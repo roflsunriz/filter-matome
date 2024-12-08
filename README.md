@@ -1,4 +1,4 @@
-# NicoCache Custom Components
+# NicoCache Filter Matome
 
 NicoCacheのカスタムフィルターとローカル拡張機能を管理するリポジトリなのじゃ！
 
@@ -16,7 +16,7 @@ NicoCacheのカスタムフィルターとローカル拡張機能を管理す�
 
 ## インストール方法
 
-1. リリースページから最新の`test_nlFilters_vXXX.zip`をダウンロード
+1. リリースページから最新の`test_nlFilters_XXX.zip`をダウンロード
 2. ZIPファイルを展開
 3. 中身を以下のように配置:
    - `nlFilters/*` → `NICOCACHE_NL/nlFilters/`
