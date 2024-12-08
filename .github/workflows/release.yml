@@ -16,7 +16,8 @@ jobs:
 
       - name: Create Release Package
         run: |
-          zip -r test_nlFilters_${{ github.ref_name }}.zip nlFilters/1[0-9][0-9]_* local/Custom*
+          VERSION=$(echo ${{ github.ref_name }} | sed 's/#//g')
+          zip -r test_nlFilters_${VERSION}.zip nlFilters/1[0-9][0-9]_* local/Custom*
 
       - name: Get Release Notes
         run: |
@@ -26,7 +27,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: test_nlFilters_${{ github.ref_name }}.zip
+          files: test_nlFilters_${VERSION}.zip
           body_path: release_notes.md
           # 199_README.mdの内容をリポジトリのREADME.mdとしても使用
           generate_release_notes: false
