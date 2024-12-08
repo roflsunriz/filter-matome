@@ -1,0 +1,260 @@
+#PlaybackrateChangerContainer {
+  position: absolute;
+  z-index: 10000;
+  /*siteHeader.css line84 override*/
+  background-color: transparent !important;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 0 16px black;
+  border: 1px solid black;
+  border-radius: 4px;
+  padding: 10px;
+  text-shadow: 2px 2px 2px white, 0 0 1em white, 0 0 0.2em white;
+  font-size: 13px;
+}
+
+#PlaybackrateChangerContainer input {
+  cursor: pointer;
+}
+
+#PlaybackrateChangerContainer.is-fullscreen,
+.MainContainers:not(.pcActive),
+#MiniModeAlternativeContainer {
+  display: none;
+}
+
+#PlaybackrateRangeArea {
+  min-width: 185px;
+  max-width: 228px;
+}
+
+#VolumeRange {
+  width: 100px;
+}
+
+#PlaybackrateRange {
+  width: 91px;
+}
+
+#CommentSearchChildContainer {
+  width: 193px;
+  display: block;
+}
+
+#SearchInput {
+  height: 38px;
+  width: 187px;
+  font-size: 24px;
+  margin-bottom: 10px;
+  resize: none;
+  cursor: initial !important;
+  background-color: gainsboro;
+}
+
+#customSeekInput,
+#customVolumeInput,
+#customPlaybackrateInput {
+  background-color: gainsboro;
+}
+
+#CommentSearchBox,
+#CommentSearchOperation {
+  display: flex;
+}
+
+#CommentSearchOperation {
+  width: 191px;
+}
+
+#CommentSearchChildContainer:hover:after {
+  white-space: pre;
+  position: absolute;
+  border-width: 1px;
+  border-style: solid;
+  background-color: white;
+  z-index: 20;
+  padding: 10px 10px;
+  margin-top: 5px;
+  margin-left: 30px;
+}
+
+#CommentSearchResultBox {
+  max-width: 230px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 5px;
+}
+
+.CommentSearchResult {
+  position: relative;
+  padding: 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.CommentSearchResult .mainContent {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+}
+
+.CommentSearchResult .Time {
+  color: #666;
+  white-space: nowrap;
+}
+
+.CommentSearchResult .Content {
+  word-break: break-all;
+  flex-grow: 1;
+}
+
+.CommentSearchResult .metaContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.CommentSearchResult .userId {
+  color: #888;
+  font-size: 0.9em;
+}
+
+.CommentSearchResult .copyButtons {
+  display: flex;
+  gap: 4px;
+}
+
+.CopyButton {
+  cursor: pointer;
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.7;
+  transition: all 0.2s;
+}
+
+.CopyButton:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.CopyButton img {
+  width: 10px;
+  height: 10px;
+}
+
+.CopyTooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  z-index: 1000;
+  white-space: nowrap;
+  bottom: -20px;
+  right: 0;
+}
+
+.CopyTooltip.Success {
+  background: rgba(0, 128, 0, 0.8);
+}
+
+.CopyTooltip.Error {
+  background: rgba(255, 0, 0, 0.8);
+}
+
+.Tab {
+  background: lightblue;
+  border-radius: 0.2em 0.2em 0 0;
+  border: none;
+}
+
+.Tab:hover,
+.Tab.Active {
+  background: grey;
+}
+
+.MainContainers.Active {
+  display: block;
+}
+
+#MiscContainer {
+  max-width: 150px;
+  overflow: hidden;
+}
+
+#InputClear {
+  display: none;
+  position: absolute;
+  font-size: 35px;
+  left: 8.6vw;
+  border: 0;
+  border-radius: 0rem;
+  box-shadow: none;
+  background: transparent;
+}
+
+#Tracker {
+  width: 180px;
+}
+
+#PlayPauseToggleButton,
+#StartCommentSearch,
+.MinExpand {
+  position: relative;
+  top: 5px;
+  width: 20.95px;
+  height: 20.95px;
+}
+
+#SeekSelect,
+.SeekButton,
+#Sync,
+.PlaybackratePresetButton,
+#PlaybackrateSelect,
+#VolumeSelect,
+#OpenRegExHelpPage,
+.customSeek,
+.customVolume,
+.customPlaybackrate,
+input.copy,
+#customSeekExec,
+#customVolumeExec,
+#customPlaybackrateExec {
+  background: linear-gradient(180deg, #303030 0%, #303030 50%, #191919 50%, #191919 100%);
+  background-color: #191919;
+  border: 1px solid #000;
+  color: white;
+}
+
+/************************************/
+/*          SeekBarTimeTip          */
+/***********************************/
+
+.SeekBarTimeTip2 {
+  box-sizing: border-box;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 14.95px;
+  outline: none;
+  pointer-events: none;
+  position: absolute;
+  visibility: hidden;
+  z-index: 10001;
+  background-color: #000000 !important;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}

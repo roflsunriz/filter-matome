@@ -1,0 +1,158 @@
+#userPageBox {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 4px;
+  box-shadow: 0 0 16px black;
+  padding: 10px;
+  z-index: 9999;
+  font-size: 11px;
+  background-color: transparent;
+  backdrop-filter: blur(5px);
+  text-shadow: 1px 1px 2px white;
+  border: 1px solid black;
+  cursor: move;
+}
+
+#userPageBox.is-fullscreen {
+  display: none;
+}
+
+#userPageBox option {
+  font-size: 11px;
+}
+
+#links a,
+#watchblock a {
+  display: block;
+  color: #35557f;
+  text-decoration: none;
+}
+
+#links a:hover,
+#watchblock a:hover {
+  text-decoration: underline;
+  background: #333;
+  color: white !important;
+}
+
+#up_mini,
+#up_mini2 {
+  height: 15px;
+  width: 15px;
+}
+
+.toggleFetchButton.upActiveFetch,
+#watchblock.upActive {
+  display: block;
+}
+
+.toggleFetchButton:not(.upActiveFetch),
+#watchblock:not(.upActive) {
+  display: none;
+}
+
+#userPageMiniModeAlternativeContainer {
+  display: none;
+}
+
+#progressContainer {
+  position: relative;
+  width: 190px;
+  height: 15px;
+  margin-top: 5px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  border: 1px solid black;
+  overflow: hidden;
+  pointer-events: none;
+}
+#progressBar {
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+  background-color: green;
+  background: -webkit-linear-gradient(top, transparent -100%, rgba(255, 255, 255, 0.5) 50%, transparent 200%), -webkit-linear-gradient(top, lime 0%, lightgreen 50%, green 50%, darkgreen 100%);
+  background: -moz-linear-gradient(top, transparent -100%, rgba(255, 255, 255, 0.5) 50%, transparent 200%), -moz-linear-gradient(top, lime 0%, lightgreen 50%, green 50%, darkgreen 100%);
+  background: -ms-linear-gradient(top, transparent -100%, rgba(255, 255, 255, 0.5) 50%, transparent 200%), -ms-linear-gradient(top, lime 0%, lightgreen 50%, green 50%, darkgreen 100%);
+  background: linear-gradient(top, transparent -100%, rgba(255, 255, 255, 0.5) 50%, transparent 200%), linear-gradient(top, lime 0%, lightgreen 50%, green 50%, darkgreen 100%);
+  position: absolute;
+  height: 100%;
+}
+
+#selectGo {
+  cursor: pointer;
+}
+
+div#links select,
+#selectGo {
+  background: linear-gradient(180deg, #303030 0%, #303030 50%, #191919 50%, #191919 100%);
+  background-color: #191919;
+  border: 1px solid #000;
+  color: white;
+}
+
+#parentVideoCompletes,
+#parentVideoEconomy,
+#parentVideoEncoding {
+  margin-top: 6px;
+  margin-bottom: 6px;
+  pointer-events: none;
+}
+
+#parentVideoModes {
+  margin-top: 3px;
+  margin-bottom: 3px;
+  pointer-events: none;
+}
+
+#parentVideoModes2 {
+  margin-top: 5px;
+  pointer-events: none;
+}
+
+.videoCompletes.Active,
+.videoEconomy.Active,
+.videoEncoding.Active,
+.videoModes.Active {
+  text-shadow: none;
+  font-size: 11px;
+  color: white;
+  background-color: crimson;
+  border: #191919 1px solid;
+}
+
+.videoCompletes,
+.videoEconomy,
+.videoEncoding,
+.videoModes {
+  text-shadow: none;
+  font-size: 11px;
+  color: #303030;
+  background-color: darkgray;
+  border: #191919 1px solid;
+}
+
+#cachingPercentage,
+#cachingPartialDuration,
+#cachingPartialSize {
+  position: absolute;
+  z-index: 1;
+}
+
+#cachingPercentage {
+  left: 23%;
+}
+
+#cachingPartialDuration {
+  left: 40%;
+}
+
+#cachingPartialSize {
+  left: 63%;
+}
+
+#userPageBox input,
+#userPageBox select,
+#userPageBox a {
+  cursor: default;
+}

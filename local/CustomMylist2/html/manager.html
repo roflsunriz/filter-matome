@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カスタムマイリスト2 マネージャー</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <!-- スクリプトの読み込み -->
+    <script src="../lib/database.js"></script>
+    <script src="../lib/mylist-manager.js"></script>
+    <script src="../js/manager.js"></script>
+    <script>
+        // Service Workerの登録
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('../lib/sw.js')
+                .then(registration => {
+                    console.log('Service Worker registered:', registration);
+                })
+                .catch(error => {
+                    console.error('Service Worker registration failed:', error);
+                });
+        }
+
+        // UIの初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            window.customMylist2ManagerUI = new CustomMylist2ManagerUI();
+        });
+    </script>
+</head>
+<body>
+    <!-- ヘッダー -->
+    <header id="customHeader" class="custom-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>CustomMylist2 Manager</h1>
+                <div class="header-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="headerFixed">
+                        <span class="slider round"></span>
+                    </label>
+                    <span>ヘッダーを固定</span>
+                </div>
+            </div>
+
+            <div class="header-center">
+                <div class="search-container">
+                    <select id="searchOption">
+                        <option value="www+search">キーワード</option>
+                        <option value="www+tag">タグ</option>
+                        <option value="www+mylist_search">マイリスト</option>
+                        <option value="seiga+search">静画</option>
+                        <option value="live+search">生放送</option>
+                        <option value="ch+search">チャンネル</option>
+                        <option value="dic+s/al/t">大百科</option>
+                    </select>
+                    <input type="text" id="searchWords" placeholder="入力して検索…">
+                    <button id="searchExec">検索</button>
+                    <button id="searchClear">クリア</button>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <nav class="header-links">
+                    <a href="https://www.nicovideo.jp/" target="_blank">トップ</a>
+                    <a href="https://www.nicovideo.jp/video_top" target="_blank">動画</a>
+                    <a href="https://seiga.nicovideo.jp/" target="_blank">静画</a>
+                    <a href="https://live.nicovideo.jp/" target="_blank">生放送</a>
+                    <a href="https://ch.nicovideo.jp/" target="_blank">チャンネル</a>
+                    <span class="more-links">
+                        <button id="moreLinksBtn">その他▼</button>
+                        <div class="dropdown-content">
+                            <a href="https://dic.nicovideo.jp/" target="_blank">大百科</a>
+                            <a href="https://jk.nicovideo.jp/" target="_blank">実況</a>
+                            <a href="https://anime.nicovideo.jp/" target="_blank">Nアニメ</a>
+                            <a href="https://www.nicovideo.jp/ranking" target="_blank">ランキング</a>
+                            <a href="https://www.nicovideo.jp/my/history/video" target="_blank">マイページ</a>
+                            <a href="https://www.nicovideo.jp/newarrival" target="_blank">新着動画</a>
+                            <a href="https://www.nicovideo.jp/recent" target="_blank">新着コメント</a>
+                            <a href="https://www.nicovideo.jp/local/fetched.html" target="_blank">フェッチリスト</a>
+                            <a href="https://www.nicovideo.jp/cache/" target="_blank">キャッシュ</a>
+                        </div>
+                    </span>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div id="CustomMylist2Manager" class="custom-mylist2-manager">
+        <!-- サイドバー（マイリスト一覧） -->
+        <div class="mylist-sidebar">
+            <div class="mylist-controls">
+                <input type="text" id="newMylistName" placeholder="新規マイリスト名">
+                <button id="createNewMylist">作成</button>
+            </div>
+
+            <div class="mylist-search">
+                <input type="text" id="mylistSearchInput" placeholder="マイリストを検索...">
+            </div>
+
+            <div class="mylist-sort-controls">
+                <select id="mylistSortType">
+                    <option value="name_asc">名前順 (昇順)</option>
+                    <option value="name_desc">名前順 (降順)</option>
+                    <option value="createdAt_desc">作成日時順 (新しい順)</option>
+                    <option value="createdAt_asc">作成日時順 (古い順)</option>
+                    <option value="videoCount_desc">動画数順 (多い順)</option>
+                    <option value="videoCount_asc">動画数順 (少ない順)</option>
+                </select>
+            </div>
+
+            <div id="mylistList" class="mylist-list">
+                <!-- マイリストがここに動的に追加される -->
+            </div>
+        </div>
+
+        <!-- メインコンテンツ（選択中のマイリストの内容） -->
+        <div class="mylist-main">
+            <!-- 選択中のマイリスト情報 -->
+            <div class="current-mylist-info">
+                <input type="text" id="currentMylistName" class="mylist-name-edit">
+                <button id="saveMylistName" class="cml2-btn">名前を保存</button>
+                <button id="deleteMylist" class="cml2-btn cml2-btn-danger">マイリストを削除</button>
+                <div class="import-export-controls">
+                    <button id="exportMylist" class="cml2-btn">エクスポート</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                    <button id="importMylist" class="cml2-btn">インポート</button>
+                </div>
+            </div>
+
+            <!-- 動画追加フォーム -->
+            <div class="video-add-form">
+                <input type="text" id="videoIdInput" placeholder="動画ID または URL">
+                <button id="addVideo">追加</button>
+            </div>
+
+            <!-- 動画一覧のコントロール -->
+            <div class="video-list-controls">
+                <select id="videoSortType">
+                    <option value="uploadedAt_desc">投稿日時順 (新しい順)</option>
+                    <option value="uploadedAt_asc">投稿日時順 (古い順)</option>
+                    <option value="title_asc">タイトル順 (昇順)</option>
+                    <option value="title_desc">タイトル順 (降順)</option>
+                    <option value="viewCount_desc">再生数順 (多い順)</option>
+                    <option value="viewCount_asc">再生数順 (少ない順)</option>
+                    <option value="commentCount_desc">コメント数順 (多い順)</option>
+                    <option value="commentCount_asc">コメント数順 (少ない順)</option>
+                    <option value="mylistCount_desc">マイリスト数順 (多い順)</option>
+                    <option value="mylistCount_asc">マイリスト数順 (少ない順)</option>
+                    <option value="addedAt_desc">追加日時順 (新しい順)</option>
+                    <option value="addedAt_asc">追加日時順 (古い順)</option>
+                </select>
+
+                <div class="video-search">
+                    <input type="text" id="videoSearchInput" placeholder="動画を検索...">
+                </div>
+
+                <div class="video-selection-controls">
+                    <button id="selectAllVideos" class="cml2-btn">全て選択</button>
+                    <button id="deselectAllVideos" class="cml2-btn">選択解除</button>
+                </div>
+
+                <div class="bulk-action-controls">
+                    <select id="selectedVideosAction">
+                        <option value="">選択した動画を...</option>
+                        <option value="move">移動</option>
+                        <option value="copy">コピー</option>
+                        <option value="delete">削除</option>
+                        <option value="refresh">情報更新</option>
+                    </select>
+                    <button id="executeSelectedAction">実行</button>
+                </div>
+            </div>
+
+            <!-- 動画一覧 -->
+            <div id="videoList" class="video-list">
+                <!-- 動画アイテムのテンプレート -->
+                <template id="videoItemTemplate">
+                    <div class="video-item">
+                        <input type="checkbox" class="video-select">
+                        <img class="video-thumbnail" src="" alt="サムネイル">
+                        <div class="video-info">
+                            <div class="video-title"></div>
+                            <div class="video-stats">
+                                <span class="view-count"></span>
+                                <span class="comment-count"></span>
+                                <span class="mylist-count"></span>
+                            </div>
+                        </div>
+                        <div class="video-actions">
+                            <button class="move-video">移動</button>
+                            <button class="copy-video">コピー</button>
+                            <button class="delete-video">削除</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- 進捗表示用モーダル -->
+    <div id="progressModal" class="progress-modal" style="display: none;">
+        <div class="progress-content">
+            <h3>インポート中...</h3>
+            <div class="progress-circle">
+                <svg viewBox="0 0 36 36" class="circular-progress">
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#eee"
+                        stroke-width="3"
+                    />
+                    <path d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#4caf50"
+                        stroke-width="3"
+                        class="progress"
+                    />
+                </svg>
+                <div class="progress-text">0%</div>
+            </div>
+            <div class="progress-status">0 / 0 件の動画を処理中...</div>
+        </div>
+    </div>
+</body>
+</html> 

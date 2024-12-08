@@ -1,0 +1,80 @@
+#PAGEHEADER {
+  position: relative;
+  top: -10px;
+  left: -10px;
+  height: 32px;
+  width: 100vw;
+  background: linear-gradient(180deg, #303030 0%, #303030 50%, #191919 50%, #191919 100%);
+}
+
+#PAGEHEADER:has(#fixedCheckBox:checked) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+body:has(#fixedCheckBox:checked) {
+  position: relative;
+  top: 35px;
+}
+
+#head {
+  font-family: "Goldman", cursive;
+  color: white;
+}
+
+#fixed {
+  position: relative;
+  left: 19vw;
+}
+
+input:where([type="checkbox"][role="switch"]) {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  position: relative;
+  font-size: inherit;
+  width: 2em;
+  height: 1em;
+  box-sizing: content-box;
+  border: 1px solid;
+  border-radius: 1em;
+  vertical-align: text-bottom;
+  margin: auto;
+  color: white;
+  background-color: white;
+}
+
+input:where([type="checkbox"][role="switch"])::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translate(0, -50%);
+  box-sizing: border-box;
+  width: 0.7em;
+  height: 0.7em;
+  margin: 0 0.15em;
+  border: 1px solid;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #757575 0%, #9e9e9e 45%, #e8e8e8 70%, #9e9e9e 85%, #757575 90% 100%);
+}
+
+input:where([type="checkbox"][role="switch"]):checked::before {
+  left: 1em;
+}
+
+input:where([type="checkbox"][role="switch"]):checked {
+  background-color: greenyellow;
+}
+
+#headerlinks {
+  position: relative;
+  left: 19vw;
+}
+
+#headerlinks > a {
+  color: white;
+  text-shadow: 1px 1px 2px black;
+}

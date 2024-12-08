@@ -1,0 +1,15 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+[Replace]
+Name = ニコニ広告チケットデイリー福引強調表示（ニコニコインフォ用）
+FullURL = https?:\/\/blog\.nicovideo\.jp\/niconews\/category\/nicoad/
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- ニコニ広告チケットデイリー福引強調表示（ニコニコインフォ用） --->
+<script type="text/javascript" src="/local/CustomFilters/nicoinfo.js" charset="utf-8"></script>
+<!--- End of ニコニ広告チケットデイリー福引強調表示（ニコニコインフォ用） --->
+$2
+>

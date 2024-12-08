@@ -1,0 +1,15 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+[Replace]
+Name = 複数列で表示し右側を非表示（検索結果ページ用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/(tag\/|search\/|newarrival|recent).*
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- 複数列で表示し右側を非表示（検索結果ページ用） --->
+<link rel="stylesheet" type="text/css" href="/local/CustomFilters/searchResultMultiColumnist.css" charset="utf-8">
+<!--- End of 複数列で表示し右側を非表示（検索結果ページ用） --->
+$2
+>

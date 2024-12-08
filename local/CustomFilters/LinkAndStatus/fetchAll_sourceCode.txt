@@ -1,0 +1,221 @@
+// -----------------------------------------------------------------------------
+// 将来的に使うかもしれないソース・コード(残す)
+// //wrapper function for fetchll, sorts them to video and mylist
+// function fetchAll_wrapper() {
+//   const loc = window.location.pathname;
+//   const videoloc = /\/user\/(\d+)\/(video)/.exec(loc);
+//   const mylistloc = /\/user\/(\d+)\/(mylist)/.exec(loc);
+//   if (videoloc != null) {
+//     fetchAll_video();
+//   } else if (mylistloc != null) {
+//     fetchAll_mylist();
+//   }
+// }
+
+// //get video list then fetch them with nicofetch function
+// function fetchAll_video() {
+//   const loc = window.location.pathname;
+//   const arr = /\/user\/(\d+)\/(video)/.exec(loc);
+//   const userid = arr[1];
+//   const url = `https://nvapi.nicovideo.jp/v1/users/${userid}/videos?sortKey=registeredAt&sortOrder=desc&pageSize=100&page=1`;
+//   fetch(url, {
+//     mode: "cors",
+//     credentials: "include",
+//     timeout: 5000,
+//     headers: {
+//       "X-Frontend-Id": 6,
+//       "X-Frontend-Version": 0,
+//     },
+//   })
+//     .then((response) => {
+//       if (response.ok === true) {
+//         return response.json();
+//       } else {
+//         throw new Error(
+//           `HTTP status code : ${response.status + response.statusText}`
+//         );
+//       }
+//     })
+//     .then((json) => {
+//       let ids = [];
+//       for (let i = 0; i < json.data.items.length; i++) {
+//         ids[i] = json.data.items[i].id;
+//         nicofetch("", ids[i], 0);
+//       }
+//       window.open("https://www.nicovideo.jp/local/fetched.html");
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//     });
+// }
+
+// //get mylist video list then fetch them with nicofetch function
+// function fetchAll_mylist() {
+//   const loc = window.location.pathname;
+//   const arr = /\/user\/(\d+)\/(mylist)/.exec(loc);
+//   const userid = arr[1];
+//   const url1 = `https://nvapi.nicovideo.jp/v1/users/${userid}/mylists?sampleItemCount=3`;
+//   fetch(url1, {
+//     mode: "cors",
+//     credentials: "include",
+//     timeout: 5000,
+//     headers: {
+//       "X-Frontend-Id": 6,
+//       "X-Frontend-Version": 0,
+//     },
+//   })
+//     .then((response) => {
+//       if (response.ok === true) {
+//         return response.json();
+//       } else {
+//         throw new Error(
+//           `HTTP status code : ${response.status + response.statusText}`
+//         );
+//       }
+//     })
+//     .then((json) => {
+//       //show mylist form to choose
+//       let ids = [];
+//       let names = [];
+//       const styles = `position:absolute;
+//                 top:50vh;
+//                 left:40vw;
+//                 z-index:30;
+//                 background: white;
+//                 border: black 1px solid;
+//                 padding:25px;`;
+//       const classes = `animate__animated animate__zoomIn`;
+//       let buf = `<form id="form" class="${classes}" style="${styles}">
+//                 <p>Select mylist to fetch:</p>`;
+
+//       for (let i = 0; i < json.data.mylists.length; i++) {
+//         ids[i] = json.data.mylists[i].id;
+//         names[i] = json.data.mylists[i].name;
+//         buf += `<div>`;
+//         buf += `<input type="radio" name="mylist" value="${ids[i]}">`;
+//         buf += `<label for="${ids[i]}">${ids[i]} ${names[i]}</label>`;
+//         buf += `</div>`;
+//       }
+//       buf += `  <div>
+//             <input type="button" id="submit" value="送信">
+//             <input type="button" id="cancel" value="キャンセル">
+//           </div></form>`;
+//       document.documentElement.insertAdjacentHTML("beforeend", buf);
+
+//       //when you choose to fetch, get mylist's content
+//       document
+//         .getElementById("submit")
+//         .addEventListener("click", function (event) {
+//           const data = new FormData(document.forms.form);
+//           for (const item of data) {
+//             let url2 = `	https://nvapi.nicovideo.jp/v2/mylists/${item[1]}?sortKey=viewCount&sortOrder=desc&pageSize=100&page=1`;
+//             fetch(url2, {
+//               mode: "cors",
+//               credentials: "include",
+//               timeout: 5000,
+//               headers: {
+//                 "X-Frontend-Id": 6,
+//                 "X-Frontend-Version": 0,
+//               },
+//             })
+//               .then((response) => {
+//                 if (response.ok === true) {
+//                   return response.json();
+//                 } else {
+//                   throw new Error(
+//                     `HTTP status code : ${
+//                       response.status + response.statusText
+//                     }`
+//                   );
+//                 }
+//               })
+//               .then((json) => {
+//                 let ids = [];
+//                 for (let i = 0; i < json.data.mylist.items.length; i++) {
+//                   ids[i] = json.data.mylist.items[i].video.id;
+//                   nicofetch("", ids[i], 0);
+//                 }
+//                 window.open("https://www.nicovideo.jp/local/fetched.html");
+//                 cc.i("form").remove();
+//               });
+//           }
+//         });
+//       //when you cancel, remove form
+//       document
+//         .getElementById("cancel")
+//         .addEventListener("click", function (event) {
+//           cc.i("form").remove();
+//         });
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//     });
+// }
+
+// //original function fetchAll
+// function fetchAll_origin() {
+//   //based on data-nl_fetch_link link, just click them
+//   const links = document.querySelectorAll("[data-nl_fetch_link]");
+//   //link[0] is exists but hidden
+//   if (links[1] !== undefined) {
+//     for (const link of links) {
+//       link.click();
+//     }
+//   } else if (/series/.test(window.location.pathname)) {
+//     //search entire web page with regex then remove duplicates
+//     const source = document.documentElement.innerHTML
+//       .match(/sm[0-9]+/g)
+//       .filter((item, index, self) => index === self.indexOf(item));
+//     let buf = "";
+//     for (const i of source) {
+//       nicofetch("", i, 0);
+//     }
+//     const e = cc.t("h2");
+//     for (let j = 0; j < e.length; j++) {
+//       //search entire web page with has nodes 'title'
+//       const q = e[j].hasChildNodes("title");
+//       if (q) {
+//         //list of video id and its title
+//         buf += source[j] + " " + e[j].textContent + "\n";
+//       }
+//     }
+//     window.alert(`以下の動画をfetchしました\n${buf}${source.length}本`);
+//   } else if (links[1] === undefined) {
+//     const str = `[up.js]fetchリンクに [data-nl_fetch_link] が存在しません。もしくはfetchリンクそのものが存在しません。\nmovieFetcherFilter.txt が古い可能性があります。`;
+//     console.error(`%c${str}`, `color: red`);
+//     window.alert(`${str}`);
+//   }
+// }
+
+// //experimental function for nicoru (can't debug with 403)
+// function nicoruAll() {
+//   let threadid = NicoCache_nl.watch.apiData.comment.threads[0].id;
+//   let url = `https://nvapi.nicovideo.jp/v1/nicorukey?language=0&threadId=${threadid}&fork=0&isVideoOwnerNicoruEnabled=true`;
+//   fetch(url, {
+//     mode: "cors",
+//     credentials: "include",
+//     timeout: 5000,
+//     headers: {
+//       "X-Frontend-Id": 6,
+//       "X-Frontend-Version": 0,
+//     },
+//   })
+//     .then((response) => {
+//       console.log(response);
+//       if (response.ok === true) {
+//         return response.json();
+//       } else {
+//         throw new Error(
+//           `HTTP status code : ${response.status + response.statusText}`
+//         );
+//       }
+//     })
+//     .then((json) => {
+//       console.log(json);
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//     });
+// }
+
+//--------------------------------------------------------------------------------

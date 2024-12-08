@@ -1,0 +1,11 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+[Style]
+Name = プレミアム会員勧誘非表示（ニコニコ動画全体用）
+FullURL = https:\/\/www\.nicovideo\.jp/.*
+Append<
+/*プレミアム会員勧誘非表示（ニコニコ動画全体用）*/
+.common-header-m5ds7e {
+    display:none !important;
+}
+>

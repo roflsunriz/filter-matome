@@ -1,0 +1,79 @@
+#TagItemsCounter_icon {
+  background-color: gold !important;
+}
+
+@keyframes bellshake {
+  0% {
+    transform: rotate(0);
+  }
+
+  15% {
+    transform: rotate(5deg);
+  }
+
+  30% {
+    transform: rotate(-5deg);
+  }
+
+  45% {
+    transform: rotate(4deg);
+  }
+
+  60% {
+    transform: rotate(-4deg);
+  }
+
+  75% {
+    transform: rotate(2deg);
+  }
+
+  85% {
+    transform: rotate(-2deg);
+  }
+
+  92% {
+    transform: rotate(1deg);
+  }
+
+  100% {
+    transform: rotate(0);
+  }
+}
+
+#TagItemsCounter {
+  animation-name: jump;
+  animation-duration: 2s;
+  animation-iteration-count: 1;
+  transform-origin: bottom;
+  animation-timing-function: cubic-bezier(0.28, 0.84, 0.42, 1);
+}
+
+@keyframes jump {
+  0% {
+    transform: scale(1, 1) translateY(0);
+  }
+
+  10% {
+    transform: scale(1.1, 0.9) translateY(0);
+  }
+
+  30% {
+    transform: scale(0.9, 1.1) translateY(-100px);
+  }
+
+  50% {
+    transform: scale(1.05, 0.95) translateY(0);
+  }
+
+  57% {
+    transform: scale(1, 1) translateY(-7px);
+  }
+
+  64% {
+    transform: scale(1, 1) translateY(0);
+  }
+
+  100% {
+    transform: scale(1, 1) translateY(0);
+  }
+}

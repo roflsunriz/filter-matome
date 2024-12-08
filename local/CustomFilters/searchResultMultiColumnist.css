@@ -1,0 +1,92 @@
+.tagCaption .share,
+.tagCaption .inner > .contentBody .itemDescription,
+.billboard_ad,
+.nicoadVideoItemWrapper,
+.content.videoBox.teibanVideos,
+.TagkeyArticleBox,
+.columnChange .open,
+.columnChange .close,
+.column700-300 .sub,
+.NewVideosPage-sub,
+.uad.nicodicNicoadVideoList {
+  display: none !important;
+}
+
+.tagCaption .inner > .contentHeader {
+  float: left !important;
+}
+
+.tagCaption .contentHeader h1 {
+  width: auto !important;
+}
+
+.tagCaption .contentHeader {
+  margin-right: 10px !important;
+}
+
+.tagCaption .contentBody {
+  padding-top: 1px !important;
+}
+
+.inner,
+.column700-300 .main,
+.video {
+  width: 100% !important;
+  max-width: 1470px !important;
+  min-width: auto !important;
+}
+
+.columnChange li.two {
+  display: block !important;
+}
+
+.columnChange {
+  padding-right: 8px !important;
+}
+
+.columnChange.open,
+.columnChange.close {
+  background-image: none !important;
+}
+
+.column700-300 .main {
+  padding-right: 4px !important;
+}
+
+.video .item:nth-child(4n + 1) {
+  clear: none !important;
+}
+
+.video .item {
+  margin-right: 5px !important;
+}
+
+.video.videoList02 .item:nth-child(2n + 1) {
+  clear: none !important;
+}
+
+.video.videoList02 .item {
+  margin-right: -1px !important;
+}
+
+.NewVideosPage-body {
+  width: 100% !important;
+  max-width: 1470px !important;
+  min-width: auto !important;
+}
+
+.NewVideosPage-main {
+  flex: 0 0 100% !important;
+}
+
+.NewVideosPage-videoList {
+  width: 100% !important;
+}
+
+.NewVideosPage-videoList_col4 > :nth-child(4n-3) {
+  margin-left: 8px !important;
+}
+
+.NewVideosPage-videoList_col4 > :nth-child(6n-5) {
+  margin-left: 0 !important;
+}

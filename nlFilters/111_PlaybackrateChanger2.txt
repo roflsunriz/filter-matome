@@ -1,0 +1,55 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+# 注意1: 導入・除去にはwatchページのハード再読み込みが必要
+#       大抵のモダンブラウザでは Ctrl + F5 でディスクキャッシュを上書きしつつ再読み込みする
+# 注意2: 公式プレイヤーが動かなくなる可能性あり(ソースコードを無理やり書き換えているため)
+
+#Requires CustomCommon/common.js
+[Replace]
+Name = PlaybackrateChanger2（視聴ページ用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- PlaybackrateChanger2（視聴ページ用） --->
+    <!-- 1. デバッグ用コンフィグ -->
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/config.js" charset="utf-8"></script>
+
+    <!-- 1. 定数定義 -->
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/constants.js" charset="utf-8"></script>
+
+    <!-- 2. ユーティリティ -->
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/utils/timeFormatter.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/utils/domUtil.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/utils/eventHandler.js" charset="utf-8"></script>
+
+    <!-- 3. コンポーネント -->
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/controllers.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/components/TabControl.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/components/VolumeControl.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/components/PlaybackControl.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/components/CommentSearch.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/components/CustomMylist2AddButton.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/components/DragEvents.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/src/components/SyncPlayback.js" charset="utf-8"></script>
+
+    <!-- 4. メインアプリケーション -->
+<script type="module" src="/local/CustomFilters/PlaybackrateChanger2/main.js"></script>
+<link rel="stylesheet" type="text/css" href="/local/CustomFilters/PlaybackrateChanger2/css/pc2.css" charset="utf-8">
+<!--- End of PlaybackrateChanger2（視聴ページ用） --->
+$2
+>
+
+#公式の再生速度調整を無効化
+[Replace]
+Name = 公式プレイヤーの再生速度調整機能無効化（nimg用）
+FullURL = https?://[^/]+\.nimg\.jp/[^/]+/[^/]+/[^/]+/[^/]+/[^/]+\.js
+Multi = TRUE
+Match<
+playbackRate
+>
+Replace<
+_x_
+>

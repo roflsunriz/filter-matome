@@ -1,0 +1,15 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+[Replace]
+Name = コモンヘッダーのユーザーアイコン・名前非表示（ニコニコ動画全体用）
+FullURL = https?:\/\/.*?\.nicovideo\.jp\/.*
+Match<
+(<head(?:[^>]+)?>)(\r\n)?
+>
+Replace<
+$1
+<!--- コモンヘッダーのユーザーアイコン・名前非表示（ニコニコ動画全体用） --->
+<script src="/local/CustomFilters/commonHeaderIconHide.js" charset="utf-8"></script>
+<!--- End of コモンヘッダーのユーザーアイコン・名前非表示（ニコニコ動画全体用） --->
+$2
+>

@@ -1,0 +1,17 @@
+@charset "utf-8";
+
+/*-------------------------
+ 背景画像指定
+--------------------------*/
+
+body {
+  background-attachment: var(--bg-att);
+  background-blend-mode: var(--bg-bl-m);
+  background-clip: var(--bg-cl);
+  background-color: var(--bg-col);
+  background-image: var(--bg-img);
+  background-origin: var(--bg-org);
+  background-position: var(--bg-pos);
+  background-repeat: var(--bg-rep);
+  background-size: var(--bg-siz);
+}

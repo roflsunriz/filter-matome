@@ -1,0 +1,28 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+[Replace]
+Name = CommentFilter（視聴ページ用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- CommentFilter（視聴ページ用） --->
+<!-- 1. 共通ユーティリティ -->
+<script type="module" src="/local/CustomFilters/CommentFilter/lib/util.js"></script>
+
+<!-- 2. データベース -->
+<script type="module" src="/local/CustomFilters/CommentFilter/src/database.js"></script>
+
+<!-- 3. メインフィルター -->
+<script type="module" src="/local/CustomFilters/CommentFilter/src/CommentFilter.js"></script>
+
+<!-- 4. UI処理 -->
+<script type="module" src="/local/CustomFilters/CommentFilter/src/CommentFilterUI.js"></script>
+
+<!-- 5. メインスクリプト -->
+<script type="module" src="/local/CustomFilters/CommentFilter/index.js"></script>
+<!--- End of CommentFilter（視聴ページ用） --->
+$2
+>

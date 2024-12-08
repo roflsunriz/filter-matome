@@ -1,0 +1,19 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+#Requires CustomCommon/common.js
+[Replace]
+Name = カスタムマイリスト2（視聴ページ用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- カスタムマイリスト2（視聴ページ用） --->
+<link rel="stylesheet" href="/local/CustomMylist2/css/watch.css" charset="utf-8">
+<script type="text/javascript" src="/local/CustomMylist2/lib/database.js" charset="utf-8"></script>
+<script type="text/javascript" src="/local/CustomMylist2/lib/mylist-manager.js" charset="utf-8"></script>
+<script type="text/javascript" src="/local/CustomMylist2/js/selector.js" charset="utf-8"></script>
+<!--- End of カスタムマイリスト2（視聴ページ用） --->
+$2
+>

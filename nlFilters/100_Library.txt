@@ -1,0 +1,25 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+[Replace]
+Name = ライブラリ挿入（ニコニコ動画全体用）
+FullURL = https:\/\/.*?\.nicovideo\.jp.*
+Match<
+(<head(?:[^>]+)?>)(\r\n)?
+>
+Replace<
+$1
+<!--- ライブラリ --->
+
+<!--- JQuery --->
+<script src="/local/jquery.min.js" charset="utf-8"></script>
+<script src="/local/jquery-ui.min.js" charset="utf-8"></script>
+
+<!--- トースター表示用ライブラリ --->
+<link rel="stylesheet" type="text/css" href="/local/CustomCommon/toastr.min.css" charset="utf-8">
+<script type="text/javascript" src="/local/CustomCommon/toastr.min.js" charset="utf-8"></script>
+
+<!--- 共通ライブラリ --->
+<script type="text/javascript" src="/local/CustomCommon/common.js" charset="utf-8"></script>
+
+<!--- End of ライブラリ --->
+$2
+>

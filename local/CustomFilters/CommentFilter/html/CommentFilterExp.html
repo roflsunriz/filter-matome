@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CommentFilterの説明</title>
+    <base href="https://www.nicovideo.jp/local/" />
+    <link rel="stylesheet" type="text/css" href="CustomCommon/fontcss/goldman.css" charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="CustomFilters/CommentFilter/css/Header.css" charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="CustomFilters/CommentFilter/css/Background-Image.css" charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="CustomFilters/CommentFilter/css/CommentFilterExp.css" charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="CustomFilters/CommentFilter/css/CommentFilterExp-colors.css" charset="utf-8" />
+  </head>
+  <body>
+    <div id="PAGEHEADER">
+      <div class="bg_headmenu">
+        <div class="headmenu_width">
+          <table class="headmenu">
+            <tbody>
+              <tr>
+                <td id="head">NGCommentProxy</td>
+                <td id="fixed">
+                  <input type="checkbox" id="fixedCheckBox" role="switch" checked />
+                  <label for="fixedCheckBox" style="color: white">固定</label>
+                </td>
+                <td id="headerlinks">
+                  <a href="https://www.nicovideo.jp/" target="_blank">トップページ</a>
+                  <a href="https://www.nicovideo.jp/video_top" target="_blank">動画</a>
+                  <a href="https://seiga.nicovideo.jp/" target="_blank">静画</a>
+                  <a href="https://live.nicovideo.jp/" target="_blank">生放送</a>
+                  <a href="https://ch.nicovideo.jp/" target="_blank">チャンネル</a>
+                  <a href="https://dic.nicovideo.jp/" target="_blank">大百科</a>
+                  <a href="https://jk.nicovideo.jp/" target="_blank">実況</a>
+                  <a href="https://anime.nicovideo.jp/" target="_blank">Nアニメ</a>
+                  <a href="https://site.nicovideo.jp/service_list/" target="_blank">その他</a>
+                  <span>┃</span>
+                  <a href="https://www.nicovideo.jp/my/history/" target="_blank">マイページ</a>
+                  <a href="https://www.nicovideo.jp/ranking" target="_blank">ランキング</a>
+                  <span>┃</span>
+                  <a href="https://www.nicovideo.jp/newarrival" target="_blank">新着動画</a>
+                  <a href="https://www.nicovideo.jp/recent" target="_blank">新着コメント</a>
+                  <span>┃</span>
+                  <a href="https://www.nicovideo.jp/local/CustomMylist2/html/manager.html" target="_blank">カスタムマイリスト2</a>
+                  <a href="https://www.nicovideo.jp/local/fetched.html" target="_blank">フェッチリスト</a>
+                  <a href="https://www.nicovideo.jp/cache/" target="_blank">キャッシュ</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="parent">
+      <div class="CFExplanation1">
+        <summary>設定画面説明</summary>
+        <img id="screenshot" src="CustomFilters/CommentFilter/img/CommentFilterSettingScreen.png" />
+      </div>
+      <div class="CFExplanation2">
+        <summary>各項目</summary>
+        <ul>
+          <li>DEBUG - 削除・置換が実行されたコメントが<b>フィルター理由と共に表示</b>されます。</li>
+          <li>ニコられた - たくさん<b>ニコられ</b>ているコメントを<b>フィルタリングから除外</b>します。(n≧3)</li>
+          <li>切り替え - <b>ブラックリスト</b>モード(NGWord)と<b>非表示</b>モード(ブラックリスト + 99:59)と<b>ホワイトリスト</b>モード(OKWord)を切り替えます。</li>
+          <li>投稿者・かんたん・通常 - それぞれのコメントタイプに適用するコマンドを入力します。</li>
+          <li>除外動画ID - <b>フィルタリングから除外する動画ID</b>を入力します。1行に1つのIDを入力。</li>
+          <li>NGワード - NGワードを指定します。<b>ブラックリスト</b>モード用。<b>正規表現可</b>。1行に1つのワードを入力。</li>
+          <li>OKワード - OKワードを指定します。<b>ホワイトリスト</b>モード用。<b>正規表現可</b>。1行に1つのワードを入力。</li>
+          <li>置換ルール - コメントの置換ルールを指定します。形式: 置換前 => 置換後。1行に1つのルールを入力。</li>
+          <li>NGユーザー - フィルタリングするユーザーIDを指定します。1行に1つのIDを入力。</li>
+          <li>除外ユーザー - フィルタリングから除外するユーザーIDを指定します。1行に1つのIDを入力。</li>
+          <li>SuperNGワード - ニコられ除外を無視してフィルタリングするNGワードを指定します。1行に1つのワードを入力。</li>
+          <li>SuperNGユーザー - ニコられ除外を無視してフィルタリングするユーザーIDを指定します。1行に1つのIDを入力。</li>
+          <li>特定動画NGユーザー - 特定の動画IDに対してのみ適用するNGユーザーを指定します。形式: 動画ID,ユーザーID。1行に1つの設定を入力。</li>
+          <li>特定動画NGワード - 特定の動画IDに対してのみ適用するNGワードを指定します。形式: 動画ID,NGワード。1行に1つの設定を入力。</li>
+        </ul>
+      </div>
+      <div class="CFExplanation3">
+        <summary>コメントコマンド一覧</summary>
+        <p>【大きさ】:big,medium,small【フォント】:defont,gothic,mincho【位置】:ue,naka,shita</p>
+        <p>デフォルト(指定なし)の場合、medium,defont,nakaになる。</p>
+        <p>【色】: &lt;一般+プレミアム&gt;</p>
+        <p>
+          <span class="CFOwnColor white">white</span>, <span class="CFOwnColor red">red</span>, <span class="CFOwnColor pink">pink</span>, <span class="CFOwnColor orange">orange</span>,
+          <span class="CFOwnColor yellow">yellow</span>, <span class="CFOwnColor green">green</span>, <span class="CFOwnColor cyan">cyan</span>, <span class="CFOwnColor blue">blue</span>,
+          <span class="CFOwnColor purple">purple</span>, <span class="CFOwnColor black">black</span>,
+        </p>
+        <p>&lt;プレミアム&gt;</p>
+        <p>
+          <span class="CFOwnColor white2">white2</span>, <span class="CFOwnColor red2">red2</span>, <span class="CFOwnColor pink2">pink2</span>, <span class="CFOwnColor orange2">orange2</span>,
+          <span class="CFOwnColor yellow2">yellow2</span>, <span class="CFOwnColor green2">green2</span>, <span class="CFOwnColor cyan2">cyan2</span>, <span class="CFOwnColor blue2">blue2</span>,
+          <span class="CFOwnColor purple2">purple2</span>, <span class="CFOwnColor black2">black2</span>,#16進数(HEX)で指定する色※1
+        </p>
+        <p>【半透明】:_live【非表示】:invisible</p>
+        <p>【横幅の長い固定コメントの縮小幅を、16:9画面の幅に合わせる。4:3動画でも適用可。】:full</p>
+        <p>【改行によるリサイズを適用しない】:ender</p>
+        <p>【このコマンドをつけたコメントが表示されなくなるタイミングを従来の方式に変更する ※2】:patissier</p>
+        <p>【ニコられてもコメントが消えにくくならないようにする。】:ca</p>
+        <p>【入力例】: small,gothic,_live,<span class="CFOwnColor HEXblue">#004e72</span></p>
+        <p><a class="NGCPLink" href="https://qa.nicovideo.jp/faq/show/7386" target="_blank">動画視聴ページで利用可能なニコスクリプト | ニコニコヘルプ</a></p>
+        <p>
+          <a class="NGCPLink" href="https://dic.nicovideo.jp/a/%E3%82%B3%E3%83%9E%E3%83%B3%E3%83%89#h2-1" target="_blank">コマンドとは [単語記事] - ニコニコ大百科</a>
+        </p>
+        <p>※既定で全てのコメントコマンドは事前に削除されています。</p>
+        <p>
+          ※1:<span class="CFOwnColor white2">white2</span>や<span class="CFOwnColor red2">red2</span
+          >といった<b>末尾に2が付く文字色と#16進数(HEX)で指定する色は適用先のプレミアム会員ステータス(isPremium)がtrueであれば適用される</b>ようです。
+        </p>
+        <p>
+          ※2:従来は、動画時間nでn&lt;1分=100コメント、1分≦n&lt;5分=250コメント、5分≦n&lt;10分=500コメント、10分≦n=1000コメントが動画全体で保持される仕様でした。現在はこれに加えて1分/100コメントが追加で保持されています。この追加分から弾くのがこのコマンドです。
+        </p>
+      </div>
+
+      <div class="CFExplanation4">
+          <a class="NGCPLink" href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_expressions/Cheatsheet" target="_blank">正規表現</a>可。(ユーザーIDは正規表現<b>不可</b>。)正規表現の特殊キーワードを文字として扱う場合はエスケープしてください。例えば<code>.</code>をエスケープする場合<code>\.</code>としてください。
+          動画プレイヤー上のコメント(またはコメント欄のコメント)を直接右クリックして出てくるメニューからNGWordやNGUserIdに追加することもできます。
+        </p>
+        <p><a class="NGCPLink" href="https://rubular.com/" target="_blank">正規表現のテスト - Rubular</a></p>
+        <p><a class="NGCPLink" href="https://jex.im/regulex/" target="_blank">正規表現の視覚化 - Regulex</a></p>
+        <p><a class="NGCPLink" href="https://w.atwiki.jp/nicocachenlwiki/pages/19.html" target="_blank">正規表現(regex) - NicoCache_nl Wiki (新)</a></p>
+        <p>
+          <a class="NGCPLink" href="https://dic.nicovideo.jp/a/ng%E6%8E%A8%E5%A5%A8%E3%83%AF%E3%83%BC%E3%83%89%E3%81%AE%E4%B8%80%E8%A6%A7" target="_blank"
+            >NG推奨ワードの一覧とは (エヌジースイショウワードノイチランとは) [単語記事] - ニコニコ大百科</a
+          >
+        </p>
+        <p>
+          テキストエリアにフォーカスがある状態でキーボードの<span class="CFKeyboard">PgUp</span>/<span class="CFKeyboard">PgDn</span>でスクロール可能です。キーボードの<span class="CFKeyboard">Home</span>/<span
+            class="CFKeyboard"
+            >End</span
+          >で文頭/文末に飛べます。<a class="NGCPLink" href="https://funny.hiroshima.jp/blog/5494/" target="_blank">その他ショートカット</a>
+        </p>
+        <summary>フィルタリングの優先順位</summary>
+        <ol>
+          <li>除外動画ID（該当する場合、以降の処理をスキップ）</li>
+          <li>SuperNGユーザー・SuperNGワード（ニコられ除外より優先）</li>
+          <li>ニコられ除外（該当する場合、以降の処理をスキップ）</li>
+          <li>除外ユーザー（該当する場合、以降の処理をスキップ）</li>
+          <li>特定動画NGユーザー・NGワード</li>
+          <li>NGユーザー</li>
+          <li>置換ルール</li>
+          <li>フィルターモード（ブラックリスト/ホワイトリスト/非表示）に応じた処理</li>
+        </ol>
+      </div>
+    </div>
+  </body>
+</html>

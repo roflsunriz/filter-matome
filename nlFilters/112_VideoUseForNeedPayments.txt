@@ -1,0 +1,30 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+#Requires CustomCommon/common.js
+[Replace]
+Name = 有料動画でのキャッシュ利用（公式動画ページ用）
+FullURL = https?://www\.nicovideo\.jp\/watch\/(?:so)?[0-9]{1,12}
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- 有料動画でのキャッシュ利用（公式動画ページ用） --->
+<script type="text/javascript" src="/local/CustomFilters/needPaymentsVideo.js" charset="utf-8"></script>
+<!--- End of 有料動画でのキャッシュ利用（公式動画ページ用） --->
+$2
+>
+
+#これは必須　無いと再生できない
+[Replace]
+Name = isNeedPaymentステート書き換え（公式動画ページ用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/(?:so)?[0-9]{1,12}
+EachLine = TRUE
+Multi = TRUE
+ContentType = text/html
+Match<
+((&quot;)okReason\2:\2).*?(\2)
+>
+Replace<
+$1PURELY$3
+>

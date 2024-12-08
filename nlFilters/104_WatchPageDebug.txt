@@ -1,0 +1,28 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+#[Replace]
+Name = ミューテーションオブザーバー（視聴ページ用）（デバッグ）
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!---ミューテーションオブザーバー（視聴ページ用）（デバッグ） --->
+<script type="text/javascript" src="/local/CustomFilters/WatchPageMisc/js/watchMutationObserverVideoSrc.js" charset="utf-8"></script>
+<!--- End of ミューテーションオブザーバー（視聴ページ用）（デバッグ） --->
+$2
+>
+
+#[Replace]
+Name = OnCanPlay（視聴ページ用）（デバッグ）
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- OnCanPlay（視聴ページ用）（デバッグ） --->
+<script type="text/javascript" src="/local/CustomFilters/WatchPageMisc/js/watchOnCanPlay.js" charset="utf-8"></script>
+<!--- End of OnCanPlay（視聴ページ用）（デバッグ） --->
+$2
+>

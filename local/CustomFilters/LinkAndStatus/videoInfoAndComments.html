@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>概要情報とコメント</title>
+    <base href="https://www.nicovideo.jp/local/" />
+    <script type="text/javascript" src="jquery.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="CustomCommon/common.js" charset="utf-8"></script>
+    <script type="text/javascript" src="CustomCommon/toastr.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="CustomFilters/LinkAndStatus/external/thumbApi.js" charset="utf-8"></script>
+    <script type="text/javascript" src="CustomFilters/LinkAndStatus/external/nvCommentApi.js" charset="utf-8"></script>
+    <link rel="stylesheet" type="text/css" href="CustomCommon/toastr.min.css" charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="CustomFilters/LinkAndStatus/css/videoInfoAndComments.css" />
+  </head>
+  <body>
+    <div id="ext_decoded_results"></div>
+    <p>
+      <input
+        type="button"
+        id="estimateProcessingTime"
+        value="推定処理時間を計算"
+        onClick="EPTWrapper(EstimatedProcessingTime(document.getElementById('comment_num').dataset.value,document.getElementById('length').dataset.value));"
+      />
+    </p>
+    <input type="button" id="nvCommentExec" value="コメントを取得して表示する(重いです)" />
+    <div id="nv_decoded_results"></div>
+  </body>
+</html>

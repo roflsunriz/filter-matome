@@ -1,0 +1,16 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+[Replace]
+Name = フェッチリンク表示＆動画非表示（ランキングページ用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/ranking.*
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- フェッチリンク表示＆動画非表示（ランキングページ用） --->
+<script type="text/javascript" src="/local/CustomFilters/rankingMovieFetcherFilter.js" charset="utf-8"></script>
+<script type="text/javascript" src="/local/CustomFilters/rankingNGHidden.js" charset="utf-8"></script>
+<!--- End of フェッチリンク表示＆動画非表示（ランキングページ用） --->
+$2
+>

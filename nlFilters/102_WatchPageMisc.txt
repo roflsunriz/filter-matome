@@ -1,0 +1,19 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+#Requires CustomCommon/common.js
+[Replace]
+Name = 雑多な挿入（視聴ページ用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- 雑多な挿入（視聴ページ用） --->
+<link rel="stylesheet" type="text/css" href="/local/CustomFilters/WatchPageMisc/css/watchTagCounter.css" charset="utf-8">
+<link rel="stylesheet" type="text/css" href="/local/CustomFilters/WatchPageMisc/css/watchBackgroundRoot.css" charset="utf-8">
+<script type="text/javascript" src="/local/CustomFilters/WatchPageMisc/js/watchTagCounter.js" charset="utf-8"></script>
+<script type="text/javascript" src="/local/CustomFilters/WatchPageMisc/js/watchPlayerPanelContainerVideosNGHidden.js" charset="utf-8"></script>
+<!--- End of 雑多な挿入（視聴ページ用） --->
+$2
+>

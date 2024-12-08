@@ -1,0 +1,180 @@
+body {
+  width: auto;
+  height: auto;
+}
+a {
+  transition: all 0.2s linear;
+}
+a:link,
+a:visited {
+  color: #a200ff;
+}
+a:hover {
+  color: #00ffea;
+}
+a:active {
+  color: #0026ff;
+}
+code {
+  font-family: Menlo, Monaco, Consolas, "Courier New", Meiryo, monospace;
+  background-color: #f0f0f0;
+  font-size: 90%;
+  padding: 0.25em;
+}
+
+summary {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.parent {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: 0.1fr 0.7fr 1fr;
+  grid-column-gap: 0px;
+  grid-row-gap: 0px;
+  background-color: transparent;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 0 16px black;
+  border: 1px solid black;
+  border-radius: 4px;
+}
+
+.CFExplanation1 {
+  grid-area: 1 / 1 / 2 / 3;
+  text-shadow: 1px 1px 2px white, -1px 1px 2px white, -1px -1px 2px white, 1px -1px 2px white;
+}
+#screenshot {
+  position: relative;
+  top: 30px;
+  left: 16vw;
+}
+.CFExplanation2 {
+  position: relative;
+  top:80px;
+  left: 23vw;
+  grid-area: 2 / 1 / 3 / 3;
+  text-shadow: 1px 1px 2px white, -1px 1px 2px white, -1px -1px 2px white, 1px -1px 2px white;
+}
+.CFExplanation3 {
+  width: 95%;
+  grid-area: 3 / 1 / 4 / 2;
+  text-shadow: 1px 1px 2px white, -1px 1px 2px white, -1px -1px 2px white, 1px -1px 2px white;
+}
+.CFExplanation4 {
+  width: 95%;
+  grid-area: 3 / 2 / 4 / 3;
+  text-shadow: 1px 1px 2px white, -1px 1px 2px white, -1px -1px 2px white, 1px -1px 2px white;
+}
+
+.CFReplace {
+  color: #ffffff;
+  border: 1px solid #dc143c;
+  background-color: #dc143c;
+  border-radius: 5%;
+  text-shadow: initial;
+}
+.CFsmid_ng {
+  color: #ffffff;
+  border: 1px solid #dccf14;
+  background-color: #dccf14;
+  border-radius: 5%;
+  text-shadow: initial;
+}
+.CFsmid_rep {
+  color: #ffffff;
+  border: 1px solid #ff8c00;
+  background-color: #ff8c00;
+  border-radius: 5%;
+  text-shadow: initial;
+}
+.CFsmid_reprep {
+  color: #ffffff;
+  border: 1px solid #4ddc14;
+  background-color: #4ddc14;
+  border-radius: 5%;
+  text-shadow: initial;
+}
+.CFExcludeKeyword {
+  color: #ffffff;
+  border: 1px solid #00ff4c;
+  background-color: #00ff4c;
+  border-radius: 5%;
+  text-shadow: initial;
+}
+.CFUserId {
+  color: #ffffff;
+  border: 1px solid #006400;
+  background-color: #006400;
+  border-radius: 5%;
+  text-shadow: initial;
+}
+.CFExclude {
+  color: #ffffff;
+  border: 1px solid teal;
+  background-color: teal;
+  border-radius: 5%;
+  text-shadow: initial;
+}
+.CFsuper_ng {
+  color: #ffffff;
+  border: 1px solid rgb(92, 0, 128);
+  background-color: rgb(92, 0, 128);
+  border-radius: 5%;
+  text-shadow: initial; 
+}
+.CFsuper_user {
+  color: #ffffff;
+  border: 1px solid rgb(128, 0, 96);
+  background-color: rgb(128, 0, 96);
+  border-radius: 5%;
+  text-shadow: initial; 
+}
+.CFKeyboard {
+  color: #fff;
+  border: 1px solid #606060;
+  background-color: #606060;
+  text-shadow: initial;
+}
+
+.CFConfig {
+  color: #fff;
+  border-radius: 5%;
+  text-shadow: initial;
+}
+.CFConfig.replace {
+  border: 1px solid #dc143c;
+  background-color: #dc143c;
+}
+.CFConfig.smid_ng {
+  border: 1px solid #dc8514;
+  background-color: #dc8514;
+}
+.CFConfig.smid_rep {
+  border: 1px solid #d9dc14;
+  background-color: #d9dc14;
+}
+.CFConfig.smid_reprep {
+  border: 1px solid #6edc14;
+  background-color: #6edc14;
+}
+.CFConfig.excludeKeyword {
+  border: 1px solid #14dcbb;
+  background-color: #14dcbb;
+}
+.CFConfig.userId {
+  border: 1px solid #1714dc;
+  background-color: #1714dc;
+}
+.CFConfig.exclude {
+  border: 1px solid #b414dc;
+  background-color: #b414dc;
+}
+.CFConfig.super_ng {
+  border: 1px solid #dc1489;
+  background-color: #dc1489;
+}
+.CFConfig.super_user {
+  border: 1px solid #dc148f;
+  background-color: #dc148f;
+}

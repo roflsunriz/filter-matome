@@ -1,0 +1,32 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+#背景画像指定（視聴ページ用）を有効化するときはマトリックス・コード（視聴ページ用）を無効化
+[Replace]
+Name = 背景画像指定（視聴ページ用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- ページ整形 背景画像指定 --->
+<link rel="stylesheet" type="text/css" href="/local/CustomFilters/WatchPageMisc/css/watchBackground.css" charset="utf-8">
+<!--- End of ページ整形 背景画像指定 --->
+$2
+>
+
+#マトリックス・コード（視聴ページ用）を有効化するときは背景画像指定（視聴ページ用）を無効化
+#[Replace]
+Name = マトリックス・コード（視聴ページ用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- ページ整形 Matrix Rain --->
+<link rel="stylesheet" type="text/css" href="/local/CustomFilters/WatchPageMisc/css/watchBackgroundMatrix.css" charset="utf-8">
+<script type="text/javascript" src="/local/CustomFilters/WatchPageMisc/js/watchMatrixRain.js" charset="utf-8"></script>
+<!--- End of ページ整形 Matrix Rain --->
+$2
+>

@@ -1,0 +1,26 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+#Requires CustomCommon/common.js
+[Replace]
+Name = Link And Status（ニコニコ動画全体用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/.*
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- Link And Status（ニコニコ動画全体用） --->
+<script type="module" src="/local/CustomFilters/LinkAndStatus/handlers/handleOtherPage.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/LinkAndStatus/handlers/handleWatchPage.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/LinkAndStatus/util/cacheUtil.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/LinkAndStatus/util/durationUtil.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/LinkAndStatus/util/fetchUtil.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/LinkAndStatus/util/uiUtil.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/LinkAndStatus/util/videoUtil.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/LinkAndStatus/util/debugUtil.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/LinkAndStatus/util/DragEvents.js" charset="utf-8"></script>
+<script type="module" src="/local/CustomFilters/LinkAndStatus/main.js" charset="utf-8"></script>
+<link rel="stylesheet" type="text/css" href="/local/CustomFilters/LinkAndStatus/css/linkAndStatus.css" charset="utf-8">
+<!--- End of Link And Status（ニコニコ動画全体用） --->
+$2
+>

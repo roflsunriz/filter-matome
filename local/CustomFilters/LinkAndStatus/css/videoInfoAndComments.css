@@ -1,0 +1,34 @@
+.copy,
+.comment_id,
+.comment_no,
+.vposMs,
+.formatted-vposMs,
+.comment_body,
+.comment_commands,
+.userId,
+.isPremium,
+.score,
+.postedAt,
+.formatted-postedAt,
+.nicoruCount,
+.nicoruId,
+.source,
+.isMyPost {
+  display: inline;
+}
+
+#ext_decoded_results,
+#nv_decoded_results.Active {
+  position: relative;
+  left: 30%;
+  width: 700px;
+  border-width: 1px;
+  border-color: black;
+  border-style: solid;
+}
+
+#estimateProcessingTime,
+#nvCommentExec {
+  position: relative;
+  left: 41vw;
+}
