@@ -1,0 +1,34 @@
+# NicoCache filter matome gitignore
+
+# VS Code settings
+.vscode/
+
+# Temp files
+*~
+*.bak
+*.tmp
+
+# nlFilters - 管理対象外のファイル
+/nlFilters/*
+!/nlFilters/1[0-9][0-9]_*
+!/nlFilters/resources/
+/nlFilters/resources/*
+!/nlFilters/resources/*.avif
+!/nlFilters/resources/*.png
+!/nlFilters/resources/*.ico
+
+# local - 管理対象外のファイル
+/local/*
+!/local/CustomCache/
+!/local/CustomCommon/
+!/local/CustomFilters/
+!/local/CustomMylist2/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
