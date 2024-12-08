@@ -32,3 +32,7 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# CommentFilterLoggerは除外しないように設定するのじゃ
+!extensions/CommentFilterLogger.class
+!extensions/CommentFilterLogger.java
