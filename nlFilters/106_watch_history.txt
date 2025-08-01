@@ -1,0 +1,17 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+#ニコニコ動画の視聴履歴トラッカーを提供する。
+#Requires common.es.js
+[Replace]
+Name = Watch History（ニコニコ動画視聴ページ用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/.*
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- Watch History（ニコニコ動画視聴ページ用） --->
+<script type="module" src="/local/features/dist/watch-tracker.es.js" charset="utf-8"></script>
+<!--- End of Watch History（ニコニコ動画視聴ページ用） --->
+$2
+>

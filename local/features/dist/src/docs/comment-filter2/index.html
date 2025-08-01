@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CommentFilter2 - README</title>
+    
+    <!-- ライブラリ -->
+    <!-- End of ライブラリ -->
+    
+    <!-- Comment Filter2 Documentation（専用ページ） -->
+    <!-- End of Comment Filter2 Documentation（専用ページ） -->
+    <script type="module" crossorigin src="/local/features/dist/comment-filter2-docs.es.js"></script>
+  </head>
+  <body>
+    <div id="headerContainer"></div>
+    <div class="parent">
+      <div class="CFExplanation1">
+        <summary>設定画面説明</summary>
+        <img id="screenshot" src="https://www.nicovideo.jp/local/images/comment-filter2.avif" />
+      </div>
+      <div class="CFExplanation2">
+        <summary>各項目の設定方法</summary>
+        <div class="rule-section">
+          <h3>ルール形式について</h3>
+          <p>CommentFilter2は<strong>JSON Lines形式</strong>でルールを管理・実行します。</p>
+          <ul>
+            <li><strong>JSON Lines形式</strong>: 実際のフィルタリングに使用される形式</li>
+            <li><strong>CSV形式</strong>: 従来形式からの移行（マイグレーション）専用</li>
+          </ul>
+          <p><strong>重要：</strong>CSV形式のルールは自動的にJSON Lines形式に変換されてから実行されます。</p>
+        </div>
+
+        <div class="rule-section">
+          <h3>JSON Lines形式（メイン形式）<img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/new_releases.svg" alt="new_releases" loading="lazy" /></h3>
+          <p>CommentFilter2で実際に使用される形式です。1行に1つのJSONオブジェクトを記述します。</p>
+          
+          <h4>基本構造</h4>
+          <div class="example-box">
+            <pre><code>{
+  "pattern": "正規表現パターン",
+  "flags": "gi",
+  "action": {"type": "replace", "replacement": "置換後文字列"},
+  "smid": ["ALL"],
+  "enabled": true
+}</code></pre>
+          </div>
+
+          <h4>パターンマッチングルール</h4>
+          <div class="example-box">
+            <strong>正規表現ルール：</strong>
+            <pre><code>{"pattern": "バカ|アホ", "flags": "gi", "action": {"type": "replace", "replacement": "***"}, "smid": ["ALL"]}</code></pre>
+            <strong>ユーザーIDルール：</strong>
+            <pre><code>{"userId": "TKAF1N8IB3c8D0WJ3l8xixNrwyQ", "action": {"type": "hide"}, "smid": ["ALL"]}</code></pre>
+          </div>
+
+          <h4>アクションタイプ</h4>
+          <ul>
+            <li><strong>hide</strong>: コメントを非表示にする
+              <pre><code>{"action": {"type": "hide"}}</code></pre>
+            </li>
+            <li><strong>replace</strong>: コメントを置換する（正規表現ルールのみ対応）
+              <pre><code>{"action": {"type": "replace", "replacement": "置換後文字列"}}</code></pre>
+            </li>
+            <li><strong>unspecified</strong>: 未指定（デフォルト動作、ニコる数条件との組み合わせ専用）
+              <pre><code>{"action": {"type": "unspecified"}}</code></pre>
+            </li>
+          </ul>
+
+          <div class="example-box" style="background-color: #fff3cd; border-color: #ffeaa7;">
+            <h4><img class="material-icon icon-dark" src="/local/images/material-design-icons/outlined/edit.svg" alt="edit" loading="lazy" /> 重要な制限事項</h4>
+            <ul>
+              <li><strong>ユーザーIDルール</strong>は「hide（非表示）」と「unspecified（除外のみ）」のみ対応しています</li>
+              <li><strong>replace（置換）</strong>は正規表現ルールでのみ利用可能です</li>
+              <li><strong>unspecified（除外のみ）</strong>はニコる数条件と同時に設定することを前提としており、単独では意味がありません</li>
+            </ul>
+          </div>
+
+          <h4>SMID指定</h4>
+          <ul>
+            <li><strong>全動画対象：</strong><code>"smid": ["ALL"]</code></li>
+            <li><strong>特定動画のみ：</strong><code>"smid": ["sm1234567890"]</code></li>
+            <li><strong>複数動画：</strong><code>"smid": ["sm1234567890", "sm0987654321"]</code></li>
+          </ul>
+
+          <h4>ニコる条件（オプション）</h4>
+          <div class="example-box">
+            <strong>指定数以上で除外：</strong>
+            <pre><code>"nicoru_cond": {"op": "&gt;=", "value": 5, "mode": "exclude"}</code></pre>
+            <strong>範囲指定：</strong>
+            <pre><code>"nicoru_cond": {"op": "range", "value": [3, 10], "mode": "include"}</code></pre>
+          </div>
+          <ul>
+            <li><strong>演算子：</strong><code>=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>, <code>range</code></li>
+            <li><strong>モード：</strong><code>include</code>（条件に合致するもののみ）, <code>exclude</code>（条件に合致するものを除外）</li>
+          </ul>
+
+          <h4>その他のオプション</h4>
+          <ul>
+            <li><strong>enabled</strong>: ルールの有効/無効（デフォルト: true）</li>
+            <li><strong>description</strong>: ルールの説明文</li>
+            <li><strong>id</strong>: ルールの一意識別子</li>
+            <li><strong>flags</strong>: 正規表現フラグ（デフォルト: "gi"）</li>
+          </ul>
+
+          <h4>完全な例</h4>
+          <div class="example-box">
+            <pre><code>// コメント行（// または # で開始）
+{"pattern": "荒らし|スパム", "flags": "gi", "action": {"type": "hide"}, "smid": ["ALL"], "description": "荒らしコメント除去"}
+{"userId": "TKAF1N8IB3c8D0WJ3l8xixNrwyQ", "action": {"type": "hide"}, "smid": ["sm1234567890"], "nicoru_cond": {"op": "&lt;", "value": 3, "mode": "include"}}
+{"pattern": "草+", "flags": "g", "action": {"type": "replace", "replacement": "w"}, "smid": ["ALL"], "enabled": false}</code></pre>
+          </div>
+        </div>
+
+        <div class="rule-section">
+          <h3>CSV形式（マイグレーション専用）</h3>
+          <p><strong>注意：</strong>CSV形式は従来形式からの移行専用です。実際のフィルタリングはJSON Lines形式で実行されます。</p>
+          <p><code>/正規表現/,/置換後表現/,SMID,ニコる数</code> の順番で入力します。</p>
+          <div class="example-box">
+            <strong>例：</strong><code>/置換したいコメント/,/置換された後のコメント/,sm1234567890,3</code>
+          </div>
+          <ul>
+            <li><strong>置換後表現：</strong>置換したいものがないときは <code>/EMPTY/</code> を指定</li>
+            <li><strong>SMID：</strong>特定の動画でのみ動作させる場合に指定。全動画対象の場合は <code>ALL</code></li>
+            <li><strong>ニコる数：</strong>指定した数以上のニコる数を持つコメントをフィルターから除外。指定なしの場合は <code>EMPTY</code></li>
+          </ul>
+          <div class="example-box">
+            <strong>全動画対象の例：</strong><code>/正規表現/,/EMPTY/,ALL,EMPTY</code><br>
+            → 正規表現にマッチするコメントを非表示、全動画対象、全ニコる数対象
+          </div>
+          
+          <div class="example-box" style="background-color: #fff3cd; border-color: #ffeaa7;">
+            <h4><img class="material-icon icon-dark" src="/local/images/material-design-icons/outlined/edit.svg" alt="edit" loading="lazy" /> 複雑な正規表現の入力方法（NEW!）</h4>
+            <p><strong>量指定子（{1,10}など）を含む正規表現</strong>は、ダブルクォートで囲んで入力してください：</p>
+            <ul>
+              <li><code>"/(([^\\]{1,10}?))(?:\\2){3,}(?=[^\\]*)/",/草/,ALL,EMPTY</code></li>
+              <li><code>"/test{1,5}pattern/",/置換/,sm1234567890,EMPTY</code></li>
+            </ul>
+            <p><strong>ダブルクォート自体を含む場合</strong>は二重化してください：</p>
+            <ul>
+              <li><code>"正規表現内で""クォート""を使用",置換後,ALL,EMPTY</code></li>
+            </ul>
+            <p>これにより「unterminated parenthetical」エラーが解消されます。</p>
+            
+            <h5><img class="material-icon icon-dark" src="/local/images/material-design-icons/outlined/rocket_launch.svg" alt="rocket_launch" loading="lazy" /> 正規表現フラグ（オプション）の指定方法</h5>
+            <p>正規表現には以下のフラグを指定できます（完全なES6+対応）：</p>
+            <ul>
+              <li><strong>g</strong>: グローバル検索（複数回マッチ）</li>
+              <li><strong>i</strong>: 大文字小文字を区別しない</li>
+              <li><strong>m</strong>: 複数行モード（^と$が行の始まり・終わりにマッチ）</li>
+              <li><strong>u</strong>: Unicode モード（正しいUnicode処理）</li>
+              <li><strong>y</strong>: sticky モード（前回マッチした位置から継続検索）</li>
+              <li><strong>s</strong>: dotAll モード（.が改行文字にもマッチ）</li>
+              <li><strong>d</strong>: hasIndices モード（マッチした位置情報を取得）</li>
+            </ul>
+            <p><strong>フラグの使用例：</strong></p>
+            <ul>
+              <li><code>/test/gi,/置換/,ALL,EMPTY</code> （大文字小文字無視 + グローバル）</li>
+              <li><code>"/pattern{1,3}/imu",/結果/,sm123,EMPTY</code> （複数フラグ + クォート囲み）</li>
+              <li><code>/\\\\s+/gms,/EMPTY/,ALL,EMPTY</code> （空白行除去 + 複数行 + dotAll）</li>
+              <li><code>/😀+/gu,/笑/,ALL,EMPTY</code> （絵文字 + Unicode + グローバル）</li>
+            </ul>
+            <div style="background-color: #e8f4fd; padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0;">
+              <strong><img class="material-icon icon-dark" src="/local/images/material-design-icons/outlined/lightbulb.svg" alt="lightbulb" loading="lazy" /> フラグの組み合わせのコツ：</strong>
+              <ul>
+                <li><code>gi</code>: 最も一般的（大文字小文字無視 + 全体検索）</li>
+                <li><code>gim</code>: 複数行テキストに対応</li>
+                <li><code>giu</code>: 日本語や絵文字を含む場合におすすめ</li>
+                <li><code>gims</code>: 改行を含む複雑なパターンマッチング</li>
+              </ul>
+            </div>
+            <p><strong>※</strong> フラグを省略した場合は自動的に「gi」が適用されます。重複フラグや無効フラグは自動的に正規化されます。</p>
+          </div>
+        </div>
+        
+        <div class="rule-section">
+          <h3>CSV形式 - NGユーザールール</h3>
+          <p><code>@ユーザーID,SMID,ニコる数</code> の順番で入力します。</p>
+          <div class="example-box">
+            <strong>例：</strong><code>@ユーザーID,sm1234567890,3</code><br>
+            → 指定ユーザーのコメントを非表示、特定動画のみ、ニコる数3以上は除外
+          </div>
+          <ul>
+            <li><strong>SMID：</strong>特定の動画でのみ動作させる場合に指定。全動画対象の場合は <code>ALL</code></li>
+            <li><strong>ニコる数：</strong>指定した数以上のニコる数を持つコメントをフィルターから除外。指定なしの場合は <code>EMPTY</code></li>
+          </ul>
+          <div class="example-box">
+            <strong>全動画対象の例：</strong><code>@ユーザーID,ALL,EMPTY</code><br>
+            → 指定ユーザーのコメントを非表示、全動画対象、全ニコる数対象
+          </div>
+          
+          <div class="example-box" style="background-color: #fff3cd; border-color: #ffeaa7;">
+            <h4><img class="material-icon icon-dark" src="/local/images/material-design-icons/outlined/edit.svg" alt="edit" loading="lazy" /> ユーザーIDルールの制限</h4>
+            <p><strong>ユーザーIDルール</strong>（CSV形式の@ユーザーID、JSON形式のuserIdルール）は<strong>非表示（hide）のみ</strong>対応しています。置換（replace）機能は利用できません。</p>
+          </div>
+        </div>
+
+          <h4>CSV形式からの移行</h4>
+          <p>既存のCSV形式ルールは自動的にJSON Lines形式に変換されます。インポート時に自動判定・変換が行われます。</p>
+          <div class="example-box">
+            <strong>CSV:</strong> <code>/バカ/,/アホ/,ALL,5</code><br>
+            <strong>JSON Lines:</strong> <code>{"pattern": "バカ", "flags": "gi", "action": {"type": "replace", "replacement": "アホ"}, "smid": ["ALL"], "nicoru_cond": {"op": "&gt;=", "value": 5, "mode": "exclude"}}</code>
+          </div>
+        </div>
+      </div>
+      <div class="CFExplanation3">
+        <summary>コメントコマンド一覧</summary>
+        <p>【大きさ】:big,medium,small【フォント】:defont,gothic,mincho【位置】:ue,naka,shita</p>
+        <p>デフォルト(指定なし)の場合、medium,defont,nakaになる。</p>
+        <p>【色】: &lt;一般+プレミアム&gt;</p>
+        <p>
+          <span class="CFOwnColor white">white</span>, <span class="CFOwnColor red">red</span>, <span class="CFOwnColor pink">pink</span>, <span class="CFOwnColor orange">orange</span>,
+          <span class="CFOwnColor yellow">yellow</span>, <span class="CFOwnColor green">green</span>, <span class="CFOwnColor cyan">cyan</span>, <span class="CFOwnColor blue">blue</span>,
+          <span class="CFOwnColor purple">purple</span>, <span class="CFOwnColor black">black</span>,
+        </p>
+        <p>&lt;プレミアム&gt;</p>
+        <p>
+          <span class="CFOwnColor white2">white2</span>, <span class="CFOwnColor red2">red2</span>, <span class="CFOwnColor pink2">pink2</span>, <span class="CFOwnColor orange2">orange2</span>,
+          <span class="CFOwnColor yellow2">yellow2</span>, <span class="CFOwnColor green2">green2</span>, <span class="CFOwnColor cyan2">cyan2</span>, <span class="CFOwnColor blue2">blue2</span>,
+          <span class="CFOwnColor purple2">purple2</span>, <span class="CFOwnColor black2">black2</span>,#16進数(HEX)で指定する色※1
+        </p>
+        <p>【半透明】:_live【非表示】:invisible</p>
+        <p>【横幅の長い固定コメントの縮小幅を、16:9画面の幅に合わせる。4:3動画でも適用可。】:full</p>
+        <p>【改行によるリサイズを適用しない】:ender</p>
+        <p>【このコマンドをつけたコメントが表示されなくなるタイミングを従来の方式に変更する ※2】:patissier</p>
+        <p>【ニコられてもコメントが消えにくくならないようにする。】:ca</p>
+        <p>【入力例】: small,gothic,_live,<span class="CFOwnColor HEXblue">#004e72</span></p>
+        <p><a class="NGCPLink" href="https://qa.nicovideo.jp/faq/show/7386" target="_blank">動画視聴ページで利用可能なニコスクリプト | ニコニコヘルプ</a></p>
+        <p>
+          <a class="NGCPLink" href="https://dic.nicovideo.jp/a/%E3%82%B3%E3%83%9E%E3%83%B3%E3%83%89#h2-1" target="_blank">コマンドとは [単語記事] - ニコニコ大百科</a>
+        </p>
+        <p>※既定で全てのコメントコマンドは事前に削除されています。</p>
+        <p>
+          ※1:<span class="CFOwnColor white2">white2</span>や<span class="CFOwnColor red2">red2</span
+          >といった<b>末尾に2が付く文字色と#16進数(HEX)で指定する色は適用先のプレミアム会員ステータス(isPremium)がtrueであれば適用される</b>ようです。
+        </p>
+        <p>
+          ※2:従来は、動画時間nでn&lt;1分=100コメント、1分≦n&lt;5分=250コメント、5分≦n&lt;10分=500コメント、10分≦n=1000コメントが動画全体で保持される仕様でした。現在はこれに加えて1分/100コメントが追加で保持されています。この追加分から弾くのがこのコマンドです。
+        </p>
+      </div>
+
+      <div class="CFExplanation4">
+        <summary>正規表現とファイル形式について</summary>
+        <div class="rule-section">
+          <h3>正規表現について</h3>
+          <p>
+            <a class="NGCPLink" href="https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_expressions/Cheatsheet" target="_blank">正規表現</a>可。(ユーザーIDは正規表現<b>不可</b>。)正規表現の特殊キーワードを文字として扱う場合はエスケープしてください。例えば<code>.</code>をエスケープする場合<code>\.</code>としてください。
+          </p>
+          <p><strong>CSV形式での重要な注意：</strong>量指定子（<code>{1,10}</code>など）を含む正規表現は、全体をダブルクォートで囲んで入力してください。</p>
+          <p><strong>JSON Lines形式では：</strong>正規表現は文字列として記述するため、エスケープが必要です。例：<code>"pattern": "\\d{1,3}"</code></p>
+        </div>
+
+        <div class="rule-section">
+          <h3>ファイル形式の自動判定</h3>
+          <p>CommentFilter2は以下の形式を自動判定します：</p>
+          <ul>
+            <li><strong>.jsonl</strong>: JSON Lines形式</li>
+            <li><strong>.json</strong>: JSON形式（コレクション）</li>
+            <li><strong>.csv</strong>: CSV形式（従来形式）</li>
+          </ul>
+          <p>ファイル拡張子に関係なく、内容から自動判定されるため、どの拡張子でも使用可能です。</p>
+        </div>
+
+        <div class="rule-section">
+          <h3>エクスポート・インポート機能</h3>
+          <ul>
+            <li><strong>エクスポート</strong>: 現在のルールをJSON Lines形式でダウンロード</li>
+            <li><strong>インポート</strong>: CSV、JSON Lines、JSON形式のファイルを読み込み</li>
+            <li><strong>自動変換</strong>: CSV形式は自動的にJSON Lines形式に変換されてから実行されます</li>
+          </ul>
+          <p><strong>重要：</strong>すべてのルールは最終的にJSON Lines形式で管理・実行されます。</p>
+        </div>
+        </p>
+        <p><a class="NGCPLink" href="https://rubular.com/" target="_blank">正規表現のテスト - Rubular</a></p>
+        <p><a class="NGCPLink" href="https://jex.im/regulex/" target="_blank">正規表現の視覚化 - Regulex</a></p>
+        <p><a class="NGCPLink" href="https://w.atwiki.jp/nicocachenlwiki/pages/19.html" target="_blank">正規表現(regex) - NicoCache_nl Wiki (新)</a></p>
+        <p>
+          <a class="NGCPLink" href="https://dic.nicovideo.jp/a/ng%E6%8E%A8%E5%A5%A8%E3%83%AF%E3%83%BC%E3%83%89%E3%81%AE%E4%B8%80%E8%A6%A7" target="_blank"
+            >NG推奨ワードの一覧とは (エヌジースイショウワードノイチランとは) [単語記事] - ニコニコ大百科</a
+          >
+        </p>
+        <p>
+          テキストエリアにフォーカスがある状態でキーボードの<span class="CFKeyboard">PgUp</span>/<span class="CFKeyboard">PgDn</span>でスクロール可能です。キーボードの<span class="CFKeyboard">Home</span>/<span
+            class="CFKeyboard"
+            >End</span
+          >で文頭/文末に飛べます。<a class="NGCPLink" href="https://funny.hiroshima.jp/blog/5494/" target="_blank">その他ショートカット</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

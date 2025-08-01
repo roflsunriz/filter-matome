@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>概要情報とコメント</title>
+    
+    <!-- ライブラリ -->
+    <script type="module" src="../common/index.ts" charset="utf-8"></script>
+    <!-- End of ライブラリ -->
+    
+    <!-- Media Info（専用ページ） -->
+    <script type="module" src="./main-controller.ts" charset="utf-8"></script>
+    <!-- End of Media Info（専用ページ） -->
+  </head>
+  <body>
+    <div id="externalDecodedResults">
+      <h2 id="video-info-title"></h2>
+      <div id="videoInfoTemplate">
+        <p>Status: <span id="api-status"></span></p>
+
+        <p>"title": <span id="video-title"></span></p>
+        <button
+          class="copy"
+          data-type="title"
+          onClick="copy_ext(event)"
+        >
+          <span class="copy-icon" data-icon="content_copy"></span>
+          Copy Title
+        </button>
+
+        <p>"video_id": <span id="video-id"></span></p>
+        <button
+          class="copy"
+          data-type="videoId"
+          onClick="copy_ext(event)"
+        >
+          <span class="copy-icon" data-icon="content_copy"></span>
+          Copy VideoId
+        </button>
+
+        <p>"description": <span id="video-description"></span></p>
+
+        <p>"thumbnail_Url": <span id="thumbnail-url"></span></p>
+        <p>"thumbnail_Url_Link": <a id="thumbnail-link" href="">
+          <span class="link-icon" data-icon="open_in_new"></span>
+          Thumbnail Link
+        </a></p>
+        <p><img id="thumbnail-img" src="" alt="サムネイル画像" /></p>
+        <button
+          class="copy"
+          data-type="thumbnailUrl"
+          onClick="copy_ext(event)"
+        >
+          <span class="copy-icon" data-icon="content_copy"></span>
+          Copy Thumbnail Link
+        </button>
+
+        <p>"first_retrieve": <span id="first-retrieve"></span></p>
+        <p id="length">"length": <span id="video-length"></span></p>
+        <p>"movie_type": <span id="movie-type"></span></p>
+        <p>"size_high": <span id="size-high"></span></p>
+        <p>"size_low": <span id="size-low"></span></p>
+        <p>"view_counter": <span id="view-counter"></span></p>
+        <p id="comment_num">"comment_num": <span id="comment-num"></span></p>
+        <p>"mylist_counter": <span id="mylist-counter"></span></p>
+        <p>"last_res_body": <span id="last-res-body"></span></p>
+
+        <p>"watch_url": <span id="watch-url"></span></p>
+        <p>"watch_Url_Link": <a id="watch-link" href="">
+          <span class="link-icon" data-icon="open_in_new"></span>
+          Watch Link
+        </a></p>
+        <button
+          class="copy"
+          data-type="watchUrl"
+          onClick="copy_ext(event)"
+        >
+          <span class="copy-icon" data-icon="content_copy"></span>
+          Copy Watch Link
+        </button>
+
+        <p>"watch_Url_Link_Shorten": <a id="watch-link-short" href="">
+          <span class="link-icon" data-icon="open_in_new"></span>
+          Watch Link Shorten
+        </a></p>
+        <button
+          class="copy"
+          data-type="watchUrlShort"
+          onClick="copy_ext(event)"
+        >
+          <span class="copy-icon" data-icon="content_copy"></span>
+          Copy Watch Link Shorten
+        </button>
+
+        <p>"thumb_type": <span id="thumb-type"></span></p>
+        <p>"embeddable": <span id="embeddable"></span></p>
+
+        <div class="thumb" width="352" height="202" loading="lazy">
+          <iframe
+            id="video-thumb"
+            width="352"
+            height="202"
+            scrolling="no"
+            style="border: solid 1px #ccc"
+            frameborder="0"
+          ></iframe>
+        </div>
+
+        <p>"no_live_play": <span id="no-live-play"></span></p>
+        <p>"tags domain": <span id="tags-domain"></span></p>
+
+        <div id="tags-container">
+          <!-- タグは動的に追加されます -->
+        </div>
+
+        <p>"genre": <span id="genre"></span></p>
+
+        <!-- チャンネル情報 -->
+        <div id="channel-info" style="display: none">
+          <p>"ch_id": <span id="ch-id"></span></p>
+          <p>"ch_name": <span id="ch-name"></span></p>
+          <p>"ch_icon_url": <span id="ch-icon-url"></span></p>
+          <p>"ch_icon_Link": <a id="ch-icon-link" href="">
+            <span class="link-icon" data-icon="open_in_new"></span>
+            Ch Icon Link
+          </a></p>
+          <p><img id="ch-icon-img" src="" alt="チャンネルアイコン" /></p>
+          <button
+            class="copy"
+            data-type="channelIcon"
+            onClick="copy_ext(event)"
+          >
+            <span class="copy-icon" data-icon="content_copy"></span>
+            Copy Channel Icon Link
+          </button>
+        </div>
+
+        <!-- ユーザー情報 -->
+        <div id="user-info" style="display: none">
+          <p>"user_id": <span id="user-id"></span></p>
+          <p>"user_nickname": <span id="user-nickname"></span></p>
+          <p>"user_icon_url": <span id="user-icon-url"></span></p>
+          <p>"user_icon_Link": <a id="user-icon-link" href="">
+            <span class="link-icon" data-icon="open_in_new"></span>
+            User Icon Link
+          </a></p>
+          <p><img id="user-icon-img" src="" alt="ユーザーアイコン" /></p>
+          <button
+            class="copy"
+            data-type="userIcon"
+            onClick="copy_ext(event)"
+          >
+            <span class="copy-icon" data-icon="content_copy"></span>
+            Copy User Icon Link
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="commentSection">
+      <p>
+        <button
+          id="estimateProcessingTime"
+          onClick="EPTWrapper(EstimatedProcessingTime(document.getElementById('comment-num').textContent,document.getElementById('video-length').textContent));"
+        >
+          <span class="action-icon" data-icon="schedule"></span>
+          推定処理時間を計算
+        </button>
+      </p>
+              <button id="nicovideoCommentExec">
+          <span class="action-icon" data-icon="comment"></span>
+          コメントを取得して表示する(重いです)
+        </button>
+
+      <div id="nicovideoDecodedResults">
+        <!-- コメント情報のテンプレート -->
+        <div id="commentTemplate" style="display: none">
+          <p>コメントId <span id="comment-thread-url"></span> より NGID用</p>
+          <p>Thread Id: <span id="thread-id"></span></p>
+
+          <div id="comments-container">
+            <!-- コメントが動的に追加される場所 -->
+          </div>
+
+          <div class="json_length">
+            <span>json raw data length: </span><span id="json-length"></span>
+            <div>
+              <div class="userId_length">
+                <span>userId length: </span><span id="userid-length"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
