@@ -62,8 +62,8 @@ jobs:
           cp README.md release/NicoCache_nl/
           cp LICENSE release/NicoCache_nl/
           
-          # ルートフォルダの重要ファイルをコピー
-          cp mime.types release/NicoCache_nl/ || echo "Warning: mime.types not found in root"
+          # mime.typesをコピー
+          cp local/mime.types release/NicoCache_nl/local/ || echo "Warning: mime.types not found in local folder"
           
           # 空フォルダを確実に含めるため.gitkeepファイルを作成
           touch release/NicoCache_nl/local/cache/.gitkeep || true
