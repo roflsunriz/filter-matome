@@ -59,6 +59,14 @@ jobs:
           cp README.md release/NicoCache_nl/
           cp LICENSE release/NicoCache_nl/
           
+          # ルートフォルダの重要ファイルをコピー
+          cp mime.types release/NicoCache_nl/ || echo "Warning: mime.types not found in root"
+          cp config.properties release/NicoCache_nl/ || echo "Warning: config.properties not found"
+          cp proxy.pac release/NicoCache_nl/ || echo "Warning: proxy.pac not found"
+          
+          # 空フォルダを確実に含めるため.gitkeepファイルを作成
+          touch release/NicoCache_nl/local/cache/.gitkeep || true
+          
           # extensionsフォルダの特定ファイルをコピー（コンパイル不要）
           cp extensions/CommentFilterLogger.java release/NicoCache_nl/extensions/ || echo "Warning: CommentFilterLogger.java not found"
           cp extensions/CommentFilterLogger.class release/NicoCache_nl/extensions/ || echo "Warning: CommentFilterLogger.class not found"
@@ -69,14 +77,19 @@ jobs:
           cp extensions/ExtUtil.java release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.java not found"
           cp extensions/ExtUtil.class release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.class not found"
           
-          # 開発用ファイルを除外
+          # 開発用ファイルを除外（ただし、開発環境構築に必要なpackage.json等は保持）
           find release/NicoCache_nl -name "node_modules" -type d -exec rm -rf {} + || true
           find release/NicoCache_nl -name "*.map" -type f -delete || true
-          find release/NicoCache_nl -name "package.json" -type f -delete || true
-          find release/NicoCache_nl -name "package-lock.json" -type f -delete || true
+          # package.json, package-lock.jsonは開発環境構築に必要なので削除しない
+          # find release/NicoCache_nl -name "package.json" -type f -delete || true
+          # find release/NicoCache_nl -name "package-lock.json" -type f -delete || true
           find release/NicoCache_nl -name "tsconfig.json" -type f -delete || true
           find release/NicoCache_nl -name ".eslintrc.json" -type f -delete || true
           find release/NicoCache_nl -name "playwright.config.ts" -type f -delete || true
+          
+          # テスト関連ファイルは除外
+          find release/NicoCache_nl -name "tests" -type d -exec rm -rf {} + || true
+          find release/NicoCache_nl -name "tests-examples" -type d -exec rm -rf {} + || true
           
           # アーカイブを作成
           cd release
@@ -100,8 +113,15 @@ jobs:
           echo "### 🔄 導入方法" >> release_notes.md
           echo "1. 既存のNicoCache_nlのバックアップを作成" >> release_notes.md
           echo "2. ダウンロードしたアーカイブを展開" >> release_notes.md
-          echo "3. \`nlFilters\`と\`local\`フォルダを上書きコピー" >> release_notes.md
-          echo "4. ブラウザでハード再読み込み（Ctrl+F5）" >> release_notes.md
+          echo "3. \`nlFilters\`, \`local\`, \`extensions\`フォルダを上書きコピー" >> release_notes.md
+          echo "4. 必要に応じて\`mime.types\`, \`config.properties\`, \`proxy.pac\`を上書きコピー" >> release_notes.md
+          echo "5. ブラウザでハード再読み込み（Ctrl+F5）" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### 🛠️ 開発環境の構築" >> release_notes.md
+          echo "1. Node.js と npm をインストール" >> release_notes.md
+          echo "2. \`cd local/features && npm install\` でフィーチャー開発環境を構築" >> release_notes.md
+          echo "3. \`cd local/nl-media-info && npm install\` でメディア情報機能の開発環境を構築" >> release_notes.md
+          echo "4. 各フォルダの README.md を参照してビルド・開発を開始" >> release_notes.md
           echo "" >> release_notes.md
           echo "### ⚠️ 注意事項" >> release_notes.md
           echo "- 更新前に各機能の設定をエクスポートすることを推奨" >> release_notes.md

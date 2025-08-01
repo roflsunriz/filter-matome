@@ -119,10 +119,10 @@ playwright.config.ts
 # ========================================
 # メディアファイル（管理対象外）
 # ========================================
-images/
-background-images/
+# images/  # local/images/は管理対象なのでコメントアウト
+# background-images/  # local/background-images/は管理対象なのでコメントアウト
 *.gif
-*.svg
+# *.svg  # local/fallback-thumbnail.svgは管理対象なのでコメントアウト
 *.jpg
 *.jpeg
 *.png
@@ -148,7 +148,7 @@ nl_cacheIcon.css
 # データファイル
 # ========================================
 *.json
-mime.types*
+# mime.types*  # local/mime.typesは管理対象なのでコメントアウト
 *.default
 
 # ========================================
