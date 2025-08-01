@@ -1,10 +1,10 @@
-# NicoCache_nl
+# filter-matome
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub release](https://img.shields.io/github/release/NicoCache_nl/NicoCache_nl.svg)](https://github.com/NicoCache_nl/NicoCache_nl/releases)
-[![Latest Version](https://img.shields.io/badge/latest-%23188-blue)](https://github.com/NicoCache_nl/NicoCache_nl/releases/latest)
+[![GitHub release](https://img.shields.io/github/release/roflsunriz/filter-matome.svg)](https://github.com/roflsunriz/filter-matome/releases)
+[![Latest Version](https://img.shields.io/badge/latest-%23188-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
 
-**NicoCache_nl**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、カスタムマイリスト、動画プレイヤー拡張など、多彩な機能を提供します。
+**filter-matome**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、カスタムマイリスト、動画プレイヤー拡張など、多彩な機能を提供します。
 
 ## ✨ 主な機能
 
@@ -217,4 +217,4 @@ git push origin "#189"
 
 ---
 
-**⚡ 高速・高機能・高カスタマイズ性 - NicoCache_nlでニコニコ動画を最大限に活用しましょう！**
+**⚡ 高速・高機能・高カスタマイズ性 - filter-matomeでニコニコ動画を最大限に活用しましょう！**

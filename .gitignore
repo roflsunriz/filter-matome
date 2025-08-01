@@ -47,12 +47,12 @@ certs/
 *.txt
 documents/
 Readme_*.txt
-autoUpdater.md
-config_editor.md
-convert_any_to_h264.md
-easyScripts.md
-mp4RenameFromExtThumb.md
-nicocache_utiliity.md
+README.autoUpdater.md
+README.config_editor.md
+README.convert_any_to_h264.md
+README.easyScripts.md
+README.mp4RenameFromExtThumb.md
+README.nicocache_utility.md
 
 # ========================================
 # ライブラリ・外部ツール
