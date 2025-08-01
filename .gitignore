@@ -47,6 +47,12 @@ certs/
 *.txt
 documents/
 Readme_*.txt
+autoUpdater.md
+config_editor.md
+convert_any_to_h264.md
+easyScripts.md
+mp4RenameFromExtThumb.md
+nicocache_utiliity.md
 
 # ========================================
 # ライブラリ・外部ツール
