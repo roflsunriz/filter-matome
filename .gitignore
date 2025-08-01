@@ -1,20 +1,109 @@
-# Node.js dependencies
-node_modules/
+# ========================================
+# NicoCache_nl Git管理設定
+# 管理対象：local/, nlFilters/の一部のみ
+# ========================================
 
-# Build artifacts and cache
-cache/
-*.log
-
-# IDE and editor files
-.vscode/
+# ========================================
+# Eclipse/IDE関連ファイル
+# ========================================
+.classpath
+.project
+.settings/
+.externalToolBuilders/
 *.code-workspace
+.vscode/
 
-# Temporary and backup files
+# ========================================
+# バッチファイル・スクリプト
+# ========================================
+*.bat
+*.sh
+*.vbs
+*.pyw
+*.py
+easy_*.ps1
+
+# ========================================
+# Java関連ファイル
+# ========================================
+*.jar
+*.jar.old
+*.jar.sig
+build.xml
+*.class
+
+# ========================================
+# 設定・データディレクトリ
+# ========================================
+config.*
+data/
+defaults/
+certs/
+.mp4_cache
+
+# ========================================
+# ドキュメント・README
+# ========================================
+*.txt
+README*.md
+documents/
+Readme_*.txt
+
+# ========================================
+# ライブラリ・外部ツール
+# ========================================
+lib/
+extensions/
+others/
+link/
+filter-matome/
+nlFilters-Syntax-HighLighter/
+
+# ========================================
+# キャッシュ・一時ファイル
+# ========================================
+cache/
+thcache/
+*.log
 *.bak
 *.tmp
 *.temp
 
-# Media files not in managed directories
+# ========================================
+# ソースコード（管理対象外）
+# ========================================
+src/
+
+# ========================================
+# アイコン・実行ファイル
+# ========================================
+*.ico
+*.exe
+*.dll
+*.property
+*.pac
+*.sig
+
+# ========================================
+# その他の除外ファイル
+# ========================================
+list/
+tatus
+autoUpdater.pyw
+
+# ========================================
+# Node.js関連（local/内も除外）
+# ========================================
+node_modules/
+package.json
+package-lock.json
+tsconfig.json
+playwright.config.ts
+.eslintrc.json
+
+# ========================================
+# メディアファイル（管理対象外）
+# ========================================
 images/
 background-images/
 *.gif
@@ -24,14 +113,9 @@ background-images/
 *.png
 *.webp
 
-# Configuration files not in managed directories
-tsconfig.json
-package.json
-package-lock.json
-playwright.config.ts
-.eslintrc.json
-
-# JavaScript files not in managed list
+# ========================================
+# JavaScript/HTML/CSS（管理対象外）
+# ========================================
 05_cache_remove_button.js
 15_cached_link_color.js
 20_watchpage.js
@@ -42,51 +126,62 @@ popThumb.js
 script.js
 nlThumbInfoRewriter.js
 overlib_mini.js
-
-# HTML and CSS files not in managed directories
 nllib_xsStorage.html
 nl_cacheIcon.css
 
-# Default and example files
-list.js.default
-mime.types.default
-mime.types
+# ========================================
+# データファイル
+# ========================================
+*.json
+mime.types*
+*.default
 
-# JSON data files
-fetched.json
-fetched.json.bak
-vid2cid.json
+# ========================================
+# local/内の除外設定
+# ========================================
+local/.gitignore
+local/features/.gitignore
+local/features/tests/
+local/features/tests-examples/
+local/features/node_modules/
+local/features/package.json
+local/features/package-lock.json
+local/features/tsconfig.json
+local/features/playwright.config.ts
+local/features/.eslintrc.json
+local/features/features.code-workspace
 
-# Test directories in features
-features/tests/
-features/tests-examples/
-features/node_modules/
-features/package.json
-features/package-lock.json
-features/tsconfig.json
-features/playwright.config.ts
-features/.eslintrc.json
-features/.gitignore
-features/features.code-workspace
+# ========================================
+# nlFilters内の除外設定（100-199以外）
+# ========================================
+nlFilters/01_globalFilter.txt
+nlFilters/05_topBarFilter.txt
+nlFilters/06_topBarが2段になるのを解消.txt
+nlFilters/08_MutationObserverHooks.txt
+nlFilters/10_thumbInfoFilter(ポップアップリンク用).txt
+nlFilters/15_thumbInfoFilter(基本).txt
+nlFilters/15_01_thumbInfoFilter(追加).txt
+nlFilters/15_02_thumbInfoFilter(Nアニメfreeのみ).txt
+nlFilters/20_watchFilter.txt
+nlFilters/99_3列Filter+mod.txt
+nlFilters/dmcキャッシュのアイコンと色を変えないやつ/
+nlFilters/evac/
 
-# Filter files outside the 100-199 range and specific files
-/01_globalFilter.txt
-/05_topBarFilter.txt
-/06_topBarが2段になるのを解消.txt
-/08_MutationObserverHooks.txt
-/10_thumbInfoFilter(ポップアップリンク用).txt
-/15_thumbInfoFilter(基本).txt
-/15_01_thumbInfoFilter(追加).txt
-/15_02_thumbInfoFilter(Nアニメfreeのみ).txt
-/20_watchFilter.txt
-/99_3列Filter+mod.txt
-
-# Directories to exclude
-dmcキャッシュのアイコンと色を変えないやつ/
-evac/
-
-# Keep only specific nlFilters files
-# This .gitignore will include:
-# - resources/ directory
-# - 100_common.txt through 199_readme.html
-# - nlFilters_編集ガイド.md
+# ========================================
+# 管理対象ファイル（明示的に含める）
+# ========================================
+# local/config/
+# local/dist/
+# local/features/config/
+# local/features/dist/
+# local/features/scripts/
+# local/features/src/
+# local/features/README.md
+# local/nl-media-info/
+# local/src/
+# local/list.js
+# local/list.js.map
+# nlFilters/resources/
+# nlFilters/1[0-9][0-9]_*.txt
+# nlFilters/19[8-9]_*.*
+# nlFilters/nlFilters_編集ガイド.md
