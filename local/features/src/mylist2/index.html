@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mylist2</title>
+    
+    <!-- ライブラリ -->
+    <script type="module" src="../common/index.ts" charset="utf-8"></script>
+    <!-- End of ライブラリ -->
+    
+    <!-- マテリアルアイコンスタイル -->
+    <script type="module">
+      import { materialIconsStyles } from '../common/material-icons.js';
+      
+      // スタイルを動的に追加
+      const styleSheet = document.createElement('style');
+      styleSheet.textContent = materialIconsStyles;
+      document.head.appendChild(styleSheet);
+    </script>
+    
+    <!-- マイリスト2（専用ページ） -->
+    <script type="module" src="./index.ts" charset="utf-8"></script>
+    <!-- End of マイリスト2（専用ページ） -->
+    
+    <!-- Service Workerの登録 -->
+    <script>
+      // Service Workerの登録（HTTPS環境またはlocalhost環境でのみ）
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", async () => {
+          // 安全な環境かチェック
+          const isSecureContext = window.isSecureContext || 
+                                 location.protocol === 'https:' || 
+                                 location.hostname === 'localhost' || 
+                                 location.hostname === '127.0.0.1';
+          
+          if (!isSecureContext) {
+            console.warn('Service Worker requires HTTPS or localhost environment. Skipping registration.');
+            return;
+          }
+          
+          try {
+            const registration = await navigator.serviceWorker.register(
+              "/local/features/dist/mylist2-service-worker.js",
+              {
+                scope: "/local/features/dist/"
+              }
+            );
+            
+            console.log('Service Worker registered successfully:', registration);
+            
+            // Service Workerの状態変化を監視
+            registration.addEventListener('updatefound', () => {
+              console.log('Service Worker update found');
+            });
+            
+          } catch (error) {
+            console.error("ServiceWorker registration failed:", error);
+            console.info("This is normal if not running on HTTPS or localhost");
+          }
+        });
+      } else {
+        console.warn('Service Worker is not supported in this browser');
+      }
+    </script>
+    
+    <!-- 折りたたみ可能なコントロール用のCSSをTypeScriptから適用 -->
+  </head>
+  <body>
+    <!-- 共通ヘッダー -->
+    <div id="headerContainer"></div>
+    <div id="Mylist2Manager" class="custom-mylist2-manager">
+      <!-- サイドバー（マイリスト一覧） -->
+      <div class="mylist-sidebar">
+        <div class="mylist-controls">
+          <input type="text" id="newMylistName" placeholder="新規マイリスト名" />
+          <button id="createNewMylist" title="新規マイリスト作成"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/add.svg" alt="add" loading="lazy"/></button>
+        </div>
+        <!-- マイリスト検索エリア -->
+        <div class="search-container">
+          <input type="text" id="mylistSearchInput" placeholder="マイリストを検索..." />
+          <button id="mylistSearchClear" class="search-clear-btn" title="マイリスト検索クリア"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/clear.svg" alt="clear" loading="lazy"/></button>
+        </div>
+        <div class="mylist-sort-controls">
+          <select id="mylistSortType">
+            <option value="name_asc">名前順 (昇順)</option>
+            <option value="name_desc">名前順 (降順)</option>
+            <option value="createdAt_desc">作成日時順 (新しい順)</option>
+            <option value="createdAt_asc">作成日時順 (古い順)</option>
+            <option value="videoCount_desc">動画数順 (多い順)</option>
+            <option value="videoCount_asc">動画数順 (少ない順)</option>
+          </select>
+        </div>
+        <div id="mylistList" class="mylist-list">
+          <!-- マイリストがここに動的に追加される -->
+        </div>
+      </div>
+      <!-- メインコンテンツ（選択中のマイリストの内容） -->
+      <div class="mylist-main">
+        <!-- 選択中のマイリスト情報 -->
+        <!-- ホバーエリア（コントロール表示用） -->
+        <div class="control-hover-area" title="ホバーでコントロールを表示"></div>
+        
+        <!-- 折りたたみ可能なコントロールエリア -->
+        <div class="collapsible-controls">
+          <div class="current-mylist-info">
+            <input type="text" id="currentMylistName" class="mylist-name-edit" />
+            <button id="saveMylistName" class="cml2-btn" title="名前を保存"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/save.svg" alt="save" loading="lazy"/></button>
+            <button id="deleteMylist" class="cml2-btn cml2-btn-danger" title="マイリストを削除"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/delete.svg" alt="delete" loading="lazy"/></button>
+            <div class="import-export-controls">
+              <button id="exportMylist" class="cml2-btn" title="エクスポート"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/file_upload.svg" alt="export" loading="lazy"/></button>
+              <input type="file" id="importFile" accept=".json" style="display: none" />
+              <button id="importMylist" class="cml2-btn" title="インポート"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/file_download.svg" alt="import" loading="lazy"/></button>
+              <div class="controls-toggle-setting">
+                <label for="alwaysShowControls" class="controls-toggle-label">
+                  <input type="checkbox" id="alwaysShowControls" class="controls-toggle-checkbox" />
+                  <span class="controls-toggle-text">常時表示</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <!-- 動画追加フォーム -->
+          <div class="video-add-form">
+            <input type="text" id="videoIdInput" placeholder="動画ID または URL でマイリスト追加" />
+            <button id="addVideo" title="動画追加"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/add.svg" alt="add" loading="lazy"/></button>
+            <input type="text" id="keywordInput" placeholder="キーワードを追加" />
+            <button id="addKeyword" title="キーワード追加"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/add.svg" alt="add" loading="lazy"/></button>
+          </div>
+        </div>
+        
+        <!-- 動画一覧のコントロール（常時表示） -->
+        <div class="video-list-controls always-visible">
+          <select id="videoSortType">
+            <option value="uploadedAt_desc">投稿日時順 (新しい順)</option>
+            <option value="uploadedAt_asc">投稿日時順 (古い順)</option>
+            <option value="title_asc">タイトル順 (昇順)</option>
+            <option value="title_desc">タイトル順 (降順)</option>
+            <option value="viewCount_desc">再生数順 (多い順)</option>
+            <option value="viewCount_asc">再生数順 (少ない順)</option>
+            <option value="commentCount_desc">コメント数順 (多い順)</option>
+            <option value="commentCount_asc">コメント数順 (少ない順)</option>
+            <option value="mylistCount_desc">マイリスト数順 (多い順)</option>
+            <option value="mylistCount_asc">マイリスト数順 (少ない順)</option>
+            <option value="length_desc">再生時間順 (長い順)</option>
+            <option value="length_asc">再生時間順 (短い順)</option>
+            <option value="addedAt_desc">追加日時順 (新しい順)</option>
+            <option value="addedAt_asc">追加日時順 (古い順)</option>
+          </select>
+          <!-- 動画検索エリア -->
+          <div class="search-container">
+            <input type="text" id="videoSearchInput" placeholder="動画を検索..." />
+            <button id="videoSearchClear" class="search-clear-btn" title="動画検索クリア"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/clear.svg" alt="clear" loading="lazy"/></button>
+          </div>
+          <div class="video-selection-controls">
+            <button id="selectAllVideos" class="cml2-btn" title="全て選択"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/check_box.svg" alt="select_all" loading="lazy"/></button>
+            <button id="deselectAllVideos" class="cml2-btn" title="選択解除"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/check_box_outline_blank.svg" alt="deselect_all" loading="lazy"/></button>
+          </div>
+          <div class="bulk-action-controls">
+            <select id="selectedVideosAction">
+              <option value="">選択...</option>
+              <option value="move">移動</option>
+              <option value="copy">コピー</option>
+              <option value="delete">削除</option>
+              <option value="refresh">情報更新</option>
+            </select>
+            <button id="executeSelectedAction" title="実行"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/play_arrow.svg" alt="execute" loading="lazy"/></button>
+          </div>
+        </div>
+        <!-- 動画一覧 -->
+        <div id="videoList" class="video-list">
+          <!-- 動画アイテムのテンプレート -->
+          <template id="videoItemTemplate">
+            <div class="video-item">
+              <input type="checkbox" class="video-select" />
+              <img class="video-thumbnail" src="" alt="サムネイル" />
+              <div class="video-info">
+                <div class="video-title"></div>
+                <div class="video-stats">
+                  <span class="view-count"></span>
+                  <span class="comment-count"></span>
+                  <span class="mylist-count"></span>
+                  <span class="video-length"></span>
+                </div>
+                <div class="video-meta">
+                  <span class="video-author"></span>
+                  <span class="video-upload-date"></span>
+                </div>
+              </div>
+              <div class="video-actions">
+                <button class="move-video" title="移動"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/drive_file_move.svg" alt="move" loading="lazy"/></button>
+                <button class="copy-video" title="コピー"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/content_copy.svg" alt="copy" loading="lazy"/></button>
+                <button class="delete-video" title="削除"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/delete.svg" alt="delete" loading="lazy"/></button>
+                <button class="refresh-video" title="情報更新"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/refresh.svg" alt="refresh" loading="lazy"/></button>
+              </div>
+            </div>
+          </template>
+          <!-- キーワードアイテムのテンプレート -->
+          <template id="keywordItemTemplate">
+            <div class="video-item keyword-item">
+              <input type="checkbox" class="video-select" />
+              <div class="keyword-icon" title="キーワード検索"><img class="material-icon icon-dark" src="/local/images/material-design-icons/outlined/search.svg" alt="search" loading="lazy"/></div>
+              <div class="video-info">
+                <div class="video-title">
+                  <span class="keyword-text"></span>
+                </div>
+                <div class="keyword-meta">
+                  <span class="keyword-added-date"></span>
+                </div>
+                <div class="keyword-links">
+                  <a href="#" class="keyword-search" target="_blank">キーワード検索</a>
+                  <a href="#" class="tag-search" target="_blank">タグ検索</a>
+                  <a href="#" class="mylist-search" target="_blank">マイリスト検索</a>
+                </div>
+              </div>
+              <div class="video-actions">
+                <button class="edit-keyword" title="編集"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/edit.svg" alt="edit" loading="lazy"/></button>
+                <button class="move-keyword" title="移動"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/drive_file_move.svg" alt="move" loading="lazy"/></button>
+                <button class="copy-keyword" title="コピー"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/content_copy.svg" alt="copy" loading="lazy"/></button>
+                <button class="delete-keyword" title="削除"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/delete.svg" alt="delete" loading="lazy"/></button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+    <!-- モーダルウィンドウ（マイリスト選択） -->
+    <div id="mylistSelectModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close" title="閉じる"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/close.svg" alt="close" loading="lazy"/></span>
+        <h2>マイリストを選択</h2>
+        <div id="modalMylistList" class="modal-mylist-list">
+          <!-- マイリスト選択肢がここに動的に追加される -->
+        </div>
+        <div class="modal-actions">
+          <button id="confirmMylistSelection" class="cml2-btn" title="実行"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/play_arrow.svg" alt="execute" loading="lazy"/></button>
+          <button id="cancelMylistSelection" class="cml2-btn cml2-btn-secondary" title="キャンセル"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/close.svg" alt="cancel" loading="lazy"/></button>
+        </div>
+      </div>
+    </div>
+    <!-- 確認ダイアログ -->
+    <div id="confirmDialog" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>確認</h2>
+        <p id="confirmMessage"></p>
+        <div class="modal-actions">
+          <button id="confirmYes" class="cml2-btn cml2-btn-danger">はい</button>
+          <button id="confirmNo" class="cml2-btn cml2-btn-secondary">いいえ</button>
+        </div>
+      </div>
+    </div>
+    <!-- プログレスバー -->
+    <div id="progressContainer" class="progress-container" style="display: none">
+      <div class="progress-bar">
+        <div id="progressBar" class="progress-fill"></div>
+      </div>
+      <div id="progressText" class="progress-text"></div>
+    </div>
+    <!-- 進捗モーダル -->
+    <div id="progressModal" class="progress-modal" style="display: none">
+      <div class="progress-content">
+        <div class="progress-circle">
+          <svg class="circular-progress" viewBox="0 0 36 36">
+            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
+                  fill="none" stroke="#eee" stroke-width="3"/>
+            <path class="progress" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
+                  fill="none" stroke="#3498db" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <div class="progress-text">0%</div>
+        </div>
+        <div class="progress-status">処理中...</div>
+      </div>
+    </div>
+    <!-- キーワード編集モーダル -->
+    <div id="keywordEditModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close-button" title="閉じる"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/close.svg" alt="close" loading="lazy"/></span>
+        <h2>キーワードを編集</h2>
+        <input type="text" id="editKeywordInput" placeholder="キーワードを入力..." />
+        <button id="saveKeywordEdit" class="cml2-btn" title="保存"><img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/save.svg" alt="save" loading="lazy"/></button>
+      </div>
+    </div>
+  </body>
+</html> 

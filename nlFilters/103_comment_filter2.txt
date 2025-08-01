@@ -1,0 +1,17 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+#ニコニコ動画公式のNGワード機能が極めて貧弱なので、この機能で非常に強力なNG機能を提供する。
+#Requires common.es.js
+[Replace]
+Name = Comment Filter2（視聴ページ用）
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/
+Match<
+(\r\n)?(</head>)
+>
+Replace<
+$1
+<!--- Comment Filter2（視聴ページ用） --->
+<script type="module" src="/local/features/dist/comment-filter2.es.js"></script>
+<!--- End of Comment Filter2（視聴ページ用） --->
+$2
+>
