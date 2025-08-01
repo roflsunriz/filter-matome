@@ -47,6 +47,9 @@ jobs:
             npm run build
           fi
 
+      - name: Install 7zip
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
       - name: Create release archive
         run: |
           # リリース用のディレクトリを作成
@@ -89,10 +92,9 @@ jobs:
           find release/NicoCache_nl -name "tests" -type d -exec rm -rf {} + || true
           find release/NicoCache_nl -name "tests-examples" -type d -exec rm -rf {} + || true
           
-          # アーカイブを作成
+          # 7zアーカイブを作成
           cd release
-          zip -r ../NicoCache_nl-${GITHUB_REF#refs/tags/}.zip NicoCache_nl/
-          tar -czf ../NicoCache_nl-${GITHUB_REF#refs/tags/}.tar.gz NicoCache_nl/
+          7z a -t7z ../NicoCache_nl-${GITHUB_REF#refs/tags/}.7z NicoCache_nl/
 
       - name: Extract version from tag
         id: version
@@ -105,8 +107,7 @@ jobs:
           echo "## 🎉 NicoCache_nl フィルタまとめ${GITHUB_REF#refs/tags/}" > release_notes.md
           echo "" >> release_notes.md
           echo "### 📦 ダウンロード" >> release_notes.md
-          echo "- **ZIP**: \`NicoCache_nl-${GITHUB_REF#refs/tags/}.zip\`" >> release_notes.md
-          echo "- **TAR.GZ**: \`NicoCache_nl-${GITHUB_REF#refs/tags/}.tar.gz\`" >> release_notes.md
+          echo "- **7Z**: \`NicoCache_nl-${GITHUB_REF#refs/tags/}.7z\`" >> release_notes.md
           echo "" >> release_notes.md
           echo "### 🔄 導入方法" >> release_notes.md
           echo "1. 既存のNicoCache_nlのバックアップを作成" >> release_notes.md
@@ -135,8 +136,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            NicoCache_nl-${{ github.ref_name }}.zip
-            NicoCache_nl-${{ github.ref_name }}.tar.gz
+            NicoCache_nl-${{ github.ref_name }}.7z
           body_path: release_notes.md
           draft: false
           prerelease: false
@@ -147,5 +147,5 @@ jobs:
       - name: Update release badge
         run: |
           echo "✅ Release ${{ github.ref_name }} created successfully!"
-          echo "📦 Archives: NicoCache_nl-${{ github.ref_name }}.zip, NicoCache_nl-${{ github.ref_name }}.tar.gz"
+          echo "📦 Archive: NicoCache_nl-${{ github.ref_name }}.7z"
           echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
