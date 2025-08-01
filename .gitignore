@@ -52,7 +52,17 @@ Readme_*.txt
 # ライブラリ・外部ツール
 # ========================================
 lib/
-extensions/
+# extensionsフォルダ内の全てを除外
+extensions/*
+# ただし、以下の4つのJavaファイル（とclassファイル）は除外しない（管理対象に含める）
+!extensions/CommentFilterLogger.java
+!extensions/CommentFilterLogger.class
+!extensions/CustomCacheReturner.java
+!extensions/CustomCacheReturner.class
+!extensions/downloadThruFFmpeg.java
+!extensions/downloadThruFFmpeg.class
+!extensions/ExtUtil.java
+!extensions/ExtUtil.class
 others/
 link/
 filter-matome/
