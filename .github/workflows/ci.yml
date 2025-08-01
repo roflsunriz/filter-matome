@@ -120,6 +120,14 @@ jobs:
             "nlFilters/199_readme.html"
             "nlFilters/198_release_notes.md"
             "nlFilters/nlFilters_編集ガイド.md"
+            "extensions/CommentFilterLogger.java"
+            "extensions/CommentFilterLogger.class"
+            "extensions/CustomCacheReturner.java"
+            "extensions/CustomCacheReturner.class"
+            "extensions/downloadThruFFmpeg.java"
+            "extensions/downloadThruFFmpeg.class"
+            "extensions/ExtUtil.java"
+            "extensions/ExtUtil.class"
           )
           
           for file in "${important_files[@]}"; do
@@ -140,4 +148,8 @@ jobs:
           path: |
             local/features/dist/
             local/nl-media-info/dist/
+            extensions/CommentFilterLogger.*
+            extensions/CustomCacheReturner.*
+            extensions/downloadThruFFmpeg.*
+            extensions/ExtUtil.*
           retention-days: 7

@@ -51,12 +51,23 @@ jobs:
         run: |
           # リリース用のディレクトリを作成
           mkdir -p release/NicoCache_nl
+          mkdir -p release/NicoCache_nl/extensions
           
           # 必要なファイルをコピー
           cp -r nlFilters release/NicoCache_nl/
           cp -r local release/NicoCache_nl/
           cp README.md release/NicoCache_nl/
           cp LICENSE release/NicoCache_nl/
+          
+          # extensionsフォルダの特定ファイルをコピー（コンパイル不要）
+          cp extensions/CommentFilterLogger.java release/NicoCache_nl/extensions/ || echo "Warning: CommentFilterLogger.java not found"
+          cp extensions/CommentFilterLogger.class release/NicoCache_nl/extensions/ || echo "Warning: CommentFilterLogger.class not found"
+          cp extensions/CustomCacheReturner.java release/NicoCache_nl/extensions/ || echo "Warning: CustomCacheReturner.java not found"
+          cp extensions/CustomCacheReturner.class release/NicoCache_nl/extensions/ || echo "Warning: CustomCacheReturner.class not found"
+          cp extensions/downloadThruFFmpeg.java release/NicoCache_nl/extensions/ || echo "Warning: downloadThruFFmpeg.java not found"
+          cp extensions/downloadThruFFmpeg.class release/NicoCache_nl/extensions/ || echo "Warning: downloadThruFFmpeg.class not found"
+          cp extensions/ExtUtil.java release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.java not found"
+          cp extensions/ExtUtil.class release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.class not found"
           
           # 開発用ファイルを除外
           find release/NicoCache_nl -name "node_modules" -type d -exec rm -rf {} + || true
