@@ -120,7 +120,7 @@ playwright.config.ts
 # メディアファイル（管理対象外）
 # ========================================
 # images/  # local/images/は管理対象なのでコメントアウト
-# background-images/  # local/background-images/は管理対象なのでコメントアウト
+local/background-images/favorites/
 *.gif
 # *.svg  # local/fallback-thumbnail.svgは管理対象なのでコメントアウト
 *.jpg
