@@ -45,7 +45,6 @@ certs/
 # ドキュメント・README
 # ========================================
 *.txt
-README*.md
 documents/
 Readme_*.txt
 
@@ -95,8 +94,8 @@ autoUpdater.pyw
 # Node.js関連（local/内も除外）
 # ========================================
 node_modules/
-package.json
-package-lock.json
+# package.json  # GitHub Actionsで必要なので除外対象から削除
+# package-lock.json  # GitHub Actionsで必要なので除外対象から削除
 tsconfig.json
 playwright.config.ts
 .eslintrc.json
@@ -144,8 +143,8 @@ local/features/.gitignore
 local/features/tests/
 local/features/tests-examples/
 local/features/node_modules/
-local/features/package.json
-local/features/package-lock.json
+# local/features/package.json  # GitHub Actionsで必要なので除外対象から削除
+# local/features/package-lock.json  # GitHub Actionsで必要なので除外対象から削除
 local/features/tsconfig.json
 local/features/playwright.config.ts
 local/features/.eslintrc.json
