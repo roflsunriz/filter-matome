@@ -44,13 +44,7 @@ jobs:
           cd local/nl-media-info
           if [ -f package.json ]; then
             npm ci
-            if npm run build:ALL --silent 2>/dev/null; then
-              npm run build:ALL
-            elif npm run build --silent 2>/dev/null; then
-              npm run build
-            else
-              echo "No build script available, skipping..."
-            fi
+            npm run build
           fi
 
       - name: Create release archive

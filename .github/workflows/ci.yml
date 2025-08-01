@@ -46,13 +46,8 @@ jobs:
         run: |
           cd local/nl-media-info
           if [ -f package.json ]; then
-            if npm run build:ALL --silent 2>/dev/null; then
-              npm run build:ALL
-            elif npm run build --silent 2>/dev/null; then
-              npm run build
-            else
-              echo "No build script available, skipping..."
-            fi
+            npm ci
+            npm run build
           fi
 
       - name: Lint check (if available)
