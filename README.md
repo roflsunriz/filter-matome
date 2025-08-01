@@ -132,7 +132,7 @@ nlFilters/
 ```bash
 cd local/features
 npm install
-npm run build
+npm run build:ALL
 ```
 
 ### nlFilter文法
@@ -167,7 +167,7 @@ Append<
 - **詳細機能説明**: [nlFilters/199_readme.html](nlFilters/199_readme.html)
 - **リリースノート**: [nlFilters/198_release_notes.md](nlFilters/198_release_notes.md)
 - **編集ガイド**: [nlFilters/nlFilters_編集ガイド.md](nlFilters/nlFilters_編集ガイド.md)
-- **機能別ドキュメント**:
+- **機能別ドキュメント**:(インストール後に表示可能になります)
   - [Comment Filter2 説明](https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html)
   - [Mylist2 説明](https://www.nicovideo.jp/local/features/dist/src/docs/mylist2/index.html)
   - [視聴履歴](https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html)
