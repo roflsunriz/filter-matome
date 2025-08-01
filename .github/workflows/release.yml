@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '#*'  # #188, #189 などのタグにマッチ
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 全履歴を取得してリリースノート生成に使用
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'local/features/package-lock.json'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: |
+          cd local/features
+          npm ci
+
+      - name: Build features
+        run: |
+          cd local/features
+          npm run build
+
+      - name: Build nl-media-info
+        run: |
+          cd local/nl-media-info
+          if [ -f package.json ]; then
+            npm ci
+            npm run build
+          fi
+
+      - name: Create release archive
+        run: |
+          # リリース用のディレクトリを作成
+          mkdir -p release/NicoCache_nl
+          
+          # 必要なファイルをコピー
+          cp -r nlFilters release/NicoCache_nl/
+          cp -r local release/NicoCache_nl/
+          cp README.md release/NicoCache_nl/
+          cp LICENSE release/NicoCache_nl/
+          
+          # 開発用ファイルを除外
+          find release/NicoCache_nl -name "node_modules" -type d -exec rm -rf {} + || true
+          find release/NicoCache_nl -name "*.map" -type f -delete || true
+          find release/NicoCache_nl -name "package.json" -type f -delete || true
+          find release/NicoCache_nl -name "package-lock.json" -type f -delete || true
+          find release/NicoCache_nl -name "tsconfig.json" -type f -delete || true
+          find release/NicoCache_nl -name ".eslintrc.json" -type f -delete || true
+          find release/NicoCache_nl -name "playwright.config.ts" -type f -delete || true
+          
+          # アーカイブを作成
+          cd release
+          zip -r ../NicoCache_nl-${GITHUB_REF#refs/tags/}.zip NicoCache_nl/
+          tar -czf ../NicoCache_nl-${GITHUB_REF#refs/tags/}.tar.gz NicoCache_nl/
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # リリースノートを生成
+          echo "## 🎉 NicoCache_nl フィルタまとめ${GITHUB_REF#refs/tags/}" > release_notes.md
+          echo "" >> release_notes.md
+          echo "### 📦 ダウンロード" >> release_notes.md
+          echo "- **ZIP**: \`NicoCache_nl-${GITHUB_REF#refs/tags/}.zip\`" >> release_notes.md
+          echo "- **TAR.GZ**: \`NicoCache_nl-${GITHUB_REF#refs/tags/}.tar.gz\`" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### 🔄 導入方法" >> release_notes.md
+          echo "1. 既存のNicoCache_nlのバックアップを作成" >> release_notes.md
+          echo "2. ダウンロードしたアーカイブを展開" >> release_notes.md
+          echo "3. \`nlFilters\`と\`local\`フォルダを上書きコピー" >> release_notes.md
+          echo "4. ブラウザでハード再読み込み（Ctrl+F5）" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### ⚠️ 注意事項" >> release_notes.md
+          echo "- 更新前に各機能の設定をエクスポートすることを推奨" >> release_notes.md
+          echo "- 詳細な変更内容は[リリースノート](nlFilters/198_release_notes.md)を確認" >> release_notes.md
+          echo "- 問題が発生した場合はクリーンインストールを試行" >> release_notes.md
+          echo "" >> release_notes.md
+          
+          # 最新のコミットメッセージを追加
+          echo "### 📝 このリリースの変更内容" >> release_notes.md
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release_notes.md || echo "- フィルタまとめ${GITHUB_REF#refs/tags/} リリース" >> release_notes.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            NicoCache_nl-${{ github.ref_name }}.zip
+            NicoCache_nl-${{ github.ref_name }}.tar.gz
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update release badge
+        run: |
+          echo "✅ Release ${{ github.ref_name }} created successfully!"
+          echo "📦 Archives: NicoCache_nl-${{ github.ref_name }}.zip, NicoCache_nl-${{ github.ref_name }}.tar.gz"
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"

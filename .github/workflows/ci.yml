@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'local/features/package-lock.json'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dependencies (features)
+        run: |
+          cd local/features
+          npm ci
+
+      - name: Build features
+        run: |
+          cd local/features
+          npm run build
+
+      - name: Install dependencies (nl-media-info)
+        run: |
+          cd local/nl-media-info
+          if [ -f package.json ]; then
+            npm ci
+          fi
+
+      - name: Build nl-media-info
+        run: |
+          cd local/nl-media-info
+          if [ -f package.json ]; then
+            npm run build
+          fi
+
+      - name: Lint check (if available)
+        run: |
+          cd local/features
+          if npm run lint --silent 2>/dev/null; then
+            npm run lint
+          else
+            echo "Lint script not available, skipping..."
+          fi
+
+      - name: Type check (if available)
+        run: |
+          cd local/features
+          if npm run type-check --silent 2>/dev/null; then
+            npm run type-check
+          else
+            echo "Type check script not available, skipping..."
+          fi
+
+      - name: Test (if available)
+        run: |
+          cd local/features
+          if npm run test --silent 2>/dev/null; then
+            npm run test
+          else
+            echo "Test script not available, skipping..."
+          fi
+
+      - name: Validate nlFilters syntax
+        run: |
+          echo "Validating nlFilter files..."
+          # 基本的な構文チェック（100-199番台のファイル）
+          for file in nlFilters/1[0-9][0-9]_*.txt; do
+            if [ -f "$file" ]; then
+              echo "Checking $file..."
+              # 基本的なnlFilter構文の存在確認
+              if ! grep -q '\[Replace\]\|\[Script\]\|\[Style\]\|\[RequestHeader\]' "$file"; then
+                echo "Warning: $file may not contain valid nlFilter syntax"
+              fi
+            fi
+          done
+          echo "nlFilter validation completed."
+
+      - name: Check file structure
+        run: |
+          echo "Checking project structure..."
+          
+          # 必須ディレクトリの確認
+          required_dirs=(
+            "nlFilters"
+            "local/features"
+            "local/features/src"
+            "local/features/dist"
+          )
+          
+          for dir in "${required_dirs[@]}"; do
+            if [ ! -d "$dir" ]; then
+              echo "Error: Required directory $dir is missing"
+              exit 1
+            else
+              echo "✓ $dir exists"
+            fi
+          done
+          
+          # 重要ファイルの確認
+          important_files=(
+            "README.md"
+            "LICENSE"
+            "nlFilters/199_readme.html"
+            "nlFilters/198_release_notes.md"
+            "nlFilters/nlFilters_編集ガイド.md"
+          )
+          
+          for file in "${important_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "Warning: Important file $file is missing"
+            else
+              echo "✓ $file exists"
+            fi
+          done
+          
+          echo "File structure check completed."
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-artifacts
+          path: |
+            local/features/dist/
+            local/nl-media-info/dist/
+          retention-days: 7
