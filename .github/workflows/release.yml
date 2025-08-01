@@ -61,8 +61,6 @@ jobs:
           
           # ルートフォルダの重要ファイルをコピー
           cp mime.types release/NicoCache_nl/ || echo "Warning: mime.types not found in root"
-          cp config.properties release/NicoCache_nl/ || echo "Warning: config.properties not found"
-          cp proxy.pac release/NicoCache_nl/ || echo "Warning: proxy.pac not found"
           
           # 空フォルダを確実に含めるため.gitkeepファイルを作成
           touch release/NicoCache_nl/local/cache/.gitkeep || true
@@ -114,7 +112,7 @@ jobs:
           echo "1. 既存のNicoCache_nlのバックアップを作成" >> release_notes.md
           echo "2. ダウンロードしたアーカイブを展開" >> release_notes.md
           echo "3. \`nlFilters\`, \`local\`, \`extensions\`フォルダを上書きコピー" >> release_notes.md
-          echo "4. 必要に応じて\`mime.types\`, \`config.properties\`, \`proxy.pac\`を上書きコピー" >> release_notes.md
+          echo "4. 必要に応じて\`mime.types\`を上書きコピー" >> release_notes.md
           echo "5. ブラウザでハード再読み込み（Ctrl+F5）" >> release_notes.md
           echo "" >> release_notes.md
           echo "### 🛠️ 開発環境の構築" >> release_notes.md
