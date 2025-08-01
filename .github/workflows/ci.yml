@@ -33,7 +33,7 @@ jobs:
       - name: Build features
         run: |
           cd local/features
-          npm run build
+          npm run build:ALL
 
       - name: Install dependencies (nl-media-info)
         run: |
@@ -46,7 +46,13 @@ jobs:
         run: |
           cd local/nl-media-info
           if [ -f package.json ]; then
-            npm run build
+            if npm run build:ALL --silent 2>/dev/null; then
+              npm run build:ALL
+            elif npm run build --silent 2>/dev/null; then
+              npm run build
+            else
+              echo "No build script available, skipping..."
+            fi
           fi
 
       - name: Lint check (if available)
