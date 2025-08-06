@@ -1,0 +1,17 @@
+# Node
+node_modules/
+dist/
+.vscode/
+*.log
+
+# テストや一時ファイル
+tests/
+tests-examples/
+*.bak
+
+# OSごとの不要ファイル
+Thumbs.db
+.DS_Store
+
+# 不要画像ファイル
+local/background-images/favorites/

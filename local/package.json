@@ -1,0 +1,30 @@
+{
+  "name": "cache-data-manager",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "TypeScript化されたキャッシュデータ管理システム",
+  "main": "dist/list.js",
+  "scripts": {
+    "dev": "vite --config config/vite.config.ts",
+    "build": "tsc && vite build --config config/vite.config.ts",
+    "preview": "vite preview --config config/vite.config.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.0.6"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "keywords": [
+    "typescript",
+    "cache",
+    "video",
+    "niconico"
+  ],
+  "author": "ひまり",
+  "license": "MIT"
+} 

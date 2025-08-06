@@ -1,0 +1,151 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '#*'  # #188, #189 などのタグにマッチ
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 全履歴を取得してリリースノート生成に使用
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: |
+          cd local/features
+          npm ci
+
+      - name: Build features
+        run: |
+          cd local/features
+          npm run build:ALL
+
+      - name: Build nl-media-info
+        run: |
+          cd local/nl-media-info
+          if [ -f package.json ]; then
+            npm ci
+            npm run build
+          fi
+
+      - name: Install 7zip
+        run: sudo apt-get update && sudo apt-get install -y p7zip-full
+
+      - name: Create release archive
+        run: |
+          # リリース用のディレクトリを作成
+          mkdir -p release/NicoCache_nl
+          mkdir -p release/NicoCache_nl/extensions
+          
+          # 必要なファイルをコピー
+          cp -r nlFilters release/NicoCache_nl/
+          cp -r local release/NicoCache_nl/
+          cp README.md release/NicoCache_nl/
+          cp LICENSE release/NicoCache_nl/
+          
+          # mime.typesをコピー
+          cp local/mime.types release/NicoCache_nl/local/ || echo "Warning: mime.types not found in local folder"
+          
+          # 空フォルダを確実に含めるため.gitkeepファイルを作成
+          touch release/NicoCache_nl/local/cache/.gitkeep || true
+          
+          # extensionsフォルダの特定ファイルをコピー（コンパイル不要）
+          cp extensions/CommentFilterLogger.java release/NicoCache_nl/extensions/ || echo "Warning: CommentFilterLogger.java not found"
+          cp extensions/CommentFilterLogger.class release/NicoCache_nl/extensions/ || echo "Warning: CommentFilterLogger.class not found"
+          cp extensions/CustomCacheReturner.java release/NicoCache_nl/extensions/ || echo "Warning: CustomCacheReturner.java not found"
+          cp extensions/CustomCacheReturner.class release/NicoCache_nl/extensions/ || echo "Warning: CustomCacheReturner.class not found"
+          cp extensions/downloadThruFFmpeg.java release/NicoCache_nl/extensions/ || echo "Warning: downloadThruFFmpeg.java not found"
+          cp extensions/downloadThruFFmpeg.class release/NicoCache_nl/extensions/ || echo "Warning: downloadThruFFmpeg.class not found"
+          cp extensions/ExtUtil.java release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.java not found"
+          cp extensions/ExtUtil.class release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.class not found"
+          
+          # 開発用ファイルを除外（ただし、開発環境構築に必要なpackage.json等は保持）
+          find release/NicoCache_nl -name "node_modules" -type d -exec rm -rf {} + || true
+          find release/NicoCache_nl -name "*.map" -type f -delete || true
+          # package.json, package-lock.jsonは開発環境構築に必要なので削除しない
+          # find release/NicoCache_nl -name "package.json" -type f -delete || true
+          # find release/NicoCache_nl -name "package-lock.json" -type f -delete || true
+          find release/NicoCache_nl -name "tsconfig.json" -type f -delete || true
+          find release/NicoCache_nl -name ".eslintrc.json" -type f -delete || true
+          find release/NicoCache_nl -name "playwright.config.ts" -type f -delete || true
+          
+          # テスト関連ファイルは除外
+          find release/NicoCache_nl -name "tests" -type d -exec rm -rf {} + || true
+          find release/NicoCache_nl -name "tests-examples" -type d -exec rm -rf {} + || true
+          
+          # 7zアーカイブを作成
+          cd release
+          7z a -t7z ../NicoCache_nl-${GITHUB_REF#refs/tags/}.7z NicoCache_nl/
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # リリースノートを生成
+          echo "## 🎉 NicoCache_nl フィルタまとめ${GITHUB_REF#refs/tags/}" > release_notes.md
+          echo "" >> release_notes.md
+          echo "### 📦 ダウンロード" >> release_notes.md
+          echo "- **7Z**: \`NicoCache_nl-${GITHUB_REF#refs/tags/}.7z\`" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### 🔄 導入方法" >> release_notes.md
+          echo "1. 既存のNicoCache_nlのバックアップを作成" >> release_notes.md
+          echo "2. ダウンロードしたアーカイブを展開" >> release_notes.md
+          echo "3. \`nlFilters\`, \`local\`, \`extensions\`フォルダを上書きコピー" >> release_notes.md
+          echo "4. 必要に応じて\`mime.types\`を上書きコピー" >> release_notes.md
+          echo "5. ブラウザでハード再読み込み（Ctrl+F5）" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### 🛠️ 開発環境の構築" >> release_notes.md
+          echo "1. Node.js と npm をインストール" >> release_notes.md
+          echo "2. \`cd local/features && npm install\` でフィーチャー開発環境を構築" >> release_notes.md
+          echo "3. \`cd local/nl-media-info && npm install\` でメディア情報機能の開発環境を構築" >> release_notes.md
+          echo "4. 各フォルダの README.md を参照してビルド・開発を開始" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### ⚠️ 注意事項" >> release_notes.md
+          echo "- 更新前に各機能の設定をエクスポートすることを推奨" >> release_notes.md
+          echo "- 詳細な変更内容は[リリースノート](nlFilters/198_release_notes.md)を確認" >> release_notes.md
+          echo "- 問題が発生した場合はクリーンインストールを試行" >> release_notes.md
+          echo "" >> release_notes.md
+          
+          # 最新のコミットメッセージを追加
+          echo "### 📝 このリリースの変更内容" >> release_notes.md
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release_notes.md || echo "- フィルタまとめ${GITHUB_REF#refs/tags/} リリース" >> release_notes.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            NicoCache_nl-${{ github.ref_name }}.7z
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update release badge
+        run: |
+          echo "✅ Release ${{ github.ref_name }} created successfully!"
+          echo "📦 Archive: NicoCache_nl-${{ github.ref_name }}.7z"
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"

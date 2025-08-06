@@ -1,0 +1,90 @@
+﻿# ローカルファイル用 Content-Type 設定ファイル
+#
+# 内容を変更する時はファイル名から".default"を削った上で編集してください
+#
+# Apache の mime.types 形式なので、
+#   mimeTypes=/etc/mime.types
+# といった感じで Apache 用のファイルを直接指定することもできます
+#
+# 書式: Content-Type<TAB>[<TAB>...]ext1[ ext2...]
+#
+application/json	json
+application/x-javascript	js
+application/x-shockwave-flash	swf
+image/gif	gif
+image/jpeg	jpg jpeg
+image/png	png
+image/svg+xml	svg
+image/avif	avif
+image/avif-sequence	avif
+text/css	css
+text/html	html htm
+text/plain	txt
+text/xml	xml
+video/flv	flv
+video/mp4	mp4
+video/webm	webm
+
+#----------------------------------------------------------------------------------------
+#    Common MIME types
+# https://developer.mozilla.org/ja/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+#----------------------------------------------------------------------------------------
+audio/aac	aac
+application/x-abiword	abw
+application/x-freearc	arc
+video/x-msvideo	avi
+application/vnd.amazon.ebook	azw
+application/octet-stream	bin
+image/bmp	bmp
+application/x-bzip	bz
+application/x-bzip2	bz2
+application/x-csh	csh
+text/csv	csv
+application/msword	doc
+application/vnd.openxmlformats-officedocument.wordprocessingml.document	docx
+application/vnd.ms-fontobject	eot
+application/epub+zip	epub
+application/gzip	gz
+image/vnd.microsoft.icon	ico
+text/calendar	ics
+application/java-archive	jar
+application/ld+json	jsonld
+audio/midi	midi
+audio/x-midi	mid
+text/javascript	mjs
+audio/mpeg	mp3
+video/mpeg	mpeg
+application/vnd.apple.installer+xml	mpkg
+application/vnd.oasis.opendocument.presentation	odp
+application/vnd.oasis.opendocument.spreadsheet	ods
+application/vnd.oasis.opendocument.text	odt
+audio/ogg	oga
+video/ogg	ogv
+application/ogg	ogx
+audio/opus	opus
+font/otf	otf
+application/pdf	pdf
+application/x-httpd-php	php
+application/vnd.ms-powerpoint	ppt
+application/vnd.openxmlformats-officedocument.presentationml.presentation	pptx
+application/vnd.rar	rar
+application/rtf	rtf
+application/x-sh	sh
+application/x-tar	tar
+image/tiff	tiff tif
+video/mp2t	ts
+font/ttf	ttf
+application/vnd.visio	vsd
+audio/wav	wav
+audio/webm	weba
+image/webp	webp
+font/woff	woff
+font/woff2	woff2
+application/xhtml+xml	xhtml
+application/vnd.ms-excel	xls
+application/vnd.openxmlformats-officedocument.spreadsheetml.sheet	xlsx
+application/vnd.mozilla.xul+xml	xul
+application/zip	zip
+video/3gpp	3gp
+video/3gpp2	3g2
+application/x-7z-compressed	7z
