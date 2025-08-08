@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Dict, List
+from typing import Dict, List, TypedDict
 
 class ConfigEditor:
     def __init__(self, config_path: str = "config.properties"):
@@ -35,9 +35,14 @@ class ConfigEditor:
             
             print("警告: ファイルの文字コードを判定できませんでした。")
 
-    def get_available_settings(self) -> List[str]:
+    class AvailableSetting(TypedDict):
+        value: str
+        comment: str
+        source: str
+
+    def get_available_settings(self) -> Dict[str, "ConfigEditor.AvailableSetting"]:
         """defaultsフォルダから利用可能な設定を取得するのじゃ"""
-        available_settings = {}
+        available_settings: Dict[str, ConfigEditor.AvailableSetting] = {}
         for file in os.listdir(self.defaults_dir):
             if file.endswith('.properties'):
                 # 文字コードを自動判定するのじゃ
