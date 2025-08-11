@@ -104,6 +104,7 @@ jobs:
           important_files=(
             "README.md"
             "LICENSE"
+            "creating-symlink-for-listjs.md"
             "nlFilters/199_readme.html"
             "nlFilters/198_release_notes.md"
             "nlFilters/nlFilters_編集ガイド.md"

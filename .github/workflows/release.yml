@@ -55,6 +55,7 @@ jobs:
           cp -r local release/NicoCache_nl/
           cp README.md release/NicoCache_nl/
           cp LICENSE release/NicoCache_nl/
+          cp creating-symlink-for-listjs.md release/NicoCache_nl/
           
           # mime.typesをコピー
           cp local/mime.types release/NicoCache_nl/local/ || echo "Warning: mime.types not found in local folder"
