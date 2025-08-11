@@ -104,14 +104,17 @@ export class StatisticsManager {
    * ファイルのフォーマットを取得するのじゃ
    */
   static #getFileFormat(file: MediaItem): string {
-    return file.media.track[0].Format || "Unknown";
+    const fmt = file.media.track[0].Format;
+    return (typeof fmt === 'string' && fmt.length > 0) ? fmt : "Unknown";
   }
 
   /**
    * ファイルサイズを取得するのじゃ
    */
   static #getFileSize(file: MediaItem): number {
-    return parseInt(file.media.track[0].FileSize || "0", 10);
+    const size = file.media.track[0].FileSize;
+    const s = (typeof size === 'string' && size.length > 0) ? size : '0';
+    return parseInt(s, 10);
   }
 
   /**

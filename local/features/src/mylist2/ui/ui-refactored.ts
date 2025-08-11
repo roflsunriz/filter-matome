@@ -360,6 +360,7 @@ export class Mylist2ManagerUI {
           <button class="copy-video">${createMaterialIcon('content_copy', { color: 'white' })}コピー</button>
           <button class="delete-video">${createMaterialIcon(ICONS.delete, { color: 'white' })}削除</button>
           <button class="refresh-video">${createMaterialIcon(ICONS.refresh, { color: 'white' })}情報更新</button>
+          <button class="open-video-details">${createMaterialIcon('info', { color: 'white' })}詳細</button>
         </div>
       `;
       fallbackElement.dataset.id = video.originalId;
@@ -377,6 +378,14 @@ export class Mylist2ManagerUI {
     // データの設定
     item.dataset.id = video.originalId;
     item.dataset.compositeId = video.id;
+    if (video.description) {
+      item.dataset.description = video.description;
+    }
+    if (video.tags && video.tags.length > 0) {
+      try {
+        item.dataset.tags = JSON.stringify(video.tags);
+      } catch {}
+    }
 
     // サムネイルと基本情報
     const thumbnailElement = item.querySelector(".video-thumbnail") as HTMLImageElement;
@@ -549,6 +558,104 @@ export class Mylist2ManagerUI {
       button.addEventListener("click", async (event) => {
         await this.eventHandlers.handleVideoRefresh(event);
       });
+    });
+
+    // 詳細表示ボタン
+    videoList.querySelectorAll('.open-video-details').forEach((button) => {
+      button.addEventListener('click', async (event) => {
+        const target = (event.currentTarget as HTMLElement).closest('.video-item') as HTMLElement | null;
+        if (!target) return;
+        const compositeId = target.dataset.compositeId;
+        if (!compositeId) {
+          // フォールバック: DOM上のデータ属性だけで表示
+          const descFromDom = target.dataset.description;
+          const tagsFromDom = target.dataset.tags;
+          const fallback: Partial<VideoInfo> = {};
+          if (descFromDom) (fallback as any).description = descFromDom;
+          if (tagsFromDom) {
+            try { (fallback as any).tags = JSON.parse(tagsFromDom); } catch {}
+          }
+          await this.showVideoDetailsModal(fallback as VideoInfo);
+          return;
+        }
+        try {
+          const db = await this.manager.getDB();
+          const tx = db.transaction(['videos'], 'readonly');
+          const store = tx.objectStore('videos');
+          const video = await new Promise<VideoInfo | null>((resolve, reject) => {
+            const req = store.get(compositeId);
+            req.onsuccess = () => resolve((req.result as unknown as VideoInfo) || null);
+            req.onerror = () => reject(req.error);
+          });
+          db.close();
+          const descFromDom = target.dataset.description;
+          const tagsFromDom = target.dataset.tags;
+          if (video) {
+            if ((video as any).description === undefined && descFromDom) {
+              (video as any).description = descFromDom;
+            }
+            if ((video as any).tags === undefined && tagsFromDom) {
+              try { (video as any).tags = JSON.parse(tagsFromDom); } catch {}
+            }
+            await this.showVideoDetailsModal(video);
+          } else {
+            // DBに見つからない場合でもDOMの情報でモーダルを表示
+            const fallback: Partial<VideoInfo> = {};
+            if (descFromDom) (fallback as any).description = descFromDom;
+            if (tagsFromDom) {
+              try { (fallback as any).tags = JSON.parse(tagsFromDom); } catch {}
+            }
+            await this.showVideoDetailsModal(fallback as VideoInfo);
+          }
+        } catch (e) {
+          window.logger.error('詳細表示に失敗:', e);
+        }
+      });
+    });
+
+    // 追加のイベント委譲（再描画や将来のDOM変更にも強い）
+    videoList.addEventListener('click', async (ev) => {
+      const trigger = (ev.target as HTMLElement).closest('.open-video-details');
+      if (!trigger) return;
+      const target = (trigger as HTMLElement).closest('.video-item') as HTMLElement | null;
+      if (!target) return;
+      const compositeId = target.dataset.compositeId;
+      const descFromDom = target.dataset.description;
+      const tagsFromDom = target.dataset.tags;
+      try {
+        if (!compositeId) {
+          const fallback: Partial<VideoInfo> = {};
+          if (descFromDom) (fallback as any).description = descFromDom;
+          if (tagsFromDom) { try { (fallback as any).tags = JSON.parse(tagsFromDom); } catch {} }
+          await this.showVideoDetailsModal(fallback as VideoInfo);
+          return;
+        }
+        const db = await this.manager.getDB();
+        const tx = db.transaction(['videos'], 'readonly');
+        const store = tx.objectStore('videos');
+        const video = await new Promise<VideoInfo | null>((resolve, reject) => {
+          const req = store.get(compositeId);
+          req.onsuccess = () => resolve((req.result as unknown as VideoInfo) || null);
+          req.onerror = () => reject(req.error);
+        });
+        db.close();
+        if (video) {
+          if ((video as any).description === undefined && descFromDom) {
+            (video as any).description = descFromDom;
+          }
+          if ((video as any).tags === undefined && tagsFromDom) {
+            try { (video as any).tags = JSON.parse(tagsFromDom); } catch {}
+          }
+          await this.showVideoDetailsModal(video);
+        } else {
+          const fallback: Partial<VideoInfo> = {};
+          if (descFromDom) (fallback as any).description = descFromDom;
+          if (tagsFromDom) { try { (fallback as any).tags = JSON.parse(tagsFromDom); } catch {} }
+          await this.showVideoDetailsModal(fallback as VideoInfo);
+        }
+      } catch (e) {
+        window.logger.error('詳細表示(委譲)に失敗:', e);
+      }
     });
   }
 
@@ -981,6 +1088,62 @@ export class Mylist2ManagerUI {
         checkboxes.forEach((checkbox) => (checkbox.checked = false));
       });
     }
+  }
+
+  // 動画詳細モーダルの表示
+  private async showVideoDetailsModal(video: VideoInfo): Promise<void> {
+    const modalId = 'videoDetailsModal';
+    let modal = document.getElementById(modalId) as HTMLElement | null;
+    if (!modal) {
+      const html = `
+        <div id="${modalId}" class="cml2-modal" style="display:none">
+          <div class="cml2-modal-content" role="dialog" aria-modal="true">
+            <h2 class="cml2-modal-title">動画詳細</h2>
+            <div class="cml2-modal-body video-details-body">
+              <div class="video-details-section">
+                <strong>説明</strong>
+                <div class="video-description" style="white-space:pre-wrap"></div>
+              </div>
+              <div class="video-details-section" style="margin-top:12px">
+                <strong>タグ</strong>
+                <div class="video-tags"></div>
+              </div>
+            </div>
+            <div class="cml2-modal-footer">
+              <button type="button" class="cml2-btn close-button">閉じる</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', html);
+      modal = document.getElementById(modalId) as HTMLElement;
+    }
+    if (!modal) return;
+    const descEl = modal.querySelector('.video-description') as HTMLElement | null;
+    const tagsEl = modal.querySelector('.video-tags') as HTMLElement | null;
+    if (descEl) descEl.textContent = video.description || '(説明なし)';
+    if (tagsEl) {
+      const tags = (video.tags && video.tags.length > 0) ? video.tags : [];
+      tagsEl.innerHTML = tags.length > 0
+        ? tags.map(t => `<span class="tag" style="display:inline-block;background:#2a2b2c;border:1px solid #444;border-radius:12px;padding:2px 8px;margin:2px 6px 0 0;">${t}</span>`).join('')
+        : '(タグなし)';
+    }
+    // 表示とクローズ処理
+    modal.style.display = 'flex';
+    const closeBtn = modal.querySelector('.close-button') as HTMLElement | null;
+    const content = modal.querySelector('.cml2-modal-content') as HTMLElement | null;
+    const handleClose = () => {
+      modal!.style.display = 'none';
+      document.removeEventListener('keydown', onKeydown);
+      modal!.removeEventListener('click', onBackdrop);
+    };
+    const onKeydown = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); };
+    const onBackdrop = (e: MouseEvent) => {
+      if (!content) return;
+      if (!content.contains(e.target as Node)) handleClose();
+    };
+    if (closeBtn) closeBtn.addEventListener('click', handleClose, { once: true });
+    document.addEventListener('keydown', onKeydown);
+    modal.addEventListener('click', onBackdrop);
   }
 
   initializeHeaderControls(): void {

@@ -4,13 +4,13 @@ import type { MediaItem, MediaTrack } from '@nlmi/types/media-info';
  * メディア情報のバリデーション用ユーティリティなのじゃ
  */
 export interface Validators {
-  isValidMediaInfo(mediaInfo: any): mediaInfo is MediaItem[];
+  isValidMediaInfo(mediaInfo: unknown): mediaInfo is MediaItem[];
   isValidFileSize(size: string | number | undefined | null): boolean;
-  isValidTrack(track: any): track is MediaTrack;
+  isValidTrack(track: unknown): track is MediaTrack;
   isValidBitrate(bitrate: string | number | undefined | null): boolean;
   isValidResolution(width: string | number, height: string | number): boolean;
   isValidMediaRef(ref: string): boolean;
-  createErrorMessage(message: string, value: any): string;
+  createErrorMessage(message: string, value: unknown): string;
 }
 
 export const validators: Validators = {
@@ -19,7 +19,7 @@ export const validators: Validators = {
    * @param mediaInfo - メディア情報オブジェクト
    * @returns バリデーション結果
    */
-  isValidMediaInfo(mediaInfo: any): mediaInfo is MediaItem[] {
+  isValidMediaInfo(mediaInfo: unknown): mediaInfo is MediaItem[] {
     if (!Array.isArray(mediaInfo)) {
       console.error('メディア情報が配列ではないのじゃ');
       return false;
@@ -52,10 +52,10 @@ export const validators: Validators = {
    * @param track - トラック情報
    * @returns バリデーション結果
    */
-  isValidTrack(track: any): track is MediaTrack {
-    return track && 
+  isValidTrack(track: unknown): track is MediaTrack {
+    return !!track && 
            typeof track === 'object' && 
-           '@type' in track;
+           '@type' in (track as Record<string, unknown>);
   },
 
   /**
@@ -109,7 +109,7 @@ export const validators: Validators = {
    * @param value - 問題のある値
    * @returns フォーマットされたエラーメッセージ
    */
-  createErrorMessage(message: string, value: any): string {
+  createErrorMessage(message: string, value: unknown): string {
     return `バリデーションエラー: ${message} (値: ${JSON.stringify(value)})`;
   }
 };
@@ -118,9 +118,9 @@ export const validators: Validators = {
  * バリデーションエラーを表すカスタムエラークラスなのじゃ
  */
 export class MediaInfoValidationError extends Error {
-  public readonly invalidValue: any;
+  public readonly invalidValue: unknown;
 
-  constructor(message: string, value: any) {
+  constructor(message: string, value: unknown) {
     super(validators.createErrorMessage(message, value));
     this.name = 'MediaInfoValidationError';
     this.invalidValue = value;

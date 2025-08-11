@@ -35,8 +35,22 @@ export * from './util-types';
 // Links Video Controller関連の型
 export * from './mlink-video-controller-types';
 
-// データベース関連の型
-export * from './database-types';
+// データベース関連の型（重複エクスポートを避けるため必要なもののみ明示的に再エクスポート）
+export type {
+  ModeValue,
+  CommandsValue,
+  StoreConfig,
+  StoresConfig,
+  ARRAY_FIELD_KEYS,
+  IndexedDBRuleItem,
+  IndexedDBSettingsItem,
+  MigrationResult as DatabaseMigrationResult,
+  DatabaseStats,
+  MigrationRecord,
+  DatabaseConfig,
+  CleanupConfig,
+  BackupData,
+} from './database-types';
 
 // Toastr関連の型（ExtendedHTMLElementの重複を避けるため明示的にエクスポート）
 export type { 

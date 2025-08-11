@@ -38,6 +38,8 @@ export class VideoService {
           uploadedAt: videoInfo.uploadedAt || Date.now(),
           authorName: videoInfo.authorName || "不明",
           length: videoInfo.length || 0,
+          description: videoInfo.description || '',
+          tags: (videoInfo.tags && videoInfo.tags.length > 0) ? videoInfo.tags : undefined,
           addedAt: Date.now(),
         };
 
@@ -150,6 +152,8 @@ export class VideoService {
           uploadedAt: newInfo.uploadedAt || existingVideo.uploadedAt,
           authorName: newInfo.authorName || existingVideo.authorName,
           length: newInfo.length || existingVideo.length || 0,
+          description: (newInfo.description !== undefined) ? newInfo.description : existingVideo.description,
+          tags: (newInfo.tags !== undefined) ? (newInfo.tags && newInfo.tags.length > 0 ? newInfo.tags : undefined) : existingVideo.tags,
         };
 
         const updateRequest = store.put(updatedVideo);

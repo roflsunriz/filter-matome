@@ -7,7 +7,8 @@ import type {
   ParsedMediaInfo, 
   VideoTrackInfo, 
   AudioTrackInfo,
-  GeneralInfo
+  GeneralInfo,
+  AllStats
 } from '@nlmi/types/media-info.js';
 
 export class MediaInfoParser {
@@ -22,7 +23,7 @@ export class MediaInfoParser {
         general: parsedInfo.general,
         averageBitrates: parsedInfo.averageBitrates
       },
-      formatStats: mediaInfoInstance.getFormatStats()
+      formatStats: mediaInfoInstance.getFormatStats() as unknown as AllStats
     };
   }
 
@@ -59,17 +60,17 @@ export class MediaInfoParser {
       initVideoFile.media.track.forEach(track => {
         if (track["@type"] === "Video") {
           const videoInfo: VideoTrackInfo = {
-            "Width": track.Width,
-            "Height": track.Height,
-            "Format": track.Format,
-            "Format profile": track.Format_Profile,
-            "Format settings": track.Format_Settings_CABAC,
-            "Frame rate mode": track.FrameRate_Mode,
-            "Frame rate": track.FrameRate,
-            "Color space": track.ColorSpace,
-            "Color range": track.colour_range,
-            "Color primaries": track.colour_primaries,
-            "Display aspect ratio": track.DisplayAspectRatio
+            "Width": String(track.Width ?? ''),
+            "Height": String(track.Height ?? ''),
+            "Format": String(track.Format ?? ''),
+            "Format profile": String(track.Format_Profile ?? ''),
+            "Format settings": String(track.Format_Settings_CABAC ?? ''),
+            "Frame rate mode": String(track.FrameRate_Mode ?? ''),
+            "Frame rate": String(track.FrameRate ?? ''),
+            "Color space": String(track.ColorSpace ?? ''),
+            "Color range": String(track.colour_range ?? ''),
+            "Color primaries": String(track.colour_primaries ?? ''),
+            "Display aspect ratio": String(track.DisplayAspectRatio ?? '')
           };
           result.video.push(videoInfo);
           
@@ -86,17 +87,17 @@ export class MediaInfoParser {
       initAudioFile.media.track.forEach(track => {
         if (track["@type"] === "Audio") {
           const audioInfo: AudioTrackInfo = {
-            "Format": track.Format,
-            "Format profile": track.Format_AdditionalFeatures,
-            "Channel(s)": track.Channels,
-            "Channel positions": track.ChannelPositions,
-            "Channel layout": track.ChannelLayout,
-            "Sampling rate": track.SamplingRate,
-            "Frame rate": track.FrameRate,
-            "Compression mode": track.Compression_Mode,
-            "Stream size": track.StreamSize,
-            "Default": track.Default,
-            "Alternate group": track.AlternateGroup
+            "Format": String(track.Format ?? ''),
+            "Format profile": String(track.Format_AdditionalFeatures ?? ''),
+            "Channel(s)": String(track.Channels ?? ''),
+            "Channel positions": String(track.ChannelPositions ?? ''),
+            "Channel layout": String(track.ChannelLayout ?? ''),
+            "Sampling rate": String(track.SamplingRate ?? ''),
+            "Frame rate": String(track.FrameRate ?? ''),
+            "Compression mode": String(track.Compression_Mode ?? ''),
+            "Stream size": String(track.StreamSize ?? ''),
+            "Default": String(track.Default ?? ''),
+            "Alternate group": String(track.AlternateGroup ?? '')
           };
           result.audio.push(audioInfo);
         }
@@ -107,16 +108,16 @@ export class MediaInfoParser {
     const audioFiles = mediaInfoInstance.getAudioFiles();
     const videoFiles = mediaInfoInstance.getVideoFiles();
     
-    let totalAudioSize = 0;
-    let totalVideoSize = 0;
+    let totalAudioSize = 0; // eslint-disable-line @typescript-eslint/no-unused-vars
+    let totalVideoSize = 0; // eslint-disable-line @typescript-eslint/no-unused-vars
     
     audioFiles.forEach(file => {
-      const fileSize = formatters.parseFileSize(file.media.track[0].FileSize);
+      const fileSize = formatters.parseFileSize(String(file.media.track[0].FileSize ?? '0'));
       totalAudioSize += fileSize;
     });
     
     videoFiles.forEach(file => {
-      const fileSize = formatters.parseFileSize(file.media.track[0].FileSize);
+      const fileSize = formatters.parseFileSize(String(file.media.track[0].FileSize ?? '0'));
       totalVideoSize += fileSize;
     });
   
@@ -128,9 +129,12 @@ export class MediaInfoParser {
     // 一般情報の設定
     const generalTrack = masterFile?.media.track.find(track => track["@type"] === "General");
     result.general = {
-      "Format": generalTrack?.Format || "N/A",
-      "File size": generalTrack?.FileSize || "N/A",
-      "Duration": initVideoFile?.media.track.find(track => track["@type"] === "Video")?.Duration || "N/A",
+      "Format": (typeof generalTrack?.Format === 'string' && generalTrack.Format.length > 0) ? generalTrack.Format : "N/A",
+      "File size": (typeof generalTrack?.FileSize === 'string' && generalTrack.FileSize.length > 0) ? generalTrack.FileSize : "N/A",
+      "Duration": ((): string => {
+        const v = initVideoFile?.media.track.find(track => track["@type"] === "Video")?.Duration;
+        return (typeof v === 'string' && v.length > 0) ? v : 'N/A';
+      })(),
       "Complete name": masterFile?.media["@ref"] || "N/A",
       "ID": constants.nlMediaInfoVideoId
     };
@@ -138,12 +142,12 @@ export class MediaInfoParser {
     // ビットレート設定
     if (initAudioFile && initAudioFile.media.track) {
       const audioTrack = initAudioFile.media.track.find(track => track["@type"] === "Audio");
-      result.averageBitrates.audio = audioTrack ? parseInt(audioTrack.BitRate_Maximum || "192000") : 192000;
+      result.averageBitrates.audio = audioTrack ? parseInt(String(audioTrack.BitRate_Maximum ?? "192000")) : 192000;
     }
   
     if (initVideoFile && initVideoFile.media.track) {
       const videoTrack = initVideoFile.media.track.find(track => track["@type"] === "Video");
-      result.averageBitrates.video = videoTrack ? parseInt(videoTrack.BitRate_Maximum || "1500000") : 1500000;
+      result.averageBitrates.video = videoTrack ? parseInt(String(videoTrack.BitRate_Maximum ?? "1500000")) : 1500000;
     }
   
     result.averageBitrates.overall = result.averageBitrates.audio + result.averageBitrates.video;

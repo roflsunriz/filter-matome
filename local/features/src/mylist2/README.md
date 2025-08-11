@@ -204,6 +204,12 @@ ProgressService ─── 進捗表示
 
 ## 🎯 目的別編集ガイド
 
+### 💡 **mlink-video-controllerからmylist2へ動画追加**
+- 動画視聴ページからmylist2へ動画追加する
+- `features/src/mlink-video-controller/handlers/mylist2.ts` の `handleAddVideo` メソッドを編集
+- その他のページからmylist2へキーワード追加する
+- `features/src/mlink-video-controller/handlers/mylist2.ts` の `handleAddKeyword` メソッドを編集
+
 ### 💡 **新しいマイリスト機能を追加したい**
 1. `services/mylist-service.ts` - サービスロジック実装
 2. `components/manager-refactored.ts` - 公開API追加

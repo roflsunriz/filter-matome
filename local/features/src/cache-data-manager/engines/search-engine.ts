@@ -1,7 +1,7 @@
 import type { LoadDataFromMemory } from '../loaders/load-data-from-memory.js';
 
 export class SearchEngine {
-  private index: any;
+  private index: unknown;
   private indexReady: Promise<void>;
 
   constructor(private dataLoader: LoadDataFromMemory) {
@@ -9,7 +9,7 @@ export class SearchEngine {
   }
 
   private async loadFlexSearch(): Promise<void> {
-    if (typeof (window as any).FlexSearch === "undefined") {
+    if (typeof (window as unknown as { FlexSearch?: unknown }).FlexSearch === "undefined") {
       await new Promise<void>((resolve, reject) => {
         const script = document.createElement("script");
         script.src = "https://cdn.jsdelivr.net/npm/flexsearch@0.7.31/dist/flexsearch.bundle.js";
@@ -22,7 +22,8 @@ export class SearchEngine {
   }
 
   private initializeIndex(): void {
-    this.index = new (window as any).FlexSearch.Document({
+    const Flex = (window as unknown as { FlexSearch: { Document: new (...args: unknown[]) => unknown } }).FlexSearch;
+    this.index = new Flex.Document({
       preset: "memory",
       tokenize: "full",
       document: {
@@ -48,20 +49,20 @@ export class SearchEngine {
     await this.indexReady;
     if (!cleanQuery || !this.index) return [];
 
-    const results = this.index.search(cleanQuery, {
+    const results = (this.index as unknown as { search: (q: string, opts: Record<string, unknown>) => Array<{ result: unknown[] }> }).search(cleanQuery, {
       limit: 1000,
       suggest: true,
       enrich: true,
       bool: "or",
     });
 
-    return [...new Set(results.flatMap((r: any) => r.result))].filter((id): id is string => typeof id === 'string');
+    return [...new Set(results.flatMap((r) => r.result))].filter((id): id is string => typeof id === 'string');
   }
 
   private async rebuildIndex(): Promise<void> {
     const entries = await this.dataLoader.getAllEntries();
     entries.forEach((entry) => {
-      this.index.add({
+      (this.index as unknown as { add: (doc: { id: string; title: string }) => void }).add({
         id: entry.id,
         title: entry.title.toLowerCase(), // 小文字化
       });

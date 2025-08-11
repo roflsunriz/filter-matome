@@ -8,9 +8,9 @@ export interface CreationDate {
 }
 
 export interface MediaDetails {
-  general: any;
-  video: any;
-  audio: any;
+  general: unknown;
+  video: unknown;
+  audio: unknown;
 }
 
 export class NicoVideoMediaInfo {
@@ -55,7 +55,9 @@ export class NicoVideoMediaInfo {
    */
   getTotalFileSize(): number {
     const totalFileSize = this.mediaInfo.reduce((total, info) => {
-      const fileSize = parseInt(info.media.track[0].FileSize || "0", 10);
+      const raw = info.media.track[0].FileSize;
+      const s = (typeof raw === 'string' && raw.length > 0) ? raw : '0';
+      const fileSize = parseInt(s, 10);
       return total + fileSize;
     }, 0);
 
@@ -70,7 +72,7 @@ export class NicoVideoMediaInfo {
   getCreationDates(): CreationDate[] {
     const creationDates = this.mediaInfo.map((info) => ({
       file: info.media["@ref"],
-      created: info.media.track[0].File_Created_Date,
+      created: (typeof info.media.track[0].File_Created_Date === 'string') ? info.media.track[0].File_Created_Date : undefined,
     }));
 
     if (constants.DEBUG_NLMEDIAINFO)
@@ -104,7 +106,7 @@ export class NicoVideoMediaInfo {
   /**
    * 統計情報を取得するのじゃ
    */
-  getFormatStats(): any {
+  getFormatStats(): unknown {
     const formatStats = StatisticsManager.generateFormatStats(this.mediaInfo);
 
     if (constants.DEBUG_NLMEDIAINFO) console.log("統計情報を取得するのじゃ:", formatStats);
@@ -115,7 +117,7 @@ export class NicoVideoMediaInfo {
   /**
    * 一般情報を抽出するのじゃ
    */
-  #extractGeneralInfo(): any {
+  #extractGeneralInfo(): unknown {
     const generalInfo =
       this.mediaInfo.find((item) => item.media["@ref"].includes(constants.MasterFile))?.media.track.find((track) => track["@type"] === "General") ||
       this.mediaInfo.find((item) => item.media["@ref"].includes(constants.MasterFile));
@@ -128,7 +130,7 @@ export class NicoVideoMediaInfo {
   /**
    * 映像情報を抽出するのじゃ
    */
-  #extractVideoInfo(): any {
+  #extractVideoInfo(): unknown {
     const videoInfo =
       this.mediaInfo.find((item) => item.media["@ref"].includes(constants.MasterFile))?.media.track.find((track) => track["@type"] === "Video") ||
       this.mediaInfo.find((item) => item.media["@ref"].includes(constants.VideoInitFile)) ||
@@ -143,7 +145,7 @@ export class NicoVideoMediaInfo {
   /**
    * 音声情報を抽出するのじゃ
    */
-  #extractAudioInfo(): any {
+  #extractAudioInfo(): unknown {
     const audioInfo =
       this.mediaInfo.find((item) => item.media["@ref"].includes(constants.MasterFile))?.media.track.find((track) => track["@type"] === "Audio") ||
       this.mediaInfo.find((item) => item.media["@ref"].includes(constants.AudioInitFile)) ||

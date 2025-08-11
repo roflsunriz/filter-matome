@@ -24,8 +24,8 @@ function initializeApp(): void {
   UIUpdater.updateTitle(constants.nlMediaInfoVideoTitle, constants.nlMediaInfoVideoId);
   
   getMediaInfo(`${constants.nlMediaInfobaseurl}${constants.nlMediaInfoVideoId}`)
-    .then(data => {
-      const parsedData = MediaInfoParser.parse(data);
+    .then((data) => {
+      const parsedData = MediaInfoParser.parse(data as unknown as import('@nlmi/types/media-info').MediaItem[]);
       if(DEBUG_NLMEDIAINFO) console.log("パース後のデータ:", parsedData);
       return parsedData;  // 明示的にパースしたデータを返すのじゃ
     })
@@ -53,7 +53,7 @@ function initializeApp(): void {
  * @param url - メディア情報のURL
  * @returns メディア情報のJSONオブジェクト
  */
-async function getMediaInfo(url: string): Promise<any> {
+async function getMediaInfo(url: string): Promise<unknown> {
   try {
     const response = await fetch(url);
     if (!response.ok) {

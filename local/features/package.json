@@ -19,12 +19,13 @@
     "build:common": "vite build --config config/vite.common.config.js",
     "build:mlink-video-controller": "vite build --config config/vite.mlink-video-controller.config.js",
     "build:comment-filter2": "vite build --config config/vite.comment-filter2.config.js",
-    "build:ALL": "npm run build:thumb-info; npm run build:mylist2; npm run build:mylist2-service-worker; npm run build:comment-filter2-docs; npm run build:video-player; npm run build:common; npm run build:mlink-video-controller; npm run build:comment-filter2; npm run build:mylist2-docs; npm run build:watch-tracker; npm run build:watch-history; npm run build:cache-data-manager; npm run build:nl-media-info",
+    "build:ALL": "node scripts/build-all.mjs",
     "build:cache-data-manager": "vite build --config config/vite.cache-data-manager.config.js",
     "build:nl-media-info": "vite build --config config/vite.nl-media-info.config.js",
     "build:mylist2-docs": "vite build --config config/vite.mylist2-docs.config.js",
     "build:watch-tracker": "vite build --config config/vite.watch-tracker.config.js",
-    "build:watch-history": "vite build --config config/vite.watch-history.config.js"
+    "build:watch-history": "vite build --config config/vite.watch-history.config.js",
+    "error-check": "tsc --noEmit && npm run lint && npm run type-check"
   },
   "devDependencies": {
     "@playwright/mcp": "^0.0.29",

@@ -44,7 +44,7 @@ declare global {
     tempList: Record<string, string[]>;
     cacheList: Record<string, string[]>;
     ncversion: string;
-    FlexSearch: any;
+    FlexSearch: unknown;
   }
 
   // グローバル変数
@@ -58,7 +58,7 @@ export interface SearchEventData {
   query: string;
 }
 
-export interface EventCallback<T = any> {
+export interface EventCallback<T = unknown> {
   (data?: T): void | Promise<void>;
 }
 

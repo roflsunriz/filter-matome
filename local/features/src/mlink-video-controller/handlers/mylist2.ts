@@ -28,7 +28,17 @@ export class Mylist2Handler {
         thumbnailUrl: apiData.video.thumbnail.url,
         uploadedAt: new Date(apiData.video.registeredAt).getTime(),
         authorName: apiData.owner?.nickname || apiData.channel?.name || '不明',
-        length: apiData.video.duration
+        length: apiData.video.duration,
+        description: apiData.video.description || '',
+        tags: (() => {
+          try {
+            const items = (apiData as unknown as { tag?: { items?: Array<{ name?: string }> } }).tag?.items || [];
+            const tagNames = items.map(t => (t?.name || '').trim()).filter(Boolean);
+            return tagNames.length > 0 ? tagNames : undefined;
+          } catch {
+            return undefined;
+          }
+        })()
       };
 
       const mylistId = await showMylistSelector();

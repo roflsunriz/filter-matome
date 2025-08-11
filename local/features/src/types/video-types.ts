@@ -48,6 +48,10 @@ export interface VideoInfo {
   uploadedAt: number;
   authorName: string;
   length: number;
+  /** 動画説明（任意） */
+  description?: string;
+  /** タグ配列（任意） */
+  tags?: string[];
 }
 
 /**
@@ -116,12 +120,23 @@ export interface ApiData {
     };
     registeredAt: string;
     duration: number;
+    /** ニコ動の動画説明（任意） */
+    description?: string;
   };
   owner?: {
     nickname: string;
   };
   channel?: {
     name: string;
+  };
+  /** タグ情報（任意、watchページのみ想定） */
+  tag?: {
+    items?: Array<{
+      name?: string;
+      [key: string]: unknown;
+    }>;
+    hasR18Tag?: boolean;
+    [key: string]: unknown;
   };
   payment?: {
     video: {

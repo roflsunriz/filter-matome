@@ -6,10 +6,8 @@ import { LazyAPIClient } from '../clients/lazy-api-client.js';
 
 export class EventCoordinator {
   constructor(
-    //@ts-ignore
     private _uiBuilder: UIBuilder,
     private eventManager: EventManager,
-    //@ts-ignore
     private _progressManager: ProgressManager
   ) {
     this.setupEventListeners();

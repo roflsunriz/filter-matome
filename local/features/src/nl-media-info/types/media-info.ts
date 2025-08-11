@@ -2,7 +2,7 @@
 
 export interface MediaTrack {
   "@type": string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface MediaItem {
@@ -95,11 +95,9 @@ export interface NicoCacheWatchData {
   };
 }
 
-export interface NicoCacheNl {
-  watch: NicoCacheWatchData;
-}
+import type { NicoCache_nlInterface } from "../../types/global-types";
 
 // Window.opener.NicoCache_nlへのアクセス用の型定義
 export interface WindowWithNicoCache extends Window {
-  NicoCache_nl: NicoCacheNl;
-} 
+  NicoCache_nl: NicoCache_nlInterface;
+}

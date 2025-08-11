@@ -2709,7 +2709,7 @@ const headerAdjustments = () => {
 class Mylist2DB {
   constructor() {
     this.dbName = "Mylist2DB";
-    this.version = 6;
+    this.version = 7;
     this.migrationSteps = this.initializeMigrationSteps();
   }
   // マイグレーションステップを初期化
@@ -2749,30 +2749,42 @@ class Mylist2DB {
       {
         version: 6,
         description: "データベースメタデータストアの追加",
-        execute: async (db) => {
+        execute: async (db, transaction) => {
           if (!db.objectStoreNames.contains("metadata")) {
             db.createObjectStore("metadata", { keyPath: "key" });
-            const transaction = db.transaction(["metadata"], "readwrite");
-            const store = transaction.objectStore("metadata");
-            await new Promise((resolve, reject) => {
-              const initData = [
-                { key: "created_at", value: (/* @__PURE__ */ new Date()).toISOString() },
-                { key: "last_backup", value: null },
-                { key: "health_check_last", value: null },
-                { key: "migration_history", value: [] }
-              ];
-              let completed = 0;
-              initData.forEach((data) => {
-                const request = store.add(data);
-                request.onsuccess = () => {
-                  completed++;
-                  if (completed === initData.length) {
-                    resolve();
-                  }
-                };
-                request.onerror = () => reject(request.error);
-              });
+          }
+          const store = transaction.objectStore("metadata");
+          await new Promise((resolve, reject) => {
+            const initData = [
+              { key: "created_at", value: (/* @__PURE__ */ new Date()).toISOString() },
+              { key: "last_backup", value: null },
+              { key: "health_check_last", value: null },
+              { key: "migration_history", value: [] }
+            ];
+            let completed = 0;
+            initData.forEach((data) => {
+              const request = store.put(data);
+              request.onsuccess = () => {
+                completed++;
+                if (completed === initData.length) {
+                  resolve();
+                }
+              };
+              request.onerror = () => reject(request.error);
             });
+          });
+        }
+      },
+      {
+        version: 7,
+        description: "videosストアにtagsインデックスを追加",
+        execute: async (db, transaction) => {
+          if (db.objectStoreNames.contains("videos")) {
+            const store = transaction.objectStore("videos");
+            const hasTagsIndex = Array.from(store.indexNames).includes("tags");
+            if (!hasTagsIndex) {
+              store.createIndex("tags", "tags", { unique: false, multiEntry: true });
+            }
           }
         }
       }
@@ -3067,6 +3079,11 @@ class Mylist2DB {
       videoStore.createIndex("uploadedAt", "uploadedAt", { unique: false });
       videoStore.createIndex("authorName", "authorName", { unique: false });
       videoStore.createIndex("length", "length", { unique: false });
+      try {
+        videoStore.createIndex("tags", "tags", { unique: false, multiEntry: true });
+      } catch (e) {
+        window.logger?.warn?.("createIndex(tags) skipped:", e);
+      }
     }
     if (!db.objectStoreNames.contains("manager")) {
       db.createObjectStore("manager", {
@@ -3154,6 +3171,7 @@ class ApiService {
       const [minutes, seconds] = length.split(":").map(Number);
       const lengthInSeconds = minutes * 60 + seconds;
       const titleElement = thumb.querySelector("title");
+      const descriptionElement = thumb.querySelector("description");
       const viewCountElement = thumb.querySelector("view_counter");
       const commentNumElement = thumb.querySelector("comment_num");
       const mylistCounterElement = thumb.querySelector("mylist_counter");
@@ -3164,6 +3182,8 @@ class ApiService {
       if (!titleElement || !viewCountElement || !commentNumElement || !mylistCounterElement || !thumbnailUrlElement || !firstRetrieveElement) {
         throw new Error("必要な動画情報が取得できませんでした");
       }
+      const tagElements = Array.from(thumb.querySelectorAll("tags tag"));
+      const tags = tagElements.map((t) => (t.textContent || "").trim()).filter(Boolean);
       const videoInfo = {
         id: videoId,
         title: titleElement.textContent || "不明な動画",
@@ -3173,7 +3193,9 @@ class ApiService {
         thumbnailUrl: thumbnailUrlElement.textContent || "",
         uploadedAt: new Date(firstRetrieveElement.textContent || "").getTime(),
         authorName: userNicknameElement?.textContent || chNameElement?.textContent || "不明",
-        length: lengthInSeconds
+        length: lengthInSeconds,
+        description: descriptionElement?.textContent || "",
+        tags: tags.length > 0 ? tags : void 0
       };
       this.apiCache.set(videoId, videoInfo);
       return videoInfo;
@@ -3391,6 +3413,8 @@ class VideoService {
           uploadedAt: videoInfo.uploadedAt || Date.now(),
           authorName: videoInfo.authorName || "不明",
           length: videoInfo.length || 0,
+          description: videoInfo.description || "",
+          tags: videoInfo.tags && videoInfo.tags.length > 0 ? videoInfo.tags : void 0,
           addedAt: Date.now()
         };
         const addRequest = store.add(video);
@@ -3479,7 +3503,9 @@ class VideoService {
           thumbnailUrl: newInfo.thumbnailUrl || existingVideo.thumbnailUrl,
           uploadedAt: newInfo.uploadedAt || existingVideo.uploadedAt,
           authorName: newInfo.authorName || existingVideo.authorName,
-          length: newInfo.length || existingVideo.length || 0
+          length: newInfo.length || existingVideo.length || 0,
+          description: newInfo.description !== void 0 ? newInfo.description : existingVideo.description,
+          tags: newInfo.tags !== void 0 ? newInfo.tags && newInfo.tags.length > 0 ? newInfo.tags : void 0 : existingVideo.tags
         };
         const updateRequest = store.put(updatedVideo);
         updateRequest.onsuccess = () => resolve();
@@ -5156,6 +5182,7 @@ class Mylist2ManagerUI {
           <button class="copy-video">${createMaterialIcon("content_copy", { color: "white" })}コピー</button>
           <button class="delete-video">${createMaterialIcon(ICONS.delete, { color: "white" })}削除</button>
           <button class="refresh-video">${createMaterialIcon(ICONS.refresh, { color: "white" })}情報更新</button>
+          <button class="open-video-details">${createMaterialIcon("info", { color: "white" })}詳細</button>
         </div>
       `;
       fallbackElement.dataset.id = video.originalId;
@@ -5170,6 +5197,15 @@ class Mylist2ManagerUI {
     }
     item.dataset.id = video.originalId;
     item.dataset.compositeId = video.id;
+    if (video.description) {
+      item.dataset.description = video.description;
+    }
+    if (video.tags && video.tags.length > 0) {
+      try {
+        item.dataset.tags = JSON.stringify(video.tags);
+      } catch {
+      }
+    }
     const thumbnailElement = item.querySelector(".video-thumbnail");
     if (thumbnailElement) {
       thumbnailElement.src = video.thumbnailUrl;
@@ -5305,6 +5341,120 @@ class Mylist2ManagerUI {
       button.addEventListener("click", async (event) => {
         await this.eventHandlers.handleVideoRefresh(event);
       });
+    });
+    videoList.querySelectorAll(".open-video-details").forEach((button) => {
+      button.addEventListener("click", async (event) => {
+        const target = event.currentTarget.closest(".video-item");
+        if (!target) return;
+        const compositeId = target.dataset.compositeId;
+        if (!compositeId) {
+          const descFromDom = target.dataset.description;
+          const tagsFromDom = target.dataset.tags;
+          const fallback = {};
+          if (descFromDom) fallback.description = descFromDom;
+          if (tagsFromDom) {
+            try {
+              fallback.tags = JSON.parse(tagsFromDom);
+            } catch {
+            }
+          }
+          await this.showVideoDetailsModal(fallback);
+          return;
+        }
+        try {
+          const db = await this.manager.getDB();
+          const tx = db.transaction(["videos"], "readonly");
+          const store = tx.objectStore("videos");
+          const video = await new Promise((resolve, reject) => {
+            const req = store.get(compositeId);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => reject(req.error);
+          });
+          db.close();
+          const descFromDom = target.dataset.description;
+          const tagsFromDom = target.dataset.tags;
+          if (video) {
+            if (video.description === void 0 && descFromDom) {
+              video.description = descFromDom;
+            }
+            if (video.tags === void 0 && tagsFromDom) {
+              try {
+                video.tags = JSON.parse(tagsFromDom);
+              } catch {
+              }
+            }
+            await this.showVideoDetailsModal(video);
+          } else {
+            const fallback = {};
+            if (descFromDom) fallback.description = descFromDom;
+            if (tagsFromDom) {
+              try {
+                fallback.tags = JSON.parse(tagsFromDom);
+              } catch {
+              }
+            }
+            await this.showVideoDetailsModal(fallback);
+          }
+        } catch (e) {
+          window.logger.error("詳細表示に失敗:", e);
+        }
+      });
+    });
+    videoList.addEventListener("click", async (ev) => {
+      const trigger = ev.target.closest(".open-video-details");
+      if (!trigger) return;
+      const target = trigger.closest(".video-item");
+      if (!target) return;
+      const compositeId = target.dataset.compositeId;
+      const descFromDom = target.dataset.description;
+      const tagsFromDom = target.dataset.tags;
+      try {
+        if (!compositeId) {
+          const fallback = {};
+          if (descFromDom) fallback.description = descFromDom;
+          if (tagsFromDom) {
+            try {
+              fallback.tags = JSON.parse(tagsFromDom);
+            } catch {
+            }
+          }
+          await this.showVideoDetailsModal(fallback);
+          return;
+        }
+        const db = await this.manager.getDB();
+        const tx = db.transaction(["videos"], "readonly");
+        const store = tx.objectStore("videos");
+        const video = await new Promise((resolve, reject) => {
+          const req = store.get(compositeId);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => reject(req.error);
+        });
+        db.close();
+        if (video) {
+          if (video.description === void 0 && descFromDom) {
+            video.description = descFromDom;
+          }
+          if (video.tags === void 0 && tagsFromDom) {
+            try {
+              video.tags = JSON.parse(tagsFromDom);
+            } catch {
+            }
+          }
+          await this.showVideoDetailsModal(video);
+        } else {
+          const fallback = {};
+          if (descFromDom) fallback.description = descFromDom;
+          if (tagsFromDom) {
+            try {
+              fallback.tags = JSON.parse(tagsFromDom);
+            } catch {
+            }
+          }
+          await this.showVideoDetailsModal(fallback);
+        }
+      } catch (e) {
+        window.logger.error("詳細表示(委譲)に失敗:", e);
+      }
     });
   }
   setupKeywordActions(videoList) {
@@ -5652,6 +5802,60 @@ class Mylist2ManagerUI {
         checkboxes.forEach((checkbox) => checkbox.checked = false);
       });
     }
+  }
+  // 動画詳細モーダルの表示
+  async showVideoDetailsModal(video) {
+    const modalId = "videoDetailsModal";
+    let modal = document.getElementById(modalId);
+    if (!modal) {
+      const html = `
+        <div id="${modalId}" class="cml2-modal" style="display:none">
+          <div class="cml2-modal-content" role="dialog" aria-modal="true">
+            <h2 class="cml2-modal-title">動画詳細</h2>
+            <div class="cml2-modal-body video-details-body">
+              <div class="video-details-section">
+                <strong>説明</strong>
+                <div class="video-description" style="white-space:pre-wrap"></div>
+              </div>
+              <div class="video-details-section" style="margin-top:12px">
+                <strong>タグ</strong>
+                <div class="video-tags"></div>
+              </div>
+            </div>
+            <div class="cml2-modal-footer">
+              <button type="button" class="cml2-btn close-button">閉じる</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML("beforeend", html);
+      modal = document.getElementById(modalId);
+    }
+    if (!modal) return;
+    const descEl = modal.querySelector(".video-description");
+    const tagsEl = modal.querySelector(".video-tags");
+    if (descEl) descEl.textContent = video.description || "(説明なし)";
+    if (tagsEl) {
+      const tags = video.tags && video.tags.length > 0 ? video.tags : [];
+      tagsEl.innerHTML = tags.length > 0 ? tags.map((t) => `<span class="tag" style="display:inline-block;background:#2a2b2c;border:1px solid #444;border-radius:12px;padding:2px 8px;margin:2px 6px 0 0;">${t}</span>`).join("") : "(タグなし)";
+    }
+    modal.style.display = "flex";
+    const closeBtn = modal.querySelector(".close-button");
+    const content = modal.querySelector(".cml2-modal-content");
+    const handleClose = () => {
+      modal.style.display = "none";
+      document.removeEventListener("keydown", onKeydown);
+      modal.removeEventListener("click", onBackdrop);
+    };
+    const onKeydown = (e) => {
+      if (e.key === "Escape") handleClose();
+    };
+    const onBackdrop = (e) => {
+      if (!content) return;
+      if (!content.contains(e.target)) handleClose();
+    };
+    if (closeBtn) closeBtn.addEventListener("click", handleClose, { once: true });
+    document.addEventListener("keydown", onKeydown);
+    modal.addEventListener("click", onBackdrop);
   }
   initializeHeaderControls() {
     const searchExecElement = document.getElementById("searchExec");

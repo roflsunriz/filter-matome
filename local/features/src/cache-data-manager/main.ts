@@ -11,8 +11,9 @@ async function initializeList(): Promise<void> {
   const eventManager = new EventManager();
   const dataLoader = new LoadDataFromMemory(progressManager);
   const uiBuilder = new UIBuilder(dataLoader, eventManager, progressManager);
-  //@ts-ignore
+  // 初期化の副作用を目的として生成（未使用警告抑止）
   const _eventCoordinator = new EventCoordinator(uiBuilder, eventManager, progressManager);
+  void _eventCoordinator;
 
   // 直接メモリから読み込み
   await uiBuilder.renderAllEntries();

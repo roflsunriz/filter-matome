@@ -32,7 +32,7 @@ export class Mylist2DB {
 
     constructor() {
         this.dbName = 'Mylist2DB';
-        this.version = 6; // バージョンアップ
+        this.version = 7; // バージョンアップ: 動画にdescription/tags対応
         this.migrationSteps = this.initializeMigrationSteps();
     }
 
@@ -73,34 +73,44 @@ export class Mylist2DB {
             {
                 version: 6,
                 description: 'データベースメタデータストアの追加',
-                execute: async (db: IDBDatabase) => {
+                execute: async (db: IDBDatabase, transaction: IDBTransaction) => {
                     if (!db.objectStoreNames.contains('metadata')) {
                         db.createObjectStore('metadata', { keyPath: 'key' });
-                        
-                        // メタデータを初期化
-                        const transaction = db.transaction(['metadata'], 'readwrite');
-                        const store = transaction.objectStore('metadata');
-                        
-                        await new Promise<void>((resolve, reject) => {
-                            const initData = [
-                                { key: 'created_at', value: new Date().toISOString() },
-                                { key: 'last_backup', value: null },
-                                { key: 'health_check_last', value: null },
-                                { key: 'migration_history', value: [] }
-                            ];
-                            
-                            let completed = 0;
-                            initData.forEach(data => {
-                                const request = store.add(data);
-                                request.onsuccess = () => {
-                                    completed++;
-                                    if (completed === initData.length) {
-                                        resolve();
-                                    }
-                                };
-                                request.onerror = () => reject(request.error);
-                            });
+                    }
+                    // バージョン変更トランザクションを使用して初期データを投入
+                    const store = transaction.objectStore('metadata');
+                    await new Promise<void>((resolve, reject) => {
+                        const initData = [
+                            { key: 'created_at', value: new Date().toISOString() },
+                            { key: 'last_backup', value: null },
+                            { key: 'health_check_last', value: null },
+                            { key: 'migration_history', value: [] }
+                        ];
+                        let completed = 0;
+                        initData.forEach(data => {
+                            const request = store.put(data);
+                            request.onsuccess = () => {
+                                completed++;
+                                if (completed === initData.length) {
+                                    resolve();
+                                }
+                            };
+                            request.onerror = () => reject(request.error);
                         });
+                    });
+                }
+            },
+            {
+                version: 7,
+                description: 'videosストアにtagsインデックスを追加',
+                execute: async (db: IDBDatabase, transaction: IDBTransaction) => {
+                    // 既存のvideosストアにtagsインデックスが無ければ追加
+                    if (db.objectStoreNames.contains('videos')) {
+                        const store = transaction.objectStore('videos');
+                        const hasTagsIndex = Array.from(store.indexNames).includes('tags');
+                        if (!hasTagsIndex) {
+                            store.createIndex('tags', 'tags', { unique: false, multiEntry: true });
+                        }
                     }
                 }
             }
@@ -459,6 +469,13 @@ export class Mylist2DB {
             videoStore.createIndex('uploadedAt', 'uploadedAt', { unique: false });
             videoStore.createIndex('authorName', 'authorName', { unique: false });
             videoStore.createIndex('length', 'length', { unique: false });
+            // v7以降での新インデックス
+            try {
+                videoStore.createIndex('tags', 'tags', { unique: false, multiEntry: true });
+            } catch (e) {
+                // 既に存在している等の理由で失敗しても致命的ではない
+                window.logger?.warn?.('createIndex(tags) skipped:', e);
+            }
         }
 
         // マネージャーストア

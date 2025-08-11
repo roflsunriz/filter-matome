@@ -180,7 +180,7 @@ export class UIUpdater {
     }
   }
 
-  static updateStatistics(formatStats: any): void {
+  static updateStatistics(formatStats: Record<string, Record<string, { count: number; totalSize: number }>>): void {
     const statsDiv = document.getElementById("format-statistics");
     if (!statsDiv) return;
     

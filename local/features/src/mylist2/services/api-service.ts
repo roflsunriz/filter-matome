@@ -96,6 +96,7 @@ export class ApiService {
       const lengthInSeconds = minutes * 60 + seconds;
 
       const titleElement = thumb.querySelector("title");
+      const descriptionElement = thumb.querySelector("description");
       const viewCountElement = thumb.querySelector("view_counter");
       const commentNumElement = thumb.querySelector("comment_num");
       const mylistCounterElement = thumb.querySelector("mylist_counter");
@@ -108,6 +109,10 @@ export class ApiService {
           !mylistCounterElement || !thumbnailUrlElement || !firstRetrieveElement) {
         throw new Error("必要な動画情報が取得できませんでした");
       }
+
+      // タグ抽出（ext.getthumbinfo は <tags> 配下に <tag> が並ぶ想定）
+      const tagElements = Array.from(thumb.querySelectorAll('tags tag')) as Element[];
+      const tags = tagElements.map(t => (t.textContent || '').trim()).filter(Boolean);
 
       const videoInfo: VideoInfo = {
         id: videoId,
@@ -122,6 +127,8 @@ export class ApiService {
           chNameElement?.textContent ||
           "不明",
         length: lengthInSeconds,
+        description: descriptionElement?.textContent || '',
+        tags: tags.length > 0 ? tags : undefined,
       };
 
       this.apiCache.set(videoId, videoInfo);

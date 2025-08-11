@@ -521,7 +521,7 @@ class NicoVideoPlayer {
 class Mylist2DB {
   constructor() {
     this.dbName = "Mylist2DB";
-    this.version = 6;
+    this.version = 7;
     this.migrationSteps = this.initializeMigrationSteps();
   }
   // マイグレーションステップを初期化
@@ -585,6 +585,19 @@ class Mylist2DB {
                 request.onerror = () => reject(request.error);
               });
             });
+          }
+        }
+      },
+      {
+        version: 7,
+        description: "videosストアにtagsインデックスを追加",
+        execute: async (db, transaction) => {
+          if (db.objectStoreNames.contains("videos")) {
+            const store = transaction.objectStore("videos");
+            const hasTagsIndex = Array.from(store.indexNames).includes("tags");
+            if (!hasTagsIndex) {
+              store.createIndex("tags", "tags", { unique: false, multiEntry: true });
+            }
           }
         }
       }
@@ -879,6 +892,10 @@ class Mylist2DB {
       videoStore.createIndex("uploadedAt", "uploadedAt", { unique: false });
       videoStore.createIndex("authorName", "authorName", { unique: false });
       videoStore.createIndex("length", "length", { unique: false });
+      try {
+        videoStore.createIndex("tags", "tags", { unique: false, multiEntry: true });
+      } catch {
+      }
     }
     if (!db.objectStoreNames.contains("manager")) {
       db.createObjectStore("manager", {
@@ -966,6 +983,7 @@ class ApiService {
       const [minutes, seconds] = length.split(":").map(Number);
       const lengthInSeconds = minutes * 60 + seconds;
       const titleElement = thumb.querySelector("title");
+      const descriptionElement = thumb.querySelector("description");
       const viewCountElement = thumb.querySelector("view_counter");
       const commentNumElement = thumb.querySelector("comment_num");
       const mylistCounterElement = thumb.querySelector("mylist_counter");
@@ -976,6 +994,8 @@ class ApiService {
       if (!titleElement || !viewCountElement || !commentNumElement || !mylistCounterElement || !thumbnailUrlElement || !firstRetrieveElement) {
         throw new Error("必要な動画情報が取得できませんでした");
       }
+      const tagElements = Array.from(thumb.querySelectorAll("tags tag"));
+      const tags = tagElements.map((t) => (t.textContent || "").trim()).filter(Boolean);
       const videoInfo = {
         id: videoId,
         title: titleElement.textContent || "不明な動画",
@@ -985,7 +1005,9 @@ class ApiService {
         thumbnailUrl: thumbnailUrlElement.textContent || "",
         uploadedAt: new Date(firstRetrieveElement.textContent || "").getTime(),
         authorName: userNicknameElement?.textContent || chNameElement?.textContent || "不明",
-        length: lengthInSeconds
+        length: lengthInSeconds,
+        description: descriptionElement?.textContent || "",
+        tags: tags.length > 0 ? tags : void 0
       };
       this.apiCache.set(videoId, videoInfo);
       return videoInfo;
@@ -1203,6 +1225,8 @@ class VideoService {
           uploadedAt: videoInfo.uploadedAt || Date.now(),
           authorName: videoInfo.authorName || "不明",
           length: videoInfo.length || 0,
+          description: videoInfo.description || "",
+          tags: videoInfo.tags && videoInfo.tags.length > 0 ? videoInfo.tags : void 0,
           addedAt: Date.now()
         };
         const addRequest = store.add(video);
@@ -1291,7 +1315,9 @@ class VideoService {
           thumbnailUrl: newInfo.thumbnailUrl || existingVideo.thumbnailUrl,
           uploadedAt: newInfo.uploadedAt || existingVideo.uploadedAt,
           authorName: newInfo.authorName || existingVideo.authorName,
-          length: newInfo.length || existingVideo.length || 0
+          length: newInfo.length || existingVideo.length || 0,
+          description: newInfo.description !== void 0 ? newInfo.description : existingVideo.description,
+          tags: newInfo.tags !== void 0 ? newInfo.tags && newInfo.tags.length > 0 ? newInfo.tags : void 0 : existingVideo.tags
         };
         const updateRequest = store.put(updatedVideo);
         updateRequest.onsuccess = () => resolve();
@@ -2271,7 +2297,17 @@ class Mylist2Handler {
         thumbnailUrl: apiData.video.thumbnail.url,
         uploadedAt: new Date(apiData.video.registeredAt).getTime(),
         authorName: apiData.owner?.nickname || apiData.channel?.name || "不明",
-        length: apiData.video.duration
+        length: apiData.video.duration,
+        description: apiData.video.description || "",
+        tags: (() => {
+          try {
+            const items = apiData.tag?.items || [];
+            const tagNames = items.map((t) => (t?.name || "").trim()).filter(Boolean);
+            return tagNames.length > 0 ? tagNames : void 0;
+          } catch {
+            return void 0;
+          }
+        })()
       };
       const mylistId = await showMylistSelector();
       if (!mylistId) {
