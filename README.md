@@ -109,12 +109,10 @@
 ### プロジェクト構成
 ```
 local/
-├── features/          # メイン機能群
-│   ├── src/          # TypeScriptソースコード
-│   ├── dist/         # ビルド済みファイル
-│   └── config/       # Vite設定ファイル群
-├── nl-media-info/    # メディア情報機能
-└── src/              # list.jsソースコード
+├─ features/          # メイン機能群
+├── src/          # TypeScriptソースコード
+├── dist/         # ビルド済みファイル
+└── config/       # Vite設定ファイル群
 
 nlFilters/
 ├── 100_common.txt           # 共通ライブラリ
@@ -167,12 +165,16 @@ Append<
 - **詳細機能説明**: [nlFilters/199_readme.html](nlFilters/199_readme.html)
 - **リリースノート**: [nlFilters/198_release_notes.md](nlFilters/198_release_notes.md)
 - **編集ガイド**: [nlFilters/nlFilters_編集ガイド.md](nlFilters/nlFilters_編集ガイド.md)
+- **シンボリックリンク作成手順 (必須)**: [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md)
 - **機能別ドキュメント**:(インストール後に表示可能になります)
   - [Comment Filter2 説明](https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html)
   - [Mylist2 説明](https://www.nicovideo.jp/local/features/dist/src/docs/mylist2/index.html)
   - [視聴履歴](https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html)
 
 ## ⚠️ 重要な注意事項
+
+### シンボリックリンク作成（必須）
+NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\local\list.js` という固定パス・固定名で参照します。ビルド成果物（例: `cache-data-manager.es.js`）へこの固定パス名でシンボリックリンクを作成しないと機能しません。詳細手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照してください。
 
 ### 使用上の注意
 - **全機能同時使用前提**: 個別機能の抜き出しは動作保証外

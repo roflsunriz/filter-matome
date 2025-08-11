@@ -12,6 +12,7 @@
         <h2>📑 目次</h2>
         <ul>
           <li><a href="#install">1. 導入方法</a></li>
+          <li><a href="#symlink">1.1 シンボリックリンク（必須）</a></li>
           <li><a href="#filters">2. 各フィルタ説明</a></li>
           <li><a href="#filter-control">3. フィルタの有効/無効切り替え方法</a></li>
           <li><a href="#background-settings">4. watchページ背景画像設定</a></li>
@@ -147,6 +148,29 @@
               >
             </li>
           </ul>
+        </div>
+      </section>
+
+      <section id="symlink">
+        <h2>1.1 シンボリックリンク（必須）</h2>
+        <div class="install-warning">
+          <p>
+            NicoCache_nl はキャッシュデータ用スクリプトを <code>C:\\NicoCache_nl\\local\\list.js</code> の固定パス・固定名で参照します。<br />
+            ビルド成果物（例: <code>cache-data-manager.es.js</code>）へこの固定パス名で<strong>シンボリックリンクを作成</strong>しないと機能しません。
+          </p>
+        </div>
+        <div class="install-steps">
+          <h3>要約（Windows / PowerShell）</h3>
+          <pre><code class="language-powershell"># 既存の list.js / list.js.map を削除
+Remove-Item -Path "C:\\NicoCache_nl\\local\\list.js"
+Remove-Item -Path "C:\\NicoCache_nl\\local\\list.js.map"
+
+# ビルド成果物へリンクを作成
+New-Item -ItemType SymbolicLink -Path "C:\\NicoCache_nl\\local\\list.js" -Target "C:\\NicoCache_nl\\local\\features\\dist\\cache-data-manager.es.js"
+New-Item -ItemType SymbolicLink -Path "C:\\NicoCache_nl\\local\\list.js.map" -Target "C:\\NicoCache_nl\\local\\features\\dist\\cache-data-manager.es.js.map"</code></pre>
+          <p>
+            詳細な手順は <a href="../creating-symlink-for-listjs.md" target="_blank">creating-symlink-for-listjs.md</a> を参照してください。
+          </p>
         </div>
       </section>
 
