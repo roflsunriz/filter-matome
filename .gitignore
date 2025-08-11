@@ -7,7 +7,14 @@ dist/
 # テストや一時ファイル
 tests/
 tests-examples/
+playwright.config.ts
 *.bak
+
+# コードスペース
+*.code-workspace
+
+# 型チェック
+.mypy_cache/
 
 # OSごとの不要ファイル
 Thumbs.db
