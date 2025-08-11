@@ -39,13 +39,7 @@ jobs:
           cd local/features
           npm run build:ALL
 
-      - name: Build nl-media-info
-        run: |
-          cd local/nl-media-info
-          if [ -f package.json ]; then
-            npm ci
-            npm run build
-          fi
+      # nl-media-info は features に統合済みのため個別ビルドは不要
 
       - name: Install 7zip
         run: sudo apt-get update && sudo apt-get install -y p7zip-full
@@ -119,8 +113,7 @@ jobs:
           echo "### 🛠️ 開発環境の構築" >> release_notes.md
           echo "1. Node.js と npm をインストール" >> release_notes.md
           echo "2. \`cd local/features && npm install\` でフィーチャー開発環境を構築" >> release_notes.md
-          echo "3. \`cd local/nl-media-info && npm install\` でメディア情報機能の開発環境を構築" >> release_notes.md
-          echo "4. 各フォルダの README.md を参照してビルド・開発を開始" >> release_notes.md
+          echo "3. 各機能の README.md を参照してビルド・開発を開始" >> release_notes.md
           echo "" >> release_notes.md
           echo "### ⚠️ 注意事項" >> release_notes.md
           echo "- 更新前に各機能の設定をエクスポートすることを推奨" >> release_notes.md

@@ -35,20 +35,7 @@ jobs:
           cd local/features
           npm run build:ALL
 
-      - name: Install dependencies (nl-media-info)
-        run: |
-          cd local/nl-media-info
-          if [ -f package.json ]; then
-            npm ci
-          fi
-
-      - name: Build nl-media-info
-        run: |
-          cd local/nl-media-info
-          if [ -f package.json ]; then
-            npm ci
-            npm run build
-          fi
+      # nl-media-info は features に統合済みのため個別ビルドは不要
 
       - name: Lint check (if available)
         run: |
@@ -147,7 +134,6 @@ jobs:
           name: build-artifacts
           path: |
             local/features/dist/
-            local/nl-media-info/dist/
             extensions/CommentFilterLogger.*
             extensions/CustomCacheReturner.*
             extensions/downloadThruFFmpeg.*
