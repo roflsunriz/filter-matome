@@ -5,7 +5,7 @@
   "workspaces": [],
   "scripts": {
     "dev": "vite --config config/vite.global.config.js",
-    "build": "powershell -ExecutionPolicy Bypass -File scripts/build-prompt.ps1",
+    "build": "npm run build:ALL",
     "build:default": "vite build --config config/vite.global.config.js",
     "type-check": "tsc --noEmit",
     "preview": "vite preview",
