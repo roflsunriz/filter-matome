@@ -69,7 +69,7 @@ export class UIBuilder {
     thumbnailImg.src = videoData.thumbnailUrl;
     // エラーハンドリング追加
     thumbnailImg.onerror = () => {
-      thumbnailImg.src = "/local/fallback-thumbnail.svg";
+      thumbnailImg.src = "/local/images/fallback-thumbnail.svg";
       thumbnailImg.classList.add("error-thumbnail");
     };
     (card.querySelector(".quality-badge") as HTMLElement).textContent = videoData.quality === 'unknown' ? "不明な画質" : videoData.quality || "不明な画質";

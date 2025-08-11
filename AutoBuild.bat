@@ -1,1 +1,0 @@
-cmd /k "color 2E && TITLE AutoBuilder && cd %~dp0 && cd /d %~dp0 && ant version extract jar"

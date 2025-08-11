@@ -6,10 +6,10 @@ Clear-Host
 # ウィンドウタイトルを設定
 $Host.UI.RawUI.WindowTitle = "AutoBuilder"
 
-# スクリプトのディレクトリに移動
-Set-Location $PSScriptRoot
+# リポジトリルートに移動
+Set-Location (Join-Path $PSScriptRoot "..")
 
-# antコマンドを実行
+# antコマンドを実行（ルートの build.xml を対象）
 ant extract jar
 
 # コンソールを開いたままにする

@@ -2686,7 +2686,7 @@ class LinkManager {
       },
       cachelist: "https://www.nicovideo.jp/cache/",
       cacheinfo: `https://www.nicovideo.jp/cache/info/v2?${videoId}`,
-      mediainfo: `https://www.nicovideo.jp/local/nl-media-info/dist/index.html?videoId=${videoId}`,
+      mediainfo: `https://www.nicovideo.jp/local/features/dist/src/nl-media-info/index.html?videoId=${videoId}`,
       videoinfo: "https://www.nicovideo.jp/local/features/dist/src/thumb-info/index.html",
       savemovie: `https://www.nicovideo.jp/cache/ffmpeg?video=${videoId}`,
       saveaudio: `https://www.nicovideo.jp/cache/ffmpeg?audio=${videoId}`,

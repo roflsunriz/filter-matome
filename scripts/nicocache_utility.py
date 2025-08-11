@@ -8,6 +8,12 @@ import webbrowser  # 追加
 import glob  # 追加
 import ctypes
 
+def _root_path(*paths: str) -> str:
+    """リポジトリルートからの絶対パスを返すのじゃ"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    root_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+    return os.path.join(root_dir, *paths)
+
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
@@ -109,8 +115,8 @@ def run_with_admin():
 
 def run_nicocache_minimized():
     try:
-        # バッチファイルのパスを取得
-        batch_path = os.path.join(os.getcwd(), "NicoCache_nl.bat")
+        # バッチファイルのパスを取得（ルート基準）
+        batch_path = _root_path("NicoCache_nl.bat")
         if not os.path.exists(batch_path):
             print("エラー: NicoCache_nl.batが見つかりません！")
             return
@@ -129,8 +135,8 @@ def run_nicocache_minimized():
 
 def run_nicocache_gui_launcher():
     try:
-        # バッチファイルのパスを取得
-        batch_path = os.path.join(os.getcwd(), "NicoCacheGUILauncher.bat")
+        # バッチファイルのパスを取得（ルート基準）
+        batch_path = _root_path("NicoCacheGUILauncher.bat")
         if not os.path.exists(batch_path):
             print("エラー: NicoCacheGUILauncher.batが見つかりません！")
             return
@@ -154,8 +160,9 @@ def kill_java_processes():
 
 def run_ant_extract_jar():
     try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        os.chdir(script_dir)
+        # ルートに移動して実行するのじゃ
+        root_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir))
+        os.chdir(root_dir)
         print(f"作業ディレクトリを設定しました: {os.getcwd()}")
         
         # build.xmlの存在確認
@@ -193,8 +200,8 @@ def run_ant_extract_jar():
 
 def compile_java_files():
     try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        extensions_dir = os.path.join(script_dir, "extensions")
+        root_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir))
+        extensions_dir = os.path.join(root_dir, "extensions")
         os.chdir(extensions_dir)
         print(f"作業ディレクトリを設定しました: {os.getcwd()}")
 
@@ -202,8 +209,8 @@ def compile_java_files():
         java_home = os.environ.get('JAVA_HOME')
         print(f"JAVA_HOME: {java_home}")
         
-        # NicoCache_nl.jarの存在確認
-        jar_path = os.path.join(script_dir, 'NicoCache_nl.jar')
+        # NicoCache_nl.jarの存在確認（ルートにある想定）
+        jar_path = os.path.join(root_dir, 'NicoCache_nl.jar')
         if not os.path.exists(jar_path):
             print(f"警告: {jar_path} が見つかりません！")
 
@@ -464,9 +471,8 @@ def open_proxy_settings():
 
 def renew_certificate():
     try:
-        # 作業ディレクトリを取得
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        cert_path = os.path.join(script_dir, "certs", "ca.cer")
+        # ルートの certs/ca.cer を参照
+        cert_path = _root_path("certs", "ca.cer")
         
         # 証明書ファイルの存在確認
         if not os.path.exists(cert_path):
@@ -527,9 +533,8 @@ def delete_certificate():
 
 def add_certificate():
     try:
-        # 作業ディレクトリを取得
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        cert_path = os.path.join(script_dir, "certs", "ca.cer")
+        # ルートの certs/ca.cer を参照
+        cert_path = _root_path("certs", "ca.cer")
         
         # 証明書ファイルの存在確認
         if not os.path.exists(cert_path):
@@ -592,9 +597,8 @@ def open_certificate_manager():
 
 def generate_certificates():
     try:
-        # 作業ディレクトリを取得
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        gencerts_path = os.path.join(script_dir, "genCerts.bat")
+        # ルートの genCerts.bat を参照
+        gencerts_path = _root_path("genCerts.bat")
         
         # genCerts.batの存在確認
         if not os.path.exists(gencerts_path):

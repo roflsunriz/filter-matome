@@ -1,8 +1,8 @@
 # 文字コードをUTF-8に設定
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-# スクリプトのあるディレクトリに移動
-Set-Location $PSScriptRoot\extensions
+# リポジトリルートの extensions に移動
+Set-Location (Join-Path $PSScriptRoot "..\extensions")
 
 # 成功したファイルのリストを初期化
 $successFiles = @()
@@ -19,7 +19,9 @@ Get-ChildItem -Filter "*.java" | Where-Object { $_.Name -notmatch "sample" } | F
     }
     
     # Javaコンパイル実行
-    $compileOutput = & "$env:JAVA_HOME\bin\javac" -Xlint -Xlint:-path -classpath "..;$PSScriptRoot\NicoCache_nl.jar" $_.FullName 2>&1
+    # ルートの JAR を参照
+    $jarPath = (Join-Path $PSScriptRoot "..\NicoCache_nl.jar")
+    $compileOutput = & "$env:JAVA_HOME\bin\javac" -Xlint -Xlint:-path -classpath "..;$jarPath" $_.FullName 2>&1
 
     # コンパイル結果の処理
     if ($compileOutput) {

@@ -1,5 +1,5 @@
 import { formatters } from '../utils/formatters';
-import type { MediaItem } from '@/types/media-info';
+import type { MediaItem } from '@nlmi/types/media-info';
 
 const MEDIA_TYPES = {
   AUDIO: 'audio',

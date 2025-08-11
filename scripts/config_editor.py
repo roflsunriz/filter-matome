@@ -1,11 +1,21 @@
 import os
 import re
-from typing import Dict, List, TypedDict
+from typing import Dict, List, TypedDict, Optional
 
 class ConfigEditor:
-    def __init__(self, config_path: str = "config.properties"):
-        self.config_path = config_path
-        self.defaults_dir = "defaults"
+    def __init__(self, config_path: Optional[str] = None):
+        # スクリプトの場所とリポジトリルートを特定するのじゃ
+        self.script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.root_dir = os.path.abspath(os.path.join(self.script_dir, os.pardir))
+
+        # ルートの config.properties を既定とするのじゃ
+        self.config_path = (
+            os.path.join(self.root_dir, "config.properties")
+            if config_path is None else config_path
+        )
+
+        # ルートの defaults ディレクトリを参照するのじゃ
+        self.defaults_dir = os.path.join(self.root_dir, "defaults")
         self.settings: Dict[str, str] = {}
         self.comments: Dict[str, str] = {}
         self.load_config()
@@ -43,6 +53,10 @@ class ConfigEditor:
     def get_available_settings(self) -> Dict[str, "ConfigEditor.AvailableSetting"]:
         """defaultsフォルダから利用可能な設定を取得するのじゃ"""
         available_settings: Dict[str, ConfigEditor.AvailableSetting] = {}
+        # フォルダが無い場合は空で返すのじゃ
+        if not os.path.isdir(self.defaults_dir):
+            return available_settings
+
         for file in os.listdir(self.defaults_dir):
             if file.endswith('.properties'):
                 # 文字コードを自動判定するのじゃ

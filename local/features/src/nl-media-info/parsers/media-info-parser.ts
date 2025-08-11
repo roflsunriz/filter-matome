@@ -8,7 +8,7 @@ import type {
   VideoTrackInfo, 
   AudioTrackInfo,
   GeneralInfo
-} from '@/types/media-info.js';
+} from '@nlmi/types/media-info.js';
 
 export class MediaInfoParser {
   static parse(jsonContent: MediaItem[]): MediaInfoResult {
