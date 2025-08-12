@@ -122,7 +122,7 @@ export class MainController {
     if (commentExecBtn) {
       commentExecBtn.addEventListener("click", () => {
         if (this.currentVideoId) {
-          this.commentHandler.startCommentProcessing(this.currentVideoId);
+          void this.commentHandler.startCommentProcessing(this.currentVideoId);
         } else {
           window.toastr.error(
             "動画IDが設定されていません",
@@ -192,7 +192,7 @@ export class MainController {
   // videoId入力UIを表示
   private showVideoIdInputUI(): void {
     const onSubmit = (videoId: string) => {
-      this.initializeWithVideoId(videoId);
+      void this.initializeWithVideoId(videoId);
     };
 
     const onCancel = () => {
@@ -224,5 +224,5 @@ const mainController = new MainController();
 
 // DOMContentLoadedイベントで初期化
 document.addEventListener('DOMContentLoaded', () => {
-  mainController.initialize();
-}); 
+  void mainController.initialize();
+});

@@ -224,7 +224,7 @@ export class VideoInfoHandler {
   }
 
   // 外部から利用するためのスタティックメソッドに修正
-  private updateVideoInfoDisplay = this.updateVideoInfo;
+  private updateVideoInfoDisplay = (doc: Document, videoId: string): void => this.updateVideoInfo(doc, videoId);
 
   // コピー機能
   handleCopy(event: MouseEvent): void {
@@ -273,7 +273,7 @@ export class VideoInfoHandler {
     window.logger.debug(`[DEBUG] textToCopy: "${textToCopy}", label: "${label}"`);
     
     if (textToCopy && textToCopy.trim() !== '') {
-      window.apiUtils.copyToClipboard(textToCopy, label);
+      void window.apiUtils.copyToClipboard(textToCopy, label);
     } else {
       window.toastr.error(
         `${label}をコピーできませんでした`,

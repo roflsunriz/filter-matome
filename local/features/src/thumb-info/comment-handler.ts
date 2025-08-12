@@ -208,11 +208,11 @@ export class CommentHandler {
     fieldDiv.className = 'comment-field';
     
     const rawValue = comment[field.key as keyof CommentData];
-    const value = field.format ? field.format(rawValue) : String(rawValue || '');
+    const value = field.format ? field.format(rawValue as never) : String(rawValue ?? '');
     
     // デバッグ用ログ（最初の数個のフィールドのみ）
     if (['id', 'body', 'userId', 'no'].includes(field.key)) {
-      window.logger.debug(`[DEBUG] Comment field "${field.key}": rawValue="${rawValue}", value="${value}"`);
+      window.logger.debug(`[DEBUG] Comment field "${field.key}": rawValue="${String(rawValue)}", value="${String(value)}"`);
     }
     
     // コピーボタンを作成
@@ -240,7 +240,7 @@ export class CommentHandler {
     const contentDiv = document.createElement('div');
     contentDiv.className = field.className;
     contentDiv.dataset.mydata = value;
-    contentDiv.textContent = `${field.label}: ${value}`;
+    contentDiv.textContent = `${field.label}: ${String(value)}`;
 
     fieldDiv.appendChild(copyButton);
     fieldDiv.appendChild(contentDiv);
@@ -301,7 +301,7 @@ export class CommentHandler {
     window.logger.debug(`[DEBUG] Comment copy - content: "${content}", label: "${label}"`);
     
     if (content && content.trim() !== '') {
-      window.apiUtils.copyToClipboard(content, label);
+      void window.apiUtils.copyToClipboard(content, label);
     } else {
       window.toastr.error(
         `${label}をコピーできませんでした`,

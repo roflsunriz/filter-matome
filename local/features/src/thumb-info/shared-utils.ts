@@ -11,7 +11,10 @@ export const videoIdUtils = {
   // window.openerからvideoIdを取得
   getFromOpener(): string | null {
     try {
-      return window.opener?.NicoCache_nl?.watch?.apiData?.video?.id || null;
+      const openerAny = window.opener as unknown;
+      const id = (openerAny as { NicoCache_nl?: { watch?: { apiData?: { video?: { id?: unknown } } } } })
+        ?.NicoCache_nl?.watch?.apiData?.video?.id;
+      return typeof id === 'string' ? id : null;
     } catch (error) {
       window.logger.warn('Cannot access window.opener:', error);
       return null;

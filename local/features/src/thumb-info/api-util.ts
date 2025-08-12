@@ -94,7 +94,8 @@ const getApiData = {
       body: JSON.stringify({ params, threadKey, additionals: {} }),
     };
     const response = await fetchData(url, options);
-    return response.json();
+    const jsonUnknown = (await response.json()) as unknown;
+    return jsonUnknown as CommentApiResponse;
   },
 };
 
