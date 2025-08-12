@@ -43,6 +43,10 @@ export class MigrationManager {
     this.initializeMigrations();
   }
 
+  private static toErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+  }
+
   /**
    * マイグレーション定義を初期化するのじゃ
    */
@@ -69,7 +73,7 @@ export class MigrationManager {
     const store = transaction.objectStore('watchHistory');
     const request = store.getAll();
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       request.onsuccess = () => {
         const entries = request.result as WatchHistoryEntry[];
         let processedCount = 0;
@@ -98,7 +102,7 @@ export class MigrationManager {
             };
             updateRequest.onerror = () => {
               logger.error('[MigrationManager] データ更新エラー:', updateRequest.error);
-              reject(updateRequest.error);
+              reject(new Error(MigrationManager.toErrorMessage(updateRequest.error)));
             };
           } else {
             processedCount++;
@@ -112,7 +116,7 @@ export class MigrationManager {
 
       request.onerror = () => {
         logger.error('[MigrationManager] データ取得エラー:', request.error);
-        reject(request.error);
+        reject(new Error(MigrationManager.toErrorMessage(request.error)));
       };
     });
   }
@@ -180,7 +184,7 @@ export class MigrationManager {
       this.dispatchProgressEvent();
       
       logger.error('[MigrationManager] マイグレーション実行エラー:', error);
-      throw error;
+      throw new Error(String(error));
     }
   }
 
@@ -209,7 +213,7 @@ export class MigrationManager {
       logger.error('[MigrationManager] 永続化要求エラー:', error);
       return { 
         success: false, 
-        error: `永続化要求失敗: ${error}` 
+        error: `永続化要求失敗: ${MigrationManager.toErrorMessage(error)}` 
       };
     }
   }
@@ -249,7 +253,7 @@ export class MigrationManager {
       logger.error('[MigrationManager] 永続化状態取得エラー:', error);
       return { 
         success: false, 
-        error: `永続化状態取得失敗: ${error}` 
+        error: `永続化状態取得失敗: ${MigrationManager.toErrorMessage(error)}` 
       };
     }
   }
@@ -271,12 +275,12 @@ export class MigrationManager {
         new Promise<WatchHistoryEntry[]>((resolve, reject) => {
           const request = watchHistoryStore.getAll();
           request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
+          request.onerror = () => reject(new Error(MigrationManager.toErrorMessage(request.error)));
         }),
         new Promise<SeriesAlert[]>((resolve, reject) => {
           const request = seriesAlertsStore.getAll();
           request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
+          request.onerror = () => reject(new Error(MigrationManager.toErrorMessage(request.error)));
         })
       ]);
 
@@ -365,17 +369,17 @@ export class MigrationManager {
         .filter(key => key.startsWith('watch-history-backup-'))
         .map(key => {
           try {
-            const backup = JSON.parse(localStorage.getItem(key) || '{}');
+            const backup = JSON.parse(localStorage.getItem(key) || '{}') as { timestamp?: unknown; version?: unknown };
             return {
               key,
-              timestamp: backup.timestamp || 0,
-              version: backup.version || 0
+              timestamp: typeof backup.timestamp === 'number' ? backup.timestamp : 0,
+              version: typeof backup.version === 'number' ? backup.version : 0
             };
           } catch {
             return null;
           }
         })
-        .filter(backup => backup !== null)
+        .filter((backup): backup is { key: string; timestamp: number; version: number } => backup !== null)
         .sort((a, b) => b.timestamp - a.timestamp);
 
       return backups as Array<{ key: string; timestamp: number; version: number }>;
@@ -395,7 +399,7 @@ export class MigrationManager {
         return { success: false, error: 'バックアップデータが見つかりません' };
       }
 
-      const backup = JSON.parse(backupData);
+      const backup = JSON.parse(backupData) as { version?: number; entries?: unknown[]; watchHistory?: unknown[]; seriesAlerts?: unknown[] };
       logger.info('[MigrationManager] バックアップからリストア中...', backupKey);
 
       // データベースを開き直してリストア
@@ -414,33 +418,33 @@ export class MigrationManager {
             new Promise<void>((resolve, reject) => {
               const clearRequest = watchHistoryStore.clear();
               clearRequest.onsuccess = () => resolve();
-              clearRequest.onerror = () => reject(clearRequest.error);
+              clearRequest.onerror = () => reject(new Error(MigrationManager.toErrorMessage(clearRequest.error)));
             }),
             new Promise<void>((resolve, reject) => {
               const clearRequest = seriesAlertsStore.clear();
               clearRequest.onsuccess = () => resolve();
-              clearRequest.onerror = () => reject(clearRequest.error);
+              clearRequest.onerror = () => reject(new Error(MigrationManager.toErrorMessage(clearRequest.error)));
             })
           ]).then(() => {
             // バックアップデータを復元
             const promises: Promise<void>[] = [];
             
             // 後方互換性のため、watchHistoryとentriesの両方をチェック
-            const entries = backup.entries || backup.watchHistory || [];
+            const entries = (backup.entries || backup.watchHistory || []) as WatchHistoryEntry[];
             entries.forEach((entry: WatchHistoryEntry) => {
               promises.push(new Promise<void>((resolve, reject) => {
                 const addRequest = watchHistoryStore.add(entry);
                 addRequest.onsuccess = () => resolve();
-                addRequest.onerror = () => reject(addRequest.error);
+                addRequest.onerror = () => reject(new Error(MigrationManager.toErrorMessage(addRequest.error)));
               }));
             });
 
             if (backup.seriesAlerts && Array.isArray(backup.seriesAlerts)) {
-              backup.seriesAlerts.forEach((alert: SeriesAlert) => {
+              (backup.seriesAlerts as SeriesAlert[]).forEach((alert: SeriesAlert) => {
                 promises.push(new Promise<void>((resolve, reject) => {
                   const addRequest = seriesAlertsStore.add(alert);
                   addRequest.onsuccess = () => resolve();
-                  addRequest.onerror = () => reject(addRequest.error);
+                  addRequest.onerror = () => reject(new Error(MigrationManager.toErrorMessage(addRequest.error)));
                 }));
               });
             }
@@ -450,22 +454,22 @@ export class MigrationManager {
               resolve({ success: true });
             }).catch(error => {
               logger.error('[MigrationManager] リストア中にエラーが発生:', error);
-              reject({ success: false, error: `リストア失敗: ${error}` });
+              reject(new Error(`リストア失敗: ${MigrationManager.toErrorMessage(error)}`));
             });
           }).catch(error => {
             logger.error('[MigrationManager] データクリア中にエラーが発生:', error);
-            reject({ success: false, error: `データクリア失敗: ${error}` });
+            reject(new Error(`データクリア失敗: ${MigrationManager.toErrorMessage(error)}`));
           });
         };
 
         request.onerror = () => {
           logger.error('[MigrationManager] データベース開放エラー:', request.error);
-          reject({ success: false, error: `データベース開放失敗: ${request.error}` });
+          reject(new Error(`データベース開放失敗: ${MigrationManager.toErrorMessage(request.error)}`));
         };
       });
     } catch (error) {
       logger.error('[MigrationManager] リストアエラー:', error);
-      return { success: false, error: `リストア失敗: ${error}` };
+      return { success: false, error: `リストア失敗: ${MigrationManager.toErrorMessage(error)}` };
     }
   }
 }

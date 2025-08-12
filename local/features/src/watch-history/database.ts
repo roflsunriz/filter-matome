@@ -44,6 +44,10 @@ export class WatchHistoryDatabase {
     };
   }
 
+  private static toErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+  }
+
   /**
    * データベースを初期化するのじゃ
    */
@@ -55,7 +59,7 @@ export class WatchHistoryDatabase {
       const initResult = await new Promise<DBResult<void>>((resolve, reject) => {
         request.onerror = () => {
           logger.error('データベース接続失敗');
-          reject({ success: false, error: 'データベース接続失敗なのじゃ' });
+          reject(new Error('データベース接続失敗なのじゃ'));
         };
 
         request.onsuccess = () => {
@@ -150,7 +154,7 @@ export class WatchHistoryDatabase {
 
       return initResult;
     } catch (error) {
-      return { success: false, error: `初期化失敗: ${error}` };
+      return { success: false, error: `初期化失敗: ${String(error)}` };
     }
   }
 
@@ -163,7 +167,7 @@ export class WatchHistoryDatabase {
     }
 
     try {
-      return new Promise((resolve, reject) => {
+      return new Promise<DBResult<void>>((resolve, reject) => {
         const transaction = this.db!.transaction([this.config.storeName], 'readwrite');
         const store = transaction.objectStore(this.config.storeName);
         
@@ -172,18 +176,18 @@ export class WatchHistoryDatabase {
         };
         
         transaction.onerror = () => {
-          reject({ success: false, error: `保存失敗: ${transaction.error}` });
+          reject(new Error(`保存失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         
         transaction.onabort = () => {
-          reject({ success: false, error: '保存処理が中断されたのじゃ' });
+          reject(new Error('保存処理が中断されたのじゃ'));
         };
         
         // 既存エントリの確認
         const getRequest = store.get(entry.videoId);
         
         getRequest.onsuccess = () => {
-          const existingEntry = getRequest.result;
+          const existingEntry = getRequest.result as WatchHistoryEntry | undefined;
           
           if (existingEntry) {
             // 既存エントリがある場合は更新
@@ -198,23 +202,23 @@ export class WatchHistoryDatabase {
             
             const putRequest = store.put(updated);
             putRequest.onerror = () => {
-              reject({ success: false, error: `更新失敗: ${putRequest.error}` });
+              reject(new Error(`更新失敗: ${WatchHistoryDatabase.toErrorMessage(putRequest.error)}`));
             };
           } else {
             // 新規エントリ
             const putRequest = store.put(entry);
             putRequest.onerror = () => {
-              reject({ success: false, error: `追加失敗: ${putRequest.error}` });
+              reject(new Error(`追加失敗: ${WatchHistoryDatabase.toErrorMessage(putRequest.error)}`));
             };
           }
         };
         
         getRequest.onerror = () => {
-          reject({ success: false, error: `既存エントリ確認失敗: ${getRequest.error}` });
+          reject(new Error(`既存エントリ確認失敗: ${WatchHistoryDatabase.toErrorMessage(getRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `保存失敗: ${error}` };
+      return { success: false, error: `保存失敗: ${String(error)}` };
     }
   }
 
@@ -232,8 +236,8 @@ export class WatchHistoryDatabase {
       
       const result = await new Promise<WatchHistoryEntry | undefined>((resolve, reject) => {
         const request = store.get(videoId);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result as WatchHistoryEntry | undefined);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
 
       if (result) {
@@ -242,7 +246,7 @@ export class WatchHistoryDatabase {
         return { success: false, error: '動画が見つからぬのじゃ' };
       }
     } catch (error) {
-      return { success: false, error: `取得失敗: ${error}` };
+      return { success: false, error: `取得失敗: ${String(error)}` };
     }
   }
 
@@ -269,7 +273,7 @@ export class WatchHistoryDatabase {
       const entries = await new Promise<WatchHistoryEntry[]>((resolve, reject) => {
         const request = store.getAll();
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
 
       logger.debug('データベースからエントリ取得完了:', { totalEntries: entries.length });
@@ -293,7 +297,7 @@ export class WatchHistoryDatabase {
       return { success: true, data: sortedEntries };
     } catch (error) {
       logger.error('getAllEntriesエラー:', error);
-      return { success: false, error: `取得失敗: ${error}` };
+      return { success: false, error: `取得失敗: ${String(error)}` };
     }
   }
 
@@ -335,7 +339,7 @@ export class WatchHistoryDatabase {
 
       return { success: true, data: stats };
     } catch (error) {
-      return { success: false, error: `統計計算失敗: ${error}` };
+      return { success: false, error: `統計計算失敗: ${String(error)}` };
     }
   }
 
@@ -425,7 +429,7 @@ export class WatchHistoryDatabase {
 
       return { success: true, data: importedCount };
     } catch (error) {
-      return { success: false, error: `インポート失敗: ${error}` };
+      return { success: false, error: `インポート失敗: ${String(error)}` };
     }
   }
 
@@ -737,7 +741,7 @@ export class WatchHistoryDatabase {
     }
 
     try {
-      return new Promise((resolve, reject) => {
+      return new Promise<DBResult<void>>((resolve, reject) => {
         const transaction = this.db!.transaction(['seriesAlerts'], 'readwrite');
         const store = transaction.objectStore('seriesAlerts');
         
@@ -746,16 +750,16 @@ export class WatchHistoryDatabase {
         };
         
         transaction.onerror = () => {
-          reject({ success: false, error: `シリーズアラート保存失敗: ${transaction.error}` });
+          reject(new Error(`シリーズアラート保存失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         
         const putRequest = store.put(alert);
         putRequest.onerror = () => {
-          reject({ success: false, error: `シリーズアラート保存失敗: ${putRequest.error}` });
+          reject(new Error(`シリーズアラート保存失敗: ${WatchHistoryDatabase.toErrorMessage(putRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `シリーズアラート保存失敗: ${error}` };
+      return { success: false, error: `シリーズアラート保存失敗: ${String(error)}` };
     }
   }
 
@@ -773,8 +777,8 @@ export class WatchHistoryDatabase {
       
       const result = await new Promise<SeriesAlert | undefined>((resolve, reject) => {
         const request = store.get(alertId);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result as SeriesAlert | undefined);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
 
       if (result) {
@@ -783,7 +787,7 @@ export class WatchHistoryDatabase {
         return { success: false, error: 'シリーズアラートが見つからぬのじゃ' };
       }
     } catch (error) {
-      return { success: false, error: `シリーズアラート取得失敗: ${error}` };
+      return { success: false, error: `シリーズアラート取得失敗: ${String(error)}` };
     }
   }
 
@@ -802,12 +806,12 @@ export class WatchHistoryDatabase {
       const alerts = await new Promise<SeriesAlert[]>((resolve, reject) => {
         const request = store.getAll();
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
 
       return { success: true, data: alerts };
     } catch (error) {
-      return { success: false, error: `シリーズアラート一覧取得失敗: ${error}` };
+      return { success: false, error: `シリーズアラート一覧取得失敗: ${String(error)}` };
     }
   }
 
@@ -820,7 +824,7 @@ export class WatchHistoryDatabase {
     }
 
     try {
-      return new Promise((resolve, reject) => {
+      return new Promise<DBResult<void>>((resolve, reject) => {
         const transaction = this.db!.transaction(['seriesAlerts'], 'readwrite');
         const store = transaction.objectStore('seriesAlerts');
         
@@ -829,16 +833,16 @@ export class WatchHistoryDatabase {
         };
         
         transaction.onerror = () => {
-          reject({ success: false, error: `シリーズアラート削除失敗: ${transaction.error}` });
+          reject(new Error(`シリーズアラート削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         
         const deleteRequest = store.delete(alertId);
         deleteRequest.onerror = () => {
-          reject({ success: false, error: `シリーズアラート削除失敗: ${deleteRequest.error}` });
+          reject(new Error(`シリーズアラート削除失敗: ${WatchHistoryDatabase.toErrorMessage(deleteRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `シリーズアラート削除失敗: ${error}` };
+      return { success: false, error: `シリーズアラート削除失敗: ${String(error)}` };
     }
   }
 
@@ -853,7 +857,7 @@ export class WatchHistoryDatabase {
     }
 
     try {
-      return new Promise((resolve, reject) => {
+      return new Promise<DBResult<void>>((resolve, reject) => {
         const transaction = this.db!.transaction([this.config.storeName], 'readwrite');
         const store = transaction.objectStore(this.config.storeName);
         
@@ -862,16 +866,16 @@ export class WatchHistoryDatabase {
         };
         
         transaction.onerror = () => {
-          reject({ success: false, error: `視聴履歴削除失敗: ${transaction.error}` });
+          reject(new Error(`視聴履歴削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         
         const deleteRequest = store.delete(videoId);
         deleteRequest.onerror = () => {
-          reject({ success: false, error: `視聴履歴削除失敗: ${deleteRequest.error}` });
+          reject(new Error(`視聴履歴削除失敗: ${WatchHistoryDatabase.toErrorMessage(deleteRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `視聴履歴削除失敗: ${error}` };
+      return { success: false, error: `視聴履歴削除失敗: ${String(error)}` };
     }
   }
 
@@ -884,7 +888,7 @@ export class WatchHistoryDatabase {
     }
 
     try {
-      return new Promise((resolve, reject) => {
+      return new Promise<DBResult<number>>((resolve, reject) => {
         const transaction = this.db!.transaction([this.config.storeName], 'readwrite');
         const store = transaction.objectStore(this.config.storeName);
         
@@ -902,20 +906,20 @@ export class WatchHistoryDatabase {
           };
           
           clearRequest.onerror = () => {
-            reject({ success: false, error: `一括削除失敗: ${clearRequest.error}` });
+            reject(new Error(`一括削除失敗: ${WatchHistoryDatabase.toErrorMessage(clearRequest.error)}`));
           };
         };
         
         countRequest.onerror = () => {
-          reject({ success: false, error: `件数取得失敗: ${countRequest.error}` });
+          reject(new Error(`件数取得失敗: ${WatchHistoryDatabase.toErrorMessage(countRequest.error)}`));
         };
         
         transaction.onerror = () => {
-          reject({ success: false, error: `一括削除失敗: ${transaction.error}` });
+          reject(new Error(`一括削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `一括削除失敗: ${error}` };
+      return { success: false, error: `一括削除失敗: ${String(error)}` };
     }
   }
 
@@ -934,7 +938,7 @@ export class WatchHistoryDatabase {
     }
 
     try {
-      return new Promise((resolve, reject) => {
+      return new Promise<DBResult<number>>((resolve, reject) => {
         const transaction = this.db!.transaction([this.config.storeName], 'readwrite');
         const store = transaction.objectStore(this.config.storeName);
         const deletedVideoIds: string[] = [];
@@ -944,7 +948,7 @@ export class WatchHistoryDatabase {
         };
         
         transaction.onerror = () => {
-          reject({ success: false, error: `条件付き削除失敗: ${transaction.error}` });
+          reject(new Error(`条件付き削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         
         // 全エントリをカーソルで走査
@@ -967,11 +971,11 @@ export class WatchHistoryDatabase {
               deletedVideoIds.push(entry.videoId);
               
               // エントリを削除
-              const deleteRequest = cursor.delete();
-              deleteRequest.onerror = () => {
-                reject({ success: false, error: `エントリ削除失敗 (${entry.videoId}): ${deleteRequest.error}` });
-                return;
-              };
+            const deleteRequest = cursor.delete();
+            deleteRequest.onerror = () => {
+              reject(new Error(`エントリ削除失敗 (${entry.videoId}): ${WatchHistoryDatabase.toErrorMessage(deleteRequest.error)}`));
+              return;
+            };
             }
             
             // 次のエントリへ
@@ -981,11 +985,11 @@ export class WatchHistoryDatabase {
         };
         
         cursorRequest.onerror = () => {
-          reject({ success: false, error: `カーソル取得失敗: ${cursorRequest.error}` });
+          reject(new Error(`カーソル取得失敗: ${WatchHistoryDatabase.toErrorMessage(cursorRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `条件付き削除失敗: ${error}` };
+      return { success: false, error: `条件付き削除失敗: ${String(error)}` };
     }
   }
 
@@ -1115,7 +1119,7 @@ export class WatchHistoryDatabase {
       await migrationManager.executeMigrations(this.db, 1, this.config.version);
       return { success: true };
     } catch (error) {
-      return { success: false, error: `マイグレーション実行失敗: ${error}` };
+      return { success: false, error: `マイグレーション実行失敗: ${WatchHistoryDatabase.toErrorMessage(error)}` };
     }
   }
 }

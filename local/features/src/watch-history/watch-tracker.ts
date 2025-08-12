@@ -28,8 +28,7 @@ export class WatchTracker {
   private readonly SESSION_RECORD_INTERVAL = 10000; // 10秒以内の重複記録を防ぐ
 
   constructor() {
-    
-    this.initialize();
+    void this.initialize();
   }
 
   /**
@@ -182,7 +181,7 @@ export class WatchTracker {
     if (!this.videoElement) {
       console.warn('[WatchTracker] video要素が見つかりません。後で再試行します。');
       // 5秒後に再試行
-      setTimeout(async () => await this.startWatching(), 5000);
+      setTimeout(() => { void this.startWatching(); }, 5000);
       return;
     }
 
@@ -304,17 +303,17 @@ export class WatchTracker {
     });
 
     // 一時停止
-    this.videoElement.addEventListener('pause', async () => {
+    this.videoElement.addEventListener('pause', () => {
       const currentTime = this.videoElement!.currentTime;
       this.emitWatchEvent('pause', currentTime);
       
       // 一時停止時にも現在の視聴セッションを記録
-      await this.recordCurrentSession();
+      void this.recordCurrentSession();
     });
 
     // 終了
     this.videoElement.addEventListener('ended', () => {
-      this.handleVideoEnded();
+      void this.handleVideoEnded();
     });
 
     // 時間更新（デバウンス処理）
@@ -322,9 +321,7 @@ export class WatchTracker {
     this.videoElement.addEventListener('timeupdate', () => {
       if (timeUpdateTimeout) clearTimeout(timeUpdateTimeout);
       
-      timeUpdateTimeout = setTimeout(async () => {
-        await this.handleTimeUpdate();
-      }, 1000); // 1秒デバウンス
+      timeUpdateTimeout = setTimeout(() => { void this.handleTimeUpdate(); }, 1000); // 1秒デバウンス
     });
   }
 
@@ -337,7 +334,7 @@ export class WatchTracker {
     }
 
     this.progressTimer = setInterval(() => {
-      this.updateProgress();
+      void this.updateProgress();
     }, this.PROGRESS_INTERVAL);
   }
 
@@ -663,7 +660,7 @@ export class WatchTracker {
     
     // データベースに同期的に保存を試みる（IndexedDBは実際には非同期だが、可能な限り）
     try {
-      watchHistoryDB.saveEntry(this.currentEntry);
+      void watchHistoryDB.saveEntry(this.currentEntry);
       logger.debug('[WatchTracker] 視聴セッションを同期的に記録しました:', {
         videoId: this.currentEntry.videoId,
         position: currentTime,
@@ -868,7 +865,6 @@ async function initializeWatchTracker(): Promise<void> {
   
   // 既存のトラッカーがあれば破棄
   if (watchTracker) {
-    
     await watchTracker.destroy();
   }
   
@@ -882,16 +878,14 @@ async function initializeWatchTracker(): Promise<void> {
 
 
 if (document.readyState === 'loading') {
-  
-  document.addEventListener('DOMContentLoaded', initializeWatchTracker);
+  document.addEventListener('DOMContentLoaded', () => { void initializeWatchTracker(); });
 } else {
-  
-  initializeWatchTracker();
+  void initializeWatchTracker();
 }
 
 // ページ遷移時の対応（SPA対応）
 let currentUrl = location.href;
-const observer = new MutationObserver(async () => {
+const observer = new MutationObserver(() => {
   if (location.href !== currentUrl) {
     
     currentUrl = location.href;
@@ -900,9 +894,7 @@ const observer = new MutationObserver(async () => {
     if (/\/watch\/[ns][mo][0-9]+/.test(location.pathname)) {
       
       // 少し待ってから初期化（DOM更新完了を待つ）
-      setTimeout(async () => {
-        await initializeWatchTracker();
-      }, 1000);
+      setTimeout(() => { void initializeWatchTracker(); }, 1000);
     }
   }
 });
@@ -922,18 +914,18 @@ window.addEventListener('beforeunload', () => {
 });
 
 // ページの可視性変更時の処理（タブ切り替え、最小化など）
-document.addEventListener('visibilitychange', async () => {
+document.addEventListener('visibilitychange', () => {
   if (watchTracker && document.visibilityState === 'hidden') {
     logger.debug('[WatchTracker] ページが非表示になりました - 進捗を一時保存します');
-    await watchTracker.saveSnapshot();
+    void watchTracker.saveSnapshot();
     // 背景でも tracking は継続するゆえ destroy は行わぬのじゃ
   }
 });
 
 // ページ離脱時の処理（より確実にキャッチ）
-window.addEventListener('pagehide', async () => {
+window.addEventListener('pagehide', () => {
   if (watchTracker) {
     logger.debug('[WatchTracker] ページが離脱されました - 視聴セッションを記録します');
-    await watchTracker.destroy();
+    void watchTracker.destroy();
   }
 }); 

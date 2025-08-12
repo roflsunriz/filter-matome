@@ -66,8 +66,26 @@ class WatchHistoryApp {
     this.setupEventListeners();
     this.loadConfig();
     this.initializeCommonHeader();
-    this.initialize();
+    void this.initialize();
     applyWatchHistoryStyles();
+  }
+
+  /**
+   * 非同期ハンドラをイベントリスナー用に安全にラップするのじゃ
+   */
+  private guardEvent<T extends Event>(handler: (ev: T) => void | Promise<void>): (ev: T) => void {
+    return (ev: T) => {
+      try {
+        const maybe = handler.call(this, ev);
+        if (maybe instanceof Promise) {
+          void maybe.catch((error) => {
+            logger?.error('[WatchHistory] Event handler error:', error);
+          });
+        }
+      } catch (error) {
+        logger?.error('[WatchHistory] Event handler throw:', error);
+      }
+    };
   }
 
   /**
@@ -127,112 +145,112 @@ class WatchHistoryApp {
    */
   private setupEventListeners(): void {
     // 検索
-    this.elements['search-input']?.addEventListener('input', this.handleSearch.bind(this));
-    this.elements['search-clear']?.addEventListener('click', this.clearSearch.bind(this));
+    this.elements['search-input']?.addEventListener('input', this.guardEvent((e) => this.handleSearch(e)));
+    this.elements['search-clear']?.addEventListener('click', this.guardEvent((e) => this.clearSearch(e)));
 
     // ソート
     document.querySelectorAll('.sort-btn').forEach(btn => {
-      btn.addEventListener('click', this.handleSort.bind(this));
+      btn.addEventListener('click', this.guardEvent((e) => this.handleSort(e)));
     });
 
     // フィルタ
-    this.elements['filter-completed']?.addEventListener('change', this.handleFilter.bind(this));
-    this.elements['filter-owner']?.addEventListener('change', this.handleFilter.bind(this));
-    this.elements['filter-date-start']?.addEventListener('change', this.handleFilter.bind(this));
-    this.elements['filter-date-end']?.addEventListener('change', this.handleFilter.bind(this));
-    this.elements['clear-date-range']?.addEventListener('click', this.clearDateRange.bind(this));
+    this.elements['filter-completed']?.addEventListener('change', this.guardEvent((e) => this.handleFilter(e)));
+    this.elements['filter-owner']?.addEventListener('change', this.guardEvent((e) => this.handleFilter(e)));
+    this.elements['filter-date-start']?.addEventListener('change', this.guardEvent((e) => this.handleFilter(e)));
+    this.elements['filter-date-end']?.addEventListener('change', this.guardEvent((e) => this.handleFilter(e)));
+    this.elements['clear-date-range']?.addEventListener('click', this.guardEvent((e) => this.clearDateRange(e)));
 
     // リフレッシュ
-    this.elements['refresh-btn']?.addEventListener('click', this.refreshData.bind(this));
+    this.elements['refresh-btn']?.addEventListener('click', this.guardEvent((e) => this.refreshData(e)));
 
     // インポート・エクスポート
-    this.elements['export-btn']?.addEventListener('click', this.handleExport.bind(this));
-    this.elements['import-btn']?.addEventListener('click', this.handleImport.bind(this));
-    this.elements['import-file']?.addEventListener('change', this.handleImportFile.bind(this));
+    this.elements['export-btn']?.addEventListener('click', this.guardEvent((e) => this.handleExport(e)));
+    this.elements['import-btn']?.addEventListener('click', this.guardEvent((e) => this.handleImport(e)));
+    this.elements['import-file']?.addEventListener('change', this.guardEvent((e) => this.handleImportFile(e)));
 
     // 削除機能
-    this.elements['delete-all-btn']?.addEventListener('click', this.deleteAllHistoryEntries.bind(this));
-    this.elements['delete-by-condition-btn']?.addEventListener('click', this.handleConditionalDelete.bind(this));
+    this.elements['delete-all-btn']?.addEventListener('click', this.guardEvent((e) => this.deleteAllHistoryEntries(e)));
+    this.elements['delete-by-condition-btn']?.addEventListener('click', this.guardEvent((e) => this.handleConditionalDelete(e)));
 
     // タブ切り替え
-    this.elements['history-tab']?.addEventListener('click', () => this.switchTab('history'));
-    this.elements['stats-tab']?.addEventListener('click', () => this.switchTab('stats'));
-    this.elements['series-tab']?.addEventListener('click', () => this.switchTab('series'));
-    this.elements['series-alert-tab']?.addEventListener('click', () => this.switchTab('series-alert'));
+    this.elements['history-tab']?.addEventListener('click', this.guardEvent(() => { this.switchTab('history'); }));
+    this.elements['stats-tab']?.addEventListener('click', this.guardEvent(() => { this.switchTab('stats'); }));
+    this.elements['series-tab']?.addEventListener('click', this.guardEvent(() => { this.switchTab('series'); }));
+    this.elements['series-alert-tab']?.addEventListener('click', this.guardEvent(() => { this.switchTab('series-alert'); }));
 
     // モーダル
-    this.elements['modal-close']?.addEventListener('click', this.closeModal.bind(this));
-    this.elements['modal-open-video']?.addEventListener('click', this.openVideo.bind(this));
-    this.elements['modal-edit-memo']?.addEventListener('click', this.openMemoEdit.bind(this));
+    this.elements['modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeModal(e)));
+    this.elements['modal-open-video']?.addEventListener('click', this.guardEvent((e) => this.openVideo(e)));
+    this.elements['modal-edit-memo']?.addEventListener('click', this.guardEvent((e) => this.openMemoEdit(e)));
 
     // メモ編集モーダル
-    this.elements['memo-modal-close']?.addEventListener('click', this.closeMemoEdit.bind(this));
-    this.elements['memo-save']?.addEventListener('click', this.saveMemo.bind(this));
-    this.elements['memo-cancel']?.addEventListener('click', this.closeMemoEdit.bind(this));
+    this.elements['memo-modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeMemoEdit(e)));
+    this.elements['memo-save']?.addEventListener('click', this.guardEvent((e) => this.saveMemo(e)));
+    this.elements['memo-cancel']?.addEventListener('click', this.guardEvent((e) => this.closeMemoEdit(e)));
 
     // モーダルオーバーレイクリック
-    this.elements['video-detail-modal']?.addEventListener('click', (e) => {
+    this.elements['video-detail-modal']?.addEventListener('click', this.guardEvent((e) => {
       if (e.target === this.elements['video-detail-modal']) {
         this.closeModal();
       }
-    });
+    }));
 
-    this.elements['memo-edit-modal']?.addEventListener('click', (e) => {
+    this.elements['memo-edit-modal']?.addEventListener('click', this.guardEvent((e) => {
       if (e.target === this.elements['memo-edit-modal']) {
         this.closeMemoEdit();
       }
-    });
+    }));
 
     // シリーズ関連イベント
-    this.elements['series-search-input']?.addEventListener('input', this.handleSeriesSearch.bind(this));
-    this.elements['series-search-clear']?.addEventListener('click', this.clearSeriesSearch.bind(this));
-    this.elements['series-progress-filter']?.addEventListener('change', this.handleSeriesFilter.bind(this));
-    this.elements['series-refresh-btn']?.addEventListener('click', this.refreshSeriesData.bind(this));
+    this.elements['series-search-input']?.addEventListener('input', this.guardEvent((e) => this.handleSeriesSearch(e)));
+    this.elements['series-search-clear']?.addEventListener('click', this.guardEvent((e) => this.clearSeriesSearch(e)));
+    this.elements['series-progress-filter']?.addEventListener('change', this.guardEvent((e) => this.handleSeriesFilter(e)));
+    this.elements['series-refresh-btn']?.addEventListener('click', this.guardEvent((e) => this.refreshSeriesData(e)));
 
     // シリーズアラート関連イベント
-    this.elements['add-series-alert-btn']?.addEventListener('click', this.openSeriesAlertModal.bind(this));
-    this.elements['add-series-alert-btn-empty']?.addEventListener('click', this.openSeriesAlertModal.bind(this));
-    this.elements['series-alert-refresh-btn']?.addEventListener('click', this.refreshSeriesAlertData.bind(this));
-    this.elements['manual-alert-check-btn']?.addEventListener('click', this.manualCheckAlerts.bind(this));
-    this.elements['notification-permission-btn']?.addEventListener('click', this.checkNotificationPermission.bind(this));
+    this.elements['add-series-alert-btn']?.addEventListener('click', this.guardEvent((e) => this.openSeriesAlertModal(e)));
+    this.elements['add-series-alert-btn-empty']?.addEventListener('click', this.guardEvent((e) => this.openSeriesAlertModal(e)));
+    this.elements['series-alert-refresh-btn']?.addEventListener('click', this.guardEvent((e) => this.refreshSeriesAlertData(e)));
+    this.elements['manual-alert-check-btn']?.addEventListener('click', this.guardEvent((e) => this.manualCheckAlerts(e)));
+    this.elements['notification-permission-btn']?.addEventListener('click', this.guardEvent((e) => this.checkNotificationPermission(e)));
 
     // シリーズアラートモーダル
-    this.elements['series-alert-modal-close']?.addEventListener('click', this.closeSeriesAlertModal.bind(this));
-    this.elements['series-alert-save']?.addEventListener('click', this.saveSeriesAlert.bind(this));
-    this.elements['series-alert-cancel']?.addEventListener('click', this.closeSeriesAlertModal.bind(this));
+    this.elements['series-alert-modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeSeriesAlertModal(e)));
+    this.elements['series-alert-save']?.addEventListener('click', this.guardEvent((e) => this.saveSeriesAlert(e)));
+    this.elements['series-alert-cancel']?.addEventListener('click', this.guardEvent((e) => this.closeSeriesAlertModal(e)));
 
     // シリーズ詳細モーダル
-    this.elements['series-detail-modal-close']?.addEventListener('click', this.closeSeriesDetailModal.bind(this));
-    this.elements['series-detail-add-alert']?.addEventListener('click', this.addAlertFromSeriesDetail.bind(this));
+    this.elements['series-detail-modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeSeriesDetailModal(e)));
+    this.elements['series-detail-add-alert']?.addEventListener('click', this.guardEvent((e) => this.addAlertFromSeriesDetail(e)));
 
     // モーダルオーバーレイクリック（シリーズ関連）
-    this.elements['series-alert-modal']?.addEventListener('click', (e) => {
+    this.elements['series-alert-modal']?.addEventListener('click', this.guardEvent((e) => {
       if (e.target === this.elements['series-alert-modal']) {
         this.closeSeriesAlertModal();
       }
-    });
+    }));
 
-    this.elements['series-detail-modal']?.addEventListener('click', (e) => {
+    this.elements['series-detail-modal']?.addEventListener('click', this.guardEvent((e) => {
       if (e.target === this.elements['series-detail-modal']) {
         this.closeSeriesDetailModal();
       }
-    });
+    }));
 
     // データベース管理関連イベント
-    this.elements['database-management-btn']?.addEventListener('click', this.openDatabaseManagementModal.bind(this));
-    this.elements['db-management-modal-close']?.addEventListener('click', this.closeDatabaseManagementModal.bind(this));
-    this.elements['request-persistence-btn']?.addEventListener('click', this.requestPersistence.bind(this));
-    this.elements['refresh-persistence-btn']?.addEventListener('click', this.refreshPersistenceStatus.bind(this));
-    this.elements['run-migration-btn']?.addEventListener('click', this.runMigration.bind(this));
-    this.elements['check-migration-btn']?.addEventListener('click', this.checkMigrationStatus.bind(this));
-    this.elements['create-backup-btn']?.addEventListener('click', this.createBackup.bind(this));
-    this.elements['refresh-backups-btn']?.addEventListener('click', this.refreshBackupList.bind(this));
+    this.elements['database-management-btn']?.addEventListener('click', this.guardEvent((e) => this.openDatabaseManagementModal(e)));
+    this.elements['db-management-modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeDatabaseManagementModal(e)));
+    this.elements['request-persistence-btn']?.addEventListener('click', this.guardEvent((e) => this.requestPersistence(e)));
+    this.elements['refresh-persistence-btn']?.addEventListener('click', this.guardEvent((e) => this.refreshPersistenceStatus(e)));
+    this.elements['run-migration-btn']?.addEventListener('click', this.guardEvent((e) => this.runMigration(e)));
+    this.elements['check-migration-btn']?.addEventListener('click', this.guardEvent((e) => this.checkMigrationStatus(e)));
+    this.elements['create-backup-btn']?.addEventListener('click', this.guardEvent((e) => this.createBackup(e)));
+    this.elements['refresh-backups-btn']?.addEventListener('click', this.guardEvent((e) => this.refreshBackupList(e)));
 
     // 設定チェックボックス
-    this.elements['auto-migration-checkbox']?.addEventListener('change', this.updateDatabaseConfig.bind(this));
-    this.elements['auto-persist-checkbox']?.addEventListener('change', this.updateDatabaseConfig.bind(this));
-    this.elements['auto-backup-checkbox']?.addEventListener('change', this.updateDatabaseConfig.bind(this));
-    this.elements['backup-before-migration-checkbox']?.addEventListener('change', this.updateDatabaseConfig.bind(this));
+    this.elements['auto-migration-checkbox']?.addEventListener('change', this.guardEvent((e) => this.updateDatabaseConfig(e)));
+    this.elements['auto-persist-checkbox']?.addEventListener('change', this.guardEvent((e) => this.updateDatabaseConfig(e)));
+    this.elements['auto-backup-checkbox']?.addEventListener('change', this.guardEvent((e) => this.updateDatabaseConfig(e)));
+    this.elements['backup-before-migration-checkbox']?.addEventListener('change', this.guardEvent((e) => this.updateDatabaseConfig(e)));
 
     // データベース管理モーダルオーバーレイクリック
     this.elements['database-management-modal']?.addEventListener('click', (e) => {
@@ -242,8 +260,8 @@ class WatchHistoryApp {
     });
 
     // 通知権限モーダル
-    this.elements['notification-permission-modal-close']?.addEventListener('click', this.closeNotificationPermissionModal.bind(this));
-    this.elements['test-notification-after-setup']?.addEventListener('click', this.testNotificationAfterSetup.bind(this));
+    this.elements['notification-permission-modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeNotificationPermissionModal(e)));
+    this.elements['test-notification-after-setup']?.addEventListener('click', this.guardEvent((e) => this.testNotificationAfterSetup(e)));
 
     // 通知権限モーダルオーバーレイクリック
     this.elements['notification-permission-modal']?.addEventListener('click', (e) => {
@@ -253,9 +271,9 @@ class WatchHistoryApp {
     });
 
     // マイグレーション進捗イベントリスナー
-    document.addEventListener('migrationProgress', (e) => {
+    document.addEventListener('migrationProgress', this.guardEvent((e) => {
       this.handleMigrationProgress(e as CustomEvent);
-    });
+    }));
   }
 
   /**
@@ -265,7 +283,10 @@ class WatchHistoryApp {
     const savedConfig = sessionStorage.getItem('watchHistoryConfig');
     if (savedConfig) {
       try {
-        this.config = { ...this.config, ...JSON.parse(savedConfig) };
+        const parsed: unknown = JSON.parse(savedConfig);
+        if (parsed && typeof parsed === 'object') {
+          this.config = { ...this.config, ...(parsed as Partial<HistoryViewConfig>) };
+        }
         // ===== 読み込んだ検索テキストをサニタイズするのじゃ =====
         const txt = (this.config.filter.searchText ?? '').trim().toLowerCase();
         if (!txt || txt === 'null' || txt === 'undefined') {
@@ -516,7 +537,7 @@ class WatchHistoryApp {
 
     // イベントリスナーを設定
     historyList.querySelectorAll('.history-item').forEach((item, index) => {
-      item.addEventListener('click', (e) => {
+      item.addEventListener('click', this.guardEvent((e) => {
         // アコーディオンのクリックイベントを除外
         if (e.target && (e.target as HTMLElement).closest('.watch-count-item')) {
           return;
@@ -526,22 +547,22 @@ class WatchHistoryApp {
           return;
         }
         this.showVideoDetail(this.filteredEntries[index]);
-      });
+      }));
 
       // 削除ボタンのイベントリスナーを設定
       const deleteBtn = item.querySelector('.history-delete-btn');
-      deleteBtn?.addEventListener('click', (e) => {
+      deleteBtn?.addEventListener('click', this.guardEvent((e) => {
         e.stopPropagation();
-        this.deleteHistoryEntry(this.filteredEntries[index]);
-      });
+        void this.deleteHistoryEntry(this.filteredEntries[index]);
+      }));
     });
 
     // アコーディオンのイベントリスナーを設定
     historyList.querySelectorAll('.watch-count-item').forEach((item) => {
-      item.addEventListener('click', (e) => {
+      item.addEventListener('click', this.guardEvent((e) => {
         e.stopPropagation(); // 履歴アイテムクリックを防ぐ
         this.toggleWatchLogsAccordion(item as HTMLElement);
-      });
+      }));
     });
   }
 
@@ -1302,17 +1323,17 @@ class WatchHistoryApp {
 
     // 統計タブの場合はグラフを更新
     if (tabName === 'stats') {
-      setTimeout(() => this.updateCharts(), 100);
+      setTimeout(() => { this.updateCharts(); }, 100);
     }
     
     // シリーズタブの場合はシリーズデータを初期化
     if (tabName === 'series') {
-      this.initializeSeriesTab();
+      void this.initializeSeriesTab();
     }
     
     // シリーズアラートタブの場合はアラートデータを初期化
     if (tabName === 'series-alert') {
-      this.initializeSeriesAlertTab();
+      void this.initializeSeriesAlertTab();
     }
   }
 
@@ -1801,22 +1822,22 @@ class WatchHistoryApp {
     // イベントリスナーを設定
     seriesList.querySelectorAll('.series-item').forEach((item, index) => {
       // シリーズアイテムのクリックイベント（ナビゲーションボタンは除外）
-      item.addEventListener('click', (e) => {
+      item.addEventListener('click', this.guardEvent((e) => {
         if (!(e.target as HTMLElement).closest('.series-nav-btn')) {
-          this.showSeriesDetail(this.filteredSeriesStats[index]);
+          void this.showSeriesDetail(this.filteredSeriesStats[index]);
         }
-      });
+      }));
     });
 
     // ナビゲーションボタンのイベントリスナーを設定
     seriesList.querySelectorAll('.series-nav-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', this.guardEvent((e) => {
         e.stopPropagation();
         const videoId = (e.currentTarget as HTMLElement).getAttribute('data-video-id');
         if (videoId) {
-          this.openVideoFromSeries(videoId);
+          void this.openVideoFromSeries(videoId);
         }
-      });
+      }));
     });
   }
 
@@ -1841,16 +1862,16 @@ class WatchHistoryApp {
     // イベントリスナーを設定
     alertList.querySelectorAll('.series-alert-item').forEach((item, index) => {
       const toggleBtn = item.querySelector('.alert-toggle');
-      toggleBtn?.addEventListener('click', (e) => {
+      toggleBtn?.addEventListener('click', this.guardEvent((e) => {
         e.stopPropagation();
-        this.toggleSeriesAlert(this.seriesAlerts[index]);
-      });
+        void this.toggleSeriesAlert(this.seriesAlerts[index]);
+      }));
 
       const deleteBtn = item.querySelector('.alert-delete');
-      deleteBtn?.addEventListener('click', (e) => {
+      deleteBtn?.addEventListener('click', this.guardEvent((e) => {
         e.stopPropagation();
-        this.deleteSeriesAlert(this.seriesAlerts[index]);
-      });
+        void this.deleteSeriesAlert(this.seriesAlerts[index]);
+      }));
     });
   }
 
@@ -2430,7 +2451,7 @@ class WatchHistoryApp {
     const maxWatchCount = parseInt(watchCountInput.value) || 0;
     const maxProgressRate = parseInt(progressRateInput.value) || 0;
 
-    this.deleteHistoryEntriesByCondition(maxWatchCount, maxProgressRate);
+    void this.deleteHistoryEntriesByCondition(maxWatchCount, maxProgressRate);
   }
 
   /**
@@ -2460,11 +2481,11 @@ class WatchHistoryApp {
 
     // 1分間隔でアラートをチェック（テスト用）
     this.alertCheckInterval = setInterval(() => {
-      this.checkSeriesAlerts();
+      void this.checkSeriesAlerts();
     }, 1 * 60 * 1000);
 
     // 初回チェック
-    this.checkSeriesAlerts();
+    void this.checkSeriesAlerts();
   }
 
   /**
@@ -2603,6 +2624,8 @@ class WatchHistoryApp {
               requireInteraction: true
             });
           }
+        }).catch((error) => {
+          logger?.error('Notification permission request failed:', error);
         });
       }
     } else {
@@ -2647,7 +2670,7 @@ class WatchHistoryApp {
         }
       }
 
-      await this.updateSeriesAlertUI();
+      this.updateSeriesAlertUI();
       
       const notificationStatus = 'Notification' in window ? 
         (Notification.permission === 'granted' ? 'ブラウザ通知有効' : 'ブラウザ通知無効') : 
@@ -3091,6 +3114,7 @@ class WatchHistoryApp {
    * バックアップリストを更新するのじゃ
    */
   private async refreshBackupList(): Promise<void> {
+    await Promise.resolve();
     try {
       const backups = watchHistoryDB.getAvailableBackups();
       this.updateBackupListUI(backups);
@@ -3123,6 +3147,7 @@ class WatchHistoryApp {
    * データベース設定を更新するのじゃ
    */
   private async refreshDatabaseConfig(): Promise<void> {
+    await Promise.resolve();
     try {
       this.databaseConfig = watchHistoryDB.getMigrationConfig();
       this.updateDatabaseConfigUI();
@@ -3262,21 +3287,21 @@ class WatchHistoryApp {
 
     // イベントリスナーを設定
     container.querySelectorAll('.backup-restore-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+      btn.addEventListener('click', this.guardEvent(async (e) => {
         const backupKey = (e.target as HTMLElement).getAttribute('data-backup-key');
         if (backupKey) {
           await this.restoreBackup(backupKey);
         }
-      });
+      }));
     });
 
     container.querySelectorAll('.backup-delete-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', this.guardEvent((e) => {
         const backupKey = (e.target as HTMLElement).getAttribute('data-backup-key');
         if (backupKey) {
-          this.deleteBackup(backupKey);
+          void this.deleteBackup(backupKey);
         }
-      });
+      }));
     });
   }
 
@@ -3314,7 +3339,7 @@ class WatchHistoryApp {
     try {
       localStorage.removeItem(backupKey);
       this.showToast('バックアップを削除しました', 'success');
-      this.refreshBackupList();
+      void this.refreshBackupList();
     } catch (error) {
       logger.error('バックアップ削除エラー:', error);
       this.showToast('バックアップの削除に失敗しました', 'error');
