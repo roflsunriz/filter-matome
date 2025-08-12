@@ -384,7 +384,9 @@ export class Mylist2ManagerUI {
     if (video.tags && video.tags.length > 0) {
       try {
         item.dataset.tags = JSON.stringify(video.tags);
-      } catch {}
+      } catch (err) {
+        void err;
+      }
     }
 
     // サムネイルと基本情報
@@ -571,9 +573,9 @@ export class Mylist2ManagerUI {
           const descFromDom = target.dataset.description;
           const tagsFromDom = target.dataset.tags;
           const fallback: Partial<VideoInfo> = {};
-          if (descFromDom) (fallback as any).description = descFromDom;
+          if (descFromDom) fallback.description = descFromDom;
           if (tagsFromDom) {
-            try { (fallback as any).tags = JSON.parse(tagsFromDom); } catch {}
+            try { fallback.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; }
           }
           await this.showVideoDetailsModal(fallback as VideoInfo);
           return;
@@ -591,19 +593,19 @@ export class Mylist2ManagerUI {
           const descFromDom = target.dataset.description;
           const tagsFromDom = target.dataset.tags;
           if (video) {
-            if ((video as any).description === undefined && descFromDom) {
-              (video as any).description = descFromDom;
+            if (video.description === undefined && descFromDom) {
+              video.description = descFromDom;
             }
-            if ((video as any).tags === undefined && tagsFromDom) {
-              try { (video as any).tags = JSON.parse(tagsFromDom); } catch {}
+            if (video.tags === undefined && tagsFromDom) {
+              try { video.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; }
             }
             await this.showVideoDetailsModal(video);
           } else {
             // DBに見つからない場合でもDOMの情報でモーダルを表示
             const fallback: Partial<VideoInfo> = {};
-            if (descFromDom) (fallback as any).description = descFromDom;
+            if (descFromDom) fallback.description = descFromDom;
             if (tagsFromDom) {
-              try { (fallback as any).tags = JSON.parse(tagsFromDom); } catch {}
+              try { fallback.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; }
             }
             await this.showVideoDetailsModal(fallback as VideoInfo);
           }
@@ -625,8 +627,8 @@ export class Mylist2ManagerUI {
       try {
         if (!compositeId) {
           const fallback: Partial<VideoInfo> = {};
-          if (descFromDom) (fallback as any).description = descFromDom;
-          if (tagsFromDom) { try { (fallback as any).tags = JSON.parse(tagsFromDom); } catch {} }
+          if (descFromDom) fallback.description = descFromDom;
+          if (tagsFromDom) { try { fallback.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; } }
           await this.showVideoDetailsModal(fallback as VideoInfo);
           return;
         }
@@ -640,17 +642,17 @@ export class Mylist2ManagerUI {
         });
         db.close();
         if (video) {
-          if ((video as any).description === undefined && descFromDom) {
-            (video as any).description = descFromDom;
+          if (video.description === undefined && descFromDom) {
+            video.description = descFromDom;
           }
-          if ((video as any).tags === undefined && tagsFromDom) {
-            try { (video as any).tags = JSON.parse(tagsFromDom); } catch {}
+          if (video.tags === undefined && tagsFromDom) {
+            try { video.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; }
           }
           await this.showVideoDetailsModal(video);
         } else {
           const fallback: Partial<VideoInfo> = {};
-          if (descFromDom) (fallback as any).description = descFromDom;
-          if (tagsFromDom) { try { (fallback as any).tags = JSON.parse(tagsFromDom); } catch {} }
+          if (descFromDom) fallback.description = descFromDom;
+          if (tagsFromDom) { try { fallback.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; } }
           await this.showVideoDetailsModal(fallback as VideoInfo);
         }
       } catch (e) {

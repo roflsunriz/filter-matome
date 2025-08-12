@@ -198,6 +198,7 @@ export class LegacyConverter {
             description: `NG正規表現: ${trimmedRegex}`
           });
         } catch (error) {
+          void error;
           log.push(`無効な正規表現をスキップ: ${trimmedRegex}`);
         }
       }
@@ -257,6 +258,7 @@ export class LegacyConverter {
             description: `SuperNG正規表現: ${trimmedRegex}`
           });
         } catch (error) {
+          void error;
           log.push(`無効なSuperNG正規表現をスキップ: ${trimmedRegex}`);
         }
       }
@@ -289,6 +291,7 @@ export class LegacyConverter {
               description: `置換ルール: ${regex.trim()} => ${replace.trim()}`
             });
           } catch (error) {
+            void error;
             log.push(`無効な置換ルールをスキップ: ${trimmedLine}`);
           }
         }

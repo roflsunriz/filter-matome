@@ -5203,7 +5203,7 @@ class Mylist2ManagerUI {
     if (video.tags && video.tags.length > 0) {
       try {
         item.dataset.tags = JSON.stringify(video.tags);
-      } catch {
+      } catch (err) {
       }
     }
     const thumbnailElement = item.querySelector(".video-thumbnail");
@@ -5355,7 +5355,7 @@ class Mylist2ManagerUI {
           if (tagsFromDom) {
             try {
               fallback.tags = JSON.parse(tagsFromDom);
-            } catch {
+            } catch (err) {
             }
           }
           await this.showVideoDetailsModal(fallback);
@@ -5380,7 +5380,8 @@ class Mylist2ManagerUI {
             if (video.tags === void 0 && tagsFromDom) {
               try {
                 video.tags = JSON.parse(tagsFromDom);
-              } catch {
+              } catch (err) {
+                void err;
               }
             }
             await this.showVideoDetailsModal(video);
@@ -5390,7 +5391,8 @@ class Mylist2ManagerUI {
             if (tagsFromDom) {
               try {
                 fallback.tags = JSON.parse(tagsFromDom);
-              } catch {
+              } catch (err) {
+                void err;
               }
             }
             await this.showVideoDetailsModal(fallback);
@@ -5415,7 +5417,8 @@ class Mylist2ManagerUI {
           if (tagsFromDom) {
             try {
               fallback.tags = JSON.parse(tagsFromDom);
-            } catch {
+            } catch (err) {
+              void err;
             }
           }
           await this.showVideoDetailsModal(fallback);
@@ -5437,7 +5440,8 @@ class Mylist2ManagerUI {
           if (video.tags === void 0 && tagsFromDom) {
             try {
               video.tags = JSON.parse(tagsFromDom);
-            } catch {
+            } catch (err) {
+              void err;
             }
           }
           await this.showVideoDetailsModal(video);
@@ -5447,7 +5451,8 @@ class Mylist2ManagerUI {
           if (tagsFromDom) {
             try {
               fallback.tags = JSON.parse(tagsFromDom);
-            } catch {
+            } catch (err) {
+              void err;
             }
           }
           await this.showVideoDetailsModal(fallback);

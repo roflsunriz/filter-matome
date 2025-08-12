@@ -12,11 +12,10 @@ import {
   CommentThread
 } from "./common-types";
 
-// グローバルスコープでのtoastr宣言
-declare const toastr: ToastrInstance;
-
-
 declare global {
+  // グローバルスコープでのtoastr宣言（型のみ。値は存在する前提）
+  const toastr: ToastrInstance;
+
   interface Window {
     NicoCache_nl: NicoCache_nlInterface;
     commonHelper: {

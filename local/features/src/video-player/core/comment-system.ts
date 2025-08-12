@@ -426,7 +426,8 @@ export class CommentSystem {
         .map(str => {
           try {
             return new RegExp(str, "i");
-          } catch (e) {
+          } catch (error) {
+            void error;
             window.logger.warn(`不正な正規表現なので無視するのじゃ: ${str}`);
             return null;
           }
@@ -462,8 +463,8 @@ export class CommentSystem {
           el.style.display = 'none';
         });
       });
-    } catch (e) {
-      window.logger.warn('公式コメントリストを非表示にできなかったのじゃ:', e);
+    } catch (error) {
+      window.logger.warn('公式コメントリストを非表示にできなかったのじゃ:', error);
     }
   }
   
