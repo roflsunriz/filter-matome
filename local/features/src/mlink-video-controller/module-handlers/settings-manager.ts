@@ -27,8 +27,11 @@ export class SettingsManager {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
-        this.settings = JSON.parse(stored);
-      } 
+        const parsed: unknown = JSON.parse(stored);
+        if (parsed && typeof parsed === 'object') {
+          this.settings = parsed as ModuleSettings;
+        }
+      }
     } catch (error) {
       window.logger.error('[SettingsManager] 設定の読み込みに失敗しました:', error);
       this.settings = {};
@@ -156,8 +159,10 @@ export class SettingsManager {
    */
   public importSettings(settingsJson: string): boolean {
     try {
-      const imported = JSON.parse(settingsJson);
-      this.settings = imported;
+      const imported: unknown = JSON.parse(settingsJson);
+      if (imported && typeof imported === 'object') {
+        this.settings = imported as ModuleSettings;
+      }
       this.saveSettings();
       
       return true;

@@ -190,12 +190,12 @@ export class WatchMylistSelectorModule implements ModuleInstance {
    */
   async initialize(): Promise<void> {
     if (this._isActive) {
-      
+      await Promise.resolve();
       return;
     }
 
     try {
-      
+      await Promise.resolve();
       
       // Watch PageまたはSearch Pageかどうかチェック
       if (!this.isTargetPage()) {

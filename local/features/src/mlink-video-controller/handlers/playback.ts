@@ -12,9 +12,9 @@ export class PlaybackHandler {
 
   public togglePlayPause(): void {
     if (this.player.isPlaying()) {
-      this.player.pause();
+      void this.player.pause();
     } else {
-      this.player.play();
+      void this.player.play();
     }
   }
 
@@ -22,13 +22,13 @@ export class PlaybackHandler {
     const currentTime = this.player.getCurrentTime();
     const delta = options.direction === 'forward' ? options.seconds : -options.seconds;
     const newTime = Math.max(0, Math.min(this.player.getDuration(), currentTime + delta));
-    this.player.seek(newTime);
+    void this.player.seek(newTime);
   }
 
   public seekToPosition(position: number): void {
     const duration = this.player.getDuration();
     const time = position * duration;
-    this.player.seek(time);
+    void this.player.seek(time);
   }
 
   public getPlaybackState() {

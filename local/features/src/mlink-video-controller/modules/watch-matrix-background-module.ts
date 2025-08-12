@@ -219,11 +219,12 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
     this.setBackgroundStyle();
 
     // 日本語文字
-    const japanese: string[] = "ｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ-ﾟ".split("");
+    const japaneseChars = "ｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ-ﾟ";
+    const japanese: string[] = japaneseChars.split("");
 
     const fontSize: number = 23;
     const columns: number = Math.floor(this.canvas.width / fontSize);
-    const drops: number[] = Array(columns).fill(1);
+    const drops: number[] = Array.from({ length: columns }, () => 1);
 
     // アニメーション開始
     this.animationId = setInterval(() => {

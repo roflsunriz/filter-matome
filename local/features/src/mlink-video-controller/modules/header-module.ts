@@ -15,15 +15,12 @@ export class HeaderModule implements ModuleInstance {
 
   async initialize(): Promise<void> {
     try {
-      
-      
+      await Promise.resolve();
       // 即座に実行
       this.hideUserElements();
       
       // 5秒間隔で定期実行（動的コンテンツ対応）
-      this.intervalId = setInterval(() => {
-        this.hideUserElements();
-      }, 5000);
+      this.intervalId = window.setInterval(() => { this.hideUserElements(); }, 5000);
       
       this.active = true;
       

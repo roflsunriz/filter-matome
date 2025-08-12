@@ -17,7 +17,7 @@ export class NicoInfoPageModule implements ModuleInstance {
 
   async initialize(): Promise<void> {
     try {
-      
+      await Promise.resolve();
       
       // 依存関係チェック
       if (!this.checkDependencies()) {

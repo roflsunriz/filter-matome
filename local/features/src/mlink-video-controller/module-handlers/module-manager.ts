@@ -6,7 +6,8 @@ import {
   ModuleEvent, 
   ModuleEventListener,
   PageDetector,
-  DependencyChecker
+  DependencyChecker,
+  ModuleCategory
 } from '../../types/module-types';
 import { SettingsManager } from './settings-manager';
 import { ModuleRegistry } from './module-registry';
@@ -45,6 +46,7 @@ class PageDetectorImpl implements PageDetector {
  */
 class DependencyCheckerImpl implements DependencyChecker {
   async checkDependencies(dependencies: string[]): Promise<boolean> {
+    await Promise.resolve();
     for (const dependency of dependencies) {
       if (!this.getDependencyStatus(dependency)) {
         window.logger.warn(`[DependencyChecker] 依存関係 ${dependency} が見つかりません`);
@@ -117,7 +119,7 @@ export class ModuleManager {
    */
   public async initialize(): Promise<void> {
     if (this.isInitialized) {
-      
+      await Promise.resolve();
       return;
     }
 
@@ -139,12 +141,12 @@ export class ModuleManager {
       
       // 【最優先】ビジュアル系モジュールを特定
       const visualModules = enabledModules.filter(config => 
-        config.category === 'visual'
+        config.category === ModuleCategory.VISUAL
       );
       
       // その他のモジュールを特定
       const otherModules = enabledModules.filter(config => 
-        config.category !== 'visual'
+        config.category !== ModuleCategory.VISUAL
       );
       
       
@@ -289,7 +291,7 @@ export class ModuleManager {
     try {
       const moduleInstance = this.modules.get(moduleId);
       if (!moduleInstance) {
-        
+        await Promise.resolve();
         return;
       }
 
@@ -372,9 +374,9 @@ export class ModuleManager {
    */
   private async createModuleInstance(config: ModuleConfig): Promise<ModuleInstance> {
     try {
-      
+      await Promise.resolve();
       // 【最優先】ビジュアル系モジュールを先に処理
-      if (config.category === 'visual') {
+      if (config.category === ModuleCategory.VISUAL) {
         
         
         // ビジュアル系モジュールを最速で処理
@@ -395,7 +397,7 @@ export class ModuleManager {
 
           default:
             throw new Error(`未知のビジュアル系モジュールID: ${config.id}`);
-        }     
+        }
         
         return instance;
       }

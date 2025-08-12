@@ -3,7 +3,6 @@ import "../../types/global.d.ts";
 import { Mylist2Manager } from "../../mylist2/components/manager-refactored.js";
 import { VideoInfo } from "../../types/video-types.js";
 import { showMylistSelector } from '../../mylist2/components/selector.js';
-import { ApiData } from '../../types/video-types.js';
 
 export class Mylist2Handler {
   private manager: Mylist2Manager;

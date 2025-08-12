@@ -74,8 +74,8 @@ export class NicoApiFetcher {
         throw new Error(`APIリクエスト失敗: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
-      const threads = data.data.threads as CommentThread[];
+      const data: unknown = await response.json();
+      const threads = (data as { data?: { threads?: CommentThread[] } })?.data?.threads ?? [];
       
       // メインスレッドを選択（forkがmainでコメント数が最多のもの）
       const mainThread = threads
@@ -132,7 +132,7 @@ export class NicoApiFetcher {
 
     const duration = Math.max(...this.comments.map(c => c.vposMs));
     const segmentDuration = duration / segments;
-    const density = new Array(segments).fill(0);
+    const density: number[] = Array.from({ length: segments }, () => 0);
 
     // 各コメントを対応するセグメントに振り分ける
     this.comments.forEach(comment => {

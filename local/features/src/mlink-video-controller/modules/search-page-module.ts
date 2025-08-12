@@ -15,7 +15,7 @@ export class SearchPageModule implements ModuleInstance {
 
   async initialize(): Promise<void> {
     try {
-      
+      await Promise.resolve();
       
       // 8列表示用のCSSを注入
       this.injectEightColumnCSS();

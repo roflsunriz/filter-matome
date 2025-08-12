@@ -9,7 +9,7 @@ export const handleVideoOperation = (operation: VideoOperation, videoId: string)
     case 'cache_remove':
       return handleCacheRemove(videoId);
     default:
-      throw new Error(`Unknown operation: ${operation}`);
+      throw new Error('Unknown operation: ' + String(operation));
   }
 };
 
@@ -28,7 +28,8 @@ export const getVideoInfo = (): SimpleVideoInfo => {
 };
 
 export const fetchCacheInfo = (videoId: string): Promise<CacheInfoResponse> => {
-  return fetch(`https://www.nicovideo.jp/cache/info/v2?${videoId}`)
+  const url = "https://www.nicovideo.jp/cache/info/v2?" + encodeURIComponent(videoId);
+  return fetch(url)
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -43,9 +44,19 @@ export const handleCacheRemove = (videoId: string): void => {
   const nicoCache = (window as Window & { NicoCache_nl: NicoCache_nlInterface }).NicoCache_nl;
   const videoTitle = nicoCache?.watch?.apiData?.video?.title || '';
   if (confirm("本当に削除しますか？: " + videoId + " " + videoTitle)) {
-    // NicoCache_nlのgetメソッドの型定義が存在しないため、anyを使用
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (nicoCache as any).get("/cache/ajax_rmall?" + videoId);
+    const unknownCache: unknown = nicoCache;
+    if (
+      unknownCache &&
+      typeof unknownCache === 'object' &&
+      'get' in unknownCache &&
+      typeof (unknownCache as { get: unknown }).get === 'function'
+    ) {
+      const getFn = (unknownCache as { get: (path: string) => void }).get;
+      const path = "/cache/ajax_rmall?" + encodeURIComponent(videoId);
+      getFn(path);
+    } else {
+      window.logger.warn('[video-util] NicoCache_nl.get が利用できません');
+    }
   }
 };
 

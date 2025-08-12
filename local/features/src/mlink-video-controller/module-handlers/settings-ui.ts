@@ -4,7 +4,7 @@ import { SettingsManager } from './settings-manager';
 import { ModuleConfig, ModuleCategory, ModuleStatus } from '../../types/module-types';
 import { WatchPageModule } from '../modules/watch-page-module';
 import { BackgroundImageSettings } from '../modules/background-image-settings';
-import { ToastrInstance } from '../../types/toastr-types';
+// import { ToastrInstance } from '../../types/toastr-types';
 import { createMaterialIcon } from '../../common/material-icons';
 import { BackgroundImageItem } from '../../types/background-image-types';
 
@@ -257,9 +257,9 @@ export class SettingsUI {
       const target = event.target as HTMLInputElement;
       
       if (target.classList.contains('module-toggle')) {
-        this.handleModuleToggle(target);
+        void this.handleModuleToggle(target);
       } else if (target.classList.contains('sub-module-toggle')) {
-        this.handleSubModuleToggle(target);
+        void this.handleSubModuleToggle(target);
       }
     });
     
@@ -352,24 +352,26 @@ export class SettingsUI {
     // 即時適用ボタン
     const applyBtn = this.shadowRoot.getElementById('apply-immediately');
     if (applyBtn) {
-      applyBtn.addEventListener('click', async () => {
-        try {
-          await this.moduleManager.reloadAllModules();
-          this.renderModuleList();
+      applyBtn.addEventListener('click', () => {
+        void (async () => {
+          try {
+            await this.moduleManager.reloadAllModules();
+            this.renderModuleList();
           
-          (window.toastr)?.success(
-            'モジュールを再読み込みしました',
-            '成功',
-            { timeOut: 3000 }
-          );
-        } catch (error) {
-          window.logger.error('[SettingsUI] モジュール再読み込みに失敗:', error);
-          (window.toastr)?.error(
-            'モジュール再読み込みに失敗しました',
-            'エラー',
-            { timeOut: 5000 }
-          );
-        }
+            (window.toastr)?.success(
+              'モジュールを再読み込みしました',
+              '成功',
+              { timeOut: 3000 }
+            );
+          } catch (error) {
+            window.logger.error('[SettingsUI] モジュール再読み込みに失敗:', error);
+            (window.toastr)?.error(
+              'モジュール再読み込みに失敗しました',
+              'エラー',
+              { timeOut: 5000 }
+            );
+          }
+        })();
       });
     }
     
@@ -384,25 +386,19 @@ export class SettingsUI {
     // 設定エクスポートボタン
     const exportBtn = this.shadowRoot.getElementById('export-settings');
     if (exportBtn) {
-      exportBtn.addEventListener('click', () => {
-        this.exportSettings();
-      });
+      exportBtn.addEventListener('click', () => { void this.exportSettings(); });
     }
     
     // 設定インポートボタン
     const importBtn = this.shadowRoot.getElementById('import-settings');
     if (importBtn) {
-      importBtn.addEventListener('click', () => {
-        this.importSettings();
-      });
+      importBtn.addEventListener('click', () => { void this.importSettings(); });
     }
     
     // 設定リセットボタン
     const resetBtn = this.shadowRoot.getElementById('reset-settings');
     if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
-        this.resetSettings();
-      });
+      resetBtn.addEventListener('click', () => { void this.resetSettings(); });
     }
   }
 
@@ -526,8 +522,11 @@ export class SettingsUI {
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
-            const settings = JSON.parse(e.target?.result as string);
-            this.settingsManager.importSettings(settings);
+            const text = e.target?.result as string;
+            const parsed: unknown = JSON.parse(text);
+            if (parsed && typeof parsed === 'object') {
+              this.settingsManager.importSettings(parsed as string);
+            }
             this.renderModuleList();
             
             (window.toastr)?.success(
@@ -618,9 +617,7 @@ export class SettingsUI {
 
     // イベントリスナーを追加
     const openButton = settingsButton.querySelector('#open-background-settings');
-    openButton?.addEventListener('click', () => {
-      this.openBackgroundImageSettings();
-    });
+    openButton?.addEventListener('click', () => { void this.openBackgroundImageSettings(); });
   }
 
   /**
@@ -713,7 +710,7 @@ export class SettingsUI {
     this.setupBackgroundModalEventListeners();
 
     // 画像リストを初期化
-    this.refreshModalImageList();
+    void this.refreshModalImageList();
   }
 
   /**
@@ -728,9 +725,7 @@ export class SettingsUI {
     // モーダルを閉じる
     const closeButtons = modal.querySelectorAll('.close-modal-btn, #close-background-modal');
     closeButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        modal.remove();
-      });
+      button.addEventListener('click', () => { modal.remove(); });
     });
 
     // モーダル外クリックで閉じる
@@ -755,15 +750,11 @@ export class SettingsUI {
 
     // URL画像追加
     const addUrlButton = modal.querySelector('#modal-add-url-image');
-    addUrlButton?.addEventListener('click', () => {
-      this.addModalImageFromUrl();
-    });
+    addUrlButton?.addEventListener('click', () => { void this.addModalImageFromUrl(); });
 
     // ファイル画像追加
     const addFileButton = modal.querySelector('#modal-add-file-image');
-    addFileButton?.addEventListener('click', () => {
-      this.addModalImageFromFile();
-    });
+    addFileButton?.addEventListener('click', () => { void this.addModalImageFromFile(); });
 
     // Enterキーでの追加
     const urlInput = modal.querySelector('#modal-image-url-input') as HTMLInputElement;
@@ -772,7 +763,7 @@ export class SettingsUI {
     [urlInput, nameInput].forEach(input => {
       input?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-          this.addModalImageFromUrl();
+          void this.addModalImageFromUrl();
         }
       });
     });
@@ -780,15 +771,13 @@ export class SettingsUI {
     const fileNameInput = modal.querySelector('#modal-file-name-input') as HTMLInputElement;
     fileNameInput?.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
-        this.addModalImageFromFile();
+        void this.addModalImageFromFile();
       }
     });
 
     // エクスポートボタン
     const exportButton = modal.querySelector('#modal-export-settings');
-    exportButton?.addEventListener('click', () => {
-      this.exportModalSettings();
-    });
+    exportButton?.addEventListener('click', () => { void this.exportModalSettings(); });
 
     // インポートボタン
     const importButton = modal.querySelector('#modal-import-settings');
@@ -803,15 +792,13 @@ export class SettingsUI {
       const target = e.target as HTMLInputElement;
       const file = target.files?.[0];
       if (file) {
-        this.importModalSettings(file);
+        void this.importModalSettings(file);
       }
     });
 
     // リセットボタン
     const resetButton = modal.querySelector('#modal-reset-settings');
-    resetButton?.addEventListener('click', () => {
-      this.resetModalSettings();
-    });
+    resetButton?.addEventListener('click', () => { void this.resetModalSettings(); });
   }
 
   /**
@@ -994,7 +981,8 @@ export class SettingsUI {
     // 選択ボタン
     const selectButtons = modal.querySelectorAll('.image-select-btn');
     selectButtons.forEach(button => {
-      button.addEventListener('click', async (e) => {
+      button.addEventListener('click', (e) => {
+        void (async () => {
         const target = e.target as HTMLElement;
         // closestを使って.image-select-btnを確実に取得
         const selectButton = target.closest('.image-select-btn') as HTMLElement;
@@ -1002,13 +990,15 @@ export class SettingsUI {
         if (imageId) {
           await this.selectModalImage(imageId);
         }
+        })();
       });
     });
 
     // 削除ボタン
     const deleteButtons = modal.querySelectorAll('.image-delete-btn');
     deleteButtons.forEach(button => {
-      button.addEventListener('click', async (e) => {
+      button.addEventListener('click', (e) => {
+        void (async () => {
         const target = e.target as HTMLElement;
         // closestを使って.image-delete-btnを確実に取得
         const deleteButton = target.closest('.image-delete-btn') as HTMLElement;
@@ -1016,6 +1006,7 @@ export class SettingsUI {
         if (imageId) {
           await this.deleteModalImage(imageId);
         }
+        })();
       });
     });
   }
@@ -1108,6 +1099,7 @@ export class SettingsUI {
    */
   private async importModalSettings(file: File): Promise<void> {
     try {
+      await Promise.resolve();
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {

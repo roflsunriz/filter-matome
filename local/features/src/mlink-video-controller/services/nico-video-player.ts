@@ -33,7 +33,7 @@ export class NicoVideoPlayer {
   };
 
   private constructor() {
-    this.initializeNicoCache();
+    void this.initializeNicoCache();
   }
 
   private async initializeNicoCache(): Promise<void> {
@@ -176,7 +176,7 @@ export class NicoVideoPlayer {
     }
 
     // SPAのページ遷移に対応するため、定期的にvideo要素の存在をチェック
-    this.checkInterval = setInterval(() => {
+    this.checkInterval = window.setInterval(() => {
       this.getVideoElement();
     }, 1000);
   }
@@ -312,7 +312,7 @@ export class NicoVideoPlayer {
       this.duration = 0;
       this.initialized = false;
       this.isInitializing = true;
-      this.initializeNicoCache();
+      void this.initializeNicoCache();
     } catch (error) {
       window.logger.error('[NicoVideoPlayer] Error reinitializing:', error);
     }

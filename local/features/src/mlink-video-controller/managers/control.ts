@@ -29,9 +29,9 @@ export class ControlManager {
 
   public togglePlayPause(): void {
     if (this.player.isPlaying()) {
-      this.player.pause();
+      void this.player.pause();
     } else {
-      this.player.play();
+      void this.player.play();
     }
   }
 
@@ -46,13 +46,13 @@ export class ControlManager {
       newTime = Math.max(0, currentTime - options.seconds);
     }
 
-    this.player.seek(newTime);
+    void this.player.seek(newTime);
   }
 
   public seekToPosition(position: number): void {
     const duration = this.player.getDuration();
     const newTime = (position / 100) * duration;
-    this.player.seek(newTime);
+    void this.player.seek(newTime);
   }
 
   public setVolume(options: VolumeOptions): void {
@@ -62,7 +62,7 @@ export class ControlManager {
       volume = this.linearToLogVolume(volume);
     }
 
-    this.player.setVolume(volume * 100);
+    void this.player.setVolume(volume * 100);
   }
 
   public setPlaybackRate(options: PlaybackRateOptions): void {
@@ -76,13 +76,13 @@ export class ControlManager {
       rate = Math.min(options.max, rate);
     }
 
-    this.player.setPlaybackRate(rate);
+    void this.player.setPlaybackRate(rate);
   }
 
   public adjustPlaybackRate(delta: number): void {
     const currentRate = this.player.getPlaybackRate();
     const newRate = Math.max(0.1, Math.min(5.0, currentRate + delta));
-    this.player.setPlaybackRate(newRate);
+    void this.player.setPlaybackRate(newRate);
   }
 
   public formatTime(seconds: number): string {

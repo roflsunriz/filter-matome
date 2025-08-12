@@ -89,14 +89,14 @@ export class MlinkVideoController extends BasePanel {
       this.speedHandler = new SpeedHandler();
     }
     
-    this.render();
+    void this.render();
     
     // 視聴ページの場合のみ動画関連の初期化を実行
     if (this.isWatchPage) {
       this.setupVideoEndedListener(); // 動画終了監視を追加
     }
     
-    this.initializeModuleSystem(); // モジュールシステムの初期化
+    void this.initializeModuleSystem(); // モジュールシステムの初期化
   }
 
   /**
@@ -108,6 +108,7 @@ export class MlinkVideoController extends BasePanel {
   }
 
   private async loadStyles(): Promise<string> {
+    await Promise.resolve();
     return `
       ${basePanelStyles}
       ${panelStyles}
@@ -343,7 +344,8 @@ export class MlinkVideoController extends BasePanel {
     // アクションカードのクリックイベント
     const actionCards = this.shadow.querySelectorAll('.action-card');
     actionCards.forEach(card => {
-      card.addEventListener('click', async (e) => {
+      card.addEventListener('click', (e) => {
+        void (async () => {
         const target = e.target as HTMLElement;
         const actionCard = target.closest('.action-card');
         if (actionCard instanceof HTMLElement && actionCard.dataset.action) {
@@ -355,6 +357,7 @@ export class MlinkVideoController extends BasePanel {
             await this.handleStaticAction(actionCard.dataset.action);
           }
         }
+        })();
       });
     });
   }
@@ -1036,12 +1039,13 @@ export class MlinkVideoController extends BasePanel {
    * 視聴ページ以外で使用する静的なアクション処理
    */
   private async handleStaticAction(action: string): Promise<void> {
+    await Promise.resolve();
     try {
       const actionMap: { [key: string]: string | (() => void) } = {
         customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
         AddToMylist: () => {
           const mylistHandler = new Mylist2Handler();
-          mylistHandler.handleAddKeyword();
+          void mylistHandler.handleAddKeyword();
         },
         nicochart: "http://nicochart.jp/",
         nicolog: "https://nicolog.jp/",
@@ -1424,9 +1428,7 @@ export class MlinkVideoController extends BasePanel {
           
           this.player.seek(0);
           // 少し遅延させて再生を開始
-          setTimeout(() => {
-            this.player?.play();
-          }, 100);
+          setTimeout(() => { void this.player?.play(); }, 100);
         }
       }
     }, 500); // 500msごとにチェック

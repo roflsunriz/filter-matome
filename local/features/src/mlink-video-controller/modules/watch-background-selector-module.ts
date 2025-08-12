@@ -28,7 +28,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
    */
   async initialize(): Promise<void> {
     if (this._isActive) {
-      
+      await Promise.resolve();
       return;
     }
 
@@ -407,7 +407,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       
       item.onclick = (e) => {
         e.stopPropagation();
-        this.changeBackground(imageItem);
+        void this.changeBackground(imageItem);
       };
       
       wheel.appendChild(item);
@@ -445,14 +445,9 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
     if (!this.radialContainer) return;
     const rc = this.radialContainer;
 
-    rc.addEventListener("mouseenter", () => {
-      rc.classList.add("open");
-    });
+    rc.addEventListener("mouseenter", () => { rc.classList.add("open"); });
 
-    rc.addEventListener("mouseleave", () => {
-      // わずかな遊びを入れて誤差 hover を吸収
-      setTimeout(() => rc.classList.remove("open"), 100);
-    });
+    rc.addEventListener("mouseleave", () => { setTimeout(() => rc.classList.remove("open"), 100); });
   }
 
   /**
@@ -493,9 +488,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       this.updateWheelRotation(wheel, currentRotation);
     });
     
-    document.addEventListener('mouseup', () => {
-      isDragging = false;
-    });
+    document.addEventListener('mouseup', () => { isDragging = false; });
   }
 
   /**
@@ -515,6 +508,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
    * 背景変更（最速化版）
    */
   private async changeBackground(imageItem: BackgroundImageItem): Promise<void> {
+    await Promise.resolve();
     let backgroundValue: string;
     
     if (imageItem.type === 'url') {
@@ -630,6 +624,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
    * 背景設定イベントリスナーの初期化（分離）
    */
   private async initializeBackgroundSettingsEvents(): Promise<void> {
+    await Promise.resolve();
     this.setupBackgroundSettingsEventListeners();
   }
 
@@ -702,24 +697,28 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
     // 選択ボタン
     const selectButtons = this.shadowRoot.querySelectorAll('.select-btn');
     selectButtons.forEach(button => {
-      button.addEventListener('click', async (e) => {
+      button.addEventListener('click', (e) => {
+        void (async () => {
         const target = e.target as HTMLElement;
         const imageId = target.getAttribute('data-id');
         if (imageId) {
           await this.selectImage(imageId);
         }
+        })();
       });
     });
 
     // 削除ボタン
     const deleteButtons = this.shadowRoot.querySelectorAll('.delete-btn');
     deleteButtons.forEach(button => {
-      button.addEventListener('click', async (e) => {
+      button.addEventListener('click', (e) => {
+        void (async () => {
         const target = e.target as HTMLElement;
         const imageId = target.getAttribute('data-id');
         if (imageId) {
           await this.deleteImage(imageId);
         }
+        })();
       });
     });
   }
@@ -773,39 +772,35 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
   private setupBackgroundSettingsEventListeners(): void {
     // 画像追加イベント
      
-    const imageAddedListener = async (_: Event) => {
-      await this.createRadialSelector();
-      
-    };
+    const imageAddedListener = (_: Event) => { void this.createRadialSelector(); };
     this.backgroundSettings.addEventListener('imageAdded', imageAddedListener);
     this.eventListeners.push({ type: 'imageAdded', listener: imageAddedListener });
 
     // 画像削除イベント
      
-    const imageDeletedListener = async (_: Event) => {
-      await this.createRadialSelector();
-      
-    };
+    const imageDeletedListener = (_: Event) => { void this.createRadialSelector(); };
     this.backgroundSettings.addEventListener('imageDeleted', imageDeletedListener);
     this.eventListeners.push({ type: 'imageDeleted', listener: imageDeletedListener });
 
     // 画像選択イベント
-    const imageSelectedListener = async (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const imageId = customEvent.detail.id;
-      const image = await this.backgroundSettings.getImage(imageId);
-      if (image) {
-        // 背景のみ変更（setSelectedImageは呼ばない）
-        let backgroundValue: string;
-        if (image.type === 'url') {
-          backgroundValue = image.data;
-        } else if (image.type === 'file') {
-          backgroundValue = `url(${image.data})`;
-        } else {
-          return;
+    const imageSelectedListener = (event: Event) => {
+      void (async () => {
+        const customEvent = event as CustomEvent<{ id: string }>;
+        const imageId = customEvent.detail?.id;
+        if (!imageId) { return; }
+        const image = await this.backgroundSettings.getImage(imageId);
+        if (image) {
+          let backgroundValue: string;
+          if (image.type === 'url') {
+            backgroundValue = image.data;
+          } else if (image.type === 'file') {
+            backgroundValue = `url(${image.data})`;
+          } else {
+            return;
+          }
+          document.documentElement.style.setProperty("--bg-img", backgroundValue);
         }
-        document.documentElement.style.setProperty("--bg-img", backgroundValue);
-      }
+      })();
       
     };
     this.backgroundSettings.addEventListener('imageSelected', imageSelectedListener);
@@ -813,19 +808,13 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
 
     // 設定インポートイベント
      
-    const settingsImportedListener = async (_: Event) => {
-      await this.createRadialSelector();
-      
-    };
+    const settingsImportedListener = (_: Event) => { void this.createRadialSelector(); };
     this.backgroundSettings.addEventListener('settingsImported', settingsImportedListener);
     this.eventListeners.push({ type: 'settingsImported', listener: settingsImportedListener });
 
     // 設定リセットイベント
      
-    const settingsResetListener = async (_: Event) => {
-      await this.createRadialSelector();
-      
-    };
+    const settingsResetListener = (_: Event) => { void this.createRadialSelector(); };
     this.backgroundSettings.addEventListener('settingsReset', settingsResetListener);
     this.eventListeners.push({ type: 'settingsReset', listener: settingsResetListener });
   }

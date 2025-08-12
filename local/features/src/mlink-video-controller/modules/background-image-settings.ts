@@ -215,7 +215,10 @@ export class BackgroundImageSettings {
       await new Promise<void>((resolve, reject) => {
         const request = store.put(metadata);
         request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onerror = () => {
+          const err = request.error;
+          reject(new Error(err instanceof Error ? err.message : String(err)));
+        };
       });
       
       window.logger.info('[BackgroundImageSettings] マイグレーションメタデータを保存しました');
@@ -277,6 +280,7 @@ export class BackgroundImageSettings {
    */
   private async cleanupOldBackups(): Promise<void> {
     try {
+      await Promise.resolve();
       const backupKeys: string[] = [];
       
       // バックアップキーを収集
@@ -458,7 +462,7 @@ export class BackgroundImageSettings {
       
       return new Promise((resolve, reject) => {
         getRequest.onsuccess = () => {
-          const existingImage = getRequest.result;
+          const existingImage = getRequest.result as unknown as BackgroundImageItem | null;
           if (!existingImage) {
             reject(new Error(`画像が見つかりません: ${id}`));
             return;
@@ -563,11 +567,12 @@ export class BackgroundImageSettings {
       const transaction = db.transaction([STORE_NAME], 'readonly');
       const store = transaction.objectStore(STORE_NAME);
 
-      return new Promise((resolve, reject) => {
+      return new Promise<BackgroundImageItem | null>((resolve, reject) => {
         const request = store.get(id);
         
         request.onsuccess = () => {
-          resolve(request.result || null);
+          const result = request.result as unknown;
+          resolve((result as BackgroundImageItem) || null);
         };
         
         request.onerror = () => {
@@ -586,6 +591,7 @@ export class BackgroundImageSettings {
    */
   public async setSelectedImage(id: string, fireEvent: boolean = true): Promise<void> {
     try {
+      await Promise.resolve();
       localStorage.setItem('selectedBackgroundImageId', id);
       
       // イベントを発火（オプション）
@@ -803,8 +809,9 @@ export class BackgroundImageSettings {
         const request = store.get('migrationHistory');
         
         request.onsuccess = () => {
-          const result = request.result;
-          resolve(result ? result.migrations : []);
+          const result = request.result as unknown;
+          const migrations = (result as { migrations?: { fromVersion: number; toVersion: number; migratedAt: string; success: boolean; }[] } | null)?.migrations ?? [];
+          resolve(migrations);
         };
         
         request.onerror = () => {
@@ -901,10 +908,11 @@ export class BackgroundImageSettings {
    */
   public async importSettings(jsonData: string): Promise<void> {
     try {
-      const importData = JSON.parse(jsonData);
+      const importData: unknown = JSON.parse(jsonData);
+      const obj = importData as { images?: unknown; selectedImageId?: unknown };
       
       // データ形式の検証
-      if (!importData.images || !Array.isArray(importData.images)) {
+      if (!Array.isArray(obj.images)) {
         throw new Error('無効なデータ形式です');
       }
       
@@ -912,29 +920,30 @@ export class BackgroundImageSettings {
       await this.clearAllImages();
       
       // インポートした画像を追加
-      for (const imageData of importData.images) {
-        if (imageData.id && imageData.name && imageData.type && imageData.data) {
+      for (const imageData of obj.images as unknown[]) {
+        const rec = imageData as Record<string, unknown>;
+        if (typeof rec.id === 'string' && typeof rec.name === 'string' && (rec.type === 'url' || rec.type === 'file') && typeof rec.data === 'string') {
           await this.addImageWithId(
-            imageData.id,
-            imageData.name,
-            imageData.type,
-            imageData.data,
-            imageData.createdAt || new Date().toISOString(),
-            imageData.updatedAt || new Date().toISOString()
+            rec.id,
+            rec.name,
+            rec.type,
+            rec.data,
+            (typeof rec.createdAt === 'string' ? rec.createdAt : new Date().toISOString()),
+            (typeof rec.updatedAt === 'string' ? rec.updatedAt : new Date().toISOString())
           );
         }
       }
       
       // 選択画像を復元
-      if (importData.selectedImageId) {
-        await this.setSelectedImage(importData.selectedImageId, false);
+      if (typeof obj.selectedImageId === 'string') {
+        await this.setSelectedImage(obj.selectedImageId, false);
       }
       
       
       
       // インポート完了イベントを発火
       this.dispatchEvent(new CustomEvent('settingsImported', { 
-        detail: { imageCount: importData.images.length } 
+        detail: { imageCount: (obj.images as unknown[]).length } 
       }));
       
     } catch (error) {

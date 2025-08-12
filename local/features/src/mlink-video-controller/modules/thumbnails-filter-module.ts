@@ -7,7 +7,7 @@ import {
   UpdateItem,
   ThumbnailsFilterGlobal 
 } from '../../types/thumbnails-filter-types';
-import { ToastrInstance } from '../../types/toastr-types';
+// import { ToastrInstance } from '../../types/toastr-types';
 import { createMaterialIcon } from '../../common/material-icons';
 
 // 設定管理クラス
@@ -25,7 +25,10 @@ class HideVideoSettings {
   loadKeywords(): Keyword[] {
     try {
       const saved = localStorage.getItem(this.storageKey);
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) { return []; }
+      const parsed = JSON.parse(saved) as unknown;
+      if (!Array.isArray(parsed)) { return []; }
+      return parsed.filter((v): v is Keyword => typeof v === 'string');
     } catch (error) {
       window.logger.error("キーワードの読み込みエラー:", error);
       return [];
@@ -707,7 +710,7 @@ export class ThumbnailsFilterModule implements ModuleInstance {
 
   async initialize(): Promise<void> {
     try {
-      
+      await Promise.resolve();
       
       this.settings = new HideVideoSettings();
       this.ui = new HideVideoUI(this.settings);

@@ -13,7 +13,7 @@ export class DeletedVideoDetector {
   private initialized: boolean = false;
 
   private constructor() {
-    this.initializeNicoCache();
+    void this.initializeNicoCache();
   }
 
   public static getInstance(): DeletedVideoDetector {
@@ -80,7 +80,7 @@ export class DeletedVideoDetector {
     this.observer = new MutationObserver(() => {
       if (this.isEnabled && location.href !== this.lastUrl) {
         this.lastUrl = location.href;
-        this.handleUnavailableVideo();
+        void this.handleUnavailableVideo();
       }
     });
 
@@ -108,15 +108,11 @@ export class DeletedVideoDetector {
   }
 
   private handlePopState = (): void => {
-    if (this.isEnabled) {
-      this.handleUnavailableVideo();
-    }
+    if (this.isEnabled) { void this.handleUnavailableVideo(); }
   };
 
   private handleDOMContentLoaded = (): void => {
-    if (this.isEnabled) {
-      this.handleUnavailableVideo();
-    }
+    if (this.isEnabled) { void this.handleUnavailableVideo(); }
   };
 
   /**

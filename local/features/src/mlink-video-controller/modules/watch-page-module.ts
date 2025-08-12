@@ -221,7 +221,7 @@ export class WatchPageModule implements ModuleInstance {
     try {
       const savedSettings = localStorage.getItem(this.SETTINGS_KEY);
       if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
+      const parsed = JSON.parse(savedSettings) as Partial<typeof this.defaultSettings>;
         // デフォルト設定とマージして、新しい設定項目に対応
         return { ...this.defaultSettings, ...parsed };
       }
@@ -722,8 +722,9 @@ export class WatchPageModule implements ModuleInstance {
     const currentVideoInfo = this.getCurrentVideoInfo();
     
     // 共有ボタンのhref属性を更新
-    const shareLinks = shareButton.querySelectorAll('a');
-    shareLinks.forEach(link => {
+    const shareLinks = Array.from(shareButton.querySelectorAll('a'));
+    shareLinks.forEach((link) => {
+      if (!(link instanceof HTMLAnchorElement)) { return; }
       const href = `https://commons.nicovideo.jp/works/${currentVideoInfo.videoId}`;
       link.setAttribute('href', href);
     });
