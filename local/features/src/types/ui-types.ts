@@ -34,7 +34,7 @@ export interface ToastConfig {
  * トースト通知のオプション
  */
 export interface ToastOptions {
-  mode: 'Success' | 'Info' | 'Warning' | 'Error' | string;
+  mode: 'Success' | 'Info' | 'Warning' | 'Error';
   middle: string;
   low?: string;
   title: string;
