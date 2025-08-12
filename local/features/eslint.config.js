@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint';
 export default [
   // no global relaxations
   // ignore patterns migrated from .eslintrc.json
-  { ignores: ['dist', 'node_modules', 'videoPlayer'] },
+  { ignores: ['dist', 'node_modules'] },
 
   // base recommended rules for JS
   js.configs.recommended,
