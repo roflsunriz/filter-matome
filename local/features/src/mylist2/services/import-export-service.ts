@@ -8,6 +8,9 @@ import { ApiService } from "./api-service.js";
 export class ImportExportService {
   private db: Mylist2DB;
   private apiService: ApiService;
+  private toMessage(value: unknown): string {
+    return value instanceof Error ? value.message : String(value);
+  }
 
   constructor(db: Mylist2DB, apiService: ApiService) {
     this.db = db;
@@ -23,7 +26,7 @@ export class ImportExportService {
     const mylists = await new Promise<MylistInfo[]>((resolve, reject) => {
       const request = mylistsStore.getAll();
       request.onsuccess = () => resolve(request.result as MylistInfo[]);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
 
     // 全動画を取得
@@ -32,7 +35,7 @@ export class ImportExportService {
     const allVideos = await new Promise<DBVideo[]>((resolve, reject) => {
       const request = videosStore.getAll();
       request.onsuccess = () => resolve(request.result as DBVideo[]);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
 
     // 全キーワードを取得
@@ -41,7 +44,7 @@ export class ImportExportService {
     const keywords = await new Promise<KeywordInfo[]>((resolve, reject) => {
       const request = keywordsStore.getAll();
       request.onsuccess = () => resolve(request.result as KeywordInfo[]);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
 
     return {
@@ -93,10 +96,10 @@ export class ImportExportService {
           resolve();
         };
         transaction.onerror = () => {
-          reject(transaction.error);
+          reject(new Error(this.toMessage(transaction.error)));
         };
       } catch (error) {
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }

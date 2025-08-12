@@ -259,11 +259,10 @@ export async function showMylistSelector(): Promise<number> {
 
     // 新規マイリスト作成
     if (createNewMylist) {
-      createNewMylist.addEventListener("click", async () => {
+      createNewMylist.addEventListener("click", () => {
         const name = newMylistName?.value.trim() || "";
         if (name) {
-          await manager.createMylist(name);
-          await displayMylists();
+          void manager.createMylist(name).then(() => displayMylists());
           if (newMylistName) {
             newMylistName.value = "";
           }
@@ -284,7 +283,7 @@ export async function showMylistSelector(): Promise<number> {
     }
 
     // 初期表示
-    displayMylists();
+    void displayMylists();
 
     // 検索機能を追加
     if (searchInput) {

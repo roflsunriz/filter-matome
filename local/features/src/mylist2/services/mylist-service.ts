@@ -6,6 +6,9 @@ import { DBVideo } from "../../types/video-types.js";
 
 export class MylistService {
   private db: Mylist2DB;
+  private toMessage(value: unknown): string {
+    return value instanceof Error ? value.message : String(value);
+  }
 
   constructor(db: Mylist2DB) {
     this.db = db;
@@ -24,7 +27,7 @@ export class MylistService {
       });
 
       request.onsuccess = () => resolve(request.result as number);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -36,7 +39,7 @@ export class MylistService {
     return new Promise<MylistInfo[]>((resolve, reject) => {
       const request = store.getAll();
       request.onsuccess = () => resolve(request.result as MylistInfo[]);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -87,7 +90,7 @@ export class MylistService {
     return new Promise<void>((resolve, reject) => {
       const request = store.get(mylistId);
       request.onsuccess = () => {
-        const mylist = request.result;
+        const mylist = request.result as MylistInfo | null;
         if (!mylist) {
           reject(new Error("マイリストが見つかりません"));
           return;
@@ -95,9 +98,9 @@ export class MylistService {
         mylist.name = newName;
         const updateRequest = store.put(mylist);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(request.error);
+        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -114,20 +117,22 @@ export class MylistService {
         const keys = deleteVideos.result;
         Promise.all([
           ...keys.map((key: IDBValidKey) => {
-            return new Promise<void>((res) => {
+            return new Promise<void>((res, rej) => {
               const request = videoStore.delete(key);
               request.onsuccess = () => res();
+              request.onerror = () => rej(new Error(this.toMessage(request.error)));
             });
           }),
-          new Promise<void>((res) => {
+          new Promise<void>((res, rej) => {
             const request = mylistStore.delete(mylistId);
             request.onsuccess = () => res();
+            request.onerror = () => rej(new Error(this.toMessage(request.error)));
           }),
         ])
           .then(() => resolve())
-          .catch(reject);
+          .catch((e) => reject(e instanceof Error ? e : new Error(this.toMessage(e))));
       };
-      deleteVideos.onerror = () => reject(deleteVideos.error);
+      deleteVideos.onerror = () => reject(new Error(this.toMessage(deleteVideos.error)));
     });
   }
 } 

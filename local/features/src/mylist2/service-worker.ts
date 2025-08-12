@@ -90,12 +90,12 @@ self.addEventListener("fetch", (event: FetchEvent) => {
           }
         }
 
-        return fetch(event.request)
+      return fetch(event.request)
           .then((response) => {
             if (response.ok) {
               const responseToCache = response.clone();
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(event.request, responseToCache);
+              void caches.open(CACHE_NAME).then((cache) => {
+                void cache.put(event.request, responseToCache);
                 cacheMetadata.set(url, Date.now());
               });
             }
@@ -131,8 +131,8 @@ self.addEventListener("fetch", (event: FetchEvent) => {
           .then((response) => {
             // レスポンスをキャッシュに保存
             const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
+            void caches.open(CACHE_NAME).then((cache) => {
+              void cache.put(event.request, responseToCache);
               cacheMetadata.set(url, Date.now());
             });
             return response;
@@ -150,8 +150,8 @@ self.addEventListener("fetch", (event: FetchEvent) => {
         // 成功したレスポンスのみキャッシュ
         if (response.ok) {
           const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
+          void caches.open(CACHE_NAME).then((cache) => {
+            void cache.put(event.request, responseToCache);
             cacheMetadata.set(url, Date.now());
           });
         }

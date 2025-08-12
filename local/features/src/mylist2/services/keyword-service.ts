@@ -5,6 +5,9 @@ import { KeywordInfo } from "../../types/mylist-types.js";
 
 export class KeywordService {
   private db: Mylist2DB;
+  private toMessage(value: unknown): string {
+    return value instanceof Error ? value.message : String(value);
+  }
 
   constructor(db: Mylist2DB) {
     this.db = db;
@@ -29,7 +32,7 @@ export class KeywordService {
         addedAt: Date.now()
       });
       request.onsuccess = () => resolve(request.result as number);
-      request.onerror = () => reject(request.error);
+    	request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -43,7 +46,7 @@ export class KeywordService {
     return new Promise<KeywordInfo[]>((resolve, reject) => {
       const request = index.getAll(mylistId);
       request.onsuccess = () => resolve(request.result as KeywordInfo[]);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -56,7 +59,7 @@ export class KeywordService {
     return new Promise<void>((resolve, reject) => {
       const request = store.delete(keywordId);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -78,9 +81,9 @@ export class KeywordService {
         keyword.mylistId = newMylistId;
         const updateRequest = store.put(keyword);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(request.error);
+        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -102,9 +105,9 @@ export class KeywordService {
         keyword.keyword = newKeyword;
         const updateRequest = store.put(keyword);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(request.error);
+        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -122,7 +125,7 @@ export class KeywordService {
         const isDuplicate = keywords.some(k => k.keyword === keyword);
         resolve(isDuplicate);
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 

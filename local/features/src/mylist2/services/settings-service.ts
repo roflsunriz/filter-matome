@@ -5,6 +5,9 @@ import { ManagerSettings } from "../../types/mylist-types.js";
 
 export class SettingsService {
   private db: Mylist2DB;
+  private toMessage(value: unknown): string {
+    return value instanceof Error ? value.message : String(value);
+  }
 
   constructor(db: Mylist2DB) {
     this.db = db;
@@ -16,14 +19,14 @@ export class SettingsService {
     const store = transaction.objectStore("manager");
 
     return new Promise<void>((resolve, reject) => {
-      const request = store.put({
-        id: "settings",
+      const safe: ManagerSettings = {
         mylistSortType: settings.mylistSortType || "name_asc",
         videoSortType: settings.videoSortType || "uploadedAt_desc",
-      });
+      };
+      const request = store.put({ id: "settings", ...safe });
 
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -36,14 +39,14 @@ export class SettingsService {
       const request = store.get("settings");
 
       request.onsuccess = () => {
-        resolve(
-          request.result || {
-            mylistSortType: "name_asc",
-            videoSortType: "uploadedAt_desc",
-          }
-        );
+        const result = request.result as ManagerSettings | null;
+        if (result && typeof result.mylistSortType === 'string' && typeof result.videoSortType === 'string') {
+          resolve(result);
+          return;
+        }
+        resolve({ mylistSortType: "name_asc", videoSortType: "uploadedAt_desc" });
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 } 

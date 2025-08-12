@@ -335,6 +335,7 @@ export class EventHandlers {
 
   // getVideoDataメソッド（publicに変更）
   public async getVideoData(videoItem: HTMLElement): Promise<DBVideo | null> {
+    await Promise.resolve();
     const id = videoItem.dataset.id;
     const titleElement = videoItem.querySelector(".video-title-link") || videoItem.querySelector(".video-title");
     const viewCountElement = videoItem.querySelector(".view-count");

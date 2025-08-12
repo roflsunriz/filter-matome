@@ -5,6 +5,9 @@ import { VideoInfo, DBVideo } from "../../types/video-types.js";
 
 export class VideoService {
   private db: Mylist2DB;
+  private toMessage(value: unknown): string {
+    return value instanceof Error ? value.message : String(value);
+  }
 
   constructor(db: Mylist2DB) {
     this.db = db;
@@ -20,9 +23,10 @@ export class VideoService {
       const request = index.get(IDBKeyRange.only(mylistId));
 
       request.onsuccess = () => {
-        const existingVideos = request.result;
-        if (existingVideos && existingVideos.id === videoInfo.id) {
-          reject("このマイリストには既に登録されています");
+        const existingVideos = request.result as unknown;
+        const existing = existingVideos as { id?: string } | null;
+        if (existing && existing.id === videoInfo.id) {
+          reject(new Error("このマイリストには既に登録されています"));
           return;
         }
 
@@ -45,10 +49,10 @@ export class VideoService {
 
         const addRequest = store.add(video);
         addRequest.onsuccess = () => resolve("追加しました");
-        addRequest.onerror = () => reject("追加に失敗しました");
+        addRequest.onerror = () => reject(new Error("追加に失敗しました"));
       };
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -61,7 +65,7 @@ export class VideoService {
     return new Promise<DBVideo[]>((resolve, reject) => {
       const request = index.getAll(mylistId);
       request.onsuccess = () => resolve(request.result as DBVideo[]);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -122,7 +126,7 @@ export class VideoService {
       };
 
       request.onerror = () => {
-        reject("削除に失敗しました");
+        reject(new Error("削除に失敗しました"));
       };
     });
   }
@@ -136,7 +140,7 @@ export class VideoService {
       const request = store.get(compositeId);
 
       request.onsuccess = () => {
-        const existingVideo = request.result as DBVideo;
+        const existingVideo = request.result as DBVideo | null;
         if (!existingVideo) {
           reject(new Error("動画が見つかりません"));
           return;

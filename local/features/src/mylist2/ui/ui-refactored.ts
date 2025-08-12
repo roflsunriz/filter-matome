@@ -1,7 +1,7 @@
 import "../../types/global.d.ts"
 
 import { Mylist2Manager } from "../components/manager-refactored.js";
-import { MylistInfo, KeywordInfo } from "../../types/mylist-types.js";
+import { MylistInfo, KeywordInfo, ExportData } from "../../types/mylist-types.js";
 import { DBVideo as VideoInfo } from "../../types/video-types.js";
 import { createMaterialIcon, ICONS } from "../../common/material-icons.js";
 
@@ -69,10 +69,15 @@ export class Mylist2ManagerUI {
     this.initializeCollapsibleControls();
     
     // 設定の初期化（これによってマイリストも読み込まれる）
-    this.initializeSettings();
+    void this.initializeSettings();
   }
 
   // デリゲートメソッド群（各サービスへの橋渡し）
+  private guardEvent(handler: (event: Event) => Promise<unknown>): (event: Event) => void {
+    return (event: Event) => {
+      void handler(event);
+    };
+  }
   async showCustomAlert(message: string, type = "info", title = ""): Promise<boolean> {
     return this.modalService.showCustomAlert(message, type, title);
   }
@@ -119,7 +124,7 @@ export class Mylist2ManagerUI {
       
       // ソートされたマイリストを取得
       const mylists = await this.sortMylists(sortType);
-      this.renderMylistList(mylists);
+      await this.renderMylistList(mylists);
     } catch (error) {
       window.logger.error("マイリスト一覧の読み込みに失敗しました:", error);
     }
@@ -178,7 +183,7 @@ export class Mylist2ManagerUI {
       item.addEventListener("click", () => {
         const id = item.getAttribute("data-id");
         if (id) {
-          this.selectMylist(parseInt(id));
+          void this.selectMylist(parseInt(id));
         }
       });
     });
@@ -302,7 +307,7 @@ export class Mylist2ManagerUI {
   private initializeAdditionalControls(): void {
     this.initializeHeaderControls();
     this.initializeSearchEventListeners();
-    this.initializeSettings();
+    void this.initializeSettings();
   }
 
   renderVideoList(videos: VideoInfo[], keywords: KeywordInfo[]): void {
@@ -536,42 +541,43 @@ export class Mylist2ManagerUI {
   private setupVideoActions(videoList: HTMLElement): void {
     // 移動ボタン
     videoList.querySelectorAll(".move-video").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleVideoMove(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleVideoMove(event);
       });
     });
 
     // コピーボタン  
     videoList.querySelectorAll(".copy-video").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleVideoCopy(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleVideoCopy(event);
       });
     });
 
     // 削除ボタン
     videoList.querySelectorAll(".delete-video").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleVideoDelete(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleVideoDelete(event);
       });
     });
 
     // 情報更新ボタン
     videoList.querySelectorAll(".refresh-video").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleVideoRefresh(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleVideoRefresh(event);
       });
     });
 
     // 詳細表示ボタン
     videoList.querySelectorAll('.open-video-details').forEach((button) => {
-      button.addEventListener('click', async (event) => {
+      button.addEventListener('click', (event) => {
+        void (async () => {
         const target = (event.currentTarget as HTMLElement).closest('.video-item');
         if (!target) return;
-        const compositeId = target.dataset.compositeId;
+          const compositeId = target.getAttribute('data-composite-id') || undefined;
         if (!compositeId) {
           // フォールバック: DOM上のデータ属性だけで表示
-          const descFromDom = target.dataset.description;
-          const tagsFromDom = target.dataset.tags;
+          const descFromDom = target.getAttribute('data-description') || undefined;
+          const tagsFromDom = target.getAttribute('data-tags') || undefined;
           const fallback: Partial<VideoInfo> = {};
           if (descFromDom) fallback.description = descFromDom;
           if (tagsFromDom) {
@@ -587,43 +593,46 @@ export class Mylist2ManagerUI {
           const video = await new Promise<VideoInfo | null>((resolve, reject) => {
             const req = store.get(compositeId);
             req.onsuccess = () => resolve((req.result as unknown as VideoInfo) || null);
-            req.onerror = () => reject(req.error);
+            req.onerror = () => {
+              const err = req.error;
+              reject(new Error(err instanceof Error ? err.message : String(err)));
+            };
           });
           db.close();
-          const descFromDom = target.dataset.description;
-          const tagsFromDom = target.dataset.tags;
+          const descFromDom = target.getAttribute('data-description') || undefined;
+          const tagsFromDom = target.getAttribute('data-tags') || undefined;
           if (video) {
-            if (video.description === undefined && descFromDom) {
-              video.description = descFromDom;
-            }
-            if (video.tags === undefined && tagsFromDom) {
-              try { video.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; }
-            }
-            await this.showVideoDetailsModal(video);
+            const enriched: VideoInfo = {
+              ...video,
+              description: video.description ?? descFromDom,
+              tags: video.tags ?? (tagsFromDom ? ((): string[] | undefined => { try { return JSON.parse(tagsFromDom) as string[]; } catch { return undefined; } })() : undefined),
+            } as VideoInfo;
+            await this.showVideoDetailsModal(enriched);
           } else {
             // DBに見つからない場合でもDOMの情報でモーダルを表示
             const fallback: Partial<VideoInfo> = {};
             if (descFromDom) fallback.description = descFromDom;
-            if (tagsFromDom) {
-              try { fallback.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; }
-            }
+            if (tagsFromDom) { try { fallback.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; } }
             await this.showVideoDetailsModal(fallback as VideoInfo);
           }
-        } catch (e) {
-          window.logger.error('詳細表示に失敗:', e);
-        }
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            window.logger.error('詳細表示に失敗:', msg);
+          }
+        })();
       });
     });
 
     // 追加のイベント委譲（再描画や将来のDOM変更にも強い）
-    videoList.addEventListener('click', async (ev) => {
+    videoList.addEventListener('click', (ev) => {
+      void (async () => {
       const trigger = (ev.target as HTMLElement).closest('.open-video-details');
       if (!trigger) return;
       const target = (trigger as HTMLElement).closest('.video-item');
       if (!target) return;
-      const compositeId = target.dataset.compositeId;
-      const descFromDom = target.dataset.description;
-      const tagsFromDom = target.dataset.tags;
+      const compositeId = target.getAttribute('data-composite-id') || undefined;
+      const descFromDom = target.getAttribute('data-description') || undefined;
+      const tagsFromDom = target.getAttribute('data-tags') || undefined;
       try {
         if (!compositeId) {
           const fallback: Partial<VideoInfo> = {};
@@ -638,17 +647,19 @@ export class Mylist2ManagerUI {
         const video = await new Promise<VideoInfo | null>((resolve, reject) => {
           const req = store.get(compositeId);
           req.onsuccess = () => resolve((req.result as unknown as VideoInfo) || null);
-          req.onerror = () => reject(req.error);
+            req.onerror = () => {
+              const err = req.error;
+              reject(new Error(err instanceof Error ? err.message : String(err)));
+            };
         });
         db.close();
         if (video) {
-          if (video.description === undefined && descFromDom) {
-            video.description = descFromDom;
-          }
-          if (video.tags === undefined && tagsFromDom) {
-            try { video.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; }
-          }
-          await this.showVideoDetailsModal(video);
+          const enriched: VideoInfo = {
+            ...video,
+            description: video.description ?? descFromDom,
+            tags: video.tags ?? (tagsFromDom ? ((): string[] | undefined => { try { return JSON.parse(tagsFromDom) as string[]; } catch { return undefined; } })() : undefined),
+          } as VideoInfo;
+          await this.showVideoDetailsModal(enriched);
         } else {
           const fallback: Partial<VideoInfo> = {};
           if (descFromDom) fallback.description = descFromDom;
@@ -656,37 +667,39 @@ export class Mylist2ManagerUI {
           await this.showVideoDetailsModal(fallback as VideoInfo);
         }
       } catch (e) {
-        window.logger.error('詳細表示(委譲)に失敗:', e);
+        const msg = e instanceof Error ? e.message : String(e);
+        window.logger.error('詳細表示(委譲)に失敗:', msg);
       }
+      })();
     });
   }
 
   private setupKeywordActions(videoList: HTMLElement): void {
     // 移動ボタン
     videoList.querySelectorAll(".move-keyword").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleKeywordMove(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleKeywordMove(event);
       });
     });
 
     // コピーボタン
     videoList.querySelectorAll(".copy-keyword").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleKeywordCopy(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleKeywordCopy(event);
       });
     });
     
     // 削除ボタン
     videoList.querySelectorAll(".delete-keyword").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleKeywordDelete(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleKeywordDelete(event);
       });
     });
 
     // 編集ボタン
     videoList.querySelectorAll(".edit-keyword").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleKeywordEdit(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleKeywordEdit(event);
       });
     });
   }
@@ -697,7 +710,7 @@ export class Mylist2ManagerUI {
 
     const createNewMylistElement = document.getElementById("createNewMylist");
     if (createNewMylistElement) {
-      createNewMylistElement.addEventListener("click", async () => {
+      createNewMylistElement.addEventListener("click", this.guardEvent(async () => {
         const nameInput = document.getElementById("newMylistName") as HTMLInputElement;
         if (!nameInput) {
           await this.showCustomAlert("マイリスト名入力欄が見つかりません");
@@ -708,13 +721,13 @@ export class Mylist2ManagerUI {
           const name = this.validateInput(nameInput.value, "mylistName");
           await this.manager.createMylist(name);
           nameInput.value = "";
-          this.loadMylists();
+          void this.loadMylists();
         } catch (error) {
           window.logger.error("マイリストの作成に失敗しました:", error);
           const errorMessage = error instanceof Error ? error.message : "マイリストの作成に失敗しました";
           await this.showCustomAlert(errorMessage);
         }
-      });
+      }));
     }
 
     // 動画ソートイベントもinitializeSettingsで設定されるため、ここでは設定しない
@@ -722,7 +735,7 @@ export class Mylist2ManagerUI {
     // 動画追加ボタンのイベントリスナー
     const addVideoElement = document.getElementById("addVideo");
     if (addVideoElement) {
-      addVideoElement.addEventListener("click", async () => {
+      addVideoElement.addEventListener("click", this.guardEvent(async () => {
         if (!this.currentMylistId) {
           await this.showCustomAlert("マイリストを選択してください");
           return;
@@ -763,18 +776,18 @@ export class Mylist2ManagerUI {
           const errorMessage = error instanceof Error ? error.message : "動画の追加に失敗しました";
           await this.showCustomAlert(errorMessage);
         }
-      });
+      }));
     }
 
     // Enterキーでも追加できるように
     const videoIdInputElement = document.getElementById("videoIdInput");
     if (videoIdInputElement) {
-      videoIdInputElement.addEventListener("keypress", async (event) => {
+      videoIdInputElement.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
-          const addVideoElement = document.getElementById("addVideo");
-          if (addVideoElement) {
-            addVideoElement.click();
+          const addVideoButton = document.getElementById("addVideo");
+          if (addVideoButton) {
+            (addVideoButton as HTMLButtonElement).click();
           }
         }
       });
@@ -783,7 +796,7 @@ export class Mylist2ManagerUI {
     // キーワード追加ボタンのイベントリスナー
     const addKeywordElement = document.getElementById("addKeyword");
     if (addKeywordElement) {
-      addKeywordElement.addEventListener("click", async () => {
+      addKeywordElement.addEventListener("click", this.guardEvent(async () => {
         if (!this.currentMylistId) {
           await this.showCustomAlert("マイリストを選択してください");
           return;
@@ -806,13 +819,13 @@ export class Mylist2ManagerUI {
           const errorMessage = error instanceof Error ? error.message : "キーワードの追加に失敗しました";
           await this.showCustomAlert(errorMessage);
         }
-      });
+      }));
     }
 
     // キーワード入力でもEnterキーで追加
     const keywordInputElement = document.getElementById("keywordInput");
     if (keywordInputElement) {
-      keywordInputElement.addEventListener("keypress", async (event) => {
+      keywordInputElement.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
           const addKeywordElement = document.getElementById("addKeyword");
@@ -826,7 +839,7 @@ export class Mylist2ManagerUI {
     // 一括操作の実行ボタン
     const executeSelectedActionElement = document.getElementById("executeSelectedAction");
     if (executeSelectedActionElement) {
-      executeSelectedActionElement.addEventListener("click", async () => {
+      executeSelectedActionElement.addEventListener("click", this.guardEvent(async () => {
         const actionSelectElement = document.getElementById("selectedVideosAction") as HTMLSelectElement;
         if (!actionSelectElement) {
           await this.showCustomAlert("操作選択要素が見つかりません");
@@ -881,13 +894,13 @@ export class Mylist2ManagerUI {
 
         // 操作完了後、セレクトボックスをリセット
         actionSelectElement.value = "";
-      });
+      }));
     }
 
     // マイリスト名の保存
     const saveMylistNameElement = document.getElementById("saveMylistName");
     if (saveMylistNameElement) {
-      saveMylistNameElement.addEventListener("click", async () => {
+      saveMylistNameElement.addEventListener("click", this.guardEvent(async () => {
         if (!this.currentMylistId) {
           await this.showCustomAlert("マイリストを選択してください");
           return;
@@ -909,13 +922,13 @@ export class Mylist2ManagerUI {
           const errorMessage = error instanceof Error ? error.message : "マイリスト名の更新に失敗しました";
           await this.showCustomAlert(errorMessage);
         }
-      });
+      }));
     }
 
     // マイリストの削除
     const deleteMylistElement = document.getElementById("deleteMylist");
     if (deleteMylistElement) {
-      deleteMylistElement.addEventListener("click", async () => {
+      deleteMylistElement.addEventListener("click", this.guardEvent(async () => {
         if (!this.currentMylistId) {
           await this.showCustomAlert("マイリストを選択してください");
           return;
@@ -949,13 +962,13 @@ export class Mylist2ManagerUI {
           const errorMessage = error instanceof Error ? error.message : "マイリストの削除に失敗しました";
           await this.showCustomAlert(errorMessage);
         }
-      });
+      }));
     }
 
     // エクスポート機能
     const exportMylistElement = document.getElementById("exportMylist");
     if (exportMylistElement) {
-      exportMylistElement.addEventListener("click", async () => {
+      exportMylistElement.addEventListener("click", this.guardEvent(async () => {
         try {
           const data = await this.manager.exportData();
           const dateTime = this.formatDateTime();
@@ -997,13 +1010,13 @@ export class Mylist2ManagerUI {
           const errorMessage = error instanceof Error ? error.message : "エクスポートに失敗しました";
           await this.showCustomAlert("エクスポートに失敗しました: " + errorMessage);
         }
-      });
+      }));
     }
 
     // インポート機能
     const importMylistElement = document.getElementById("importMylist");
     if (importMylistElement) {
-      importMylistElement.addEventListener("click", async () => {
+      importMylistElement.addEventListener("click", this.guardEvent(async () => {
         const input = document.getElementById("importFile") as HTMLInputElement;
         if (!input) {
           await this.showCustomAlert("インポートファイル選択要素が見つかりません");
@@ -1012,12 +1025,12 @@ export class Mylist2ManagerUI {
         
         input.accept = ".json,.txt"; // .txtも受け付けるように
         input.click();
-      });
+      }));
     }
 
     const importFileElement = document.getElementById("importFile");
     if (importFileElement) {
-      importFileElement.addEventListener("change", async (event) => {
+      importFileElement.addEventListener("change", this.guardEvent(async (event) => {
         const input = event.target as HTMLInputElement;
         const file = input.files?.[0];
         if (!file) return;
@@ -1028,8 +1041,8 @@ export class Mylist2ManagerUI {
 
           // ファイル形式を判定
           try {
-            const data = JSON.parse(text);
-            if (Array.isArray(data) && data[0]?.vid) {
+            const data = JSON.parse(text) as unknown;
+            if (Array.isArray(data) && typeof data[0] === 'object' && data[0] !== null && 'vid' in data[0]) {
               // カスタムマイリスト1の形式
               this.showProgress();
               mylistId = await this.manager.importLegacyData(text, (current: number, total: number) =>
@@ -1039,7 +1052,38 @@ export class Mylist2ManagerUI {
             } else {
               // Mylist2の形式
               this.showProgress();
-              await this.manager.importData(data);
+              // data は unknown なので ExportData の形状を厳密に確認し、明示的に構築
+              const rec = data as Record<string, unknown>;
+              if (!rec || typeof rec !== 'object') {
+                throw new Error('無効なデータ形式です');
+              }
+              const mylistsUnknown = rec.mylists;
+              const videosUnknown = rec.videos;
+              const keywordsUnknown = rec.keywords;
+              if (!Array.isArray(mylistsUnknown) || !Array.isArray(videosUnknown)) {
+                throw new Error('Mylist2のエクスポート形式ではありません');
+              }
+              const isMylistInfo = (v: unknown): v is MylistInfo => {
+                if (typeof v !== 'object' || v === null) return false;
+                const r = v as Record<string, unknown>;
+                return typeof r.name === 'string' && typeof r.createdAt === 'number';
+              };
+              const isDBVideo = (v: unknown): v is VideoInfo => {
+                if (typeof v !== 'object' || v === null) return false;
+                const r = v as Record<string, unknown>;
+                return typeof r.id === 'string' && typeof r.originalId === 'string' && typeof r.mylistId === 'number';
+              };
+              const isKeywordInfo = (v: unknown): v is KeywordInfo => {
+                if (typeof v !== 'object' || v === null) return false;
+                const r = v as Record<string, unknown>;
+                return typeof r.keyword === 'string' && typeof r.addedAt === 'number';
+              };
+              const exportData: ExportData = {
+                mylists: (mylistsUnknown as unknown[]).filter(isMylistInfo),
+                videos: (videosUnknown as unknown[]).filter(isDBVideo),
+                keywords: Array.isArray(keywordsUnknown) ? (keywordsUnknown as unknown[]).filter(isKeywordInfo) : [],
+              };
+              await this.manager.importData(exportData);
               await this.showCustomAlert("データを正常にインポートしました");
             }
           } catch (error) {
@@ -1064,7 +1108,7 @@ export class Mylist2ManagerUI {
 
         // ファイル選択をリセット
         input.value = "";
-      });
+      }));
     }
 
     // 全選択ボタンのイベントリスナー（動画のみ）
@@ -1094,6 +1138,7 @@ export class Mylist2ManagerUI {
 
   // 動画詳細モーダルの表示
   private async showVideoDetailsModal(video: VideoInfo): Promise<void> {
+    await Promise.resolve();
     const modalId = 'videoDetailsModal';
     let modal = document.getElementById(modalId);
     if (!modal) {
@@ -1152,9 +1197,9 @@ export class Mylist2ManagerUI {
     // 検索機能
     const searchExecElement = document.getElementById("searchExec");
     if (searchExecElement) {
-      searchExecElement.addEventListener("click", () => {
-        this.executeSearch();
-      });
+      searchExecElement.addEventListener("click", this.guardEvent(async () => {
+        await this.executeSearch();
+      }));
     }
 
     const searchClearElement = document.getElementById("searchClear");
@@ -1172,7 +1217,7 @@ export class Mylist2ManagerUI {
     if (searchWordsElement) {
       searchWordsElement.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
-          this.executeSearch();
+          void this.executeSearch();
         }
       });
     }
@@ -1307,21 +1352,21 @@ export class Mylist2ManagerUI {
     }
 
     // 変更イベントの設定
-    mylistSort.addEventListener("change", async () => {
+    mylistSort.addEventListener("change", this.guardEvent(async () => {
       await this.manager.saveManagerSettings({
         mylistSortType: mylistSort.value,
         videoSortType: videoSort.value,
       });
-      this.loadMylists();
-    });
+      await this.loadMylists();
+    }));
 
-    videoSort.addEventListener("change", async () => {
+    videoSort.addEventListener("change", this.guardEvent(async () => {
       await this.manager.saveManagerSettings({
         mylistSortType: mylistSort.value,
         videoSortType: videoSort.value,
       });
-      this.loadVideos();
-    });
+      await this.loadVideos();
+    }));
   }
 
   // キーワード編集モーダルを表示する関数

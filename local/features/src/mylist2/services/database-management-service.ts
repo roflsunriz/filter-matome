@@ -35,7 +35,7 @@ export class DatabaseManagementService {
                 success: false,
                 health: {
                     isHealthy: false,
-                    issues: [`Initialization failed: ${error}`],
+                    issues: [`Initialization failed: ${error instanceof Error ? error.message : String(error)}`],
                     storageEstimate: null,
                     persistence: false
                 },
@@ -61,7 +61,7 @@ export class DatabaseManagementService {
             window.logger?.error('Health check failed:', error);
             return {
                 isHealthy: false,
-                issues: [`Health check failed: ${error}`],
+                issues: [`Health check failed: ${error instanceof Error ? error.message : String(error)}`],
                 storageEstimate: null,
                 persistence: false
             };
@@ -252,7 +252,7 @@ export class DatabaseManagementService {
 
     // 健全性問題の通知
     private notifyHealthIssues(health: DatabaseHealth): void {
-        const issues = health.issues.join(', ');
+        const issues = health.issues.map(i => String(i)).join(', ');
         
         // UI通知（存在する場合）
         if (typeof window !== 'undefined' && 
@@ -270,21 +270,23 @@ export class DatabaseManagementService {
 
     // 自動バックアップ機能
     async scheduleAutoBackup(intervalHours: number = 24): Promise<void> {
+        await Promise.resolve();
         const intervalMs = intervalHours * 60 * 60 * 1000;
         
-        setInterval(async () => {
+        setInterval(() => {
             try {
-                const result = await this.createBackup();
+                void this.createBackup().then((result) => {
                 
-                if (result.success && result.backupData) {
-                    // 自動バックアップをローカルストレージに保存
-                    localStorage.setItem('mylist2_auto_backup', result.backupData);
-                    localStorage.setItem('mylist2_auto_backup_timestamp', new Date().toISOString());
-                    
-                    window.logger?.info('Auto backup completed');
-                } else {
-                    window.logger?.error('Auto backup failed:', result.error);
-                }
+                    if (result.success && result.backupData) {
+                        localStorage.setItem('mylist2_auto_backup', result.backupData);
+                        localStorage.setItem('mylist2_auto_backup_timestamp', new Date().toISOString());
+                        window.logger?.info('Auto backup completed');
+                    } else {
+                        window.logger?.error('Auto backup failed:', result.error);
+                    }
+                }).catch((error) => {
+                    window.logger?.error('Auto backup error:', error);
+                });
             } catch (error) {
                 window.logger?.error('Auto backup error:', error);
             }

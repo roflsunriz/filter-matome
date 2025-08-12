@@ -29,6 +29,16 @@ export class Mylist2DB {
     private version: number;
     private migrationSteps: MigrationStep[];
     private onProgressCallback?: (progress: MigrationProgress) => void;
+    private toMessage(value: unknown): string {
+        if (value && typeof (value as { message?: unknown }).message === 'string') {
+            return (value as { message: string }).message;
+        }
+        try {
+            return String(value);
+        } catch {
+            return 'Unknown error';
+        }
+    }
 
     constructor() {
         this.dbName = 'Mylist2DB';
@@ -43,6 +53,7 @@ export class Mylist2DB {
                 version: 1,
                 description: '初期データベース構造の作成',
                 execute: async (db: IDBDatabase) => {
+                    await Promise.resolve();
                     this.createInitialStores(db);
                 }
             },
@@ -50,6 +61,7 @@ export class Mylist2DB {
                 version: 4,
                 description: 'マネージャーストアの追加',
                 execute: async (db: IDBDatabase) => {
+                    await Promise.resolve();
                     if (!db.objectStoreNames.contains('manager')) {
                         db.createObjectStore('manager', { keyPath: 'id' });
                     }
@@ -59,6 +71,7 @@ export class Mylist2DB {
                 version: 5,
                 description: 'キーワードストアの追加',
                 execute: async (db: IDBDatabase) => {
+                    await Promise.resolve();
                     if (!db.objectStoreNames.contains('keywords')) {
                         const keywordStore = db.createObjectStore('keywords', { 
                             keyPath: 'id',
@@ -95,7 +108,7 @@ export class Mylist2DB {
                                     resolve();
                                 }
                             };
-                            request.onerror = () => reject(request.error);
+                            request.onerror = () => reject(new Error(this.toMessage(request.error)));
                         });
                     });
                 }
@@ -104,6 +117,7 @@ export class Mylist2DB {
                 version: 7,
                 description: 'videosストアにtagsインデックスを追加',
                 execute: async (db: IDBDatabase, transaction: IDBTransaction) => {
+                    await Promise.resolve();
                     // 既存のvideosストアにtagsインデックスが無ければ追加
                     if (db.objectStoreNames.contains('videos')) {
                         const store = transaction.objectStore('videos');
@@ -188,15 +202,15 @@ export class Mylist2DB {
             const [mylists, videos, keywords] = await Promise.all([
                 new Promise<MylistInfo[]>((resolve, reject) => {
                     mylistsRequest.onsuccess = () => resolve(mylistsRequest.result);
-                    mylistsRequest.onerror = () => reject(mylistsRequest.error);
+                    mylistsRequest.onerror = () => reject(new Error(this.toMessage(mylistsRequest.error)));
                 }),
                 new Promise<DBVideo[]>((resolve, reject) => {
                     videosRequest.onsuccess = () => resolve(videosRequest.result);
-                    videosRequest.onerror = () => reject(videosRequest.error);
+                    videosRequest.onerror = () => reject(new Error(this.toMessage(videosRequest.error)));
                 }),
                 new Promise<KeywordInfo[]>((resolve, reject) => {
                     keywordsRequest.onsuccess = () => resolve(keywordsRequest.result);
-                    keywordsRequest.onerror = () => reject(keywordsRequest.error);
+                    keywordsRequest.onerror = () => reject(new Error(this.toMessage(keywordsRequest.error)));
                 })
             ]);
 
@@ -224,13 +238,13 @@ export class Mylist2DB {
                     value: new Date().toISOString() 
                 });
                 request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
+                request.onerror = () => reject(new Error(this.toMessage(request.error)));
             });
 
             db.close();
             
         } catch (error) {
-            health.issues.push(`Health check failed: ${error}`);
+            health.issues.push(`Health check failed: ${this.toMessage(error)}`);
             health.isHealthy = false;
         }
 
@@ -273,7 +287,7 @@ export class Mylist2DB {
                 
                 backup.data[storeName] = await new Promise<unknown[]>((resolve, reject) => {
                     request.onsuccess = () => resolve(request.result);
-                    request.onerror = () => reject(request.error);
+                    request.onerror = () => reject(new Error(this.toMessage(request.error)));
                 });
             }
 
@@ -286,7 +300,7 @@ export class Mylist2DB {
                     value: backup.timestamp 
                 });
                 request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
+                request.onerror = () => reject(new Error(this.toMessage(request.error)));
             });
 
             db.close();
@@ -300,7 +314,8 @@ export class Mylist2DB {
 
     // バックアップからの復元
     async restoreFromBackup(backupData: string): Promise<void> {
-        const backup = JSON.parse(backupData);
+        const backupUnknown: unknown = JSON.parse(backupData);
+        const backup = backupUnknown as { data: Record<string, unknown[]> };
         const db = await this.initDB();
 
         try {
@@ -314,7 +329,7 @@ export class Mylist2DB {
                 await new Promise<void>((resolve, reject) => {
                     const clearRequest = store.clear();
                     clearRequest.onsuccess = () => resolve();
-                    clearRequest.onerror = () => reject(clearRequest.error);
+                    clearRequest.onerror = () => reject(new Error(this.toMessage(clearRequest.error)));
                 });
 
                 // バックアップデータを復元
@@ -323,7 +338,7 @@ export class Mylist2DB {
                     await new Promise<void>((resolve, reject) => {
                         const putRequest = store.put(item);
                         putRequest.onsuccess = () => resolve();
-                        putRequest.onerror = () => reject(putRequest.error);
+                        putRequest.onerror = () => reject(new Error(this.toMessage(putRequest.error)));
                     });
                 }
             }
@@ -392,7 +407,9 @@ export class Mylist2DB {
                         await new Promise<void>((resolve, reject) => {
                             const getRequest = metadataStore.get('migration_history');
                             getRequest.onsuccess = () => {
-                                const history = getRequest.result?.value || [];
+                                const historyRaw = getRequest.result as { value?: unknown } | undefined;
+                                const current = historyRaw && 'value' in historyRaw ? historyRaw.value : [];
+                                const history: unknown[] = Array.isArray(current) ? current : [];
                                 history.push({
                                     from: oldVersion,
                                     to: this.version,
@@ -405,9 +422,9 @@ export class Mylist2DB {
                                     value: history
                                 });
                                 putRequest.onsuccess = () => resolve();
-                                putRequest.onerror = () => reject(putRequest.error);
+                                putRequest.onerror = () => reject(new Error(this.toMessage(putRequest.error)));
                             };
-                            getRequest.onerror = () => reject(getRequest.error);
+                            getRequest.onerror = () => reject(new Error(this.toMessage(getRequest.error)));
                         });
                     }
 
@@ -437,7 +454,7 @@ export class Mylist2DB {
             };
 
             request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
+            request.onerror = () => reject(new Error(this.toMessage(request.error)));
         });
     }
 

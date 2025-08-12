@@ -30,7 +30,7 @@ export class ApiService {
       });
 
       if (!this.isProcessingQueue) {
-        this.processQueue();
+        void this.processQueue();
       }
     });
   }
@@ -58,7 +58,7 @@ export class ApiService {
 
     // 次のリクエストまで待機
     await new Promise((resolve) => setTimeout(resolve, this.API_RATE_LIMIT));
-    this.processQueue();
+    void this.processQueue();
   }
 
   // 実際のAPI呼び出し（内部用）
