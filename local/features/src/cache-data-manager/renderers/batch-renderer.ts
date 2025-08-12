@@ -36,7 +36,7 @@ export class BatchRenderer {
   // 検索結果用最適化レンダリング
   public async renderSearchResults(resultIds: string[]): Promise<void> {
     this.clearContainer();
-    const entries = await this.dataLoader.getEntriesByIds(resultIds);
+    const entries = this.dataLoader.getEntriesByIds(resultIds);
     if (entries.length === 0) {
       this.showNoResultsMessage();
       return;

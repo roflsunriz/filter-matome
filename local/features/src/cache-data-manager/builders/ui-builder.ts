@@ -111,7 +111,7 @@ export class UIBuilder {
   public async renderAllEntries(): Promise<void> {
     this.progressManager.show("動画データ読み込み中");
     try {
-      const entries = await this.dataLoader.getAllEntries();
+      const entries = this.dataLoader.getAllEntries();
       await this.renderer.processBatch(entries);
     } finally {
       this.progressManager.hide();
@@ -134,7 +134,7 @@ export class UIBuilder {
     this.eventManager.addListener("searchClear", async () => {
       this.progressManager.show("全データ再表示中");
       try {
-        const entries = await this.dataLoader.getAllEntries();
+        const entries = this.dataLoader.getAllEntries();
         await this.renderer.processBatch(entries);
       } finally {
         this.progressManager.hide();

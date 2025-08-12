@@ -80,8 +80,8 @@ export class LoadDataFromMemory {
       });
   }
 
-  public async getEntriesByIds(ids: string[]): Promise<VideoData[]> {
-    const allEntries = await this.getAllEntries();
+  public getEntriesByIds(ids: string[]): VideoData[] {
+    const allEntries = this.getAllEntries();
     return allEntries.filter((entry) => ids.includes(entry.id));
   }
 } 

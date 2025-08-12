@@ -19,9 +19,9 @@ async function initializeList(): Promise<void> {
   await uiBuilder.renderAllEntries();
 }
 
-window.addEventListener("load", ()=>{
+window.addEventListener("load", () => {
   const style = document.createElement('style');
   style.textContent = cacheListStyles;
   document.head.appendChild(style);
-  initializeList();
+  void initializeList();
 });

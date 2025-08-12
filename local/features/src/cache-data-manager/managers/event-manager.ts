@@ -13,6 +13,10 @@ export class EventManager {
 
   public trigger<T>(eventType: string, data?: T): void {
     const callbacks = this.listeners.get(eventType) || [];
-    callbacks.forEach((cb) => (cb as EventCallback<T>)(data));
+    callbacks.forEach((cb) => {
+      const result = (cb as EventCallback<T>)(data);
+      // ignore returned Promise intentionally
+      void result;
+    });
   }
 } 

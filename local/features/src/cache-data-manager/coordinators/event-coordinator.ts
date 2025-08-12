@@ -43,7 +43,7 @@ export class EventCoordinator {
   }
 
   private setupCardEvents(): void {
-    document.addEventListener("click", async (event) => {
+    document.addEventListener("click", (event) => {
       const card = (event.target as HTMLElement).closest(".video-card") as HTMLElement;
       if (!card) return;
 
@@ -53,7 +53,7 @@ export class EventCoordinator {
 
       // 詳細情報遅延読み込み
       if (!button) {
-        await this.showDetailInfo(baseId);
+        void this.showDetailInfo(baseId);
         return;
       }
 

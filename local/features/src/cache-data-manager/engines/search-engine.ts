@@ -59,8 +59,8 @@ export class SearchEngine {
     return [...new Set(results.flatMap((r) => r.result))].filter((id): id is string => typeof id === 'string');
   }
 
-  private async rebuildIndex(): Promise<void> {
-    const entries = await this.dataLoader.getAllEntries();
+  private rebuildIndex(): void {
+    const entries = this.dataLoader.getAllEntries();
     entries.forEach((entry) => {
       (this.index as { add: (doc: { id: string; title: string }) => void }).add({
         id: entry.id,
