@@ -64,9 +64,14 @@ window.commonHelper = {
       }
       const text = await response.text();
       const doc = new DOMParser().parseFromString(text, "text/html");
-      const serverContext = JSON.parse(doc.querySelector('meta[name="server-context"]')?.getAttribute("content") || "{}");
+      const serverContextRaw = JSON.parse(doc.querySelector('meta[name="server-context"]')?.getAttribute("content") || "{}");
+      const serverContext = serverContextRaw && typeof serverContextRaw === "object" ? serverContextRaw : {};
       const serverResponseContent = doc.querySelector('meta[name="server-response"]')?.getAttribute("content") || "{}";
-      const serverResponse = JSON.parse(decodeURIComponent(serverResponseContent));
+      const serverResponseUnknown = JSON.parse(decodeURIComponent(serverResponseContent));
+      if (!serverResponseUnknown || typeof serverResponseUnknown !== "object") {
+        throw new Error("Invalid server response");
+      }
+      const serverResponse = serverResponseUnknown;
       return {
         serverContext,
         serverResponse,
@@ -671,7 +676,8 @@ class Toastr {
             `;
       toastElement.appendChild(progressElement);
       setTimeout(() => {
-        progressElement.style.transition = `width ${options.timeOut}ms linear`;
+        const timeout = typeof options.timeOut === "number" ? options.timeOut : 0;
+        progressElement.style.transition = `width ${timeout}ms linear`;
         progressElement.style.width = "0%";
       }, 10);
     }
@@ -688,7 +694,7 @@ class Toastr {
       toastElement.addEventListener("mouseenter", () => {
         clearTimeout(toastElement.timeoutId);
         const progressElement = toastElement.querySelector(`.${options.progressClass}`);
-        if (progressElement) {
+        if (progressElement instanceof HTMLElement) {
           progressElement.style.transition = "none";
         }
       });
@@ -698,8 +704,9 @@ class Toastr {
             this.removeToast(toastElement);
           }, options.extendedTimeOut);
           const progressElement = toastElement.querySelector(`.${options.progressClass}`);
-          if (progressElement) {
-            progressElement.style.transition = `width ${options.extendedTimeOut}ms linear`;
+          if (progressElement instanceof HTMLElement) {
+            const ext = typeof options.extendedTimeOut === "number" ? options.extendedTimeOut : 0;
+            progressElement.style.transition = `width ${ext}ms linear`;
             progressElement.style.width = "0%";
           }
         }
@@ -2707,6 +2714,16 @@ const headerAdjustments = () => {
 };
 
 class Mylist2DB {
+  toMessage(value) {
+    if (value && typeof value.message === "string") {
+      return value.message;
+    }
+    try {
+      return String(value);
+    } catch {
+      return "Unknown error";
+    }
+  }
   constructor() {
     this.dbName = "Mylist2DB";
     this.version = 7;
@@ -2719,6 +2736,7 @@ class Mylist2DB {
         version: 1,
         description: "初期データベース構造の作成",
         execute: async (db) => {
+          await Promise.resolve();
           this.createInitialStores(db);
         }
       },
@@ -2726,6 +2744,7 @@ class Mylist2DB {
         version: 4,
         description: "マネージャーストアの追加",
         execute: async (db) => {
+          await Promise.resolve();
           if (!db.objectStoreNames.contains("manager")) {
             db.createObjectStore("manager", { keyPath: "id" });
           }
@@ -2735,6 +2754,7 @@ class Mylist2DB {
         version: 5,
         description: "キーワードストアの追加",
         execute: async (db) => {
+          await Promise.resolve();
           if (!db.objectStoreNames.contains("keywords")) {
             const keywordStore = db.createObjectStore("keywords", {
               keyPath: "id",
@@ -2770,7 +2790,7 @@ class Mylist2DB {
                   resolve();
                 }
               };
-              request.onerror = () => reject(request.error);
+              request.onerror = () => reject(new Error(this.toMessage(request.error)));
             });
           });
         }
@@ -2779,6 +2799,7 @@ class Mylist2DB {
         version: 7,
         description: "videosストアにtagsインデックスを追加",
         execute: async (db, transaction) => {
+          await Promise.resolve();
           if (db.objectStoreNames.contains("videos")) {
             const store = transaction.objectStore("videos");
             const hasTagsIndex = Array.from(store.indexNames).includes("tags");
@@ -2849,15 +2870,15 @@ class Mylist2DB {
       const [mylists, videos, keywords] = await Promise.all([
         new Promise((resolve, reject) => {
           mylistsRequest.onsuccess = () => resolve(mylistsRequest.result);
-          mylistsRequest.onerror = () => reject(mylistsRequest.error);
+          mylistsRequest.onerror = () => reject(new Error(this.toMessage(mylistsRequest.error)));
         }),
         new Promise((resolve, reject) => {
           videosRequest.onsuccess = () => resolve(videosRequest.result);
-          videosRequest.onerror = () => reject(videosRequest.error);
+          videosRequest.onerror = () => reject(new Error(this.toMessage(videosRequest.error)));
         }),
         new Promise((resolve, reject) => {
           keywordsRequest.onsuccess = () => resolve(keywordsRequest.result);
-          keywordsRequest.onerror = () => reject(keywordsRequest.error);
+          keywordsRequest.onerror = () => reject(new Error(this.toMessage(keywordsRequest.error)));
         })
       ]);
       const mylistIds = new Set(mylists.map((m) => m.id));
@@ -2879,11 +2900,11 @@ class Mylist2DB {
           value: (/* @__PURE__ */ new Date()).toISOString()
         });
         request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(this.toMessage(request.error)));
       });
       db.close();
     } catch (error) {
-      health.issues.push(`Health check failed: ${error}`);
+      health.issues.push(`Health check failed: ${this.toMessage(error)}`);
       health.isHealthy = false;
     }
     return health;
@@ -2916,7 +2937,7 @@ class Mylist2DB {
         const request = store.getAll();
         backup.data[storeName] = await new Promise((resolve, reject) => {
           request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
+          request.onerror = () => reject(new Error(this.toMessage(request.error)));
         });
       }
       const metadataTransaction = db.transaction(["metadata"], "readwrite");
@@ -2927,7 +2948,7 @@ class Mylist2DB {
           value: backup.timestamp
         });
         request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(this.toMessage(request.error)));
       });
       db.close();
       return JSON.stringify(backup);
@@ -2938,7 +2959,8 @@ class Mylist2DB {
   }
   // バックアップからの復元
   async restoreFromBackup(backupData) {
-    const backup = JSON.parse(backupData);
+    const backupUnknown = JSON.parse(backupData);
+    const backup = backupUnknown;
     const db = await this.initDB();
     try {
       const storeNames = Object.keys(backup.data);
@@ -2948,14 +2970,14 @@ class Mylist2DB {
         await new Promise((resolve, reject) => {
           const clearRequest = store.clear();
           clearRequest.onsuccess = () => resolve();
-          clearRequest.onerror = () => reject(clearRequest.error);
+          clearRequest.onerror = () => reject(new Error(this.toMessage(clearRequest.error)));
         });
         const data = backup.data[storeName];
         for (const item of data) {
           await new Promise((resolve, reject) => {
             const putRequest = store.put(item);
             putRequest.onsuccess = () => resolve();
-            putRequest.onerror = () => reject(putRequest.error);
+            putRequest.onerror = () => reject(new Error(this.toMessage(putRequest.error)));
           });
         }
       }
@@ -3010,7 +3032,9 @@ class Mylist2DB {
             await new Promise((resolve2, reject2) => {
               const getRequest = metadataStore.get("migration_history");
               getRequest.onsuccess = () => {
-                const history = getRequest.result?.value || [];
+                const historyRaw = getRequest.result;
+                const current = historyRaw && "value" in historyRaw ? historyRaw.value : [];
+                const history = Array.isArray(current) ? current : [];
                 history.push({
                   from: oldVersion,
                   to: this.version,
@@ -3022,9 +3046,9 @@ class Mylist2DB {
                   value: history
                 });
                 putRequest.onsuccess = () => resolve2();
-                putRequest.onerror = () => reject2(putRequest.error);
+                putRequest.onerror = () => reject2(new Error(this.toMessage(putRequest.error)));
               };
-              getRequest.onerror = () => reject2(getRequest.error);
+              getRequest.onerror = () => reject2(new Error(this.toMessage(getRequest.error)));
             });
           }
           if (this.onProgressCallback) {
@@ -3051,7 +3075,7 @@ class Mylist2DB {
         }
       };
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   createInitialStores(db) {
@@ -3118,7 +3142,7 @@ class ApiService {
         reject
       });
       if (!this.isProcessingQueue) {
-        this.processQueue();
+        void this.processQueue();
       }
     });
   }
@@ -3141,7 +3165,7 @@ class ApiService {
       }
     }
     await new Promise((resolve) => setTimeout(resolve, this.API_RATE_LIMIT));
-    this.processQueue();
+    void this.processQueue();
   }
   // 実際のAPI呼び出し（内部用）
   async _fetchVideoInfo(videoId) {
@@ -3278,6 +3302,9 @@ class ApiService {
 }
 
 class MylistService {
+  toMessage(value) {
+    return value instanceof Error ? value.message : String(value);
+  }
   constructor(db) {
     this.db = db;
   }
@@ -3292,7 +3319,7 @@ class MylistService {
         sortOrder: 0
       });
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   async getAllMylists() {
@@ -3302,7 +3329,7 @@ class MylistService {
     return new Promise((resolve, reject) => {
       const request = store.getAll();
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   async sortMylists(sortType, getVideosFunc) {
@@ -3351,9 +3378,9 @@ class MylistService {
         mylist.name = newName;
         const updateRequest = store.put(mylist);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(request.error);
+        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   async deleteMylist(mylistId) {
@@ -3368,23 +3395,28 @@ class MylistService {
         const keys = deleteVideos.result;
         Promise.all([
           ...keys.map((key) => {
-            return new Promise((res) => {
+            return new Promise((res, rej) => {
               const request = videoStore.delete(key);
               request.onsuccess = () => res();
+              request.onerror = () => rej(new Error(this.toMessage(request.error)));
             });
           }),
-          new Promise((res) => {
+          new Promise((res, rej) => {
             const request = mylistStore.delete(mylistId);
             request.onsuccess = () => res();
+            request.onerror = () => rej(new Error(this.toMessage(request.error)));
           })
-        ]).then(() => resolve()).catch(reject);
+        ]).then(() => resolve()).catch((e) => reject(e instanceof Error ? e : new Error(this.toMessage(e))));
       };
-      deleteVideos.onerror = () => reject(deleteVideos.error);
+      deleteVideos.onerror = () => reject(new Error(this.toMessage(deleteVideos.error)));
     });
   }
 }
 
 class VideoService {
+  toMessage(value) {
+    return value instanceof Error ? value.message : String(value);
+  }
   constructor(db) {
     this.db = db;
   }
@@ -3397,8 +3429,9 @@ class VideoService {
       const request = index.get(IDBKeyRange.only(mylistId));
       request.onsuccess = () => {
         const existingVideos = request.result;
-        if (existingVideos && existingVideos.id === videoInfo.id) {
-          reject("このマイリストには既に登録されています");
+        const existing = existingVideos;
+        if (existing && existing.id === videoInfo.id) {
+          reject(new Error("このマイリストには既に登録されています"));
           return;
         }
         const video = {
@@ -3419,9 +3452,9 @@ class VideoService {
         };
         const addRequest = store.add(video);
         addRequest.onsuccess = () => resolve("追加しました");
-        addRequest.onerror = () => reject("追加に失敗しました");
+        addRequest.onerror = () => reject(new Error("追加に失敗しました"));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   async getVideos(mylistId) {
@@ -3432,7 +3465,7 @@ class VideoService {
     return new Promise((resolve, reject) => {
       const request = index.getAll(mylistId);
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   sortVideos(videos, sortType) {
@@ -3478,7 +3511,7 @@ class VideoService {
         resolve("削除しました");
       };
       request.onerror = () => {
-        reject("削除に失敗しました");
+        reject(new Error("削除に失敗しました"));
       };
     });
   }
@@ -3517,6 +3550,9 @@ class VideoService {
 }
 
 class KeywordService {
+  toMessage(value) {
+    return value instanceof Error ? value.message : String(value);
+  }
   constructor(db) {
     this.db = db;
   }
@@ -3536,7 +3572,7 @@ class KeywordService {
         addedAt: Date.now()
       });
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードを取得
@@ -3548,7 +3584,7 @@ class KeywordService {
     return new Promise((resolve, reject) => {
       const request = index.getAll(mylistId);
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードを削除
@@ -3559,7 +3595,7 @@ class KeywordService {
     return new Promise((resolve, reject) => {
       const request = store.delete(keywordId);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードを移動
@@ -3578,9 +3614,9 @@ class KeywordService {
         keyword.mylistId = newMylistId;
         const updateRequest = store.put(keyword);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(request.error);
+        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードを編集
@@ -3599,9 +3635,9 @@ class KeywordService {
         keyword.keyword = newKeyword;
         const updateRequest = store.put(keyword);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(request.error);
+        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードの重複チェック
@@ -3617,7 +3653,7 @@ class KeywordService {
         const isDuplicate = keywords.some((k) => k.keyword === keyword);
         resolve(isDuplicate);
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードのソート
@@ -3642,6 +3678,9 @@ class KeywordService {
 }
 
 class ImportExportService {
+  toMessage(value) {
+    return value instanceof Error ? value.message : String(value);
+  }
   constructor(db, apiService) {
     this.db = db;
     this.apiService = apiService;
@@ -3653,21 +3692,21 @@ class ImportExportService {
     const mylists = await new Promise((resolve, reject) => {
       const request = mylistsStore.getAll();
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
     const videosTransaction = database.transaction(["videos"], "readonly");
     const videosStore = videosTransaction.objectStore("videos");
     const allVideos = await new Promise((resolve, reject) => {
       const request = videosStore.getAll();
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
     const keywordsTransaction = database.transaction(["keywords"], "readonly");
     const keywordsStore = keywordsTransaction.objectStore("keywords");
     const keywords = await new Promise((resolve, reject) => {
       const request = keywordsStore.getAll();
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
     return {
       mylists,
@@ -3709,10 +3748,10 @@ class ImportExportService {
           resolve();
         };
         transaction.onerror = () => {
-          reject(transaction.error);
+          reject(new Error(this.toMessage(transaction.error)));
         };
       } catch (error) {
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }
@@ -3775,6 +3814,9 @@ class ImportExportService {
 }
 
 class SettingsService {
+  toMessage(value) {
+    return value instanceof Error ? value.message : String(value);
+  }
   constructor(db) {
     this.db = db;
   }
@@ -3783,13 +3825,13 @@ class SettingsService {
     const transaction = database.transaction(["manager"], "readwrite");
     const store = transaction.objectStore("manager");
     return new Promise((resolve, reject) => {
-      const request = store.put({
-        id: "settings",
+      const safe = {
         mylistSortType: settings.mylistSortType || "name_asc",
         videoSortType: settings.videoSortType || "uploadedAt_desc"
-      });
+      };
+      const request = store.put({ id: "settings", ...safe });
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   async loadManagerSettings() {
@@ -3799,14 +3841,14 @@ class SettingsService {
     return new Promise((resolve, reject) => {
       const request = store.get("settings");
       request.onsuccess = () => {
-        resolve(
-          request.result || {
-            mylistSortType: "name_asc",
-            videoSortType: "uploadedAt_desc"
-          }
-        );
+        const result = request.result;
+        if (result && typeof result.mylistSortType === "string" && typeof result.videoSortType === "string") {
+          resolve(result);
+          return;
+        }
+        resolve({ mylistSortType: "name_asc", videoSortType: "uploadedAt_desc" });
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 }
@@ -3836,7 +3878,7 @@ class DatabaseManagementService {
         success: false,
         health: {
           isHealthy: false,
-          issues: [`Initialization failed: ${error}`],
+          issues: [`Initialization failed: ${error instanceof Error ? error.message : String(error)}`],
           storageEstimate: null,
           persistence: false
         },
@@ -3859,7 +3901,7 @@ class DatabaseManagementService {
       window.logger?.error("Health check failed:", error);
       return {
         isHealthy: false,
-        issues: [`Health check failed: ${error}`],
+        issues: [`Health check failed: ${error instanceof Error ? error.message : String(error)}`],
         storageEstimate: null,
         persistence: false
       };
@@ -4006,7 +4048,7 @@ class DatabaseManagementService {
   }
   // 健全性問題の通知
   notifyHealthIssues(health) {
-    const issues = health.issues.join(", ");
+    const issues = health.issues.map((i) => String(i)).join(", ");
     if (typeof window !== "undefined" && window.Mylist2ManagerUI?.showNotification) {
       const windowWithUI = window;
       windowWithUI.Mylist2ManagerUI.showNotification(
@@ -4018,17 +4060,21 @@ class DatabaseManagementService {
   }
   // 自動バックアップ機能
   async scheduleAutoBackup(intervalHours = 24) {
+    await Promise.resolve();
     const intervalMs = intervalHours * 60 * 60 * 1e3;
-    setInterval(async () => {
+    setInterval(() => {
       try {
-        const result = await this.createBackup();
-        if (result.success && result.backupData) {
-          localStorage.setItem("mylist2_auto_backup", result.backupData);
-          localStorage.setItem("mylist2_auto_backup_timestamp", (/* @__PURE__ */ new Date()).toISOString());
-          window.logger?.info("Auto backup completed");
-        } else {
-          window.logger?.error("Auto backup failed:", result.error);
-        }
+        void this.createBackup().then((result) => {
+          if (result.success && result.backupData) {
+            localStorage.setItem("mylist2_auto_backup", result.backupData);
+            localStorage.setItem("mylist2_auto_backup_timestamp", (/* @__PURE__ */ new Date()).toISOString());
+            window.logger?.info("Auto backup completed");
+          } else {
+            window.logger?.error("Auto backup failed:", result.error);
+          }
+        }).catch((error) => {
+          window.logger?.error("Auto backup error:", error);
+        });
       } catch (error) {
         window.logger?.error("Auto backup error:", error);
       }
@@ -4746,6 +4792,7 @@ class EventHandlers {
   }
   // getVideoDataメソッド（publicに変更）
   async getVideoData(videoItem) {
+    await Promise.resolve();
     const id = videoItem.dataset.id;
     const titleElement = videoItem.querySelector(".video-title-link") || videoItem.querySelector(".video-title");
     const viewCountElement = videoItem.querySelector(".view-count");
@@ -4958,9 +5005,14 @@ class Mylist2ManagerUI {
     this.initializeEventListeners();
     this.initializeAdditionalControls();
     this.initializeCollapsibleControls();
-    this.initializeSettings();
+    void this.initializeSettings();
   }
   // デリゲートメソッド群（各サービスへの橋渡し）
+  guardEvent(handler) {
+    return (event) => {
+      void handler(event);
+    };
+  }
   async showCustomAlert(message, type = "info", title = "") {
     return this.modalService.showCustomAlert(message, type, title);
   }
@@ -4994,7 +5046,7 @@ class Mylist2ManagerUI {
       const mylistSortTypeElement = document.getElementById("mylistSortType");
       const sortType = mylistSortTypeElement ? mylistSortTypeElement.value : "name_asc";
       const mylists = await this.sortMylists(sortType);
-      this.renderMylistList(mylists);
+      await this.renderMylistList(mylists);
     } catch (error) {
       window.logger.error("マイリスト一覧の読み込みに失敗しました:", error);
     }
@@ -5042,7 +5094,7 @@ class Mylist2ManagerUI {
       item.addEventListener("click", () => {
         const id = item.getAttribute("data-id");
         if (id) {
-          this.selectMylist(parseInt(id));
+          void this.selectMylist(parseInt(id));
         }
       });
     });
@@ -5135,7 +5187,7 @@ class Mylist2ManagerUI {
   initializeAdditionalControls() {
     this.initializeHeaderControls();
     this.initializeSearchEventListeners();
-    this.initializeSettings();
+    void this.initializeSettings();
   }
   renderVideoList(videos, keywords) {
     const videoList = document.getElementById("videoList");
@@ -5323,68 +5375,140 @@ class Mylist2ManagerUI {
   }
   setupVideoActions(videoList) {
     videoList.querySelectorAll(".move-video").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleVideoMove(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleVideoMove(event);
       });
     });
     videoList.querySelectorAll(".copy-video").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleVideoCopy(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleVideoCopy(event);
       });
     });
     videoList.querySelectorAll(".delete-video").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleVideoDelete(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleVideoDelete(event);
       });
     });
     videoList.querySelectorAll(".refresh-video").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleVideoRefresh(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleVideoRefresh(event);
       });
     });
     videoList.querySelectorAll(".open-video-details").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        const target = event.currentTarget.closest(".video-item");
-        if (!target) return;
-        const compositeId = target.dataset.compositeId;
-        if (!compositeId) {
-          const descFromDom = target.dataset.description;
-          const tagsFromDom = target.dataset.tags;
-          const fallback = {};
-          if (descFromDom) fallback.description = descFromDom;
-          if (tagsFromDom) {
-            try {
-              fallback.tags = JSON.parse(tagsFromDom);
-            } catch (err) {
+      button.addEventListener("click", (event) => {
+        void (async () => {
+          const target = event.currentTarget.closest(".video-item");
+          if (!target) return;
+          const compositeId = target.getAttribute("data-composite-id") || void 0;
+          if (!compositeId) {
+            const descFromDom = target.getAttribute("data-description") || void 0;
+            const tagsFromDom = target.getAttribute("data-tags") || void 0;
+            const fallback = {};
+            if (descFromDom) fallback.description = descFromDom;
+            if (tagsFromDom) {
+              try {
+                fallback.tags = JSON.parse(tagsFromDom);
+              } catch (err) {
+              }
             }
+            await this.showVideoDetailsModal(fallback);
+            return;
           }
-          await this.showVideoDetailsModal(fallback);
-          return;
-        }
+          try {
+            const db = await this.manager.getDB();
+            const tx = db.transaction(["videos"], "readonly");
+            const store = tx.objectStore("videos");
+            const video = await new Promise((resolve, reject) => {
+              const req = store.get(compositeId);
+              req.onsuccess = () => resolve(req.result || null);
+              req.onerror = () => {
+                const err = req.error;
+                reject(new Error(err instanceof Error ? err.message : String(err)));
+              };
+            });
+            db.close();
+            const descFromDom = target.getAttribute("data-description") || void 0;
+            const tagsFromDom = target.getAttribute("data-tags") || void 0;
+            if (video) {
+              const enriched = {
+                ...video,
+                description: video.description ?? descFromDom,
+                tags: video.tags ?? (tagsFromDom ? (() => {
+                  try {
+                    return JSON.parse(tagsFromDom);
+                  } catch {
+                    return void 0;
+                  }
+                })() : void 0)
+              };
+              await this.showVideoDetailsModal(enriched);
+            } else {
+              const fallback = {};
+              if (descFromDom) fallback.description = descFromDom;
+              if (tagsFromDom) {
+                try {
+                  fallback.tags = JSON.parse(tagsFromDom);
+                } catch (err) {
+                  void err;
+                }
+              }
+              await this.showVideoDetailsModal(fallback);
+            }
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            window.logger.error("詳細表示に失敗:", msg);
+          }
+        })();
+      });
+    });
+    videoList.addEventListener("click", (ev) => {
+      void (async () => {
+        const trigger = ev.target.closest(".open-video-details");
+        if (!trigger) return;
+        const target = trigger.closest(".video-item");
+        if (!target) return;
+        const compositeId = target.getAttribute("data-composite-id") || void 0;
+        const descFromDom = target.getAttribute("data-description") || void 0;
+        const tagsFromDom = target.getAttribute("data-tags") || void 0;
         try {
+          if (!compositeId) {
+            const fallback = {};
+            if (descFromDom) fallback.description = descFromDom;
+            if (tagsFromDom) {
+              try {
+                fallback.tags = JSON.parse(tagsFromDom);
+              } catch (err) {
+                void err;
+              }
+            }
+            await this.showVideoDetailsModal(fallback);
+            return;
+          }
           const db = await this.manager.getDB();
           const tx = db.transaction(["videos"], "readonly");
           const store = tx.objectStore("videos");
           const video = await new Promise((resolve, reject) => {
             const req = store.get(compositeId);
             req.onsuccess = () => resolve(req.result || null);
-            req.onerror = () => reject(req.error);
+            req.onerror = () => {
+              const err = req.error;
+              reject(new Error(err instanceof Error ? err.message : String(err)));
+            };
           });
           db.close();
-          const descFromDom = target.dataset.description;
-          const tagsFromDom = target.dataset.tags;
           if (video) {
-            if (video.description === void 0 && descFromDom) {
-              video.description = descFromDom;
-            }
-            if (video.tags === void 0 && tagsFromDom) {
-              try {
-                video.tags = JSON.parse(tagsFromDom);
-              } catch (err) {
-                void err;
-              }
-            }
-            await this.showVideoDetailsModal(video);
+            const enriched = {
+              ...video,
+              description: video.description ?? descFromDom,
+              tags: video.tags ?? (tagsFromDom ? (() => {
+                try {
+                  return JSON.parse(tagsFromDom);
+                } catch {
+                  return void 0;
+                }
+              })() : void 0)
+            };
+            await this.showVideoDetailsModal(enriched);
           } else {
             const fallback = {};
             if (descFromDom) fallback.description = descFromDom;
@@ -5398,89 +5522,31 @@ class Mylist2ManagerUI {
             await this.showVideoDetailsModal(fallback);
           }
         } catch (e) {
-          window.logger.error("詳細表示に失敗:", e);
+          const msg = e instanceof Error ? e.message : String(e);
+          window.logger.error("詳細表示(委譲)に失敗:", msg);
         }
-      });
-    });
-    videoList.addEventListener("click", async (ev) => {
-      const trigger = ev.target.closest(".open-video-details");
-      if (!trigger) return;
-      const target = trigger.closest(".video-item");
-      if (!target) return;
-      const compositeId = target.dataset.compositeId;
-      const descFromDom = target.dataset.description;
-      const tagsFromDom = target.dataset.tags;
-      try {
-        if (!compositeId) {
-          const fallback = {};
-          if (descFromDom) fallback.description = descFromDom;
-          if (tagsFromDom) {
-            try {
-              fallback.tags = JSON.parse(tagsFromDom);
-            } catch (err) {
-              void err;
-            }
-          }
-          await this.showVideoDetailsModal(fallback);
-          return;
-        }
-        const db = await this.manager.getDB();
-        const tx = db.transaction(["videos"], "readonly");
-        const store = tx.objectStore("videos");
-        const video = await new Promise((resolve, reject) => {
-          const req = store.get(compositeId);
-          req.onsuccess = () => resolve(req.result || null);
-          req.onerror = () => reject(req.error);
-        });
-        db.close();
-        if (video) {
-          if (video.description === void 0 && descFromDom) {
-            video.description = descFromDom;
-          }
-          if (video.tags === void 0 && tagsFromDom) {
-            try {
-              video.tags = JSON.parse(tagsFromDom);
-            } catch (err) {
-              void err;
-            }
-          }
-          await this.showVideoDetailsModal(video);
-        } else {
-          const fallback = {};
-          if (descFromDom) fallback.description = descFromDom;
-          if (tagsFromDom) {
-            try {
-              fallback.tags = JSON.parse(tagsFromDom);
-            } catch (err) {
-              void err;
-            }
-          }
-          await this.showVideoDetailsModal(fallback);
-        }
-      } catch (e) {
-        window.logger.error("詳細表示(委譲)に失敗:", e);
-      }
+      })();
     });
   }
   setupKeywordActions(videoList) {
     videoList.querySelectorAll(".move-keyword").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleKeywordMove(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleKeywordMove(event);
       });
     });
     videoList.querySelectorAll(".copy-keyword").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleKeywordCopy(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleKeywordCopy(event);
       });
     });
     videoList.querySelectorAll(".delete-keyword").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleKeywordDelete(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleKeywordDelete(event);
       });
     });
     videoList.querySelectorAll(".edit-keyword").forEach((button) => {
-      button.addEventListener("click", async (event) => {
-        await this.eventHandlers.handleKeywordEdit(event);
+      button.addEventListener("click", (event) => {
+        void this.eventHandlers.handleKeywordEdit(event);
       });
     });
   }
@@ -5488,7 +5554,7 @@ class Mylist2ManagerUI {
   initializeEventListeners() {
     const createNewMylistElement = document.getElementById("createNewMylist");
     if (createNewMylistElement) {
-      createNewMylistElement.addEventListener("click", async () => {
+      createNewMylistElement.addEventListener("click", this.guardEvent(async () => {
         const nameInput = document.getElementById("newMylistName");
         if (!nameInput) {
           await this.showCustomAlert("マイリスト名入力欄が見つかりません");
@@ -5498,17 +5564,17 @@ class Mylist2ManagerUI {
           const name = this.validateInput(nameInput.value, "mylistName");
           await this.manager.createMylist(name);
           nameInput.value = "";
-          this.loadMylists();
+          void this.loadMylists();
         } catch (error) {
           window.logger.error("マイリストの作成に失敗しました:", error);
           const errorMessage = error instanceof Error ? error.message : "マイリストの作成に失敗しました";
           await this.showCustomAlert(errorMessage);
         }
-      });
+      }));
     }
     const addVideoElement = document.getElementById("addVideo");
     if (addVideoElement) {
-      addVideoElement.addEventListener("click", async () => {
+      addVideoElement.addEventListener("click", this.guardEvent(async () => {
         if (!this.currentMylistId) {
           await this.showCustomAlert("マイリストを選択してください");
           return;
@@ -5540,23 +5606,23 @@ class Mylist2ManagerUI {
           const errorMessage = error instanceof Error ? error.message : "動画の追加に失敗しました";
           await this.showCustomAlert(errorMessage);
         }
-      });
+      }));
     }
     const videoIdInputElement = document.getElementById("videoIdInput");
     if (videoIdInputElement) {
-      videoIdInputElement.addEventListener("keypress", async (event) => {
+      videoIdInputElement.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
-          const addVideoElement2 = document.getElementById("addVideo");
-          if (addVideoElement2) {
-            addVideoElement2.click();
+          const addVideoButton = document.getElementById("addVideo");
+          if (addVideoButton) {
+            addVideoButton.click();
           }
         }
       });
     }
     const addKeywordElement = document.getElementById("addKeyword");
     if (addKeywordElement) {
-      addKeywordElement.addEventListener("click", async () => {
+      addKeywordElement.addEventListener("click", this.guardEvent(async () => {
         if (!this.currentMylistId) {
           await this.showCustomAlert("マイリストを選択してください");
           return;
@@ -5577,11 +5643,11 @@ class Mylist2ManagerUI {
           const errorMessage = error instanceof Error ? error.message : "キーワードの追加に失敗しました";
           await this.showCustomAlert(errorMessage);
         }
-      });
+      }));
     }
     const keywordInputElement = document.getElementById("keywordInput");
     if (keywordInputElement) {
-      keywordInputElement.addEventListener("keypress", async (event) => {
+      keywordInputElement.addEventListener("keypress", (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
           const addKeywordElement2 = document.getElementById("addKeyword");
@@ -5593,7 +5659,7 @@ class Mylist2ManagerUI {
     }
     const executeSelectedActionElement = document.getElementById("executeSelectedAction");
     if (executeSelectedActionElement) {
-      executeSelectedActionElement.addEventListener("click", async () => {
+      executeSelectedActionElement.addEventListener("click", this.guardEvent(async () => {
         const actionSelectElement = document.getElementById("selectedVideosAction");
         if (!actionSelectElement) {
           await this.showCustomAlert("操作選択要素が見つかりません");
@@ -5640,11 +5706,11 @@ class Mylist2ManagerUI {
           await this.showCustomAlert(errorMessage);
         }
         actionSelectElement.value = "";
-      });
+      }));
     }
     const saveMylistNameElement = document.getElementById("saveMylistName");
     if (saveMylistNameElement) {
-      saveMylistNameElement.addEventListener("click", async () => {
+      saveMylistNameElement.addEventListener("click", this.guardEvent(async () => {
         if (!this.currentMylistId) {
           await this.showCustomAlert("マイリストを選択してください");
           return;
@@ -5664,11 +5730,11 @@ class Mylist2ManagerUI {
           const errorMessage = error instanceof Error ? error.message : "マイリスト名の更新に失敗しました";
           await this.showCustomAlert(errorMessage);
         }
-      });
+      }));
     }
     const deleteMylistElement = document.getElementById("deleteMylist");
     if (deleteMylistElement) {
-      deleteMylistElement.addEventListener("click", async () => {
+      deleteMylistElement.addEventListener("click", this.guardEvent(async () => {
         if (!this.currentMylistId) {
           await this.showCustomAlert("マイリストを選択してください");
           return;
@@ -5698,11 +5764,11 @@ class Mylist2ManagerUI {
           const errorMessage = error instanceof Error ? error.message : "マイリストの削除に失敗しました";
           await this.showCustomAlert(errorMessage);
         }
-      });
+      }));
     }
     const exportMylistElement = document.getElementById("exportMylist");
     if (exportMylistElement) {
-      exportMylistElement.addEventListener("click", async () => {
+      exportMylistElement.addEventListener("click", this.guardEvent(async () => {
         try {
           const data = await this.manager.exportData();
           const dateTime = this.formatDateTime();
@@ -5733,11 +5799,11 @@ class Mylist2ManagerUI {
           const errorMessage = error instanceof Error ? error.message : "エクスポートに失敗しました";
           await this.showCustomAlert("エクスポートに失敗しました: " + errorMessage);
         }
-      });
+      }));
     }
     const importMylistElement = document.getElementById("importMylist");
     if (importMylistElement) {
-      importMylistElement.addEventListener("click", async () => {
+      importMylistElement.addEventListener("click", this.guardEvent(async () => {
         const input = document.getElementById("importFile");
         if (!input) {
           await this.showCustomAlert("インポートファイル選択要素が見つかりません");
@@ -5745,11 +5811,11 @@ class Mylist2ManagerUI {
         }
         input.accept = ".json,.txt";
         input.click();
-      });
+      }));
     }
     const importFileElement = document.getElementById("importFile");
     if (importFileElement) {
-      importFileElement.addEventListener("change", async (event) => {
+      importFileElement.addEventListener("change", this.guardEvent(async (event) => {
         const input = event.target;
         const file = input.files?.[0];
         if (!file) return;
@@ -5758,7 +5824,7 @@ class Mylist2ManagerUI {
           let mylistId;
           try {
             const data = JSON.parse(text);
-            if (Array.isArray(data) && data[0]?.vid) {
+            if (Array.isArray(data) && typeof data[0] === "object" && data[0] !== null && "vid" in data[0]) {
               this.showProgress();
               mylistId = await this.manager.importLegacyData(
                 text,
@@ -5767,7 +5833,37 @@ class Mylist2ManagerUI {
               await this.showCustomAlert("カスタムマイリスト1のデータを正常にインポートしました");
             } else {
               this.showProgress();
-              await this.manager.importData(data);
+              const rec = data;
+              if (!rec || typeof rec !== "object") {
+                throw new Error("無効なデータ形式です");
+              }
+              const mylistsUnknown = rec.mylists;
+              const videosUnknown = rec.videos;
+              const keywordsUnknown = rec.keywords;
+              if (!Array.isArray(mylistsUnknown) || !Array.isArray(videosUnknown)) {
+                throw new Error("Mylist2のエクスポート形式ではありません");
+              }
+              const isMylistInfo = (v) => {
+                if (typeof v !== "object" || v === null) return false;
+                const r = v;
+                return typeof r.name === "string" && typeof r.createdAt === "number";
+              };
+              const isDBVideo = (v) => {
+                if (typeof v !== "object" || v === null) return false;
+                const r = v;
+                return typeof r.id === "string" && typeof r.originalId === "string" && typeof r.mylistId === "number";
+              };
+              const isKeywordInfo = (v) => {
+                if (typeof v !== "object" || v === null) return false;
+                const r = v;
+                return typeof r.keyword === "string" && typeof r.addedAt === "number";
+              };
+              const exportData = {
+                mylists: mylistsUnknown.filter(isMylistInfo),
+                videos: videosUnknown.filter(isDBVideo),
+                keywords: Array.isArray(keywordsUnknown) ? keywordsUnknown.filter(isKeywordInfo) : []
+              };
+              await this.manager.importData(exportData);
               await this.showCustomAlert("データを正常にインポートしました");
             }
           } catch (error) {
@@ -5786,7 +5882,7 @@ class Mylist2ManagerUI {
           this.hideProgress();
         }
         input.value = "";
-      });
+      }));
     }
     const selectAllVideosElement = document.getElementById("selectAllVideos");
     if (selectAllVideosElement) {
@@ -5810,6 +5906,7 @@ class Mylist2ManagerUI {
   }
   // 動画詳細モーダルの表示
   async showVideoDetailsModal(video) {
+    await Promise.resolve();
     const modalId = "videoDetailsModal";
     let modal = document.getElementById(modalId);
     if (!modal) {
@@ -5865,9 +5962,9 @@ class Mylist2ManagerUI {
   initializeHeaderControls() {
     const searchExecElement = document.getElementById("searchExec");
     if (searchExecElement) {
-      searchExecElement.addEventListener("click", () => {
-        this.executeSearch();
-      });
+      searchExecElement.addEventListener("click", this.guardEvent(async () => {
+        await this.executeSearch();
+      }));
     }
     const searchClearElement = document.getElementById("searchClear");
     if (searchClearElement) {
@@ -5882,7 +5979,7 @@ class Mylist2ManagerUI {
     if (searchWordsElement) {
       searchWordsElement.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
-          this.executeSearch();
+          void this.executeSearch();
         }
       });
     }
@@ -5986,20 +6083,20 @@ class Mylist2ManagerUI {
     if (this.currentMylistId) {
       await this.loadVideos();
     }
-    mylistSort.addEventListener("change", async () => {
+    mylistSort.addEventListener("change", this.guardEvent(async () => {
       await this.manager.saveManagerSettings({
         mylistSortType: mylistSort.value,
         videoSortType: videoSort.value
       });
-      this.loadMylists();
-    });
-    videoSort.addEventListener("change", async () => {
+      await this.loadMylists();
+    }));
+    videoSort.addEventListener("change", this.guardEvent(async () => {
       await this.manager.saveManagerSettings({
         mylistSortType: mylistSort.value,
         videoSortType: videoSort.value
       });
-      this.loadVideos();
-    });
+      await this.loadVideos();
+    }));
   }
   // キーワード編集モーダルを表示する関数
   async showKeywordEditModal(keywordId, currentKeyword) {

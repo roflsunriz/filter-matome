@@ -64,9 +64,14 @@ window.commonHelper = {
       }
       const text = await response.text();
       const doc = new DOMParser().parseFromString(text, "text/html");
-      const serverContext = JSON.parse(doc.querySelector('meta[name="server-context"]')?.getAttribute("content") || "{}");
+      const serverContextRaw = JSON.parse(doc.querySelector('meta[name="server-context"]')?.getAttribute("content") || "{}");
+      const serverContext = serverContextRaw && typeof serverContextRaw === "object" ? serverContextRaw : {};
       const serverResponseContent = doc.querySelector('meta[name="server-response"]')?.getAttribute("content") || "{}";
-      const serverResponse = JSON.parse(decodeURIComponent(serverResponseContent));
+      const serverResponseUnknown = JSON.parse(decodeURIComponent(serverResponseContent));
+      if (!serverResponseUnknown || typeof serverResponseUnknown !== "object") {
+        throw new Error("Invalid server response");
+      }
+      const serverResponse = serverResponseUnknown;
       return {
         serverContext,
         serverResponse,
@@ -671,7 +676,8 @@ class Toastr {
             `;
       toastElement.appendChild(progressElement);
       setTimeout(() => {
-        progressElement.style.transition = `width ${options.timeOut}ms linear`;
+        const timeout = typeof options.timeOut === "number" ? options.timeOut : 0;
+        progressElement.style.transition = `width ${timeout}ms linear`;
         progressElement.style.width = "0%";
       }, 10);
     }
@@ -688,7 +694,7 @@ class Toastr {
       toastElement.addEventListener("mouseenter", () => {
         clearTimeout(toastElement.timeoutId);
         const progressElement = toastElement.querySelector(`.${options.progressClass}`);
-        if (progressElement) {
+        if (progressElement instanceof HTMLElement) {
           progressElement.style.transition = "none";
         }
       });
@@ -698,8 +704,9 @@ class Toastr {
             this.removeToast(toastElement);
           }, options.extendedTimeOut);
           const progressElement = toastElement.querySelector(`.${options.progressClass}`);
-          if (progressElement) {
-            progressElement.style.transition = `width ${options.extendedTimeOut}ms linear`;
+          if (progressElement instanceof HTMLElement) {
+            const ext = typeof options.extendedTimeOut === "number" ? options.extendedTimeOut : 0;
+            progressElement.style.transition = `width ${ext}ms linear`;
             progressElement.style.width = "0%";
           }
         }
@@ -1536,7 +1543,8 @@ const getApiData = {
       body: JSON.stringify({ params, threadKey, additionals: {} })
     };
     const response = await fetchData(url, options);
-    return response.json();
+    const jsonUnknown = await response.json();
+    return jsonUnknown;
   }
 };
 window.apiUtils = {
@@ -1855,7 +1863,9 @@ const videoIdUtils = {
   // window.openerからvideoIdを取得
   getFromOpener() {
     try {
-      return window.opener?.NicoCache_nl?.watch?.apiData?.video?.id || null;
+      const openerAny = window.opener;
+      const id = openerAny?.NicoCache_nl?.watch?.apiData?.video?.id;
+      return typeof id === "string" ? id : null;
     } catch (error) {
       window.logger.warn("Cannot access window.opener:", error);
       return null;
@@ -1986,7 +1996,7 @@ class VideoInfoHandler {
   constructor() {
     this.currentVideoId = null;
     // 外部から利用するためのスタティックメソッドに修正
-    this.updateVideoInfoDisplay = this.updateVideoInfo;
+    this.updateVideoInfoDisplay = (doc, videoId) => this.updateVideoInfo(doc, videoId);
   }
   // videoIdを設定
   setVideoId(videoId) {
@@ -2185,7 +2195,7 @@ class VideoInfoHandler {
     }
     window.logger.debug(`[DEBUG] textToCopy: "${textToCopy}", label: "${label}"`);
     if (textToCopy && textToCopy.trim() !== "") {
-      window.apiUtils.copyToClipboard(textToCopy, label);
+      void window.apiUtils.copyToClipboard(textToCopy, label);
     } else {
       window.toastr.error(
         `${label}をコピーできませんでした`,
@@ -2351,9 +2361,9 @@ class CommentHandler {
     const fieldDiv = document.createElement("div");
     fieldDiv.className = "comment-field";
     const rawValue = comment[field.key];
-    const value = field.format ? field.format(rawValue) : String(rawValue || "");
+    const value = field.format ? field.format(rawValue) : String(rawValue ?? "");
     if (["id", "body", "userId", "no"].includes(field.key)) {
-      window.logger.debug(`[DEBUG] Comment field "${field.key}": rawValue="${rawValue}", value="${value}"`);
+      window.logger.debug(`[DEBUG] Comment field "${field.key}": rawValue="${String(rawValue)}", value="${String(value)}"`);
     }
     const copyButton = document.createElement("button");
     copyButton.className = "copy";
@@ -2374,7 +2384,7 @@ class CommentHandler {
     const contentDiv = document.createElement("div");
     contentDiv.className = field.className;
     contentDiv.dataset.mydata = value;
-    contentDiv.textContent = `${field.label}: ${value}`;
+    contentDiv.textContent = `${field.label}: ${String(value)}`;
     fieldDiv.appendChild(copyButton);
     fieldDiv.appendChild(contentDiv);
     return fieldDiv;
@@ -2421,7 +2431,7 @@ class CommentHandler {
     }
     window.logger.debug(`[DEBUG] Comment copy - content: "${content}", label: "${label}"`);
     if (content && content.trim() !== "") {
-      window.apiUtils.copyToClipboard(content, label);
+      void window.apiUtils.copyToClipboard(content, label);
     } else {
       window.toastr.error(
         `${label}をコピーできませんでした`,
@@ -2535,7 +2545,7 @@ class MainController {
     if (commentExecBtn) {
       commentExecBtn.addEventListener("click", () => {
         if (this.currentVideoId) {
-          this.commentHandler.startCommentProcessing(this.currentVideoId);
+          void this.commentHandler.startCommentProcessing(this.currentVideoId);
         } else {
           window.toastr.error(
             "動画IDが設定されていません",
@@ -2596,7 +2606,7 @@ class MainController {
   // videoId入力UIを表示
   showVideoIdInputUI() {
     const onSubmit = (videoId) => {
-      this.initializeWithVideoId(videoId);
+      void this.initializeWithVideoId(videoId);
     };
     const onCancel = () => {
       const apiStatus = document.getElementById("api-status");
@@ -2620,6 +2630,6 @@ class MainController {
 }
 const mainController = new MainController();
 document.addEventListener("DOMContentLoaded", () => {
-  mainController.initialize();
+  void mainController.initialize();
 });
 //# sourceMappingURL=thumb-info.es.js.map

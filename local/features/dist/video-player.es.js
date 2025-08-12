@@ -111,7 +111,7 @@ class UrlManager {
         throw new Error(`Cache search failed: ${response.status}`);
       }
       const data = await response.json();
-      const availablePaths = data.paths || [];
+      const availablePaths = data && typeof data === "object" && "paths" in data ? data.paths : [];
       const urls = {
         auto: `/cache/${videoId}/auto/movie`,
         ref: `/cache/file/nicocachenl_refcache=${videoId}.hls//master.m3u8`
@@ -278,14 +278,14 @@ class CacheManager {
           playDuration: `${Math.floor(playDuration / 60)}分${Math.floor(playDuration % 60)}秒`,
           usedMemory: `${(usedMemory / (1024 * 1024)).toFixed(2)}MB`
         });
-        this.forceCleanup();
+        void this.forceCleanup();
       }
     } else {
       if (playDuration > CACHE_MANAGEMENT.TIME_THRESHOLD_MS / 1e3) {
         window.logger.info("再生時間に基づくキャッシュクリーンアップが必要なのじゃ！", {
           playDuration: `${Math.floor(playDuration / 60)}分${Math.floor(playDuration % 60)}秒`
         });
-        this.forceCleanup();
+        void this.forceCleanup();
       }
     }
   }
@@ -360,7 +360,7 @@ class CacheManager {
     this.video.load();
     await new Promise((resolve) => setTimeout(resolve, 100));
     this.video.src = currentSrc;
-    await this.video.load();
+    this.video.load();
     this.restorePlaybackPosition(wasPlaying, currentPosition);
   }
   /**
@@ -370,12 +370,10 @@ class CacheManager {
     const safePosition = Math.max(0, currentPosition - CACHE_MANAGEMENT.CLEANUP_BUFFER_SECONDS);
     this.video.currentTime = safePosition;
     if (wasPlaying) {
-      setTimeout(async () => {
-        try {
-          await this.video.play();
-        } catch (error) {
+      setTimeout(() => {
+        void this.video.play().catch((error) => {
           window.logger.error("再生の再開に失敗したのじゃ:", error);
-        }
+        });
       }, 100);
     }
   }
@@ -471,7 +469,7 @@ class ToastManager {
         window.toastr.error(message, title, { timeOut: timeout });
         break;
       default:
-        window.logger.info(`[Toast-${mode}] ${title} ${message}`);
+        window.logger.info(`[Toast-${String(mode)}] ${title} ${message}`);
     }
   }
 }
@@ -765,7 +763,11 @@ async function backupExistingData(db) {
         backup.playerSettings = request.result;
         resolve(void 0);
       };
-      request.onerror = reject;
+      request.onerror = () => {
+        const e = request.error;
+        const msg = e && typeof e.message === "string" ? e.message : typeof e === "string" ? e : JSON.stringify(e);
+        reject(new Error(msg));
+      };
     });
   }
   return backup;
@@ -786,6 +788,7 @@ function createNewStores(db) {
   });
 }
 async function migratePlayerSettings(db, transaction, backupData) {
+  await Promise.resolve();
   if (!backupData.playerSettings) return;
   const store = transaction.objectStore("playerSettings");
   const playerSettings = backupData.playerSettings;
@@ -800,6 +803,7 @@ async function migratePlayerSettings(db, transaction, backupData) {
   }
 }
 async function recordMigrationInfo(db, transaction) {
+  await Promise.resolve();
   const systemStore = transaction.objectStore("systemInfo");
   const migrationInfo = {
     key: "migration_v2",
@@ -880,11 +884,15 @@ class MigrationManager {
       await migration.execute(db, transaction);
       await new Promise((resolve, reject) => {
         transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
+        transaction.onerror = () => {
+          const err = transaction.error;
+          const msg = err && typeof err.message === "string" ? err.message : typeof err === "string" ? err : JSON.stringify(err);
+          reject(new Error(msg));
+        };
       });
       window.logger?.info(`マイグレーション完了: v${version}`);
     } catch (error) {
-      throw new Error(`バージョン ${version} のマイグレーションに失敗: ${error}`);
+      throw new Error(`バージョン ${version} のマイグレーションに失敗: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -911,7 +919,11 @@ class MigrationManager {
           this.backupData.stores[storeName] = request.result;
           resolve();
         };
-        request.onerror = () => reject(request.error);
+        request.onerror = () => {
+          const e = request.error;
+          const msg = e && typeof e.message === "string" ? e.message : typeof e === "string" ? e : JSON.stringify(e);
+          reject(new Error(msg));
+        };
       });
     }
     try {
@@ -944,14 +956,22 @@ class MigrationManager {
           await new Promise((resolve, reject) => {
             const clearRequest = store.clear();
             clearRequest.onsuccess = () => resolve();
-            clearRequest.onerror = () => reject(clearRequest.error);
+            clearRequest.onerror = () => {
+              const e = clearRequest.error;
+              const msg = e && typeof e.message === "string" ? e.message : typeof e === "string" ? e : JSON.stringify(e);
+              reject(new Error(msg));
+            };
           });
           const backupItems = this.backupData.stores[storeName];
           for (const item of backupItems) {
             await new Promise((resolve, reject) => {
               const putRequest = store.put(item);
               putRequest.onsuccess = () => resolve();
-              putRequest.onerror = () => reject(putRequest.error);
+              putRequest.onerror = () => {
+                const e = putRequest.error;
+                const msg = e && typeof e.message === "string" ? e.message : typeof e === "string" ? e : JSON.stringify(e);
+                reject(new Error(msg));
+              };
             });
           }
         }
@@ -988,7 +1008,11 @@ class MigrationManager {
     await new Promise((resolve, reject) => {
       const request = store.put(migrationRecord);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        const e = request.error;
+        const msg = e && typeof e.message === "string" ? e.message : typeof e === "string" ? e : JSON.stringify(e);
+        reject(new Error(msg));
+      };
     });
   }
   /**
@@ -1023,7 +1047,7 @@ class MigrationManager {
       return new Promise((resolve) => {
         request.onsuccess = () => {
           const result = request.result;
-          resolve(result ? result.version : 1);
+          resolve(result && typeof result.version === "number" ? result.version : 1);
         };
         request.onerror = () => {
           window.logger?.warn("バージョン取得失敗、初期バージョンを返すのじゃ");
@@ -1052,11 +1076,15 @@ class MigrationManager {
         request.onsuccess = () => {
           const results = request.result;
           const migrationRecords = results.filter(
-            (item) => item.key.startsWith("migration_v")
+            (item) => typeof item.key === "string" && item.key.startsWith("migration_v")
           );
           resolve(migrationRecords);
         };
-        request.onerror = () => reject(request.error);
+        request.onerror = () => {
+          const e = request.error;
+          const msg = e && typeof e.message === "string" ? e.message : typeof e === "string" ? e : JSON.stringify(e);
+          reject(new Error(msg));
+        };
       });
     } catch (error) {
       window.logger?.error("マイグレーション履歴取得エラー:", error);
@@ -1069,6 +1097,7 @@ class MigrationManager {
    * @returns 整合性チェック結果
    */
   async validateDatabase(db) {
+    await Promise.resolve();
     const errors = [];
     try {
       const expectedStores = DB_VERSION_HISTORY[DB_CONFIG.CURRENT_VERSION].stores;
@@ -1079,7 +1108,7 @@ class MigrationManager {
       }
       return { valid: errors.length === 0, errors };
     } catch (error) {
-      errors.push(`整合性チェックエラー: ${error}`);
+      errors.push(`整合性チェックエラー: ${error instanceof Error ? error.message : String(error)}`);
       return { valid: false, errors };
     }
   }
@@ -1088,13 +1117,17 @@ class MigrationManager {
    */
   setupErrorHandling() {
     window.addEventListener("error", (event) => {
-      if (event.error && event.error.message.includes("Migration")) {
-        window.logger?.error("マイグレーション関連エラー:", event.error);
+      const err = event.error;
+      const message = err && typeof err.message === "string" ? err.message : String(err);
+      if (message.includes("Migration")) {
+        window.logger?.error("マイグレーション関連エラー:", message);
       }
     });
     window.addEventListener("unhandledrejection", (event) => {
-      if (event.reason && event.reason.message && event.reason.message.includes("Migration")) {
-        window.logger?.error("マイグレーション関連Promise拒否:", event.reason);
+      const reasonUnknown = event.reason;
+      const message = reasonUnknown && typeof reasonUnknown.message === "string" ? reasonUnknown.message : String(reasonUnknown);
+      if (message.includes("Migration")) {
+        window.logger?.error("マイグレーション関連Promise拒否:", message);
       }
     });
   }
@@ -1143,6 +1176,12 @@ class DatabaseManager {
     this.migrationManager = new MigrationManager();
     this.setupPeriodicCleanup();
   }
+  toMessage(value) {
+    if (value && typeof value.message === "string") {
+      return value.message;
+    }
+    return String(value);
+  }
   /**
    * シングルトンインスタンスを取得
    */
@@ -1181,8 +1220,8 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_CONFIG.NAME, DB_CONFIG.CURRENT_VERSION);
       request.onerror = () => {
-        window.logger?.error("データベースのオープンに失敗:", request.error);
-        reject(new Error("データベースのオープンに失敗したのじゃ"));
+        window.logger?.error("データベースのオープンに失敗:", this.toMessage(request.error));
+        reject(new Error(this.toMessage(request.error)));
       };
       request.onsuccess = () => {
         const db = request.result;
@@ -1235,7 +1274,7 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.put(settingData);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1249,7 +1288,7 @@ class DatabaseManager {
       const request = store.get(key);
       request.onsuccess = () => {
         const result = request.result;
-        resolve(result ? result.value : defaultValue);
+        resolve(result && typeof result === "object" && "value" in result && result.value !== void 0 ? result.value : defaultValue);
       };
       request.onerror = () => {
         window.logger?.warn(`設定取得失敗: ${key}`);
@@ -1267,7 +1306,7 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.put(videoCache);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1279,8 +1318,11 @@ class DatabaseManager {
     const store = transaction.objectStore("videoCache");
     return new Promise((resolve, reject) => {
       const request = store.get(videoId);
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const resultUnknown = request.result;
+        resolve(resultUnknown ? resultUnknown : null);
+      };
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1293,7 +1335,7 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.add(viewHistory);
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1318,7 +1360,7 @@ class DatabaseManager {
           resolve(results);
         }
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1331,7 +1373,7 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.put(userStats);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1345,7 +1387,7 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.get(statId);
       request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1358,7 +1400,7 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.add(commentHistory);
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1371,7 +1413,7 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.put(systemInfo);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1383,8 +1425,11 @@ class DatabaseManager {
     const store = transaction.objectStore("systemInfo");
     return new Promise((resolve, reject) => {
       const request = store.get(key);
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const resultUnknown = request.result;
+        resolve(resultUnknown ? resultUnknown : null);
+      };
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1399,11 +1444,13 @@ class DatabaseManager {
       request.onsuccess = () => {
         const results = {};
         request.result.forEach((item) => {
-          results[item.id] = item.value;
+          if (item && typeof item.id === "string") {
+            results[item.id] = item.value;
+          }
         });
         resolve(results);
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1420,7 +1467,7 @@ class DatabaseManager {
       const count = await new Promise((resolve, reject) => {
         const request = store.count();
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(this.toMessage(request.error)));
       });
       storeStats[storeName] = count;
       totalRecords += count;
@@ -1467,7 +1514,7 @@ class DatabaseManager {
           resolve();
         }
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1494,7 +1541,7 @@ class DatabaseManager {
           resolve();
         }
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1510,7 +1557,7 @@ class DatabaseManager {
         const caches = request.result;
         let deletedCount = 0;
         caches.forEach((cache) => {
-          if (cache.expiresAt && new Date(cache.expiresAt) < now) {
+          if (cache && cache.expiresAt && new Date(cache.expiresAt) < now && cache.videoId !== void 0) {
             store.delete(cache.videoId);
             deletedCount++;
           }
@@ -1518,7 +1565,7 @@ class DatabaseManager {
         window.logger?.debug(`期限切れキャッシュ ${deletedCount} 件を削除`);
         resolve();
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   /**
@@ -1565,7 +1612,7 @@ class DatabaseManager {
         window.logger?.info("データベースをリセットしたのじゃ");
         resolve();
       };
-      deleteRequest.onerror = () => reject(deleteRequest.error);
+      deleteRequest.onerror = () => reject(new Error(this.toMessage(deleteRequest.error)));
     });
   }
   /**
@@ -1585,7 +1632,7 @@ class DatabaseManager {
       const request = store.getAll();
       backup.stores[storeName] = await new Promise((resolve, reject) => {
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(this.toMessage(request.error)));
       });
     }
     return backup;
@@ -1678,7 +1725,7 @@ const getSettings = async (key, defaultValue) => {
         const request = store.get(key);
         request.onsuccess = () => {
           const result = request.result;
-          if (result) {
+          if (result && "value" in result) {
             resolve(result.value);
           } else {
             resolve(defaultValue);
@@ -1775,7 +1822,7 @@ class PlayerControlsShadow extends HTMLElement {
     };
     this.shadow = this.attachShadow({ mode: "closed" });
     this.shadow.innerHTML = this.getTemplate();
-    this.initializeComponent();
+    void this.initializeComponent();
   }
   /**
    * コンポーネントの非同期初期化
@@ -1816,7 +1863,7 @@ class PlayerControlsShadow extends HTMLElement {
     this.ensureInitialized();
     this.video = video;
     this.setupVideoEvents();
-    this.initializeSettings();
+    void this.initializeSettings();
     window.logger.info("ビデオ要素が設定されたのじゃ！");
   }
   /**
@@ -2654,7 +2701,7 @@ class PlayerControlsShadow extends HTMLElement {
     const applyBtn = this.shadow.querySelector("#apply-comment-settings");
     if (applyBtn) {
       applyBtn.addEventListener("click", () => {
-        this.applyCommentSettings();
+        void this.applyCommentSettings();
       });
     }
   }
@@ -2944,7 +2991,7 @@ class PlayerControlsShadow extends HTMLElement {
           this.tempNgWords.splice(index, 1);
           this.updateNGWordList(true);
         } else {
-          this.removeNGWord(index);
+          void this.removeNGWord(index);
         }
       });
       li.appendChild(removeBtn);
@@ -2969,7 +3016,7 @@ class PlayerControlsShadow extends HTMLElement {
           this.tempNgRegex.splice(index, 1);
           this.updateNGRegexList(true);
         } else {
-          this.removeNGRegex(index);
+          void this.removeNGRegex(index);
         }
       });
       li.appendChild(removeBtn);
@@ -4406,7 +4453,7 @@ class CommentRenderer {
         window.logger.warn("無効なレーン数なのじゃ:", this.maxLanes);
         this.maxLanes = 10;
       }
-      this.laneStates = new Array(this.maxLanes).fill(null);
+      this.laneStates = Array.from({ length: this.maxLanes }, () => null);
       window.logger.info("キャンバスとレーンの初期化完了なのじゃ！", {
         width: this.canvas.width,
         height: this.canvas.height,
@@ -4419,7 +4466,7 @@ class CommentRenderer {
     } catch (error) {
       window.logger.error("キャンバスのリサイズに失敗したのじゃ:", error);
       this.maxLanes = 10;
-      this.laneStates = new Array(this.maxLanes).fill(null);
+      this.laneStates = Array.from({ length: this.maxLanes }, () => null);
     }
   }
   /**
@@ -4729,7 +4776,7 @@ class CommentRenderer {
     this.comments = [];
     this.activeComments.clear();
     this.commentGroups = [];
-    this.laneStates = new Array(this.maxLanes).fill(null);
+    this.laneStates = Array.from({ length: this.maxLanes }, () => null);
     this.clearCanvas();
     window.logger.info("コメントをクリアしたのじゃ！");
   }
@@ -4837,12 +4884,19 @@ class CommentFetcher {
       if (!metaElement) {
         throw new Error("server-responseが見つからないのじゃ...");
       }
-      const apiData = JSON.parse(decodeURIComponent(metaElement.getAttribute("content") || "")).data.response;
+      const parsed = JSON.parse(decodeURIComponent(metaElement.getAttribute("content") || ""));
+      if (!parsed || typeof parsed !== "object" || !("data" in parsed)) {
+        throw new Error("server-responseメタの内容が不正なのじゃ");
+      }
+      const apiDataObj = parsed.data?.response;
+      if (!apiDataObj || !apiDataObj.comment || !apiDataObj.comment.nvComment) {
+        throw new Error("コメントAPIデータが不正なのじゃ");
+      }
       window.logger.info("APIデータを取得したのじゃ！");
       return {
-        threadKey: apiData.comment.nvComment.threadKey,
-        params: apiData.comment.nvComment.params,
-        server: apiData.comment.nvComment.server
+        threadKey: String(apiDataObj.comment.nvComment.threadKey || ""),
+        params: { value: String(apiDataObj.comment.nvComment.params || "") },
+        server: String(apiDataObj.comment.nvComment.server || "")
       };
     } catch (error) {
       window.logger.error("APIデータの取得に失敗したのじゃ...", {
@@ -4909,7 +4963,8 @@ class CommentFetcher {
       if (!response.responseText) {
         throw new Error("サーバーからの応答が空なのじゃ...");
       }
-      return JSON.parse(response.responseText);
+      const parsedResp = JSON.parse(response.responseText);
+      return parsedResp;
     } catch (error) {
       window.logger.error("コメント取得エラーなのじゃ！", error);
       throw error;
@@ -4973,7 +5028,7 @@ class CommentSystem {
     this._handleCommentFilter2Update = (event) => {
       const customEvent = event;
       const detail = customEvent.detail;
-      if (detail && detail.filteredData) {
+      if (detail && typeof detail === "object" && "filteredData" in detail) {
         window.logger.debug("CommentFilter2からフィルタリング済みデータを受け取ったのじゃ！");
         this.applyFilteredComments(detail.filteredData);
       }
@@ -4986,6 +5041,7 @@ class CommentSystem {
    * コメントシステムの初期化
    */
   async initialize(videoElement) {
+    await Promise.resolve();
     try {
       window.logger.info("コメントシステムの初期化を開始するのじゃ！");
       if (this.isInitialized) {
@@ -5415,7 +5471,7 @@ class FloatingDeletedPlayer {
     this.videoElement = this.container.querySelector("#floating-video-element");
     this.setupEventListeners();
     this.initializeIcons();
-    this.loadVideo(videoIdOrUrl);
+    void this.loadVideo(videoIdOrUrl);
   }
   /**
    * アイコンの初期化
@@ -5608,8 +5664,9 @@ class FloatingDeletedPlayer {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
-      if (!data || !data[videoId]) {
+      const jsonUnknown = await response.json();
+      const data = jsonUnknown;
+      if (!data || !(videoId in data)) {
         throw new Error("動画情報が見つかりません");
       }
       const videoInfo = data[videoId];
@@ -5617,7 +5674,7 @@ class FloatingDeletedPlayer {
         throw new Error("この動画は現在利用できません");
       }
       const cacheId = videoInfo.preferred;
-      const title = videoInfo.caches && videoInfo.caches[cacheId] ? videoInfo.caches[cacheId].title : "";
+      const title = videoInfo.caches && videoInfo.caches[cacheId] ? String(videoInfo.caches[cacheId].title ?? "") : "";
       const isHLS = cacheId.endsWith(".hls");
       const url = isHLS ? `https://www.nicovideo.jp/cache/${cacheId}` : `https://www.nicovideo.jp/cache/${videoId}/auto/movie`;
       return { url, isHLS, title };
@@ -5630,6 +5687,7 @@ class FloatingDeletedPlayer {
    * HLS動画の読み込み
    */
   async loadHLSVideo(url) {
+    await Promise.resolve();
     if (!this.videoElement) return;
     this.updateStatus("HLS動画を読み込み中...");
     if (typeof Hls !== "undefined" && Hls.isSupported()) {
@@ -5661,6 +5719,7 @@ class FloatingDeletedPlayer {
    * 通常動画の読み込み
    */
   async loadRegularVideo(url) {
+    await Promise.resolve();
     if (!this.videoElement) return;
     this.updateStatus("動画を読み込み中...");
     this.videoElement.src = url;
@@ -5809,10 +5868,16 @@ class NicoCachePlayer {
           }
         },
         cacheUtil: {
-          formatCacheInfo: async () => false
+          formatCacheInfo: async () => {
+            await Promise.resolve();
+            return false;
+          }
         },
         cc: {
-          MainVideoPlayerWidthHeightReturner: async () => 0
+          MainVideoPlayerWidthHeightReturner: async () => {
+            await Promise.resolve();
+            return 0;
+          }
         },
         handleError: () => {
         }
@@ -5883,7 +5948,7 @@ class NicoCachePlayer {
     window.addEventListener("load", () => {
       if (window.NicoCache_nl && window.NicoCache_nl.watch) {
         window.NicoCache_nl.watch.addEventListener("initialized", () => {
-          this.handleVideoChange();
+          void this.handleVideoChange();
           this.setupUrlChangeListener();
         });
       }
@@ -5894,15 +5959,15 @@ class NicoCachePlayer {
    * History APIをオーバーライドして動画変更を検知
    */
   overrideHistoryMethods() {
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
+    const originalPushState = history.pushState.bind(history);
+    const originalReplaceState = history.replaceState.bind(history);
     history.pushState = (...args) => {
-      originalPushState.apply(history, args);
-      this.handleVideoChange();
+      originalPushState(...args);
+      void this.handleVideoChange();
     };
     history.replaceState = (...args) => {
-      originalReplaceState.apply(history, args);
-      this.handleVideoChange();
+      originalReplaceState(...args);
+      void this.handleVideoChange();
     };
   }
   /**
@@ -5917,7 +5982,9 @@ class NicoCachePlayer {
       const currentUrl = location.href;
       if (currentUrl !== lastUrl && WATCH_CONFIG.URL_PATTERN.test(currentUrl)) {
         lastUrl = currentUrl;
-        setTimeout(() => this.handleVideoChange(), WATCH_CONFIG.CHECK_INTERVAL_MS);
+        setTimeout(() => {
+          void this.handleVideoChange();
+        }, WATCH_CONFIG.CHECK_INTERVAL_MS);
       }
     });
     this.observer.observe(document.querySelector("body"), {
@@ -6075,9 +6142,9 @@ class NicoCachePlayer {
               cleanup();
               resolve();
             };
-            const onError = (e) => {
+            const onError = (_e) => {
               cleanup();
-              reject(e);
+              reject(new Error("video error"));
             };
             const cleanup = () => {
               this.videoElement?.removeEventListener("canplay", onCanPlay);
@@ -6223,6 +6290,7 @@ class NicoCachePlayer {
    * HLS動画の読み込み
    */
   async loadHLSVideo(url) {
+    await Promise.resolve();
     if (!this.videoElement) return;
     window.logger.info("HLS動画の読み込みを開始するのじゃ:", url);
     if (typeof Hls !== "undefined" && Hls.isSupported()) {

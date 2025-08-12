@@ -62,8 +62,8 @@ self.addEventListener("fetch", (event) => {
         return fetch(event.request).then((response2) => {
           if (response2.ok) {
             const responseToCache = response2.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
+            void caches.open(CACHE_NAME).then((cache) => {
+              void cache.put(event.request, responseToCache);
               cacheMetadata.set(url, Date.now());
             });
           }
@@ -89,8 +89,8 @@ self.addEventListener("fetch", (event) => {
       if (url.includes("ext.nicovideo.jp/api/getthumbinfo")) {
         return fetch(event.request).then((response2) => {
           const responseToCache = response2.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
+          void caches.open(CACHE_NAME).then((cache) => {
+            void cache.put(event.request, responseToCache);
             cacheMetadata.set(url, Date.now());
           });
           return response2;
@@ -104,8 +104,8 @@ self.addEventListener("fetch", (event) => {
       return fetch(event.request).then((response2) => {
         if (response2.ok) {
           const responseToCache = response2.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
+          void caches.open(CACHE_NAME).then((cache) => {
+            void cache.put(event.request, responseToCache);
             cacheMetadata.set(url, Date.now());
           });
         }

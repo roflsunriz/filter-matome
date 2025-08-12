@@ -43,9 +43,9 @@ function toCompatibleGlobalData(data) {
 class DataInterceptor {
   constructor() {
     this.currentSmid = null;
-    this.originalFetch = window.fetch;
-    this.originalPushState = history.pushState;
-    this.originalReplaceState = history.replaceState;
+    this.originalFetch = window.fetch.bind(window);
+    this.originalPushState = history.pushState.bind(history);
+    this.originalReplaceState = history.replaceState.bind(history);
     this.setupInterception();
     this.setupSPANavigation();
     this.initializeGlobalData();
@@ -71,11 +71,11 @@ class DataInterceptor {
    */
   setupSPANavigation() {
     history.pushState = (...args) => {
-      this.originalPushState.apply(history, args);
+      this.originalPushState(...args);
       setTimeout(() => this.updateCurrentSmid(), 0);
     };
     history.replaceState = (...args) => {
-      this.originalReplaceState.apply(history, args);
+      this.originalReplaceState(...args);
       setTimeout(() => this.updateCurrentSmid(), 0);
     };
     window.addEventListener("popstate", () => {
@@ -121,13 +121,25 @@ class DataInterceptor {
    */
   setupInterception() {
     window.fetch = async (input, init) => {
-      const url = typeof input === "string" ? input : input.toString();
+      let url;
+      if (input instanceof Request) {
+        url = input.url;
+      } else if (input instanceof URL) {
+        url = input.toString();
+      } else if (typeof input === "string") {
+        url = input;
+      } else {
+        url = "";
+      }
       if (url.includes(CONSTANTS.API_ENDPOINT)) {
         try {
           const response = await this.originalFetch(input, init);
           const clonedResponse = response.clone();
-          const data = await clonedResponse.json();
-          const processedData = await this.processCommentData(data, url);
+          const dataRaw = await clonedResponse.json();
+          if (!dataRaw || typeof dataRaw !== "object") {
+            return response;
+          }
+          const processedData = await this.processCommentData(dataRaw, url);
           const filteredResponse = await this.createFilteredResponse(processedData, response);
           return filteredResponse;
         } catch (error) {
@@ -241,6 +253,7 @@ class DataInterceptor {
    * フィルタリング済みデータで新しいレスポンスを作成
    */
   async createFilteredResponse(filteredData, originalResponse) {
+    await Promise.resolve();
     try {
       const filteredJson = JSON.stringify(filteredData);
       const newResponse = new Response(filteredJson, {
@@ -283,7 +296,7 @@ function parseJsonl(text) {
         errors.push(`Line ${i + 1}: Invalid rule format`);
       }
     } catch (error) {
-      errors.push(`Line ${i + 1}: JSON parse error - ${error}`);
+      errors.push(`Line ${i + 1}: JSON parse error - ${String(error)}`);
     }
   }
   if (errors.length > 0) {
@@ -397,7 +410,7 @@ function convertCsvToJsonl(csvText) {
         warnings.push(`Line ${i + 1}: Could not convert rule`);
       }
     } catch (error) {
-      errors.push(`Line ${i + 1}: ${error}`);
+      errors.push(`Line ${i + 1}: ${String(error)}`);
     }
   }
   return {
@@ -1066,12 +1079,14 @@ class FilterStorage {
       const request = store.get("main");
       request.onsuccess = () => {
         if (request.result) {
+          const raw = request.result;
+          const obj = raw && typeof raw === "object" ? raw : {};
           const settings = {
-            debugMode: request.result.debugMode,
-            isEnabled: request.result.isEnabled,
-            commandSettings: request.result.commandSettings || this.getDefaultCommandSettings(),
-            logToCommentFilterLogger: request.result.logToCommentFilterLogger !== void 0 ? request.result.logToCommentFilterLogger : true,
-            useJsonFormat: request.result.useJsonFormat !== void 0 ? request.result.useJsonFormat : true
+            debugMode: Boolean(obj.debugMode),
+            isEnabled: Boolean(obj.isEnabled),
+            commandSettings: obj.commandSettings || this.getDefaultCommandSettings(),
+            logToCommentFilterLogger: obj.logToCommentFilterLogger !== void 0 ? Boolean(obj.logToCommentFilterLogger) : true,
+            useJsonFormat: obj.useJsonFormat !== void 0 ? Boolean(obj.useJsonFormat) : true
             // デフォルトで新形式を使用
           };
           resolve(settings);
@@ -1113,7 +1128,7 @@ class FilterStorage {
       };
       return JSON.stringify(exportData, null, 2);
     } catch (error) {
-      throw new Error(`JSON export failed: ${error}`);
+      throw new Error(`JSON export failed: ${String(error)}`);
     }
   }
   /**
@@ -1131,7 +1146,7 @@ class FilterStorage {
       };
       return JSON.stringify(exportData, null, 2);
     } catch (error) {
-      throw new Error(`Export failed: ${error}`);
+      throw new Error(`Export failed: ${String(error)}`);
     }
   }
   /**
@@ -1140,7 +1155,7 @@ class FilterStorage {
   async importData(data) {
     try {
       const format = detectFileFormat(data);
-      window.logger?.info(`[CommentFilter2] Detected import format: ${format}`);
+      window.logger?.info(`[CommentFilter2] Detected import format: ${String(format)}`);
       switch (format) {
         case "jsonl":
           return await this.importJsonlData(data);
@@ -1152,7 +1167,7 @@ class FilterStorage {
           throw new Error("Unknown file format");
       }
     } catch (error) {
-      throw new Error(`Import failed: ${error}`);
+      throw new Error(`Import failed: ${String(error)}`);
     }
   }
   /**
@@ -1171,7 +1186,7 @@ class FilterStorage {
         migratedCount: rules.length
       };
     } catch (error) {
-      throw new Error(`JSONL import failed: ${error}`);
+      throw new Error(`JSONL import failed: ${String(error)}`);
     }
   }
   /**
@@ -1180,7 +1195,7 @@ class FilterStorage {
   async importJsonData(data) {
     try {
       const parsedData = JSON.parse(data);
-      if (parsedData.version && parsedData.rules) {
+      if (typeof parsedData === "object" && parsedData !== null && "version" in parsedData && "rules" in parsedData) {
         const collection = parsedData;
         await this.saveJsonRules(collection.rules);
         if (collection.settings) {
@@ -1195,7 +1210,7 @@ class FilterStorage {
           migratedCount: collection.rules.length
         };
       }
-      if (parsedData.rules && parsedData.settings) {
+      if (typeof parsedData === "object" && parsedData !== null && "rules" in parsedData && "settings" in parsedData) {
         const legacyData = parsedData;
         const convertedRules = [];
         for (const rule of legacyData.rules) {
@@ -1217,7 +1232,7 @@ class FilterStorage {
           migratedCount: convertedRules.length
         };
       }
-      if (LegacyConverter.isLegacyData(parsedData)) {
+      if (typeof parsedData === "object" && parsedData !== null && LegacyConverter.isLegacyData(parsedData)) {
         const legacySettings = parsedData;
         window.logger?.info("[CommentFilter2] Detected legacy CommentFilter settings format");
         const conversionResult = LegacyConverter.convert(legacySettings);
@@ -1237,7 +1252,7 @@ class FilterStorage {
       }
       throw new Error("Invalid JSON format");
     } catch (error) {
-      throw new Error(`JSON import failed: ${error}`);
+      throw new Error(`JSON import failed: ${String(error)}`);
     }
   }
   /**
@@ -1251,7 +1266,7 @@ class FilterStorage {
       }
       return migrationResult;
     } catch (error) {
-      throw new Error(`CSV import failed: ${error}`);
+      throw new Error(`CSV import failed: ${String(error)}`);
     }
   }
   /**
@@ -1295,7 +1310,16 @@ class FilterStorage {
     return new Promise((resolve, reject) => {
       const request = store.getAll();
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        const err = request.error;
+        if (err instanceof Error) {
+          reject(err);
+        } else if (err && typeof err.message === "string") {
+          reject(new Error(err.message));
+        } else {
+          reject(new Error("IndexedDB getAll error"));
+        }
+      };
     });
   }
   /**
@@ -1305,7 +1329,16 @@ class FilterStorage {
     return new Promise((resolve, reject) => {
       const request = store.add(data);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        const err = request.error;
+        if (err instanceof Error) {
+          reject(err);
+        } else if (err && typeof err.message === "string") {
+          reject(new Error(err.message));
+        } else {
+          reject(new Error("IndexedDB add error"));
+        }
+      };
     });
   }
   /**
@@ -1315,7 +1348,16 @@ class FilterStorage {
     return new Promise((resolve, reject) => {
       const request = store.put(data);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        const err = request.error;
+        if (err instanceof Error) {
+          reject(err);
+        } else if (err && typeof err.message === "string") {
+          reject(new Error(err.message));
+        } else {
+          reject(new Error("IndexedDB put error"));
+        }
+      };
     });
   }
   /**
@@ -1468,7 +1510,7 @@ class FilterStorage {
         }
       };
       const backupJson = JSON.stringify(backup, null, 2);
-      window.logger?.info(`[CommentFilter2] Backup created successfully (${backupJson.length} characters)`);
+      window.logger?.info(`[CommentFilter2] Backup created successfully (${String(backupJson.length)} characters)`);
       return {
         success: true,
         backup: backupJson
@@ -1490,8 +1532,15 @@ class FilterStorage {
     }
     try {
       window.logger?.info("[CommentFilter2] Restoring database from backup...");
-      const backup = JSON.parse(backupJson);
-      if (!backup.version || !backup.data) {
+      const backupRaw = JSON.parse(backupJson);
+      if (!backupRaw || typeof backupRaw !== "object") {
+        throw new Error("Invalid backup format");
+      }
+      const backup = backupRaw;
+      if (typeof backup.version !== "number" && typeof backup.version !== "string") {
+        throw new Error("Invalid backup version");
+      }
+      if (!backup.data || typeof backup.data !== "object") {
         throw new Error("Invalid backup format");
       }
       if (backup.data.jsonRules) {
@@ -1502,8 +1551,8 @@ class FilterStorage {
       }
       await this.recordMigrationEvent("restore", {
         fromBackup: true,
-        backupTimestamp: backup.timestamp,
-        backupVersion: backup.version
+        backupTimestamp: typeof backup.timestamp === "string" ? backup.timestamp : (/* @__PURE__ */ new Date()).toISOString(),
+        backupVersion: typeof backup.version === "number" ? backup.version : Number(backup.version)
       });
       window.logger?.info("[CommentFilter2] Database restored successfully");
       return { success: true };
@@ -1636,6 +1685,7 @@ class FilterStorage {
    * 特定バージョンへのマイグレーション実行
    */
   async performVersionMigration(version) {
+    await Promise.resolve();
     try {
       switch (version) {
         case 4:
@@ -1668,7 +1718,7 @@ class FilterStorage {
    */
   validateRuleStructure(rule) {
     try {
-      if (!rule.action || !rule.smid || !rule.enabled === void 0) {
+      if (!rule.action || !rule.smid || rule.enabled === void 0) {
         return false;
       }
       if (!rule.action.type || !["hide", "replace"].includes(rule.action.type)) {
@@ -2128,6 +2178,7 @@ class CommentFilter {
    * メインのフィルタリング処理
    */
   async applyFilters(rules, currentSmid) {
+    await Promise.resolve();
     const globalData = this.getGlobalData();
     if (!globalData?.originalData) {
       if (this.debugMode) {
@@ -2150,7 +2201,7 @@ class CommentFilter {
       if (this.debugMode) {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
       }
-      this.sendFilterLogsAsync();
+      void this.sendFilterLogsAsync();
       return filteredData;
     } catch (error) {
       window.logger?.error("[CommentFilter2] Filtering failed:", error);
@@ -2531,6 +2582,7 @@ class CommentFilter {
    * フィルターログを非同期で送信
    */
   async sendFilterLogsAsync() {
+    await Promise.resolve();
     if (!this.settings?.logToCommentFilterLogger) {
       if (this.debugMode) {
         window.logger?.debug("[CommentFilter2] Filter log sending is disabled in settings");
@@ -2627,6 +2679,7 @@ class JsonCommentFilter {
    * メインのフィルタリング処理（JSON形式ルール対応）
    */
   async applyFilters(rules, currentSmid) {
+    await Promise.resolve();
     const globalData = this.getGlobalData();
     if (!globalData?.originalData) {
       if (this.debugMode) {
@@ -2649,7 +2702,7 @@ class JsonCommentFilter {
       if (this.debugMode) {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
       }
-      this.sendFilterLogsAsync();
+      void this.sendFilterLogsAsync();
       return filteredData;
     } catch (error) {
       window.logger?.error("[CommentFilter2] JSON filtering failed:", error);
@@ -2988,6 +3041,7 @@ class JsonCommentFilter {
    * フィルターログを非同期で送信
    */
   async sendFilterLogsAsync() {
+    await Promise.resolve();
     if (!this.settings?.logToCommentFilterLogger) {
       if (this.debugMode) {
         window.logger?.debug("[CommentFilter2] Filter log sending is disabled in settings");
@@ -4582,7 +4636,7 @@ class UIManager {
     this.storage = new FilterStorage();
     this.filter = new CommentFilter();
     this.jsonFilter = new JsonCommentFilter();
-    this.initialize();
+    void this.initialize();
   }
   /**
    * UIマネジメントの初期化
@@ -4600,6 +4654,7 @@ class UIManager {
    * UIを作成してシャドウDOMに挿入
    */
   async createUI() {
+    await Promise.resolve();
     if (this.isUICreated) return;
     this.removeUI();
     this.injectStyles();
@@ -4615,7 +4670,7 @@ class UIManager {
     shadowHost.id = "cf2-shadow-host";
     document.body.appendChild(shadowHost);
     this.shadowRoot = shadowHost.attachShadow({ mode: "closed" });
-    await this.injectShadowStyles();
+    this.injectShadowStyles();
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = mainUITemplate;
     this.container = tempDiv.firstElementChild;
@@ -4623,7 +4678,7 @@ class UIManager {
     this.bindEvents();
     this.updateUI();
     this.updateFormatDisplay();
-    this.refreshRulesList();
+    void this.refreshRulesList();
     this.isUICreated = true;
     window.logger?.info("[CommentFilter2] UI created in Shadow DOM and ready");
   }
@@ -4644,17 +4699,12 @@ class UIManager {
   /**
    * スタイルをシャドウDOMに注入
    */
-  async injectShadowStyles() {
+  injectShadowStyles() {
     if (!this.shadowRoot) return;
-    try {
-      const style = document.createElement("style");
-      style.textContent = CommentFilter2MainStyles;
-      this.shadowRoot.appendChild(style);
-      window.logger?.debug("[CommentFilter2] Styles injected into Shadow DOM");
-    } catch (error) {
-      window.logger?.error("[CommentFilter2] Failed to inject shadow styles:", error);
-      throw error;
-    }
+    const style = document.createElement("style");
+    style.textContent = CommentFilter2MainStyles;
+    this.shadowRoot.appendChild(style);
+    window.logger?.debug("[CommentFilter2] Styles injected into Shadow DOM");
   }
   /**
    * イベントハンドラーをバインド（シャドウDOM対応）
@@ -4685,14 +4735,18 @@ class UIManager {
     this.safeAddEventListener(UI_ELEMENTS.RELOAD_BTN, "click", () => this.reloadPage());
     const fileInput = this.container.querySelector(`#${UI_ELEMENTS.FILE_INPUT}`);
     if (fileInput) {
-      fileInput.addEventListener("change", (e) => this.handleFileImport(e));
+      fileInput.addEventListener("change", (e) => {
+        void this.handleFileImport(e);
+      });
       window.logger?.debug("[CommentFilter2] File input event listener bound");
     } else {
       window.logger?.error("[CommentFilter2] File input element not found in shadow DOM");
     }
     const legacyFileInput = this.container.querySelector(`#${UI_ELEMENTS.LEGACY_FILE_INPUT}`);
     if (legacyFileInput) {
-      legacyFileInput.addEventListener("change", (e) => this.handleLegacyFileImport(e));
+      legacyFileInput.addEventListener("change", (e) => {
+        void this.handleLegacyFileImport(e);
+      });
       window.logger?.debug("[CommentFilter2] Legacy file input event listener bound");
     } else {
       window.logger?.error("[CommentFilter2] Legacy file input element not found in shadow DOM");
@@ -4708,9 +4762,14 @@ class UIManager {
     if (!this.container) return;
     const element = this.container.querySelector(`#${elementId}`);
     if (element) {
-      element.addEventListener(eventType, async () => {
+      element.addEventListener(eventType, () => {
         try {
-          await handler();
+          const maybe = handler();
+          if (maybe instanceof Promise) {
+            void maybe.catch((error) => {
+              window.logger?.error(`[CommentFilter2] Event handler error for ${elementId}:`, error);
+            });
+          }
         } catch (error) {
           window.logger?.error(`[CommentFilter2] Event handler error for ${elementId}:`, error);
         }
@@ -4853,7 +4912,7 @@ class UIManager {
   /**
    * UIを現在の設定で更新
    */
-  async updateUI() {
+  updateUI() {
     if (!this.container) return;
     const mainToggle = this.container.querySelector(`#${UI_ELEMENTS.MAIN_TOGGLE}`);
     if (mainToggle) {
@@ -5113,14 +5172,14 @@ class UIManager {
       const text = await this.readFileAsText(file);
       await this.storage.importData(text);
       await this.loadSettings();
-      await this.updateUI();
+      this.updateUI();
       this.updateCommandFields();
-      await this.refreshRulesList();
+      void this.refreshRulesList();
       if (this.currentFormat === "json") {
         await this.loadJsonRules();
       }
       const rules = await this.storage.getJsonRules();
-      window.toastr?.success(`データをインポートしました（${rules.length}個のルール）`);
+      window.toastr?.success(`データをインポートしました（${String(rules.length)}個のルール）`);
     } catch (error) {
       window.logger?.error("[CommentFilter2] Import failed:", error);
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -5150,9 +5209,9 @@ class UIManager {
       }
       await this.storage.importData(text);
       await this.loadSettings();
-      await this.updateUI();
+      this.updateUI();
       this.updateCommandFields();
-      await this.refreshRulesList();
+      void this.refreshRulesList();
       if (this.currentFormat === "json") {
         await this.loadJsonRules();
       }
@@ -5170,7 +5229,16 @@ class UIManager {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(reader.error);
+      reader.onerror = () => {
+        const err = reader.error;
+        if (err instanceof Error) {
+          reject(err);
+        } else if (err && typeof err.message === "string") {
+          reject(new Error(err.message));
+        } else {
+          reject(new Error("File read error"));
+        }
+      };
       reader.readAsText(file);
     });
   }
@@ -5191,7 +5259,11 @@ class UIManager {
       window.logger?.info("[CommentFilter2] Reloading page to apply settings...");
       await this.storage.saveSettings(this.currentSettings);
       setTimeout(() => {
-        window.location.reload();
+        try {
+          window.location.reload();
+        } catch (e) {
+          throw new Error(String(e));
+        }
       }, 100);
     } catch (error) {
       window.logger?.error("[CommentFilter2] Failed to reload page:", error);
@@ -5364,7 +5436,7 @@ class UIManager {
       case "json":
         this.container.querySelector(`#${UI_ELEMENTS.FORMAT_JSON}`)?.classList.add(CSS_CLASSES.TOGGLE_ACTIVE);
         jsonSection?.classList.remove(CSS_CLASSES.HIDDEN);
-        this.loadJsonRules();
+        void this.loadJsonRules();
         break;
     }
   }
@@ -5383,7 +5455,7 @@ class UIManager {
       existingRules.push(rule);
       await this.storage.saveJsonRules(existingRules);
       this.clearForm();
-      this.refreshRulesList();
+      await this.refreshRulesList();
       window.toastr?.success("ルールを追加しました");
     } catch (error) {
       window.logger?.error("[CommentFilter2] Failed to add rule from form:", error);
@@ -5478,17 +5550,17 @@ class UIManager {
     if (!this.container) return;
     try {
       const textarea = this.container.querySelector(`#${UI_ELEMENTS.JSON_TEXTAREA}`);
-      const jsonText = textarea.value.trim();
+      const jsonText = textarea instanceof HTMLTextAreaElement ? textarea.value.trim() : "";
       if (!jsonText) {
         await this.storage.saveJsonRules([]);
         window.toastr?.success("ルールをクリアしました");
-        this.refreshRulesList();
+        await this.refreshRulesList();
         return;
       }
       const rules = parseJsonl(jsonText);
       await this.storage.saveJsonRules(rules);
-      window.toastr?.success(`${rules.length}個のJSONルールを保存しました`);
-      this.refreshRulesList();
+      window.toastr?.success(`${String(rules.length)}個のJSONルールを保存しました`);
+      await this.refreshRulesList();
     } catch (error) {
       window.logger?.error("[CommentFilter2] Failed to save JSON rules:", error);
       window.toastr?.error("JSONルールの保存に失敗しました");
@@ -5500,8 +5572,8 @@ class UIManager {
   validateJsonRules() {
     if (!this.container) return;
     try {
-      const textarea = this.container.querySelector(`#${UI_ELEMENTS.JSON_TEXTAREA}`);
-      const jsonText = textarea.value.trim();
+      const textarea2 = this.container.querySelector(`#${UI_ELEMENTS.JSON_TEXTAREA}`);
+      const jsonText = textarea2 instanceof HTMLTextAreaElement ? textarea2.value.trim() : "";
       if (!jsonText) {
         window.toastr?.info("検証するJSONがありません");
         return;
@@ -5509,7 +5581,7 @@ class UIManager {
       const rules = parseJsonl(jsonText);
       window.toastr?.success(`✅ JSON形式が正しく、${rules.length}個のルールが有効です`);
     } catch (error) {
-      window.toastr?.error(`❌ JSON形式エラー: ${error}`);
+      window.toastr?.error(`❌ JSON形式エラー: ${String(error)}`);
     }
   }
   /**
@@ -5536,7 +5608,7 @@ class UIManager {
       const rulesList = this.container.querySelector(`#${UI_ELEMENTS.RULES_LIST}`);
       const countText = this.container.querySelector(`#${UI_ELEMENTS.RULE_COUNT_TEXT}`);
       if (countText) {
-        countText.textContent = `${rules.length}件`;
+        countText.textContent = `${String(rules.length)}件`;
       }
       if (!rulesList) return;
       if (rules.length === 0) {
@@ -5546,7 +5618,9 @@ class UIManager {
       const rulesHtml = rules.map((rule, index) => this.generateRuleItemHtml(rule, index)).join("");
       rulesList.innerHTML = rulesHtml;
       rulesList.querySelectorAll(".cf2-rule-delete").forEach((btn, index) => {
-        btn.addEventListener("click", () => this.deleteRule(index));
+        btn.addEventListener("click", () => {
+          void this.deleteRule(index);
+        });
       });
     } catch (error) {
       window.logger?.error("[CommentFilter2] Failed to refresh rules list:", error);
@@ -5576,7 +5650,7 @@ class UIManager {
       actionText = "除外のみ";
     }
     const smidText = rule.smid.join(", ");
-    const nicoruText = rule.nicoru_cond ? `${rule.nicoru_cond.op} ${rule.nicoru_cond.value} (${rule.nicoru_cond.mode})` : "条件なし";
+    const nicoruText = rule.nicoru_cond ? `${rule.nicoru_cond.op} ${String(rule.nicoru_cond.value)} (${rule.nicoru_cond.mode})` : "条件なし";
     return `
       <div class="cf2-rule-item">
         <div class="cf2-rule-header">
@@ -5602,7 +5676,7 @@ class UIManager {
       const rules = await this.storage.getJsonRules();
       rules.splice(index, 1);
       await this.storage.saveJsonRules(rules);
-      this.refreshRulesList();
+      await this.refreshRulesList();
       window.toastr?.success("ルールを削除しました");
     } catch (error) {
       window.logger?.error("[CommentFilter2] Failed to delete rule:", error);
@@ -5618,7 +5692,7 @@ class UIManager {
     }
     try {
       await this.storage.saveJsonRules([]);
-      this.refreshRulesList();
+      await this.refreshRulesList();
       window.toastr?.success("すべてのルールを削除しました");
     } catch (error) {
       window.logger?.error("[CommentFilter2] Failed to clear all rules:", error);
@@ -6037,12 +6111,13 @@ class CommentFilter2 {
     this.dataInterceptor = new DataInterceptor();
     this.uiManager = new UIManager();
     this.videoPlayerBridge = new VideoPlayerBridge();
-    this.initialize();
+    void this.initialize();
   }
   /**
    * CommentFilter2の初期化
    */
   async initialize() {
+    await Promise.resolve();
     try {
       this.setupKeyboardShortcuts();
       this.startDataMonitoring();
@@ -6057,10 +6132,10 @@ class CommentFilter2 {
    */
   setupKeyboardShortcuts() {
     if (!this.keyboardShortcutEnabled) return;
-    document.addEventListener("keydown", async (event) => {
+    document.addEventListener("keydown", (event) => {
       if (event.ctrlKey && event.shiftKey && event.key === "F") {
         event.preventDefault();
-        await this.toggleUI();
+        void this.toggleUI();
         window.logger?.debug("[CommentFilter2] UI toggled via keyboard shortcut");
       }
     });
@@ -6069,16 +6144,17 @@ class CommentFilter2 {
    * データの変更を監視してフィルターを適用
    */
   startDataMonitoring() {
-    this.processCommentData();
+    void this.processCommentData();
     window.addEventListener(CONSTANTS.EVENTS.DATA_UPDATED, () => {
       window.logger?.debug("[CommentFilter2] Processing comment data due to DATA_UPDATED event");
-      this.processCommentData();
+      void this.processCommentData();
     });
     window.addEventListener(CONSTANTS.EVENTS.SMID_CHANGED, (event) => {
       const customEvent = event;
-      const { smid } = customEvent.detail;
+      const detail = customEvent.detail ?? {};
+      const smid = typeof detail.smid === "string" ? detail.smid : "";
       window.logger?.debug(`[CommentFilter2] Processing comment data due to SMID change: ${smid}`);
-      this.processCommentData();
+      void this.processCommentData();
     });
     window.logger?.info("[CommentFilter2] Event-driven data monitoring initialized");
   }
@@ -6086,6 +6162,7 @@ class CommentFilter2 {
    * コメントデータの処理
    */
   async processCommentData() {
+    await Promise.resolve();
     try {
       const globalData = DataInterceptor.getGlobalData();
       if (globalData?.originalData && globalData?.currentSmid) {
@@ -6168,7 +6245,9 @@ class CommentFilter2 {
 }
 let commentFilter2Instance = null;
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initializeCommentFilter2);
+  document.addEventListener("DOMContentLoaded", () => {
+    initializeCommentFilter2();
+  });
 } else {
   initializeCommentFilter2();
 }

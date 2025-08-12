@@ -134,6 +134,9 @@ class MigrationManager {
     };
     this.initializeMigrations();
   }
+  static toErrorMessage(error) {
+    return error instanceof Error ? error.message : String(error);
+  }
   /**
    * マイグレーション定義を初期化するのじゃ
    */
@@ -180,7 +183,7 @@ class MigrationManager {
             };
             updateRequest.onerror = () => {
               logger.error("[MigrationManager] データ更新エラー:", updateRequest.error);
-              reject(updateRequest.error);
+              reject(new Error(MigrationManager.toErrorMessage(updateRequest.error)));
             };
           } else {
             processedCount++;
@@ -193,7 +196,7 @@ class MigrationManager {
       };
       request.onerror = () => {
         logger.error("[MigrationManager] データ取得エラー:", request.error);
-        reject(request.error);
+        reject(new Error(MigrationManager.toErrorMessage(request.error)));
       };
     });
   }
@@ -245,7 +248,7 @@ class MigrationManager {
       this.currentProgress.isRunning = false;
       this.dispatchProgressEvent();
       logger.error("[MigrationManager] マイグレーション実行エラー:", error);
-      throw error;
+      throw new Error(String(error));
     }
   }
   /**
@@ -271,7 +274,7 @@ class MigrationManager {
       logger.error("[MigrationManager] 永続化要求エラー:", error);
       return {
         success: false,
-        error: `永続化要求失敗: ${error}`
+        error: `永続化要求失敗: ${MigrationManager.toErrorMessage(error)}`
       };
     }
   }
@@ -306,7 +309,7 @@ class MigrationManager {
       logger.error("[MigrationManager] 永続化状態取得エラー:", error);
       return {
         success: false,
-        error: `永続化状態取得失敗: ${error}`
+        error: `永続化状態取得失敗: ${MigrationManager.toErrorMessage(error)}`
       };
     }
   }
@@ -324,12 +327,12 @@ class MigrationManager {
         new Promise((resolve, reject) => {
           const request = watchHistoryStore.getAll();
           request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
+          request.onerror = () => reject(new Error(MigrationManager.toErrorMessage(request.error)));
         }),
         new Promise((resolve, reject) => {
           const request = seriesAlertsStore.getAll();
           request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
+          request.onerror = () => reject(new Error(MigrationManager.toErrorMessage(request.error)));
         })
       ]);
       const backup = {
@@ -402,8 +405,8 @@ class MigrationManager {
           const backup = JSON.parse(localStorage.getItem(key) || "{}");
           return {
             key,
-            timestamp: backup.timestamp || 0,
-            version: backup.version || 0
+            timestamp: typeof backup.timestamp === "number" ? backup.timestamp : 0,
+            version: typeof backup.version === "number" ? backup.version : 0
           };
         } catch {
           return null;
@@ -437,12 +440,12 @@ class MigrationManager {
             new Promise((resolve2, reject2) => {
               const clearRequest = watchHistoryStore.clear();
               clearRequest.onsuccess = () => resolve2();
-              clearRequest.onerror = () => reject2(clearRequest.error);
+              clearRequest.onerror = () => reject2(new Error(MigrationManager.toErrorMessage(clearRequest.error)));
             }),
             new Promise((resolve2, reject2) => {
               const clearRequest = seriesAlertsStore.clear();
               clearRequest.onsuccess = () => resolve2();
-              clearRequest.onerror = () => reject2(clearRequest.error);
+              clearRequest.onerror = () => reject2(new Error(MigrationManager.toErrorMessage(clearRequest.error)));
             })
           ]).then(() => {
             const promises = [];
@@ -451,7 +454,7 @@ class MigrationManager {
               promises.push(new Promise((resolve2, reject2) => {
                 const addRequest = watchHistoryStore.add(entry);
                 addRequest.onsuccess = () => resolve2();
-                addRequest.onerror = () => reject2(addRequest.error);
+                addRequest.onerror = () => reject2(new Error(MigrationManager.toErrorMessage(addRequest.error)));
               }));
             });
             if (backup.seriesAlerts && Array.isArray(backup.seriesAlerts)) {
@@ -459,7 +462,7 @@ class MigrationManager {
                 promises.push(new Promise((resolve2, reject2) => {
                   const addRequest = seriesAlertsStore.add(alert);
                   addRequest.onsuccess = () => resolve2();
-                  addRequest.onerror = () => reject2(addRequest.error);
+                  addRequest.onerror = () => reject2(new Error(MigrationManager.toErrorMessage(addRequest.error)));
                 }));
               });
             }
@@ -468,21 +471,21 @@ class MigrationManager {
               resolve({ success: true });
             }).catch((error) => {
               logger.error("[MigrationManager] リストア中にエラーが発生:", error);
-              reject({ success: false, error: `リストア失敗: ${error}` });
+              reject(new Error(`リストア失敗: ${MigrationManager.toErrorMessage(error)}`));
             });
           }).catch((error) => {
             logger.error("[MigrationManager] データクリア中にエラーが発生:", error);
-            reject({ success: false, error: `データクリア失敗: ${error}` });
+            reject(new Error(`データクリア失敗: ${MigrationManager.toErrorMessage(error)}`));
           });
         };
         request.onerror = () => {
           logger.error("[MigrationManager] データベース開放エラー:", request.error);
-          reject({ success: false, error: `データベース開放失敗: ${request.error}` });
+          reject(new Error(`データベース開放失敗: ${MigrationManager.toErrorMessage(request.error)}`));
         };
       });
     } catch (error) {
       logger.error("[MigrationManager] リストアエラー:", error);
-      return { success: false, error: `リストア失敗: ${error}` };
+      return { success: false, error: `リストア失敗: ${MigrationManager.toErrorMessage(error)}` };
     }
   }
 }
@@ -497,6 +500,9 @@ class WatchHistoryDatabase {
       storeName: config?.storeName || "watchHistory"
     };
   }
+  static toErrorMessage(error) {
+    return error instanceof Error ? error.message : String(error);
+  }
   /**
    * データベースを初期化するのじゃ
    */
@@ -507,7 +513,7 @@ class WatchHistoryDatabase {
       const initResult = await new Promise((resolve, reject) => {
         request.onerror = () => {
           logger.error("データベース接続失敗");
-          reject({ success: false, error: "データベース接続失敗なのじゃ" });
+          reject(new Error("データベース接続失敗なのじゃ"));
         };
         request.onsuccess = () => {
           this.db = request.result;
@@ -579,7 +585,7 @@ class WatchHistoryDatabase {
       }
       return initResult;
     } catch (error) {
-      return { success: false, error: `初期化失敗: ${error}` };
+      return { success: false, error: `初期化失敗: ${String(error)}` };
     }
   }
   /**
@@ -597,10 +603,10 @@ class WatchHistoryDatabase {
           resolve({ success: true });
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `保存失敗: ${transaction.error}` });
+          reject(new Error(`保存失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         transaction.onabort = () => {
-          reject({ success: false, error: "保存処理が中断されたのじゃ" });
+          reject(new Error("保存処理が中断されたのじゃ"));
         };
         const getRequest = store.get(entry.videoId);
         getRequest.onsuccess = () => {
@@ -616,21 +622,21 @@ class WatchHistoryDatabase {
             };
             const putRequest = store.put(updated);
             putRequest.onerror = () => {
-              reject({ success: false, error: `更新失敗: ${putRequest.error}` });
+              reject(new Error(`更新失敗: ${WatchHistoryDatabase.toErrorMessage(putRequest.error)}`));
             };
           } else {
             const putRequest = store.put(entry);
             putRequest.onerror = () => {
-              reject({ success: false, error: `追加失敗: ${putRequest.error}` });
+              reject(new Error(`追加失敗: ${WatchHistoryDatabase.toErrorMessage(putRequest.error)}`));
             };
           }
         };
         getRequest.onerror = () => {
-          reject({ success: false, error: `既存エントリ確認失敗: ${getRequest.error}` });
+          reject(new Error(`既存エントリ確認失敗: ${WatchHistoryDatabase.toErrorMessage(getRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `保存失敗: ${error}` };
+      return { success: false, error: `保存失敗: ${String(error)}` };
     }
   }
   /**
@@ -646,7 +652,7 @@ class WatchHistoryDatabase {
       const result = await new Promise((resolve, reject) => {
         const request = store.get(videoId);
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
       if (result) {
         return { success: true, data: result };
@@ -654,7 +660,7 @@ class WatchHistoryDatabase {
         return { success: false, error: "動画が見つからぬのじゃ" };
       }
     } catch (error) {
-      return { success: false, error: `取得失敗: ${error}` };
+      return { success: false, error: `取得失敗: ${String(error)}` };
     }
   }
   /**
@@ -672,7 +678,7 @@ class WatchHistoryDatabase {
       const entries = await new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
       logger.debug("データベースからエントリ取得完了:", { totalEntries: entries.length });
       if (entries.length > 0) {
@@ -688,7 +694,7 @@ class WatchHistoryDatabase {
       return { success: true, data: sortedEntries };
     } catch (error) {
       logger.error("getAllEntriesエラー:", error);
-      return { success: false, error: `取得失敗: ${error}` };
+      return { success: false, error: `取得失敗: ${String(error)}` };
     }
   }
   /**
@@ -718,7 +724,7 @@ class WatchHistoryDatabase {
       };
       return { success: true, data: stats };
     } catch (error) {
-      return { success: false, error: `統計計算失敗: ${error}` };
+      return { success: false, error: `統計計算失敗: ${String(error)}` };
     }
   }
   /**
@@ -789,7 +795,7 @@ class WatchHistoryDatabase {
       }
       return { success: true, data: importedCount };
     } catch (error) {
-      return { success: false, error: `インポート失敗: ${error}` };
+      return { success: false, error: `インポート失敗: ${String(error)}` };
     }
   }
   // ===== プライベートメソッド =====
@@ -1058,15 +1064,15 @@ class WatchHistoryDatabase {
           resolve({ success: true });
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `シリーズアラート保存失敗: ${transaction.error}` });
+          reject(new Error(`シリーズアラート保存失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         const putRequest = store.put(alert);
         putRequest.onerror = () => {
-          reject({ success: false, error: `シリーズアラート保存失敗: ${putRequest.error}` });
+          reject(new Error(`シリーズアラート保存失敗: ${WatchHistoryDatabase.toErrorMessage(putRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `シリーズアラート保存失敗: ${error}` };
+      return { success: false, error: `シリーズアラート保存失敗: ${String(error)}` };
     }
   }
   /**
@@ -1082,7 +1088,7 @@ class WatchHistoryDatabase {
       const result = await new Promise((resolve, reject) => {
         const request = store.get(alertId);
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
       if (result) {
         return { success: true, data: result };
@@ -1090,7 +1096,7 @@ class WatchHistoryDatabase {
         return { success: false, error: "シリーズアラートが見つからぬのじゃ" };
       }
     } catch (error) {
-      return { success: false, error: `シリーズアラート取得失敗: ${error}` };
+      return { success: false, error: `シリーズアラート取得失敗: ${String(error)}` };
     }
   }
   /**
@@ -1106,11 +1112,11 @@ class WatchHistoryDatabase {
       const alerts = await new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
       return { success: true, data: alerts };
     } catch (error) {
-      return { success: false, error: `シリーズアラート一覧取得失敗: ${error}` };
+      return { success: false, error: `シリーズアラート一覧取得失敗: ${String(error)}` };
     }
   }
   /**
@@ -1128,15 +1134,15 @@ class WatchHistoryDatabase {
           resolve({ success: true });
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `シリーズアラート削除失敗: ${transaction.error}` });
+          reject(new Error(`シリーズアラート削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         const deleteRequest = store.delete(alertId);
         deleteRequest.onerror = () => {
-          reject({ success: false, error: `シリーズアラート削除失敗: ${deleteRequest.error}` });
+          reject(new Error(`シリーズアラート削除失敗: ${WatchHistoryDatabase.toErrorMessage(deleteRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `シリーズアラート削除失敗: ${error}` };
+      return { success: false, error: `シリーズアラート削除失敗: ${String(error)}` };
     }
   }
   // ===== 視聴履歴削除機能 =====
@@ -1155,15 +1161,15 @@ class WatchHistoryDatabase {
           resolve({ success: true });
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `視聴履歴削除失敗: ${transaction.error}` });
+          reject(new Error(`視聴履歴削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         const deleteRequest = store.delete(videoId);
         deleteRequest.onerror = () => {
-          reject({ success: false, error: `視聴履歴削除失敗: ${deleteRequest.error}` });
+          reject(new Error(`視聴履歴削除失敗: ${WatchHistoryDatabase.toErrorMessage(deleteRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `視聴履歴削除失敗: ${error}` };
+      return { success: false, error: `視聴履歴削除失敗: ${String(error)}` };
     }
   }
   /**
@@ -1185,18 +1191,18 @@ class WatchHistoryDatabase {
             resolve({ success: true, data: deletedCount });
           };
           clearRequest.onerror = () => {
-            reject({ success: false, error: `一括削除失敗: ${clearRequest.error}` });
+            reject(new Error(`一括削除失敗: ${WatchHistoryDatabase.toErrorMessage(clearRequest.error)}`));
           };
         };
         countRequest.onerror = () => {
-          reject({ success: false, error: `件数取得失敗: ${countRequest.error}` });
+          reject(new Error(`件数取得失敗: ${WatchHistoryDatabase.toErrorMessage(countRequest.error)}`));
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `一括削除失敗: ${transaction.error}` });
+          reject(new Error(`一括削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `一括削除失敗: ${error}` };
+      return { success: false, error: `一括削除失敗: ${String(error)}` };
     }
   }
   /**
@@ -1220,7 +1226,7 @@ class WatchHistoryDatabase {
           resolve({ success: true, data: deletedVideoIds.length });
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `条件付き削除失敗: ${transaction.error}` });
+          reject(new Error(`条件付き削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         const cursorRequest = store.openCursor();
         cursorRequest.onsuccess = (event) => {
@@ -1232,7 +1238,7 @@ class WatchHistoryDatabase {
               deletedVideoIds.push(entry.videoId);
               const deleteRequest = cursor.delete();
               deleteRequest.onerror = () => {
-                reject({ success: false, error: `エントリ削除失敗 (${entry.videoId}): ${deleteRequest.error}` });
+                reject(new Error(`エントリ削除失敗 (${entry.videoId}): ${WatchHistoryDatabase.toErrorMessage(deleteRequest.error)}`));
                 return;
               };
             }
@@ -1240,11 +1246,11 @@ class WatchHistoryDatabase {
           }
         };
         cursorRequest.onerror = () => {
-          reject({ success: false, error: `カーソル取得失敗: ${cursorRequest.error}` });
+          reject(new Error(`カーソル取得失敗: ${WatchHistoryDatabase.toErrorMessage(cursorRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `条件付き削除失敗: ${error}` };
+      return { success: false, error: `条件付き削除失敗: ${String(error)}` };
     }
   }
   /**
@@ -1354,7 +1360,7 @@ class WatchHistoryDatabase {
       await migrationManager.executeMigrations(this.db, 1, this.config.version);
       return { success: true };
     } catch (error) {
-      return { success: false, error: `マイグレーション実行失敗: ${error}` };
+      return { success: false, error: `マイグレーション実行失敗: ${WatchHistoryDatabase.toErrorMessage(error)}` };
     }
   }
 }
@@ -1380,7 +1386,7 @@ class WatchTracker {
     this.REPEAT_DETECTION_THRESHOLD = 5;
     // 5秒以上の後戻りで繰り返し再生と判定
     this.SESSION_RECORD_INTERVAL = 1e4;
-    this.initialize();
+    void this.initialize();
   }
   /**
    * 初期化するのじゃ
@@ -1481,7 +1487,9 @@ class WatchTracker {
     this.videoElement = document.querySelector("video");
     if (!this.videoElement) {
       console.warn("[WatchTracker] video要素が見つかりません。後で再試行します。");
-      setTimeout(async () => await this.startWatching(), 5e3);
+      setTimeout(() => {
+        void this.startWatching();
+      }, 5e3);
       return;
     }
     this.setupVideoEventListeners();
@@ -1562,19 +1570,19 @@ class WatchTracker {
     this.videoElement.addEventListener("play", () => {
       this.emitWatchEvent("resume", this.videoElement.currentTime);
     });
-    this.videoElement.addEventListener("pause", async () => {
+    this.videoElement.addEventListener("pause", () => {
       const currentTime = this.videoElement.currentTime;
       this.emitWatchEvent("pause", currentTime);
-      await this.recordCurrentSession();
+      void this.recordCurrentSession();
     });
     this.videoElement.addEventListener("ended", () => {
-      this.handleVideoEnded();
+      void this.handleVideoEnded();
     });
     let timeUpdateTimeout = null;
     this.videoElement.addEventListener("timeupdate", () => {
       if (timeUpdateTimeout) clearTimeout(timeUpdateTimeout);
-      timeUpdateTimeout = setTimeout(async () => {
-        await this.handleTimeUpdate();
+      timeUpdateTimeout = setTimeout(() => {
+        void this.handleTimeUpdate();
       }, 1e3);
     });
   }
@@ -1586,7 +1594,7 @@ class WatchTracker {
       clearInterval(this.progressTimer);
     }
     this.progressTimer = setInterval(() => {
-      this.updateProgress();
+      void this.updateProgress();
     }, this.PROGRESS_INTERVAL);
   }
   /**
@@ -1812,7 +1820,7 @@ class WatchTracker {
       this.currentEntry.completed = true;
     }
     try {
-      watchHistoryDB.saveEntry(this.currentEntry);
+      void watchHistoryDB.saveEntry(this.currentEntry);
       logger.debug("[WatchTracker] 視聴セッションを同期的に記録しました:", {
         videoId: this.currentEntry.videoId,
         position: currentTime,
@@ -1956,17 +1964,19 @@ async function initializeWatchTracker() {
   watchTracker = new WatchTracker();
 }
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initializeWatchTracker);
+  document.addEventListener("DOMContentLoaded", () => {
+    void initializeWatchTracker();
+  });
 } else {
-  initializeWatchTracker();
+  void initializeWatchTracker();
 }
 let currentUrl = location.href;
-const observer = new MutationObserver(async () => {
+const observer = new MutationObserver(() => {
   if (location.href !== currentUrl) {
     currentUrl = location.href;
     if (/\/watch\/[ns][mo][0-9]+/.test(location.pathname)) {
-      setTimeout(async () => {
-        await initializeWatchTracker();
+      setTimeout(() => {
+        void initializeWatchTracker();
       }, 1e3);
     }
   }
@@ -1980,16 +1990,16 @@ window.addEventListener("beforeunload", () => {
     watchTracker.destroySync();
   }
 });
-document.addEventListener("visibilitychange", async () => {
+document.addEventListener("visibilitychange", () => {
   if (watchTracker && document.visibilityState === "hidden") {
     logger.debug("[WatchTracker] ページが非表示になりました - 進捗を一時保存します");
-    await watchTracker.saveSnapshot();
+    void watchTracker.saveSnapshot();
   }
 });
-window.addEventListener("pagehide", async () => {
+window.addEventListener("pagehide", () => {
   if (watchTracker) {
     logger.debug("[WatchTracker] ページが離脱されました - 視聴セッションを記録します");
-    await watchTracker.destroy();
+    void watchTracker.destroy();
   }
 });
 

@@ -34,9 +34,14 @@ window.commonHelper = {
       }
       const text = await response.text();
       const doc = new DOMParser().parseFromString(text, "text/html");
-      const serverContext = JSON.parse(doc.querySelector('meta[name="server-context"]')?.getAttribute("content") || "{}");
+      const serverContextRaw = JSON.parse(doc.querySelector('meta[name="server-context"]')?.getAttribute("content") || "{}");
+      const serverContext = serverContextRaw && typeof serverContextRaw === "object" ? serverContextRaw : {};
       const serverResponseContent = doc.querySelector('meta[name="server-response"]')?.getAttribute("content") || "{}";
-      const serverResponse = JSON.parse(decodeURIComponent(serverResponseContent));
+      const serverResponseUnknown = JSON.parse(decodeURIComponent(serverResponseContent));
+      if (!serverResponseUnknown || typeof serverResponseUnknown !== "object") {
+        throw new Error("Invalid server response");
+      }
+      const serverResponse = serverResponseUnknown;
       return {
         serverContext,
         serverResponse,
@@ -641,7 +646,8 @@ class Toastr {
             `;
       toastElement.appendChild(progressElement);
       setTimeout(() => {
-        progressElement.style.transition = `width ${options.timeOut}ms linear`;
+        const timeout = typeof options.timeOut === "number" ? options.timeOut : 0;
+        progressElement.style.transition = `width ${timeout}ms linear`;
         progressElement.style.width = "0%";
       }, 10);
     }
@@ -658,7 +664,7 @@ class Toastr {
       toastElement.addEventListener("mouseenter", () => {
         clearTimeout(toastElement.timeoutId);
         const progressElement = toastElement.querySelector(`.${options.progressClass}`);
-        if (progressElement) {
+        if (progressElement instanceof HTMLElement) {
           progressElement.style.transition = "none";
         }
       });
@@ -668,8 +674,9 @@ class Toastr {
             this.removeToast(toastElement);
           }, options.extendedTimeOut);
           const progressElement = toastElement.querySelector(`.${options.progressClass}`);
-          if (progressElement) {
-            progressElement.style.transition = `width ${options.extendedTimeOut}ms linear`;
+          if (progressElement instanceof HTMLElement) {
+            const ext = typeof options.extendedTimeOut === "number" ? options.extendedTimeOut : 0;
+            progressElement.style.transition = `width ${ext}ms linear`;
             progressElement.style.width = "0%";
           }
         }

@@ -221,7 +221,7 @@ class NicoVideoPlayer {
         MAX: 5
       }
     };
-    this.initializeNicoCache();
+    void this.initializeNicoCache();
   }
   async initializeNicoCache() {
     while (!window.NicoCache_nl) {
@@ -327,7 +327,7 @@ class NicoVideoPlayer {
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
     }
-    this.checkInterval = setInterval(() => {
+    this.checkInterval = window.setInterval(() => {
       this.getVideoElement();
     }, 1e3);
   }
@@ -440,7 +440,7 @@ class NicoVideoPlayer {
       this.duration = 0;
       this.initialized = false;
       this.isInitializing = true;
-      this.initializeNicoCache();
+      void this.initializeNicoCache();
     } catch (error) {
       window.logger.error("[NicoVideoPlayer] Error reinitializing:", error);
     }
@@ -519,6 +519,16 @@ class NicoVideoPlayer {
 }
 
 class Mylist2DB {
+  toMessage(value) {
+    if (value && typeof value.message === "string") {
+      return value.message;
+    }
+    try {
+      return String(value);
+    } catch {
+      return "Unknown error";
+    }
+  }
   constructor() {
     this.dbName = "Mylist2DB";
     this.version = 7;
@@ -531,6 +541,7 @@ class Mylist2DB {
         version: 1,
         description: "初期データベース構造の作成",
         execute: async (db) => {
+          await Promise.resolve();
           this.createInitialStores(db);
         }
       },
@@ -538,6 +549,7 @@ class Mylist2DB {
         version: 4,
         description: "マネージャーストアの追加",
         execute: async (db) => {
+          await Promise.resolve();
           if (!db.objectStoreNames.contains("manager")) {
             db.createObjectStore("manager", { keyPath: "id" });
           }
@@ -547,6 +559,7 @@ class Mylist2DB {
         version: 5,
         description: "キーワードストアの追加",
         execute: async (db) => {
+          await Promise.resolve();
           if (!db.objectStoreNames.contains("keywords")) {
             const keywordStore = db.createObjectStore("keywords", {
               keyPath: "id",
@@ -582,7 +595,7 @@ class Mylist2DB {
                   resolve();
                 }
               };
-              request.onerror = () => reject(request.error);
+              request.onerror = () => reject(new Error(this.toMessage(request.error)));
             });
           });
         }
@@ -591,6 +604,7 @@ class Mylist2DB {
         version: 7,
         description: "videosストアにtagsインデックスを追加",
         execute: async (db, transaction) => {
+          await Promise.resolve();
           if (db.objectStoreNames.contains("videos")) {
             const store = transaction.objectStore("videos");
             const hasTagsIndex = Array.from(store.indexNames).includes("tags");
@@ -661,15 +675,15 @@ class Mylist2DB {
       const [mylists, videos, keywords] = await Promise.all([
         new Promise((resolve, reject) => {
           mylistsRequest.onsuccess = () => resolve(mylistsRequest.result);
-          mylistsRequest.onerror = () => reject(mylistsRequest.error);
+          mylistsRequest.onerror = () => reject(new Error(this.toMessage(mylistsRequest.error)));
         }),
         new Promise((resolve, reject) => {
           videosRequest.onsuccess = () => resolve(videosRequest.result);
-          videosRequest.onerror = () => reject(videosRequest.error);
+          videosRequest.onerror = () => reject(new Error(this.toMessage(videosRequest.error)));
         }),
         new Promise((resolve, reject) => {
           keywordsRequest.onsuccess = () => resolve(keywordsRequest.result);
-          keywordsRequest.onerror = () => reject(keywordsRequest.error);
+          keywordsRequest.onerror = () => reject(new Error(this.toMessage(keywordsRequest.error)));
         })
       ]);
       const mylistIds = new Set(mylists.map((m) => m.id));
@@ -691,11 +705,11 @@ class Mylist2DB {
           value: (/* @__PURE__ */ new Date()).toISOString()
         });
         request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(this.toMessage(request.error)));
       });
       db.close();
     } catch (error) {
-      health.issues.push(`Health check failed: ${error}`);
+      health.issues.push(`Health check failed: ${this.toMessage(error)}`);
       health.isHealthy = false;
     }
     return health;
@@ -728,7 +742,7 @@ class Mylist2DB {
         const request = store.getAll();
         backup.data[storeName] = await new Promise((resolve, reject) => {
           request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
+          request.onerror = () => reject(new Error(this.toMessage(request.error)));
         });
       }
       const metadataTransaction = db.transaction(["metadata"], "readwrite");
@@ -739,7 +753,7 @@ class Mylist2DB {
           value: backup.timestamp
         });
         request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(this.toMessage(request.error)));
       });
       db.close();
       return JSON.stringify(backup);
@@ -750,7 +764,8 @@ class Mylist2DB {
   }
   // バックアップからの復元
   async restoreFromBackup(backupData) {
-    const backup = JSON.parse(backupData);
+    const backupUnknown = JSON.parse(backupData);
+    const backup = backupUnknown;
     const db = await this.initDB();
     try {
       const storeNames = Object.keys(backup.data);
@@ -760,14 +775,14 @@ class Mylist2DB {
         await new Promise((resolve, reject) => {
           const clearRequest = store.clear();
           clearRequest.onsuccess = () => resolve();
-          clearRequest.onerror = () => reject(clearRequest.error);
+          clearRequest.onerror = () => reject(new Error(this.toMessage(clearRequest.error)));
         });
         const data = backup.data[storeName];
         for (const item of data) {
           await new Promise((resolve, reject) => {
             const putRequest = store.put(item);
             putRequest.onsuccess = () => resolve();
-            putRequest.onerror = () => reject(putRequest.error);
+            putRequest.onerror = () => reject(new Error(this.toMessage(putRequest.error)));
           });
         }
       }
@@ -822,7 +837,9 @@ class Mylist2DB {
             await new Promise((resolve2, reject2) => {
               const getRequest = metadataStore.get("migration_history");
               getRequest.onsuccess = () => {
-                const history = getRequest.result?.value || [];
+                const historyRaw = getRequest.result;
+                const current = historyRaw && "value" in historyRaw ? historyRaw.value : [];
+                const history = Array.isArray(current) ? current : [];
                 history.push({
                   from: oldVersion,
                   to: this.version,
@@ -834,9 +851,9 @@ class Mylist2DB {
                   value: history
                 });
                 putRequest.onsuccess = () => resolve2();
-                putRequest.onerror = () => reject2(putRequest.error);
+                putRequest.onerror = () => reject2(new Error(this.toMessage(putRequest.error)));
               };
-              getRequest.onerror = () => reject2(getRequest.error);
+              getRequest.onerror = () => reject2(new Error(this.toMessage(getRequest.error)));
             });
           }
           if (this.onProgressCallback) {
@@ -863,7 +880,7 @@ class Mylist2DB {
         }
       };
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   createInitialStores(db) {
@@ -930,7 +947,7 @@ class ApiService {
         reject
       });
       if (!this.isProcessingQueue) {
-        this.processQueue();
+        void this.processQueue();
       }
     });
   }
@@ -953,7 +970,7 @@ class ApiService {
       }
     }
     await new Promise((resolve) => setTimeout(resolve, this.API_RATE_LIMIT));
-    this.processQueue();
+    void this.processQueue();
   }
   // 実際のAPI呼び出し（内部用）
   async _fetchVideoInfo(videoId) {
@@ -1090,6 +1107,9 @@ class ApiService {
 }
 
 class MylistService {
+  toMessage(value) {
+    return value instanceof Error ? value.message : String(value);
+  }
   constructor(db) {
     this.db = db;
   }
@@ -1104,7 +1124,7 @@ class MylistService {
         sortOrder: 0
       });
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   async getAllMylists() {
@@ -1114,7 +1134,7 @@ class MylistService {
     return new Promise((resolve, reject) => {
       const request = store.getAll();
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   async sortMylists(sortType, getVideosFunc) {
@@ -1163,9 +1183,9 @@ class MylistService {
         mylist.name = newName;
         const updateRequest = store.put(mylist);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(request.error);
+        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   async deleteMylist(mylistId) {
@@ -1180,23 +1200,28 @@ class MylistService {
         const keys = deleteVideos.result;
         Promise.all([
           ...keys.map((key) => {
-            return new Promise((res) => {
+            return new Promise((res, rej) => {
               const request = videoStore.delete(key);
               request.onsuccess = () => res();
+              request.onerror = () => rej(new Error(this.toMessage(request.error)));
             });
           }),
-          new Promise((res) => {
+          new Promise((res, rej) => {
             const request = mylistStore.delete(mylistId);
             request.onsuccess = () => res();
+            request.onerror = () => rej(new Error(this.toMessage(request.error)));
           })
-        ]).then(() => resolve()).catch(reject);
+        ]).then(() => resolve()).catch((e) => reject(e instanceof Error ? e : new Error(this.toMessage(e))));
       };
-      deleteVideos.onerror = () => reject(deleteVideos.error);
+      deleteVideos.onerror = () => reject(new Error(this.toMessage(deleteVideos.error)));
     });
   }
 }
 
 class VideoService {
+  toMessage(value) {
+    return value instanceof Error ? value.message : String(value);
+  }
   constructor(db) {
     this.db = db;
   }
@@ -1209,8 +1234,9 @@ class VideoService {
       const request = index.get(IDBKeyRange.only(mylistId));
       request.onsuccess = () => {
         const existingVideos = request.result;
-        if (existingVideos && existingVideos.id === videoInfo.id) {
-          reject("このマイリストには既に登録されています");
+        const existing = existingVideos;
+        if (existing && existing.id === videoInfo.id) {
+          reject(new Error("このマイリストには既に登録されています"));
           return;
         }
         const video = {
@@ -1231,9 +1257,9 @@ class VideoService {
         };
         const addRequest = store.add(video);
         addRequest.onsuccess = () => resolve("追加しました");
-        addRequest.onerror = () => reject("追加に失敗しました");
+        addRequest.onerror = () => reject(new Error("追加に失敗しました"));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   async getVideos(mylistId) {
@@ -1244,7 +1270,7 @@ class VideoService {
     return new Promise((resolve, reject) => {
       const request = index.getAll(mylistId);
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   sortVideos(videos, sortType) {
@@ -1290,7 +1316,7 @@ class VideoService {
         resolve("削除しました");
       };
       request.onerror = () => {
-        reject("削除に失敗しました");
+        reject(new Error("削除に失敗しました"));
       };
     });
   }
@@ -1329,6 +1355,9 @@ class VideoService {
 }
 
 class KeywordService {
+  toMessage(value) {
+    return value instanceof Error ? value.message : String(value);
+  }
   constructor(db) {
     this.db = db;
   }
@@ -1348,7 +1377,7 @@ class KeywordService {
         addedAt: Date.now()
       });
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードを取得
@@ -1360,7 +1389,7 @@ class KeywordService {
     return new Promise((resolve, reject) => {
       const request = index.getAll(mylistId);
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードを削除
@@ -1371,7 +1400,7 @@ class KeywordService {
     return new Promise((resolve, reject) => {
       const request = store.delete(keywordId);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードを移動
@@ -1390,9 +1419,9 @@ class KeywordService {
         keyword.mylistId = newMylistId;
         const updateRequest = store.put(keyword);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(request.error);
+        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードを編集
@@ -1411,9 +1440,9 @@ class KeywordService {
         keyword.keyword = newKeyword;
         const updateRequest = store.put(keyword);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(request.error);
+        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードの重複チェック
@@ -1429,7 +1458,7 @@ class KeywordService {
         const isDuplicate = keywords.some((k) => k.keyword === keyword);
         resolve(isDuplicate);
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   // キーワードのソート
@@ -1454,6 +1483,9 @@ class KeywordService {
 }
 
 class ImportExportService {
+  toMessage(value) {
+    return value instanceof Error ? value.message : String(value);
+  }
   constructor(db, apiService) {
     this.db = db;
     this.apiService = apiService;
@@ -1465,21 +1497,21 @@ class ImportExportService {
     const mylists = await new Promise((resolve, reject) => {
       const request = mylistsStore.getAll();
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
     const videosTransaction = database.transaction(["videos"], "readonly");
     const videosStore = videosTransaction.objectStore("videos");
     const allVideos = await new Promise((resolve, reject) => {
       const request = videosStore.getAll();
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
     const keywordsTransaction = database.transaction(["keywords"], "readonly");
     const keywordsStore = keywordsTransaction.objectStore("keywords");
     const keywords = await new Promise((resolve, reject) => {
       const request = keywordsStore.getAll();
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
     return {
       mylists,
@@ -1521,10 +1553,10 @@ class ImportExportService {
           resolve();
         };
         transaction.onerror = () => {
-          reject(transaction.error);
+          reject(new Error(this.toMessage(transaction.error)));
         };
       } catch (error) {
-        reject(error);
+        reject(error instanceof Error ? error : new Error(String(error)));
       }
     });
   }
@@ -1587,6 +1619,9 @@ class ImportExportService {
 }
 
 class SettingsService {
+  toMessage(value) {
+    return value instanceof Error ? value.message : String(value);
+  }
   constructor(db) {
     this.db = db;
   }
@@ -1595,13 +1630,13 @@ class SettingsService {
     const transaction = database.transaction(["manager"], "readwrite");
     const store = transaction.objectStore("manager");
     return new Promise((resolve, reject) => {
-      const request = store.put({
-        id: "settings",
+      const safe = {
         mylistSortType: settings.mylistSortType || "name_asc",
         videoSortType: settings.videoSortType || "uploadedAt_desc"
-      });
+      };
+      const request = store.put({ id: "settings", ...safe });
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
   async loadManagerSettings() {
@@ -1611,14 +1646,14 @@ class SettingsService {
     return new Promise((resolve, reject) => {
       const request = store.get("settings");
       request.onsuccess = () => {
-        resolve(
-          request.result || {
-            mylistSortType: "name_asc",
-            videoSortType: "uploadedAt_desc"
-          }
-        );
+        const result = request.result;
+        if (result && typeof result.mylistSortType === "string" && typeof result.videoSortType === "string") {
+          resolve(result);
+          return;
+        }
+        resolve({ mylistSortType: "name_asc", videoSortType: "uploadedAt_desc" });
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 }
@@ -1648,7 +1683,7 @@ class DatabaseManagementService {
         success: false,
         health: {
           isHealthy: false,
-          issues: [`Initialization failed: ${error}`],
+          issues: [`Initialization failed: ${error instanceof Error ? error.message : String(error)}`],
           storageEstimate: null,
           persistence: false
         },
@@ -1671,7 +1706,7 @@ class DatabaseManagementService {
       window.logger?.error("Health check failed:", error);
       return {
         isHealthy: false,
-        issues: [`Health check failed: ${error}`],
+        issues: [`Health check failed: ${error instanceof Error ? error.message : String(error)}`],
         storageEstimate: null,
         persistence: false
       };
@@ -1818,7 +1853,7 @@ class DatabaseManagementService {
   }
   // 健全性問題の通知
   notifyHealthIssues(health) {
-    const issues = health.issues.join(", ");
+    const issues = health.issues.map((i) => String(i)).join(", ");
     if (typeof window !== "undefined" && window.Mylist2ManagerUI?.showNotification) {
       const windowWithUI = window;
       windowWithUI.Mylist2ManagerUI.showNotification(
@@ -1830,17 +1865,21 @@ class DatabaseManagementService {
   }
   // 自動バックアップ機能
   async scheduleAutoBackup(intervalHours = 24) {
+    await Promise.resolve();
     const intervalMs = intervalHours * 60 * 60 * 1e3;
-    setInterval(async () => {
+    setInterval(() => {
       try {
-        const result = await this.createBackup();
-        if (result.success && result.backupData) {
-          localStorage.setItem("mylist2_auto_backup", result.backupData);
-          localStorage.setItem("mylist2_auto_backup_timestamp", (/* @__PURE__ */ new Date()).toISOString());
-          window.logger?.info("Auto backup completed");
-        } else {
-          window.logger?.error("Auto backup failed:", result.error);
-        }
+        void this.createBackup().then((result) => {
+          if (result.success && result.backupData) {
+            localStorage.setItem("mylist2_auto_backup", result.backupData);
+            localStorage.setItem("mylist2_auto_backup_timestamp", (/* @__PURE__ */ new Date()).toISOString());
+            window.logger?.info("Auto backup completed");
+          } else {
+            window.logger?.error("Auto backup failed:", result.error);
+          }
+        }).catch((error) => {
+          window.logger?.error("Auto backup error:", error);
+        });
       } catch (error) {
         window.logger?.error("Auto backup error:", error);
       }
@@ -2233,11 +2272,10 @@ async function showMylistSelector() {
       };
     }
     if (createNewMylist) {
-      createNewMylist.addEventListener("click", async () => {
+      createNewMylist.addEventListener("click", () => {
         const name = newMylistName?.value.trim() || "";
         if (name) {
-          await manager.createMylist(name);
-          await displayMylists();
+          void manager.createMylist(name).then(() => displayMylists());
           if (newMylistName) {
             newMylistName.value = "";
           }
@@ -2253,7 +2291,7 @@ async function showMylistSelector() {
         reject(new Error("キャンセルされました"));
       });
     }
-    displayMylists();
+    void displayMylists();
     if (searchInput) {
       searchInput.addEventListener("input", () => {
         const searchText = searchInput.value.toLowerCase();
@@ -2382,7 +2420,7 @@ const handleVideoOperation = (operation, videoId) => {
     case "cache_remove":
       return handleCacheRemove(videoId);
     default:
-      throw new Error(`Unknown operation: ${operation}`);
+      throw new Error("Unknown operation: " + String(operation));
   }
 };
 const handleCacheRemove = (videoId) => {
@@ -2390,7 +2428,14 @@ const handleCacheRemove = (videoId) => {
   const nicoCache = window.NicoCache_nl;
   const videoTitle = nicoCache?.watch?.apiData?.video?.title || "";
   if (confirm("本当に削除しますか？: " + videoId + " " + videoTitle)) {
-    nicoCache.get("/cache/ajax_rmall?" + videoId);
+    const unknownCache = nicoCache;
+    if (unknownCache && typeof unknownCache === "object" && "get" in unknownCache && typeof unknownCache.get === "function") {
+      const getFn = unknownCache.get;
+      const path = "/cache/ajax_rmall?" + encodeURIComponent(videoId);
+      getFn(path);
+    } else {
+      window.logger.warn("[video-util] NicoCache_nl.get が利用できません");
+    }
   }
 };
 
@@ -2816,7 +2861,7 @@ class NicoApiFetcher {
         throw new Error(`APIリクエスト失敗: ${response.status} ${response.statusText}`);
       }
       const data = await response.json();
-      const threads = data.data.threads;
+      const threads = data?.data?.threads ?? [];
       const mainThread = threads.filter((thread) => thread.fork === "main").sort((a, b) => b.commentCount - a.commentCount)[0];
       if (mainThread) {
         this.comments = mainThread.comments.map((comment) => ({
@@ -2862,7 +2907,7 @@ class NicoApiFetcher {
     if (this.comments.length === 0) return [];
     const duration = Math.max(...this.comments.map((c) => c.vposMs));
     const segmentDuration = duration / segments;
-    const density = new Array(segments).fill(0);
+    const density = Array.from({ length: segments }, () => 0);
     this.comments.forEach((comment) => {
       const segmentIndex = Math.floor(comment.vposMs / segmentDuration);
       if (segmentIndex < segments) {
@@ -3595,21 +3640,21 @@ class PlaybackHandler {
   }
   togglePlayPause() {
     if (this.player.isPlaying()) {
-      this.player.pause();
+      void this.player.pause();
     } else {
-      this.player.play();
+      void this.player.play();
     }
   }
   seek(options) {
     const currentTime = this.player.getCurrentTime();
     const delta = options.direction === "forward" ? options.seconds : -options.seconds;
     const newTime = Math.max(0, Math.min(this.player.getDuration(), currentTime + delta));
-    this.player.seek(newTime);
+    void this.player.seek(newTime);
   }
   seekToPosition(position) {
     const duration = this.player.getDuration();
     const time = position * duration;
-    this.player.seek(time);
+    void this.player.seek(time);
   }
   getPlaybackState() {
     return {
@@ -3762,7 +3807,10 @@ class SettingsManager {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
-        this.settings = JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === "object") {
+          this.settings = parsed;
+        }
       }
     } catch (error) {
       window.logger.error("[SettingsManager] 設定の読み込みに失敗しました:", error);
@@ -3868,7 +3916,9 @@ class SettingsManager {
   importSettings(settingsJson) {
     try {
       const imported = JSON.parse(settingsJson);
-      this.settings = imported;
+      if (imported && typeof imported === "object") {
+        this.settings = imported;
+      }
       this.saveSettings();
       return true;
     } catch (error) {
@@ -4109,6 +4159,7 @@ class PageDetectorImpl {
 }
 class DependencyCheckerImpl {
   async checkDependencies(dependencies) {
+    await Promise.resolve();
     for (const dependency of dependencies) {
       if (!this.getDependencyStatus(dependency)) {
         window.logger.warn(`[DependencyChecker] 依存関係 ${dependency} が見つかりません`);
@@ -4163,6 +4214,7 @@ class ModuleManager {
    */
   async initialize() {
     if (this.isInitialized) {
+      await Promise.resolve();
       return;
     }
     try {
@@ -4172,10 +4224,10 @@ class ModuleManager {
         (config) => this.settings.isModuleEnabled(config.id)
       );
       const visualModules = enabledModules.filter(
-        (config) => config.category === "visual"
+        (config) => config.category === ModuleCategory.VISUAL
       );
       const otherModules = enabledModules.filter(
-        (config) => config.category !== "visual"
+        (config) => config.category !== ModuleCategory.VISUAL
       );
       if (visualModules.length > 0) {
         const visualPromises = visualModules.map(
@@ -4259,6 +4311,7 @@ class ModuleManager {
     try {
       const moduleInstance = this.modules.get(moduleId);
       if (!moduleInstance) {
+        await Promise.resolve();
         return;
       }
       moduleInstance.destroy();
@@ -4316,7 +4369,8 @@ class ModuleManager {
    */
   async createModuleInstance(config) {
     try {
-      if (config.category === "visual") {
+      await Promise.resolve();
+      if (config.category === ModuleCategory.VISUAL) {
         let instance2;
         switch (config.id) {
           case "watch_background_selector": {
@@ -4640,7 +4694,10 @@ class BackgroundImageSettings {
       await new Promise((resolve, reject) => {
         const request = store.put(metadata);
         request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
+        request.onerror = () => {
+          const err = request.error;
+          reject(new Error(err instanceof Error ? err.message : String(err)));
+        };
       });
       window.logger.info("[BackgroundImageSettings] マイグレーションメタデータを保存しました");
     } catch (error) {
@@ -4689,6 +4746,7 @@ class BackgroundImageSettings {
    */
   async cleanupOldBackups() {
     try {
+      await Promise.resolve();
       const backupKeys = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -4913,7 +4971,8 @@ class BackgroundImageSettings {
       return new Promise((resolve, reject) => {
         const request = store.get(id);
         request.onsuccess = () => {
-          resolve(request.result || null);
+          const result = request.result;
+          resolve(result || null);
         };
         request.onerror = () => {
           window.logger.error(`[BackgroundImageSettings] 画像の取得に失敗しました: ${id}`);
@@ -4930,6 +4989,7 @@ class BackgroundImageSettings {
    */
   async setSelectedImage(id, fireEvent = true) {
     try {
+      await Promise.resolve();
       localStorage.setItem("selectedBackgroundImageId", id);
       if (fireEvent) {
         this.dispatchEvent(new CustomEvent("imageSelected", {
@@ -5092,7 +5152,8 @@ class BackgroundImageSettings {
         const request = store.get("migrationHistory");
         request.onsuccess = () => {
           const result = request.result;
-          resolve(result ? result.migrations : []);
+          const migrations = result?.migrations ?? [];
+          resolve(migrations);
         };
         request.onerror = () => {
           window.logger.warn("[BackgroundImageSettings] マイグレーション履歴の取得に失敗");
@@ -5170,27 +5231,29 @@ class BackgroundImageSettings {
   async importSettings(jsonData) {
     try {
       const importData = JSON.parse(jsonData);
-      if (!importData.images || !Array.isArray(importData.images)) {
+      const obj = importData;
+      if (!Array.isArray(obj.images)) {
         throw new Error("無効なデータ形式です");
       }
       await this.clearAllImages();
-      for (const imageData of importData.images) {
-        if (imageData.id && imageData.name && imageData.type && imageData.data) {
+      for (const imageData of obj.images) {
+        const rec = imageData;
+        if (typeof rec.id === "string" && typeof rec.name === "string" && (rec.type === "url" || rec.type === "file") && typeof rec.data === "string") {
           await this.addImageWithId(
-            imageData.id,
-            imageData.name,
-            imageData.type,
-            imageData.data,
-            imageData.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
-            imageData.updatedAt || (/* @__PURE__ */ new Date()).toISOString()
+            rec.id,
+            rec.name,
+            rec.type,
+            rec.data,
+            typeof rec.createdAt === "string" ? rec.createdAt : (/* @__PURE__ */ new Date()).toISOString(),
+            typeof rec.updatedAt === "string" ? rec.updatedAt : (/* @__PURE__ */ new Date()).toISOString()
           );
         }
       }
-      if (importData.selectedImageId) {
-        await this.setSelectedImage(importData.selectedImageId, false);
+      if (typeof obj.selectedImageId === "string") {
+        await this.setSelectedImage(obj.selectedImageId, false);
       }
       this.dispatchEvent(new CustomEvent("settingsImported", {
-        detail: { imageCount: importData.images.length }
+        detail: { imageCount: obj.images.length }
       }));
     } catch (error) {
       window.logger.error("[BackgroundImageSettings] 設定のインポートに失敗:", error);
@@ -5449,9 +5512,9 @@ class SettingsUI {
     this.shadowRoot.addEventListener("change", (event) => {
       const target = event.target;
       if (target.classList.contains("module-toggle")) {
-        this.handleModuleToggle(target);
+        void this.handleModuleToggle(target);
       } else if (target.classList.contains("sub-module-toggle")) {
-        this.handleSubModuleToggle(target);
+        void this.handleSubModuleToggle(target);
       }
     });
     this.setupActionButtons();
@@ -5512,23 +5575,25 @@ class SettingsUI {
     }
     const applyBtn = this.shadowRoot.getElementById("apply-immediately");
     if (applyBtn) {
-      applyBtn.addEventListener("click", async () => {
-        try {
-          await this.moduleManager.reloadAllModules();
-          this.renderModuleList();
-          window.toastr?.success(
-            "モジュールを再読み込みしました",
-            "成功",
-            { timeOut: 3e3 }
-          );
-        } catch (error) {
-          window.logger.error("[SettingsUI] モジュール再読み込みに失敗:", error);
-          window.toastr?.error(
-            "モジュール再読み込みに失敗しました",
-            "エラー",
-            { timeOut: 5e3 }
-          );
-        }
+      applyBtn.addEventListener("click", () => {
+        void (async () => {
+          try {
+            await this.moduleManager.reloadAllModules();
+            this.renderModuleList();
+            window.toastr?.success(
+              "モジュールを再読み込みしました",
+              "成功",
+              { timeOut: 3e3 }
+            );
+          } catch (error) {
+            window.logger.error("[SettingsUI] モジュール再読み込みに失敗:", error);
+            window.toastr?.error(
+              "モジュール再読み込みに失敗しました",
+              "エラー",
+              { timeOut: 5e3 }
+            );
+          }
+        })();
       });
     }
     const reloadBtn = this.shadowRoot.getElementById("reload-and-apply");
@@ -5540,19 +5605,19 @@ class SettingsUI {
     const exportBtn = this.shadowRoot.getElementById("export-settings");
     if (exportBtn) {
       exportBtn.addEventListener("click", () => {
-        this.exportSettings();
+        void this.exportSettings();
       });
     }
     const importBtn = this.shadowRoot.getElementById("import-settings");
     if (importBtn) {
       importBtn.addEventListener("click", () => {
-        this.importSettings();
+        void this.importSettings();
       });
     }
     const resetBtn = this.shadowRoot.getElementById("reset-settings");
     if (resetBtn) {
       resetBtn.addEventListener("click", () => {
-        this.resetSettings();
+        void this.resetSettings();
       });
     }
   }
@@ -5661,8 +5726,13 @@ class SettingsUI {
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
-            const settings = JSON.parse(e.target?.result);
-            this.settingsManager.importSettings(settings);
+            const text = e.target?.result;
+            const parsed = JSON.parse(text);
+            if (typeof parsed === "string") {
+              this.settingsManager.importSettings(parsed);
+            } else {
+              this.settingsManager.importSettings(JSON.stringify(parsed));
+            }
             this.renderModuleList();
             window.toastr?.success(
               "設定をインポートしました",
@@ -5744,7 +5814,7 @@ class SettingsUI {
     container.appendChild(settingsButton);
     const openButton = settingsButton.querySelector("#open-background-settings");
     openButton?.addEventListener("click", () => {
-      this.openBackgroundImageSettings();
+      void this.openBackgroundImageSettings();
     });
   }
   /**
@@ -5824,7 +5894,7 @@ class SettingsUI {
     `;
     this.shadowRoot.appendChild(modal);
     this.setupBackgroundModalEventListeners();
-    this.refreshModalImageList();
+    void this.refreshModalImageList();
   }
   /**
    * 背景画像設定モーダルのイベントリスナーを設定
@@ -5855,30 +5925,30 @@ class SettingsUI {
     });
     const addUrlButton = modal.querySelector("#modal-add-url-image");
     addUrlButton?.addEventListener("click", () => {
-      this.addModalImageFromUrl();
+      void this.addModalImageFromUrl();
     });
     const addFileButton = modal.querySelector("#modal-add-file-image");
     addFileButton?.addEventListener("click", () => {
-      this.addModalImageFromFile();
+      void this.addModalImageFromFile();
     });
     const urlInput = modal.querySelector("#modal-image-url-input");
     const nameInput = modal.querySelector("#modal-image-name-input");
     [urlInput, nameInput].forEach((input) => {
       input?.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
-          this.addModalImageFromUrl();
+          void this.addModalImageFromUrl();
         }
       });
     });
     const fileNameInput = modal.querySelector("#modal-file-name-input");
     fileNameInput?.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
-        this.addModalImageFromFile();
+        void this.addModalImageFromFile();
       }
     });
     const exportButton = modal.querySelector("#modal-export-settings");
     exportButton?.addEventListener("click", () => {
-      this.exportModalSettings();
+      void this.exportModalSettings();
     });
     const importButton = modal.querySelector("#modal-import-settings");
     importButton?.addEventListener("click", () => {
@@ -5890,12 +5960,12 @@ class SettingsUI {
       const target = e.target;
       const file = target.files?.[0];
       if (file) {
-        this.importModalSettings(file);
+        void this.importModalSettings(file);
       }
     });
     const resetButton = modal.querySelector("#modal-reset-settings");
     resetButton?.addEventListener("click", () => {
-      this.resetModalSettings();
+      void this.resetModalSettings();
     });
   }
   /**
@@ -6027,24 +6097,28 @@ class SettingsUI {
     if (!modal) return;
     const selectButtons = modal.querySelectorAll(".image-select-btn");
     selectButtons.forEach((button) => {
-      button.addEventListener("click", async (e) => {
-        const target = e.target;
-        const selectButton = target.closest(".image-select-btn");
-        const imageId = selectButton?.getAttribute("data-image-id");
-        if (imageId) {
-          await this.selectModalImage(imageId);
-        }
+      button.addEventListener("click", (e) => {
+        void (async () => {
+          const target = e.target;
+          const selectButton = target.closest(".image-select-btn");
+          const imageId = selectButton?.getAttribute("data-image-id");
+          if (imageId) {
+            await this.selectModalImage(imageId);
+          }
+        })();
       });
     });
     const deleteButtons = modal.querySelectorAll(".image-delete-btn");
     deleteButtons.forEach((button) => {
-      button.addEventListener("click", async (e) => {
-        const target = e.target;
-        const deleteButton = target.closest(".image-delete-btn");
-        const imageId = deleteButton?.getAttribute("data-image-id");
-        if (imageId) {
-          await this.deleteModalImage(imageId);
-        }
+      button.addEventListener("click", (e) => {
+        void (async () => {
+          const target = e.target;
+          const deleteButton = target.closest(".image-delete-btn");
+          const imageId = deleteButton?.getAttribute("data-image-id");
+          if (imageId) {
+            await this.deleteModalImage(imageId);
+          }
+        })();
       });
     });
   }
@@ -6122,6 +6196,7 @@ class SettingsUI {
    */
   async importModalSettings(file) {
     try {
+      await Promise.resolve();
       const reader = new FileReader();
       reader.onload = async (e) => {
         try {
@@ -8582,11 +8657,11 @@ class MlinkVideoController extends BasePanel {
       this.volumeHandler = new VolumeHandler();
       this.speedHandler = new SpeedHandler();
     }
-    this.render();
+    void this.render();
     if (this.isWatchPage) {
       this.setupVideoEndedListener();
     }
-    this.initializeModuleSystem();
+    void this.initializeModuleSystem();
   }
   /**
    * 現在のページが視聴ページかどうかを判定
@@ -8596,6 +8671,7 @@ class MlinkVideoController extends BasePanel {
     return pathname.includes("/watch/");
   }
   async loadStyles() {
+    await Promise.resolve();
     return `
       ${basePanelStyles}
       ${panelStyles}
@@ -8723,16 +8799,18 @@ class MlinkVideoController extends BasePanel {
     }
     const actionCards = this.shadow.querySelectorAll(".action-card");
     actionCards.forEach((card) => {
-      card.addEventListener("click", async (e) => {
-        const target = e.target;
-        const actionCard = target.closest(".action-card");
-        if (actionCard instanceof HTMLElement && actionCard.dataset.action) {
-          if (this.linkManager) {
-            await this.linkManager.handleAction(actionCard.dataset.action);
-          } else {
-            await this.handleStaticAction(actionCard.dataset.action);
+      card.addEventListener("click", (e) => {
+        void (async () => {
+          const target = e.target;
+          const actionCard = target.closest(".action-card");
+          if (actionCard instanceof HTMLElement && actionCard.dataset.action) {
+            if (this.linkManager) {
+              await this.linkManager.handleAction(actionCard.dataset.action);
+            } else {
+              await this.handleStaticAction(actionCard.dataset.action);
+            }
           }
-        }
+        })();
       });
     });
   }
@@ -9260,12 +9338,13 @@ class MlinkVideoController extends BasePanel {
    * 視聴ページ以外で使用する静的なアクション処理
    */
   async handleStaticAction(action) {
+    await Promise.resolve();
     try {
       const actionMap = {
         customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
         AddToMylist: () => {
           const mylistHandler = new Mylist2Handler();
-          mylistHandler.handleAddKeyword();
+          void mylistHandler.handleAddKeyword();
         },
         nicochart: "http://nicochart.jp/",
         nicolog: "https://nicolog.jp/",
@@ -9537,7 +9616,7 @@ class MlinkVideoController extends BasePanel {
         if (duration > 0 && currentTime > 0 && duration - currentTime <= 0.5) {
           this.player.seek(0);
           setTimeout(() => {
-            this.player?.play();
+            void this.player?.play();
           }, 100);
         }
       }
@@ -9738,6 +9817,7 @@ class WatchBackgroundSelectorModule {
    */
   async initialize() {
     if (this._isActive) {
+      await Promise.resolve();
       return;
     }
     try {
@@ -10039,7 +10119,7 @@ class WatchBackgroundSelectorModule {
       item.title = imageItem.name;
       item.onclick = (e) => {
         e.stopPropagation();
-        this.changeBackground(imageItem);
+        void this.changeBackground(imageItem);
       };
       wheel.appendChild(item);
     });
@@ -10122,6 +10202,7 @@ class WatchBackgroundSelectorModule {
    * 背景変更（最速化版）
    */
   async changeBackground(imageItem) {
+    await Promise.resolve();
     let backgroundValue;
     if (imageItem.type === "url") {
       backgroundValue = imageItem.data;
@@ -10219,6 +10300,7 @@ class WatchBackgroundSelectorModule {
    * 背景設定イベントリスナーの初期化（分離）
    */
   async initializeBackgroundSettingsEvents() {
+    await Promise.resolve();
     this.setupBackgroundSettingsEventListeners();
   }
   /**
@@ -10273,22 +10355,26 @@ class WatchBackgroundSelectorModule {
     if (!this.shadowRoot) return;
     const selectButtons = this.shadowRoot.querySelectorAll(".select-btn");
     selectButtons.forEach((button) => {
-      button.addEventListener("click", async (e) => {
-        const target = e.target;
-        const imageId = target.getAttribute("data-id");
-        if (imageId) {
-          await this.selectImage(imageId);
-        }
+      button.addEventListener("click", (e) => {
+        void (async () => {
+          const target = e.target;
+          const imageId = target.getAttribute("data-id");
+          if (imageId) {
+            await this.selectImage(imageId);
+          }
+        })();
       });
     });
     const deleteButtons = this.shadowRoot.querySelectorAll(".delete-btn");
     deleteButtons.forEach((button) => {
-      button.addEventListener("click", async (e) => {
-        const target = e.target;
-        const imageId = target.getAttribute("data-id");
-        if (imageId) {
-          await this.deleteImage(imageId);
-        }
+      button.addEventListener("click", (e) => {
+        void (async () => {
+          const target = e.target;
+          const imageId = target.getAttribute("data-id");
+          if (imageId) {
+            await this.deleteImage(imageId);
+          }
+        })();
       });
     });
   }
@@ -10327,41 +10413,46 @@ class WatchBackgroundSelectorModule {
    * 背景画像設定のイベントリスナーを設定
    */
   setupBackgroundSettingsEventListeners() {
-    const imageAddedListener = async (_) => {
-      await this.createRadialSelector();
+    const imageAddedListener = (_) => {
+      void this.createRadialSelector();
     };
     this.backgroundSettings.addEventListener("imageAdded", imageAddedListener);
     this.eventListeners.push({ type: "imageAdded", listener: imageAddedListener });
-    const imageDeletedListener = async (_) => {
-      await this.createRadialSelector();
+    const imageDeletedListener = (_) => {
+      void this.createRadialSelector();
     };
     this.backgroundSettings.addEventListener("imageDeleted", imageDeletedListener);
     this.eventListeners.push({ type: "imageDeleted", listener: imageDeletedListener });
-    const imageSelectedListener = async (event) => {
-      const customEvent = event;
-      const imageId = customEvent.detail.id;
-      const image = await this.backgroundSettings.getImage(imageId);
-      if (image) {
-        let backgroundValue;
-        if (image.type === "url") {
-          backgroundValue = image.data;
-        } else if (image.type === "file") {
-          backgroundValue = `url(${image.data})`;
-        } else {
+    const imageSelectedListener = (event) => {
+      void (async () => {
+        const customEvent = event;
+        const imageId = customEvent.detail?.id;
+        if (!imageId) {
           return;
         }
-        document.documentElement.style.setProperty("--bg-img", backgroundValue);
-      }
+        const image = await this.backgroundSettings.getImage(imageId);
+        if (image) {
+          let backgroundValue;
+          if (image.type === "url") {
+            backgroundValue = image.data;
+          } else if (image.type === "file") {
+            backgroundValue = `url(${image.data})`;
+          } else {
+            return;
+          }
+          document.documentElement.style.setProperty("--bg-img", backgroundValue);
+        }
+      })();
     };
     this.backgroundSettings.addEventListener("imageSelected", imageSelectedListener);
     this.eventListeners.push({ type: "imageSelected", listener: imageSelectedListener });
-    const settingsImportedListener = async (_) => {
-      await this.createRadialSelector();
+    const settingsImportedListener = (_) => {
+      void this.createRadialSelector();
     };
     this.backgroundSettings.addEventListener("settingsImported", settingsImportedListener);
     this.eventListeners.push({ type: "settingsImported", listener: settingsImportedListener });
-    const settingsResetListener = async (_) => {
-      await this.createRadialSelector();
+    const settingsResetListener = (_) => {
+      void this.createRadialSelector();
     };
     this.backgroundSettings.addEventListener("settingsReset", settingsResetListener);
     this.eventListeners.push({ type: "settingsReset", listener: settingsResetListener });
@@ -10527,10 +10618,11 @@ class WatchMatrixBackgroundModule {
       return;
     }
     this.setBackgroundStyle();
-    const japanese = "ｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ-ﾟ".split("");
+    const japaneseChars = "ｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ-ﾟ";
+    const japanese = japaneseChars.split("");
     const fontSize = 23;
     const columns = Math.floor(this.canvas.width / fontSize);
-    const drops = Array(columns).fill(1);
+    const drops = Array.from({ length: columns }, () => 1);
     this.animationId = setInterval(() => {
       this.drawMatrix(ctx, drops, japanese, fontSize, this.canvas.height);
     }, 33);
@@ -10585,8 +10677,9 @@ class HeaderModule {
   }
   async initialize() {
     try {
+      await Promise.resolve();
       this.hideUserElements();
-      this.intervalId = setInterval(() => {
+      this.intervalId = window.setInterval(() => {
         this.hideUserElements();
       }, 5e3);
       this.active = true;
@@ -10694,6 +10787,7 @@ class SearchPageModule {
   }
   async initialize() {
     try {
+      await Promise.resolve();
       this.injectEightColumnCSS();
       this.active = true;
     } catch (error) {
@@ -10869,6 +10963,7 @@ class NicoInfoPageModule {
   }
   async initialize() {
     try {
+      await Promise.resolve();
       if (!this.checkDependencies()) {
         throw new Error("必要な依存関係が見つかりません (window.toastr)");
       }
@@ -11542,8 +11637,11 @@ https://nico.ms/${currentVideoInfo.videoId}`;
     const shareButton = document.getElementById("TagItemsShareButton");
     if (!shareButton) return;
     const currentVideoInfo = this.getCurrentVideoInfo();
-    const shareLinks = shareButton.querySelectorAll("a");
+    const shareLinks = Array.from(shareButton.querySelectorAll("a"));
     shareLinks.forEach((link) => {
+      if (!(link instanceof HTMLAnchorElement)) {
+        return;
+      }
       const href = `https://commons.nicovideo.jp/works/${currentVideoInfo.videoId}`;
       link.setAttribute("href", href);
     });
@@ -11790,9 +11888,11 @@ class WatchMylistSelectorModule {
    */
   async initialize() {
     if (this._isActive) {
+      await Promise.resolve();
       return;
     }
     try {
+      await Promise.resolve();
       if (!this.isTargetPage()) {
         return;
       }
@@ -11873,7 +11973,14 @@ class HideVideoSettings {
   loadKeywords() {
     try {
       const saved = localStorage.getItem(this.storageKey);
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) {
+        return [];
+      }
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+      return parsed.filter((v) => typeof v === "string");
     } catch (error) {
       window.logger.error("キーワードの読み込みエラー:", error);
       return [];
@@ -12466,6 +12573,7 @@ class ThumbnailsFilterModule {
   }
   async initialize() {
     try {
+      await Promise.resolve();
       this.settings = new HideVideoSettings();
       this.ui = new HideVideoUI(this.settings);
       this.ui.initialize();
@@ -12516,15 +12624,15 @@ class DeletedVideoDetector {
     this.initialized = false;
     this.handlePopState = () => {
       if (this.isEnabled) {
-        this.handleUnavailableVideo();
+        void this.handleUnavailableVideo();
       }
     };
     this.handleDOMContentLoaded = () => {
       if (this.isEnabled) {
-        this.handleUnavailableVideo();
+        void this.handleUnavailableVideo();
       }
     };
-    this.initializeNicoCache();
+    void this.initializeNicoCache();
   }
   static {
     this.instance = null;
@@ -12575,7 +12683,7 @@ class DeletedVideoDetector {
     this.observer = new MutationObserver(() => {
       if (this.isEnabled && location.href !== this.lastUrl) {
         this.lastUrl = location.href;
-        this.handleUnavailableVideo();
+        void this.handleUnavailableVideo();
       }
     });
     this.observer.observe(document.body, {

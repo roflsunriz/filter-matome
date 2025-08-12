@@ -3294,6 +3294,9 @@ class MigrationManager {
     };
     this.initializeMigrations();
   }
+  static toErrorMessage(error) {
+    return error instanceof Error ? error.message : String(error);
+  }
   /**
    * マイグレーション定義を初期化するのじゃ
    */
@@ -3340,7 +3343,7 @@ class MigrationManager {
             };
             updateRequest.onerror = () => {
               logger.error("[MigrationManager] データ更新エラー:", updateRequest.error);
-              reject(updateRequest.error);
+              reject(new Error(MigrationManager.toErrorMessage(updateRequest.error)));
             };
           } else {
             processedCount++;
@@ -3353,7 +3356,7 @@ class MigrationManager {
       };
       request.onerror = () => {
         logger.error("[MigrationManager] データ取得エラー:", request.error);
-        reject(request.error);
+        reject(new Error(MigrationManager.toErrorMessage(request.error)));
       };
     });
   }
@@ -3405,7 +3408,7 @@ class MigrationManager {
       this.currentProgress.isRunning = false;
       this.dispatchProgressEvent();
       logger.error("[MigrationManager] マイグレーション実行エラー:", error);
-      throw error;
+      throw new Error(String(error));
     }
   }
   /**
@@ -3431,7 +3434,7 @@ class MigrationManager {
       logger.error("[MigrationManager] 永続化要求エラー:", error);
       return {
         success: false,
-        error: `永続化要求失敗: ${error}`
+        error: `永続化要求失敗: ${MigrationManager.toErrorMessage(error)}`
       };
     }
   }
@@ -3466,7 +3469,7 @@ class MigrationManager {
       logger.error("[MigrationManager] 永続化状態取得エラー:", error);
       return {
         success: false,
-        error: `永続化状態取得失敗: ${error}`
+        error: `永続化状態取得失敗: ${MigrationManager.toErrorMessage(error)}`
       };
     }
   }
@@ -3484,12 +3487,12 @@ class MigrationManager {
         new Promise((resolve, reject) => {
           const request = watchHistoryStore.getAll();
           request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
+          request.onerror = () => reject(new Error(MigrationManager.toErrorMessage(request.error)));
         }),
         new Promise((resolve, reject) => {
           const request = seriesAlertsStore.getAll();
           request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
+          request.onerror = () => reject(new Error(MigrationManager.toErrorMessage(request.error)));
         })
       ]);
       const backup = {
@@ -3562,8 +3565,8 @@ class MigrationManager {
           const backup = JSON.parse(localStorage.getItem(key) || "{}");
           return {
             key,
-            timestamp: backup.timestamp || 0,
-            version: backup.version || 0
+            timestamp: typeof backup.timestamp === "number" ? backup.timestamp : 0,
+            version: typeof backup.version === "number" ? backup.version : 0
           };
         } catch {
           return null;
@@ -3597,12 +3600,12 @@ class MigrationManager {
             new Promise((resolve2, reject2) => {
               const clearRequest = watchHistoryStore.clear();
               clearRequest.onsuccess = () => resolve2();
-              clearRequest.onerror = () => reject2(clearRequest.error);
+              clearRequest.onerror = () => reject2(new Error(MigrationManager.toErrorMessage(clearRequest.error)));
             }),
             new Promise((resolve2, reject2) => {
               const clearRequest = seriesAlertsStore.clear();
               clearRequest.onsuccess = () => resolve2();
-              clearRequest.onerror = () => reject2(clearRequest.error);
+              clearRequest.onerror = () => reject2(new Error(MigrationManager.toErrorMessage(clearRequest.error)));
             })
           ]).then(() => {
             const promises = [];
@@ -3611,7 +3614,7 @@ class MigrationManager {
               promises.push(new Promise((resolve2, reject2) => {
                 const addRequest = watchHistoryStore.add(entry);
                 addRequest.onsuccess = () => resolve2();
-                addRequest.onerror = () => reject2(addRequest.error);
+                addRequest.onerror = () => reject2(new Error(MigrationManager.toErrorMessage(addRequest.error)));
               }));
             });
             if (backup.seriesAlerts && Array.isArray(backup.seriesAlerts)) {
@@ -3619,7 +3622,7 @@ class MigrationManager {
                 promises.push(new Promise((resolve2, reject2) => {
                   const addRequest = seriesAlertsStore.add(alert);
                   addRequest.onsuccess = () => resolve2();
-                  addRequest.onerror = () => reject2(addRequest.error);
+                  addRequest.onerror = () => reject2(new Error(MigrationManager.toErrorMessage(addRequest.error)));
                 }));
               });
             }
@@ -3628,21 +3631,21 @@ class MigrationManager {
               resolve({ success: true });
             }).catch((error) => {
               logger.error("[MigrationManager] リストア中にエラーが発生:", error);
-              reject({ success: false, error: `リストア失敗: ${error}` });
+              reject(new Error(`リストア失敗: ${MigrationManager.toErrorMessage(error)}`));
             });
           }).catch((error) => {
             logger.error("[MigrationManager] データクリア中にエラーが発生:", error);
-            reject({ success: false, error: `データクリア失敗: ${error}` });
+            reject(new Error(`データクリア失敗: ${MigrationManager.toErrorMessage(error)}`));
           });
         };
         request.onerror = () => {
           logger.error("[MigrationManager] データベース開放エラー:", request.error);
-          reject({ success: false, error: `データベース開放失敗: ${request.error}` });
+          reject(new Error(`データベース開放失敗: ${MigrationManager.toErrorMessage(request.error)}`));
         };
       });
     } catch (error) {
       logger.error("[MigrationManager] リストアエラー:", error);
-      return { success: false, error: `リストア失敗: ${error}` };
+      return { success: false, error: `リストア失敗: ${MigrationManager.toErrorMessage(error)}` };
     }
   }
 }
@@ -3657,6 +3660,9 @@ class WatchHistoryDatabase {
       storeName: config?.storeName || "watchHistory"
     };
   }
+  static toErrorMessage(error) {
+    return error instanceof Error ? error.message : String(error);
+  }
   /**
    * データベースを初期化するのじゃ
    */
@@ -3667,7 +3673,7 @@ class WatchHistoryDatabase {
       const initResult = await new Promise((resolve, reject) => {
         request.onerror = () => {
           logger.error("データベース接続失敗");
-          reject({ success: false, error: "データベース接続失敗なのじゃ" });
+          reject(new Error("データベース接続失敗なのじゃ"));
         };
         request.onsuccess = () => {
           this.db = request.result;
@@ -3739,7 +3745,7 @@ class WatchHistoryDatabase {
       }
       return initResult;
     } catch (error) {
-      return { success: false, error: `初期化失敗: ${error}` };
+      return { success: false, error: `初期化失敗: ${String(error)}` };
     }
   }
   /**
@@ -3757,10 +3763,10 @@ class WatchHistoryDatabase {
           resolve({ success: true });
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `保存失敗: ${transaction.error}` });
+          reject(new Error(`保存失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         transaction.onabort = () => {
-          reject({ success: false, error: "保存処理が中断されたのじゃ" });
+          reject(new Error("保存処理が中断されたのじゃ"));
         };
         const getRequest = store.get(entry.videoId);
         getRequest.onsuccess = () => {
@@ -3776,21 +3782,21 @@ class WatchHistoryDatabase {
             };
             const putRequest = store.put(updated);
             putRequest.onerror = () => {
-              reject({ success: false, error: `更新失敗: ${putRequest.error}` });
+              reject(new Error(`更新失敗: ${WatchHistoryDatabase.toErrorMessage(putRequest.error)}`));
             };
           } else {
             const putRequest = store.put(entry);
             putRequest.onerror = () => {
-              reject({ success: false, error: `追加失敗: ${putRequest.error}` });
+              reject(new Error(`追加失敗: ${WatchHistoryDatabase.toErrorMessage(putRequest.error)}`));
             };
           }
         };
         getRequest.onerror = () => {
-          reject({ success: false, error: `既存エントリ確認失敗: ${getRequest.error}` });
+          reject(new Error(`既存エントリ確認失敗: ${WatchHistoryDatabase.toErrorMessage(getRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `保存失敗: ${error}` };
+      return { success: false, error: `保存失敗: ${String(error)}` };
     }
   }
   /**
@@ -3806,7 +3812,7 @@ class WatchHistoryDatabase {
       const result = await new Promise((resolve, reject) => {
         const request = store.get(videoId);
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
       if (result) {
         return { success: true, data: result };
@@ -3814,7 +3820,7 @@ class WatchHistoryDatabase {
         return { success: false, error: "動画が見つからぬのじゃ" };
       }
     } catch (error) {
-      return { success: false, error: `取得失敗: ${error}` };
+      return { success: false, error: `取得失敗: ${String(error)}` };
     }
   }
   /**
@@ -3832,7 +3838,7 @@ class WatchHistoryDatabase {
       const entries = await new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
       logger.debug("データベースからエントリ取得完了:", { totalEntries: entries.length });
       if (entries.length > 0) {
@@ -3848,7 +3854,7 @@ class WatchHistoryDatabase {
       return { success: true, data: sortedEntries };
     } catch (error) {
       logger.error("getAllEntriesエラー:", error);
-      return { success: false, error: `取得失敗: ${error}` };
+      return { success: false, error: `取得失敗: ${String(error)}` };
     }
   }
   /**
@@ -3878,7 +3884,7 @@ class WatchHistoryDatabase {
       };
       return { success: true, data: stats };
     } catch (error) {
-      return { success: false, error: `統計計算失敗: ${error}` };
+      return { success: false, error: `統計計算失敗: ${String(error)}` };
     }
   }
   /**
@@ -3949,7 +3955,7 @@ class WatchHistoryDatabase {
       }
       return { success: true, data: importedCount };
     } catch (error) {
-      return { success: false, error: `インポート失敗: ${error}` };
+      return { success: false, error: `インポート失敗: ${String(error)}` };
     }
   }
   // ===== プライベートメソッド =====
@@ -4218,15 +4224,15 @@ class WatchHistoryDatabase {
           resolve({ success: true });
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `シリーズアラート保存失敗: ${transaction.error}` });
+          reject(new Error(`シリーズアラート保存失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         const putRequest = store.put(alert);
         putRequest.onerror = () => {
-          reject({ success: false, error: `シリーズアラート保存失敗: ${putRequest.error}` });
+          reject(new Error(`シリーズアラート保存失敗: ${WatchHistoryDatabase.toErrorMessage(putRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `シリーズアラート保存失敗: ${error}` };
+      return { success: false, error: `シリーズアラート保存失敗: ${String(error)}` };
     }
   }
   /**
@@ -4242,7 +4248,7 @@ class WatchHistoryDatabase {
       const result = await new Promise((resolve, reject) => {
         const request = store.get(alertId);
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
       if (result) {
         return { success: true, data: result };
@@ -4250,7 +4256,7 @@ class WatchHistoryDatabase {
         return { success: false, error: "シリーズアラートが見つからぬのじゃ" };
       }
     } catch (error) {
-      return { success: false, error: `シリーズアラート取得失敗: ${error}` };
+      return { success: false, error: `シリーズアラート取得失敗: ${String(error)}` };
     }
   }
   /**
@@ -4266,11 +4272,11 @@ class WatchHistoryDatabase {
       const alerts = await new Promise((resolve, reject) => {
         const request = store.getAll();
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
       });
       return { success: true, data: alerts };
     } catch (error) {
-      return { success: false, error: `シリーズアラート一覧取得失敗: ${error}` };
+      return { success: false, error: `シリーズアラート一覧取得失敗: ${String(error)}` };
     }
   }
   /**
@@ -4288,15 +4294,15 @@ class WatchHistoryDatabase {
           resolve({ success: true });
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `シリーズアラート削除失敗: ${transaction.error}` });
+          reject(new Error(`シリーズアラート削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         const deleteRequest = store.delete(alertId);
         deleteRequest.onerror = () => {
-          reject({ success: false, error: `シリーズアラート削除失敗: ${deleteRequest.error}` });
+          reject(new Error(`シリーズアラート削除失敗: ${WatchHistoryDatabase.toErrorMessage(deleteRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `シリーズアラート削除失敗: ${error}` };
+      return { success: false, error: `シリーズアラート削除失敗: ${String(error)}` };
     }
   }
   // ===== 視聴履歴削除機能 =====
@@ -4315,15 +4321,15 @@ class WatchHistoryDatabase {
           resolve({ success: true });
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `視聴履歴削除失敗: ${transaction.error}` });
+          reject(new Error(`視聴履歴削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         const deleteRequest = store.delete(videoId);
         deleteRequest.onerror = () => {
-          reject({ success: false, error: `視聴履歴削除失敗: ${deleteRequest.error}` });
+          reject(new Error(`視聴履歴削除失敗: ${WatchHistoryDatabase.toErrorMessage(deleteRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `視聴履歴削除失敗: ${error}` };
+      return { success: false, error: `視聴履歴削除失敗: ${String(error)}` };
     }
   }
   /**
@@ -4345,18 +4351,18 @@ class WatchHistoryDatabase {
             resolve({ success: true, data: deletedCount });
           };
           clearRequest.onerror = () => {
-            reject({ success: false, error: `一括削除失敗: ${clearRequest.error}` });
+            reject(new Error(`一括削除失敗: ${WatchHistoryDatabase.toErrorMessage(clearRequest.error)}`));
           };
         };
         countRequest.onerror = () => {
-          reject({ success: false, error: `件数取得失敗: ${countRequest.error}` });
+          reject(new Error(`件数取得失敗: ${WatchHistoryDatabase.toErrorMessage(countRequest.error)}`));
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `一括削除失敗: ${transaction.error}` });
+          reject(new Error(`一括削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `一括削除失敗: ${error}` };
+      return { success: false, error: `一括削除失敗: ${String(error)}` };
     }
   }
   /**
@@ -4380,7 +4386,7 @@ class WatchHistoryDatabase {
           resolve({ success: true, data: deletedVideoIds.length });
         };
         transaction.onerror = () => {
-          reject({ success: false, error: `条件付き削除失敗: ${transaction.error}` });
+          reject(new Error(`条件付き削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         const cursorRequest = store.openCursor();
         cursorRequest.onsuccess = (event) => {
@@ -4392,7 +4398,7 @@ class WatchHistoryDatabase {
               deletedVideoIds.push(entry.videoId);
               const deleteRequest = cursor.delete();
               deleteRequest.onerror = () => {
-                reject({ success: false, error: `エントリ削除失敗 (${entry.videoId}): ${deleteRequest.error}` });
+                reject(new Error(`エントリ削除失敗 (${entry.videoId}): ${WatchHistoryDatabase.toErrorMessage(deleteRequest.error)}`));
                 return;
               };
             }
@@ -4400,11 +4406,11 @@ class WatchHistoryDatabase {
           }
         };
         cursorRequest.onerror = () => {
-          reject({ success: false, error: `カーソル取得失敗: ${cursorRequest.error}` });
+          reject(new Error(`カーソル取得失敗: ${WatchHistoryDatabase.toErrorMessage(cursorRequest.error)}`));
         };
       });
     } catch (error) {
-      return { success: false, error: `条件付き削除失敗: ${error}` };
+      return { success: false, error: `条件付き削除失敗: ${String(error)}` };
     }
   }
   /**
@@ -4514,7 +4520,7 @@ class WatchHistoryDatabase {
       await migrationManager.executeMigrations(this.db, 1, this.config.version);
       return { success: true };
     } catch (error) {
-      return { success: false, error: `マイグレーション実行失敗: ${error}` };
+      return { success: false, error: `マイグレーション実行失敗: ${WatchHistoryDatabase.toErrorMessage(error)}` };
     }
   }
 }
@@ -4550,8 +4556,25 @@ class WatchHistoryApp {
     this.setupEventListeners();
     this.loadConfig();
     this.initializeCommonHeader();
-    this.initialize();
+    void this.initialize();
     applyWatchHistoryStyles();
+  }
+  /**
+   * 非同期ハンドラをイベントリスナー用に安全にラップするのじゃ
+   */
+  guardEvent(handler) {
+    return (ev) => {
+      try {
+        const maybe = handler.call(this, ev);
+        if (maybe instanceof Promise) {
+          void maybe.catch((error) => {
+            logger?.error("[WatchHistory] Event handler error:", error);
+          });
+        }
+      } catch (error) {
+        logger?.error("[WatchHistory] Event handler throw:", error);
+      }
+    };
   }
   /**
    * DOM要素を初期化するのじゃ
@@ -4681,93 +4704,101 @@ class WatchHistoryApp {
    * イベントリスナーを設定するのじゃ
    */
   setupEventListeners() {
-    this.elements["search-input"]?.addEventListener("input", this.handleSearch.bind(this));
-    this.elements["search-clear"]?.addEventListener("click", this.clearSearch.bind(this));
+    this.elements["search-input"]?.addEventListener("input", this.guardEvent((ev) => this.handleSearch(ev)));
+    this.elements["search-clear"]?.addEventListener("click", this.guardEvent(() => this.clearSearch()));
     document.querySelectorAll(".sort-btn").forEach((btn) => {
-      btn.addEventListener("click", this.handleSort.bind(this));
+      btn.addEventListener("click", this.guardEvent((ev) => this.handleSort(ev)));
     });
-    this.elements["filter-completed"]?.addEventListener("change", this.handleFilter.bind(this));
-    this.elements["filter-owner"]?.addEventListener("change", this.handleFilter.bind(this));
-    this.elements["filter-date-start"]?.addEventListener("change", this.handleFilter.bind(this));
-    this.elements["filter-date-end"]?.addEventListener("change", this.handleFilter.bind(this));
-    this.elements["clear-date-range"]?.addEventListener("click", this.clearDateRange.bind(this));
-    this.elements["refresh-btn"]?.addEventListener("click", this.refreshData.bind(this));
-    this.elements["export-btn"]?.addEventListener("click", this.handleExport.bind(this));
-    this.elements["import-btn"]?.addEventListener("click", this.handleImport.bind(this));
-    this.elements["import-file"]?.addEventListener("change", this.handleImportFile.bind(this));
-    this.elements["delete-all-btn"]?.addEventListener("click", this.deleteAllHistoryEntries.bind(this));
-    this.elements["delete-by-condition-btn"]?.addEventListener("click", this.handleConditionalDelete.bind(this));
-    this.elements["history-tab"]?.addEventListener("click", () => this.switchTab("history"));
-    this.elements["stats-tab"]?.addEventListener("click", () => this.switchTab("stats"));
-    this.elements["series-tab"]?.addEventListener("click", () => this.switchTab("series"));
-    this.elements["series-alert-tab"]?.addEventListener("click", () => this.switchTab("series-alert"));
-    this.elements["modal-close"]?.addEventListener("click", this.closeModal.bind(this));
-    this.elements["modal-open-video"]?.addEventListener("click", this.openVideo.bind(this));
-    this.elements["modal-edit-memo"]?.addEventListener("click", this.openMemoEdit.bind(this));
-    this.elements["memo-modal-close"]?.addEventListener("click", this.closeMemoEdit.bind(this));
-    this.elements["memo-save"]?.addEventListener("click", this.saveMemo.bind(this));
-    this.elements["memo-cancel"]?.addEventListener("click", this.closeMemoEdit.bind(this));
-    this.elements["video-detail-modal"]?.addEventListener("click", (e) => {
+    this.elements["filter-completed"]?.addEventListener("change", this.guardEvent(() => this.handleFilter()));
+    this.elements["filter-owner"]?.addEventListener("change", this.guardEvent(() => this.handleFilter()));
+    this.elements["filter-date-start"]?.addEventListener("change", this.guardEvent(() => this.handleFilter()));
+    this.elements["filter-date-end"]?.addEventListener("change", this.guardEvent(() => this.handleFilter()));
+    this.elements["clear-date-range"]?.addEventListener("click", this.guardEvent(() => this.clearDateRange()));
+    this.elements["refresh-btn"]?.addEventListener("click", this.guardEvent(() => this.refreshData()));
+    this.elements["export-btn"]?.addEventListener("click", this.guardEvent(() => this.handleExport()));
+    this.elements["import-btn"]?.addEventListener("click", this.guardEvent(() => this.handleImport()));
+    this.elements["import-file"]?.addEventListener("change", this.guardEvent((ev) => this.handleImportFile(ev)));
+    this.elements["delete-all-btn"]?.addEventListener("click", this.guardEvent(() => this.deleteAllHistoryEntries()));
+    this.elements["delete-by-condition-btn"]?.addEventListener("click", this.guardEvent(() => this.handleConditionalDelete()));
+    this.elements["history-tab"]?.addEventListener("click", this.guardEvent(() => {
+      this.switchTab("history");
+    }));
+    this.elements["stats-tab"]?.addEventListener("click", this.guardEvent(() => {
+      this.switchTab("stats");
+    }));
+    this.elements["series-tab"]?.addEventListener("click", this.guardEvent(() => {
+      this.switchTab("series");
+    }));
+    this.elements["series-alert-tab"]?.addEventListener("click", this.guardEvent(() => {
+      this.switchTab("series-alert");
+    }));
+    this.elements["modal-close"]?.addEventListener("click", this.guardEvent(() => this.closeModal()));
+    this.elements["modal-open-video"]?.addEventListener("click", this.guardEvent(() => this.openVideo()));
+    this.elements["modal-edit-memo"]?.addEventListener("click", this.guardEvent(() => this.openMemoEdit()));
+    this.elements["memo-modal-close"]?.addEventListener("click", this.guardEvent(() => this.closeMemoEdit()));
+    this.elements["memo-save"]?.addEventListener("click", this.guardEvent(() => this.saveMemo()));
+    this.elements["memo-cancel"]?.addEventListener("click", this.guardEvent(() => this.closeMemoEdit()));
+    this.elements["video-detail-modal"]?.addEventListener("click", this.guardEvent((e) => {
       if (e.target === this.elements["video-detail-modal"]) {
         this.closeModal();
       }
-    });
-    this.elements["memo-edit-modal"]?.addEventListener("click", (e) => {
+    }));
+    this.elements["memo-edit-modal"]?.addEventListener("click", this.guardEvent((e) => {
       if (e.target === this.elements["memo-edit-modal"]) {
         this.closeMemoEdit();
       }
-    });
-    this.elements["series-search-input"]?.addEventListener("input", this.handleSeriesSearch.bind(this));
-    this.elements["series-search-clear"]?.addEventListener("click", this.clearSeriesSearch.bind(this));
-    this.elements["series-progress-filter"]?.addEventListener("change", this.handleSeriesFilter.bind(this));
-    this.elements["series-refresh-btn"]?.addEventListener("click", this.refreshSeriesData.bind(this));
-    this.elements["add-series-alert-btn"]?.addEventListener("click", this.openSeriesAlertModal.bind(this));
-    this.elements["add-series-alert-btn-empty"]?.addEventListener("click", this.openSeriesAlertModal.bind(this));
-    this.elements["series-alert-refresh-btn"]?.addEventListener("click", this.refreshSeriesAlertData.bind(this));
-    this.elements["manual-alert-check-btn"]?.addEventListener("click", this.manualCheckAlerts.bind(this));
-    this.elements["notification-permission-btn"]?.addEventListener("click", this.checkNotificationPermission.bind(this));
-    this.elements["series-alert-modal-close"]?.addEventListener("click", this.closeSeriesAlertModal.bind(this));
-    this.elements["series-alert-save"]?.addEventListener("click", this.saveSeriesAlert.bind(this));
-    this.elements["series-alert-cancel"]?.addEventListener("click", this.closeSeriesAlertModal.bind(this));
-    this.elements["series-detail-modal-close"]?.addEventListener("click", this.closeSeriesDetailModal.bind(this));
-    this.elements["series-detail-add-alert"]?.addEventListener("click", this.addAlertFromSeriesDetail.bind(this));
-    this.elements["series-alert-modal"]?.addEventListener("click", (e) => {
+    }));
+    this.elements["series-search-input"]?.addEventListener("input", this.guardEvent((ev) => this.handleSeriesSearch(ev)));
+    this.elements["series-search-clear"]?.addEventListener("click", this.guardEvent(() => this.clearSeriesSearch()));
+    this.elements["series-progress-filter"]?.addEventListener("change", this.guardEvent(() => this.handleSeriesFilter()));
+    this.elements["series-refresh-btn"]?.addEventListener("click", this.guardEvent(() => this.refreshSeriesData()));
+    this.elements["add-series-alert-btn"]?.addEventListener("click", this.guardEvent(() => this.openSeriesAlertModal()));
+    this.elements["add-series-alert-btn-empty"]?.addEventListener("click", this.guardEvent(() => this.openSeriesAlertModal()));
+    this.elements["series-alert-refresh-btn"]?.addEventListener("click", this.guardEvent(() => this.refreshSeriesAlertData()));
+    this.elements["manual-alert-check-btn"]?.addEventListener("click", this.guardEvent(() => this.manualCheckAlerts()));
+    this.elements["notification-permission-btn"]?.addEventListener("click", this.guardEvent(() => this.checkNotificationPermission()));
+    this.elements["series-alert-modal-close"]?.addEventListener("click", this.guardEvent(() => this.closeSeriesAlertModal()));
+    this.elements["series-alert-save"]?.addEventListener("click", this.guardEvent(() => this.saveSeriesAlert()));
+    this.elements["series-alert-cancel"]?.addEventListener("click", this.guardEvent(() => this.closeSeriesAlertModal()));
+    this.elements["series-detail-modal-close"]?.addEventListener("click", this.guardEvent(() => this.closeSeriesDetailModal()));
+    this.elements["series-detail-add-alert"]?.addEventListener("click", this.guardEvent(() => this.addAlertFromSeriesDetail()));
+    this.elements["series-alert-modal"]?.addEventListener("click", this.guardEvent((e) => {
       if (e.target === this.elements["series-alert-modal"]) {
         this.closeSeriesAlertModal();
       }
-    });
-    this.elements["series-detail-modal"]?.addEventListener("click", (e) => {
+    }));
+    this.elements["series-detail-modal"]?.addEventListener("click", this.guardEvent((e) => {
       if (e.target === this.elements["series-detail-modal"]) {
         this.closeSeriesDetailModal();
       }
-    });
-    this.elements["database-management-btn"]?.addEventListener("click", this.openDatabaseManagementModal.bind(this));
-    this.elements["db-management-modal-close"]?.addEventListener("click", this.closeDatabaseManagementModal.bind(this));
-    this.elements["request-persistence-btn"]?.addEventListener("click", this.requestPersistence.bind(this));
-    this.elements["refresh-persistence-btn"]?.addEventListener("click", this.refreshPersistenceStatus.bind(this));
-    this.elements["run-migration-btn"]?.addEventListener("click", this.runMigration.bind(this));
-    this.elements["check-migration-btn"]?.addEventListener("click", this.checkMigrationStatus.bind(this));
-    this.elements["create-backup-btn"]?.addEventListener("click", this.createBackup.bind(this));
-    this.elements["refresh-backups-btn"]?.addEventListener("click", this.refreshBackupList.bind(this));
-    this.elements["auto-migration-checkbox"]?.addEventListener("change", this.updateDatabaseConfig.bind(this));
-    this.elements["auto-persist-checkbox"]?.addEventListener("change", this.updateDatabaseConfig.bind(this));
-    this.elements["auto-backup-checkbox"]?.addEventListener("change", this.updateDatabaseConfig.bind(this));
-    this.elements["backup-before-migration-checkbox"]?.addEventListener("change", this.updateDatabaseConfig.bind(this));
+    }));
+    this.elements["database-management-btn"]?.addEventListener("click", this.guardEvent(() => this.openDatabaseManagementModal()));
+    this.elements["db-management-modal-close"]?.addEventListener("click", this.guardEvent(() => this.closeDatabaseManagementModal()));
+    this.elements["request-persistence-btn"]?.addEventListener("click", this.guardEvent(() => this.requestPersistence()));
+    this.elements["refresh-persistence-btn"]?.addEventListener("click", this.guardEvent(() => this.refreshPersistenceStatus()));
+    this.elements["run-migration-btn"]?.addEventListener("click", this.guardEvent(() => this.runMigration()));
+    this.elements["check-migration-btn"]?.addEventListener("click", this.guardEvent(() => this.checkMigrationStatus()));
+    this.elements["create-backup-btn"]?.addEventListener("click", this.guardEvent(() => this.createBackup()));
+    this.elements["refresh-backups-btn"]?.addEventListener("click", this.guardEvent(() => this.refreshBackupList()));
+    this.elements["auto-migration-checkbox"]?.addEventListener("change", this.guardEvent(() => this.updateDatabaseConfig()));
+    this.elements["auto-persist-checkbox"]?.addEventListener("change", this.guardEvent(() => this.updateDatabaseConfig()));
+    this.elements["auto-backup-checkbox"]?.addEventListener("change", this.guardEvent(() => this.updateDatabaseConfig()));
+    this.elements["backup-before-migration-checkbox"]?.addEventListener("change", this.guardEvent(() => this.updateDatabaseConfig()));
     this.elements["database-management-modal"]?.addEventListener("click", (e) => {
       if (e.target === this.elements["database-management-modal"]) {
         this.closeDatabaseManagementModal();
       }
     });
-    this.elements["notification-permission-modal-close"]?.addEventListener("click", this.closeNotificationPermissionModal.bind(this));
-    this.elements["test-notification-after-setup"]?.addEventListener("click", this.testNotificationAfterSetup.bind(this));
+    this.elements["notification-permission-modal-close"]?.addEventListener("click", this.guardEvent(() => this.closeNotificationPermissionModal()));
+    this.elements["test-notification-after-setup"]?.addEventListener("click", this.guardEvent(() => this.testNotificationAfterSetup()));
     this.elements["notification-permission-modal"]?.addEventListener("click", (e) => {
       if (e.target === this.elements["notification-permission-modal"]) {
         this.closeNotificationPermissionModal();
       }
     });
-    document.addEventListener("migrationProgress", (e) => {
+    document.addEventListener("migrationProgress", this.guardEvent((e) => {
       this.handleMigrationProgress(e);
-    });
+    }));
   }
   /**
    * 設定を読み込むのじゃ
@@ -4776,7 +4807,10 @@ class WatchHistoryApp {
     const savedConfig = sessionStorage.getItem("watchHistoryConfig");
     if (savedConfig) {
       try {
-        this.config = { ...this.config, ...JSON.parse(savedConfig) };
+        const parsed = JSON.parse(savedConfig);
+        if (parsed && typeof parsed === "object") {
+          this.config = { ...this.config, ...parsed };
+        }
         const txt = (this.config.filter.searchText ?? "").trim().toLowerCase();
         if (!txt || txt === "null" || txt === "undefined") {
           delete this.config.filter.searchText;
@@ -4971,7 +5005,7 @@ class WatchHistoryApp {
       this.showToast("履歴描画でエラー発生なのじゃ", "error");
     }
     historyList.querySelectorAll(".history-item").forEach((item, index) => {
-      item.addEventListener("click", (e) => {
+      item.addEventListener("click", this.guardEvent((e) => {
         if (e.target && e.target.closest(".watch-count-item")) {
           return;
         }
@@ -4979,18 +5013,18 @@ class WatchHistoryApp {
           return;
         }
         this.showVideoDetail(this.filteredEntries[index]);
-      });
+      }));
       const deleteBtn = item.querySelector(".history-delete-btn");
-      deleteBtn?.addEventListener("click", (e) => {
+      deleteBtn?.addEventListener("click", this.guardEvent((e) => {
         e.stopPropagation();
-        this.deleteHistoryEntry(this.filteredEntries[index]);
-      });
+        void this.deleteHistoryEntry(this.filteredEntries[index]);
+      }));
     });
     historyList.querySelectorAll(".watch-count-item").forEach((item) => {
-      item.addEventListener("click", (e) => {
+      item.addEventListener("click", this.guardEvent((e) => {
         e.stopPropagation();
         this.toggleWatchLogsAccordion(item);
-      });
+      }));
     });
   }
   /**
@@ -5615,13 +5649,15 @@ class WatchHistoryApp {
     });
     this.elements[`${tabName}-content`]?.classList.add("active");
     if (tabName === "stats") {
-      setTimeout(() => this.updateCharts(), 100);
+      setTimeout(() => {
+        this.updateCharts();
+      }, 100);
     }
     if (tabName === "series") {
-      this.initializeSeriesTab();
+      void this.initializeSeriesTab();
     }
     if (tabName === "series-alert") {
-      this.initializeSeriesAlertTab();
+      void this.initializeSeriesAlertTab();
     }
   }
   /**
@@ -6026,20 +6062,20 @@ class WatchHistoryApp {
     );
     seriesList.innerHTML = items.join("");
     seriesList.querySelectorAll(".series-item").forEach((item, index) => {
-      item.addEventListener("click", (e) => {
+      item.addEventListener("click", this.guardEvent((e) => {
         if (!e.target.closest(".series-nav-btn")) {
-          this.showSeriesDetail(this.filteredSeriesStats[index]);
+          void this.showSeriesDetail(this.filteredSeriesStats[index]);
         }
-      });
+      }));
     });
     seriesList.querySelectorAll(".series-nav-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", this.guardEvent((e) => {
         e.stopPropagation();
         const videoId = e.currentTarget.getAttribute("data-video-id");
         if (videoId) {
-          this.openVideoFromSeries(videoId);
+          void this.openVideoFromSeries(videoId);
         }
-      });
+      }));
     });
   }
   /**
@@ -6058,15 +6094,15 @@ class WatchHistoryApp {
     alertList.innerHTML = items.join("");
     alertList.querySelectorAll(".series-alert-item").forEach((item, index) => {
       const toggleBtn = item.querySelector(".alert-toggle");
-      toggleBtn?.addEventListener("click", (e) => {
+      toggleBtn?.addEventListener("click", this.guardEvent((e) => {
         e.stopPropagation();
-        this.toggleSeriesAlert(this.seriesAlerts[index]);
-      });
+        void this.toggleSeriesAlert(this.seriesAlerts[index]);
+      }));
       const deleteBtn = item.querySelector(".alert-delete");
-      deleteBtn?.addEventListener("click", (e) => {
+      deleteBtn?.addEventListener("click", this.guardEvent((e) => {
         e.stopPropagation();
-        this.deleteSeriesAlert(this.seriesAlerts[index]);
-      });
+        void this.deleteSeriesAlert(this.seriesAlerts[index]);
+      }));
     });
   }
   /**
@@ -6568,7 +6604,7 @@ class WatchHistoryApp {
     }
     const maxWatchCount = parseInt(watchCountInput.value) || 0;
     const maxProgressRate = parseInt(progressRateInput.value) || 0;
-    this.deleteHistoryEntriesByCondition(maxWatchCount, maxProgressRate);
+    void this.deleteHistoryEntriesByCondition(maxWatchCount, maxProgressRate);
   }
   /**
    * シリーズ選択肢を更新するのじゃ
@@ -6592,9 +6628,9 @@ class WatchHistoryApp {
       clearInterval(this.alertCheckInterval);
     }
     this.alertCheckInterval = setInterval(() => {
-      this.checkSeriesAlerts();
+      void this.checkSeriesAlerts();
     }, 1 * 60 * 1e3);
-    this.checkSeriesAlerts();
+    void this.checkSeriesAlerts();
   }
   /**
    * アラートUIの定期更新を開始するのじゃ
@@ -6705,6 +6741,8 @@ class WatchHistoryApp {
               requireInteraction: true
             });
           }
+        }).catch((error) => {
+          logger?.error("Notification permission request failed:", error);
         });
       }
     } else {
@@ -6738,7 +6776,7 @@ class WatchHistoryApp {
           notificationCount++;
         }
       }
-      await this.updateSeriesAlertUI();
+      this.updateSeriesAlertUI();
       const notificationStatus = "Notification" in window ? Notification.permission === "granted" ? "ブラウザ通知有効" : "ブラウザ通知無効" : "ブラウザ通知未対応";
       this.showToast(
         `${checkedCount}件のアラートをチェックしました。${notificationCount}件の新しい動画が見つかりました。（${notificationStatus}）`,
@@ -7111,6 +7149,7 @@ class WatchHistoryApp {
    * バックアップリストを更新するのじゃ
    */
   async refreshBackupList() {
+    await Promise.resolve();
     try {
       const backups = watchHistoryDB.getAvailableBackups();
       this.updateBackupListUI(backups);
@@ -7139,6 +7178,7 @@ class WatchHistoryApp {
    * データベース設定を更新するのじゃ
    */
   async refreshDatabaseConfig() {
+    await Promise.resolve();
     try {
       this.databaseConfig = watchHistoryDB.getMigrationConfig();
       this.updateDatabaseConfigUI();
@@ -7256,20 +7296,20 @@ class WatchHistoryApp {
     }).join("");
     container.innerHTML = backupItems;
     container.querySelectorAll(".backup-restore-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
+      btn.addEventListener("click", this.guardEvent(async (e) => {
         const backupKey = e.target.getAttribute("data-backup-key");
         if (backupKey) {
           await this.restoreBackup(backupKey);
         }
-      });
+      }));
     });
     container.querySelectorAll(".backup-delete-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", this.guardEvent((e) => {
         const backupKey = e.target.getAttribute("data-backup-key");
         if (backupKey) {
-          this.deleteBackup(backupKey);
+          void this.deleteBackup(backupKey);
         }
-      });
+      }));
     });
   }
   /**
@@ -7302,7 +7342,7 @@ class WatchHistoryApp {
     try {
       localStorage.removeItem(backupKey);
       this.showToast("バックアップを削除しました", "success");
-      this.refreshBackupList();
+      void this.refreshBackupList();
     } catch (error) {
       logger.error("バックアップ削除エラー:", error);
       this.showToast("バックアップの削除に失敗しました", "error");
