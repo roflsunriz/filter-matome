@@ -26,8 +26,10 @@ export class UrlManager {
         throw new Error(`Cache search failed: ${response.status}`);
       }
 
-      const data = await response.json();
-      const availablePaths = data.paths || [];
+      const data: unknown = await response.json();
+      const availablePaths = (data && typeof data === 'object' && 'paths' in (data as Record<string, unknown>)
+        ? (data as { paths?: unknown }).paths
+        : []) as unknown[];
 
       // 基本的なURLセット
       const urls: VideoUrlInfo = {

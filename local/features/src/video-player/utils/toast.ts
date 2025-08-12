@@ -84,7 +84,7 @@ export class ToastManager {
         window.toastr.error(message, title, { timeOut: timeout });
         break;
       default:
-        window.logger.info(`[Toast-${mode}] ${title} ${message}`);
+        window.logger.info(`[Toast-${String(mode)}] ${title} ${message}`);
     }
   }
 } 

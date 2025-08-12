@@ -118,9 +118,9 @@ export const getSettings = async <T>(key: string, defaultValue: T): Promise<T> =
         const request = store.get(key);
 
         request.onsuccess = () => {
-          const result = request.result;
-          if (result) {
-            resolve(result.value);
+          const result = request.result as { value?: unknown } | undefined;
+          if (result && 'value' in result) {
+            resolve(result.value as T);
           } else {
             resolve(defaultValue);
           }
@@ -165,8 +165,10 @@ export const getAllSettings = async (): Promise<Record<string, ModeValue>> => {
 
         request.onsuccess = () => {
           const allSettings: Record<string, ModeValue> = {};
-          request.result.forEach(item => {
-            allSettings[item.id] = item.value;
+          (request.result as Array<{ id?: string; value?: ModeValue }>).forEach(item => {
+            if (item && typeof item.id === 'string') {
+              allSettings[item.id] = item.value as ModeValue;
+            }
           });
           resolve(allSettings);
         };

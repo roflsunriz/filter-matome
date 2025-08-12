@@ -22,6 +22,13 @@ export class DatabaseManager {
   private migrationManager: MigrationManager;
   private initializationPromise: Promise<void> | null = null;
   private cleanupTimer: number | null = null;
+  
+  private toMessage(value: unknown): string {
+    if (value && typeof (value as { message?: unknown }).message === 'string') {
+      return (value as { message: string }).message;
+    }
+    return String(value);
+  }
 
   private constructor() {
     this.migrationManager = new MigrationManager();
@@ -71,8 +78,8 @@ export class DatabaseManager {
       const request = indexedDB.open(DB_CONFIG.NAME, DB_CONFIG.CURRENT_VERSION);
 
       request.onerror = () => {
-        window.logger?.error('データベースのオープンに失敗:', request.error);
-        reject(new Error('データベースのオープンに失敗したのじゃ'));
+        window.logger?.error('データベースのオープンに失敗:', this.toMessage(request.error));
+        reject(new Error(this.toMessage(request.error)));
       };
 
       request.onsuccess = () => {
@@ -137,7 +144,7 @@ export class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.put(settingData);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -153,8 +160,8 @@ export class DatabaseManager {
     return new Promise((resolve) => {
       const request = store.get(key);
       request.onsuccess = () => {
-        const result = request.result;
-        resolve(result ? result.value : defaultValue);
+        const result = request.result as { value?: T } | null | undefined;
+        resolve(result && typeof result === 'object' && 'value' in result && result.value !== undefined ? (result.value as T) : defaultValue);
       };
       request.onerror = () => {
         window.logger?.warn(`設定取得失敗: ${key}`);
@@ -175,7 +182,7 @@ export class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.put(videoCache);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -190,8 +197,11 @@ export class DatabaseManager {
 
     return new Promise((resolve, reject) => {
       const request = store.get(videoId);
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const resultUnknown = request.result as unknown;
+        resolve(resultUnknown ? (resultUnknown as VideoCache) : null);
+      };
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -207,7 +217,7 @@ export class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.add(viewHistory);
       request.onsuccess = () => resolve(request.result as number);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -229,14 +239,14 @@ export class DatabaseManager {
       request.onsuccess = () => {
         const cursor = request.result;
         if (cursor && count < limit) {
-          results.push(cursor.value);
+          results.push(cursor.value as ViewHistory);
           count++;
           cursor.continue();
         } else {
           resolve(results);
         }
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -252,7 +262,7 @@ export class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.put(userStats);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -268,8 +278,8 @@ export class DatabaseManager {
 
     return new Promise((resolve, reject) => {
       const request = store.get(statId);
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve((request.result as UserStats) || null);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -285,7 +295,7 @@ export class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.add(commentHistory);
       request.onsuccess = () => resolve(request.result as number);
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -301,7 +311,7 @@ export class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = store.put(systemInfo);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -316,8 +326,11 @@ export class DatabaseManager {
 
     return new Promise((resolve, reject) => {
       const request = store.get(key);
-      request.onsuccess = () => resolve(request.result || null);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const resultUnknown = request.result as unknown;
+        resolve(resultUnknown ? (resultUnknown as SystemInfo) : null);
+      };
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -334,12 +347,14 @@ export class DatabaseManager {
       const request = store.getAll();
       request.onsuccess = () => {
         const results: Record<string, ModeValue> = {};
-        request.result.forEach(item => {
-          results[item.id] = item.value;
+        (request.result as Array<{ id?: string; value?: ModeValue }>).forEach(item => {
+          if (item && typeof item.id === 'string') {
+            results[item.id] = item.value as ModeValue;
+          }
         });
         resolve(results);
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -364,7 +379,7 @@ export class DatabaseManager {
       const count = await new Promise<number>((resolve, reject) => {
         const request = store.count();
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => reject(new Error(this.toMessage(request.error)));
       });
       
       storeStats[storeName] = count;
@@ -429,7 +444,7 @@ export class DatabaseManager {
           resolve();
         }
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -461,7 +476,7 @@ export class DatabaseManager {
           resolve();
         }
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -476,11 +491,11 @@ export class DatabaseManager {
 
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        const caches = request.result;
+        const caches = request.result as Array<{ videoId?: IDBValidKey; expiresAt?: string | number | Date }>;
         let deletedCount = 0;
 
         caches.forEach(cache => {
-          if (cache.expiresAt && new Date(cache.expiresAt) < now) {
+          if (cache && cache.expiresAt && new Date(cache.expiresAt) < now && cache.videoId !== undefined) {
             store.delete(cache.videoId);
             deletedCount++;
           }
@@ -489,7 +504,7 @@ export class DatabaseManager {
         window.logger?.debug(`期限切れキャッシュ ${deletedCount} 件を削除`);
         resolve();
       };
-      request.onerror = () => reject(request.error);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -544,7 +559,7 @@ export class DatabaseManager {
         window.logger?.info('データベースをリセットしたのじゃ');
         resolve();
       };
-      deleteRequest.onerror = () => reject(deleteRequest.error);
+      deleteRequest.onerror = () => reject(new Error(this.toMessage(deleteRequest.error)));
     });
   }
 
@@ -572,8 +587,8 @@ export class DatabaseManager {
       const request = store.getAll();
       
       backup.stores[storeName] = await new Promise((resolve, reject) => {
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result as unknown[]);
+        request.onerror = () => reject(new Error(this.toMessage(request.error)));
       });
     }
 

@@ -36,6 +36,7 @@ export class CommentSystem {
    * コメントシステムの初期化
    */
   async initialize(videoElement: HTMLVideoElement): Promise<void> {
+    await Promise.resolve();
     try {
       window.logger.info("コメントシステムの初期化を開始するのじゃ！");
       
@@ -140,11 +141,11 @@ export class CommentSystem {
   // イベントハンドラーをプロパティとして保持
   private _handleCommentFilter2Update = (event: Event): void => {
     const customEvent = event as CustomEvent;
-    const detail = customEvent.detail;
+    const detail: unknown = customEvent.detail;
     
-    if (detail && detail.filteredData) {
+    if (detail && typeof detail === 'object' && 'filteredData' in (detail as Record<string, unknown>)) {
       window.logger.debug('CommentFilter2からフィルタリング済みデータを受け取ったのじゃ！');
-      this.applyFilteredComments(detail.filteredData);
+      this.applyFilteredComments((detail as { filteredData: CommentApiResponse }).filteredData);
     }
   };
 

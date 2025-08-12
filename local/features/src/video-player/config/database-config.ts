@@ -203,7 +203,13 @@ async function backupExistingData(db: IDBDatabase): Promise<Record<string, unkno
         backup.playerSettings = request.result;
         resolve(undefined);
       };
-      request.onerror = reject;
+      request.onerror = () => {
+        const e = request.error as unknown;
+        const msg = e && typeof (e as { message?: string }).message === 'string'
+          ? (e as { message: string }).message
+          : (typeof e === 'string' ? e : JSON.stringify(e));
+        reject(new Error(msg));
+      };
     });
   }
   
@@ -234,6 +240,7 @@ async function migratePlayerSettings(
   transaction: IDBTransaction, 
   backupData: Record<string, unknown>
 ): Promise<void> {
+  await Promise.resolve();
   if (!backupData.playerSettings) return;
   
   const store = transaction.objectStore('playerSettings');
@@ -260,6 +267,7 @@ async function recordMigrationInfo(
   db: IDBDatabase, 
   transaction: IDBTransaction
 ): Promise<void> {
+  await Promise.resolve();
   const systemStore = transaction.objectStore('systemInfo');
   
   const migrationInfo: SystemInfo = {

@@ -25,13 +25,21 @@ export class CommentFetcher {
       }
 
       // APIデータをパース
-      const apiData = JSON.parse(decodeURIComponent(metaElement.getAttribute('content') || '')).data.response;
+      type ServerResponseMeta = { data?: { response?: { comment?: { nvComment?: { threadKey?: string; params?: string; server?: string } } } } };
+      const parsed: unknown = JSON.parse(decodeURIComponent(metaElement.getAttribute('content') || ''));
+      if (!parsed || typeof parsed !== 'object' || !('data' in parsed)) {
+        throw new Error('server-responseメタの内容が不正なのじゃ');
+      }
+      const apiDataObj = (parsed as ServerResponseMeta).data?.response;
+      if (!apiDataObj || !apiDataObj.comment || !apiDataObj.comment.nvComment) {
+        throw new Error('コメントAPIデータが不正なのじゃ');
+      }
       window.logger.info("APIデータを取得したのじゃ！");
 
       return {
-        threadKey: apiData.comment.nvComment.threadKey,
-        params: apiData.comment.nvComment.params,
-        server: apiData.comment.nvComment.server,
+        threadKey: String(apiDataObj.comment.nvComment.threadKey || ''),
+        params: String(apiDataObj.comment.nvComment.params || ''),
+        server: String(apiDataObj.comment.nvComment.server || ''),
       };
     } catch (error) {
       window.logger.error("APIデータの取得に失敗したのじゃ...", {
@@ -117,7 +125,8 @@ export class CommentFetcher {
         throw new Error("サーバーからの応答が空なのじゃ...");
       }
 
-      return JSON.parse(response.responseText);
+      const parsedResp: unknown = JSON.parse(response.responseText);
+      return parsedResp as CommentApiResponse;
     } catch (error) {
       window.logger.error("コメント取得エラーなのじゃ！", error);
       throw error;

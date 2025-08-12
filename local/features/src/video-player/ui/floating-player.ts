@@ -120,8 +120,8 @@ export class FloatingDeletedPlayer {
     // アイコンの初期化
     this.initializeIcons();
 
-    // 動画を読み込み
-    this.loadVideo(videoIdOrUrl);
+    // 動画を読み込み（未処理Promise防止）
+    void this.loadVideo(videoIdOrUrl);
   }
 
   /**
@@ -346,7 +346,7 @@ export class FloatingDeletedPlayer {
              } else {
          // 動画IDの場合はキャッシュURLを生成
          this.updateStatus('キャッシュ情報を取得中...');
-         const cacheResult = await this.getCacheUrl(videoIdOrUrl);
+      const cacheResult = await this.getCacheUrl(videoIdOrUrl);
          finalUrl = cacheResult.url;
          isHLS = cacheResult.isHLS;
          
@@ -383,19 +383,20 @@ export class FloatingDeletedPlayer {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: CacheInfoResponse = await response.json();
+      const jsonUnknown: unknown = await response.json();
+      const data = jsonUnknown as CacheInfoResponse;
 
-      if (!data || !data[videoId]) {
+      if (!data || !(videoId in data)) {
         throw new Error("動画情報が見つかりません");
       }
 
-      const videoInfo = data[videoId];
+      const videoInfo = data[videoId] as { preferred?: string; caches?: Record<string, { title?: string }> };
       if (!videoInfo.preferred) {
         throw new Error("この動画は現在利用できません");
       }
 
       const cacheId: string = videoInfo.preferred;
-      const title: string = videoInfo.caches && videoInfo.caches[cacheId] ? videoInfo.caches[cacheId].title : "";
+      const title: string = videoInfo.caches && videoInfo.caches[cacheId] ? String(videoInfo.caches[cacheId].title ?? '') : "";
       const isHLS = cacheId.endsWith(".hls");
 
       // URLを構築
@@ -414,6 +415,7 @@ export class FloatingDeletedPlayer {
    * HLS動画の読み込み
    */
   private async loadHLSVideo(url: string): Promise<void> {
+    await Promise.resolve();
     if (!this.videoElement) return;
 
     this.updateStatus('HLS動画を読み込み中...');
@@ -456,6 +458,7 @@ export class FloatingDeletedPlayer {
    * 通常動画の読み込み
    */
   private async loadRegularVideo(url: string): Promise<void> {
+    await Promise.resolve();
     if (!this.videoElement) return;
 
     this.updateStatus('動画を読み込み中...');

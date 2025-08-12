@@ -39,7 +39,7 @@ export class PlayerControlsShadow extends HTMLElement {
     this.shadow.innerHTML = this.getTemplate();
     
     // 非同期で初期化（DOMReadyを待つ）
-    this.initializeComponent();
+    void this.initializeComponent();
   }
 
   /**
@@ -99,7 +99,7 @@ export class PlayerControlsShadow extends HTMLElement {
     this.setupVideoEvents();
     
     // 設定の初期化
-    this.initializeSettings();
+    void this.initializeSettings();
     
     window.logger.info('ビデオ要素が設定されたのじゃ！');
   }
@@ -1022,7 +1022,7 @@ export class PlayerControlsShadow extends HTMLElement {
     const applyBtn = this.shadow.querySelector('#apply-comment-settings') as HTMLButtonElement;
     if (applyBtn) {
       applyBtn.addEventListener('click', () => {
-        this.applyCommentSettings();
+        void this.applyCommentSettings();
       });
     }
   }
@@ -1412,7 +1412,7 @@ export class PlayerControlsShadow extends HTMLElement {
           this.tempNgWords.splice(index, 1);
           this.updateNGWordList(true);
         } else {
-          this.removeNGWord(index);
+          void this.removeNGWord(index);
         }
       });
 
@@ -1442,7 +1442,7 @@ export class PlayerControlsShadow extends HTMLElement {
           this.tempNgRegex.splice(index, 1);
           this.updateNGRegexList(true);
         } else {
-          this.removeNGRegex(index);
+          void this.removeNGRegex(index);
         }
       });
 

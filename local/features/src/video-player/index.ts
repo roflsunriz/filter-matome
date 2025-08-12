@@ -95,10 +95,10 @@ export class NicoCachePlayer {
           addEventListener: () => {}
         },
         cacheUtil: {
-          formatCacheInfo: async () => false
+          formatCacheInfo: async () => { await Promise.resolve(); return false; }
         },
         cc: {
-          MainVideoPlayerWidthHeightReturner: async () => 0
+          MainVideoPlayerWidthHeightReturner: async () => { await Promise.resolve(); return 0; }
         },
         handleError: () => {}
       };
@@ -175,7 +175,7 @@ export class NicoCachePlayer {
     window.addEventListener('load', () => {
       if (window.NicoCache_nl && window.NicoCache_nl.watch) {
         window.NicoCache_nl.watch.addEventListener('initialized', () => {
-          this.handleVideoChange();
+          void this.handleVideoChange();
           this.setupUrlChangeListener();
         });
       }
@@ -189,17 +189,17 @@ export class NicoCachePlayer {
    * History APIをオーバーライドして動画変更を検知
    */
   private overrideHistoryMethods(): void {
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
+    const originalPushState = history.pushState.bind(history);
+    const originalReplaceState = history.replaceState.bind(history);
 
     history.pushState = (...args) => {
-      originalPushState.apply(history, args);
-      this.handleVideoChange();
+      originalPushState(...args);
+      void this.handleVideoChange();
     };
 
     history.replaceState = (...args) => {
-      originalReplaceState.apply(history, args);
-      this.handleVideoChange();
+      originalReplaceState(...args);
+      void this.handleVideoChange();
     };
   }
 
@@ -220,7 +220,7 @@ export class NicoCachePlayer {
       if (currentUrl !== lastUrl && WATCH_CONFIG.URL_PATTERN.test(currentUrl)) {
         lastUrl = currentUrl;
         // 動画情報の読み込みを待つ
-        setTimeout(() => this.handleVideoChange(), WATCH_CONFIG.CHECK_INTERVAL_MS);
+        setTimeout(() => { void this.handleVideoChange(); }, WATCH_CONFIG.CHECK_INTERVAL_MS);
       }
     });
 
@@ -440,9 +440,9 @@ export class NicoCachePlayer {
               cleanup();
               resolve();
             };
-            const onError = (e: Event) => {
+            const onError = (_e: Event) => {
               cleanup();
-              reject(e);
+              reject(new Error('video error'));
             };
 
             const cleanup = () => {
@@ -652,6 +652,7 @@ export class NicoCachePlayer {
    * HLS動画の読み込み
    */
   private async loadHLSVideo(url: string): Promise<void> {
+    await Promise.resolve();
     if (!this.videoElement) return;
 
     window.logger.info('HLS動画の読み込みを開始するのじゃ:', url);

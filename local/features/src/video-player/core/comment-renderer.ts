@@ -283,8 +283,8 @@ export class CommentRenderer {
         this.maxLanes = 10; // デフォルト値を設定
       }
 
-      // レーン状態配列を初期化
-      this.laneStates = new Array(this.maxLanes).fill(null);
+      // レーン状態配列を初期化（型安全）
+      this.laneStates = Array.from({ length: this.maxLanes }, () => null as Comment | null);
 
       window.logger.info("キャンバスとレーンの初期化完了なのじゃ！", {
         width: this.canvas.width,
@@ -301,7 +301,7 @@ export class CommentRenderer {
       window.logger.error("キャンバスのリサイズに失敗したのじゃ:", error);
       // エラー時は最小構成で初期化
       this.maxLanes = 10;
-      this.laneStates = new Array(this.maxLanes).fill(null);
+      this.laneStates = Array.from({ length: this.maxLanes }, () => null as Comment | null);
     }
   }
 
@@ -346,7 +346,7 @@ export class CommentRenderer {
   private cleanup(currentTime: number, force = false): void {
     // コメントの削除条件を位置ベースに変更
     // 仮想拡張キャンバスの左端を完全に通過したら削除するのじゃ
-    this.activeComments.forEach(comment => {
+    this.activeComments.forEach((comment: Comment) => {
       if (force) {
         this.activeComments.delete(comment);
         return;
@@ -372,8 +372,8 @@ export class CommentRenderer {
     });
 
     // 不要なグループの削除
-    this.commentGroups = this.commentGroups.filter(group => 
-      group.some(comment => this.activeComments.has(comment))
+    this.commentGroups = this.commentGroups.filter((group: Comment[]) => 
+      group.some((comment: Comment) => this.activeComments.has(comment))
     );
   }
 
@@ -763,7 +763,7 @@ export class CommentRenderer {
     this.comments = [];
     this.activeComments.clear();
     this.commentGroups = [];
-    this.laneStates = new Array(this.maxLanes).fill(null);
+    this.laneStates = Array.from({ length: this.maxLanes }, () => null as Comment | null);
     this.clearCanvas();
     window.logger.info("コメントをクリアしたのじゃ！");
   }

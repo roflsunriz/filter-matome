@@ -88,7 +88,7 @@ export class CacheManager {
       const usedMemory = memoryInfo.usedJSHeapSize;
 
       // キャッシュサイズまたは再生時間のしきい値を超えた場合
-      if (usedMemory > CACHE_MANAGEMENT.CACHE_SIZE_THRESHOLD_BYTES || 
+          if (usedMemory > CACHE_MANAGEMENT.CACHE_SIZE_THRESHOLD_BYTES || 
           playDuration > CACHE_MANAGEMENT.TIME_THRESHOLD_MS / 1000) {
         
         window.logger.info('キャッシュクリーンアップが必要なのじゃ！', {
@@ -96,7 +96,7 @@ export class CacheManager {
           usedMemory: `${(usedMemory / (1024 * 1024)).toFixed(2)}MB`
         });
         
-        this.forceCleanup();
+        void this.forceCleanup();
       }
     } else {
       // メモリ情報が取得できない場合は時間だけで判断
@@ -105,7 +105,7 @@ export class CacheManager {
           playDuration: `${Math.floor(playDuration / 60)}分${Math.floor(playDuration % 60)}秒`
         });
         
-        this.forceCleanup();
+        void this.forceCleanup();
       }
     }
   }
@@ -221,7 +221,7 @@ export class CacheManager {
     
     // メディアソースを復元
     this.video.src = currentSrc;
-    await this.video.load();
+    this.video.load();
 
     // 位置と再生状態を復元
     this.restorePlaybackPosition(wasPlaying, currentPosition);
@@ -238,13 +238,10 @@ export class CacheManager {
     // 再生状態を復元
     if (wasPlaying) {
       // 少し待ってから再生を試行
-      setTimeout(async () => {
-        try {
-          await this.video.play();
-        } catch (error) {
+      setTimeout(() => {
+        void this.video.play().catch((error) => {
           window.logger.error('再生の再開に失敗したのじゃ:', error);
-          // 自動再生失敗時はユーザーインタラクションを待つ
-        }
+        });
       }, 100);
     }
   }

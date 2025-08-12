@@ -102,12 +102,18 @@ export class MigrationManager {
       // トランザクション完了を待機
       await new Promise<void>((resolve, reject) => {
         transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
+        transaction.onerror = () => {
+          const err = transaction.error as unknown;
+          const msg = err && typeof (err as { message?: string }).message === 'string'
+            ? (err as { message: string }).message
+            : (typeof err === 'string' ? err : JSON.stringify(err));
+          reject(new Error(msg));
+        };
       });
 
       window.logger?.info(`マイグレーション完了: v${version}`);
     } catch (error) {
-      throw new Error(`バージョン ${version} のマイグレーションに失敗: ${error}`);
+      throw new Error(`バージョン ${version} のマイグレーションに失敗: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -138,7 +144,13 @@ export class MigrationManager {
           this.backupData.stores[storeName] = request.result;
           resolve();
         };
-        request.onerror = () => reject(request.error);
+         request.onerror = () => {
+           const e = request.error as unknown;
+           const msg = e && typeof (e as { message?: string }).message === 'string'
+             ? (e as { message: string }).message
+             : (typeof e === 'string' ? e : JSON.stringify(e));
+           reject(new Error(msg));
+         };
       });
     }
 
@@ -180,7 +192,13 @@ export class MigrationManager {
           await new Promise<void>((resolve, reject) => {
             const clearRequest = store.clear();
             clearRequest.onsuccess = () => resolve();
-            clearRequest.onerror = () => reject(clearRequest.error);
+            clearRequest.onerror = () => {
+              const e = clearRequest.error as unknown;
+              const msg = e && typeof (e as { message?: string }).message === 'string'
+                ? (e as { message: string }).message
+                : (typeof e === 'string' ? e : JSON.stringify(e));
+              reject(new Error(msg));
+            };
           });
 
           // バックアップデータを復旧
@@ -189,7 +207,13 @@ export class MigrationManager {
             await new Promise<void>((resolve, reject) => {
               const putRequest = store.put(item);
               putRequest.onsuccess = () => resolve();
-              putRequest.onerror = () => reject(putRequest.error);
+              putRequest.onerror = () => {
+                const e = putRequest.error as unknown;
+                const msg = e && typeof (e as { message?: string }).message === 'string'
+                  ? (e as { message: string }).message
+                  : (typeof e === 'string' ? e : JSON.stringify(e));
+                reject(new Error(msg));
+              };
             });
           }
         }
@@ -231,7 +255,13 @@ export class MigrationManager {
     await new Promise<void>((resolve, reject) => {
       const request = store.put(migrationRecord);
       request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+         request.onerror = () => {
+           const e = request.error as unknown;
+           const msg = e && typeof (e as { message?: string }).message === 'string'
+             ? (e as { message: string }).message
+             : (typeof e === 'string' ? e : JSON.stringify(e));
+           reject(new Error(msg));
+         };
     });
   }
 
@@ -274,8 +304,8 @@ export class MigrationManager {
 
       return new Promise<number>((resolve) => {
         request.onsuccess = () => {
-          const result = request.result;
-          resolve(result ? result.version : 1);
+          const result = request.result as { version?: number } | undefined;
+          resolve(result && typeof result.version === 'number' ? result.version : 1);
         };
         request.onerror = () => {
           window.logger?.warn('バージョン取得失敗、初期バージョンを返すのじゃ');
@@ -305,13 +335,19 @@ export class MigrationManager {
 
       return new Promise<SystemInfo[]>((resolve, reject) => {
         request.onsuccess = () => {
-          const results = request.result;
+          const results = request.result as SystemInfo[];
           const migrationRecords = results.filter(item => 
-            item.key.startsWith('migration_v')
+            typeof item.key === 'string' && item.key.startsWith('migration_v')
           );
           resolve(migrationRecords);
         };
-        request.onerror = () => reject(request.error);
+         request.onerror = () => {
+           const e = request.error as unknown;
+           const msg = e && typeof (e as { message?: string }).message === 'string'
+             ? (e as { message: string }).message
+             : (typeof e === 'string' ? e : JSON.stringify(e));
+           reject(new Error(msg));
+         };
       });
     } catch (error) {
       window.logger?.error('マイグレーション履歴取得エラー:', error);
@@ -325,6 +361,7 @@ export class MigrationManager {
    * @returns 整合性チェック結果
    */
   async validateDatabase(db: IDBDatabase): Promise<{ valid: boolean; errors: string[] }> {
+    await Promise.resolve();
     const errors: string[] = [];
 
     try {
@@ -341,7 +378,7 @@ export class MigrationManager {
 
       return { valid: errors.length === 0, errors };
     } catch (error) {
-      errors.push(`整合性チェックエラー: ${error}`);
+      errors.push(`整合性チェックエラー: ${error instanceof Error ? error.message : String(error)}`);
       return { valid: false, errors };
     }
   }
@@ -351,16 +388,22 @@ export class MigrationManager {
    */
   private setupErrorHandling(): void {
     // グローバルエラーハンドラー
-    window.addEventListener('error', (event) => {
-      if (event.error && event.error.message.includes('Migration')) {
-        window.logger?.error('マイグレーション関連エラー:', event.error);
+    window.addEventListener('error', (event: ErrorEvent) => {
+      const err = event.error as unknown;
+      const message = err && typeof (err as { message?: string }).message === 'string' ? (err as { message: string }).message : String(err);
+      if (message.includes('Migration')) {
+        window.logger?.error('マイグレーション関連エラー:', message);
       }
     });
 
     // Promise拒否ハンドラー
-    window.addEventListener('unhandledrejection', (event) => {
-      if (event.reason && event.reason.message && event.reason.message.includes('Migration')) {
-        window.logger?.error('マイグレーション関連Promise拒否:', event.reason);
+    window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+      const reasonUnknown = event.reason as unknown;
+      const message = reasonUnknown && typeof (reasonUnknown as { message?: string }).message === 'string'
+        ? (reasonUnknown as { message: string }).message
+        : String(reasonUnknown);
+      if (message.includes('Migration')) {
+        window.logger?.error('マイグレーション関連Promise拒否:', message);
       }
     });
   }
