@@ -58,9 +58,14 @@ window.commonHelper = {
       const text = await response.text();
       const doc = new DOMParser().parseFromString(text, "text/html");
       
-      const serverContext = JSON.parse(doc.querySelector('meta[name="server-context"]')?.getAttribute('content') || '{}');
+      const serverContextRaw: unknown = JSON.parse(doc.querySelector('meta[name="server-context"]')?.getAttribute('content') || '{}');
+      const serverContext = (serverContextRaw && typeof serverContextRaw === 'object') ? serverContextRaw as Record<string, unknown> : {};
       const serverResponseContent = doc.querySelector('meta[name="server-response"]')?.getAttribute('content') || '{}';
-      const serverResponse = JSON.parse(decodeURIComponent(serverResponseContent)) as NicoApiServerResponse;
+      const serverResponseUnknown: unknown = JSON.parse(decodeURIComponent(serverResponseContent));
+      if (!serverResponseUnknown || typeof serverResponseUnknown !== 'object') {
+        throw new Error('Invalid server response');
+      }
+      const serverResponse = serverResponseUnknown as NicoApiServerResponse;
       
       return {
         serverContext: serverContext,

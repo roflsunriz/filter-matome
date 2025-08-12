@@ -442,7 +442,8 @@ class Toastr {
             toastElement.appendChild(progressElement);
 
             setTimeout(() => {
-                progressElement.style.transition = `width ${options.timeOut}ms linear`;
+                const timeout = typeof options.timeOut === 'number' ? options.timeOut : 0;
+                progressElement.style.transition = `width ${timeout}ms linear`;
                 progressElement.style.width = '0%';
             }, 10);
         }
@@ -462,7 +463,7 @@ class Toastr {
             toastElement.addEventListener('mouseenter', () => {
                 clearTimeout((toastElement as ExtendedHTMLElement).timeoutId);
                 const progressElement = toastElement.querySelector(`.${options.progressClass}`);
-                if (progressElement) {
+                if (progressElement instanceof HTMLElement) {
                     progressElement.style.transition = 'none';
                 }
             });
@@ -474,8 +475,9 @@ class Toastr {
                     }, options.extendedTimeOut) as unknown as number;
                     
                     const progressElement = toastElement.querySelector(`.${options.progressClass}`);
-                    if (progressElement) {
-                        progressElement.style.transition = `width ${options.extendedTimeOut}ms linear`;
+                    if (progressElement instanceof HTMLElement) {
+                        const ext = typeof options.extendedTimeOut === 'number' ? options.extendedTimeOut : 0;
+                        progressElement.style.transition = `width ${ext}ms linear`;
                         progressElement.style.width = '0%';
                     }
                 }
