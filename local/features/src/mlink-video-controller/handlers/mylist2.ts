@@ -14,7 +14,7 @@ export class Mylist2Handler {
 
   async handleAddVideo(): Promise<void> {
     try {
-      const apiData = window.NicoCache_nl.watch.apiData as ApiData;
+      const apiData = window.NicoCache_nl.watch.apiData;
       if (!apiData || !apiData.video) {
         throw new Error('動画情報の取得に失敗しました');
       }

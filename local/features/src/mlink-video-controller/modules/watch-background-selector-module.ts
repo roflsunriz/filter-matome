@@ -772,7 +772,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
    */
   private setupBackgroundSettingsEventListeners(): void {
     // 画像追加イベント
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const imageAddedListener = async (_: Event) => {
       await this.createRadialSelector();
       
@@ -781,7 +781,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
     this.eventListeners.push({ type: 'imageAdded', listener: imageAddedListener });
 
     // 画像削除イベント
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const imageDeletedListener = async (_: Event) => {
       await this.createRadialSelector();
       
@@ -812,7 +812,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
     this.eventListeners.push({ type: 'imageSelected', listener: imageSelectedListener });
 
     // 設定インポートイベント
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const settingsImportedListener = async (_: Event) => {
       await this.createRadialSelector();
       
@@ -821,7 +821,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
     this.eventListeners.push({ type: 'settingsImported', listener: settingsImportedListener });
 
     // 設定リセットイベント
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const settingsResetListener = async (_: Event) => {
       await this.createRadialSelector();
       

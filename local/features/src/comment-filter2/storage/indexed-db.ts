@@ -1010,7 +1010,7 @@ export class FilterStorage {
         version: this.dbVersion
       };
 
-      const transaction = this.db!.transaction([CONSTANTS.DB_CONFIG.STORES.SETTINGS], 'readwrite');
+      const transaction = this.db.transaction([CONSTANTS.DB_CONFIG.STORES.SETTINGS], 'readwrite');
       const store = transaction.objectStore(CONSTANTS.DB_CONFIG.STORES.SETTINGS);
       await this.putToStore(store, migrationRecord);
       window.logger?.info(`[CommentFilter2] Migration event recorded: ${eventType}`);

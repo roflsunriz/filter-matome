@@ -313,7 +313,7 @@ export class DataInterceptor {
     const data = window[CONSTANTS.GLOBAL_DATA_KEY];
     // 型安全性を保つため、データが存在し、必要なプロパティを持っているかチェック
     if (data && typeof data === 'object' && 'originalData' in data) {
-      return data as CommentFilter2GlobalData;
+      return data;
     }
     return null;
   }

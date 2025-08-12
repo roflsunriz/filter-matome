@@ -376,7 +376,7 @@ export class MigrationManager {
           }
         })
         .filter(backup => backup !== null)
-        .sort((a, b) => b!.timestamp - a!.timestamp);
+        .sort((a, b) => b.timestamp - a.timestamp);
 
       return backups as Array<{ key: string; timestamp: number; version: number }>;
     } catch (error) {

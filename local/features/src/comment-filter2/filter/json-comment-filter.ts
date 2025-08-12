@@ -108,7 +108,7 @@ export class JsonCommentFilter {
 
     return comments
       .map(comment => this.applyRulesToComment(comment, rules, currentSmid, threadFork))
-      .filter(comment => comment !== null) as CF2Comment[];
+      .filter(comment => comment !== null);
   }
 
   /**
@@ -500,7 +500,7 @@ export class JsonCommentFilter {
         'filteredData' in data && 
         'currentSmid' in data && 
         'lastUpdated' in data) {
-      return data as CommentFilter2GlobalData;
+      return data;
     }
     
     return null;

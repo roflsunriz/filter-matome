@@ -296,7 +296,7 @@ export class SettingsUI {
       toggle.checked = !toggle.checked;
       
       // エラー通知
-      (window.toastr as ToastrInstance)?.error(
+      (window.toastr)?.error(
         `モジュール ${moduleId} の切り替えに失敗しました`,
         'エラー',
         { timeOut: 5000 }
@@ -332,7 +332,7 @@ export class SettingsUI {
       toggle.checked = !toggle.checked;
       
       // エラー通知
-      (window.toastr as ToastrInstance)?.error(
+      (window.toastr)?.error(
         `サブモジュール ${subModuleId} の切り替えに失敗しました`,
         'エラー',
         { timeOut: 5000 }
@@ -357,14 +357,14 @@ export class SettingsUI {
           await this.moduleManager.reloadAllModules();
           this.renderModuleList();
           
-          (window.toastr as ToastrInstance)?.success(
+          (window.toastr)?.success(
             'モジュールを再読み込みしました',
             '成功',
             { timeOut: 3000 }
           );
         } catch (error) {
           window.logger.error('[SettingsUI] モジュール再読み込みに失敗:', error);
-          (window.toastr as ToastrInstance)?.error(
+          (window.toastr)?.error(
             'モジュール再読み込みに失敗しました',
             'エラー',
             { timeOut: 5000 }
@@ -497,14 +497,14 @@ export class SettingsUI {
       
       URL.revokeObjectURL(url);
       
-      (window.toastr as ToastrInstance)?.success(
+      (window.toastr)?.success(
         '設定をエクスポートしました',
         '成功',
         { timeOut: 3000 }
       );
     } catch (error) {
       window.logger.error('[SettingsUI] 設定エクスポートに失敗:', error);
-      (window.toastr as ToastrInstance)?.error(
+      (window.toastr)?.error(
         '設定エクスポートに失敗しました',
         'エラー',
         { timeOut: 5000 }
@@ -530,14 +530,14 @@ export class SettingsUI {
             this.settingsManager.importSettings(settings);
             this.renderModuleList();
             
-            (window.toastr as ToastrInstance)?.success(
+            (window.toastr)?.success(
               '設定をインポートしました',
               '成功',
               { timeOut: 3000 }
             );
           } catch (error) {
             window.logger.error('[SettingsUI] 設定インポートに失敗:', error);
-            (window.toastr as ToastrInstance)?.error(
+            (window.toastr)?.error(
               '設定インポートに失敗しました',
               'エラー',
               { timeOut: 5000 }
@@ -560,14 +560,14 @@ export class SettingsUI {
         this.settingsManager.resetSettings();
         this.renderModuleList();
         
-        (window.toastr as ToastrInstance)?.success(
+        (window.toastr)?.success(
           '設定をリセットしました',
           '成功',
           { timeOut: 3000 }
         );
       } catch (error) {
         window.logger.error('[SettingsUI] 設定リセットに失敗:', error);
-        (window.toastr as ToastrInstance)?.error(
+        (window.toastr)?.error(
           '設定リセットに失敗しました',
           'エラー',
           { timeOut: 5000 }
@@ -636,7 +636,7 @@ export class SettingsUI {
       
     } catch (error) {
       window.logger.error('[SettingsUI] 背景画像設定の初期化に失敗:', error);
-      (window.toastr as ToastrInstance)?.error(
+      (window.toastr)?.error(
         '背景画像設定の初期化に失敗しました',
         'エラー',
         { timeOut: 5000 }
@@ -830,12 +830,12 @@ export class SettingsUI {
     const name = nameInput.value.trim();
     
     if (!url) {
-      (window.toastr as ToastrInstance)?.warning('URLを入力してください', '入力エラー');
+      (window.toastr)?.warning('URLを入力してください', '入力エラー');
       return;
     }
     
     if (!name) {
-      (window.toastr as ToastrInstance)?.warning('画像名を入力してください', '入力エラー');
+      (window.toastr)?.warning('画像名を入力してください', '入力エラー');
       return;
     }
 
@@ -863,11 +863,11 @@ export class SettingsUI {
       // 画像リストを更新
       await this.refreshModalImageList();
       
-      (window.toastr as ToastrInstance)?.success(`画像「${name}」を追加しました`, '成功');
+      (window.toastr)?.success(`画像「${name}」を追加しました`, '成功');
       
     } catch (error) {
       window.logger.error('[SettingsUI] URL画像の追加に失敗:', error);
-      (window.toastr as ToastrInstance)?.error('画像の追加に失敗しました', 'エラー');
+      (window.toastr)?.error('画像の追加に失敗しました', 'エラー');
     }
   }
 
@@ -887,12 +887,12 @@ export class SettingsUI {
     const name = nameInput.value.trim();
     
     if (!file) {
-      (window.toastr as ToastrInstance)?.warning('ファイルを選択してください', '入力エラー');
+      (window.toastr)?.warning('ファイルを選択してください', '入力エラー');
       return;
     }
     
     if (!name) {
-      (window.toastr as ToastrInstance)?.warning('画像名を入力してください', '入力エラー');
+      (window.toastr)?.warning('画像名を入力してください', '入力エラー');
       return;
     }
 
@@ -910,11 +910,11 @@ export class SettingsUI {
       // 画像リストを更新
       await this.refreshModalImageList();
       
-      (window.toastr as ToastrInstance)?.success(`画像「${name}」を追加しました`, '成功');
+      (window.toastr)?.success(`画像「${name}」を追加しました`, '成功');
       
     } catch (error) {
       window.logger.error('[SettingsUI] ファイル画像の追加に失敗:', error);
-      (window.toastr as ToastrInstance)?.error('画像の追加に失敗しました', 'エラー');
+      (window.toastr)?.error('画像の追加に失敗しました', 'エラー');
     }
   }
 
@@ -1042,11 +1042,11 @@ export class SettingsUI {
         document.documentElement.style.setProperty("--bg-img", backgroundValue);
         
         await this.refreshModalImageList();
-        (window.toastr as ToastrInstance)?.success(`背景画像を「${image.name}」に変更しました`, '成功');
+        (window.toastr)?.success(`背景画像を「${image.name}」に変更しました`, '成功');
       }
     } catch (error) {
       window.logger.error('[SettingsUI] 画像の選択に失敗:', error);
-      (window.toastr as ToastrInstance)?.error('画像の選択に失敗しました', 'エラー');
+      (window.toastr)?.error('画像の選択に失敗しました', 'エラー');
     }
   }
 
@@ -1064,11 +1064,11 @@ export class SettingsUI {
       await this.backgroundSettings.deleteImage(imageId);
       await this.refreshModalImageList();
       
-      (window.toastr as ToastrInstance)?.success(`画像「${image.name}」を削除しました`, '成功');
+      (window.toastr)?.success(`画像「${image.name}」を削除しました`, '成功');
       
     } catch (error) {
       window.logger.error('[SettingsUI] 画像の削除に失敗:', error);
-      (window.toastr as ToastrInstance)?.error('画像の削除に失敗しました', 'エラー');
+      (window.toastr)?.error('画像の削除に失敗しました', 'エラー');
     }
   }
 
@@ -1088,14 +1088,14 @@ export class SettingsUI {
       
       URL.revokeObjectURL(url);
       
-      (window.toastr as ToastrInstance)?.success(
+      (window.toastr)?.success(
         '背景画像設定をエクスポートしました',
         '成功',
         { timeOut: 3000 }
       );
     } catch (error) {
       window.logger.error('[SettingsUI] 背景画像設定エクスポートに失敗:', error);
-      (window.toastr as ToastrInstance)?.error(
+      (window.toastr)?.error(
         '背景画像設定エクスポートに失敗しました',
         'エラー',
         { timeOut: 5000 }
@@ -1115,14 +1115,14 @@ export class SettingsUI {
           await this.backgroundSettings.importSettings(settingsData);
           await this.refreshModalImageList();
           
-          (window.toastr as ToastrInstance)?.success(
+          (window.toastr)?.success(
             '背景画像設定をインポートしました',
             '成功',
             { timeOut: 3000 }
           );
         } catch (importError) {
           window.logger.error('[SettingsUI] インポートデータの処理に失敗:', importError);
-          (window.toastr as ToastrInstance)?.error(
+          (window.toastr)?.error(
             'インポートデータの処理に失敗しました',
             'エラー',
             { timeOut: 5000 }
@@ -1132,7 +1132,7 @@ export class SettingsUI {
       reader.readAsText(file);
     } catch (error) {
       window.logger.error('[SettingsUI] 背景画像設定インポートに失敗:', error);
-      (window.toastr as ToastrInstance)?.error(
+      (window.toastr)?.error(
         '背景画像設定インポートに失敗しました',
         'エラー',
         { timeOut: 5000 }
@@ -1149,14 +1149,14 @@ export class SettingsUI {
         await this.backgroundSettings.resetToDefaults();
         await this.refreshModalImageList();
         
-        (window.toastr as ToastrInstance)?.success(
+        (window.toastr)?.success(
           '背景画像設定をデフォルトに戻しました',
           '成功',
           { timeOut: 3000 }
         );
       } catch (error) {
         window.logger.error('[SettingsUI] 背景画像設定リセットに失敗:', error);
-        (window.toastr as ToastrInstance)?.error(
+        (window.toastr)?.error(
           '背景画像設定リセットに失敗しました',
           'エラー',
           { timeOut: 5000 }

@@ -383,7 +383,7 @@ export class WatchPageModule implements ModuleInstance {
       const retryInterval = 700;
 
       const attempt = (): void => {
-        const element = document.getElementsByClassName("pos_relative d_flex flex-wrap_wrap gap_base")[0] as Element;
+        const element = document.getElementsByClassName("pos_relative d_flex flex-wrap_wrap gap_base")[0];
         
         // タグ数を動的に取得（より具体的なセレクターを使用）
         const tagLength = this.getTagCount();

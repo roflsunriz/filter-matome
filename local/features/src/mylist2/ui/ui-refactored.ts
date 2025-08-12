@@ -565,7 +565,7 @@ export class Mylist2ManagerUI {
     // 詳細表示ボタン
     videoList.querySelectorAll('.open-video-details').forEach((button) => {
       button.addEventListener('click', async (event) => {
-        const target = (event.currentTarget as HTMLElement).closest('.video-item') as HTMLElement | null;
+        const target = (event.currentTarget as HTMLElement).closest('.video-item');
         if (!target) return;
         const compositeId = target.dataset.compositeId;
         if (!compositeId) {
@@ -619,7 +619,7 @@ export class Mylist2ManagerUI {
     videoList.addEventListener('click', async (ev) => {
       const trigger = (ev.target as HTMLElement).closest('.open-video-details');
       if (!trigger) return;
-      const target = (trigger as HTMLElement).closest('.video-item') as HTMLElement | null;
+      const target = (trigger as HTMLElement).closest('.video-item');
       if (!target) return;
       const compositeId = target.dataset.compositeId;
       const descFromDom = target.dataset.description;
@@ -1071,7 +1071,7 @@ export class Mylist2ManagerUI {
     const selectAllVideosElement = document.getElementById("selectAllVideos");
     if (selectAllVideosElement) {
       selectAllVideosElement.addEventListener("click", () => {
-        const checkboxes = document.querySelectorAll(".video-select") as NodeListOf<HTMLInputElement>;
+        const checkboxes = document.querySelectorAll(".video-select");
         checkboxes.forEach((checkbox) => {
           // 親要素がキーワードアイテムでない場合のみ選択
           const parentItem = checkbox.closest(".video-item, .keyword-item");
@@ -1086,7 +1086,7 @@ export class Mylist2ManagerUI {
     const deselectAllVideosElement = document.getElementById("deselectAllVideos");
     if (deselectAllVideosElement) {
       deselectAllVideosElement.addEventListener("click", () => {
-        const checkboxes = document.querySelectorAll(".video-select") as NodeListOf<HTMLInputElement>;
+        const checkboxes = document.querySelectorAll(".video-select");
         checkboxes.forEach((checkbox) => (checkbox.checked = false));
       });
     }
@@ -1095,7 +1095,7 @@ export class Mylist2ManagerUI {
   // 動画詳細モーダルの表示
   private async showVideoDetailsModal(video: VideoInfo): Promise<void> {
     const modalId = 'videoDetailsModal';
-    let modal = document.getElementById(modalId) as HTMLElement | null;
+    let modal = document.getElementById(modalId);
     if (!modal) {
       const html = `
         <div id="${modalId}" class="cml2-modal" style="display:none">
@@ -1120,8 +1120,8 @@ export class Mylist2ManagerUI {
       modal = document.getElementById(modalId) as HTMLElement;
     }
     if (!modal) return;
-    const descEl = modal.querySelector('.video-description') as HTMLElement | null;
-    const tagsEl = modal.querySelector('.video-tags') as HTMLElement | null;
+    const descEl = modal.querySelector('.video-description');
+    const tagsEl = modal.querySelector('.video-tags');
     if (descEl) descEl.textContent = video.description || '(説明なし)';
     if (tagsEl) {
       const tags = (video.tags && video.tags.length > 0) ? video.tags : [];
@@ -1131,12 +1131,12 @@ export class Mylist2ManagerUI {
     }
     // 表示とクローズ処理
     modal.style.display = 'flex';
-    const closeBtn = modal.querySelector('.close-button') as HTMLElement | null;
-    const content = modal.querySelector('.cml2-modal-content') as HTMLElement | null;
+    const closeBtn = modal.querySelector('.close-button');
+    const content = modal.querySelector('.cml2-modal-content');
     const handleClose = () => {
-      modal!.style.display = 'none';
+      modal.style.display = 'none';
       document.removeEventListener('keydown', onKeydown);
-      modal!.removeEventListener('click', onBackdrop);
+      modal.removeEventListener('click', onBackdrop);
     };
     const onKeydown = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose(); };
     const onBackdrop = (e: MouseEvent) => {
@@ -1348,11 +1348,11 @@ export class Mylist2ManagerUI {
       input.value = currentKeyword;
 
       // モーダルを表示
-      (modal as HTMLElement).style.display = "flex";
+      (modal).style.display = "flex";
 
       // クローズボタンのイベントリスナー
       const closeHandler = () => {
-        (modal as HTMLElement).style.display = "none";
+        (modal).style.display = "none";
         closeButton.removeEventListener("click", closeHandler);
         saveButton.removeEventListener("click", saveHandler);
         resolve(null);
@@ -1361,7 +1361,7 @@ export class Mylist2ManagerUI {
       // 保存ボタンのイベントリスナー
       const saveHandler = () => {
         const newKeyword = input.value;
-        (modal as HTMLElement).style.display = "none";
+        (modal).style.display = "none";
         closeButton.removeEventListener("click", closeHandler);
         saveButton.removeEventListener("click", saveHandler);
         resolve(newKeyword);

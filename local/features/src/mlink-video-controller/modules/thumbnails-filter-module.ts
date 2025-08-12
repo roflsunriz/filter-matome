@@ -549,7 +549,7 @@ class HideVideoUI {
           : "";
 
         if (typeof window !== 'undefined' && 'toastr' in window) {
-          const toastr = window.toastr as ToastrInstance;
+          const toastr = window.toastr;
           toastr.info(
             message,
             "動画フィルター",

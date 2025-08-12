@@ -23,7 +23,7 @@ export class MediaInfoParser {
         general: parsedInfo.general,
         averageBitrates: parsedInfo.averageBitrates
       },
-      formatStats: mediaInfoInstance.getFormatStats() as unknown as AllStats
+      formatStats: mediaInfoInstance.getFormatStats() as AllStats
     };
   }
 

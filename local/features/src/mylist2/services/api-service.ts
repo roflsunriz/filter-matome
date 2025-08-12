@@ -111,7 +111,7 @@ export class ApiService {
       }
 
       // タグ抽出（ext.getthumbinfo は <tags> 配下に <tag> が並ぶ想定）
-      const tagElements = Array.from(thumb.querySelectorAll('tags tag')) as Element[];
+      const tagElements = Array.from(thumb.querySelectorAll('tags tag'));
       const tags = tagElements.map(t => (t.textContent || '').trim()).filter(Boolean);
 
       const videoInfo: VideoInfo = {

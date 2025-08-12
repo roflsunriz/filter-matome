@@ -22,7 +22,7 @@ export const waitForElement = (selector: string, timeout = 10000): Promise<Eleme
     }, timeout);
 
     // DOM変更を監視
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     const observer = new MutationObserver((_) => {
       const element = document.querySelector(selector);
       if (element) {
@@ -80,7 +80,7 @@ export const waitForPlayer = (timeout = 5000): Promise<HTMLElement> => {
  * @returns MutationObserverオブジェクト（後で切断するため）
  */
 export const observeVideoReady = (callback: (video: HTMLVideoElement) => void): MutationObserver => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const observer = new MutationObserver((_) => {
     const video = document.querySelector('video') as HTMLVideoElement;
     if (video && video.readyState >= 2) {

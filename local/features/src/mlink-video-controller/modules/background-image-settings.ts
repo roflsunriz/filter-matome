@@ -166,7 +166,7 @@ export class BackgroundImageSettings {
       if (oldVersion < 2) {
         // メタデータストアを作成
         if (!db.objectStoreNames.contains(METADATA_STORE_NAME)) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+           
           const _metadataStore = db.createObjectStore(METADATA_STORE_NAME, { keyPath: 'key' });
           window.logger.info('[BackgroundImageSettings] メタデータストアを作成しました');
         }
@@ -357,7 +357,7 @@ export class BackgroundImageSettings {
         
         // メタデータストア作成
         if (!db.objectStoreNames.contains(METADATA_STORE_NAME)) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+           
           const _metadataStore = db.createObjectStore(METADATA_STORE_NAME, { keyPath: 'key' });
           window.logger.info('[BackgroundImageSettings] メタデータストアを作成しました');
         }

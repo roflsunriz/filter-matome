@@ -175,11 +175,11 @@ export class ModalService {
       input.value = currentKeyword;
 
       // モーダルを表示
-      (modal as HTMLElement).style.display = "flex";
+      (modal).style.display = "flex";
 
       // クローズボタンのイベントリスナー
       const closeHandler = () => {
-        (modal as HTMLElement).style.display = "none";
+        (modal).style.display = "none";
         closeButton.removeEventListener("click", closeHandler);
         saveButton.removeEventListener("click", saveHandler);
         resolve(null);
@@ -188,7 +188,7 @@ export class ModalService {
       // 保存ボタンのイベントリスナー
       const saveHandler = () => {
         const newKeyword = input.value;
-        (modal as HTMLElement).style.display = "none";
+        (modal).style.display = "none";
         closeButton.removeEventListener("click", closeHandler);
         saveButton.removeEventListener("click", saveHandler);
         resolve(newKeyword);

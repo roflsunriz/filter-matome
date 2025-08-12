@@ -375,7 +375,7 @@ export class VideoPlayerBridge implements IVideoPlayerBridge {
         'filteredData' in data && 
         'currentSmid' in data && 
         'lastUpdated' in data) {
-      return data as CommentFilter2GlobalData;
+      return data;
     }
     
     return null;

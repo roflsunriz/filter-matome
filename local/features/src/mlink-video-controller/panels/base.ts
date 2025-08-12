@@ -167,7 +167,7 @@ export class BasePanel extends HTMLElement {
     }
     
     // ドロップダウンメニューが開いているselect要素があるかチェック
-    const selectElements = this.shadow.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
+    const selectElements = this.shadow.querySelectorAll('select');
     for (const select of Array.from(selectElements)) {
       if (document.activeElement === select || select.matches(':focus')) {
         return;

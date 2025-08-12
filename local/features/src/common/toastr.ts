@@ -383,8 +383,8 @@ class Toastr {
         }
 
         const toastElement = document.createElement('div');
-        toastElement.className = (options.toastClass ?? "") as string;
-        toastElement.classList.add((params.iconClass ?? "") as string);
+        toastElement.className = (options.toastClass ?? "");
+        toastElement.classList.add((params.iconClass ?? ""));
 
         if (options.closeButton) {
             const closeButton = document.createElement('button');
@@ -413,7 +413,7 @@ class Toastr {
 
         if (params.title) {
             const titleElement = document.createElement('div');
-            titleElement.className = (options.titleClass ?? "") as string;
+            titleElement.className = (options.titleClass ?? "");
             titleElement.innerHTML = options.escapeHtml ? 
                 this.escapeHtml(params.title) : params.title;
             toastElement.appendChild(titleElement);
@@ -421,7 +421,7 @@ class Toastr {
 
         if (params.message) {
             const messageElement = document.createElement('div');
-            messageElement.className = (options.messageClass ?? "") as string;
+            messageElement.className = (options.messageClass ?? "");
             messageElement.innerHTML = options.escapeHtml ? 
                 this.escapeHtml(params.message) : params.message;
             toastElement.appendChild(messageElement);
@@ -429,7 +429,7 @@ class Toastr {
 
         if (options.progressBar) {
             const progressElement = document.createElement('div');
-            progressElement.className = (options.progressClass ?? "") as string;
+            progressElement.className = (options.progressClass ?? "");
             progressElement.style.cssText = `
                 position: absolute;
                 left: 0;
@@ -453,7 +453,7 @@ class Toastr {
 
         if (options.onclick) {
             toastElement.addEventListener('click', (e) => {
-                options.onclick!(e);
+                options.onclick(e);
                 if (options.tapToDismiss) this.removeToast(toastElement);
             });
         }
@@ -461,7 +461,7 @@ class Toastr {
         if (options.closeOnHover) {
             toastElement.addEventListener('mouseenter', () => {
                 clearTimeout((toastElement as ExtendedHTMLElement).timeoutId);
-                const progressElement = toastElement.querySelector(`.${options.progressClass}`) as HTMLElement | null;
+                const progressElement = toastElement.querySelector(`.${options.progressClass}`);
                 if (progressElement) {
                     progressElement.style.transition = 'none';
                 }
@@ -473,7 +473,7 @@ class Toastr {
                         this.removeToast(toastElement);
                     }, options.extendedTimeOut) as unknown as number;
                     
-                    const progressElement = toastElement.querySelector(`.${options.progressClass}`) as HTMLElement | null;
+                    const progressElement = toastElement.querySelector(`.${options.progressClass}`);
                     if (progressElement) {
                         progressElement.style.transition = `width ${options.extendedTimeOut}ms linear`;
                         progressElement.style.width = '0%';
@@ -483,9 +483,9 @@ class Toastr {
         }
 
         this.animate(toastElement, {
-            method: options.showMethod!,
-            duration: options.showDuration!,
-            easing: options.showEasing!
+            method: options.showMethod,
+            duration: options.showDuration,
+            easing: options.showEasing
         }, () => {
             if (options.onShown) options.onShown();
         });

@@ -137,7 +137,7 @@ export class CommentFilter {
 
     return comments
       .map(comment => this.applyRulesToComment(comment, rules, currentSmid, threadFork))
-      .filter(comment => comment !== null) as CF2Comment[];
+      .filter(comment => comment !== null);
   }
 
   /**
@@ -496,7 +496,7 @@ export class CommentFilter {
         'filteredData' in data && 
         'currentSmid' in data && 
         'lastUpdated' in data) {
-      return data as CommentFilter2GlobalData;
+      return data;
     }
     
     return null;

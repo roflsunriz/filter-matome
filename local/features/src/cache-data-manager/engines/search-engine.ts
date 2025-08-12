@@ -62,7 +62,7 @@ export class SearchEngine {
   private async rebuildIndex(): Promise<void> {
     const entries = await this.dataLoader.getAllEntries();
     entries.forEach((entry) => {
-      (this.index as unknown as { add: (doc: { id: string; title: string }) => void }).add({
+      (this.index as { add: (doc: { id: string; title: string }) => void }).add({
         id: entry.id,
         title: entry.title.toLowerCase(), // 小文字化
       });

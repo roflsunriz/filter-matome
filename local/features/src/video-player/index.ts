@@ -495,7 +495,7 @@ export class NicoCachePlayer {
       );
 
       // 追加のエラーハンドラ
-      this.videoElement!.addEventListener('error', e => window.logger.error('[VIDEO-ERROR]', e));
+      this.videoElement.addEventListener('error', e => window.logger.error('[VIDEO-ERROR]', e));
     } catch (error) {
       window.logger.error('動画再生でエラーが発生したのじゃ:', error);
       this.toastManager.showError('動画の再生に失敗しました');
