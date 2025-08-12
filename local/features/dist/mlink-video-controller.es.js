@@ -561,31 +561,30 @@ class Mylist2DB {
       {
         version: 6,
         description: "データベースメタデータストアの追加",
-        execute: async (db) => {
+        execute: async (db, transaction) => {
           if (!db.objectStoreNames.contains("metadata")) {
             db.createObjectStore("metadata", { keyPath: "key" });
-            const transaction = db.transaction(["metadata"], "readwrite");
-            const store = transaction.objectStore("metadata");
-            await new Promise((resolve, reject) => {
-              const initData = [
-                { key: "created_at", value: (/* @__PURE__ */ new Date()).toISOString() },
-                { key: "last_backup", value: null },
-                { key: "health_check_last", value: null },
-                { key: "migration_history", value: [] }
-              ];
-              let completed = 0;
-              initData.forEach((data) => {
-                const request = store.add(data);
-                request.onsuccess = () => {
-                  completed++;
-                  if (completed === initData.length) {
-                    resolve();
-                  }
-                };
-                request.onerror = () => reject(request.error);
-              });
-            });
           }
+          const store = transaction.objectStore("metadata");
+          await new Promise((resolve, reject) => {
+            const initData = [
+              { key: "created_at", value: (/* @__PURE__ */ new Date()).toISOString() },
+              { key: "last_backup", value: null },
+              { key: "health_check_last", value: null },
+              { key: "migration_history", value: [] }
+            ];
+            let completed = 0;
+            initData.forEach((data) => {
+              const request = store.put(data);
+              request.onsuccess = () => {
+                completed++;
+                if (completed === initData.length) {
+                  resolve();
+                }
+              };
+              request.onerror = () => reject(request.error);
+            });
+          });
         }
       },
       {
@@ -894,7 +893,8 @@ class Mylist2DB {
       videoStore.createIndex("length", "length", { unique: false });
       try {
         videoStore.createIndex("tags", "tags", { unique: false, multiEntry: true });
-      } catch {
+      } catch (e) {
+        window.logger?.warn?.("createIndex(tags) skipped:", e);
       }
     }
     if (!db.objectStoreNames.contains("manager")) {
