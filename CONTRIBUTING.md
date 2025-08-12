@@ -25,18 +25,14 @@ NicoCache_nlプロジェクトへの貢献に興味を持っていただき、�
 1. **リポジトリのフォーク**
    ```bash
    # GitHubでリポジトリをフォーク後
-   git clone https://github.com/your-username/NicoCache_nl.git
-   cd NicoCache_nl
+   git clone https://github.com/roflsunriz/filter-matome.git
+   cd filter-matome
    ```
 
 2. **依存関係のインストール**
    ```bash
    # features モジュール
    cd local/features
-   npm install
-   
-   # nl-media-info モジュール（存在する場合）
-   cd ../nl-media-info
    npm install
    ```
 
@@ -45,20 +41,25 @@ NicoCache_nlプロジェクトへの貢献に興味を持っていただき、�
    # features モジュール
    cd local/features
    npm run build
-   
-   # nl-media-info モジュール
-   cd ../nl-media-info
-   npm run build
    ```
+
+4. **エラーチェック**
+   ESLintとTypeCheckを実行。
+   ```bash
+   # features モジュール
+   cd local/features
+   npm run error-check
+   ```
+
 
 ## 📝 開発ガイドライン
 
 ### コーディング規約
 
 #### TypeScript
-- TypeScript 5.x の最新機能を積極的に使用
+- TypeScript 5.9.2 の最新機能を積極的に使用
 - 型安全性を最優先に考慮
-- ESLint + Prettier の設定に従う
+- ESLint + TypeCheck + Prettier の設定に従う
 
 #### nlFilter
 - ファイル名は `1XX_機能名.txt` の形式
@@ -114,9 +115,12 @@ docs: READMEの導入手順を更新
 ### 自動テスト
 ```bash
 cd local/features
-npm run test    # テスト実行（利用可能な場合）
 npm run lint    # 静的解析
+npm run type-check    # 型チェック
+npm run error-check    # エラーチェック(ESLintとTypeCheck)
 ```
+
+Playwrightでの自動テスト
 
 ## 📋 プルリクエストのガイドライン
 
@@ -125,6 +129,7 @@ npm run lint    # 静的解析
 - [ ] コミットメッセージが規約に従っている
 - [ ] ビルドが成功する
 - [ ] 手動テストを実行した
+- [ ] 自動テストを実行した
 - [ ] 関連ドキュメントを更新した
 
 ### プルリクエストの流れ
@@ -179,7 +184,6 @@ npm run lint    # 静的解析
 ### nlFilter編集時の注意
 - **100-199番台のみ編集**
 - 01-99番台は外部配布物のため編集禁止
-- 400行以上のファイルは分割必須
 - 依存関係を考慮した配置
 
 ### 互換性の維持
@@ -194,7 +198,7 @@ npm run lint    # 静的解析
 
 ## 🌟 貢献者への感謝
 
-すべての貢献者の方々に心から感謝いたします。あなたの貢献により、NicoCache_nlはより良いソフトウェアになります。
+すべての貢献者の方々に心から感謝いたします。あなたの貢献により、filter-matomeはより良いソフトウェアになります。
 
 ### 貢献の種類
 - コード貢献
@@ -207,8 +211,8 @@ npm run lint    # 静的解析
 ## 📞 質問・サポート
 
 ### 開発に関する質問
-- [Discussion](https://github.com/your-username/NicoCache_nl/discussions)
-- [Issue](https://github.com/your-username/NicoCache_nl/issues)
+- [Discussion](https://github.com/roflsunriz/filter-matome/discussions)
+- [Issue](https://github.com/roflsunriz/filter-matome/issues)
 
 ### コミュニティ
 - [NicoCache_nl Wiki](https://w.atwiki.jp/nicocachenlwiki/)
@@ -218,9 +222,13 @@ npm run lint    # 静的解析
 
 ### メンテナー向けリリース作成
 ```bash
-# 次のバージョン番号でタグを作成（例：#189）
-git tag "#189"
-git push origin "#189"
+# 次のバージョン番号でタグを作成（例：#190）
+git tag "#190"
+git push origin "#190"
+
+# 間違えてリリースを作った場合、タグを削除して再度リリースを作成
+git tag -d "#190"
+git push origin :refs/tags/#190
 
 # GitHub Actionsが自動的に実行され、以下が行われます：
 # 1. TypeScript/Viteプロジェクトのビルド
@@ -231,7 +239,6 @@ git push origin "#189"
 
 ### バージョン管理
 - **形式**: `#188`, `#189`, `#190` など
-- **最新**: フィルタまとめ#188 (2025/08/01)
 - **履歴**: [nlFilters/198_release_notes.md](nlFilters/198_release_notes.md)
 
 ---
