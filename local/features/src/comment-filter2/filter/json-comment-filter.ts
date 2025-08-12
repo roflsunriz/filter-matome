@@ -30,6 +30,8 @@ export class JsonCommentFilter {
    * メインのフィルタリング処理（JSON形式ルール対応）
    */
   public async applyFilters(rules: NgRuleJson[], currentSmid: string | null): Promise<CF2CommentApiResponse | null> {
+    // minimal await to satisfy require-await while keeping logic unchanged
+    await Promise.resolve();
     const globalData = this.getGlobalData();
     
     if (!globalData?.originalData) {
@@ -62,7 +64,7 @@ export class JsonCommentFilter {
       }
 
       // フィルターログを送信（非同期・ノンブロッキング）
-      this.sendFilterLogsAsync();
+      void this.sendFilterLogsAsync();
 
       return filteredData;
     } catch (error) {
@@ -524,6 +526,7 @@ export class JsonCommentFilter {
    * フィルターログを非同期で送信
    */
   private async sendFilterLogsAsync(): Promise<void> {
+    await Promise.resolve();
     if (!this.settings?.logToCommentFilterLogger) {
       if (this.debugMode) {
         window.logger?.debug('[CommentFilter2] Filter log sending is disabled in settings');

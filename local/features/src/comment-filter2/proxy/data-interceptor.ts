@@ -11,9 +11,9 @@ export class DataInterceptor {
   private currentSmid: string | null = null;
 
   constructor() {
-    this.originalFetch = window.fetch;
-    this.originalPushState = history.pushState;
-    this.originalReplaceState = history.replaceState;
+    this.originalFetch = window.fetch.bind(window);
+    this.originalPushState = history.pushState.bind(history);
+    this.originalReplaceState = history.replaceState.bind(history);
     this.setupInterception();
     this.setupSPANavigation();
     this.initializeGlobalData();
@@ -46,14 +46,14 @@ export class DataInterceptor {
    */
   private setupSPANavigation(): void {
     // History API をフック
-    history.pushState = (...args) => {
-      this.originalPushState.apply(history, args);
+    history.pushState = (...args: Parameters<typeof history.pushState>) => {
+      this.originalPushState(...args);
       // pushState 後に SMID を更新
       setTimeout(() => this.updateCurrentSmid(), 0);
     };
 
-    history.replaceState = (...args) => {
-      this.originalReplaceState.apply(history, args);
+    history.replaceState = (...args: Parameters<typeof history.replaceState>) => {
+      this.originalReplaceState(...args);
       // replaceState 後に SMID を更新
       setTimeout(() => this.updateCurrentSmid(), 0);
     };
@@ -115,7 +115,16 @@ export class DataInterceptor {
    */
   private setupInterception(): void {
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-      const url = typeof input === 'string' ? input : input.toString();
+      let url: string;
+      if (input instanceof Request) {
+        url = input.url;
+      } else if (input instanceof URL) {
+        url = input.toString();
+      } else if (typeof input === 'string') {
+        url = input;
+      } else {
+        url = '';
+      }
       
       // 対象エンドポイントをチェック
       if (url.includes(CONSTANTS.API_ENDPOINT)) {
@@ -123,9 +132,12 @@ export class DataInterceptor {
           const response = await this.originalFetch(input, init);
           const clonedResponse = response.clone();
           
-          // レスポンスデータを処理
-          const data: CF2CommentApiResponse = await clonedResponse.json();
-          const processedData = await this.processCommentData(data, url);
+          // レスポンスデータを処理（unknown→最小限の形チェック後にキャスト）
+          const dataRaw: unknown = await clonedResponse.json();
+          if (!dataRaw || typeof dataRaw !== 'object') {
+            return response;
+          }
+          const processedData = await this.processCommentData(dataRaw as CF2CommentApiResponse, url);
           
           // フィルタリング済みデータで新しいレスポンスを作成
           const filteredResponse = await this.createFilteredResponse(processedData, response);
@@ -287,6 +299,7 @@ export class DataInterceptor {
    * フィルタリング済みデータで新しいレスポンスを作成
    */
   private async createFilteredResponse(filteredData: CF2CommentApiResponse, originalResponse: Response): Promise<Response> {
+    await Promise.resolve();
     try {
       // フィルタリング済みデータをJSON文字列に変換
       const filteredJson = JSON.stringify(filteredData);

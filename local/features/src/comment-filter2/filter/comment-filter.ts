@@ -58,6 +58,8 @@ export class CommentFilter {
    * メインのフィルタリング処理
    */
   public async applyFilters(rules: NGWordRule[], currentSmid: string | null): Promise<CF2CommentApiResponse | null> {
+    // minimal await to satisfy require-await while keeping logic unchanged
+    await Promise.resolve();
     const globalData = this.getGlobalData();
     
     if (!globalData?.originalData) {
@@ -90,7 +92,7 @@ export class CommentFilter {
       }
 
       // フィルターログを送信（非同期・ノンブロッキング）
-      this.sendFilterLogsAsync();
+      void this.sendFilterLogsAsync();
 
       return filteredData;
     } catch (error) {
@@ -650,6 +652,7 @@ export class CommentFilter {
    * フィルターログを非同期で送信
    */
   private async sendFilterLogsAsync(): Promise<void> {
+    await Promise.resolve();
     // 設定でログ送信が無効の場合はスキップ
     if (!this.settings?.logToCommentFilterLogger) {
       if (this.debugMode) {

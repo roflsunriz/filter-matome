@@ -379,15 +379,17 @@ export class FilterStorage {
 
       request.onsuccess = () => {
         if (request.result) {
+          const raw = request.result as unknown;
+          const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {};
           const settings = {
-            debugMode: request.result.debugMode,
-            isEnabled: request.result.isEnabled,
-            commandSettings: request.result.commandSettings || this.getDefaultCommandSettings(),
-            logToCommentFilterLogger: request.result.logToCommentFilterLogger !== undefined 
-              ? request.result.logToCommentFilterLogger 
+            debugMode: Boolean(obj.debugMode),
+            isEnabled: Boolean(obj.isEnabled),
+            commandSettings: (obj.commandSettings as CommandSettings) || this.getDefaultCommandSettings(),
+            logToCommentFilterLogger: obj.logToCommentFilterLogger !== undefined 
+              ? Boolean(obj.logToCommentFilterLogger)
               : true,
-            useJsonFormat: request.result.useJsonFormat !== undefined 
-              ? request.result.useJsonFormat 
+            useJsonFormat: obj.useJsonFormat !== undefined 
+              ? Boolean(obj.useJsonFormat)
               : true // デフォルトで新形式を使用
           };
           resolve(settings);
@@ -432,7 +434,7 @@ export class FilterStorage {
 
       return JSON.stringify(exportData, null, 2);
     } catch (error) {
-      throw new Error(`JSON export failed: ${error}`);
+      throw new Error(`JSON export failed: ${String(error)}`);
     }
   }
 
@@ -453,7 +455,7 @@ export class FilterStorage {
 
       return JSON.stringify(exportData, null, 2);
     } catch (error) {
-      throw new Error(`Export failed: ${error}`);
+      throw new Error(`Export failed: ${String(error)}`);
     }
   }
 
@@ -464,7 +466,7 @@ export class FilterStorage {
     try {
       const format = detectFileFormat(data);
       
-      window.logger?.info(`[CommentFilter2] Detected import format: ${format}`);
+      window.logger?.info(`[CommentFilter2] Detected import format: ${String(format)}`);
       
       switch (format) {
         case 'jsonl':
@@ -477,7 +479,7 @@ export class FilterStorage {
           throw new Error('Unknown file format');
       }
     } catch (error) {
-      throw new Error(`Import failed: ${error}`);
+      throw new Error(`Import failed: ${String(error)}`);
     }
   }
 
@@ -498,7 +500,7 @@ export class FilterStorage {
         migratedCount: rules.length
       };
     } catch (error) {
-      throw new Error(`JSONL import failed: ${error}`);
+      throw new Error(`JSONL import failed: ${String(error)}`);
     }
   }
 
@@ -507,10 +509,10 @@ export class FilterStorage {
    */
   private async importJsonData(data: string): Promise<MigrationResult> {
     try {
-      const parsedData = JSON.parse(data);
+      const parsedData: unknown = JSON.parse(data);
       
       // 新形式のJSONコレクション
-      if (parsedData.version && parsedData.rules) {
+      if (typeof parsedData === 'object' && parsedData !== null && 'version' in parsedData && 'rules' in parsedData) {
         const collection = parsedData as NgRuleJsonCollection;
         
         // ルールを保存
@@ -532,7 +534,7 @@ export class FilterStorage {
       }
       
       // 旧形式のFilterDatabase
-      if (parsedData.rules && parsedData.settings) {
+      if (typeof parsedData === 'object' && parsedData !== null && 'rules' in parsedData && 'settings' in parsedData) {
         const legacyData = parsedData as FilterDatabase;
         
         // 旧形式→JSON形式に変換
@@ -561,7 +563,7 @@ export class FilterStorage {
       }
       
       // CommentFilter（旧機能）のレガシー設定形式
-      if (LegacyConverter.isLegacyData(parsedData)) {
+      if (typeof parsedData === 'object' && parsedData !== null && LegacyConverter.isLegacyData(parsedData as Record<string, unknown>)) {
         const legacySettings = parsedData as LegacyCommentFilterSettings;
         
         window.logger?.info('[CommentFilter2] Detected legacy CommentFilter settings format');
@@ -588,7 +590,7 @@ export class FilterStorage {
       
       throw new Error('Invalid JSON format');
     } catch (error) {
-      throw new Error(`JSON import failed: ${error}`);
+      throw new Error(`JSON import failed: ${String(error)}`);
     }
   }
 
@@ -605,7 +607,7 @@ export class FilterStorage {
       
       return migrationResult;
     } catch (error) {
-      throw new Error(`CSV import failed: ${error}`);
+      throw new Error(`CSV import failed: ${String(error)}`);
     }
   }
 
@@ -657,8 +659,17 @@ export class FilterStorage {
   private getAllFromStore(store: IDBObjectStore): Promise<IndexedDBRuleItem[]> {
     return new Promise((resolve, reject) => {
       const request = store.getAll();
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result as IndexedDBRuleItem[]);
+      request.onerror = () => {
+        const err = request.error;
+        if (err instanceof Error) {
+          reject(err);
+        } else if (err && typeof (err as { message?: unknown }).message === 'string') {
+          reject(new Error((err as { message: string }).message));
+        } else {
+          reject(new Error('IndexedDB getAll error'));
+        }
+      };
     });
   }
 
@@ -666,10 +677,19 @@ export class FilterStorage {
    * ヘルパーメソッド: ストアにデータを追加
    */
   private addToStore(store: IDBObjectStore, data: NgRuleJson | IndexedDBRuleItem | Record<string, unknown>): Promise<void> {
-    return new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
       const request = store.add(data);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve();
+        request.onerror = () => {
+          const err = request.error;
+          if (err instanceof Error) {
+            reject(err);
+          } else if (err && typeof (err as { message?: unknown }).message === 'string') {
+            reject(new Error((err as { message: string }).message));
+          } else {
+            reject(new Error('IndexedDB add error'));
+          }
+        };
     });
   }
 
@@ -677,10 +697,19 @@ export class FilterStorage {
    * ヘルパーメソッド: ストアにデータを保存
    */
   private putToStore(store: IDBObjectStore, data: Record<string, unknown>): Promise<void> {
-    return new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
       const request = store.put(data);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve();
+        request.onerror = () => {
+          const err = request.error;
+          if (err instanceof Error) {
+            reject(err);
+          } else if (err && typeof (err as { message?: unknown }).message === 'string') {
+            reject(new Error((err as { message: string }).message));
+          } else {
+            reject(new Error('IndexedDB put error'));
+          }
+        };
     });
   }
 
@@ -876,7 +905,7 @@ export class FilterStorage {
       };
 
       const backupJson = JSON.stringify(backup, null, 2);
-      window.logger?.info(`[CommentFilter2] Backup created successfully (${backupJson.length} characters)`);
+      window.logger?.info(`[CommentFilter2] Backup created successfully (${String(backupJson.length)} characters)`);
       
       return {
         success: true,
@@ -903,10 +932,17 @@ export class FilterStorage {
     try {
       window.logger?.info('[CommentFilter2] Restoring database from backup...');
 
-      const backup = JSON.parse(backupJson);
+      const backupRaw: unknown = JSON.parse(backupJson);
+      if (!backupRaw || typeof backupRaw !== 'object') {
+        throw new Error('Invalid backup format');
+      }
+      const backup = backupRaw as { version?: unknown; data?: { jsonRules?: NgRuleJson[]; settings?: Settings } ; timestamp?: unknown };
       
       // バックアップの妥当性チェック
-      if (!backup.version || !backup.data) {
+      if (typeof backup.version !== 'number' && typeof backup.version !== 'string') {
+        throw new Error('Invalid backup version');
+      }
+      if (!backup.data || typeof backup.data !== 'object') {
         throw new Error('Invalid backup format');
       }
 
@@ -922,8 +958,8 @@ export class FilterStorage {
       // 復元記録を保存
       await this.recordMigrationEvent('restore', {
         fromBackup: true,
-        backupTimestamp: backup.timestamp,
-        backupVersion: backup.version
+        backupTimestamp: typeof backup.timestamp === 'string' ? backup.timestamp : new Date().toISOString(),
+        backupVersion: String(backup.version)
       });
 
       window.logger?.info('[CommentFilter2] Database restored successfully');
@@ -1101,6 +1137,7 @@ export class FilterStorage {
    * 特定バージョンへのマイグレーション実行
    */
   private async performVersionMigration(version: number): Promise<{ success: boolean; description: string; error?: string }> {
+    await Promise.resolve();
     try {
       switch (version) {
         case 4:
@@ -1138,7 +1175,7 @@ export class FilterStorage {
   private validateRuleStructure(rule: NgRuleJson): boolean {
     try {
       // 必須フィールドのチェック
-      if (!rule.action || !rule.smid || !rule.enabled === undefined) {
+      if (!rule.action || !rule.smid || rule.enabled === undefined) {
         return false;
       }
 

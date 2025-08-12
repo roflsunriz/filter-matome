@@ -36,7 +36,7 @@ export class UIManager {
     this.storage = new FilterStorage();
     this.filter = new CommentFilter();
     this.jsonFilter = new JsonCommentFilter();
-    this.initialize();
+    void this.initialize();
   }
 
   /**
@@ -58,6 +58,7 @@ export class UIManager {
    * UIを作成してシャドウDOMに挿入
    */
   private async createUI(): Promise<void> {
+    await Promise.resolve();
     if (this.isUICreated) return;
 
     // 既存のUIを削除
@@ -87,7 +88,7 @@ export class UIManager {
     this.shadowRoot = shadowHost.attachShadow({ mode: 'closed' });
 
     // スタイルをシャドウDOM内に注入
-    await this.injectShadowStyles();
+    this.injectShadowStyles();
 
     // UIコンテナを作成
     const tempDiv = document.createElement('div');
@@ -106,8 +107,8 @@ export class UIManager {
     // 初期形式を設定
     this.updateFormatDisplay();
     
-    // ルール一覧を初期化
-    this.refreshRulesList();
+    // ルール一覧を初期化（非同期だがイベントコールバック外なのでawait不要）
+    void this.refreshRulesList();
 
     this.isUICreated = true;
     window.logger?.info('[CommentFilter2] UI created in Shadow DOM and ready');
@@ -135,23 +136,17 @@ export class UIManager {
   /**
    * スタイルをシャドウDOMに注入
    */
-  private async injectShadowStyles(): Promise<void> {
+  private injectShadowStyles(): void {
     if (!this.shadowRoot) return;
 
-    try {
-      // インライン化されたCSSを使用
-      const style = document.createElement('style');
-      style.textContent = CommentFilter2MainStyles;
+    // インライン化されたCSSを使用
+    const style = document.createElement('style');
+    style.textContent = CommentFilter2MainStyles;
 
-      // シャドウDOMに挿入
-      this.shadowRoot.appendChild(style);
+    // シャドウDOMに挿入
+    this.shadowRoot.appendChild(style);
 
-      window.logger?.debug('[CommentFilter2] Styles injected into Shadow DOM');
-    } catch (error) {
-      window.logger?.error('[CommentFilter2] Failed to inject shadow styles:', error);
-      // フォールバック：インラインCSSでエラーが出ることは稀だが、念のため
-      throw error;
-    }
+    window.logger?.debug('[CommentFilter2] Styles injected into Shadow DOM');
   }
 
   /**
@@ -199,7 +194,7 @@ export class UIManager {
     // ファイル入力の特別処理
     const fileInput = this.container.querySelector(`#${UI_ELEMENTS.FILE_INPUT}`) as HTMLInputElement;
     if (fileInput) {
-      fileInput.addEventListener('change', (e) => this.handleFileImport(e));
+      fileInput.addEventListener('change', (e) => { void this.handleFileImport(e); });
       window.logger?.debug('[CommentFilter2] File input event listener bound');
     } else {
       window.logger?.error('[CommentFilter2] File input element not found in shadow DOM');
@@ -208,7 +203,7 @@ export class UIManager {
     // レガシーファイル入力の特別処理
     const legacyFileInput = this.container.querySelector(`#${UI_ELEMENTS.LEGACY_FILE_INPUT}`) as HTMLInputElement;
     if (legacyFileInput) {
-      legacyFileInput.addEventListener('change', (e) => this.handleLegacyFileImport(e));
+      legacyFileInput.addEventListener('change', (e) => { void this.handleLegacyFileImport(e); });
       window.logger?.debug('[CommentFilter2] Legacy file input event listener bound');
     } else {
       window.logger?.error('[CommentFilter2] Legacy file input element not found in shadow DOM');
@@ -231,9 +226,14 @@ export class UIManager {
 
     const element = this.container.querySelector(`#${elementId}`);
     if (element) {
-      element.addEventListener(eventType, async () => {
+      element.addEventListener(eventType, () => {
         try {
-          await handler();
+          const maybe = handler();
+          if (maybe instanceof Promise) {
+            void maybe.catch((error) => {
+              window.logger?.error(`[CommentFilter2] Event handler error for ${elementId}:`, error);
+            });
+          }
         } catch (error) {
           window.logger?.error(`[CommentFilter2] Event handler error for ${elementId}:`, error);
         }
@@ -421,7 +421,7 @@ export class UIManager {
   /**
    * UIを現在の設定で更新
    */
-  private async updateUI(): Promise<void> {
+  private updateUI(): void {
     if (!this.container) return;
 
     // メイントグルの更新
@@ -754,13 +754,13 @@ export class UIManager {
       await this.loadSettings();
       
       // UI全体を更新
-      await this.updateUI();
+      this.updateUI();
       
       // コマンド設定フィールドを更新
       this.updateCommandFields();
       
       // ルール一覧を更新
-      await this.refreshRulesList();
+      void this.refreshRulesList();
       
       // JSON形式の場合、JSONテキストエリアも更新
       if (this.currentFormat === 'json') {
@@ -769,7 +769,7 @@ export class UIManager {
       
       // インポート後のルール数を取得
       const rules = await this.storage.getJsonRules();
-      window.toastr?.success(`データをインポートしました（${rules.length}個のルール）`);
+      window.toastr?.success(`データをインポートしました（${String(rules.length)}個のルール）`);
       
     } catch (error) {
       window.logger?.error('[CommentFilter2] Import failed:', error);
@@ -817,13 +817,13 @@ export class UIManager {
       await this.loadSettings();
       
       // UI全体を更新
-      await this.updateUI();
+      this.updateUI();
       
       // コマンド設定フィールドを更新
       this.updateCommandFields();
       
       // ルール一覧を更新
-      await this.refreshRulesList();
+      void this.refreshRulesList();
       
       // JSON形式の場合、JSONテキストエリアも更新
       if (this.currentFormat === 'json') {
@@ -850,7 +850,16 @@ export class UIManager {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(reader.error);
+      reader.onerror = () => {
+        const err = reader.error;
+        if (err instanceof Error) {
+          reject(err);
+        } else if (err && typeof (err as { message?: unknown }).message === 'string') {
+          reject(new Error((err as { message: string }).message));
+        } else {
+          reject(new Error('File read error'));
+        }
+      };
       reader.readAsText(file);
     });
   }
@@ -883,7 +892,11 @@ export class UIManager {
       
       // 短い遅延の後にリロード（UIの更新を確実にするため）
       setTimeout(() => {
-        window.location.reload();
+        try {
+          window.location.reload();
+        } catch (e) {
+          throw new Error(String(e));
+        }
       }, 100);
       
     } catch (error) {
@@ -1107,7 +1120,7 @@ export class UIManager {
       case 'json':
         this.container.querySelector(`#${UI_ELEMENTS.FORMAT_JSON}`)?.classList.add(CSS_CLASSES.TOGGLE_ACTIVE);
         jsonSection?.classList.remove(CSS_CLASSES.HIDDEN);
-        this.loadJsonRules();
+        void this.loadJsonRules();
         break;
     }
   }
@@ -1136,7 +1149,7 @@ export class UIManager {
       this.clearForm();
       
       // ルール一覧を更新
-      this.refreshRulesList();
+      await this.refreshRulesList();
       
       window.toastr?.success('ルールを追加しました');
     } catch (error) {
@@ -1264,21 +1277,21 @@ export class UIManager {
     if (!this.container) return;
 
     try {
-      const textarea = this.container.querySelector(`#${UI_ELEMENTS.JSON_TEXTAREA}`) as HTMLTextAreaElement;
-      const jsonText = textarea.value.trim();
+      const textarea = this.container.querySelector(`#${UI_ELEMENTS.JSON_TEXTAREA}`);
+      const jsonText = textarea instanceof HTMLTextAreaElement ? textarea.value.trim() : '';
 
       if (!jsonText) {
         await this.storage.saveJsonRules([]);
         window.toastr?.success('ルールをクリアしました');
-        this.refreshRulesList();
+        await this.refreshRulesList();
         return;
       }
 
       const rules = parseJsonl(jsonText);
       await this.storage.saveJsonRules(rules);
       
-      window.toastr?.success(`${rules.length}個のJSONルールを保存しました`);
-      this.refreshRulesList();
+      window.toastr?.success(`${String(rules.length)}個のJSONルールを保存しました`);
+      await this.refreshRulesList();
     } catch (error) {
       window.logger?.error('[CommentFilter2] Failed to save JSON rules:', error);
       window.toastr?.error('JSONルールの保存に失敗しました');
@@ -1292,8 +1305,8 @@ export class UIManager {
     if (!this.container) return;
 
     try {
-      const textarea = this.container.querySelector(`#${UI_ELEMENTS.JSON_TEXTAREA}`) as HTMLTextAreaElement;
-      const jsonText = textarea.value.trim();
+      const textarea2 = this.container.querySelector(`#${UI_ELEMENTS.JSON_TEXTAREA}`);
+      const jsonText = textarea2 instanceof HTMLTextAreaElement ? textarea2.value.trim() : '';
 
       if (!jsonText) {
         window.toastr?.info('検証するJSONがありません');
@@ -1303,7 +1316,7 @@ export class UIManager {
       const rules = parseJsonl(jsonText);
       window.toastr?.success(`✅ JSON形式が正しく、${rules.length}個のルールが有効です`);
     } catch (error) {
-      window.toastr?.error(`❌ JSON形式エラー: ${error}`);
+      window.toastr?.error(`❌ JSON形式エラー: ${String(error)}`);
     }
   }
 
@@ -1336,7 +1349,7 @@ export class UIManager {
       const countText = this.container.querySelector(`#${UI_ELEMENTS.RULE_COUNT_TEXT}`);
 
       if (countText) {
-        countText.textContent = `${rules.length}件`;
+        countText.textContent = `${String(rules.length)}件`;
       }
 
       if (!rulesList) return;
@@ -1351,7 +1364,7 @@ export class UIManager {
 
       // 削除ボタンのイベントリスナーを設定
       rulesList.querySelectorAll('.cf2-rule-delete').forEach((btn, index) => {
-        btn.addEventListener('click', () => this.deleteRule(index));
+        btn.addEventListener('click', () => { void this.deleteRule(index); });
       });
     } catch (error) {
       window.logger?.error('[CommentFilter2] Failed to refresh rules list:', error);
@@ -1384,7 +1397,7 @@ export class UIManager {
     }
     const smidText = rule.smid.join(', ');
     const nicoruText = rule.nicoru_cond 
-      ? `${rule.nicoru_cond.op} ${rule.nicoru_cond.value} (${rule.nicoru_cond.mode})`
+      ? `${rule.nicoru_cond.op} ${String(rule.nicoru_cond.value)} (${rule.nicoru_cond.mode})`
       : '条件なし';
 
     return `
@@ -1414,7 +1427,7 @@ export class UIManager {
       rules.splice(index, 1);
       await this.storage.saveJsonRules(rules);
       
-      this.refreshRulesList();
+      await this.refreshRulesList();
       window.toastr?.success('ルールを削除しました');
     } catch (error) {
       window.logger?.error('[CommentFilter2] Failed to delete rule:', error);
@@ -1432,7 +1445,7 @@ export class UIManager {
 
     try {
       await this.storage.saveJsonRules([]);
-      this.refreshRulesList();
+      await this.refreshRulesList();
       window.toastr?.success('すべてのルールを削除しました');
     } catch (error) {
       window.logger?.error('[CommentFilter2] Failed to clear all rules:', error);

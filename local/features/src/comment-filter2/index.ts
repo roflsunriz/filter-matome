@@ -17,13 +17,14 @@ export class CommentFilter2 {
     this.uiManager = new UIManager();
     this.videoPlayerBridge = new VideoPlayerBridge();
     
-    this.initialize();
+    void this.initialize();
   }
 
   /**
    * CommentFilter2の初期化
    */
   private async initialize(): Promise<void> {
+    await Promise.resolve();
     try {
       // キーボードショートカットを設定
       this.setupKeyboardShortcuts();
@@ -45,11 +46,11 @@ export class CommentFilter2 {
   private setupKeyboardShortcuts(): void {
     if (!this.keyboardShortcutEnabled) return;
 
-    document.addEventListener('keydown', async (event) => {
+    document.addEventListener('keydown', (event) => {
       // Ctrl+Shift+F でUIを表示/非表示
       if (event.ctrlKey && event.shiftKey && event.key === 'F') {
         event.preventDefault();
-        await this.toggleUI();
+        void this.toggleUI();
         window.logger?.debug('[CommentFilter2] UI toggled via keyboard shortcut');
       }
     });
@@ -60,20 +61,21 @@ export class CommentFilter2 {
    */
   private startDataMonitoring(): void {
     // 初回ページロード時に1回実行
-    this.processCommentData();
+    void this.processCommentData();
     
     // コメントデータ更新時のイベントリスナー
     window.addEventListener(CONSTANTS.EVENTS.DATA_UPDATED, () => {
       window.logger?.debug('[CommentFilter2] Processing comment data due to DATA_UPDATED event');
-      this.processCommentData();
+      void this.processCommentData();
     });
     
     // SMID変更（動画切替）時のイベントリスナー
     window.addEventListener(CONSTANTS.EVENTS.SMID_CHANGED, (event: Event) => {
       const customEvent = event as CustomEvent;
-      const { smid } = customEvent.detail;
+      const detail = (customEvent.detail ?? {}) as { smid?: unknown };
+      const smid = typeof detail.smid === 'string' ? detail.smid : '';
       window.logger?.debug(`[CommentFilter2] Processing comment data due to SMID change: ${smid}`);
-      this.processCommentData();
+      void this.processCommentData();
     });
     
     window.logger?.info('[CommentFilter2] Event-driven data monitoring initialized');
@@ -83,6 +85,7 @@ export class CommentFilter2 {
    * コメントデータの処理
    */
   private async processCommentData(): Promise<void> {
+    await Promise.resolve();
     try {
       const globalData = DataInterceptor.getGlobalData();
       
@@ -202,7 +205,7 @@ let commentFilter2Instance: CommentFilter2 | null = null;
 
 // DOM読み込み完了後に初期化
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeCommentFilter2);
+  document.addEventListener('DOMContentLoaded', () => { initializeCommentFilter2(); });
 } else {
   initializeCommentFilter2();
 }

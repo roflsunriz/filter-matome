@@ -28,7 +28,7 @@ export function parseJsonl(text: string): NgRuleJson[] {
         errors.push(`Line ${i + 1}: Invalid rule format`);
       }
     } catch (error) {
-      errors.push(`Line ${i + 1}: JSON parse error - ${error}`);
+      errors.push(`Line ${i + 1}: JSON parse error - ${String(error)}`);
     }
   }
 
@@ -66,7 +66,7 @@ export function parseJsonCollection(text: string): NgRuleJson[] {
     
     throw new Error('Invalid JSON collection format');
   } catch (error) {
-    throw new Error(`JSON collection parse error: ${error}`);
+    throw new Error(`JSON collection parse error: ${String(error)}`);
   }
 }
 
@@ -239,7 +239,7 @@ export function convertCsvToJsonl(csvText: string): MigrationResult {
         warnings.push(`Line ${i + 1}: Could not convert rule`);
       }
     } catch (error) {
-      errors.push(`Line ${i + 1}: ${error}`);
+      errors.push(`Line ${i + 1}: ${String(error)}`);
     }
   }
 
