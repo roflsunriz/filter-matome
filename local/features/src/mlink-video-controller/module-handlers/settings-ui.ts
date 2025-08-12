@@ -524,8 +524,11 @@ export class SettingsUI {
           try {
             const text = e.target?.result as string;
             const parsed: unknown = JSON.parse(text);
-            if (parsed && typeof parsed === 'object') {
-              this.settingsManager.importSettings(parsed as string);
+            if (typeof parsed === 'string') {
+              this.settingsManager.importSettings(parsed);
+            } else {
+              // 文字列以外は文字列化して取り込む（フォールバック）
+              this.settingsManager.importSettings(JSON.stringify(parsed));
             }
             this.renderModuleList();
             

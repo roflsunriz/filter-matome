@@ -959,7 +959,7 @@ export class FilterStorage {
       await this.recordMigrationEvent('restore', {
         fromBackup: true,
         backupTimestamp: typeof backup.timestamp === 'string' ? backup.timestamp : new Date().toISOString(),
-        backupVersion: String(backup.version)
+        backupVersion: typeof backup.version === 'number' ? backup.version : Number(backup.version)
       });
 
       window.logger?.info('[CommentFilter2] Database restored successfully');

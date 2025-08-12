@@ -145,32 +145,32 @@ class WatchHistoryApp {
    */
   private setupEventListeners(): void {
     // 検索
-    this.elements['search-input']?.addEventListener('input', this.guardEvent((e) => this.handleSearch(e)));
-    this.elements['search-clear']?.addEventListener('click', this.guardEvent((e) => this.clearSearch(e)));
+    this.elements['search-input']?.addEventListener('input', this.guardEvent((ev) => this.handleSearch(ev)));
+    this.elements['search-clear']?.addEventListener('click', this.guardEvent(() => this.clearSearch()));
 
     // ソート
     document.querySelectorAll('.sort-btn').forEach(btn => {
-      btn.addEventListener('click', this.guardEvent((e) => this.handleSort(e)));
+      btn.addEventListener('click', this.guardEvent((ev) => this.handleSort(ev)));
     });
 
     // フィルタ
-    this.elements['filter-completed']?.addEventListener('change', this.guardEvent((e) => this.handleFilter(e)));
-    this.elements['filter-owner']?.addEventListener('change', this.guardEvent((e) => this.handleFilter(e)));
-    this.elements['filter-date-start']?.addEventListener('change', this.guardEvent((e) => this.handleFilter(e)));
-    this.elements['filter-date-end']?.addEventListener('change', this.guardEvent((e) => this.handleFilter(e)));
-    this.elements['clear-date-range']?.addEventListener('click', this.guardEvent((e) => this.clearDateRange(e)));
+    this.elements['filter-completed']?.addEventListener('change', this.guardEvent(() => this.handleFilter()));
+    this.elements['filter-owner']?.addEventListener('change', this.guardEvent(() => this.handleFilter()));
+    this.elements['filter-date-start']?.addEventListener('change', this.guardEvent(() => this.handleFilter()));
+    this.elements['filter-date-end']?.addEventListener('change', this.guardEvent(() => this.handleFilter()));
+    this.elements['clear-date-range']?.addEventListener('click', this.guardEvent(() => this.clearDateRange()));
 
     // リフレッシュ
-    this.elements['refresh-btn']?.addEventListener('click', this.guardEvent((e) => this.refreshData(e)));
+    this.elements['refresh-btn']?.addEventListener('click', this.guardEvent(() => this.refreshData()));
 
     // インポート・エクスポート
-    this.elements['export-btn']?.addEventListener('click', this.guardEvent((e) => this.handleExport(e)));
-    this.elements['import-btn']?.addEventListener('click', this.guardEvent((e) => this.handleImport(e)));
-    this.elements['import-file']?.addEventListener('change', this.guardEvent((e) => this.handleImportFile(e)));
+    this.elements['export-btn']?.addEventListener('click', this.guardEvent(() => this.handleExport()));
+    this.elements['import-btn']?.addEventListener('click', this.guardEvent(() => this.handleImport()));
+    this.elements['import-file']?.addEventListener('change', this.guardEvent((ev) => this.handleImportFile(ev)));
 
     // 削除機能
-    this.elements['delete-all-btn']?.addEventListener('click', this.guardEvent((e) => this.deleteAllHistoryEntries(e)));
-    this.elements['delete-by-condition-btn']?.addEventListener('click', this.guardEvent((e) => this.handleConditionalDelete(e)));
+    this.elements['delete-all-btn']?.addEventListener('click', this.guardEvent(() => this.deleteAllHistoryEntries()));
+    this.elements['delete-by-condition-btn']?.addEventListener('click', this.guardEvent(() => this.handleConditionalDelete()));
 
     // タブ切り替え
     this.elements['history-tab']?.addEventListener('click', this.guardEvent(() => { this.switchTab('history'); }));
@@ -179,49 +179,49 @@ class WatchHistoryApp {
     this.elements['series-alert-tab']?.addEventListener('click', this.guardEvent(() => { this.switchTab('series-alert'); }));
 
     // モーダル
-    this.elements['modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeModal(e)));
-    this.elements['modal-open-video']?.addEventListener('click', this.guardEvent((e) => this.openVideo(e)));
-    this.elements['modal-edit-memo']?.addEventListener('click', this.guardEvent((e) => this.openMemoEdit(e)));
+    this.elements['modal-close']?.addEventListener('click', this.guardEvent(() => this.closeModal()));
+    this.elements['modal-open-video']?.addEventListener('click', this.guardEvent(() => this.openVideo()));
+    this.elements['modal-edit-memo']?.addEventListener('click', this.guardEvent(() => this.openMemoEdit()));
 
     // メモ編集モーダル
-    this.elements['memo-modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeMemoEdit(e)));
-    this.elements['memo-save']?.addEventListener('click', this.guardEvent((e) => this.saveMemo(e)));
-    this.elements['memo-cancel']?.addEventListener('click', this.guardEvent((e) => this.closeMemoEdit(e)));
+    this.elements['memo-modal-close']?.addEventListener('click', this.guardEvent(() => this.closeMemoEdit()));
+    this.elements['memo-save']?.addEventListener('click', this.guardEvent(() => this.saveMemo()));
+    this.elements['memo-cancel']?.addEventListener('click', this.guardEvent(() => this.closeMemoEdit()));
 
     // モーダルオーバーレイクリック
     this.elements['video-detail-modal']?.addEventListener('click', this.guardEvent((e) => {
-      if (e.target === this.elements['video-detail-modal']) {
+      if ((e.target as HTMLElement) === this.elements['video-detail-modal']) {
         this.closeModal();
       }
     }));
 
     this.elements['memo-edit-modal']?.addEventListener('click', this.guardEvent((e) => {
-      if (e.target === this.elements['memo-edit-modal']) {
+      if ((e.target as HTMLElement) === this.elements['memo-edit-modal']) {
         this.closeMemoEdit();
       }
     }));
 
     // シリーズ関連イベント
-    this.elements['series-search-input']?.addEventListener('input', this.guardEvent((e) => this.handleSeriesSearch(e)));
-    this.elements['series-search-clear']?.addEventListener('click', this.guardEvent((e) => this.clearSeriesSearch(e)));
-    this.elements['series-progress-filter']?.addEventListener('change', this.guardEvent((e) => this.handleSeriesFilter(e)));
-    this.elements['series-refresh-btn']?.addEventListener('click', this.guardEvent((e) => this.refreshSeriesData(e)));
+    this.elements['series-search-input']?.addEventListener('input', this.guardEvent((ev) => this.handleSeriesSearch(ev)));
+    this.elements['series-search-clear']?.addEventListener('click', this.guardEvent(() => this.clearSeriesSearch()));
+    this.elements['series-progress-filter']?.addEventListener('change', this.guardEvent(() => this.handleSeriesFilter()));
+    this.elements['series-refresh-btn']?.addEventListener('click', this.guardEvent(() => this.refreshSeriesData()));
 
     // シリーズアラート関連イベント
-    this.elements['add-series-alert-btn']?.addEventListener('click', this.guardEvent((e) => this.openSeriesAlertModal(e)));
-    this.elements['add-series-alert-btn-empty']?.addEventListener('click', this.guardEvent((e) => this.openSeriesAlertModal(e)));
-    this.elements['series-alert-refresh-btn']?.addEventListener('click', this.guardEvent((e) => this.refreshSeriesAlertData(e)));
-    this.elements['manual-alert-check-btn']?.addEventListener('click', this.guardEvent((e) => this.manualCheckAlerts(e)));
-    this.elements['notification-permission-btn']?.addEventListener('click', this.guardEvent((e) => this.checkNotificationPermission(e)));
+    this.elements['add-series-alert-btn']?.addEventListener('click', this.guardEvent(() => this.openSeriesAlertModal()));
+    this.elements['add-series-alert-btn-empty']?.addEventListener('click', this.guardEvent(() => this.openSeriesAlertModal()));
+    this.elements['series-alert-refresh-btn']?.addEventListener('click', this.guardEvent(() => this.refreshSeriesAlertData()));
+    this.elements['manual-alert-check-btn']?.addEventListener('click', this.guardEvent(() => this.manualCheckAlerts()));
+    this.elements['notification-permission-btn']?.addEventListener('click', this.guardEvent(() => this.checkNotificationPermission()));
 
     // シリーズアラートモーダル
-    this.elements['series-alert-modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeSeriesAlertModal(e)));
-    this.elements['series-alert-save']?.addEventListener('click', this.guardEvent((e) => this.saveSeriesAlert(e)));
-    this.elements['series-alert-cancel']?.addEventListener('click', this.guardEvent((e) => this.closeSeriesAlertModal(e)));
+    this.elements['series-alert-modal-close']?.addEventListener('click', this.guardEvent(() => this.closeSeriesAlertModal()));
+    this.elements['series-alert-save']?.addEventListener('click', this.guardEvent(() => this.saveSeriesAlert()));
+    this.elements['series-alert-cancel']?.addEventListener('click', this.guardEvent(() => this.closeSeriesAlertModal()));
 
     // シリーズ詳細モーダル
-    this.elements['series-detail-modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeSeriesDetailModal(e)));
-    this.elements['series-detail-add-alert']?.addEventListener('click', this.guardEvent((e) => this.addAlertFromSeriesDetail(e)));
+    this.elements['series-detail-modal-close']?.addEventListener('click', this.guardEvent(() => this.closeSeriesDetailModal()));
+    this.elements['series-detail-add-alert']?.addEventListener('click', this.guardEvent(() => this.addAlertFromSeriesDetail()));
 
     // モーダルオーバーレイクリック（シリーズ関連）
     this.elements['series-alert-modal']?.addEventListener('click', this.guardEvent((e) => {
@@ -237,20 +237,20 @@ class WatchHistoryApp {
     }));
 
     // データベース管理関連イベント
-    this.elements['database-management-btn']?.addEventListener('click', this.guardEvent((e) => this.openDatabaseManagementModal(e)));
-    this.elements['db-management-modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeDatabaseManagementModal(e)));
-    this.elements['request-persistence-btn']?.addEventListener('click', this.guardEvent((e) => this.requestPersistence(e)));
-    this.elements['refresh-persistence-btn']?.addEventListener('click', this.guardEvent((e) => this.refreshPersistenceStatus(e)));
-    this.elements['run-migration-btn']?.addEventListener('click', this.guardEvent((e) => this.runMigration(e)));
-    this.elements['check-migration-btn']?.addEventListener('click', this.guardEvent((e) => this.checkMigrationStatus(e)));
-    this.elements['create-backup-btn']?.addEventListener('click', this.guardEvent((e) => this.createBackup(e)));
-    this.elements['refresh-backups-btn']?.addEventListener('click', this.guardEvent((e) => this.refreshBackupList(e)));
+    this.elements['database-management-btn']?.addEventListener('click', this.guardEvent(() => this.openDatabaseManagementModal()));
+    this.elements['db-management-modal-close']?.addEventListener('click', this.guardEvent(() => this.closeDatabaseManagementModal()));
+    this.elements['request-persistence-btn']?.addEventListener('click', this.guardEvent(() => this.requestPersistence()));
+    this.elements['refresh-persistence-btn']?.addEventListener('click', this.guardEvent(() => this.refreshPersistenceStatus()));
+    this.elements['run-migration-btn']?.addEventListener('click', this.guardEvent(() => this.runMigration()));
+    this.elements['check-migration-btn']?.addEventListener('click', this.guardEvent(() => this.checkMigrationStatus()));
+    this.elements['create-backup-btn']?.addEventListener('click', this.guardEvent(() => this.createBackup()));
+    this.elements['refresh-backups-btn']?.addEventListener('click', this.guardEvent(() => this.refreshBackupList()));
 
     // 設定チェックボックス
-    this.elements['auto-migration-checkbox']?.addEventListener('change', this.guardEvent((e) => this.updateDatabaseConfig(e)));
-    this.elements['auto-persist-checkbox']?.addEventListener('change', this.guardEvent((e) => this.updateDatabaseConfig(e)));
-    this.elements['auto-backup-checkbox']?.addEventListener('change', this.guardEvent((e) => this.updateDatabaseConfig(e)));
-    this.elements['backup-before-migration-checkbox']?.addEventListener('change', this.guardEvent((e) => this.updateDatabaseConfig(e)));
+    this.elements['auto-migration-checkbox']?.addEventListener('change', this.guardEvent(() => this.updateDatabaseConfig()));
+    this.elements['auto-persist-checkbox']?.addEventListener('change', this.guardEvent(() => this.updateDatabaseConfig()));
+    this.elements['auto-backup-checkbox']?.addEventListener('change', this.guardEvent(() => this.updateDatabaseConfig()));
+    this.elements['backup-before-migration-checkbox']?.addEventListener('change', this.guardEvent(() => this.updateDatabaseConfig()));
 
     // データベース管理モーダルオーバーレイクリック
     this.elements['database-management-modal']?.addEventListener('click', (e) => {
@@ -260,8 +260,8 @@ class WatchHistoryApp {
     });
 
     // 通知権限モーダル
-    this.elements['notification-permission-modal-close']?.addEventListener('click', this.guardEvent((e) => this.closeNotificationPermissionModal(e)));
-    this.elements['test-notification-after-setup']?.addEventListener('click', this.guardEvent((e) => this.testNotificationAfterSetup(e)));
+    this.elements['notification-permission-modal-close']?.addEventListener('click', this.guardEvent(() => this.closeNotificationPermissionModal()));
+    this.elements['test-notification-after-setup']?.addEventListener('click', this.guardEvent(() => this.testNotificationAfterSetup()));
 
     // 通知権限モーダルオーバーレイクリック
     this.elements['notification-permission-modal']?.addEventListener('click', (e) => {

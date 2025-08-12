@@ -1115,7 +1115,7 @@ export class Mylist2ManagerUI {
     const selectAllVideosElement = document.getElementById("selectAllVideos");
     if (selectAllVideosElement) {
       selectAllVideosElement.addEventListener("click", () => {
-        const checkboxes = document.querySelectorAll(".video-select");
+        const checkboxes = document.querySelectorAll<HTMLInputElement>(".video-select");
         checkboxes.forEach((checkbox) => {
           // 親要素がキーワードアイテムでない場合のみ選択
           const parentItem = checkbox.closest(".video-item, .keyword-item");
@@ -1130,7 +1130,7 @@ export class Mylist2ManagerUI {
     const deselectAllVideosElement = document.getElementById("deselectAllVideos");
     if (deselectAllVideosElement) {
       deselectAllVideosElement.addEventListener("click", () => {
-        const checkboxes = document.querySelectorAll(".video-select");
+        const checkboxes = document.querySelectorAll<HTMLInputElement>(".video-select");
         checkboxes.forEach((checkbox) => (checkbox.checked = false));
       });
     }

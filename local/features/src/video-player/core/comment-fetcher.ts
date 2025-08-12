@@ -38,9 +38,9 @@ export class CommentFetcher {
 
       return {
         threadKey: String(apiDataObj.comment.nvComment.threadKey || ''),
-        params: String(apiDataObj.comment.nvComment.params || ''),
+        params: { value: String(apiDataObj.comment.nvComment.params || '') },
         server: String(apiDataObj.comment.nvComment.server || ''),
-      };
+      } as unknown as CommentApiData;
     } catch (error) {
       window.logger.error("APIデータの取得に失敗したのじゃ...", {
         error: error instanceof Error ? error.message : 'Unknown error',
