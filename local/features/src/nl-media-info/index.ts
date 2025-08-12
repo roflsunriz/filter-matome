@@ -43,7 +43,10 @@ function initializeApp(): void {
       if (loadingElement) loadingElement.style.display = "none";
       if (errorElement) {
         errorElement.style.display = "block";
-        errorElement.textContent = `エラー: ${error.message}`;
+        const message = (error && typeof (error as { message?: string }).message === 'string')
+          ? (error as { message: string }).message
+          : String(error);
+        errorElement.textContent = `エラー: ${message}`;
       }
     });
 }

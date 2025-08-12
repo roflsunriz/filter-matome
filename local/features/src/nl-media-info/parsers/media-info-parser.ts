@@ -29,6 +29,21 @@ export class MediaInfoParser {
 
   static #parseBasicInfo(jsonContent: MediaItem[]): ParsedMediaInfo {
     const mediaInfoInstance = new NicoVideoMediaInfo(jsonContent);
+    const toStr = (value: unknown, fallback = ''): string => {
+      if (typeof value === 'string') return value;
+      if (value === null || value === undefined) return fallback;
+      if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+        return String(value);
+      }
+      if (typeof value === 'object') {
+        try {
+          return JSON.stringify(value);
+        } catch {
+          return fallback;
+        }
+      }
+      return fallback;
+    };
   
     const result: ParsedMediaInfo = {
       general: {} as GeneralInfo,
@@ -60,17 +75,17 @@ export class MediaInfoParser {
       initVideoFile.media.track.forEach(track => {
         if (track["@type"] === "Video") {
           const videoInfo: VideoTrackInfo = {
-            "Width": String(track.Width ?? ''),
-            "Height": String(track.Height ?? ''),
-            "Format": String(track.Format ?? ''),
-            "Format profile": String(track.Format_Profile ?? ''),
-            "Format settings": String(track.Format_Settings_CABAC ?? ''),
-            "Frame rate mode": String(track.FrameRate_Mode ?? ''),
-            "Frame rate": String(track.FrameRate ?? ''),
-            "Color space": String(track.ColorSpace ?? ''),
-            "Color range": String(track.colour_range ?? ''),
-            "Color primaries": String(track.colour_primaries ?? ''),
-            "Display aspect ratio": String(track.DisplayAspectRatio ?? '')
+            "Width": toStr(track.Width),
+            "Height": toStr(track.Height),
+            "Format": toStr(track.Format),
+            "Format profile": toStr(track.Format_Profile),
+            "Format settings": toStr(track.Format_Settings_CABAC),
+            "Frame rate mode": toStr(track.FrameRate_Mode),
+            "Frame rate": toStr(track.FrameRate),
+            "Color space": toStr(track.ColorSpace),
+            "Color range": toStr(track.colour_range),
+            "Color primaries": toStr(track.colour_primaries),
+            "Display aspect ratio": toStr(track.DisplayAspectRatio)
           };
           result.video.push(videoInfo);
           
@@ -87,17 +102,17 @@ export class MediaInfoParser {
       initAudioFile.media.track.forEach(track => {
         if (track["@type"] === "Audio") {
           const audioInfo: AudioTrackInfo = {
-            "Format": String(track.Format ?? ''),
-            "Format profile": String(track.Format_AdditionalFeatures ?? ''),
-            "Channel(s)": String(track.Channels ?? ''),
-            "Channel positions": String(track.ChannelPositions ?? ''),
-            "Channel layout": String(track.ChannelLayout ?? ''),
-            "Sampling rate": String(track.SamplingRate ?? ''),
-            "Frame rate": String(track.FrameRate ?? ''),
-            "Compression mode": String(track.Compression_Mode ?? ''),
-            "Stream size": String(track.StreamSize ?? ''),
-            "Default": String(track.Default ?? ''),
-            "Alternate group": String(track.AlternateGroup ?? '')
+            "Format": toStr(track.Format),
+            "Format profile": toStr(track.Format_AdditionalFeatures),
+            "Channel(s)": toStr(track.Channels),
+            "Channel positions": toStr(track.ChannelPositions),
+            "Channel layout": toStr(track.ChannelLayout),
+            "Sampling rate": toStr(track.SamplingRate),
+            "Frame rate": toStr(track.FrameRate),
+            "Compression mode": toStr(track.Compression_Mode),
+            "Stream size": toStr(track.StreamSize),
+            "Default": toStr(track.Default),
+            "Alternate group": toStr(track.AlternateGroup)
           };
           result.audio.push(audioInfo);
         }
@@ -112,12 +127,14 @@ export class MediaInfoParser {
     let totalVideoSize = 0; // eslint-disable-line @typescript-eslint/no-unused-vars
     
     audioFiles.forEach(file => {
-      const fileSize = formatters.parseFileSize(String(file.media.track[0].FileSize ?? '0'));
+      const fs = file.media.track[0].FileSize;
+      const fileSize = formatters.parseFileSize(toStr(fs, '0'));
       totalAudioSize += fileSize;
     });
     
     videoFiles.forEach(file => {
-      const fileSize = formatters.parseFileSize(String(file.media.track[0].FileSize ?? '0'));
+      const fsv = file.media.track[0].FileSize;
+      const fileSize = formatters.parseFileSize(toStr(fsv, '0'));
       totalVideoSize += fileSize;
     });
   
@@ -142,12 +159,14 @@ export class MediaInfoParser {
     // ビットレート設定
     if (initAudioFile && initAudioFile.media.track) {
       const audioTrack = initAudioFile.media.track.find(track => track["@type"] === "Audio");
-      result.averageBitrates.audio = audioTrack ? parseInt(String(audioTrack.BitRate_Maximum ?? "192000")) : 192000;
+      const ab = audioTrack?.BitRate_Maximum;
+      result.averageBitrates.audio = audioTrack ? parseInt(toStr(ab, "192000")) : 192000;
     }
   
     if (initVideoFile && initVideoFile.media.track) {
       const videoTrack = initVideoFile.media.track.find(track => track["@type"] === "Video");
-      result.averageBitrates.video = videoTrack ? parseInt(String(videoTrack.BitRate_Maximum ?? "1500000")) : 1500000;
+      const vb = videoTrack?.BitRate_Maximum;
+      result.averageBitrates.video = videoTrack ? parseInt(toStr(vb, "1500000")) : 1500000;
     }
   
     result.averageBitrates.overall = result.averageBitrates.audio + result.averageBitrates.video;
