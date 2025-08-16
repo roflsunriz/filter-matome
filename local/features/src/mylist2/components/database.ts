@@ -520,4 +520,23 @@ export class Mylist2DB {
         
         return { db, health, persistence };
     }
+
+    // すべてのアプリデータをクリア（メタデータは保持）
+    async clearAllData(clearManager: boolean = false): Promise<void> {
+        const db = await this.initDB();
+        try {
+            const storeNames = clearManager
+                ? ['mylists', 'videos', 'keywords', 'manager']
+                : ['mylists', 'videos', 'keywords'];
+            const tx = db.transaction(storeNames, 'readwrite');
+            await Promise.all(storeNames.map(storeName => new Promise<void>((resolve, reject) => {
+                const store = tx.objectStore(storeName);
+                const req = store.clear();
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(new Error(this.toMessage(req.error)));
+            })));
+        } finally {
+            db.close();
+        }
+    }
 } 

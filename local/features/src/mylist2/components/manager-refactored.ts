@@ -11,6 +11,7 @@ import { KeywordService } from "../services/keyword-service.js";
 import { ImportExportService } from "../services/import-export-service.js";
 import { SettingsService } from "../services/settings-service.js";
 import { DatabaseManagementService } from "../services/database-management-service.js";
+import { GoogleDriveService } from "../services/cloud/google-drive-service.js";
 
 export class Mylist2Manager {
   private db: Mylist2DB;
@@ -21,6 +22,7 @@ export class Mylist2Manager {
   private importExportService: ImportExportService;
   private settingsService: SettingsService;
   private databaseManagementService: DatabaseManagementService;
+  private googleDriveService: GoogleDriveService;
 
   constructor() {
     this.db = new Mylist2DB();
@@ -31,6 +33,7 @@ export class Mylist2Manager {
     this.importExportService = new ImportExportService(this.db, this.apiService);
     this.settingsService = new SettingsService(this.db);
     this.databaseManagementService = new DatabaseManagementService(this.db);
+    this.googleDriveService = new GoogleDriveService();
   }
 
   // データベースへのアクセスを提供するpublicメソッド
@@ -218,5 +221,41 @@ export class Mylist2Manager {
   // サービス終了時のクリーンアップ
   destroy(): void {
     this.databaseManagementService.destroy();
+  }
+
+  // データの全消去（設定含むかを選択可能）
+  async clearAllData(includeSettings = false): Promise<{ success: boolean; error?: string }> {
+    return this.databaseManagementService.clearAllData({ includeSettings });
+  }
+
+  // Google Drive アップロード (zip圧縮)
+  async uploadBackupToGoogleDrive(baseFileName: string): Promise<{ success: boolean; fileId?: string; error?: string }> {
+    try {
+      const backup = await this.createDatabaseBackup();
+      if (!backup.success || !backup.backupData) return { success: false, error: backup.error || 'バックアップ作成に失敗しました' };
+      return await this.googleDriveService.uploadBackupZip(baseFileName, backup.backupData);
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  setGoogleClientId(clientId: string): void {
+    this.googleDriveService.setClientId(clientId);
+  }
+
+  // Google Drive 上のバックアップ一覧
+  async listGoogleDriveBackups(): Promise<Array<{ id: string; name: string; modifiedTime?: string; size?: string }>> {
+    return this.googleDriveService.listBackups();
+  }
+
+  // Google Drive からバックアップをダウンロードして復元
+  async restoreFromGoogleDriveBackup(fileId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const jsonText = await this.googleDriveService.downloadBackupJson(fileId);
+      const res = await this.restoreDatabaseFromBackup(jsonText);
+      return res;
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
   }
 } 

@@ -965,66 +965,101 @@ export class Mylist2ManagerUI {
       }));
     }
 
-    // エクスポート機能
+    // エクスポート機能（モーダル経由）
     const exportMylistElement = document.getElementById("exportMylist");
     if (exportMylistElement) {
       exportMylistElement.addEventListener("click", this.guardEvent(async () => {
+        const choice = await this.modalService.showExportOptionsModal();
+        if (choice.action === 'cancel') return;
         try {
-          const data = await this.manager.exportData();
-          const dateTime = this.formatDateTime();
-          const fileName = `Mylist2_${dateTime}.json`;
-
-          const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-          const url = URL.createObjectURL(blob);
-
-          // ダウンロードの完了を待つための Promise を作成
-          await new Promise<void>((resolve, reject) => {
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = fileName;
-
-            // ダウンロード完了時のイベント
-            a.onclick = () => {
-              setTimeout(() => {
-                URL.revokeObjectURL(url);
-                resolve();
-              }, 1000); // ダウンロード完了まで少し待機
-            };
-
-            // エラー時
-            a.onerror = () => {
-              URL.revokeObjectURL(url);
-              reject(new Error("ダウンロードに失敗しました"));
-            };
-
-            // クリックイベントを発火
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-          });
-
-          // ダウンロード完了後にメッセージを表示
-          await this.showCustomAlert("エクスポートが完了しました");
+          if (choice.action === 'local') {
+            const data = await this.manager.exportData();
+            const dateTime = this.formatDateTime();
+            const fileName = `Mylist2_${dateTime}.json`;
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            await new Promise<void>((resolve, reject) => {
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = fileName;
+              a.onclick = () => { setTimeout(() => { URL.revokeObjectURL(url); resolve(); }, 500); };
+              a.onerror = () => { URL.revokeObjectURL(url); reject(new Error("ダウンロードに失敗しました")); };
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            });
+            await this.showCustomAlert("エクスポートが完了しました");
+          } else if (choice.action === 'cloud') {
+            const dateTime = this.formatDateTime();
+            const baseName = `Mylist2_${dateTime}`;
+            const result = await this.manager.uploadBackupToGoogleDrive(baseName);
+            if (result.success) {
+              await this.showCustomAlert("Google Drive にバックアップを保存しました");
+            } else {
+              await this.showCustomAlert("Google Drive へのバックアップに失敗しました: " + (result.error || "不明なエラー"));
+            }
+          }
         } catch (error) {
-          window.logger.error("エクスポートに失敗しました:", error);
+          window.logger.error("エクスポート処理でエラー:", error);
           const errorMessage = error instanceof Error ? error.message : "エクスポートに失敗しました";
           await this.showCustomAlert("エクスポートに失敗しました: " + errorMessage);
         }
       }));
     }
 
-    // インポート機能
+    // インポート機能（モーダル経由）
     const importMylistElement = document.getElementById("importMylist");
     if (importMylistElement) {
       importMylistElement.addEventListener("click", this.guardEvent(async () => {
-        const input = document.getElementById("importFile") as HTMLInputElement;
-        if (!input) {
-          await this.showCustomAlert("インポートファイル選択要素が見つかりません");
-          return;
+        const choice = await this.modalService.showImportOptionsModal();
+        if (choice.action === 'cancel') return;
+        if (choice.action === 'local') {
+          const input = document.getElementById("importFile") as HTMLInputElement;
+          if (!input) {
+            await this.showCustomAlert("インポートファイル選択要素が見つかりません");
+            return;
+          }
+          input.accept = ".json,.txt";
+          input.click();
+        } else if (choice.action === 'clear') {
+          const confirmed = await this.showCustomConfirm("本当に全データをクリアしますか？この操作は取り消せません。", "warning", "データベースのクリア");
+          if (!confirmed) return;
+          const result = await this.manager.clearAllData(false);
+          if (result.success) {
+            await this.loadMylists();
+            const videoListElement = document.getElementById("videoList");
+            if (videoListElement) videoListElement.innerHTML = "";
+            await this.showCustomAlert("データベースをクリアしました");
+          } else {
+            await this.showCustomAlert("データベースのクリアに失敗しました: " + (result.error || "不明なエラー"));
+          }
+        } else if (choice.action === 'cloud') {
+          try {
+            const backups = await this.manager.listGoogleDriveBackups();
+            if (!backups || backups.length === 0) {
+              await this.showCustomAlert("Google Drive にバックアップが見つかりません");
+              return;
+            }
+            const selectedId = await this.modalService.showSelectionModal(
+              '復元するバックアップを選択',
+              backups.map(f => ({ id: f.id, label: f.name, subLabel: f.modifiedTime ? new Date(f.modifiedTime).toLocaleString() : '' })),
+              '復元'
+            );
+            if (!selectedId) return;
+            const confirmed = await this.showCustomConfirm("選択したバックアップで復元します。現在のデータは上書きされます。よろしいですか？", 'warning', '復元確認');
+            if (!confirmed) return;
+            this.showProgress();
+            const res = await this.manager.restoreFromGoogleDriveBackup(selectedId);
+            if (res.success) {
+              await this.loadMylists();
+              await this.showCustomAlert("バックアップから復元しました");
+            } else {
+              await this.showCustomAlert("復元に失敗しました: " + (res.error || "不明なエラー"));
+            }
+          } finally {
+            this.hideProgress();
+          }
         }
-        
-        input.accept = ".json,.txt"; // .txtも受け付けるように
-        input.click();
       }));
     }
 

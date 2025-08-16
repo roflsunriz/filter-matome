@@ -68,6 +68,11 @@ export const ICONS = {
   trending_up: 'trending_up',
   video_library: 'video_library',
   whatshot: 'whatshot',
+  download: 'download',
+  schedule: 'schedule',
+  cloud_upload: 'cloud_upload',
+  cloud_download: 'cloud_download',
+  upload: 'upload',
   } as const;
 
 /**

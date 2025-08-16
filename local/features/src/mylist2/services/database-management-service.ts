@@ -338,4 +338,15 @@ export class DatabaseManagementService {
     destroy(): void {
         this.stopAutoHealthCheck();
     }
+
+    // すべてのデータをクリア（UIからの明示操作用）
+    async clearAllData(options?: { includeSettings?: boolean }): Promise<{ success: boolean; error?: string }> {
+        try {
+            await this.db.clearAllData(options?.includeSettings === true);
+            return { success: true };
+        } catch (error) {
+            window.logger?.error('Failed to clear all data:', error);
+            return { success: false, error: error?.toString?.() ?? String(error) };
+        }
+    }
 } 

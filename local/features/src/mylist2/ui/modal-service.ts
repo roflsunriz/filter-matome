@@ -198,4 +198,106 @@ export class ModalService {
       saveButton.addEventListener("click", saveHandler);
     });
   }
+
+  // エクスポートオプションモーダル
+  async showExportOptionsModal(): Promise<{
+    action: 'local' | 'cloud' | 'cancel';
+  }> {
+    return new Promise((resolve) => {
+      const html = `
+        <div class="cml2-modal" style="display:flex">
+          <div class="cml2-modal-content">
+            <h3 class="cml2-modal-title">エクスポート方法を選択</h3>
+            <div class="cml2-modal-body">
+              <div style="display:flex; flex-direction:column; gap:8px">
+                <button class="cml2-btn" id="exportLocal">${createMaterialIcon(ICONS.download, { color: 'white' })}ローカルに保存</button>
+                <button class="cml2-btn" id="exportCloud">${createMaterialIcon(ICONS.cloud_upload, { color: 'white' })}Google Drive にバックアップ</button>
+              </div>
+            </div>
+            <div class="cml2-modal-footer">
+              <button class="cml2-btn" id="exportCancel">${createMaterialIcon(ICONS.close, { color: 'white' })}キャンセル</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', html);
+      const modal = document.querySelector('.cml2-modal') as HTMLElement;
+      const cleanup = () => modal?.remove();
+      const bind = (id: string, result: 'local' | 'cloud' | 'cancel') => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', () => { cleanup(); resolve({ action: result }); });
+      };
+      bind('exportLocal', 'local');
+      bind('exportCloud', 'cloud');
+      bind('exportCancel', 'cancel');
+    });
+  }
+
+  // インポートオプションモーダル
+  async showImportOptionsModal(): Promise<{
+    action: 'local' | 'clear' | 'cloud' | 'cancel';
+  }> {
+    return new Promise((resolve) => {
+      const html = `
+        <div class="cml2-modal" style="display:flex">
+          <div class="cml2-modal-content">
+            <h3 class="cml2-modal-title">インポート方法を選択</h3>
+            <div class="cml2-modal-body">
+              <div style="display:flex; flex-direction:column; gap:8px">
+                <button class="cml2-btn" id="importLocal">${createMaterialIcon(ICONS.upload, { color: 'white' })}ローカルからインポート</button>
+                <button class="cml2-btn" id="importClear">${createMaterialIcon(ICONS.delete, { color: 'white' })}データベースのクリア</button>
+                <button class="cml2-btn" id="importCloud">${createMaterialIcon(ICONS.cloud_download, { color: 'white' })}Google Drive からインポート</button>
+              </div>
+            </div>
+            <div class="cml2-modal-footer">
+              <button class="cml2-btn" id="importCancel">${createMaterialIcon(ICONS.close, { color: 'white' })}キャンセル</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', html);
+      const modal = document.querySelector('.cml2-modal') as HTMLElement;
+      const cleanup = () => modal?.remove();
+      const bind = (id: string, result: 'local' | 'clear' | 'cloud' | 'cancel') => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', () => { cleanup(); resolve({ action: result }); });
+      };
+      bind('importLocal', 'local');
+      bind('importClear', 'clear');
+      bind('importCloud', 'cloud');
+      bind('importCancel', 'cancel');
+    });
+  }
+
+  // 汎用選択モーダル（セレクトで一つ選ぶ）
+  async showSelectionModal(
+    title: string,
+    items: Array<{ id: string; label: string; subLabel?: string }>,
+    confirmText = 'OK'
+  ): Promise<string | null> {
+    return new Promise((resolve) => {
+      const html = `
+        <div class="cml2-modal" style="display:flex">
+          <div class="cml2-modal-content">
+            <h3 class="cml2-modal-title">${title}</h3>
+            <div class="cml2-modal-body">
+              <select class="cml2-select" id="cml2Selection">
+                ${items.map(it => `<option value="${it.id}">${it.label}${it.subLabel ? ` - ${it.subLabel}` : ''}</option>`).join('')}
+              </select>
+            </div>
+            <div class="cml2-modal-footer">
+              <button class="cml2-btn" id="cml2SelectionCancel">${createMaterialIcon(ICONS.close, { color: 'white' })}キャンセル</button>
+              <button class="cml2-btn" id="cml2SelectionOk">${createMaterialIcon(ICONS.check, { color: 'white' })}${confirmText}</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', html);
+      const modal = document.querySelector('.cml2-modal') as HTMLElement;
+      const select = document.getElementById('cml2Selection') as HTMLSelectElement | null;
+      const ok = document.getElementById('cml2SelectionOk');
+      const cancel = document.getElementById('cml2SelectionCancel');
+      if (!modal || !select || !ok || !cancel) { resolve(null); return; }
+      const cleanup = () => modal.remove();
+      ok.addEventListener('click', () => { const v = select.value; cleanup(); resolve(v || null); });
+      cancel.addEventListener('click', () => { cleanup(); resolve(null); });
+    });
+  }
 } 
