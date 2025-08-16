@@ -131,6 +131,22 @@ jobs:
           echo "### 📝 このリリースの変更内容" >> release_notes.md
           git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release_notes.md || echo "- フィルタまとめ${GITHUB_REF#refs/tags/} リリース" >> release_notes.md
 
+          echo "" >> release_notes.md
+          echo "### 📄 nlFilters リリースノート抜粋" >> release_notes.md
+          SECTION_TITLE="### フィルタまとめ${GITHUB_REF#refs/tags/} "
+          if grep -q "^${SECTION_TITLE}" nlFilters/198_release_notes.md; then
+            # 見出し行から次の見出し直前までを抽出
+            awk -v t="${SECTION_TITLE}" '
+              BEGIN { p=0 }
+              $0 ~ "^" t { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
+              p && /^### フィルタまとめ#/ { p=0; print ""; print "</details>" }
+              p { print }
+              END { if (p==1) { print ""; print "</details>" } }
+            ' nlFilters/198_release_notes.md >> release_notes.md
+          else
+            echo "- 該当するセクションが見つかりませんでした。全文は nlFilters/198_release_notes.md を参照してください。" >> release_notes.md
+          fi
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
