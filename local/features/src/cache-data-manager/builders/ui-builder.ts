@@ -60,28 +60,30 @@ export class UIBuilder {
 
   public createVideoCard(videoData: VideoData): HTMLElement {
     const card = (this.templates.get("videoCard") as HTMLElement).cloneNode(true) as HTMLElement;
-    card.dataset.id = videoData.baseId;
+    const safe = this.normalizeVideoData(videoData);
+    card.dataset.id = safe.baseId;
 
     // 基本情報設定
-    (card.querySelector(".video-id") as HTMLElement).textContent = videoData.baseId;
-    (card.querySelector(".video-title") as HTMLElement).textContent = videoData.title === "null" ? "タイトルを取得できません" : videoData.title || "タイトルを取得できません";
+    (card.querySelector(".video-id") as HTMLElement).textContent = safe.baseId;
+    (card.querySelector(".video-title") as HTMLElement).textContent = safe.title === "null" ? "タイトルを取得できません" : safe.title || "タイトルを取得できません";
     const thumbnailImg = card.querySelector(".thumbnail-image") as HTMLImageElement;
-    thumbnailImg.src = videoData.thumbnailUrl;
+    thumbnailImg.src = safe.thumbnailUrl;
     // エラーハンドリング追加
     thumbnailImg.onerror = () => {
       thumbnailImg.src = "/local/images/fallback-thumbnail.svg";
       thumbnailImg.classList.add("error-thumbnail");
     };
-    (card.querySelector(".quality-badge") as HTMLElement).textContent = videoData.quality === 'unknown' ? "不明な画質" : videoData.quality || "不明な画質";
-    (card.querySelector(".quality-badge") as HTMLElement).className = `quality-badge ${this.getQualityClass(videoData.quality)}`;
-    (card.querySelector(".temp-file") as HTMLElement).textContent = this.getTempOrCompleteString(videoData.isTemp);
+    (card.querySelector(".quality-badge") as HTMLElement).textContent = safe.quality === 'unknown' ? "不明な画質" : safe.quality || "不明な画質";
+    (card.querySelector(".quality-badge") as HTMLElement).className = `quality-badge ${this.getQualityClass(safe.quality)}`;
+    (card.querySelector(".temp-file") as HTMLElement).textContent = this.getTempOrCompleteString(safe.isTemp);
 
     return card;
   }
 
-  private getQualityClass(quality: string): string {
+  private getQualityClass(quality: unknown): string {
     // 数値部分のみ抽出して数値化
-    const numericValue = parseInt(String(quality).replace(/[^0-9]/g, '')) || 'unknown';
+    const qualityStr = typeof quality === 'string' || typeof quality === 'number' ? String(quality) : '';
+    const numericValue = parseInt(qualityStr.replace(/[^0-9]/g, '')) || 'unknown';
     
     const qualityMap: Record<string | number, string> = {
       1080: "hd-quality",
@@ -93,12 +95,34 @@ export class UIBuilder {
     return qualityMap[numericValue] || "unknown-quality";
   }
 
-  private getTempOrCompleteString(string: boolean): string {
-    if (string === true) {
+  private getTempOrCompleteString(isTemp: unknown): string {
+    if (isTemp === true) {
       return "Temporary";
     } else {
       return "Complete";
     }
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+  }
+
+  private normalizeVideoData(input: unknown): {
+    baseId: string;
+    title: string;
+    thumbnailUrl: string;
+    quality: string;
+    isTemp: boolean;
+  } {
+    if (this.isRecord(input)) {
+      const baseId = typeof input.baseId === 'string' ? input.baseId : '';
+      const title = typeof input.title === 'string' ? input.title : '';
+      const thumbnailUrl = typeof input.thumbnailUrl === 'string' ? input.thumbnailUrl : '';
+      const quality = typeof input.quality === 'string' ? input.quality : 'unknown';
+      const isTemp = typeof input.isTemp === 'boolean' ? input.isTemp : false;
+      return { baseId, title, thumbnailUrl, quality, isTemp };
+    }
+    return { baseId: '', title: '', thumbnailUrl: '', quality: 'unknown', isTemp: false };
   }
 
   private createHeaderAndContainer(): void {

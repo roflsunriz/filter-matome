@@ -17,10 +17,11 @@ export class BatchRenderer {
   // バッチ処理用メソッド
   public async processBatch(entries: VideoData[]): Promise<void> {
     this.clearContainer();
-    this.renderQueue = [...entries];
+    // ローカルキューを使ってバッチ処理（this.renderQueue を変更しない）
+    const queue = entries.slice();
 
-    while (this.renderQueue.length > 0) {
-      const batch = this.renderQueue.splice(0, this.batchSize);
+    while (queue.length > 0) {
+      const batch = queue.splice(0, this.batchSize);
       const fragment = document.createDocumentFragment();
 
       batch.forEach((entry) => {
@@ -57,7 +58,12 @@ export class BatchRenderer {
     }
   }
 
-  public findEntryById(id: string): VideoData | undefined {
-    return this.dataLoader.getAllEntries().find((e) => e.id === id);
+  public findEntryById(id: string): unknown {
+    const all = this.dataLoader.getAllEntries() as unknown[];
+    const hasId = (v: unknown): v is { id: string } => typeof v === 'object' && v !== null && typeof (v as Record<string, unknown>).id === 'string';
+    for (const e of all) {
+      if (hasId(e) && e.id === id) return e;
+    }
+    return undefined;
   }
 } 

@@ -20,11 +20,13 @@ export class LoadDataFromMemory {
 
     // tempList優先で統合
     for (const [id, data] of Object.entries(tempList)) {
+      if (!Array.isArray(data)) continue;
       entries.push(this.normalizeEntry(id, data));
     }
 
     // cacheListからtempListにないもののみ追加
     for (const [id, data] of Object.entries(cacheList)) {
+      if (!Array.isArray(data)) continue;
       if (!tempList[id]) {
         entries.push(this.normalizeEntry(id, data));
       }
@@ -59,29 +61,58 @@ export class LoadDataFromMemory {
   }
 
   // 従来のソートロジックを維持
+  private isVideoData(value: unknown): value is VideoData {
+    return typeof value === 'object' && value !== null && typeof ((value as unknown as Record<string, unknown>).id) === 'string' && ((value as unknown as Record<string, unknown>).id as string).length > 0;
+  }
+
   private sortEntries(entries: VideoData[]): VideoData[] {
-    return entries
-      .filter((entry) => entry && entry.id) // 無効なエントリを除外
-      .sort((a, b) => {
-        const typePriority: Record<string, number> = { nm: 1, sm: 2, so: 3 };
-        const getType = (id: string) => id.slice(0, 2);
-        const getNumber = (id: string) => parseInt(id.match(/\d+/)?.[0] || "0", 10);
+    const filtered = entries.filter((e) => this.isVideoData(e));
 
-        const aType = getType(a.id);
-        const bType = getType(b.id);
+    const getIdSafe = (entry: unknown): string => {
+      if (typeof entry === 'object' && entry !== null) {
+        const rec = entry as Record<string, unknown>;
+        if (typeof rec.id === 'string') return rec.id;
+      }
+      return '';
+    };
 
-        // タイプ順で比較
-        if (typePriority[aType] !== typePriority[bType]) {
-          return typePriority[aType] - typePriority[bType];
-        }
+    const getTypeFromId = (id: string) => id.slice(0, 2);
+    const getNumberFromId = (id: string) => parseInt(id.match(/\d+/)?.[0] || "0", 10);
 
-        // 同じタイプなら数値で比較
-        return getNumber(a.id) - getNumber(b.id);
-      });
+    return filtered.sort((a, b) => {
+      const aId = getIdSafe(a);
+      const bId = getIdSafe(b);
+
+      const typePriority: Record<string, number> = { nm: 1, sm: 2, so: 3 };
+      const aType = getTypeFromId(aId);
+      const bType = getTypeFromId(bId);
+
+      // タイプ順で比較
+      if (typePriority[aType] !== typePriority[bType]) {
+        return typePriority[aType] - typePriority[bType];
+      }
+
+      // 同じタイプなら数値で比較
+      return getNumberFromId(aId) - getNumberFromId(bId);
+    });
   }
 
   public getEntriesByIds(ids: string[]): VideoData[] {
     const allEntries = this.getAllEntries();
-    return allEntries.filter((entry) => ids.includes(entry.id));
+    const getId = (e: unknown): string | undefined => {
+      if (typeof e === 'object' && e !== null) {
+        const rec = e as Record<string, unknown>;
+        if (typeof rec.id === 'string') return rec.id;
+      }
+      return undefined;
+    };
+
+    const allUnknown = allEntries as unknown[];
+    const filtered = allUnknown.filter((entry) => {
+      const id = getId(entry);
+      return typeof id === 'string' && ids.includes(id);
+    }) as VideoData[];
+
+    return filtered;
   }
 } 

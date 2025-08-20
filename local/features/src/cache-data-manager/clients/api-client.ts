@@ -16,13 +16,10 @@ export class APIClient {
     }
 
     const text = await response.text();
-    const parsedData = this.parseResponse(text);
-
-    // キャッシュ保存
-    this.cache.set(videoId, parsedData);
+    // キャッシュ保存と返却を直接行う（中間変数を避ける）
+    this.cache.set(videoId, this.parseResponse(text));
     setTimeout(() => this.cache.delete(videoId), 30 * 60 * 1000);
-
-    return parsedData;
+    return this.cache.get(videoId)!;
   }
 
   private parseResponse(xmlText: string): APIResponse {
