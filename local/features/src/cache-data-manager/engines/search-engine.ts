@@ -1,4 +1,5 @@
 import type { LoadDataFromMemory } from '../loaders/load-data-from-memory.js';
+// avoid importing project path aliases here to keep linting safe
 
 export class SearchEngine {
   private index: unknown;
@@ -60,12 +61,21 @@ export class SearchEngine {
   }
 
   private rebuildIndex(): void {
-    const entries = this.dataLoader.getAllEntries();
-    entries.forEach((entry) => {
-      (this.index as { add: (doc: { id: string; title: string }) => void }).add({
-        id: entry.id,
-        title: entry.title.toLowerCase(), // 小文字化
-      });
-    });
+    const entries = this.dataLoader.getAllEntries() as unknown[];
+
+    for (const rawEntry of entries) {
+      if (typeof rawEntry !== 'object' || rawEntry === null) continue;
+      const rec = rawEntry as Record<string, unknown>;
+      const id = typeof rec.id === 'string' ? rec.id : undefined;
+      const titleRaw = typeof rec.title === 'string' ? rec.title : undefined;
+      if (!id || !titleRaw) continue;
+
+      const safeTitle = titleRaw.toLowerCase();
+
+      const indexWithAdd = this.index as { add?: (doc: { id: string; title: string }) => void } | undefined;
+      if (indexWithAdd && typeof indexWithAdd.add === 'function') {
+        indexWithAdd.add({ id, title: safeTitle });
+      }
+    }
   }
 } 

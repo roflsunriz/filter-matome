@@ -3,12 +3,13 @@ import type { EventCallback } from '@/types';
 export class EventManager {
   private listeners: Map<string, EventCallback<unknown>[]> = new Map();
 
-  // すべて unknown ベースで扱うことで呼び出し側のジェネリクス差異を吸収する
-  public addListener(eventType: string, callback: EventCallback<unknown>): void {
+  // 呼び出し側が具体的なイベント型を渡せるようにジェネリクスを受け取る
+  // 内部では unknown ベースの配列に格納するためキャストして扱う
+  public addListener<T = unknown>(eventType: string, callback: EventCallback<T>): void {
     if (!this.listeners.has(eventType)) {
       this.listeners.set(eventType, []);
     }
-    this.listeners.get(eventType)?.push(callback);
+    this.listeners.get(eventType)?.push(callback as EventCallback<unknown>);
   }
 
   public trigger(eventType: string, data?: unknown): void {
