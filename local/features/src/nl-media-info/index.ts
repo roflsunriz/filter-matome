@@ -1,4 +1,5 @@
 import { MediaInfoParser } from './parsers/media-info-parser.js';
+import { validators } from './utils/validators.js';
 import { UIUpdater } from './ui/ui-updater.js';
 import { constants } from './utils/constants.js';
 import { uiStyles } from './styles/styles.js';
@@ -24,10 +25,13 @@ function initializeApp(): void {
   UIUpdater.updateTitle(constants.nlMediaInfoVideoTitle, constants.nlMediaInfoVideoId);
   
   getMediaInfo(`${constants.nlMediaInfobaseurl}${constants.nlMediaInfoVideoId}`)
-    .then((data) => {
-      const parsedData = MediaInfoParser.parse(data as import('@/types').MediaItem[]);
-      if(DEBUG_NLMEDIAINFO) console.log("パース後のデータ:", parsedData);
-      return parsedData;  // 明示的にパースしたデータを返すのじゃ
+    .then((data: unknown) => {
+      if (!validators.isValidMediaInfo(data)) {
+        throw new Error('メディア情報の形式が不正なのじゃ');
+      }
+      const parsedData = MediaInfoParser.parse(data);
+      if (DEBUG_NLMEDIAINFO) console.log("パース後のデータ:", parsedData);
+      return parsedData;
     })
     .then(parsedData => {
       if (!parsedData || !parsedData.result) {

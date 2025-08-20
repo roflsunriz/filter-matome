@@ -1,6 +1,6 @@
 import { StatisticsManager } from "../managers/statistics-manager.js";
 import { constants } from "../utils/constants.js";
-import type { MediaItem } from '@/types';
+import type { MediaItem, AllStats } from '@/types/nl-media-info-types';
 
 export interface CreationDate {
   file: string;
@@ -8,9 +8,9 @@ export interface CreationDate {
 }
 
 export interface MediaDetails {
-  general: unknown;
-  video: unknown;
-  audio: unknown;
+  general: Record<string, unknown> | undefined;
+  video: Record<string, unknown> | undefined;
+  audio: Record<string, unknown> | undefined;
 }
 
 export class NicoVideoMediaInfo {
@@ -20,15 +20,55 @@ export class NicoVideoMediaInfo {
     this.mediaInfo = jsonData;
   }
 
+  // 安全アクセサ群
+  #isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+  }
+
+  #safeGetMediaRef(item: MediaItem): string {
+    const media = (item as unknown as { media?: unknown }).media;
+    if (this.#isRecord(media)) {
+      const ref = media["@ref"];
+      return typeof ref === 'string' ? ref : '';
+    }
+    return '';
+  }
+
+  #safeGetTracks(item: MediaItem): unknown[] | undefined {
+    const media = (item as unknown as { media?: unknown }).media;
+    if (this.#isRecord(media)) {
+      const track = media["track"];
+      return Array.isArray(track) ? track : undefined;
+    }
+    return undefined;
+  }
+
+  #safeFindTrackByType(item: MediaItem, type: string): Record<string, unknown> | undefined {
+    const tracks = this.#safeGetTracks(item);
+    const found = tracks?.find((t) => {
+      if (!this.#isRecord(t)) return false;
+      const atType = t["@type"];
+      return typeof atType === 'string' && atType === type;
+    });
+    return this.#isRecord(found) ? found : undefined;
+  }
+
+  #safeGetFirstTrack(item: MediaItem): Record<string, unknown> | undefined {
+    const tracks = this.#safeGetTracks(item);
+    const first = tracks && tracks.length > 0 ? tracks[0] : undefined;
+    return this.#isRecord(first) ? first : undefined;
+  }
+
   /**
    * 音声ファイルの情報を取得するのじゃ
    */
   getAudioFiles(): MediaItem[] {
-    const audioFiles = this.mediaInfo.filter(
-      (info) => info.media["@ref"].includes(constants.AudioInitFile) || 
-                info.media["@ref"].includes(constants.AudioInitFile2) || 
-                info.media["@ref"].includes(constants.AudioInitFile3)
-    );
+    const audioFiles = this.mediaInfo.filter((info) => {
+      const ref = this.#safeGetMediaRef(info);
+      return ref.includes(constants.AudioInitFile) ||
+             ref.includes(constants.AudioInitFile2) ||
+             ref.includes(constants.AudioInitFile3);
+    });
 
     if (constants.DEBUG_NLMEDIAINFO) console.log("音声ファイルの情報を取得するのじゃ:", audioFiles);
 
@@ -39,11 +79,12 @@ export class NicoVideoMediaInfo {
    * 映像ファイルの情報を取得するのじゃ
    */
   getVideoFiles(): MediaItem[] {
-    const videoFiles = this.mediaInfo.filter(
-      (info) => info.media["@ref"].includes(constants.VideoInitFile) || 
-                info.media["@ref"].includes(constants.VideoInitFile2) || 
-                info.media["@ref"].includes(constants.VideoInitFile3)
-    );
+    const videoFiles = this.mediaInfo.filter((info) => {
+      const ref = this.#safeGetMediaRef(info);
+      return ref.includes(constants.VideoInitFile) ||
+             ref.includes(constants.VideoInitFile2) ||
+             ref.includes(constants.VideoInitFile3);
+    });
 
     if (constants.DEBUG_NLMEDIAINFO) console.log("映像ファイルの情報を取得するのじゃ:", videoFiles);
 
@@ -55,10 +96,11 @@ export class NicoVideoMediaInfo {
    */
   getTotalFileSize(): number {
     const totalFileSize = this.mediaInfo.reduce((total, info) => {
-      const raw = info.media.track[0].FileSize;
+      const first = this.#safeGetFirstTrack(info);
+      const raw: unknown = first ? first["FileSize"] : undefined;
       const s = (typeof raw === 'string' && raw.length > 0) ? raw : '0';
       const fileSize = parseInt(s, 10);
-      return total + fileSize;
+      return total + (Number.isNaN(fileSize) ? 0 : fileSize);
     }, 0);
 
     if (constants.DEBUG_NLMEDIAINFO) console.log("全体のファイルサイズを取得するのじゃ:", totalFileSize);
@@ -70,10 +112,15 @@ export class NicoVideoMediaInfo {
    * ファイルの作成日時情報を取得するのじゃ
    */
   getCreationDates(): CreationDate[] {
-    const creationDates = this.mediaInfo.map((info) => ({
-      file: info.media["@ref"],
-      created: (typeof info.media.track[0].File_Created_Date === 'string') ? info.media.track[0].File_Created_Date : undefined,
-    }));
+    const creationDates = this.mediaInfo.map((info) => {
+      const ref = this.#safeGetMediaRef(info);
+      const first = this.#safeGetFirstTrack(info);
+      const createdRaw: unknown = first ? first["File_Created_Date"] : undefined;
+      return {
+        file: ref,
+        created: typeof createdRaw === 'string' ? createdRaw : undefined,
+      };
+    });
 
     if (constants.DEBUG_NLMEDIAINFO)
       console.log("ファイルの作成日時情報を取得するのじゃ:", creationDates);
@@ -106,7 +153,7 @@ export class NicoVideoMediaInfo {
   /**
    * 統計情報を取得するのじゃ
    */
-  getFormatStats(): unknown {
+  getFormatStats(): AllStats {
     const formatStats = StatisticsManager.generateFormatStats(this.mediaInfo);
 
     if (constants.DEBUG_NLMEDIAINFO) console.log("統計情報を取得するのじゃ:", formatStats);
@@ -117,10 +164,10 @@ export class NicoVideoMediaInfo {
   /**
    * 一般情報を抽出するのじゃ
    */
-  #extractGeneralInfo(): unknown {
-    const generalInfo =
-      this.mediaInfo.find((item) => item.media["@ref"].includes(constants.MasterFile))?.media.track.find((track) => track["@type"] === "General") ||
-      this.mediaInfo.find((item) => item.media["@ref"].includes(constants.MasterFile));
+  #extractGeneralInfo(): Record<string, unknown> | undefined {
+    const master = this.mediaInfo.find((item) => this.#safeGetMediaRef(item).includes(constants.MasterFile));
+    const generalTrack = master ? this.#safeFindTrackByType(master, "General") : undefined;
+    const generalInfo = generalTrack ?? (master ? this.#safeGetFirstTrack(master) : undefined);
 
     if (constants.DEBUG_NLMEDIAINFO) console.log("一般情報を抽出するのじゃ:", generalInfo);
 
@@ -130,12 +177,15 @@ export class NicoVideoMediaInfo {
   /**
    * 映像情報を抽出するのじゃ
    */
-  #extractVideoInfo(): unknown {
-    const videoInfo =
-      this.mediaInfo.find((item) => item.media["@ref"].includes(constants.MasterFile))?.media.track.find((track) => track["@type"] === "Video") ||
-      this.mediaInfo.find((item) => item.media["@ref"].includes(constants.VideoInitFile)) ||
-      this.mediaInfo.find((item) => item.media["@ref"].includes(constants.VideoInitFile2)) ||
-      this.mediaInfo.find((item) => item.media["@ref"].includes(constants.VideoInitFile3));
+  #extractVideoInfo(): Record<string, unknown> | undefined {
+    const master = this.mediaInfo.find((item) => this.#safeGetMediaRef(item).includes(constants.MasterFile));
+    const videoTrack = master ? this.#safeFindTrackByType(master, "Video") : undefined;
+    const initVideo = this.mediaInfo.find((item) => {
+      const ref = this.#safeGetMediaRef(item);
+      return ref.includes(constants.VideoInitFile) || ref.includes(constants.VideoInitFile2) || ref.includes(constants.VideoInitFile3);
+    });
+    const initVideoTrack = initVideo ? this.#safeFindTrackByType(initVideo, "Video") ?? this.#safeGetFirstTrack(initVideo) : undefined;
+    const videoInfo = videoTrack ?? initVideoTrack;
 
     if (constants.DEBUG_NLMEDIAINFO) console.log("映像情報を抽出するのじゃ:", videoInfo);
 
@@ -145,12 +195,15 @@ export class NicoVideoMediaInfo {
   /**
    * 音声情報を抽出するのじゃ
    */
-  #extractAudioInfo(): unknown {
-    const audioInfo =
-      this.mediaInfo.find((item) => item.media["@ref"].includes(constants.MasterFile))?.media.track.find((track) => track["@type"] === "Audio") ||
-      this.mediaInfo.find((item) => item.media["@ref"].includes(constants.AudioInitFile)) ||
-      this.mediaInfo.find((item) => item.media["@ref"].includes(constants.AudioInitFile2)) ||
-      this.mediaInfo.find((item) => item.media["@ref"].includes(constants.AudioInitFile3));
+  #extractAudioInfo(): Record<string, unknown> | undefined {
+    const master = this.mediaInfo.find((item) => this.#safeGetMediaRef(item).includes(constants.MasterFile));
+    const audioTrack = master ? this.#safeFindTrackByType(master, "Audio") : undefined;
+    const initAudio = this.mediaInfo.find((item) => {
+      const ref = this.#safeGetMediaRef(item);
+      return ref.includes(constants.AudioInitFile) || ref.includes(constants.AudioInitFile2) || ref.includes(constants.AudioInitFile3);
+    });
+    const initAudioTrack = initAudio ? this.#safeFindTrackByType(initAudio, "Audio") ?? this.#safeGetFirstTrack(initAudio) : undefined;
+    const audioInfo = audioTrack ?? initAudioTrack;
 
     if (constants.DEBUG_NLMEDIAINFO) console.log("音声情報を抽出するのじゃ:", audioInfo);
 

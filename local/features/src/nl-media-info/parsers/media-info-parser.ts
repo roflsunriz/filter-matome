@@ -1,34 +1,52 @@
 import { NicoVideoMediaInfo } from './nico-video-media-info.js';
 import { constants } from '../utils/constants.js';
-import { formatters } from '../utils/formatters.js';
-import type { 
-  MediaItem, 
-  MediaInfoResult, 
-  ParsedMediaInfo, 
-  VideoTrackInfo, 
-  AudioTrackInfo,
-  GeneralInfo,
-  AllStats
-} from '@/types';
+// import { formatters } from '../utils/formatters.js';
+import { validators } from '../utils/validators.js';
+import type {
+  MediaItem,
+  MediaInfoResult,
+  ParsedMediaInfo,
+  VideoTrackInfo,
+  AudioTrackInfo
+} from '@/types/nl-media-info-types';
 
 export class MediaInfoParser {
   static parse(jsonContent: MediaItem[]): MediaInfoResult {
-    const mediaInfoInstance = new NicoVideoMediaInfo(jsonContent);
-    const parsedInfo = this.#parseBasicInfo(jsonContent);
-    
-    return {
-      result: {
-        video: parsedInfo.video,
-        audio: parsedInfo.audio,
-        general: parsedInfo.general,
-        averageBitrates: parsedInfo.averageBitrates
-      },
-      formatStats: mediaInfoInstance.getFormatStats() as AllStats
-    };
+    if (!validators.isValidMediaInfo(jsonContent)) {
+      throw new Error('Invalid media info format');
+    }
+    const parsed = this.#parseBasicInfo(jsonContent);
+    const stats = new NicoVideoMediaInfo(jsonContent).getFormatStats();
+    return { result: parsed, formatStats: stats } as MediaInfoResult;
   }
 
   static #parseBasicInfo(jsonContent: MediaItem[]): ParsedMediaInfo {
-    const mediaInfoInstance = new NicoVideoMediaInfo(jsonContent);
+    const getMediaRef = (item: MediaItem): string => {
+      const media = (item as unknown as { media?: unknown }).media;
+      if (typeof media === 'object' && media !== null) {
+        const ref = (media as Record<string, unknown>)["@ref"];
+        return typeof ref === 'string' ? ref : '';
+      }
+      return '';
+    };
+
+    const getTracks = (item: MediaItem): unknown[] | undefined => {
+      const media = (item as unknown as { media?: unknown }).media;
+      if (typeof media === 'object' && media !== null) {
+        const track = (media as Record<string, unknown>)["track"];
+        return Array.isArray(track) ? track : undefined;
+      }
+      return undefined;
+    };
+
+    // const getFirstTrack = (item: MediaItem): Record<string, unknown> | undefined => {
+    //   const tracks = getTracks(item);
+    //   if (Array.isArray(tracks) && tracks.length > 0) {
+    //     const first = tracks[0];
+    //     if (typeof first === 'object' && first !== null) return first as Record<string, unknown>;
+    //   }
+    //   return undefined;
+    // };
     const toStr = (value: unknown, fallback = ''): string => {
       if (typeof value === 'string') return value;
       if (value === null || value === undefined) return fallback;
@@ -45,49 +63,43 @@ export class MediaInfoParser {
       return fallback;
     };
   
-    const result: ParsedMediaInfo = {
-      general: {} as GeneralInfo,
-      video: [],
-      audio: [],
-      averageBitrates: {
-        overall: 0,
-        video: 0,
-        audio: 0,
-      }
-    };
+    const collectedVideo: VideoTrackInfo[] = [];
+    const collectedAudio: AudioTrackInfo[] = [];
   
     // init01.cmfvファイルからビデオ情報を取得
-    const initVideoFile = jsonContent.find(item => 
-      item.media["@ref"].includes(constants.VideoInitFile) || 
-      item.media["@ref"].includes(constants.VideoInitFile2) ||
-      item.media["@ref"].includes(constants.VideoInitFile3)
+    const initVideoFile: MediaItem | undefined = jsonContent.find((item): boolean => 
+      getMediaRef(item).includes(constants.VideoInitFile) || 
+      getMediaRef(item).includes(constants.VideoInitFile2) ||
+      getMediaRef(item).includes(constants.VideoInitFile3)
     );
-  
+
     // init01.cmfaファイルから音声情報を取得
-    const initAudioFile = jsonContent.find(item => 
-      item.media["@ref"].includes(constants.AudioInitFile) || 
-      item.media["@ref"].includes(constants.AudioInitFile2) ||
-      item.media["@ref"].includes(constants.AudioInitFile3)
+    const initAudioFile: MediaItem | undefined = jsonContent.find((item): boolean => 
+      getMediaRef(item).includes(constants.AudioInitFile) || 
+      getMediaRef(item).includes(constants.AudioInitFile2) ||
+      getMediaRef(item).includes(constants.AudioInitFile3)
     );
   
     // ビデオ情報の処理
-    if (initVideoFile && initVideoFile.media.track) {
-      initVideoFile.media.track.forEach(track => {
-        if (track["@type"] === "Video") {
+    if (initVideoFile) {
+      const tracks = getTracks(initVideoFile);
+      tracks?.forEach(track => {
+        if (validators.isValidTrack(track) && (track as Record<string, unknown>)["@type"] === "Video") {
+          const tr = track as Record<string, unknown>;
           const videoInfo: VideoTrackInfo = {
-            "Width": toStr(track.Width),
-            "Height": toStr(track.Height),
-            "Format": toStr(track.Format),
-            "Format profile": toStr(track.Format_Profile),
-            "Format settings": toStr(track.Format_Settings_CABAC),
-            "Frame rate mode": toStr(track.FrameRate_Mode),
-            "Frame rate": toStr(track.FrameRate),
-            "Color space": toStr(track.ColorSpace),
-            "Color range": toStr(track.colour_range),
-            "Color primaries": toStr(track.colour_primaries),
-            "Display aspect ratio": toStr(track.DisplayAspectRatio)
+            "Width": toStr(tr.Width),
+            "Height": toStr(tr.Height),
+            "Format": toStr(tr.Format),
+            "Format profile": toStr(tr.Format_Profile),
+            "Format settings": toStr(tr.Format_Settings_CABAC),
+            "Frame rate mode": toStr(tr.FrameRate_Mode),
+            "Frame rate": toStr(tr.FrameRate),
+            "Color space": toStr(tr.ColorSpace),
+            "Color range": toStr(tr.colour_range),
+            "Color primaries": toStr(tr.colour_primaries),
+            "Display aspect ratio": toStr(tr.DisplayAspectRatio)
           };
-          result.video.push(videoInfo);
+          collectedVideo.push(videoInfo);
           
           if (constants.DEBUG_NLMEDIAINFO) {
             console.log("Video track raw data:", track);
@@ -98,85 +110,88 @@ export class MediaInfoParser {
     }
   
     // 音声情報の処理
-    if (initAudioFile && initAudioFile.media.track) {
-      initAudioFile.media.track.forEach(track => {
-        if (track["@type"] === "Audio") {
+    if (initAudioFile) {
+      const tracks = getTracks(initAudioFile);
+      tracks?.forEach(track => {
+        if (validators.isValidTrack(track) && (track as Record<string, unknown>)["@type"] === "Audio") {
+          const tr = track as Record<string, unknown>;
           const audioInfo: AudioTrackInfo = {
-            "Format": toStr(track.Format),
-            "Format profile": toStr(track.Format_AdditionalFeatures),
-            "Channel(s)": toStr(track.Channels),
-            "Channel positions": toStr(track.ChannelPositions),
-            "Channel layout": toStr(track.ChannelLayout),
-            "Sampling rate": toStr(track.SamplingRate),
-            "Frame rate": toStr(track.FrameRate),
-            "Compression mode": toStr(track.Compression_Mode),
-            "Stream size": toStr(track.StreamSize),
-            "Default": toStr(track.Default),
-            "Alternate group": toStr(track.AlternateGroup)
+            "Format": toStr(tr.Format),
+            "Format profile": toStr(tr.Format_AdditionalFeatures),
+            "Channel(s)": toStr(tr.Channels),
+            "Channel positions": toStr(tr.ChannelPositions),
+            "Channel layout": toStr(tr.ChannelLayout),
+            "Sampling rate": toStr(tr.SamplingRate),
+            "Frame rate": toStr(tr.FrameRate),
+            "Compression mode": toStr(tr.Compression_Mode),
+            "Stream size": toStr(tr.StreamSize),
+            "Default": toStr(tr.Default),
+            "Alternate group": toStr(tr.AlternateGroup)
           };
-          result.audio.push(audioInfo);
+          collectedAudio.push(audioInfo);
         }
       });
     }
   
     // 音声・ビデオファイルの分類と合計サイズ計算
-    const audioFiles = mediaInfoInstance.getAudioFiles();
-    const videoFiles = mediaInfoInstance.getVideoFiles();
+    // const audioFiles = mediaInfoInstance.getAudioFiles();
+    // const videoFiles = mediaInfoInstance.getVideoFiles();
     
-    let totalAudioSize = 0; // eslint-disable-line @typescript-eslint/no-unused-vars
-    let totalVideoSize = 0; // eslint-disable-line @typescript-eslint/no-unused-vars
+    // 合計サイズは現状UIで未使用のため計算のみ削除
     
-    audioFiles.forEach(file => {
-      const fs = file.media.track[0].FileSize;
-      const fileSize = formatters.parseFileSize(toStr(fs, '0'));
-      totalAudioSize += fileSize;
-    });
-    
-    videoFiles.forEach(file => {
-      const fsv = file.media.track[0].FileSize;
-      const fileSize = formatters.parseFileSize(toStr(fsv, '0'));
-      totalVideoSize += fileSize;
-    });
+    // 合計サイズは未使用のため走査自体も省略
   
     // master.m3u8からDurationを取得
-    const masterFile = jsonContent.find(item =>
-      item.media["@ref"].includes("master.m3u8")
+    const masterFile: MediaItem | undefined = jsonContent.find((item): boolean =>
+      getMediaRef(item).includes("master.m3u8")
     );
     
     // 一般情報の設定
-    const generalTrack = masterFile?.media.track.find(track => track["@type"] === "General");
-    result.general = {
-      "Format": (typeof generalTrack?.Format === 'string' && generalTrack.Format.length > 0) ? generalTrack.Format : "N/A",
-      "File size": (typeof generalTrack?.FileSize === 'string' && generalTrack.FileSize.length > 0) ? generalTrack.FileSize : "N/A",
-      "Duration": ((): string => {
-        const v = initVideoFile?.media.track.find(track => track["@type"] === "Video")?.Duration;
-        return (typeof v === 'string' && v.length > 0) ? v : 'N/A';
-      })(),
-      "Complete name": masterFile?.media["@ref"] || "N/A",
+    const generalTracks = masterFile ? getTracks(masterFile) : undefined;
+    const generalTrack = generalTracks ? generalTracks.find(t => typeof t === 'object' && (t as Record<string, unknown>)["@type"] === "General") as Record<string, unknown> | undefined : undefined;
+    const durationValue = (() => {
+      const videoTracks = initVideoFile ? getTracks(initVideoFile) : undefined;
+      const v = videoTracks ? videoTracks.find(t => typeof t === 'object' && (t as Record<string, unknown>)["@type"] === "Video") as Record<string, unknown> | undefined : undefined;
+      return toStr(v ? v["Duration"] : undefined, 'N/A');
+    })();
+    const safeGeneral = {
+      "Format": toStr(generalTrack?.Format, 'N/A'),
+      "File size": toStr(generalTrack?.FileSize, 'N/A'),
+      "Duration": durationValue,
+      "Complete name": masterFile ? getMediaRef(masterFile) : "N/A",
       "ID": constants.nlMediaInfoVideoId
+    } as const;
+  
+    // ビットレート設定（ローカルで計算）
+    let avgAudio = 192000;
+    let avgVideo = 1500000;
+    if (initAudioFile) {
+      const tracks = getTracks(initAudioFile);
+      const audioTrack = tracks ? tracks.find(t => typeof t === 'object' && (t as Record<string, unknown>)["@type"] === "Audio") as Record<string, unknown> | undefined : undefined;
+      const ab = audioTrack ? audioTrack["BitRate_Maximum"] : undefined;
+      avgAudio = audioTrack ? parseInt(toStr(ab, "192000")) : 192000;
+    }
+
+    if (initVideoFile) {
+      const tracks = getTracks(initVideoFile);
+      const videoTrack = tracks ? tracks.find(t => typeof t === 'object' && (t as Record<string, unknown>)["@type"] === "Video") as Record<string, unknown> | undefined : undefined;
+      const vb = videoTrack ? videoTrack["BitRate_Maximum"] : undefined;
+      avgVideo = videoTrack ? parseInt(toStr(vb, "1500000")) : 1500000;
+    }
+
+    const safeResult: ParsedMediaInfo = {
+      general: safeGeneral,
+      video: collectedVideo,
+      audio: collectedAudio,
+      averageBitrates: { audio: avgAudio, video: avgVideo, overall: avgAudio + avgVideo }
     };
-  
-    // ビットレート設定
-    if (initAudioFile && initAudioFile.media.track) {
-      const audioTrack = initAudioFile.media.track.find(track => track["@type"] === "Audio");
-      const ab = audioTrack?.BitRate_Maximum;
-      result.averageBitrates.audio = audioTrack ? parseInt(toStr(ab, "192000")) : 192000;
-    }
-  
-    if (initVideoFile && initVideoFile.media.track) {
-      const videoTrack = initVideoFile.media.track.find(track => track["@type"] === "Video");
-      const vb = videoTrack?.BitRate_Maximum;
-      result.averageBitrates.video = videoTrack ? parseInt(toStr(vb, "1500000")) : 1500000;
-    }
-  
-    result.averageBitrates.overall = result.averageBitrates.audio + result.averageBitrates.video;
   
     if (constants.DEBUG_NLMEDIAINFO) {
       console.log("init01.cmfv:", initVideoFile);
       console.log("init01.cmfa:", initAudioFile);
-      console.log("パース結果:", result);
+      console.log("パース結果:", safeResult);
     }
   
-    return result;
+    return safeResult;
   }
 } 

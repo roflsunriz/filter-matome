@@ -50,9 +50,18 @@ export class StatisticsManager {
   /**
    * ファイルをフィルタリングするのじゃ
    */
+  static #getMediaRef(file: MediaItem): string {
+    const media = (file as unknown as { media?: unknown }).media;
+    if (typeof media === 'object' && media !== null) {
+      const ref = (media as Record<string, unknown>)["@ref"];
+      return typeof ref === 'string' ? ref : '';
+    }
+    return '';
+  }
+
   static #filterFilesByType(files: MediaItem[], type: MediaType): MediaItem[] {
     return files.filter(file => {
-      const mediaRef = file.media["@ref"];
+      const mediaRef = this.#getMediaRef(file);
       switch (type) {
         case MEDIA_TYPES.AUDIO:
           return mediaRef.includes("audio") && !mediaRef.includes("init");
@@ -103,8 +112,22 @@ export class StatisticsManager {
   /**
    * ファイルのフォーマットを取得するのじゃ
    */
+  static #getFirstTrack(file: MediaItem): Record<string, unknown> | undefined {
+    const media = (file as unknown as { media?: unknown }).media;
+    if (typeof media === 'object' && media !== null) {
+      const mediaObj = media as { track?: unknown };
+      if (Array.isArray(mediaObj.track) && mediaObj.track.length > 0) {
+        const trackArr = mediaObj.track as unknown[];
+        const first = trackArr[0];
+        if (typeof first === 'object' && first !== null) return first as Record<string, unknown>;
+      }
+    }
+    return undefined;
+  }
+
   static #getFileFormat(file: MediaItem): string {
-    const fmt = file.media.track[0].Format;
+    const first = this.#getFirstTrack(file);
+    const fmt = first ? first["Format"] : undefined;
     return (typeof fmt === 'string' && fmt.length > 0) ? fmt : "Unknown";
   }
 
@@ -112,9 +135,11 @@ export class StatisticsManager {
    * ファイルサイズを取得するのじゃ
    */
   static #getFileSize(file: MediaItem): number {
-    const size = file.media.track[0].FileSize;
+    const first = this.#getFirstTrack(file);
+    const size = first ? first["FileSize"] : undefined;
     const s = (typeof size === 'string' && size.length > 0) ? size : '0';
-    return parseInt(s, 10);
+    const parsed = parseInt(s, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
   }
 
   /**
