@@ -9,7 +9,7 @@ import type {
   AudioTrackInfo,
   GeneralInfo,
   AllStats
-} from '@nlmi/types/media-info.js';
+} from '@/types';
 
 export class MediaInfoParser {
   static parse(jsonContent: MediaItem[]): MediaInfoResult {

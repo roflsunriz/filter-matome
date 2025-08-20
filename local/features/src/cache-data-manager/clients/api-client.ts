@@ -1,4 +1,4 @@
-import type { APIResponse } from '../types/index.js';
+import type { APIResponse } from '@/types';
 
 export class APIClient {
   private baseUrl: string = "https://ext.nicovideo.jp/api/getthumbinfo/";

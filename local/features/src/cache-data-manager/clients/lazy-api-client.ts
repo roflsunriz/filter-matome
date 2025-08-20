@@ -1,5 +1,5 @@
 import { APIClient } from './api-client.js';
-import type { APIResponse } from '../types/index.js';
+import type { APIResponse } from '@/types';
 
 // APIClientを必要時のみ読み込む
 export class LazyAPIClient {

@@ -1,4 +1,4 @@
-import type { VideoData } from '../types/index.js';
+import type { VideoData } from '@/types';
 import { ProgressManager } from '../managers/progress-manager.js';
 
 export class LoadDataFromMemory {

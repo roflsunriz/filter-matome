@@ -1,5 +1,5 @@
 import { formatters } from '../utils/formatters';
-import type { MediaItem } from '@nlmi/types/media-info';
+import type { MediaItem } from '@/types';
 
 const MEDIA_TYPES = {
   AUDIO: 'audio',
@@ -53,7 +53,7 @@ export class StatisticsManager {
   static #filterFilesByType(files: MediaItem[], type: MediaType): MediaItem[] {
     return files.filter(file => {
       const mediaRef = file.media["@ref"];
-      switch(type) {
+      switch (type) {
         case MEDIA_TYPES.AUDIO:
           return mediaRef.includes("audio") && !mediaRef.includes("init");
         case MEDIA_TYPES.VIDEO:

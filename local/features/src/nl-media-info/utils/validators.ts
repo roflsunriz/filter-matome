@@ -1,4 +1,4 @@
-import type { MediaItem, MediaTrack } from '@nlmi/types/media-info';
+import type { MediaItem, MediaTrack } from '@/types';
 
 /**
  * メディア情報のバリデーション用ユーティリティなのじゃ

@@ -35,6 +35,12 @@ export * from './util-types';
 // Links Video Controller関連の型
 export * from './mlink-video-controller-types';
 
+// Cache Data Manager 関連の型
+export * from './cache-data-manager-types';
+
+// NL Media Info 関連の型
+export * from './nl-media-info-types';
+
 // データベース関連の型（重複エクスポートを避けるため必要なもののみ明示的に再エクスポート）
 export type {
   ModeValue,

@@ -1,4 +1,4 @@
-import type { WindowWithNicoCache } from '@nlmi/types/media-info';
+import type { WindowWithNicoCache } from '@/types';
 
 export interface Constants {
   nlMediaInfobaseurl: string;

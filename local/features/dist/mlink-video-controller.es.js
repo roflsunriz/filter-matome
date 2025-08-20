@@ -1956,15 +1956,20 @@ class GoogleDriveService {
     this.clientId = null;
     this.scope = "https://www.googleapis.com/auth/drive.file";
     this.backupFolderName = "Mylist2 Backups";
-    this.clientId = clientIdFromConfig || localStorage.getItem("mylist2_google_client_id");
+    this.defaultClientId = "757779940916-u31ia8oafa998j6qqavdpqjjn988it8b.apps.googleusercontent.com";
+    this.clientId = clientIdFromConfig || localStorage.getItem("mylist2_google_client_id") || this.defaultClientId;
   }
   // fflate ローダ（npm優先 → CDNフォールバック）
   async loadFflate() {
     try {
       const m = await Promise.resolve().then(() => browser);
       return m;
-    } catch (_e) {
-      const mod = await import('https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/index.js');
+    } catch {
+      const cdnUrl = "https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/index.js";
+      const mod = await import(
+        /* @vite-ignore */
+        cdnUrl
+      );
       return mod;
     }
   }
@@ -1974,7 +1979,8 @@ class GoogleDriveService {
   }
   async ensureGisLoaded() {
     await Promise.resolve();
-    if (window.google && google.accounts?.oauth2) return;
+    const win = window;
+    if (win.google && win.google.accounts && win.google.accounts.oauth2) return;
     await new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = "https://accounts.google.com/gsi/client";
@@ -1998,7 +2004,8 @@ class GoogleDriveService {
     await this.ensureGisLoaded();
     const token = await new Promise((resolve, reject) => {
       try {
-        const tokenClient = google.accounts.oauth2.initTokenClient({
+        const win = window;
+        const tokenClient = win.google.accounts.oauth2.initTokenClient({
           client_id: this.clientId,
           scope: this.scope,
           callback: (resp) => {
@@ -2014,7 +2021,7 @@ class GoogleDriveService {
         });
         tokenClient.requestAccessToken({ prompt: "consent" });
       } catch (e) {
-        reject(e);
+        reject(e instanceof Error ? e : new Error(String(e)));
       }
     });
     return token;
@@ -2062,7 +2069,9 @@ class GoogleDriveService {
   async createZipBlob(fileName, jsonText) {
     const { zipSync, strToU8 } = await this.loadFflate();
     const zipped = zipSync({ [fileName]: strToU8(jsonText) }, { level: 6 });
-    return new Blob([zipped], { type: "application/zip" });
+    const ab = new ArrayBuffer(zipped.byteLength);
+    new Uint8Array(ab).set(zipped);
+    return new Blob([ab], { type: "application/zip" });
   }
   buildMultipartBody(metadata, fileBlob, boundary) {
     const encoder = new TextEncoder();
@@ -2115,7 +2124,7 @@ Content-Type: application/zip\r
       { method: "GET" }
     );
     const files = Array.isArray(res.files) ? res.files : [];
-    return files.filter((f) => /\.zip$/.test(f.name) && /^Mylist2_/.test(f.name)).sort((a, b) => (b.modifiedTime || "").localeCompare(a.modifiedTime || ""));
+    return files.filter((f) => /.zip$/.test(f.name) && /^Mylist2_/.test(f.name)).sort((a, b) => (b.modifiedTime || "").localeCompare(a.modifiedTime || ""));
   }
   // ZIPをダウンロードしてJSON文字列を取り出す
   async downloadBackupJson(fileId) {
@@ -2131,7 +2140,7 @@ Content-Type: application/zip\r
     const buf = new Uint8Array(await resp.arrayBuffer());
     const { unzipSync, strFromU8 } = await this.loadFflate();
     const files = unzipSync(buf);
-    const jsonEntryName = Object.keys(files).find((n) => /\.json$/.test(n));
+    const jsonEntryName = Object.keys(files).find((n) => /.json$/.test(n));
     if (!jsonEntryName) throw new Error("ZIP内にJSONファイルが見つかりません");
     return strFromU8(files[jsonEntryName]);
   }

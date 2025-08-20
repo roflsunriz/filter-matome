@@ -95,9 +95,11 @@ export interface NicoCacheWatchData {
   };
 }
 
-import type { NicoCache_nlInterface } from "../../types/global-types";
+import type { NicoCache_nlInterface } from './global-types';
 
 // Window.opener.NicoCache_nlへのアクセス用の型定義
 export interface WindowWithNicoCache extends Window {
   NicoCache_nl: NicoCache_nlInterface;
 }
+
+

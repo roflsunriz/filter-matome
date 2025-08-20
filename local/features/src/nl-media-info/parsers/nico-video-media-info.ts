@@ -1,6 +1,6 @@
 import { StatisticsManager } from "../managers/statistics-manager.js";
 import { constants } from "../utils/constants.js";
-import type { MediaItem } from '@nlmi/types/media-info.js';
+import type { MediaItem } from '@/types';
 
 export interface CreationDate {
   file: string;

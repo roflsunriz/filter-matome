@@ -1,4 +1,4 @@
-import type { VideoData } from '../types/index.js';
+import type { VideoData } from '@/types';
 import type { LoadDataFromMemory } from '../loaders/load-data-from-memory.js';
 
 export class BatchRenderer {

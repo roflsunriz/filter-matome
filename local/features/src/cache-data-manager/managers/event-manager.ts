@@ -1,4 +1,4 @@
-import type { EventCallback } from '../types/index.js';
+import type { EventCallback } from '@/types';
 
 export class EventManager {
   private listeners: Map<string, EventCallback<unknown>[]> = new Map();

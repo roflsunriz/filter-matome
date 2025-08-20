@@ -1,5 +1,5 @@
 import { formatters } from '../utils/formatters.js';
-import type { MediaInfoResult } from '@nlmi/types/media-info.js';
+import type { MediaInfoResult } from '@/types';
 
 export class UIUpdater {
   static updateAll(mediaInfo: MediaInfoResult): void {

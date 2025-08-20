@@ -25,7 +25,7 @@ function initializeApp(): void {
   
   getMediaInfo(`${constants.nlMediaInfobaseurl}${constants.nlMediaInfoVideoId}`)
     .then((data) => {
-      const parsedData = MediaInfoParser.parse(data as import('@nlmi/types/media-info').MediaItem[]);
+      const parsedData = MediaInfoParser.parse(data as import('@/types').MediaItem[]);
       if(DEBUG_NLMEDIAINFO) console.log("パース後のデータ:", parsedData);
       return parsedData;  // 明示的にパースしたデータを返すのじゃ
     })

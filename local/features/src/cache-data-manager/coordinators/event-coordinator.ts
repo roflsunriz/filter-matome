@@ -1,7 +1,7 @@
 import type { UIBuilder } from '../builders/ui-builder.js';
 import type { EventManager } from '../managers/event-manager.js';
 import type { ProgressManager } from '../managers/progress-manager.js';
-import type { APIResponse } from '../types/index.js';
+import type { APIResponse } from '@/types';
 import { LazyAPIClient } from '../clients/lazy-api-client.js';
 
 export class EventCoordinator {
