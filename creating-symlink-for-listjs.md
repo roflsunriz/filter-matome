@@ -1,6 +1,7 @@
 ### NicoCache_nl 用 `local/list.js` シンボリックリンク作成手順（Windows / PowerShell）
 
-**重要**: NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\local\list.js` という「固定のパス・固定のファイル名」で参照させます。設定で場所や名前は変えられません。ゆえに、ビルド成果物（例: `cache-data-manager.es.js`）へ必ずこの固定パス名でシンボリックリンクを張る必要があります。.mapファイルはデバッグ用です。
+**重要**: NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\local\list.js` という「固定のパス・固定のファイル名」で参照します。設定で場所や名前は変えられません。  
+そのため、ビルド成果物（例: `cache-data-manager.es.js`）へ必ずこの固定パス名でシンボリックリンクを張る必要があります。`.map`ファイルはデバッグ用です。
 
 ---
 
@@ -10,11 +11,14 @@
 - ビルド済みファイルの一例: `C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js`
 - `C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js.map`
 
-#### 手順
+---
+
+## 1. 手動でシンボリックリンクを作成する場合
+
 1. 既存の `list.js`（ファイル/リンク）があれば削除します。
 
    ```powershell
-   Remove-Item -Path "C:\NicoCache_nl\local\list.js" 
+   Remove-Item -Path "C:\NicoCache_nl\local\list.js"
    Remove-Item -Path "C:\NicoCache_nl\local\list.js.map"
    ```
 
@@ -36,16 +40,27 @@
    Test-Path "C:\NicoCache_nl\local\list.js"
    ```
 
-#### うまくいかない時の確認点
-- 管理者権限で PowerShell を開いているか、あるいは Windows の開発者モードが有効か確認します。
-- `-Target` に指定したパスが正しいか見直します。
-- 既存の `list.js` が残っているか（削除できているか）確認します。
-
 ---
 
-参考コマンド（再掲）
+## 2. スクリプト（`scripts\create-listjs-symlink.ps1`）で簡単に作成する場合
 
-```powershell
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js" -Target "C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js"
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Target "C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js.map"
-```
+このリポジトリには、シンボリックリンク作成を自動化する PowerShell スクリプト `scripts\create-listjs-symlink.ps1` が用意されています。  
+このスクリプトを使うことで、削除やリンク作成、mapファイルの有無チェックもまとめて自動で行えます。
+
+### 使い方
+
+1. PowerShell でカレントディレクトリをNicoCache_nlのルートディレクトリにします。
+
+   ```powershell
+   Set-Location "C:\NicoCache_nl"
+   ```
+
+2. 以下のコマンドを実行します
+
+   ```powershell
+   .\scripts\create-listjs-symlink.ps1
+   ```
+
+対話型のスクリプトなので、Targetを訊かれたらビルド成果物のパスを入力してください。既定値で`C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js`を指定済みなのでそれで良ければEnterでOKです。
+
+3. スクリプトが自動で `list.js` および `.map` のリンクを作成し、確認情報も表示します。
