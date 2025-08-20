@@ -1,5 +1,5 @@
 // フィルターログ送信ユーティリティ - CommentFilterLogger.javaとの連携
-import { CF2FilterLogEntry } from '../../types/filter-types';
+import { CF2FilterLogEntry } from '@/types/filter-types';
 
 export class FilterLogger {
   // ローカル環境でCommentFilterLogger.javaが動作していることを想定

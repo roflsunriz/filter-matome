@@ -1,5 +1,5 @@
 // JSON Lines パーサ/シリアライザ - 新形式ルール処理
-import { NgRuleJson, NgRuleJsonCollection, MigrationResult, Action } from '../../types/filter-types';
+import { NgRuleJson, NgRuleJsonCollection, MigrationResult, Action } from '@/types/filter-types';
 
 /**
  * JSON Lines形式の文字列をパースしてルール配列に変換

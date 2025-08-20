@@ -1,4 +1,4 @@
-import { ToastConfig, PlayerSettings, CacheManagementConfig, CommentRendererConfig } from '../../types/index.js';
+import { ToastConfig, PlayerSettings, CacheManagementConfig, CommentRendererConfig } from '@/types/index.js';
 
 // URLの設定
 export const URLS = {

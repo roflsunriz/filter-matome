@@ -1,4 +1,4 @@
-import { ToastrOptions, ToastrNotifyParams, ToastData, ExtendedHTMLElement } from '../types/toastr-types';
+import { ToastrOptions, ToastrNotifyParams, ToastData, ExtendedHTMLElement } from '@/types/toastr-types';
 
 /**
  * Toastr用のCSSスタイル

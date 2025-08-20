@@ -1,6 +1,6 @@
 import { COMMENT_RENDERER_CONFIG } from '../config/constants.js';
-import { Comment } from '../../types/comment-types.js';
-import { ExtendedDocument } from '../../types/ui-types.js';
+import { Comment } from '@/types/comment-types.js';
+import { ExtendedDocument } from '@/types/ui-types.js';
 
 /**
  * コメントレンダラークラス

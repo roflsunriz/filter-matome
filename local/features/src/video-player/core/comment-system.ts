@@ -6,7 +6,7 @@ import {
   Comment, 
   CommentApiResponse, 
   SafeCommentFilter2GlobalData 
-} from '../../types/comment-types.js';
+} from '@/types/comment-types.js';
 
 /**
  * コメントシステム - レンダリングとリスト表示を統合管理

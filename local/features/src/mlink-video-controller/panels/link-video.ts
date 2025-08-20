@@ -16,9 +16,9 @@ import { SettingsManager } from '../module-handlers/settings-manager';
 import { SettingsUI } from '../module-handlers/settings-ui';
 
 // 型定義のインポート
-import { LinkGroup, LinkData, MlinkVideoComment } from '../../types/mlink-video-controller-types';
-import { ThumbnailsFilterGlobal } from '../../types/thumbnails-filter-types';
-import { TimerHandle } from '../../types/util-types';
+import { LinkGroup, LinkData, MlinkVideoComment } from '@/types/mlink-video-controller-types';
+import { ThumbnailsFilterGlobal } from '@/types/thumbnails-filter-types';
+import { TimerHandle } from '@/types/util-types';
 
 // テンプレートの静的インポート
 import { panelTemplate } from '../templates/panel';

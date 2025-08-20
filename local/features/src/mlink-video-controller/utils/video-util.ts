@@ -1,8 +1,8 @@
 "use strict";
 
 import "../../types/global.d.ts"
-import { VideoOperation, SimpleVideoInfo, ExtendedApiData, CacheInfoResponse } from '../../types/video-types';
-import { NicoCache_nlInterface } from '../../types/global-types';
+import { VideoOperation, SimpleVideoInfo, ExtendedApiData, CacheInfoResponse } from '@/types/video-types';
+import { NicoCache_nlInterface } from '@/types/global-types';
 
 export const handleVideoOperation = (operation: VideoOperation, videoId: string): void => {
   switch (operation) {

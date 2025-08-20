@@ -1,5 +1,5 @@
 import { NicoVideoPlayer } from '../services/nico-video-player';
-import { PlaybackState, SeekOptions, VolumeOptions, PlaybackRateOptions } from '../../types/mlink-video-controller-types';
+import { PlaybackState, SeekOptions, VolumeOptions, PlaybackRateOptions } from '@/types/mlink-video-controller-types';
 
 export class ControlManager {
   private static instance: ControlManager;

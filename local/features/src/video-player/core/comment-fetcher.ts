@@ -1,4 +1,4 @@
-import { CommentApiResponse, CommentApiData } from '../../types/comment-types.js';
+import { CommentApiResponse, CommentApiData } from '@/types/comment-types.js';
 
 /**
  * ニコニコ動画のコメントを取得するクラス

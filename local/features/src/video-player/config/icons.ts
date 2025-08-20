@@ -1,4 +1,4 @@
-import { PlayerIconKey } from '../../types/video-types.js';
+import { PlayerIconKey } from '@/types/video-types.js';
 import { createMaterialIcon, ICONS } from '../../common/material-icons.js';
 
 // マテリアルアイコンを使用したアイコン定義

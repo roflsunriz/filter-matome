@@ -1,5 +1,5 @@
 import { CACHE_MANAGEMENT } from '../config/constants.js';
-import { HlsInstance } from '../../types/video-types.js';
+import { HlsInstance } from '@/types/video-types.js';
 
 /**
  * ビデオプレイヤーのキャッシュ管理クラス

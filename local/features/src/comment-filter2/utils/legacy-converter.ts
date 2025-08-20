@@ -1,6 +1,6 @@
 // CommentFilter（旧機能）のレガシー設定データをJSON Lines形式に変換するユーティリティ
 
-import { NgRuleJson, Settings, CommandSettings, UnknownData, Action, NicoruCond } from '../../types/filter-types';
+import { NgRuleJson, Settings, CommandSettings, UnknownData, Action, NicoruCond } from '@/types/filter-types';
 
 /**
  * レガシー設定データの型定義

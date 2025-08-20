@@ -1,5 +1,5 @@
 // UIマネジメント部 - UIの制御とイベント処理
-import { Settings, CommandSettings, NgRuleJson, NicoruCond } from '../../types/filter-types';
+import { Settings, CommandSettings, NgRuleJson, NicoruCond } from '@/types/filter-types';
 import { FilterStorage } from '../storage/indexed-db';
 import { CommentFilter } from '../filter/comment-filter';
 import { JsonCommentFilter } from '../filter/json-comment-filter';

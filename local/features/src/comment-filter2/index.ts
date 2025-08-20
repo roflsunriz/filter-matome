@@ -3,7 +3,7 @@ import { DataInterceptor } from './proxy/data-interceptor';
 import { UIManager } from './components/ui-manager';
 import { VideoPlayerBridge } from './integrations/video-player-bridge';
 import { CONSTANTS } from './utils/constants';
-import { VideoPlayerBridgeStatus } from '../types/video-player-bridge-types';
+import { VideoPlayerBridgeStatus } from '@/types/video-player-bridge-types';
 
 export class CommentFilter2 {
   private dataInterceptor: DataInterceptor;

@@ -1,4 +1,4 @@
-import { LogLevel } from '../types/global-types';
+import { LogLevel } from '@/types/global-types';
 
 class Logger {
   private static instance: Logger;

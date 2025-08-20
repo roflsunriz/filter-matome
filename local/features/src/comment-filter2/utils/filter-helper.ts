@@ -1,6 +1,6 @@
 // フィルターヘルパー - 循環依存を避けるための独立したフィルター処理
 import { CONSTANTS } from './constants';
-import { CF2CommentApiResponse, NGWordRule, Settings, CommentFilter2GlobalData } from '../../types/filter-types';
+import { CF2CommentApiResponse, NGWordRule, Settings, CommentFilter2GlobalData } from '@/types/filter-types';
 
 /**
  * グローバルデータを取得

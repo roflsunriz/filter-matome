@@ -3,7 +3,7 @@
  * IndexedDBを使用して背景画像の設定を保存・管理する
  */
 
-import { BackgroundImageItem } from '../../types/background-image-types';
+import { BackgroundImageItem } from '@/types/background-image-types';
 
 // データベース設定
 const DB_NAME = 'BackgroundImageSettingsDB';

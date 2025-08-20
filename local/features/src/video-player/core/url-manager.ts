@@ -1,4 +1,4 @@
-import { VideoUrlInfo } from '../../types/index';
+import { VideoUrlInfo } from '@/types/index';
 import { URLS } from '../config/constants';
 
 /**

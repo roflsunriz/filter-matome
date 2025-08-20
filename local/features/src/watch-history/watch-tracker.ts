@@ -5,8 +5,8 @@
  * @author わらわ（のじゃロリ娘）
  */
 
-import { WatchHistoryEntry, WatchLogEntry, WatchEvent, WatchEventType, VideoStats, SeriesInfo, SeriesVideoInfo } from '../types/watch-history-types';
-import { NicoApiData } from '../types/common-types';
+import { WatchHistoryEntry, WatchLogEntry, WatchEvent, WatchEventType, VideoStats, SeriesInfo, SeriesVideoInfo } from '@/types/watch-history-types';
+import { NicoApiData } from '@/types/common-types';
 import { watchHistoryDB } from './database';
 import { logger } from '../common/logger';
 

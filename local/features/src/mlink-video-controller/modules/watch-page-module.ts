@@ -1,4 +1,4 @@
-import { ModuleInstance, ModuleConfig, PageType, ModuleCategory, ModuleStatus, WatchPageSubModule } from '../../types/module-types';
+import { ModuleInstance, ModuleConfig, PageType, ModuleCategory, ModuleStatus, WatchPageSubModule } from '@/types/module-types';
 import { createMaterialIcon } from '../../common/material-icons';
 
 /**

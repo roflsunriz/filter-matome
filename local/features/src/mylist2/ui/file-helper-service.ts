@@ -1,4 +1,4 @@
-import { ExportData } from '../../types/mylist-types';
+import { ExportData } from '@/types/mylist-types';
 
 export class FileHelperService {
   

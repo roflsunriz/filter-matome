@@ -13,7 +13,7 @@ import type {
   WatchHistoryEntry,
   SeriesAlert,
   DBResult 
-} from '../types/watch-history-types';
+} from '@/types/watch-history-types';
 import { logger } from '../common/logger';
 
 /**

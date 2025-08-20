@@ -1,4 +1,4 @@
-import { NicoCache_nlInterface } from '../../types/global-types';
+import { NicoCache_nlInterface } from '@/types/global-types';
 
 export class NicoVideoPlayer {
   private static instance: NicoVideoPlayer;

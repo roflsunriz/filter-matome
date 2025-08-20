@@ -3,7 +3,7 @@ import { PLAYER_ICONS } from '../config/icons.js';
 import { materialIconsStyles } from '../../common/material-icons.js';
 import { CommentSystem } from '../core/comment-system.js';
 import * as IndexedDBUtils from '../utils/indexed-db-utils.js';
-import { ExtendedDocument, ExtendedHTMLElement } from '../../types/index.js';
+import { ExtendedDocument, ExtendedHTMLElement } from '@/types/index.js';
 
 /**
  * シャドウDOM版のプレイヤーコントロール

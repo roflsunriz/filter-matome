@@ -1,4 +1,4 @@
-import { ModuleInstance, ModuleConfig, ModuleStatus } from '../../types/module-types';
+import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
 import { 
   Keyword, 
   PageType, 
@@ -6,8 +6,8 @@ import {
   UrlPatterns, 
   UpdateItem,
   ThumbnailsFilterGlobal 
-} from '../../types/thumbnails-filter-types';
-// import { ToastrInstance } from '../../types/toastr-types';
+} from '@/types/thumbnails-filter-types';
+// import { ToastrInstance } from '@/types/toastr-types';
 import { createMaterialIcon } from '../../common/material-icons';
 
 // 設定管理クラス

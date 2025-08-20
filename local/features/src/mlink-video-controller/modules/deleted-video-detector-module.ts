@@ -1,5 +1,5 @@
-import { ModuleInstance, ModuleConfig, ModuleStatus } from '../../types/module-types';
-import { DeletedVideoDetectorStatus } from '../../types/video-types';
+import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
+import { DeletedVideoDetectorStatus } from '@/types/video-types';
 import { DeletedVideoDetector } from '../services/deleted-video-detector';
 
 /**

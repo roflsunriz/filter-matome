@@ -1,8 +1,8 @@
 // IndexedDB部 - NGワードルールと設定の永続化（JSON形式対応）
 import { CONSTANTS } from '../utils/constants';
-import { NGWordRule, Settings, FilterDatabase, CommandSettings } from '../../types/filter-types';
-import { NgRuleJson, NgRuleJsonCollection, MigrationResult, MigrationEventDetails, MigrationHistoryRecord, SettingStorageItem, SettingsStorage } from '../../types/filter-types';
-import { IndexedDBRuleItem } from '../../types/database-types';
+import { NGWordRule, Settings, FilterDatabase, CommandSettings } from '@/types/filter-types';
+import { NgRuleJson, NgRuleJsonCollection, MigrationResult, MigrationEventDetails, MigrationHistoryRecord, SettingStorageItem, SettingsStorage } from '@/types/filter-types';
+import { IndexedDBRuleItem } from '@/types/database-types';
 import { parseJsonl, convertCsvToJsonl, detectFileFormat } from '../utils/jsonl-parser';
 import { LegacyConverter, LegacyCommentFilterSettings } from '../utils/legacy-converter';
 

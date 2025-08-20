@@ -1,6 +1,6 @@
-import { ModuleInstance, ModuleConfig, ModuleStatus } from '../../types/module-types';
+import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
 import { BackgroundImageSettings } from './background-image-settings';
-import { BackgroundImageItem } from '../../types/background-image-types';
+import { BackgroundImageItem } from '@/types/background-image-types';
 import { createMaterialIcon } from '../../common/material-icons';
 
 /**

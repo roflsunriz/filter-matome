@@ -8,8 +8,8 @@ import { CUSTOM_PLAYER_SHADOW_HTML, CUSTOM_PLAYER_SHADOW_STYLES } from './ui/tem
 import { WATCH_CONFIG } from './config/constants.js';
 import { CommentSystem } from './core/comment-system.js';
 import { FloatingDeletedPlayer } from './ui/floating-player.js';
-import { ApiData } from '../types/index.js';
-import { HlsInstance } from '../types/video-types.js';
+import { ApiData } from '@/types/index.js';
+import { HlsInstance } from '@/types/video-types.js';
 
 // カスタムエレメントの明示的な登録確認
 if (!customElements.get('player-controls-shadow')) {

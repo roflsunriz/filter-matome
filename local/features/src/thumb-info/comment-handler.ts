@@ -1,8 +1,8 @@
 "use strict";
 
 import "../types/global-types";
-import { IntegratedNicoData, CommentData } from '../types/common-types';
-import { CommentField } from '../types/comment-types';
+import { IntegratedNicoData, CommentData } from '@/types/common-types';
+import { CommentField } from '@/types/comment-types';
 import { createMaterialIcon } from '../common/material-icons.js';
 import { estimationUtils } from './shared-utils.js';
 

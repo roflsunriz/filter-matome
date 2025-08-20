@@ -1,7 +1,7 @@
 // JSON形式ルール対応フィルター部 - 新世代コメントフィルタリング処理
 import { CONSTANTS } from '../utils/constants';
-import { CF2CommentApiResponse, CommentFilter2GlobalData, CF2Comment, Settings, CF2FilterLogEntry } from '../../types/filter-types';
-import { NgRuleJson, NicoruCond, Action } from '../../types/filter-types';
+import { CF2CommentApiResponse, CommentFilter2GlobalData, CF2Comment, Settings, CF2FilterLogEntry } from '@/types/filter-types';
+import { NgRuleJson, NicoruCond, Action } from '@/types/filter-types';
 import { sanitizeCommentBody, sanitizeCommentCommands } from '../utils/sanitizer';
 import { FilterLogger } from '../utils/filter-logger';
 

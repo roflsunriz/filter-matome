@@ -1,4 +1,4 @@
-import { Comment } from '../../types/index.js';
+import { Comment } from '@/types/index.js';
 
 /**
  * シャドウDOM版コメントリスト表示クラス

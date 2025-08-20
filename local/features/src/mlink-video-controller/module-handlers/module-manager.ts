@@ -8,7 +8,7 @@ import {
   PageDetector,
   DependencyChecker,
   ModuleCategory
-} from '../../types/module-types';
+} from '@/types/module-types';
 import { SettingsManager } from './settings-manager';
 import { ModuleRegistry } from './module-registry';
 

@@ -1,4 +1,4 @@
-import { ModuleSettings, ModuleConfigData } from '../../types/module-types';
+import { ModuleSettings, ModuleConfigData } from '@/types/module-types';
 
 /**
  * モジュール設定の保存・読み込みを管理するクラス

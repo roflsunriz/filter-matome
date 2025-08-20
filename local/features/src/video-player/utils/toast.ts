@@ -1,6 +1,6 @@
 import "../../types/global.d.ts";
 
-import { ToastMode, ToastConfig } from '../../types/index.js';
+import { ToastMode, ToastConfig } from '@/types/index.js';
 import { TOAST_CONFIG } from '../config/constants.js';
 
 /**

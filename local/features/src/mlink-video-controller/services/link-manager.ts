@@ -1,6 +1,6 @@
-import { ExtendedNicoCache_nl } from '../../types/global-types';
-import { LinkData, ActionMap } from '../../types/mlink-video-controller-types';
-import { ThumbnailsFilterGlobal } from '../../types/thumbnails-filter-types';
+import { ExtendedNicoCache_nl } from '@/types/global-types';
+import { LinkData, ActionMap } from '@/types/mlink-video-controller-types';
+import { ThumbnailsFilterGlobal } from '@/types/thumbnails-filter-types';
 import { Mylist2Handler } from '../handlers/mylist2';
 import { handleVideoOperation } from '../utils/video-util';
 import { getIconPath } from '../../common/material-icons';

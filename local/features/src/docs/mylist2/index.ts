@@ -1,5 +1,5 @@
 import { applyMylist2DocsStyles } from './styles.js';
-import type { HeaderConfig } from '../../types/common-types';
+import type { HeaderConfig } from '@/types/common-types';
 
 // スタイルを適用
 applyMylist2DocsStyles();

@@ -1,4 +1,4 @@
-import { NicoCache_nlInterface } from '../../types/global-types';
+import { NicoCache_nlInterface } from '@/types/global-types';
 
 /**
  * 削除動画検出・リダイレクト機能

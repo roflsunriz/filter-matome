@@ -25,7 +25,7 @@ import type {
   PersistenceStatus,
   MigrationProgress,
   DatabaseManagementConfig
-} from '../types/watch-history-types';
+} from '@/types/watch-history-types';
 import { watchHistoryDB } from './database';
 
 

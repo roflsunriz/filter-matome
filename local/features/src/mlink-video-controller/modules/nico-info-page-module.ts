@@ -1,4 +1,4 @@
-import { ModuleInstance, ModuleConfig, ModuleStatus } from '../../types/module-types';
+import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
 
 /**
  * ニコニコインフォページモジュール

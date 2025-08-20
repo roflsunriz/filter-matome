@@ -1,6 +1,6 @@
 import { NicoVideoPlayer } from '../services/nico-video-player';
-import { MlinkVideoComment, NicoApiResponse, NicoApiData } from '../../types/mlink-video-controller-types';
-import { CommentThread } from '../../types/comment-types';
+import { MlinkVideoComment, NicoApiResponse, NicoApiData } from '@/types/mlink-video-controller-types';
+import { CommentThread } from '@/types/comment-types';
 
 export class NicoApiFetcher {
   private static instance: NicoApiFetcher;

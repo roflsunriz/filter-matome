@@ -1,6 +1,6 @@
 import { NicoVideoPlayer } from '../services/nico-video-player';
 import { TimeFormatter } from '../utils/time-formatter';
-import { SeekOptions } from '../../types/mlink-video-controller-types';
+import { SeekOptions } from '@/types/mlink-video-controller-types';
 
 export class PlaybackHandler {
   private player: NicoVideoPlayer;

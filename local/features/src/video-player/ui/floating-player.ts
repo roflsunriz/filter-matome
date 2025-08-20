@@ -2,7 +2,7 @@ import { FLOATING_DELETED_PLAYER_HTML, FLOATING_DELETED_PLAYER_STYLES } from './
 import { createMaterialIcon } from '../../common/material-icons.js';
 import { applyStyles } from '../utils/dom-utils.js';
 import '../../types/video-types.js';
-import { HlsInstance, CacheInfoResponse, CacheUrlResult } from '../../types/video-types.js';
+import { HlsInstance, CacheInfoResponse, CacheUrlResult } from '@/types/video-types.js';
 
 /**
  * フローティング削除済み動画プレーヤークラス

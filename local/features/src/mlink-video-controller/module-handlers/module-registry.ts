@@ -1,4 +1,4 @@
-import { ModuleConfig, ModuleCategory, PageType } from '../../types/module-types';
+import { ModuleConfig, ModuleCategory, PageType } from '@/types/module-types';
 import { createMaterialIcon } from '../../common/material-icons';
 
 /**

@@ -1,12 +1,12 @@
 import { ModuleManager } from './module-manager';
 import { ModuleRegistry } from './module-registry';
 import { SettingsManager } from './settings-manager';
-import { ModuleConfig, ModuleCategory, ModuleStatus } from '../../types/module-types';
+import { ModuleConfig, ModuleCategory, ModuleStatus } from '@/types/module-types';
 import { WatchPageModule } from '../modules/watch-page-module';
 import { BackgroundImageSettings } from '../modules/background-image-settings';
-// import { ToastrInstance } from '../../types/toastr-types';
+// import { ToastrInstance } from '@/types/toastr-types';
 import { createMaterialIcon } from '../../common/material-icons';
-import { BackgroundImageItem } from '../../types/background-image-types';
+import { BackgroundImageItem } from '@/types/background-image-types';
 
 /**
  * 設定UIを管理するクラス

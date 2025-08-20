@@ -1,13 +1,13 @@
 // video_player連携部 - video_playerライブラリとの橋渡し
 import { CONSTANTS } from '../utils/constants';
-import { CF2CommentApiResponse, CommentFilter2GlobalData } from '../../types/filter-types';
+import { CF2CommentApiResponse, CommentFilter2GlobalData } from '@/types/filter-types';
 import { 
   VideoPlayerGetCommentsArgs, 
   VideoPlayerResponse, 
   VideoPlayerBridgeStatus, 
   CommentFilter2UpdateEventDetail,
   IVideoPlayerBridge 
-} from '../../types/video-player-bridge-types';
+} from '@/types/video-player-bridge-types';
 // グローバル型定義はglobalTypes.tsで管理
 import '../../types/global-types.js';
 

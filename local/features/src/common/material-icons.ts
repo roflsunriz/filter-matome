@@ -1,6 +1,6 @@
 // マテリアルアイコン統合ヘルパー
 
-import type { IconStyle, IconSize, IconColor, IconOptions, IconName } from '../types/icon-types';
+import type { IconStyle, IconSize, IconColor, IconOptions, IconName } from '@/types/icon-types';
 
 // 型定義の再エクスポート（既存コードとの互換性のため）
 export type { IconStyle, IconSize, IconColor, IconOptions, IconName };

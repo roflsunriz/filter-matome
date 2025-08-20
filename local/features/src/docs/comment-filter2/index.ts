@@ -1,6 +1,6 @@
 import { applyCommentFilter2DocsStyles } from './styles.js';
 import { applyCommentFilter2MainStyles } from './main-styles.js';
-import type { HeaderConfig } from '../../types/common-types'
+import type { HeaderConfig } from '@/types/common-types'
 
 // スタイルを適用
 applyCommentFilter2DocsStyles();

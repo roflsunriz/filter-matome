@@ -1,5 +1,5 @@
 import { NicoVideoPlayer } from '../services/nico-video-player';
-import { VolumeOptions } from '../../types/mlink-video-controller-types';
+import { VolumeOptions } from '@/types/mlink-video-controller-types';
 
 export class VolumeHandler {
   private player: NicoVideoPlayer;

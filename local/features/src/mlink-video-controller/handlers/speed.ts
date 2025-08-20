@@ -1,5 +1,5 @@
 import { NicoVideoPlayer } from '../services/nico-video-player';
-import { PlaybackRateOptions } from '../../types/mlink-video-controller-types';
+import { PlaybackRateOptions } from '@/types/mlink-video-controller-types';
 
 export class SpeedHandler {
   private player: NicoVideoPlayer;
