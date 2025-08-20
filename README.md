@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/roflsunriz/filter-matome.svg)](https://github.com/roflsunriz/filter-matome/releases)
-[![Latest Version](https://img.shields.io/badge/latest-%23188-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
+[![Latest Version](https://img.shields.io/badge/latest-%23190-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
 
 **filter-matome**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
 
@@ -24,7 +24,9 @@
 
 ### 前提条件
 - [NicoCache_nl](https://w.atwiki.jp/nicocachenlwiki/) 本体のインストール
-- Java Development Kit (JDK) 17以上
+- Java Development Kit (JDK) 17以上 (Adoptium OpenJDK 17)
+- Apache Ant 1.10.12以上
+- Boucy Castle 1.70以上
 - 対応ブラウザ: Firefox (推奨), Chrome
 
 ### インストール手順
@@ -33,14 +35,15 @@
    ```bash
    # NicoCache_nl Wikiを参照してインストール
    ```
+   [インストール方法](https://w.atwiki.jp/nicocachenlwiki/pages/30.html)
 
 2. **フィルター群の配置**
    ```bash
    # ディレクトリ構造を維持して以下に配置
    NicoCache_nl/
-   ├── nlFilters/     # 100-199番台のフィルターファイル
-   ├── local/         # 拡張機能のソースコード・設定
-   └── extensions/    # 追加拡張機能
+   ├── nlFilters/     # 100-199番台のDSLフィルター
+   ├── local/         # 拡張機能のコンパイル済みファイル、ソースコード
+   └── extensions/    # 追加拡張機能のコンパイル済みファイル、ソースコード
    ```
 
 3. **設定の有効化**
@@ -50,7 +53,7 @@
 ### クリーンインストール
 ```bash
 # 既存の100-199番台フィルターを削除
-# extensions,localにあるスクリプト群をダウンロードファイルを見ながら削除(必要なファイルを間違えて消さないため)
+# extensions,local,nlFiltersにあるファイルをダウンロードファイルを見ながら削除(必要なファイルを間違えて消さないため)
 # 新しいファイルで上書き更新
 # 設定のインポート（必要に応じて）
 ```
@@ -59,9 +62,10 @@
 
 ### 視聴履歴 (watch-history)
 - **無制限履歴保存**: ニコニコ動画の50件制限を突破
-- **高度な統計**: 日次・週次・月次分析
-- **シリーズ追跡**: 新規投稿の自動通知
+- **高度な統計**: 日別視聴状況・時間帯別視聴状況
+- **シリーズ追跡**: 新規投稿の自動通知・シリーズナビゲーション
 - **検索・フィルタ**: 強力な検索・ソート機能
+- **メモ機能**: 履歴にメモを残せる
 
 ### マイリスト2 (mylist2)
 - **複数マイリスト**: 無制限でマイリスト作成
@@ -73,6 +77,7 @@
 
 ### コメントフィルター2 (comment-filter2)
 - **JSON Lines形式**: 高度なルール設定
+- **エクスポート・インポート**: データの移行・バックアップ
 - **正規表現対応**: 柔軟なパターンマッチング
 - **リアルタイム処理**: 高速なコメント処理
 - **NGユーザー・ニコる数設定**: コメントのNGユーザー・ニコる数設定
@@ -87,13 +92,14 @@
 - **NGワード・NG正規表現**: コメントのNGワード・NG正規表現
 
 ### マルチリンクビデオコントローラー (mlink-video-controller)
-- **リンク管理**: 複数リンクの一括管理
-- **リンク切り替え**: リンクの切り替え
+- **リンク提供**: mylist2, comment-filter2, mylist2への追加ボタン、動画非表示設定、ニコニコ動画関連サービスへのリンク、キャッシュリスト、キャッシュ情報、nlMediaInfo, 音声保存、動画保存、コメント保存、キャッシュ削除
 - **再生速度調整**: 再生速度の調整
+- **多彩なコントロールボタン**: 再生・一時停止・次の動画・前の動画・繰り返し再生・シークバー・5秒スキップ・10秒スキップ・30秒スキップ・60秒スキップ
+- **コメント検索**: コメントの検索
 - **フレーム単位シーク**: フレーム単位でのシーク
 - **音量微調整**: 音量の微調整
 - **コメントヒートマップ**: コメントの盛り上がり箇所を視覚化
-- **モジュール管理**: モジュールの管理
+- **モジュール管理**: プライバシーモジュール、UI強化モジュール、視聴ページ機能強化モジュール、背景セレクタ、マトリックス風背景モジュール
 
 
 ## 🔧 開発者向け情報
@@ -108,19 +114,21 @@
 ### プロジェクト構成
 ```
 local/
-├─ features/          # メイン機能群
-├── src/          # TypeScriptソースコード
-├── dist/         # ビルド済みファイル
-└── config/       # Vite設定ファイル群
+├─ background-images/    # 視聴ページ用の背景画像
+├┬── features/          # メイン機能群
+│├── src/          # TypeScriptソースコード
+│├── dist/         # ビルド済みファイル
+│└── config/       # Vite設定ファイル群
+└── images/     # マテリアルアイコン、画像
 
 nlFilters/
-├── 100_common.txt           # 共通ライブラリ
-├── 101_disable_official.txt # 公式機能無効化
-├── 102_mlink_video_controller.txt # マルチリンクビデオコントローラー
-├── 103_comment_filter2.txt  # コメントフィルター
-├── 104_video_player.txt     # 動画プレイヤー
-├── 105_premium_hide.txt     # プレミアム勧誘非表示
-├── 106_watch_history.txt    # 視聴履歴
+├── 100_common.txt           # 共通ライブラリ(トースト通知、ロギング、共通ヘッダ、マテリアルアイコンヘルパなどを提供する共通ライブラリ)
+├── 101_disable_official.txt # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
+├── 102_mlink_video_controller.txt # マルチリンクビデオコントローラー(視聴ページにマルチリンクビデオコントローラーを追加)
+├── 103_comment_filter2.txt  # コメントフィルター(視聴ページにコメントフィルターを追加)
+├── 104_video_player.txt     # 動画プレイヤー(視聴ページに動画プレイヤーを追加)
+├── 105_premium_hide.txt     # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
+├── 106_watch_history.txt    # 視聴履歴(視聴ページにウォッチトラッカーを追加)
 ├── 198_release_notes.*      # リリースノート
 └── 199_readme.html          # 詳細ドキュメント
 ```
@@ -130,6 +138,9 @@ nlFilters/
 cd local/features
 npm install
 npm run build
+
+# 個別ビルド(詳細はpackage.jsonを参照)
+npm run build:comment-filter2
 ```
 
 ### nlFilter文法
@@ -165,6 +176,7 @@ Append<
 - **リリースノート**: [nlFilters/198_release_notes.md](nlFilters/198_release_notes.md)
 - **編集ガイド**: [nlFilters/nlFilters_編集ガイド.md](nlFilters/nlFilters_編集ガイド.md)
 - **シンボリックリンク作成手順 (必須)**: [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md)
+- シンボリックリンクはNicoCache_nlのキャッシュマネージャを使用する際に必須です。
 - **機能別ドキュメント**:(インストール後に表示可能になります)
   - [Comment Filter2 説明](https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html)
   - [Mylist2 説明](https://www.nicovideo.jp/local/features/dist/src/docs/mylist2/index.html)
@@ -173,7 +185,7 @@ Append<
 ## ⚠️ 重要な注意事項
 
 ### シンボリックリンク作成（必須）
-NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\local\list.js` という固定パス・固定名で参照します。ビルド成果物（例: `cache-data-manager.es.js`）へこの固定パス名でシンボリックリンクを作成しないと機能しません。詳細手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照してください。
+NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\local\list.js` という固定パス・固定名で参照します。ビルド成果物（例: `cache-data-manager.es.js`）へこの固定パス名でシンボリックリンクを作成しないと機能しません。詳細手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照してください。
 
 ### 使用上の注意
 - **全機能同時使用前提**: 個別機能の抜き出しは動作保証外
@@ -186,6 +198,7 @@ NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\l
 - サイトデータの削除
 - Cookieとサイトデータの削除
 - オフライン作業用データの削除
+mylist2やcomment-filter2,watch-historyのデータはIndexedDBに保存されているので必ずエクスポートして安全な場所に退避させてください！
 
 **対策**: 各機能の設定画面から定期的にエクスポートを実行してください。
 
@@ -193,15 +206,19 @@ NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\l
 
 ### コミュニティ
 - [NicoCache_nl Wiki](https://w.atwiki.jp/nicocachenlwiki/)
-- [5ちゃんねる 本スレッド](https://find.5ch.net/search?q=NicoCache)
+- [5ちゃんねる 本スレッド](https://find.5ch.net/search?q=NicoCache_nl)
+- [Talk](https://talk.jp/boards/software/1675038388)
 - [おーぷん2ちゃんねる](https://ana.open2ch.net/test/read.cgi/software/1675001508/)
 - [開発スレッド](https://sportschan.org/librejp/thread/16592.html)
 
 ### 開発ツール
+- [Node.js](https://nodejs.org/ja/download)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [Apache Ant](https://ant.apache.org/bindownload.cgi)
 - [Adoptium OpenJDK](https://adoptium.net/temurin/releases/?version=17)
+- [Boucy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest)
 - [WinMerge](https://winmerge.org/?lang=ja)
-- [MediaInfo](https://mediaarea.net/en/MediaInfo/Download/Windows)
+- [MediaInfo CLI](https://mediaarea.net/ja/MediaInfo/Download/Windows)
 
 ## 📄 ライセンス
 
@@ -213,20 +230,20 @@ MIT License - Copyright (c) 2017-2025 ◆awd5z.AlOFJq
 
 ### 最新バージョン
 
-- **リリース形式**: `#189`, `#190` などの番号形式
+- **リリース形式**: `#191`, `#192` などの番号形式
 - **リリース履歴**: [nlFilters/198_release_notes.md](nlFilters/198_release_notes.md)
 
 ### リリース作成方法（開発者向け）
 ```bash
 # 次のバージョンタグを作成してプッシュ
-git tag "#190"
-git push origin "#190"
+git tag "#191"
+git push origin "#191"
 ```
 
 ```bash
 # 間違えてリリースを作った場合、タグを削除して再度リリースを作成
-git tag -d "#190"
-git push origin :refs/tags/#190
+git tag -d "#191"
+git push origin :refs/tags/#191
 ```
 
 ## 🤝 コントリビューション
