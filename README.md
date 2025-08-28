@@ -116,11 +116,11 @@
 ```
 local/
 ├─ background-images/    # 視聴ページ用の背景画像
-├─┬── features/          # メイン機能群
-│ ├── src/          # TypeScriptソースコード
-│ ├── dist/         # ビルド済みファイル
-│ └── config/       # Vite設定ファイル群
-└── images/     # マテリアルアイコン、画像
+├──images/               # マテリアルアイコン、画像
+└─┬── features/          # メイン機能群
+  ├── src/               # TypeScriptソースコード
+  ├── dist/              # ビルド済みファイル
+  └── config/            # Vite設定ファイル群
 
 nlFilters/
 ├──resources/                # 199_readme.htmlの画像, js, css
