@@ -6727,7 +6727,7 @@ window.addEventListener("load", () => {
     return;
   }
   window.NicoCommon.createHeader("headerContainer", {
-    title: "Mylist2",
+    title: "mylist2",
     showSearch: true,
     showMoreLinks: true,
     enableFixedMode: false

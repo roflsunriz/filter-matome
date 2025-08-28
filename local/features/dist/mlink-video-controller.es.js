@@ -2829,19 +2829,19 @@ class LinkManager {
       custom: [
         {
           id: "customMylist",
-          title: "Mylist2",
+          title: "mylist2",
           icon: getIconPath("playlist_add", "outlined"),
           action: "customMylist"
         },
         {
           id: "AddVideoToCustomMylist",
-          title: "Mylist2に追加",
+          title: "mylist2に追加",
           icon: getIconPath("playlist_add_circle", "outlined"),
           action: "AddVideoToCustomMylist"
         },
         {
           id: "commentFilter2",
-          title: "CommentFilter2",
+          title: "comment-filter2",
           icon: getIconPath("filter_list", "outlined"),
           action: "commentFilter2"
         },
@@ -8993,9 +8993,9 @@ class MlinkVideoController extends BasePanel {
       this.initializeComponents();
       this.setupEventListeners();
       if (this.isWatchPage) {
-        this.setupFab(createMaterialIcon("sports_esports", { style: "outlined", classes: "fab-icon", color: "white" }), "Video Controls");
+        this.setupFab(createMaterialIcon("sports_esports", { style: "outlined", classes: "fab-icon", color: "white" }), "mlink-video-controller");
       } else {
-        this.setupFab(createMaterialIcon("link", { style: "outlined", classes: "fab-icon", color: "white" }), "Links & Settings");
+        this.setupFab(createMaterialIcon("link", { style: "outlined", classes: "fab-icon", color: "white" }), "mlink-video-controller");
       }
       if (this.isWatchPage) {
         this.initializeHeatmap();
@@ -9499,13 +9499,13 @@ class MlinkVideoController extends BasePanel {
       custom: [
         {
           id: "customMylist",
-          title: "Mylist2",
+          title: "mylist2",
           icon: getIconPath("playlist_add", "outlined"),
           action: "customMylist"
         },
         {
           id: "AddToMylist",
-          title: "Mylist2に追加",
+          title: "mylist2に追加",
           icon: getIconPath("playlist_add_circle", "outlined"),
           action: "AddToMylist"
         },

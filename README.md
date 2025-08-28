@@ -116,13 +116,14 @@
 ```
 local/
 ├─ background-images/    # 視聴ページ用の背景画像
-├┬── features/          # メイン機能群
-│├── src/          # TypeScriptソースコード
-│├── dist/         # ビルド済みファイル
-│└── config/       # Vite設定ファイル群
+├─┬── features/          # メイン機能群
+│ ├── src/          # TypeScriptソースコード
+│ ├── dist/         # ビルド済みファイル
+│ └── config/       # Vite設定ファイル群
 └── images/     # マテリアルアイコン、画像
 
 nlFilters/
+├──resources/                # 199_readme.htmlの画像, js, css
 ├── 100_common.txt           # 共通ライブラリ(トースト通知、ロギング、共通ヘッダ、マテリアルアイコンヘルパなどを提供する共通ライブラリ)
 ├── 101_disable_official.txt # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
 ├── 102_mlink_video_controller.txt # マルチリンクビデオコントローラー(視聴ページにマルチリンクビデオコントローラーを追加)
@@ -201,18 +202,17 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 - オフライン作業用データの削除
 - ブラウザデータの削除
 
-mylist2やcomment-filter2,watch-historyのデータはIndexedDBに保存されているので必ずエクスポートして安全な場所に退避させてください！
+**注意**: mylist2やcomment-filter2,watch-historyのデータはIndexedDBに保存されているので必ずエクスポートして安全な場所に退避してください！
 
-**対策**: 各機能の設定画面から定期的にエクスポートを実行してください。
 
 ## 🔗 関連リンク
 
 ### コミュニティ
 - [NicoCache_nl Wiki](https://w.atwiki.jp/nicocachenlwiki/)
 - [5ちゃんねる 本スレッド](https://find.5ch.net/search?q=NicoCache_nl)
-- [Talk](https://talk.jp/boards/software/1675038388)
-- [おーぷん2ちゃんねる](https://ana.open2ch.net/test/read.cgi/software/1675001508/)
-- [開発スレッド](https://sportschan.org/librejp/thread/16592.html)
+- [Talk スレッド](https://talk.jp/boards/software/1675038388)
+- [おーぷん2ちゃんねる スレッド](https://ana.open2ch.net/test/read.cgi/software/1675001508/)
+- [LibreJP 開発スレッド](https://sportschan.org/librejp/thread/16592.html)
 
 ### 開発ツール
 - [Node.js](https://nodejs.org/ja/download)
@@ -225,7 +225,7 @@ mylist2やcomment-filter2,watch-historyのデータはIndexedDBに保存され�
 
 ## 📄 ライセンス
 
-MIT License - Copyright (c) 2017-2025 ◆awd5z.AlOFJq
+MIT License - Copyright (c) 2017-2025 ◆awd5z.AlOFJq(roflsunriz)
 
 私の名前を明記している限り、本ソフトウェアは自由に使用、複製、改変、配布できます。詳細は[LICENSE](LICENSE)ファイルをご覧ください。
 

@@ -27,8 +27,8 @@
       <header>
         <h1>フィルタまとめ README</h1>
         <div class="meta">
-          <p>作者：◆awd5z.AlOFJq</p>
-          <p>更新日：2025 年 07 月 19 日</p>
+          <p>作者：◆awd5z.AlOFJq(roflsunriz)</p>
+          <p>更新日：2025 年 08 月 28 日</p>
         </div>
       </header>
 
@@ -109,6 +109,8 @@
       <section id="install">
         <h2>1. 導入方法</h2>
 
+        <p>GitHubページのリリースページ(<a href="https://github.com/roflsunriz/filter-matome/releases" target="_blank" class="reference-link">https://github.com/roflsunriz/filter-matome/releases</a>)からダウンロードしてください。</p>
+
         <div class="install-warning">
           <p>
             ディレクトリ構造を壊さずにそのまま<code>local</code>フォルダは<code>local</code>フォルダに、<code>nlFilters</code>は<code>nlFilters</code>フォルダに、<code>extensions</code>フォルダは<code>extensions</code>フォルダに上書きする。
@@ -117,6 +119,8 @@
             フィルタの抜き差しは上級者向けなのでnlFiltersの文法を完全に理解し、HTML/CSS/JavaScriptの知識が十分にあり、デベロッパーコンソールを十全に扱え、自己解決できる者だけが自己の責任で対応すること。
           </p>
         </div>
+
+        <p>問題を発見した場合は<a href="https://github.com/roflsunriz/filter-matome/issues" target="_blank" class="reference-link">GitHubのIssue</a>にて報告してください。あるいはIssueで相談してからPull Requestを送ってください。</p>
 
         <div class="install-steps">
           <h3>標準手順</h3>
@@ -130,7 +134,7 @@
           <h3>クリーンインストール手順</h3>
           <p>
             <code>nlFilters</code
-            >から100*〜199*.txtを削除後、<code>test_nlFilters</code>の構成に従って必要なファイルのみを残したあと標準手順を実行する。
+            >から100*〜199*.txtを削除後、ダウンロード済みパッケージの構成とNicoCache_nlのファイル構成を比べて必要なファイルのみを残したあと標準手順を実行する。
           </p>
         </div>
 
@@ -282,8 +286,10 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
           </div>
         </div>
 
+        <p>nlFiltersのシンタックスハイライト機能は<a href="https://github.com/roflsunriz/NLF-Code" target="_blank" class="reference-link">NLF Code</a>が利用可能。</p>
+
         <div class="image-container">
-          <img src="./resources/toggle.avif" alt="フィルタ切り替え画面" style="max-width: 500px" />
+          <img src="./resources/toggle.png" alt="フィルタ切り替え画面" style="max-width: 500px" />
         </div>
       </section>
 
@@ -302,7 +308,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
             >を参照
           </div>
           <p>
-            背景画像を変更したい場合は、画像を<a href="https://squoosh.app/">Squoosh</a>等でavifに変換し(ブラウザが解釈できる形式であれば変換する必要はない)、Nicocache_nlのlocal/background_images/favorites等任意のフォルダに画像をコピペする。mlink-video-controllerの設定タブ、背景画像設定から背景画像を設定できる。URL指定とファイル選択ができ、ファイル選択したときはIndexedDBにデータが保存される。URL指定は`local/background_images/favorites/image.png`のように指定する。円環が大きくなり過ぎない範囲で任意の数指定可能。もちろんフォルダーパスも自由。
+            背景画像を変更したい場合は、画像を<a href="https://squoosh.app/">Squoosh</a>等で好きな画像形式に変換し(ブラウザが解釈できる形式であれば変換する必要はない)、Nicocache_nlのlocal/background_images/favorites等任意のフォルダに画像をコピペする。(NicoCache_nlからファイルを参照するにはlocalフォルダ以下でなければならない。)mlink-video-controllerの設定タブ、背景画像設定から背景画像を設定できる。URL指定とファイル選択ができ、ファイル選択したときはIndexedDBにデータが保存される。URL指定は`local/background_images/favorites/image.png`のように指定する。円環が大きくなり過ぎない範囲で任意の数指定可能。もちろんフォルダーパスも自由。
           </p>
         </div>
 
@@ -355,7 +361,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
         <div class="export-instructions">
           <h3>各機能のエクスポート方法</h3>
           <article class="feature">
-            <h4>Mylist2</h4>
+            <h4>mylist2</h4>
             <p>
               <a href="https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html" target="_blank">https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html</a>
               にアクセスし、「エクスポート」ボタンをクリック
@@ -363,7 +369,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
           </article>
 
           <article class="feature">
-            <h4>CommentFilter2</h4>
+            <h4>comment-filter2</h4>
             <p>
               ニコニコ動画の視聴ページに行き、コメントフィルタ設定画面の「エクスポート」ボタンをクリック
             </p>

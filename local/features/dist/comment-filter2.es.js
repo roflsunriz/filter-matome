@@ -3198,7 +3198,7 @@ const mainUITemplate = `
   <div class="cf2-header">
     <div class="cf2-title">
       ${getIconSVG(ICONS.filter)}
-      <span class="cf2-title-text">CommentFilter2</span>
+      <span class="cf2-title-text">comment-filter2</span>
               <a href="https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html" target="_blank">${getIconSVG(ICONS.info)}</a>
     </div>
     <button id="cf2-close-btn" class="cf2-close-btn" title="閉じる">

@@ -15,19 +15,19 @@ export class LinkManager {
     custom: [
       {
         id: 'customMylist',
-        title: 'Mylist2',
+        title: 'mylist2',
         icon: getIconPath('playlist_add', 'outlined'),
         action: 'customMylist'
       },
       {
         id: 'AddVideoToCustomMylist',
-        title: 'Mylist2に追加',
+        title: 'mylist2に追加',
         icon: getIconPath('playlist_add_circle', 'outlined'),
         action: 'AddVideoToCustomMylist'
       },
       {
         id: 'commentFilter2',
-        title: 'CommentFilter2',
+        title: 'comment-filter2',
         icon: getIconPath('filter_list', 'outlined'),
         action: 'commentFilter2'
       },

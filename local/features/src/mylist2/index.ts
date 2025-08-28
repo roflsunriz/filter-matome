@@ -23,7 +23,7 @@ window.addEventListener("load", () => {
     
     // 共通ヘッダーを初期化（グローバル関数を使用）
     window.NicoCommon.createHeader("headerContainer", {
-      title: "Mylist2",
+      title: "mylist2",
       showSearch: true,
       showMoreLinks: true,
       enableFixedMode: false

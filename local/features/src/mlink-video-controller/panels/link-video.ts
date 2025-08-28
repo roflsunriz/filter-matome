@@ -201,9 +201,9 @@ export class MlinkVideoController extends BasePanel {
       
       // FABの設定（ページタイプに応じて変更）
       if (this.isWatchPage) {
-        this.setupFab(createMaterialIcon('sports_esports', { style: 'outlined', classes: 'fab-icon', color: 'white' }), 'Video Controls');
+        this.setupFab(createMaterialIcon('sports_esports', { style: 'outlined', classes: 'fab-icon', color: 'white' }), 'mlink-video-controller');
       } else {
-        this.setupFab(createMaterialIcon('link', { style: 'outlined', classes: 'fab-icon', color: 'white' }), 'Links & Settings');
+        this.setupFab(createMaterialIcon('link', { style: 'outlined', classes: 'fab-icon', color: 'white' }), 'mlink-video-controller');
       }
       
       // 視聴ページの場合のみヒートマップを初期化
@@ -943,13 +943,13 @@ export class MlinkVideoController extends BasePanel {
       custom: [
         {
           id: 'customMylist',
-          title: 'Mylist2',
+          title: 'mylist2',
           icon: getIconPath('playlist_add', 'outlined'),
           action: 'customMylist'
         },
         {
           id: 'AddToMylist',
-          title: 'Mylist2に追加',
+          title: 'mylist2に追加',
           icon: getIconPath('playlist_add_circle', 'outlined'),
           action: 'AddToMylist'
         },
