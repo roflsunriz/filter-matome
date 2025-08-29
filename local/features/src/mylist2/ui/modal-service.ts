@@ -211,7 +211,7 @@ export class ModalService {
             <div class="cml2-modal-body">
               <div style="display:flex; flex-direction:column; gap:8px">
                 <button class="cml2-btn" id="exportLocal">${createMaterialIcon(ICONS.download, { color: 'white' })}ローカルに保存</button>
-                <button class="cml2-btn" id="exportCloud">${createMaterialIcon(ICONS.cloud_upload, { color: 'white' })}Google Drive にバックアップ</button>
+                <button class="cml2-btn" id="exportCloud">${createMaterialIcon(ICONS.cloud_upload, { color: 'white' })}クラウドにバックアップ</button>
               </div>
             </div>
             <div class="cml2-modal-footer">
@@ -245,7 +245,7 @@ export class ModalService {
               <div style="display:flex; flex-direction:column; gap:8px">
                 <button class="cml2-btn" id="importLocal">${createMaterialIcon(ICONS.upload, { color: 'white' })}ローカルからインポート</button>
                 <button class="cml2-btn" id="importClear">${createMaterialIcon(ICONS.delete, { color: 'white' })}データベースのクリア</button>
-                <button class="cml2-btn" id="importCloud">${createMaterialIcon(ICONS.cloud_download, { color: 'white' })}Google Drive からインポート</button>
+                <button class="cml2-btn" id="importCloud">${createMaterialIcon(ICONS.cloud_download, { color: 'white' })}クラウドからインポート</button>
               </div>
             </div>
             <div class="cml2-modal-footer">
@@ -264,6 +264,41 @@ export class ModalService {
       bind('importClear', 'clear');
       bind('importCloud', 'cloud');
       bind('importCancel', 'cancel');
+    });
+  }
+
+  // クラウドプロバイダ選択モーダル
+  async showCloudProviderSelectModal(): Promise<'gdrive' | 'onedrive' | 'dropbox' | 'mega' | null> {
+    return new Promise((resolve) => {
+      const html = `
+        <div class="cml2-modal" style="display:flex">
+          <div class="cml2-modal-content">
+            <h3 class="cml2-modal-title">クラウドストレージを選択</h3>
+            <div class="cml2-modal-body">
+              <div style="display:flex; flex-direction:column; gap:8px">
+                <button class="cml2-btn" id="selG">${createMaterialIcon(ICONS.cloud_upload, { color: 'white' })}Google Drive</button>
+                <button class="cml2-btn" id="selO">${createMaterialIcon(ICONS.cloud_upload, { color: 'white' })}OneDrive</button>
+                <button class="cml2-btn" id="selD">${createMaterialIcon(ICONS.cloud_upload, { color: 'white' })}Dropbox</button>
+                <button class="cml2-btn" id="selM">${createMaterialIcon(ICONS.cloud_upload, { color: 'white' })}MEGA (β)</button>
+              </div>
+            </div>
+            <div class="cml2-modal-footer">
+              <button class="cml2-btn" id="selCancel">${createMaterialIcon(ICONS.close, { color: 'white' })}キャンセル</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', html);
+      const modal = document.querySelector('.cml2-modal') as HTMLElement;
+      const cleanup = () => modal?.remove();
+      const bind = (id: string, result: 'gdrive' | 'onedrive' | 'dropbox' | 'mega' | null) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', () => { cleanup(); resolve(result); });
+      };
+      bind('selG', 'gdrive');
+      bind('selO', 'onedrive');
+      bind('selD', 'dropbox');
+      bind('selM', 'mega');
+      bind('selCancel', null);
     });
   }
 

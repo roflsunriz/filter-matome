@@ -407,3 +407,17 @@ await manager.scheduleAutoDatabaseBackup(24);
 - **運用効率**: 自動監視によるメンテナンス負荷軽減
 
 この文書を参考に、効率的にmylist2プロジェクトを編集できるのじゃ！ 
+
+## ☁️ クラウドバックアップ対応（Google Drive / OneDrive / Dropbox / MEGA β）
+
+- UI から「エクスポート → クラウドにバックアップ」「インポート → クラウドからインポート」を選択し、プロバイダを指定します。
+- Google Drive: ブラウザ内 OAuth（Google Identity Services）で動作。必要に応じてクライアントIDを入力して利用可能。
+- OneDrive: Microsoft Graph のアクセストークン（Files.ReadWrite）を一時入力して利用。トークンは `localStorage` に保存されます（期限切れ時は再入力）。
+- Dropbox: Dropbox のアクセストークン（files.content.write/read）を一時入力して利用。トークンは `localStorage` に保存されます。
+- MEGA: 現在はプレースホルダ（β）。ブラウザのみ・バックエンド無しでの安全な連携には SDK 導入が必要なため、今後対応予定。
+
+保存先フォルダとファイル名
+- Google Drive: `Mylist2 Backups/Mylist2_YYYYMMDD_HHMMSS.zip`
+- OneDrive: `Mylist2 Backups/Mylist2_YYYYMMDD_HHMMSS.zip`
+- Dropbox: `/Mylist2 Backups/Mylist2_YYYYMMDD_HHMMSS.zip`
+- ZIP 内には `Mylist2_*.json` が格納され、復元時に自動解凍・読み込みします。

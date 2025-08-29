@@ -12,6 +12,9 @@ import { ImportExportService } from "../services/import-export-service.js";
 import { SettingsService } from "../services/settings-service.js";
 import { DatabaseManagementService } from "../services/database-management-service.js";
 import { GoogleDriveService } from "../services/cloud/google-drive-service.js";
+import { DropboxService } from "../services/cloud/dropbox-service.js";
+import { OneDriveService } from "../services/cloud/onedrive-service.js";
+import { MegaService } from "../services/cloud/mega-service.js";
 
 export class Mylist2Manager {
   private db: Mylist2DB;
@@ -23,6 +26,9 @@ export class Mylist2Manager {
   private settingsService: SettingsService;
   private databaseManagementService: DatabaseManagementService;
   private googleDriveService: GoogleDriveService;
+  private dropboxService: DropboxService;
+  private oneDriveService: OneDriveService;
+  private megaService: MegaService;
 
   constructor() {
     this.db = new Mylist2DB();
@@ -34,6 +40,9 @@ export class Mylist2Manager {
     this.settingsService = new SettingsService(this.db);
     this.databaseManagementService = new DatabaseManagementService(this.db);
     this.googleDriveService = new GoogleDriveService();
+    this.dropboxService = new DropboxService();
+    this.oneDriveService = new OneDriveService();
+    this.megaService = new MegaService();
   }
 
   // データベースへのアクセスを提供するpublicメソッド
@@ -258,4 +267,53 @@ export class Mylist2Manager {
       return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
   }
-} 
+
+  // 汎用クラウド: プロバイダ選択版
+  async uploadBackupToCloud(provider: 'gdrive' | 'dropbox' | 'onedrive' | 'mega', baseFileName: string): Promise<{ success: boolean; id?: string; error?: string }> {
+    try {
+      const backup = await this.createDatabaseBackup();
+      if (!backup.success || !backup.backupData) return { success: false, error: backup.error || 'バックアップ作成に失敗しました' };
+      if (provider === 'gdrive') {
+        const r = await this.googleDriveService.uploadBackupZip(baseFileName, backup.backupData);
+        return r.success ? { success: true, id: r.fileId } : { success: false, error: r.error };
+      }
+      if (provider === 'dropbox') {
+        const r = await this.dropboxService.uploadBackupZip(baseFileName, backup.backupData);
+        return r.success ? { success: true, id: r.path } : { success: false, error: r.error };
+      }
+      if (provider === 'onedrive') {
+        const r = await this.oneDriveService.uploadBackupZip(baseFileName, backup.backupData);
+        return r.success ? { success: true, id: r.fileId } : { success: false, error: r.error };
+      }
+      if (provider === 'mega') {
+        const r = await this.megaService.uploadBackupZip(baseFileName, backup.backupData);
+        return r.success ? { success: true, id: r.fileId } : { success: false, error: r.error };
+      }
+      return { success: false, error: '未知のプロバイダ' };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  async listCloudBackups(provider: 'gdrive' | 'dropbox' | 'onedrive' | 'mega'): Promise<Array<{ id: string; name: string; modifiedTime?: string; size?: string }>> {
+    if (provider === 'gdrive') return this.googleDriveService.listBackups();
+    if (provider === 'dropbox') return this.dropboxService.listBackups();
+    if (provider === 'onedrive') return this.oneDriveService.listBackups();
+    if (provider === 'mega') return this.megaService.listBackups();
+    return [];
+  }
+
+  async restoreFromCloudBackup(provider: 'gdrive' | 'dropbox' | 'onedrive' | 'mega', id: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      let jsonText = '';
+      if (provider === 'gdrive') jsonText = await this.googleDriveService.downloadBackupJson(id);
+      else if (provider === 'dropbox') jsonText = await this.dropboxService.downloadBackupJson(id);
+      else if (provider === 'onedrive') jsonText = await this.oneDriveService.downloadBackupJson(id);
+      else if (provider === 'mega') jsonText = await this.megaService.downloadBackupJson(id);
+      const res = await this.restoreDatabaseFromBackup(jsonText);
+      return res;
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+}
