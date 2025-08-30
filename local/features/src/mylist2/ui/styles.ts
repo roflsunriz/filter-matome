@@ -3,10 +3,58 @@
  */
 
 export const MYLIST_MANAGER_STYLES_PART1 = `
+/* Theme variables (scoped to Mylist2 root) */
+.custom-mylist2-manager {
+  /* base defaults (dark-blue) */
+  --cml2-bg: #1a1b1c;
+  --cml2-text: #ffffff;
+  --cml2-panel: #2a2b2c;
+  --cml2-border: #333333;
+  --cml2-muted: #888888;
+  --cml2-muted-strong: #666666;
+  --cml2-accent: #2a88bd;
+  --cml2-accent-hover: #3498db;
+  --cml2-danger: #e74c3c;
+  --cml2-danger-hover: #c0392b;
+  --cml2-focus-ring: rgba(52, 152, 219, 0.3);
+  --cml2-link: #1976d2;
+  --cml2-link-hover: #1565c0;
+  --cml2-scrollbar-thumb: #666666;
+  --cml2-scrollbar-track: var(--cml2-panel);
+  --cml2-text-soft: #dddddd;
+  --cml2-border-success: #27ae60;
+  --cml2-border-danger: #e74c3c;
+  --cml2-border-warning: #f39c12;
+  --cml2-border-info: #3498db;
+}
+
+/* Theme presets */
+.cml2-theme-dark-blue { /* defaults already match */ }
+.cml2-theme-dark-green {
+  --cml2-accent: #27ae60;
+  --cml2-accent-hover: #2ecc71;
+  --cml2-focus-ring: rgba(39, 174, 96, 0.3);
+}
+.cml2-theme-dark-amber {
+  --cml2-accent: #f39c12;
+  --cml2-accent-hover: #f1c40f;
+  --cml2-focus-ring: rgba(243, 156, 18, 0.3);
+}
+.cml2-theme-dark-violet {
+  --cml2-accent: #8e44ad;
+  --cml2-accent-hover: #9b59b6;
+  --cml2-focus-ring: rgba(142, 68, 173, 0.3);
+}
+.cml2-theme-dark-red {
+  --cml2-accent: #e74c3c;
+  --cml2-accent-hover: #c0392b;
+  --cml2-focus-ring: rgba(231, 76, 60, 0.3);
+}
+
 .mylist-item {
   padding: 12px;
   cursor: pointer;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--cml2-border);
   transition: background-color 0.2s;
 }
 
@@ -23,13 +71,13 @@ export const MYLIST_MANAGER_STYLES_PART1 = `
 .mylist-count-mylist-tab,
 .mylist-count {
   font-size: 12px;
-  color: #888;
+  color: var(--cml2-muted);
   margin-left: 8px;
   padding: 2px 6px;
 }
 
 .mylist-count-mylist-tab {
-  background: #2a2b2c;
+  background: var(--cml2-panel);
   border-radius: 4px;
 }
 
@@ -41,7 +89,7 @@ export const MYLIST_MANAGER_STYLES_PART1 = `
 
 .mylist-date {
   font-size: 12px;
-  color: #888;
+  color: var(--cml2-muted);
 }
 
 .mylist-controls {
@@ -50,11 +98,11 @@ export const MYLIST_MANAGER_STYLES_PART1 = `
 }
 
 .mylist-item:hover {
-  background: #2a2b2c;
+  background: var(--cml2-panel);
 }
 
 .mylist-item.active {
-  background: #2a88bd;
+  background: var(--cml2-accent);
 }
 
 /* 既存のスタイルに追加 */
@@ -67,8 +115,8 @@ export const MYLIST_MANAGER_STYLES_PART1 = `
   transform: translate(-50%, -50%);
   width: 97%;
   height: 87%;
-  background: #1a1b1c;
-  color: #ffffff;
+  background: var(--cml2-bg);
+  color: var(--cml2-text);
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   z-index: 8000;
@@ -76,7 +124,7 @@ export const MYLIST_MANAGER_STYLES_PART1 = `
 
 .mylist-sidebar {
   width: 250px;
-  border-right: 1px solid #333;
+  border-right: 1px solid var(--cml2-border);
   padding: 15px;
   display: flex;
   flex-direction: column;
@@ -103,7 +151,7 @@ export const MYLIST_MANAGER_STYLES_PART1 = `
   display: flex;
   align-items: center;
   padding: 10px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--cml2-border);
   gap: 10px;
 }
 
@@ -125,19 +173,19 @@ export const MYLIST_MANAGER_STYLES_PART1 = `
 
 .video-author {
   font-size: 12px;
-  color: #888;
+  color: var(--cml2-muted);
   margin-bottom: 2px;
 }
 
 .video-upload-date {
   font-size: 12px;
-  color: #888;
+  color: var(--cml2-muted);
   margin-bottom: 5px;
 }
 
 .video-stats {
   font-size: 12px;
-  color: #888;
+  color: var(--cml2-muted);
 }
 
 .video-stats span:not(:last-child) {
@@ -147,9 +195,9 @@ export const MYLIST_MANAGER_STYLES_PART1 = `
 /* フォーム要素のスタイル */
 input[type="text"],
 select {
-  background: #2a2b2c;
-  border: 1px solid #444;
-  color: #ffffff;
+  background: var(--cml2-panel);
+  border: 1px solid var(--cml2-border);
+  color: var(--cml2-text);
   padding: 8px;
   border-radius: 4px;
 }
@@ -163,8 +211,8 @@ select {
 }
 
 button {
-  background: #2a88bd;
-  color: #ffffff;
+  background: var(--cml2-accent);
+  color: var(--cml2-text);
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -172,15 +220,15 @@ button {
 }
 
 button:hover {
-  background: #3498db;
+  background: var(--cml2-accent-hover);
 }
 
 button.danger {
-  background: #e74c3c;
+  background: var(--cml2-danger);
 }
 
 button.danger:hover {
-  background: #c0392b;
+  background: var(--cml2-danger-hover);
 }
 `;
 
@@ -188,7 +236,7 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
 /* メインコンテンツ領域のスタイル */
 .mylist-main {
   padding: 20px;
-  background: #1a1b1c;
+  background: var(--cml2-bg);
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
@@ -199,7 +247,7 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
   gap: 10px;
   align-items: center;
   padding: 15px;
-  background: #2a2b2c;
+  background: var(--cml2-panel);
   border-radius: 6px;
   margin-bottom: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -208,11 +256,11 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
 .mylist-name-edit {
   flex: 1;
   padding: 8px 12px;
-  background: #1a1b1c;
-  border: 1px solid #444;
+  background: var(--cml2-bg);
+  border: 1px solid var(--cml2-border);
   border-radius: 4px;
   font-size: 14px;
-  color: #ffffff;
+  color: var(--cml2-text);
 }
 
 .current-mylist-info button {
@@ -225,13 +273,13 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
 }
 
 .current-mylist-info button:not(.danger) {
-  background: #4a90e2;
-  color: white;
+  background: var(--cml2-accent);
+  color: var(--cml2-text);
 }
 
 .current-mylist-info button.danger {
-  background: #dc3545;
-  color: white;
+  background: var(--cml2-danger);
+  color: var(--cml2-text);
 }
 
 .current-mylist-info button:hover {
@@ -246,7 +294,7 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
 }
 
 .import-export-controls button {
-  background: #27ae60;
+  background: var(--cml2-accent);
 }
 
 /* 動画追加フォーム */
@@ -255,7 +303,7 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
   gap: 10px;
   margin-bottom: 20px;
   padding: 15px;
-  background: #2a2b2c;
+  background: var(--cml2-panel);
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
@@ -263,17 +311,17 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
 .video-add-form input {
   flex: 1;
   padding: 8px 12px;
-  background: #1a1b1c;
-  border: 1px solid #444;
+  background: var(--cml2-bg);
+  border: 1px solid var(--cml2-border);
   border-radius: 4px;
   font-size: 14px;
-  color: #ffffff;
+  color: var(--cml2-text);
 }
 
 .video-add-form button {
   padding: 8px 20px;
-  background: #4a90e2;
-  color: white;
+  background: var(--cml2-accent);
+  color: var(--cml2-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -281,7 +329,7 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
 }
 
 .video-add-form button:hover {
-  background: #357abd;
+  background: var(--cml2-accent-hover);
 }
 
 /* 動画一覧コントロール */
@@ -291,7 +339,7 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
   align-items: center;
   gap: 15px;
   padding: 15px;
-  background: #2a2b2c;
+  background: var(--cml2-panel);
   border-radius: 6px;
   margin-bottom: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -303,7 +351,7 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
   z-index: 8000;
   background: rgba(42, 43, 44, 0.98);
   backdrop-filter: blur(10px);
-  border: 1px solid #444;
+  border: 1px solid var(--cml2-border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -360,7 +408,7 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
 
 .bulk-action-controls button {
   padding: 8px 16px;
-  background: #4a90e2;
+  background: var(--cml2-accent);
   color: white;
   border: none;
   border-radius: 4px;
@@ -369,7 +417,7 @@ export const MYLIST_MANAGER_STYLES_PART2 = `
 }
 
 .bulk-action-controls button:hover {
-  background: #357abd;
+  background: var(--cml2-accent-hover);
 }
 
 /* ホバーエフェクト */
@@ -382,13 +430,13 @@ button:hover {
 input:focus,
 select:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  border-color: var(--cml2-accent);
+  box-shadow: 0 0 0 2px var(--cml2-focus-ring);
 }
 
 /* プレースホルダーのスタイル */
 input::placeholder {
-  color: #666;
+  color: var(--cml2-muted-strong);
 }
 
 /* スクロールバーのスタイル */
@@ -397,16 +445,16 @@ input::placeholder {
 }
 
 .video-list::-webkit-scrollbar-track {
-  background: #1a1b1c;
+  background: var(--cml2-bg);
 }
 
 .video-list::-webkit-scrollbar-thumb {
-  background: #444;
+  background: var(--cml2-border);
   border-radius: 4px;
 }
 
 .video-list::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--cml2-border);
 }
 `;
 
@@ -462,7 +510,7 @@ export const MYLIST_MANAGER_STYLES_PART3 = `
 
 .progress-status {
   margin-top: 1em;
-  color: #666;
+  color: var(--cml2-muted-strong);
 }
 
 /* ヘッダースタイル */
@@ -475,7 +523,7 @@ export const MYLIST_MANAGER_STYLES_PART3 = `
 }
 
 .cml2-video-link {
-  color: #1976d2;
+  color: var(--cml2-link);
   text-decoration: none;
   display: inline-block;
   max-width: 100%;
@@ -485,7 +533,7 @@ export const MYLIST_MANAGER_STYLES_PART3 = `
 }
 
 .cml2-video-link:hover {
-  color: #1565c0;
+  color: var(--cml2-link-hover);
   text-decoration: underline;
 }
 
@@ -497,12 +545,12 @@ export const MYLIST_MANAGER_STYLES_PART3 = `
   font-size: 14px;
   cursor: pointer;
   transition: background-color 0.2s;
-  color: white;
-  background: #2a88bd; /* 基本の青色 */
+  color: var(--cml2-text);
+  background: var(--cml2-accent);
 }
 
 .cml2-btn:hover {
-  background: #3498db;
+  background: var(--cml2-accent-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -511,17 +559,17 @@ export const MYLIST_MANAGER_STYLES_PART3 = `
 .current-mylist-info .cml2-btn.cml2-btn-danger,
 .video-actions .delete-video,
 .video-actions .delete-keyword {
-  background: #e74c3c;
+  background: var(--cml2-danger);
 }
 
 .current-mylist-info .cml2-btn.cml2-btn-danger:hover,
 .video-actions .delete-video:hover,
 .video-actions .delete-keyword:hover {
-  background: #c0392b;
+  background: var(--cml2-danger-hover);
 }
 
 .cml2-video-link {
-  color: #1976d2;
+  color: var(--cml2-link);
   text-decoration: none;
   display: inline-block;
   max-width: 100%;
@@ -531,7 +579,7 @@ export const MYLIST_MANAGER_STYLES_PART3 = `
 }
 
 .cml2-video-link:hover {
-  color: #1565c0;
+  color: var(--cml2-link-hover);
   text-decoration: underline;
 }
 
@@ -540,7 +588,7 @@ export const MYLIST_MANAGER_STYLES_PART3 = `
   flex: 1;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #666 #2a2b2c;
+  scrollbar-color: var(--cml2-scrollbar-thumb) var(--cml2-scrollbar-track);
   margin-top: 15px;
 }
 
@@ -550,11 +598,11 @@ export const MYLIST_MANAGER_STYLES_PART3 = `
 }
 
 .mylist-list::-webkit-scrollbar-track {
-  background: #2a2b2c;
+  background: var(--cml2-scrollbar-track);
 }
 
 .mylist-list::-webkit-scrollbar-thumb {
-  background-color: #666;
+  background-color: var(--cml2-scrollbar-thumb);
   border-radius: 4px;
 }
 `;
@@ -575,8 +623,8 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 }
 
 .cml2-modal-content {
-  background: #1a1b1c;
-  color: #ffffff;
+  background: var(--cml2-bg);
+  color: var(--cml2-text);
   padding: 20px;
   border-radius: 8px;
   min-width: 300px;
@@ -587,7 +635,7 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 .cml2-modal-title {
   margin: 0 0 15px 0;
   padding-bottom: 10px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--cml2-border);
 }
 
 .cml2-modal-body {
@@ -604,16 +652,16 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 .cml2-select {
   width: 100%;
   padding: 8px;
-  background: #2a2b2c;
-  border: 1px solid #444;
-  color: #ffffff;
+  background: var(--cml2-panel);
+  border: 1px solid var(--cml2-border);
+  color: var(--cml2-text);
   border-radius: 4px;
   margin-bottom: 15px;
 }
 
 .cml2-select option {
-  background: #2a2b2c;
-  color: #ffffff;
+  background: var(--cml2-panel);
+  color: var(--cml2-text);
 }
 
 /* 検索コンテナのスタイル */
@@ -626,20 +674,20 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 .search-container input {
   flex: 1;
   padding: 8px 12px;
-  background: #1a1b1c;
-  border: 1px solid #444;
+  background: var(--cml2-bg);
+  border: 1px solid var(--cml2-border);
   border-radius: 4px;
-  color: #ffffff;
+  color: var(--cml2-text);
   font-size: 14px;
   min-width: 0; /* flexアイテムの最小幅を0に設定 */
 }
 
 .search-container input::placeholder {
-  color: #888;
+  color: var(--cml2-muted);
 }
 
 .search-clear-btn {
-  background: #666;
+  background: var(--cml2-muted-strong);
   border: none;
   padding: 8px;
   border-radius: 4px;
@@ -653,7 +701,7 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 }
 
 .search-clear-btn:hover {
-  background: #777;
+  background: var(--cml2-muted);
 }
 
 .search-clear-btn .material-icon {
@@ -672,16 +720,16 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 .video-search input {
   width: 93%;
   padding: 8px 12px;
-  background: #1a1b1c;
-  border: 1px solid #444;
+  background: var(--cml2-bg);
+  border: 1px solid var(--cml2-border);
   border-radius: 4px;
-  color: #ffffff;
+  color: var(--cml2-text);
   font-size: 14px;
 }
 
 .mylist-search input::placeholder,
 .video-search input::placeholder {
-  color: #888;
+  color: var(--cml2-muted);
 }
 
 /* 非表示アイテムのスタイル */
@@ -709,17 +757,17 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #e0e0e0;
+  background-color: var(--cml2-scrollbar-thumb);
   border-radius: 4px;
 }
 
 .keyword-icon svg {
-  fill: #666;
+  fill: var(--cml2-muted-strong);
 }
 
 .keyword-links a {
   margin-right: 1em;
-  color: #0066cc;
+  color: var(--cml2-link);
   text-decoration: none;
 }
 
@@ -730,7 +778,7 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 .keyword-text,
 .keyword-added-date {
   font-weight: bold;
-  color: #ddd;
+  color: var(--cml2-text-soft);
 }
 
 /* キーワード編集モーダルのスタイル */
@@ -748,8 +796,8 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 }
 
 #keywordEditModal .modal-content {
-  background: #1a1b1c;
-  color: #ffffff;
+  background: var(--cml2-bg);
+  color: var(--cml2-text);
   padding: 20px;
   border-radius: 8px;
   min-width: 300px;
@@ -761,7 +809,7 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 #keywordEditModal h2 {
   margin: 0 0 15px 0;
   padding-bottom: 10px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--cml2-border);
   font-size: 1.2em;
 }
 
@@ -770,22 +818,22 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
   right: 10px;
   top: 10px;
   font-size: 24px;
-  color: #888;
+  color: var(--cml2-muted);
   cursor: pointer;
   transition: color 0.2s;
 }
 
 #keywordEditModal .close-button:hover {
-  color: #fff;
+  color: var(--cml2-text);
 }
 
 #keywordEditModal #editKeywordInput {
   width: 100%;
   padding: 8px 12px;
-  background: #2a2b2c;
-  border: 1px solid #444;
+  background: var(--cml2-panel);
+  border: 1px solid var(--cml2-border);
   border-radius: 4px;
-  color: #ffffff;
+  color: var(--cml2-text);
   font-size: 14px;
   margin-bottom: 15px;
   box-sizing: border-box;
@@ -793,14 +841,14 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 
 #keywordEditModal #editKeywordInput:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  border-color: var(--cml2-accent);
+  box-shadow: 0 0 0 2px var(--cml2-focus-ring);
 }
 
 #keywordEditModal #saveKeywordEdit {
   padding: 8px 16px;
-  background: #2a88bd;
-  color: white;
+  background: var(--cml2-accent);
+  color: var(--cml2-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -809,7 +857,7 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 }
 
 #keywordEditModal #saveKeywordEdit:hover {
-  background: #3498db;
+  background: var(--cml2-accent-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -829,8 +877,8 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 }
 
 .cml2-alert-content {
-  background: #1a1b1c;
-  color: #ffffff;
+  background: var(--cml2-bg);
+  color: var(--cml2-text);
   padding: 20px;
   border-radius: 8px;
   min-width: 300px;
@@ -841,7 +889,7 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 .cml2-alert-title {
   margin: 0 0 15px 0;
   padding-bottom: 10px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--cml2-border);
   font-size: 1.2em;
 }
 
@@ -858,19 +906,19 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 
 /* アラートタイプによる色分け */
 .cml2-alert-content.success {
-  border-left: 4px solid #27ae60;
+  border-left: 4px solid var(--cml2-border-success);
 }
 
 .cml2-alert-content.error {
-  border-left: 4px solid #e74c3c;
+  border-left: 4px solid var(--cml2-border-danger);
 }
 
 .cml2-alert-content.warning {
-  border-left: 4px solid #f39c12;
+  border-left: 4px solid var(--cml2-border-warning);
 }
 
 .cml2-alert-content.info {
-  border-left: 4px solid #3498db;
+  border-left: 4px solid var(--cml2-border-info);
 }
 `;
 
@@ -901,7 +949,7 @@ export const COLLAPSIBLE_CONTROLS_STYLES = `
   position: relative;
   z-index: 8050;
   background: rgba(26, 27, 28, 0.98);
-  color: #ffffff;
+  color: var(--cml2-text);
   backdrop-filter: blur(10px);
   max-height: 0;
   opacity: 0;
@@ -1001,7 +1049,7 @@ export const COLLAPSIBLE_CONTROLS_STYLES = `
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
-  border: 1px solid #444;
+  border: 1px solid var(--cml2-border);
 }
 
 .control-hover-area:hover::after {
@@ -1046,8 +1094,8 @@ export const COLLAPSIBLE_CONTROLS_STYLES = `
 /* コントロール内のボタンスタイルを確保 */
 .collapsible-controls .cml2-btn,
 .collapsible-controls button {
-  background: #2a88bd;
-  color: #ffffff;
+  background: var(--cml2-accent);
+  color: var(--cml2-text);
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -1057,23 +1105,23 @@ export const COLLAPSIBLE_CONTROLS_STYLES = `
 
 .collapsible-controls .cml2-btn:hover,
 .collapsible-controls button:hover {
-  background: #3498db;
+  background: var(--cml2-accent-hover);
 }
 
 .collapsible-controls .cml2-btn.cml2-btn-danger {
-  background: #e74c3c;
+  background: var(--cml2-danger);
 }
 
 .collapsible-controls .cml2-btn.cml2-btn-danger:hover {
-  background: #c0392b;
+  background: var(--cml2-danger-hover);
 }
 
 /* インプット要素のスタイル統一 */
 .collapsible-controls input[type="text"],
 .collapsible-controls select {
-  background: #2a2b2c;
-  border: 1px solid #444;
-  color: #ffffff;
+  background: var(--cml2-panel);
+  border: 1px solid var(--cml2-border);
+  color: var(--cml2-text);
   padding: 8px 12px;
   border-radius: 4px;
 }
@@ -1081,8 +1129,8 @@ export const COLLAPSIBLE_CONTROLS_STYLES = `
 .collapsible-controls input[type="text"]:focus,
 .collapsible-controls select:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  border-color: var(--cml2-accent);
+  box-shadow: 0 0 0 2px var(--cml2-focus-ring);
 }
 
 /* 常時表示設定のスタイル */
@@ -1110,8 +1158,8 @@ export const COLLAPSIBLE_CONTROLS_STYLES = `
   width: 16px;
   height: 16px;
   margin-right: 6px;
-  background: #2a2b2c;
-  border: 1px solid #555;
+  background: var(--cml2-panel);
+  border: 1px solid var(--cml2-border);
   border-radius: 3px;
   cursor: pointer;
   position: relative;
@@ -1120,8 +1168,8 @@ export const COLLAPSIBLE_CONTROLS_STYLES = `
 }
 
 .controls-toggle-checkbox:checked {
-  background: #3498db;
-  border-color: #3498db;
+  background: var(--cml2-accent);
+  border-color: var(--cml2-accent);
 }
 
 .controls-toggle-checkbox:checked::after {
@@ -1137,7 +1185,7 @@ export const COLLAPSIBLE_CONTROLS_STYLES = `
 
 .controls-toggle-checkbox:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 0 0 2px var(--cml2-focus-ring);
 }
 
 .controls-toggle-text {

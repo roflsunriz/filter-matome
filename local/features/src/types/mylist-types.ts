@@ -31,6 +31,7 @@ export interface KeywordInfo {
 export interface ManagerSettings {
   mylistSortType: string;
   videoSortType: string;
+  theme?: string;
 }
 
 /**

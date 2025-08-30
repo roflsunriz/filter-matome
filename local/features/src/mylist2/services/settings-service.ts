@@ -22,6 +22,7 @@ export class SettingsService {
       const safe: ManagerSettings = {
         mylistSortType: settings.mylistSortType || "name_asc",
         videoSortType: settings.videoSortType || "uploadedAt_desc",
+        theme: settings.theme || "dark-blue",
       };
       const request = store.put({ id: "settings", ...safe });
 
@@ -41,10 +42,12 @@ export class SettingsService {
       request.onsuccess = () => {
         const result = request.result as ManagerSettings | null;
         if (result && typeof result.mylistSortType === 'string' && typeof result.videoSortType === 'string') {
-          resolve(result);
+          const theme = (result as { theme?: unknown }).theme;
+          const safeTheme = typeof theme === 'string' ? theme : 'dark-blue';
+          resolve({ ...result, theme: safeTheme });
           return;
         }
-        resolve({ mylistSortType: "name_asc", videoSortType: "uploadedAt_desc" });
+        resolve({ mylistSortType: "name_asc", videoSortType: "uploadedAt_desc", theme: "dark-blue" });
       };
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });

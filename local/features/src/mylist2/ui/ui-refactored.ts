@@ -72,6 +72,18 @@ export class Mylist2ManagerUI {
     void this.initializeSettings();
   }
 
+  private applyTheme(theme: string): void {
+    const root = document.getElementById("Mylist2Manager");
+    if (!root) return;
+    // Remove existing theme classes
+    root.classList.forEach(cls => {
+      if (cls.startsWith('cml2-theme-')) root.classList.remove(cls);
+    });
+    // Add selected theme class; fallback to dark-blue
+    const themeClass = `cml2-theme-${theme}`;
+    root.classList.add(themeClass);
+  }
+
   // デリゲートメソッド群（各サービスへの橋渡し）
   private guardEvent(handler: (event: Event) => Promise<unknown>): (event: Event) => void {
     return (event: Event) => {
@@ -1378,6 +1390,7 @@ export class Mylist2ManagerUI {
     // プルダウンメニューの初期値を設定
     const mylistSort = document.getElementById("mylistSortType") as HTMLSelectElement;
     const videoSort = document.getElementById("videoSortType") as HTMLSelectElement;
+    const themeSelect = document.getElementById("themeSelect") as HTMLSelectElement | null;
     
     if (!mylistSort || !videoSort) {
       window.logger.error("ソート選択要素が見つかりません");
@@ -1386,6 +1399,10 @@ export class Mylist2ManagerUI {
 
     mylistSort.value = settings.mylistSortType;
     videoSort.value = settings.videoSortType;
+    // テーマ初期値
+    const themeValue = (settings as { theme?: string }).theme || 'dark-blue';
+    if (themeSelect) themeSelect.value = themeValue;
+    this.applyTheme(themeValue);
 
     // 初期表示時に並び替えを実行
     await this.loadMylists(); // マイリスト一覧の並び替え
@@ -1398,6 +1415,7 @@ export class Mylist2ManagerUI {
       await this.manager.saveManagerSettings({
         mylistSortType: mylistSort.value,
         videoSortType: videoSort.value,
+        theme: themeSelect ? themeSelect.value : (settings as { theme?: string }).theme || 'dark-blue',
       });
       await this.loadMylists();
     }));
@@ -1406,9 +1424,22 @@ export class Mylist2ManagerUI {
       await this.manager.saveManagerSettings({
         mylistSortType: mylistSort.value,
         videoSortType: videoSort.value,
+        theme: themeSelect ? themeSelect.value : (settings as { theme?: string }).theme || 'dark-blue',
       });
       await this.loadVideos();
     }));
+
+    if (themeSelect) {
+      themeSelect.addEventListener("change", this.guardEvent(async () => {
+        const newTheme = themeSelect.value;
+        await this.manager.saveManagerSettings({
+          mylistSortType: mylistSort.value,
+          videoSortType: videoSort.value,
+          theme: newTheme,
+        });
+        this.applyTheme(newTheme);
+      }));
+    }
   }
 
   // キーワード編集モーダルを表示する関数

@@ -1648,7 +1648,8 @@ class SettingsService {
     return new Promise((resolve, reject) => {
       const safe = {
         mylistSortType: settings.mylistSortType || "name_asc",
-        videoSortType: settings.videoSortType || "uploadedAt_desc"
+        videoSortType: settings.videoSortType || "uploadedAt_desc",
+        theme: settings.theme || "dark-blue"
       };
       const request = store.put({ id: "settings", ...safe });
       request.onsuccess = () => resolve();
@@ -1664,10 +1665,12 @@ class SettingsService {
       request.onsuccess = () => {
         const result = request.result;
         if (result && typeof result.mylistSortType === "string" && typeof result.videoSortType === "string") {
-          resolve(result);
+          const theme = result.theme;
+          const safeTheme = typeof theme === "string" ? theme : "dark-blue";
+          resolve({ ...result, theme: safeTheme });
           return;
         }
-        resolve({ mylistSortType: "name_asc", videoSortType: "uploadedAt_desc" });
+        resolve({ mylistSortType: "name_asc", videoSortType: "uploadedAt_desc", theme: "dark-blue" });
       };
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
@@ -2146,6 +2149,304 @@ Content-Type: application/zip\r
   }
 }
 
+class DropboxService {
+  // Dropbox はルート起点のパス
+  constructor(tokenFromConfig) {
+    this.accessToken = null;
+    this.backupFolderPath = "/Mylist2 Backups";
+    this.accessToken = tokenFromConfig || localStorage.getItem("mylist2_dropbox_token");
+  }
+  setAccessToken(token) {
+    this.accessToken = token;
+    localStorage.setItem("mylist2_dropbox_token", token);
+  }
+  ensureAccessToken() {
+    if (this.accessToken) return Promise.resolve(this.accessToken);
+    const input = window.prompt(
+      "Dropbox のアクセストークンを入力してください (files.content.read/write 権限)",
+      ""
+    );
+    if (!input) throw new Error("Dropbox アクセストークンが設定されていません");
+    this.setAccessToken(input);
+    return Promise.resolve(input);
+  }
+  // fflate ローダ（npm優先 → CDNフォールバック）
+  async loadFflate() {
+    try {
+      const m = await Promise.resolve().then(() => browser);
+      return m;
+    } catch {
+      const cdnUrl = "https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/index.js";
+      const mod = await import(
+        /* @vite-ignore */
+        cdnUrl
+      );
+      return mod;
+    }
+  }
+  async createZipBlob(fileName, jsonText) {
+    const { zipSync, strToU8 } = await this.loadFflate();
+    const zipped = zipSync({ [fileName]: strToU8(jsonText) }, { level: 6 });
+    const ab = new ArrayBuffer(zipped.byteLength);
+    new Uint8Array(ab).set(zipped);
+    return new Blob([ab], { type: "application/zip" });
+  }
+  async ensureBackupFolder() {
+    const token = await this.ensureAccessToken();
+    const res = await fetch("https://api.dropboxapi.com/2/files/get_metadata", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ path: this.backupFolderPath, include_deleted: false })
+    });
+    if (res.ok) return;
+    const create = await fetch("https://api.dropboxapi.com/2/files/create_folder_v2", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ path: this.backupFolderPath, autorename: false })
+    });
+    if (!create.ok) {
+      const text = await create.text().catch(() => "");
+      throw new Error(`Dropbox フォルダ作成に失敗: ${create.status} ${create.statusText} ${text}`);
+    }
+  }
+  async uploadBackupZip(baseFileName, backupJson) {
+    try {
+      await this.ensureBackupFolder();
+      const token = await this.ensureAccessToken();
+      const zipName = `${baseFileName}.zip`;
+      const zipBlob = await this.createZipBlob(`${baseFileName}.json`, backupJson);
+      const path = `${this.backupFolderPath}/${zipName}`;
+      const upload = await fetch("https://content.dropboxapi.com/2/files/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/octet-stream",
+          "Dropbox-API-Arg": JSON.stringify({ path, mode: { ".tag": "add" }, mute: true, strict_conflict: false })
+        },
+        body: zipBlob
+      });
+      if (!upload.ok) {
+        const text = await upload.text().catch(() => "");
+        throw new Error(`Dropbox アップロード失敗: ${upload.status} ${upload.statusText} ${text}`);
+      }
+      return { success: true, path };
+    } catch (e) {
+      window.logger?.error("Dropbox upload failed:", e);
+      return { success: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  }
+  async listBackups() {
+    const token = await this.ensureAccessToken();
+    await this.ensureBackupFolder();
+    const list = await fetch("https://api.dropboxapi.com/2/files/list_folder", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ path: this.backupFolderPath, recursive: false, include_deleted: false })
+    });
+    if (!list.ok) {
+      const text = await list.text().catch(() => "");
+      throw new Error(`Dropbox 一覧取得失敗: ${list.status} ${list.statusText} ${text}`);
+    }
+    const json = await list.json();
+    const items = (json.entries || []).filter((e) => e[".tag"] === "file" && /\.zip$/.test(e.name) && /^Mylist2_/.test(e.name));
+    return items.map((f) => ({ id: `${this.backupFolderPath}/${f.name}`, name: f.name, modifiedTime: f.server_modified || f.client_modified, size: typeof f.size === "number" ? String(f.size) : void 0 })).sort((a, b) => (b.modifiedTime || "").localeCompare(a.modifiedTime || ""));
+  }
+  async downloadBackupJson(filePath) {
+    const token = await this.ensureAccessToken();
+    const resp = await fetch("https://content.dropboxapi.com/2/files/download", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Dropbox-API-Arg": JSON.stringify({ path: filePath })
+      }
+    });
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => "");
+      throw new Error(`Dropbox ダウンロード失敗: ${resp.status} ${resp.statusText} ${text}`);
+    }
+    const buf = new Uint8Array(await resp.arrayBuffer());
+    const { unzipSync, strFromU8 } = await this.loadFflate();
+    const files = unzipSync(buf);
+    const jsonEntryName = Object.keys(files).find((n) => /\.json$/.test(n));
+    if (!jsonEntryName) throw new Error("ZIP内にJSONファイルが見つかりません");
+    return strFromU8(files[jsonEntryName]);
+  }
+}
+
+class OneDriveService {
+  constructor(tokenFromConfig) {
+    this.accessToken = null;
+    this.backupFolderName = "Mylist2 Backups";
+    this.accessToken = tokenFromConfig || localStorage.getItem("mylist2_onedrive_token");
+  }
+  setAccessToken(token) {
+    this.accessToken = token;
+    localStorage.setItem("mylist2_onedrive_token", token);
+  }
+  ensureAccessToken() {
+    if (this.accessToken) return Promise.resolve(this.accessToken);
+    const input = window.prompt(
+      "OneDrive (Microsoft Graph) のアクセストークンを入力してください (Files.ReadWrite)",
+      ""
+    );
+    if (!input) throw new Error("OneDrive アクセストークンが設定されていません");
+    this.setAccessToken(input);
+    return Promise.resolve(input);
+  }
+  // fflate ローダ（npm優先 → CDNフォールバック）
+  async loadFflate() {
+    try {
+      const m = await Promise.resolve().then(() => browser);
+      return m;
+    } catch {
+      const cdnUrl = "https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/index.js";
+      const mod = await import(
+        /* @vite-ignore */
+        cdnUrl
+      );
+      return mod;
+    }
+  }
+  async createZipBlob(fileName, jsonText) {
+    const { zipSync, strToU8 } = await this.loadFflate();
+    const zipped = zipSync({ [fileName]: strToU8(jsonText) }, { level: 6 });
+    const ab = new ArrayBuffer(zipped.byteLength);
+    new Uint8Array(ab).set(zipped);
+    return new Blob([ab], { type: "application/zip" });
+  }
+  async ensureBackupFolder() {
+    const token = await this.ensureAccessToken();
+    const q = new URL("https://graph.microsoft.com/v1.0/me/drive/root/children");
+    q.searchParams.set("$select", "id,name,folder");
+    const res = await fetch(q.toString(), {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`OneDrive フォルダ一覧取得失敗: ${res.status} ${res.statusText} ${text}`);
+    }
+    const json = await res.json();
+    const existing = (json.value || []).find((e) => e.folder && e.name === this.backupFolderName);
+    if (existing) return existing.id;
+    const create = await fetch("https://graph.microsoft.com/v1.0/me/drive/root/children", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name: this.backupFolderName, folder: {}, "@microsoft.graph.conflictBehavior": "fail" })
+    });
+    if (!create.ok) {
+      const text = await create.text().catch(() => "");
+      throw new Error(`OneDrive フォルダ作成失敗: ${create.status} ${create.statusText} ${text}`);
+    }
+    const c = await create.json();
+    return c.id;
+  }
+  async uploadBackupZip(baseFileName, backupJson) {
+    try {
+      const folderId = await this.ensureBackupFolder();
+      const token = await this.ensureAccessToken();
+      const zipName = `${baseFileName}.zip`;
+      const zipBlob = await this.createZipBlob(`${baseFileName}.json`, backupJson);
+      const put = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${encodeURIComponent(folderId)}:/${encodeURIComponent(zipName)}:/content`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: zipBlob
+      });
+      if (!put.ok) {
+        const text = await put.text().catch(() => "");
+        throw new Error(`OneDrive アップロード失敗: ${put.status} ${put.statusText} ${text}`);
+      }
+      const meta = await put.json();
+      return { success: true, fileId: meta.id };
+    } catch (e) {
+      window.logger?.error("OneDrive upload failed:", e);
+      return { success: false, error: e instanceof Error ? e.message : String(e) };
+    }
+  }
+  async listBackups() {
+    const token = await this.ensureAccessToken();
+    const folderId = await this.ensureBackupFolder();
+    const res = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${encodeURIComponent(folderId)}/children?$select=id,name,size,lastModifiedDateTime`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`OneDrive 一覧取得失敗: ${res.status} ${res.statusText} ${text}`);
+    }
+    const json = await res.json();
+    const files = (json.value || []).filter((f) => /\.zip$/.test(f.name) && /^Mylist2_/.test(f.name));
+    return files.map((f) => ({ id: f.id, name: f.name, modifiedTime: f.lastModifiedDateTime, size: typeof f.size === "number" ? String(f.size) : void 0 })).sort((a, b) => (b.modifiedTime || "").localeCompare(a.modifiedTime || ""));
+  }
+  async downloadBackupJson(fileId) {
+    const token = await this.ensureAccessToken();
+    const resp = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${encodeURIComponent(fileId)}/content`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+      redirect: "follow"
+    });
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => "");
+      throw new Error(`OneDrive ダウンロード失敗: ${resp.status} ${resp.statusText} ${text}`);
+    }
+    const buf = new Uint8Array(await resp.arrayBuffer());
+    const { unzipSync, strFromU8 } = await this.loadFflate();
+    const files = unzipSync(buf);
+    const jsonEntryName = Object.keys(files).find((n) => /\.json$/.test(n));
+    if (!jsonEntryName) throw new Error("ZIP内にJSONファイルが見つかりません");
+    return strFromU8(files[jsonEntryName]);
+  }
+}
+
+class MegaService {
+  constructor() {
+    // 将来的にアクセストークン/セッション情報などを保持
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.session = null;
+  }
+  // 現段階では未対応（プレースホルダ）。実装時にセッション設定を行う。
+  setSession(session) {
+    this.session = session;
+    localStorage.setItem("mylist2_mega_session", JSON.stringify(session));
+  }
+  unsupported() {
+    throw new Error(
+      "MEGA 連携はブラウザのみ・バックエンド無し環境では追加実装が必要です。設定画面で 'Dropbox' または 'OneDrive' をご利用ください。"
+    );
+  }
+  // API 互換: GoogleDrive/Dropbox/OneDrive と同じメソッド群
+  uploadBackupZip(_baseFileName, _backupJson) {
+    try {
+      this.unsupported();
+    } catch (e) {
+      return Promise.resolve({ success: false, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+  listBackups() {
+    return Promise.reject(this.createUnsupportedError());
+  }
+  downloadBackupJson(_fileId) {
+    return Promise.reject(this.createUnsupportedError());
+  }
+  createUnsupportedError() {
+    return new Error(
+      "MEGA 連携は未実装です。Dropbox / OneDrive / Google Drive をご利用ください。"
+    );
+  }
+}
+
 class Mylist2Manager {
   constructor() {
     this.db = new Mylist2DB();
@@ -2157,6 +2458,9 @@ class Mylist2Manager {
     this.settingsService = new SettingsService(this.db);
     this.databaseManagementService = new DatabaseManagementService(this.db);
     this.googleDriveService = new GoogleDriveService();
+    this.dropboxService = new DropboxService();
+    this.oneDriveService = new OneDriveService();
+    this.megaService = new MegaService();
   }
   // データベースへのアクセスを提供するpublicメソッド
   async getDB() {
@@ -2305,6 +2609,52 @@ class Mylist2Manager {
   async restoreFromGoogleDriveBackup(fileId) {
     try {
       const jsonText = await this.googleDriveService.downloadBackupJson(fileId);
+      const res = await this.restoreDatabaseFromBackup(jsonText);
+      return res;
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+  // 汎用クラウド: プロバイダ選択版
+  async uploadBackupToCloud(provider, baseFileName) {
+    try {
+      const backup = await this.createDatabaseBackup();
+      if (!backup.success || !backup.backupData) return { success: false, error: backup.error || "バックアップ作成に失敗しました" };
+      if (provider === "gdrive") {
+        const r = await this.googleDriveService.uploadBackupZip(baseFileName, backup.backupData);
+        return r.success ? { success: true, id: r.fileId } : { success: false, error: r.error };
+      }
+      if (provider === "dropbox") {
+        const r = await this.dropboxService.uploadBackupZip(baseFileName, backup.backupData);
+        return r.success ? { success: true, id: r.path } : { success: false, error: r.error };
+      }
+      if (provider === "onedrive") {
+        const r = await this.oneDriveService.uploadBackupZip(baseFileName, backup.backupData);
+        return r.success ? { success: true, id: r.fileId } : { success: false, error: r.error };
+      }
+      if (provider === "mega") {
+        const r = await this.megaService.uploadBackupZip(baseFileName, backup.backupData);
+        return r.success ? { success: true, id: r.fileId } : { success: false, error: r.error };
+      }
+      return { success: false, error: "未知のプロバイダ" };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+  async listCloudBackups(provider) {
+    if (provider === "gdrive") return this.googleDriveService.listBackups();
+    if (provider === "dropbox") return this.dropboxService.listBackups();
+    if (provider === "onedrive") return this.oneDriveService.listBackups();
+    if (provider === "mega") return this.megaService.listBackups();
+    return [];
+  }
+  async restoreFromCloudBackup(provider, id) {
+    try {
+      let jsonText = "";
+      if (provider === "gdrive") jsonText = await this.googleDriveService.downloadBackupJson(id);
+      else if (provider === "dropbox") jsonText = await this.dropboxService.downloadBackupJson(id);
+      else if (provider === "onedrive") jsonText = await this.oneDriveService.downloadBackupJson(id);
+      else if (provider === "mega") jsonText = await this.megaService.downloadBackupJson(id);
       const res = await this.restoreDatabaseFromBackup(jsonText);
       return res;
     } catch (error) {
