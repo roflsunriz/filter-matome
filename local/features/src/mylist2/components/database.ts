@@ -42,7 +42,7 @@ export class Mylist2DB {
 
     constructor() {
         this.dbName = 'Mylist2DB';
-        this.version = 7; // バージョンアップ: 動画にdescription/tags対応
+        this.version = 8; // バージョンアップ: 動画にmemo対応（検索/保持用）
         this.migrationSteps = this.initializeMigrationSteps();
     }
 

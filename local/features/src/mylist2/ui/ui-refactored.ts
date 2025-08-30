@@ -11,6 +11,7 @@ import { ProgressService } from "./progress-service.js";
 import { FileHelperService } from "./file-helper-service.js";
 import { EventHandlers } from "./event-handlers.js";
 import { BatchOperations } from "./batch-operations.js";
+import { linkify } from "../utils/linkify.js";
 
 export class Mylist2ManagerUI {
   private manager: Mylist2Manager;
@@ -405,6 +406,11 @@ export class Mylist2ManagerUI {
         void err;
       }
     }
+    // メモ（存在すれば）
+    const memoValue = (video as unknown as { memo?: string }).memo;
+    if (memoValue !== undefined) {
+      item.dataset.memo = String(memoValue);
+    }
 
     // サムネイルと基本情報
     const thumbnailElement = item.querySelector(".video-thumbnail") as HTMLImageElement;
@@ -590,12 +596,13 @@ export class Mylist2ManagerUI {
           // フォールバック: DOM上のデータ属性だけで表示
           const descFromDom = target.getAttribute('data-description') || undefined;
           const tagsFromDom = target.getAttribute('data-tags') || undefined;
+          const memoFromDom = target.getAttribute('data-memo') || '';
           const fallback: Partial<VideoInfo> = {};
           if (descFromDom) fallback.description = descFromDom;
           if (tagsFromDom) {
             try { fallback.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; }
           }
-          await this.showVideoDetailsModal(fallback as VideoInfo);
+          await this.showVideoDetailsModal(fallback as VideoInfo, undefined, memoFromDom);
           return;
         }
         try {
@@ -613,19 +620,20 @@ export class Mylist2ManagerUI {
           db.close();
           const descFromDom = target.getAttribute('data-description') || undefined;
           const tagsFromDom = target.getAttribute('data-tags') || undefined;
+          const memoFromDom = target.getAttribute('data-memo') || '';
           if (video) {
             const enriched: VideoInfo = {
               ...video,
               description: video.description ?? descFromDom,
               tags: video.tags ?? (tagsFromDom ? ((): string[] | undefined => { try { return JSON.parse(tagsFromDom) as string[]; } catch { return undefined; } })() : undefined),
             } as VideoInfo;
-            await this.showVideoDetailsModal(enriched);
+            await this.showVideoDetailsModal(enriched, compositeId, memoFromDom);
           } else {
             // DBに見つからない場合でもDOMの情報でモーダルを表示
             const fallback: Partial<VideoInfo> = {};
             if (descFromDom) fallback.description = descFromDom;
             if (tagsFromDom) { try { fallback.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; } }
-            await this.showVideoDetailsModal(fallback as VideoInfo);
+            await this.showVideoDetailsModal(fallback as VideoInfo, compositeId, memoFromDom);
           }
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
@@ -645,12 +653,13 @@ export class Mylist2ManagerUI {
       const compositeId = target.getAttribute('data-composite-id') || undefined;
       const descFromDom = target.getAttribute('data-description') || undefined;
       const tagsFromDom = target.getAttribute('data-tags') || undefined;
+      const memoFromDom = target.getAttribute('data-memo') || '';
       try {
         if (!compositeId) {
           const fallback: Partial<VideoInfo> = {};
           if (descFromDom) fallback.description = descFromDom;
           if (tagsFromDom) { try { fallback.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; } }
-          await this.showVideoDetailsModal(fallback as VideoInfo);
+          await this.showVideoDetailsModal(fallback as VideoInfo, compositeId, memoFromDom);
           return;
         }
         const db = await this.manager.getDB();
@@ -671,12 +680,12 @@ export class Mylist2ManagerUI {
             description: video.description ?? descFromDom,
             tags: video.tags ?? (tagsFromDom ? ((): string[] | undefined => { try { return JSON.parse(tagsFromDom) as string[]; } catch { return undefined; } })() : undefined),
           } as VideoInfo;
-          await this.showVideoDetailsModal(enriched);
+          await this.showVideoDetailsModal(enriched, compositeId, memoFromDom);
         } else {
           const fallback: Partial<VideoInfo> = {};
           if (descFromDom) fallback.description = descFromDom;
           if (tagsFromDom) { try { fallback.tags = JSON.parse(tagsFromDom) as string[]; } catch (err) { void err; } }
-          await this.showVideoDetailsModal(fallback as VideoInfo);
+          await this.showVideoDetailsModal(fallback as VideoInfo, compositeId, memoFromDom);
         }
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -1190,8 +1199,8 @@ export class Mylist2ManagerUI {
     }
   }
 
-  // 動画詳細モーダルの表示
-  private async showVideoDetailsModal(video: VideoInfo): Promise<void> {
+  // 動画詳細モーダルの表示（メモ編集対応）
+  private async showVideoDetailsModal(video: VideoInfo, compositeId?: string, memoText: string = ""): Promise<void> {
     await Promise.resolve();
     const modalId = 'videoDetailsModal';
     let modal = document.getElementById(modalId);
@@ -1209,28 +1218,63 @@ export class Mylist2ManagerUI {
                 <strong>タグ</strong>
                 <div class="video-tags"></div>
               </div>
+              <div class="video-details-section" style="margin-top:12px">
+                <strong>メモ</strong>
+                <textarea class="video-memo" rows="4" style="width:100%" placeholder="メモを入力..."></textarea>
+              </div>
             </div>
             <div class="cml2-modal-footer">
+              <button type="button" class="cml2-btn save-memo-button">メモを保存</button>
               <button type="button" class="cml2-btn close-button">閉じる</button>
             </div>
           </div>
         </div>`;
       document.body.insertAdjacentHTML('beforeend', html);
-      modal = document.getElementById(modalId) as HTMLElement;
+      const found = document.getElementById(modalId);
+      if (found) {
+        modal = found;
+      }
     }
     if (!modal) return;
     const descEl = modal.querySelector('.video-description');
     const tagsEl = modal.querySelector('.video-tags');
-    if (descEl) descEl.textContent = video.description || '(説明なし)';
+    const memoEl = modal.querySelector<HTMLTextAreaElement>('.video-memo');
+    if (descEl instanceof HTMLElement) {
+      const text = video.description || '(説明なし)';
+      descEl.innerHTML = linkify(text);
+    }
     if (tagsEl) {
       const tags = (video.tags && video.tags.length > 0) ? video.tags : [];
       tagsEl.innerHTML = tags.length > 0
         ? tags.map(t => `<span class="tag" style="display:inline-block;background:#2a2b2c;border:1px solid #444;border-radius:12px;padding:2px 8px;margin:2px 6px 0 0;">${t}</span>`).join('')
         : '(タグなし)';
     }
+    if (memoEl) {
+      memoEl.value = memoText || '';
+    }
     // 表示とクローズ処理
+    // タグを辞書リンクに差し替え（上書き）
+    if (tagsEl instanceof HTMLElement) {
+      const tags = (video.tags && video.tags.length > 0) ? video.tags : [];
+      if (tags.length > 0) {
+        const anchors = tags.map((t) => {
+          const a = document.createElement('a');
+          a.className = 'cml2-tag';
+          a.href = `https://dic.nicovideo.jp/a/${encodeURIComponent(t)}`;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = t;
+          return a.outerHTML;
+        }).join('');
+        tagsEl.innerHTML = anchors;
+      } else {
+        tagsEl.innerHTML = '(タグなし)';
+      }
+    }
+
     modal.style.display = 'flex';
     const closeBtn = modal.querySelector('.close-button');
+    const saveBtn = modal.querySelector('.save-memo-button');
     const content = modal.querySelector('.cml2-modal-content');
     const handleClose = () => {
       modal.style.display = 'none';
@@ -1243,6 +1287,27 @@ export class Mylist2ManagerUI {
       if (!content.contains(e.target as Node)) handleClose();
     };
     if (closeBtn) closeBtn.addEventListener('click', handleClose, { once: true });
+    if (saveBtn && memoEl) {
+      saveBtn.addEventListener('click', () => {
+        void (async () => {
+          const text = memoEl.value || '';
+          if (compositeId) {
+            try {
+              await this.manager.updateVideoMemo(compositeId, text);
+              const item = document.querySelector(`.video-item[data-composite-id="${compositeId}"]`);
+              if (item) {
+                (item as HTMLElement).setAttribute('data-memo', text);
+              }
+              await this.showCustomAlert('メモを保存しました');
+            } catch {
+              await this.showCustomAlert('メモの保存に失敗しました');
+            }
+          } else {
+            await this.showCustomAlert('メモの保存対象が特定できませんでした');
+          }
+        })();
+      }, { once: true });
+    }
     document.addEventListener('keydown', onKeydown);
     modal.addEventListener('click', onBackdrop);
   }
@@ -1374,8 +1439,9 @@ export class Mylist2ManagerUI {
         
         const title = titleElement.textContent?.toLowerCase() || "";
         const author = authorElement.textContent?.toLowerCase() || "";
+        const memo = (item.getAttribute('data-memo') || '').toLowerCase();
 
-        if (title.includes(searchText) || author.includes(searchText)) {
+        if (title.includes(searchText) || author.includes(searchText) || memo.includes(searchText)) {
           item.classList.remove("hidden");
         } else {
           item.classList.add("hidden");

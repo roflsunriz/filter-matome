@@ -8,6 +8,12 @@ export class ModalService {
   // カスタムアラートの実装
   showCustomAlert(message: string, type = "info", title = ""): Promise<boolean> {
     return new Promise((resolve) => {
+      // お知らせ表示時は進捗モーダルを一時的に隠す
+      const progressModal = document.getElementById("progressModal");
+      const wasProgressVisible = progressModal ? getComputedStyle(progressModal).display !== "none" : false;
+      if (progressModal && wasProgressVisible) {
+        progressModal.style.display = "none";
+      }
       const modalHTML = `
         <div class="cml2-alert-modal">
           <div class="cml2-alert-content ${type}">
@@ -20,7 +26,8 @@ export class ModalService {
         </div>
       `;
 
-      document.body.insertAdjacentHTML("beforeend", modalHTML);
+      const mountRoot = document.getElementById('Mylist2Manager') || document.body;
+      mountRoot.insertAdjacentHTML("beforeend", modalHTML);
       const modal = document.querySelector(".cml2-alert-modal") as HTMLElement;
       const okButton = document.getElementById("alertOkButton") as HTMLButtonElement;
 
@@ -31,9 +38,32 @@ export class ModalService {
       }
 
       modal.style.display = "flex";
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          modal.remove();
+          document.removeEventListener('keydown', onKey);
+          modal.removeEventListener('click', onBackdrop);
+          if (progressModal && wasProgressVisible) progressModal.style.display = "flex";
+          resolve(false);
+        }
+      };
+      const onBackdrop = (e: MouseEvent) => {
+        if (e.target === modal) {
+          modal.remove();
+          document.removeEventListener('keydown', onKey);
+          modal.removeEventListener('click', onBackdrop);
+          if (progressModal && wasProgressVisible) progressModal.style.display = "flex";
+          resolve(false);
+        }
+      };
+      document.addEventListener('keydown', onKey);
+      modal.addEventListener('click', onBackdrop);
 
       okButton.addEventListener("click", () => {
+        document.removeEventListener('keydown', onKey);
+        modal.removeEventListener('click', onBackdrop);
         modal.remove();
+        if (progressModal && wasProgressVisible) progressModal.style.display = "flex";
         resolve(true);
       });
     });
@@ -42,6 +72,12 @@ export class ModalService {
   // カスタム確認ダイアログの実装
   showCustomConfirm(message: string, type = "warning", title = ""): Promise<boolean> {
     return new Promise((resolve) => {
+      // お知らせ表示時は進捗モーダルを一時的に隠す
+      const progressModal = document.getElementById("progressModal");
+      const wasProgressVisible = progressModal ? getComputedStyle(progressModal).display !== "none" : false;
+      if (progressModal && wasProgressVisible) {
+        progressModal.style.display = "none";
+      }
       const modalHTML = `
         <div class="cml2-alert-modal">
           <div class="cml2-alert-content ${type}">
@@ -55,7 +91,8 @@ export class ModalService {
         </div>
       `;
 
-      document.body.insertAdjacentHTML("beforeend", modalHTML);
+      const mountRoot = document.getElementById('Mylist2Manager') || document.body;
+      mountRoot.insertAdjacentHTML("beforeend", modalHTML);
       const modal = document.querySelector(".cml2-alert-modal") as HTMLElement;
       const okButton = document.getElementById("confirmOkButton") as HTMLButtonElement;
       const cancelButton = document.getElementById("confirmCancelButton") as HTMLButtonElement;
@@ -67,16 +104,20 @@ export class ModalService {
       }
 
       modal.style.display = "flex";
-
-      okButton.addEventListener("click", () => {
+      const cleanup = (result: boolean) => {
+        document.removeEventListener('keydown', onKey);
+        modal.removeEventListener('click', onBackdrop);
         modal.remove();
-        resolve(true);
-      });
+        if (progressModal && wasProgressVisible) progressModal.style.display = "flex";
+        resolve(result);
+      };
+      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') cleanup(false); };
+      const onBackdrop = (e: MouseEvent) => { if (e.target === modal) cleanup(false); };
+      document.addEventListener('keydown', onKey);
+      modal.addEventListener('click', onBackdrop);
 
-      cancelButton.addEventListener("click", () => {
-        modal.remove();
-        resolve(false);
-      });
+      okButton.addEventListener("click", () => { cleanup(true); });
+      cancelButton.addEventListener("click", () => { cleanup(false); });
     });
   }
 
@@ -119,7 +160,8 @@ export class ModalService {
         </div>
       `;
 
-      document.body.insertAdjacentHTML("beforeend", modalHTML);
+      const mountRoot = document.getElementById('Mylist2Manager') || document.body;
+      mountRoot.insertAdjacentHTML("beforeend", modalHTML);
 
       return new Promise<number | null>((resolve) => {
         const modal = document.querySelector(".cml2-modal") as HTMLElement;
@@ -133,16 +175,22 @@ export class ModalService {
           return;
         }
 
+        const cleanup = (res: number | null) => {
+          document.removeEventListener('keydown', onKey);
+          modal.removeEventListener('click', onBackdrop);
+          modal.remove();
+          resolve(res);
+        };
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') cleanup(null); };
+        const onBackdrop = (e: MouseEvent) => { if (e.target === modal) cleanup(null); };
         confirmBtn.addEventListener("click", () => {
           const selectedId = parseInt(select.value);
-          modal.remove();
-          resolve(selectedId);
+          cleanup(Number.isNaN(selectedId) ? null : selectedId);
         });
 
-        cancelBtn.addEventListener("click", () => {
-          modal.remove();
-          resolve(null);
-        });
+        cancelBtn.addEventListener("click", () => { cleanup(null); });
+        document.addEventListener('keydown', onKey);
+        modal.addEventListener('click', onBackdrop);
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "マイリスト選択に失敗しました";
@@ -219,9 +267,12 @@ export class ModalService {
             </div>
           </div>
         </div>`;
-      document.body.insertAdjacentHTML('beforeend', html);
+      const mountRoot = document.getElementById('Mylist2Manager') || document.body;
+      mountRoot.insertAdjacentHTML('beforeend', html);
       const modal = document.querySelector('.cml2-modal') as HTMLElement;
-      const cleanup = () => modal?.remove();
+      const cleanup = () => { document.removeEventListener('keydown', onKey); modal?.removeEventListener('click', onBackdrop); modal?.remove(); };
+      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { cleanup(); resolve({ action: 'cancel' }); } };
+      const onBackdrop = (e: MouseEvent) => { if (e.target === modal) { cleanup(); resolve({ action: 'cancel' }); } };
       const bind = (id: string, result: 'local' | 'cloud' | 'cancel') => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('click', () => { cleanup(); resolve({ action: result }); });
@@ -229,6 +280,8 @@ export class ModalService {
       bind('exportLocal', 'local');
       bind('exportCloud', 'cloud');
       bind('exportCancel', 'cancel');
+      document.addEventListener('keydown', onKey);
+      modal.addEventListener('click', onBackdrop);
     });
   }
 
@@ -253,9 +306,10 @@ export class ModalService {
             </div>
           </div>
         </div>`;
-      document.body.insertAdjacentHTML('beforeend', html);
+      const mountRoot = document.getElementById('Mylist2Manager') || document.body;
+      mountRoot.insertAdjacentHTML('beforeend', html);
       const modal = document.querySelector('.cml2-modal') as HTMLElement;
-      const cleanup = () => modal?.remove();
+      const cleanup = () => { document.removeEventListener('keydown', onKey); modal?.removeEventListener('click', onBackdrop); modal?.remove(); };
       const bind = (id: string, result: 'local' | 'clear' | 'cloud' | 'cancel') => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('click', () => { cleanup(); resolve({ action: result }); });
@@ -264,6 +318,10 @@ export class ModalService {
       bind('importClear', 'clear');
       bind('importCloud', 'cloud');
       bind('importCancel', 'cancel');
+      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { cleanup(); resolve({ action: 'cancel' }); } };
+      const onBackdrop = (e: MouseEvent) => { if (e.target === modal) { cleanup(); resolve({ action: 'cancel' }); } };
+      document.addEventListener('keydown', onKey);
+      modal.addEventListener('click', onBackdrop);
     });
   }
 
@@ -287,9 +345,12 @@ export class ModalService {
             </div>
           </div>
         </div>`;
-      document.body.insertAdjacentHTML('beforeend', html);
+      const mountRoot = document.getElementById('Mylist2Manager') || document.body;
+      mountRoot.insertAdjacentHTML('beforeend', html);
       const modal = document.querySelector('.cml2-modal') as HTMLElement;
-      const cleanup = () => modal?.remove();
+      const cleanup = () => { document.removeEventListener('keydown', onKey); modal?.removeEventListener('click', onBackdrop); modal?.remove(); };
+      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { cleanup(); resolve(null); } };
+      const onBackdrop = (e: MouseEvent) => { if (e.target === modal) { cleanup(); resolve(null); } };
       const bind = (id: string, result: 'gdrive' | 'onedrive' | 'dropbox' | 'mega' | null) => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('click', () => { cleanup(); resolve(result); });
@@ -299,6 +360,8 @@ export class ModalService {
       bind('selD', 'dropbox');
       bind('selM', 'mega');
       bind('selCancel', null);
+      document.addEventListener('keydown', onKey);
+      modal.addEventListener('click', onBackdrop);
     });
   }
 
@@ -324,15 +387,20 @@ export class ModalService {
             </div>
           </div>
         </div>`;
-      document.body.insertAdjacentHTML('beforeend', html);
+      const mountRoot = document.getElementById('Mylist2Manager') || document.body;
+      mountRoot.insertAdjacentHTML('beforeend', html);
       const modal = document.querySelector('.cml2-modal') as HTMLElement;
       const select = document.getElementById('cml2Selection') as HTMLSelectElement | null;
       const ok = document.getElementById('cml2SelectionOk');
       const cancel = document.getElementById('cml2SelectionCancel');
       if (!modal || !select || !ok || !cancel) { resolve(null); return; }
-      const cleanup = () => modal.remove();
-      ok.addEventListener('click', () => { const v = select.value; cleanup(); resolve(v || null); });
-      cancel.addEventListener('click', () => { cleanup(); resolve(null); });
+      const cleanup = (res: string | null) => { document.removeEventListener('keydown', onKey); modal.removeEventListener('click', onBackdrop); modal.remove(); resolve(res); };
+      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') cleanup(null); };
+      const onBackdrop = (e: MouseEvent) => { if (e.target === modal) cleanup(null); };
+      ok.addEventListener('click', () => { const v = select.value; cleanup(v || null); });
+      cancel.addEventListener('click', () => { cleanup(null); });
+      document.addEventListener('keydown', onKey);
+      modal.addEventListener('click', onBackdrop);
     });
   }
 } 

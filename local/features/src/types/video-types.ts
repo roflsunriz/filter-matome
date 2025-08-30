@@ -82,6 +82,8 @@ export interface DBVideo extends VideoInfo {
   originalId: string;
   mylistId: number;
   addedAt: number;
+  /** ユーザー任意のメモ */
+  memo?: string;
 }
 
 /**

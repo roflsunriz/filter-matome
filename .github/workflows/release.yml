@@ -147,6 +147,25 @@ jobs:
             echo "- 該当するセクションが見つかりませんでした。全文は nlFilters/198_release_notes.md を参照してください。" >> release_notes.md
           fi
 
+      - name: Fallback notes for decimal tags
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          case "$TAG" in
+            *.*)
+              TAG_MAJOR="${TAG%%.*}"
+              SECTION_TITLE="### フィルタまとめ${TAG_MAJOR} "
+              if grep -q "^${SECTION_TITLE}" nlFilters/198_release_notes.md; then
+                awk -v t="${SECTION_TITLE}" '
+                  BEGIN { p=0 }
+                  $0 ~ "^" t { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
+                  p && /^### フィルタまとめ/ { p=0; print ""; print "</details>" }
+                  p { print }
+                  END { if (p==1) { print ""; print "</details>" } }
+                ' nlFilters/198_release_notes.md >> release_notes.md
+              fi
+              ;;
+          esac
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:

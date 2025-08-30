@@ -377,7 +377,24 @@ export class EventHandlers {
     const authorName = authorElement?.textContent?.replace("投稿者: ", "") || "不明";
     const length = lengthElement ? this.fileHelperService.parseLength(lengthElement.textContent || "") : 0;
 
-    return {
+    // data-* 属性から説明/タグ/メモを取得（存在すれば保持）
+    const descriptionFromDom = videoItem.dataset.description;
+    let tagsFromDom: string[] | undefined;
+    const rawTags = videoItem.dataset.tags;
+    if (rawTags) {
+      try {
+        const parsed: unknown = JSON.parse(rawTags);
+        if (Array.isArray(parsed)) {
+          const onlyStrings = (parsed as unknown[]).filter((t): t is string => typeof t === 'string');
+          tagsFromDom = onlyStrings;
+        }
+      } catch (e) {
+        void e;
+      }
+    }
+    const memoFromDom = videoItem.dataset.memo;
+
+    const result: DBVideo = {
       id: id,
       originalId: id,
       title: title,
@@ -388,8 +405,13 @@ export class EventHandlers {
       uploadedAt: uploadedAt,
       authorName: authorName,
       length: length,
+      // 可能なら説明/タグ/メモを保持
+      ...(descriptionFromDom ? { description: descriptionFromDom } : {}),
+      ...(tagsFromDom && tagsFromDom.length > 0 ? { tags: tagsFromDom } : {}),
+      ...(memoFromDom !== undefined ? { memo: memoFromDom } : {}),
       addedAt: Date.now(),
       mylistId: currentMylistId
     };
+    return result;
   }
-} 
+}

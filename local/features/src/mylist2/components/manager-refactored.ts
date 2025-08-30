@@ -92,6 +92,10 @@ export class Mylist2Manager {
     return this.videoService.updateVideoInfo(compositeId, newInfo);
   }
 
+  async updateVideoMemo(compositeId: string, memo: string): Promise<void> {
+    return this.videoService.updateVideoMemo(compositeId, memo);
+  }
+
   // キーワード関連のメソッド
   async addKeyword(mylistId: number, keyword: string): Promise<number> {
     return this.keywordService.addKeyword(mylistId, keyword);

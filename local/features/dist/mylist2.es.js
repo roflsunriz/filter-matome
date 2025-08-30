@@ -1637,7 +1637,7 @@ const MYLIST_MANAGER_STYLES_PART1 = `
   background: var(--cml2-accent);
 }
 
-/* 既存のスタイルに追加 */
+/* 既存スタイルに追加 */
 
 .custom-mylist2-manager {
   display: flex;
@@ -1817,7 +1817,7 @@ const MYLIST_MANAGER_STYLES_PART2 = `
   opacity: 0.9;
 }
 
-/* インポート/エクスポートコントロール */
+/* インポート・エクスポートコントロール */
 .import-export-controls {
   display: flex;
   gap: 10px;
@@ -1971,20 +1971,20 @@ input::placeholder {
 }
 
 /* スクロールバーのスタイル */
-.video-list::-webkit-scrollbar {
+.video-list::-WebKit-scrollbar {
   width: 8px;
 }
 
-.video-list::-webkit-scrollbar-track {
+.video-list::-WebKit-scrollbar-track {
   background: var(--cml2-bg);
 }
 
-.video-list::-webkit-scrollbar-thumb {
+.video-list::-WebKit-scrollbar-thumb {
   background: var(--cml2-border);
   border-radius: 4px;
 }
 
-.video-list::-webkit-scrollbar-thumb:hover {
+.video-list::-WebKit-scrollbar-thumb:hover {
   background: var(--cml2-border);
 }
 `;
@@ -2000,6 +2000,7 @@ const MYLIST_MANAGER_STYLES_PART3 = `
   display: flex;
   justify-content: center;
   align-items: center;
+  /* 進捗は背面。お知らせ(.cml2-alert-modal: z-index 99999)が前面 */
   z-index: 9500;
 }
 
@@ -2085,7 +2086,7 @@ const MYLIST_MANAGER_STYLES_PART3 = `
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 危険な操作のボタンスタイル - 詳細度を上げる */
+/* 危険な操作用ボタンスタイル - 詳細度を上げる */
 .current-mylist-info .cml2-btn.cml2-btn-danger,
 .video-actions .delete-video,
 .video-actions .delete-keyword {
@@ -2122,16 +2123,16 @@ const MYLIST_MANAGER_STYLES_PART3 = `
   margin-top: 15px;
 }
 
-/* Webkit系ブラウザ用のスクロールバースタイル */
-.mylist-list::-webkit-scrollbar {
+/* WebKit系ブラウザ用のスクロールバー スタイル */
+.mylist-list::-WebKit-scrollbar {
   width: 8px;
 }
 
-.mylist-list::-webkit-scrollbar-track {
+.mylist-list::-WebKit-scrollbar-track {
   background: var(--cml2-scrollbar-track);
 }
 
-.mylist-list::-webkit-scrollbar-thumb {
+.mylist-list::-WebKit-scrollbar-thumb {
   background-color: var(--cml2-scrollbar-thumb);
   border-radius: 4px;
 }
@@ -2152,8 +2153,8 @@ const MYLIST_MANAGER_STYLES_PART4 = `
 }
 
 .cml2-modal-content {
-  background: var(--cml2-bg);
-  color: var(--cml2-text);
+  background: var(--cml2-bg, #1a1b1c);
+  color: var(--cml2-text, #ffffff);
   padding: 20px;
   border-radius: 8px;
   min-width: 300px;
@@ -2164,7 +2165,7 @@ const MYLIST_MANAGER_STYLES_PART4 = `
 .cml2-modal-title {
   margin: 0 0 15px 0;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--cml2-border);
+  border-bottom: 1px solid var(--cml2-border, #333333);
 }
 
 .cml2-modal-body {
@@ -2177,20 +2178,53 @@ const MYLIST_MANAGER_STYLES_PART4 = `
   justify-content: flex-end;
 }
 
+.video-details-body {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.video-details-section {
+  margin-top: 8px;
+}
+
+.video-description {
+  white-space: pre-wrap;
+  background: var(--cml2-panel, #2a2b2c);
+  color: var(--cml2-text, #ffffff);
+  border: 1px solid var(--cml2-border, #333333);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.video-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.video-tags .cml2-tag {
+  display: inline-block;
+  background: var(--cml2-panel, #2a2b2c);
+  border: 1px solid var(--cml2-border, #333333);
+  border-radius: 12px;
+  padding: 2px 8px;
+  color: var(--cml2-text-soft, #dddddd);
+}
+
 /* セレクトボックスのスタイル */
 .cml2-select {
   width: 100%;
   padding: 8px;
-  background: var(--cml2-panel);
-  border: 1px solid var(--cml2-border);
-  color: var(--cml2-text);
+  background: var(--cml2-panel, #2a2b2c);
+  border: 1px solid var(--cml2-border, #333333);
+  color: var(--cml2-text, #ffffff);
   border-radius: 4px;
   margin-bottom: 15px;
 }
 
 .cml2-select option {
-  background: var(--cml2-panel);
-  color: var(--cml2-text);
+  background: var(--cml2-bg, #1a1b1c);
+  color: var(--cml2-text, #ffffff);
 }
 
 /* 検索コンテナのスタイル */
@@ -2238,7 +2272,7 @@ const MYLIST_MANAGER_STYLES_PART4 = `
   height: 16px;
 }
 
-/* 検索欄のスタイル（後方互換性のため残す） */
+/* 検索欄のスタイル（後方互換性のため残す）*/
 .mylist-search,
 .video-search {
   margin: 10px 0;
@@ -2325,8 +2359,8 @@ const MYLIST_MANAGER_STYLES_PART4 = `
 }
 
 #keywordEditModal .modal-content {
-  background: var(--cml2-bg);
-  color: var(--cml2-text);
+  background: var(--cml2-bg, #1a1b1c);
+  color: var(--cml2-text, #ffffff);
   padding: 20px;
   border-radius: 8px;
   min-width: 300px;
@@ -2406,8 +2440,8 @@ const MYLIST_MANAGER_STYLES_PART4 = `
 }
 
 .cml2-alert-content {
-  background: var(--cml2-bg);
-  color: var(--cml2-text);
+  background: var(--cml2-bg, #1a1b1c);
+  color: var(--cml2-text, #ffffff);
   padding: 20px;
   border-radius: 8px;
   min-width: 300px;
@@ -2418,7 +2452,7 @@ const MYLIST_MANAGER_STYLES_PART4 = `
 .cml2-alert-title {
   margin: 0 0 15px 0;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--cml2-border);
+  border-bottom: 1px solid var(--cml2-border, #333333);
   font-size: 1.2em;
 }
 
@@ -2435,19 +2469,19 @@ const MYLIST_MANAGER_STYLES_PART4 = `
 
 /* アラートタイプによる色分け */
 .cml2-alert-content.success {
-  border-left: 4px solid var(--cml2-border-success);
+  border-left: 4px solid var(--cml2-border-success, #27ae60);
 }
 
 .cml2-alert-content.error {
-  border-left: 4px solid var(--cml2-border-danger);
+  border-left: 4px solid var(--cml2-border-danger, #e74c3c);
 }
 
 .cml2-alert-content.warning {
-  border-left: 4px solid var(--cml2-border-warning);
+  border-left: 4px solid var(--cml2-border-warning, #f39c12);
 }
 
 .cml2-alert-content.info {
-  border-left: 4px solid var(--cml2-border-info);
+  border-left: 4px solid var(--cml2-border-info, #3498db);
 }
 `;
 const COLLAPSIBLE_CONTROLS_STYLES = `
@@ -2520,7 +2554,7 @@ const COLLAPSIBLE_CONTROLS_STYLES = `
   }
 }
 
-/* サイドバー内の要素の幅統一 */
+/* サイドバー内要素の統一 */
 #newMylistName {
   width: 100%;
   box-sizing: border-box;
@@ -2546,7 +2580,7 @@ const COLLAPSIBLE_CONTROLS_STYLES = `
   box-sizing: border-box;
 }
 
-/* 小さい画面での動画リストの拡張 */
+/* 小さい画面での動画リスト拡張 */
 @media (max-width: 1024px) {
   .mylist-main {
     position: relative;
@@ -2561,7 +2595,7 @@ const COLLAPSIBLE_CONTROLS_STYLES = `
 
 /* ホバーエリアのヒント表示 */
 .control-hover-area::after {
-  content: "⬇ ホバーでコントロールを表示";
+  content: "ホバーでコントロールを表示";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -2597,7 +2631,7 @@ const COLLAPSIBLE_CONTROLS_STYLES = `
   }
   
   .control-hover-area::after {
-    content: "👆 タップでコントロール";
+    content: "タッチでコントロールを切り替え";
     font-size: 12px;
     color: rgba(255, 255, 255, 0.7);
     background: rgba(42, 43, 44, 0.95);
@@ -2616,7 +2650,7 @@ const COLLAPSIBLE_CONTROLS_STYLES = `
 
 
 
-/* コントロール内のボタンスタイルを確保 */
+/* コントロール用ボタンスタイルを統一 */
 .collapsible-controls .cml2-btn,
 .collapsible-controls button {
   background: var(--cml2-accent);
@@ -2717,7 +2751,7 @@ const COLLAPSIBLE_CONTROLS_STYLES = `
   white-space: nowrap;
 }
 
-/* 常時表示モードのとき */
+/* 常時表示モードのまとめ */
 .collapsible-controls.always-visible {
   max-height: none !important;
   opacity: 1 !important;
@@ -2779,7 +2813,7 @@ class Mylist2DB {
   }
   constructor() {
     this.dbName = "Mylist2DB";
-    this.version = 7;
+    this.version = 8;
     this.migrationSteps = this.initializeMigrationSteps();
   }
   // マイグレーションステップを初期化
@@ -3517,6 +3551,8 @@ class VideoService {
           length: videoInfo.length || 0,
           description: videoInfo.description || "",
           tags: videoInfo.tags && videoInfo.tags.length > 0 ? videoInfo.tags : void 0,
+          // 任意: VideoInfoにmemoが渡ってくる場合は保持
+          memo: videoInfo.memo ?? void 0,
           addedAt: Date.now()
         };
         const addRequest = store.add(video);
@@ -3610,6 +3646,26 @@ class VideoService {
           tags: newInfo.tags !== void 0 ? newInfo.tags && newInfo.tags.length > 0 ? newInfo.tags : void 0 : existingVideo.tags
         };
         const updateRequest = store.put(updatedVideo);
+        updateRequest.onsuccess = () => resolve();
+        updateRequest.onerror = () => reject(new Error("データベースの更新に失敗しました"));
+      };
+      request.onerror = () => reject(new Error("動画情報の取得に失敗しました"));
+    });
+  }
+  async updateVideoMemo(compositeId, memo) {
+    const database = await this.db.initDB();
+    const transaction = database.transaction(["videos"], "readwrite");
+    const store = transaction.objectStore("videos");
+    return new Promise((resolve, reject) => {
+      const request = store.get(compositeId);
+      request.onsuccess = () => {
+        const existingVideo = request.result;
+        if (!existingVideo) {
+          reject(new Error("動画が見つかりません"));
+          return;
+        }
+        const updated = { ...existingVideo, memo };
+        const updateRequest = store.put(updated);
         updateRequest.onsuccess = () => resolve();
         updateRequest.onerror = () => reject(new Error("データベースの更新に失敗しました"));
       };
@@ -4796,6 +4852,9 @@ class Mylist2Manager {
   async updateVideoInfo(compositeId, newInfo) {
     return this.videoService.updateVideoInfo(compositeId, newInfo);
   }
+  async updateVideoMemo(compositeId, memo) {
+    return this.videoService.updateVideoMemo(compositeId, memo);
+  }
   // キーワード関連のメソッド
   async addKeyword(mylistId, keyword) {
     return this.keywordService.addKeyword(mylistId, keyword);
@@ -4965,6 +5024,11 @@ class ModalService {
   // カスタムアラートの実装
   showCustomAlert(message, type = "info", title = "") {
     return new Promise((resolve) => {
+      const progressModal = document.getElementById("progressModal");
+      const wasProgressVisible = progressModal ? getComputedStyle(progressModal).display !== "none" : false;
+      if (progressModal && wasProgressVisible) {
+        progressModal.style.display = "none";
+      }
       const modalHTML = `
         <div class="cml2-alert-modal">
           <div class="cml2-alert-content ${type}">
@@ -4976,7 +5040,8 @@ class ModalService {
           </div>
         </div>
       `;
-      document.body.insertAdjacentHTML("beforeend", modalHTML);
+      const mountRoot = document.getElementById("Mylist2Manager") || document.body;
+      mountRoot.insertAdjacentHTML("beforeend", modalHTML);
       const modal = document.querySelector(".cml2-alert-modal");
       const okButton = document.getElementById("alertOkButton");
       if (!modal || !okButton) {
@@ -4985,8 +5050,31 @@ class ModalService {
         return;
       }
       modal.style.display = "flex";
+      const onKey = (e) => {
+        if (e.key === "Escape") {
+          modal.remove();
+          document.removeEventListener("keydown", onKey);
+          modal.removeEventListener("click", onBackdrop);
+          if (progressModal && wasProgressVisible) progressModal.style.display = "flex";
+          resolve(false);
+        }
+      };
+      const onBackdrop = (e) => {
+        if (e.target === modal) {
+          modal.remove();
+          document.removeEventListener("keydown", onKey);
+          modal.removeEventListener("click", onBackdrop);
+          if (progressModal && wasProgressVisible) progressModal.style.display = "flex";
+          resolve(false);
+        }
+      };
+      document.addEventListener("keydown", onKey);
+      modal.addEventListener("click", onBackdrop);
       okButton.addEventListener("click", () => {
+        document.removeEventListener("keydown", onKey);
+        modal.removeEventListener("click", onBackdrop);
         modal.remove();
+        if (progressModal && wasProgressVisible) progressModal.style.display = "flex";
         resolve(true);
       });
     });
@@ -4994,6 +5082,11 @@ class ModalService {
   // カスタム確認ダイアログの実装
   showCustomConfirm(message, type = "warning", title = "") {
     return new Promise((resolve) => {
+      const progressModal = document.getElementById("progressModal");
+      const wasProgressVisible = progressModal ? getComputedStyle(progressModal).display !== "none" : false;
+      if (progressModal && wasProgressVisible) {
+        progressModal.style.display = "none";
+      }
       const modalHTML = `
         <div class="cml2-alert-modal">
           <div class="cml2-alert-content ${type}">
@@ -5006,7 +5099,8 @@ class ModalService {
           </div>
         </div>
       `;
-      document.body.insertAdjacentHTML("beforeend", modalHTML);
+      const mountRoot = document.getElementById("Mylist2Manager") || document.body;
+      mountRoot.insertAdjacentHTML("beforeend", modalHTML);
       const modal = document.querySelector(".cml2-alert-modal");
       const okButton = document.getElementById("confirmOkButton");
       const cancelButton = document.getElementById("confirmCancelButton");
@@ -5016,13 +5110,26 @@ class ModalService {
         return;
       }
       modal.style.display = "flex";
-      okButton.addEventListener("click", () => {
+      const cleanup = (result) => {
+        document.removeEventListener("keydown", onKey);
+        modal.removeEventListener("click", onBackdrop);
         modal.remove();
-        resolve(true);
+        if (progressModal && wasProgressVisible) progressModal.style.display = "flex";
+        resolve(result);
+      };
+      const onKey = (e) => {
+        if (e.key === "Escape") cleanup(false);
+      };
+      const onBackdrop = (e) => {
+        if (e.target === modal) cleanup(false);
+      };
+      document.addEventListener("keydown", onKey);
+      modal.addEventListener("click", onBackdrop);
+      okButton.addEventListener("click", () => {
+        cleanup(true);
       });
       cancelButton.addEventListener("click", () => {
-        modal.remove();
-        resolve(false);
+        cleanup(false);
       });
     });
   }
@@ -5053,7 +5160,8 @@ class ModalService {
           </div>
         </div>
       `;
-      document.body.insertAdjacentHTML("beforeend", modalHTML);
+      const mountRoot = document.getElementById("Mylist2Manager") || document.body;
+      mountRoot.insertAdjacentHTML("beforeend", modalHTML);
       return new Promise((resolve) => {
         const modal = document.querySelector(".cml2-modal");
         const confirmBtn = document.getElementById("confirmAction");
@@ -5064,15 +5172,27 @@ class ModalService {
           resolve(null);
           return;
         }
+        const cleanup = (res) => {
+          document.removeEventListener("keydown", onKey);
+          modal.removeEventListener("click", onBackdrop);
+          modal.remove();
+          resolve(res);
+        };
+        const onKey = (e) => {
+          if (e.key === "Escape") cleanup(null);
+        };
+        const onBackdrop = (e) => {
+          if (e.target === modal) cleanup(null);
+        };
         confirmBtn.addEventListener("click", () => {
           const selectedId = parseInt(select.value);
-          modal.remove();
-          resolve(selectedId);
+          cleanup(Number.isNaN(selectedId) ? null : selectedId);
         });
         cancelBtn.addEventListener("click", () => {
-          modal.remove();
-          resolve(null);
+          cleanup(null);
         });
+        document.addEventListener("keydown", onKey);
+        modal.addEventListener("click", onBackdrop);
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "マイリスト選択に失敗しました";
@@ -5134,9 +5254,26 @@ class ModalService {
             </div>
           </div>
         </div>`;
-      document.body.insertAdjacentHTML("beforeend", html);
+      const mountRoot = document.getElementById("Mylist2Manager") || document.body;
+      mountRoot.insertAdjacentHTML("beforeend", html);
       const modal = document.querySelector(".cml2-modal");
-      const cleanup = () => modal?.remove();
+      const cleanup = () => {
+        document.removeEventListener("keydown", onKey);
+        modal?.removeEventListener("click", onBackdrop);
+        modal?.remove();
+      };
+      const onKey = (e) => {
+        if (e.key === "Escape") {
+          cleanup();
+          resolve({ action: "cancel" });
+        }
+      };
+      const onBackdrop = (e) => {
+        if (e.target === modal) {
+          cleanup();
+          resolve({ action: "cancel" });
+        }
+      };
       const bind = (id, result) => {
         const el = document.getElementById(id);
         if (el) el.addEventListener("click", () => {
@@ -5147,6 +5284,8 @@ class ModalService {
       bind("exportLocal", "local");
       bind("exportCloud", "cloud");
       bind("exportCancel", "cancel");
+      document.addEventListener("keydown", onKey);
+      modal.addEventListener("click", onBackdrop);
     });
   }
   // インポートオプションモーダル
@@ -5168,9 +5307,14 @@ class ModalService {
             </div>
           </div>
         </div>`;
-      document.body.insertAdjacentHTML("beforeend", html);
+      const mountRoot = document.getElementById("Mylist2Manager") || document.body;
+      mountRoot.insertAdjacentHTML("beforeend", html);
       const modal = document.querySelector(".cml2-modal");
-      const cleanup = () => modal?.remove();
+      const cleanup = () => {
+        document.removeEventListener("keydown", onKey);
+        modal?.removeEventListener("click", onBackdrop);
+        modal?.remove();
+      };
       const bind = (id, result) => {
         const el = document.getElementById(id);
         if (el) el.addEventListener("click", () => {
@@ -5182,6 +5326,20 @@ class ModalService {
       bind("importClear", "clear");
       bind("importCloud", "cloud");
       bind("importCancel", "cancel");
+      const onKey = (e) => {
+        if (e.key === "Escape") {
+          cleanup();
+          resolve({ action: "cancel" });
+        }
+      };
+      const onBackdrop = (e) => {
+        if (e.target === modal) {
+          cleanup();
+          resolve({ action: "cancel" });
+        }
+      };
+      document.addEventListener("keydown", onKey);
+      modal.addEventListener("click", onBackdrop);
     });
   }
   // クラウドプロバイダ選択モーダル
@@ -5204,9 +5362,26 @@ class ModalService {
             </div>
           </div>
         </div>`;
-      document.body.insertAdjacentHTML("beforeend", html);
+      const mountRoot = document.getElementById("Mylist2Manager") || document.body;
+      mountRoot.insertAdjacentHTML("beforeend", html);
       const modal = document.querySelector(".cml2-modal");
-      const cleanup = () => modal?.remove();
+      const cleanup = () => {
+        document.removeEventListener("keydown", onKey);
+        modal?.removeEventListener("click", onBackdrop);
+        modal?.remove();
+      };
+      const onKey = (e) => {
+        if (e.key === "Escape") {
+          cleanup();
+          resolve(null);
+        }
+      };
+      const onBackdrop = (e) => {
+        if (e.target === modal) {
+          cleanup();
+          resolve(null);
+        }
+      };
       const bind = (id, result) => {
         const el = document.getElementById(id);
         if (el) el.addEventListener("click", () => {
@@ -5219,6 +5394,8 @@ class ModalService {
       bind("selD", "dropbox");
       bind("selM", "mega");
       bind("selCancel", null);
+      document.addEventListener("keydown", onKey);
+      modal.addEventListener("click", onBackdrop);
     });
   }
   // 汎用選択モーダル（セレクトで一つ選ぶ）
@@ -5239,7 +5416,8 @@ class ModalService {
             </div>
           </div>
         </div>`;
-      document.body.insertAdjacentHTML("beforeend", html);
+      const mountRoot = document.getElementById("Mylist2Manager") || document.body;
+      mountRoot.insertAdjacentHTML("beforeend", html);
       const modal = document.querySelector(".cml2-modal");
       const select = document.getElementById("cml2Selection");
       const ok = document.getElementById("cml2SelectionOk");
@@ -5248,16 +5426,27 @@ class ModalService {
         resolve(null);
         return;
       }
-      const cleanup = () => modal.remove();
+      const cleanup = (res) => {
+        document.removeEventListener("keydown", onKey);
+        modal.removeEventListener("click", onBackdrop);
+        modal.remove();
+        resolve(res);
+      };
+      const onKey = (e) => {
+        if (e.key === "Escape") cleanup(null);
+      };
+      const onBackdrop = (e) => {
+        if (e.target === modal) cleanup(null);
+      };
       ok.addEventListener("click", () => {
         const v = select.value;
-        cleanup();
-        resolve(v || null);
+        cleanup(v || null);
       });
       cancel.addEventListener("click", () => {
-        cleanup();
-        resolve(null);
+        cleanup(null);
       });
+      document.addEventListener("keydown", onKey);
+      modal.addEventListener("click", onBackdrop);
     });
   }
 }
@@ -5678,7 +5867,21 @@ class EventHandlers {
     }
     const authorName = authorElement?.textContent?.replace("投稿者: ", "") || "不明";
     const length = lengthElement ? this.fileHelperService.parseLength(lengthElement.textContent || "") : 0;
-    return {
+    const descriptionFromDom = videoItem.dataset.description;
+    let tagsFromDom;
+    const rawTags = videoItem.dataset.tags;
+    if (rawTags) {
+      try {
+        const parsed = JSON.parse(rawTags);
+        if (Array.isArray(parsed)) {
+          const onlyStrings = parsed.filter((t) => typeof t === "string");
+          tagsFromDom = onlyStrings;
+        }
+      } catch (e) {
+      }
+    }
+    const memoFromDom = videoItem.dataset.memo;
+    const result = {
       id,
       originalId: id,
       title,
@@ -5689,9 +5892,14 @@ class EventHandlers {
       uploadedAt,
       authorName,
       length,
+      // 可能なら説明/タグ/メモを保持
+      ...descriptionFromDom ? { description: descriptionFromDom } : {},
+      ...tagsFromDom && tagsFromDom.length > 0 ? { tags: tagsFromDom } : {},
+      ...memoFromDom !== void 0 ? { memo: memoFromDom } : {},
       addedAt: Date.now(),
       mylistId: currentMylistId
     };
+    return result;
   }
 }
 
@@ -5824,6 +6032,33 @@ class BatchOperations {
     }
   }
 }
+
+const escapeHtml = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+const linkify = (text) => {
+  const re = /(https?:\/\/[^\s<'"]+)|(\bmylist\/(\d+)\b)|(\b([a-z]{2}\d+)\b)/g;
+  let result = "";
+  let last = 0;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    result += escapeHtml(text.slice(last, m.index));
+    let href = "";
+    let label = "";
+    if (m[1]) {
+      href = m[1];
+      label = m[1];
+    } else if (m[2]) {
+      href = `https://www.nicovideo.jp/mylist/${m[3]}`;
+      label = m[2];
+    } else if (m[4]) {
+      href = `https://www.nicovideo.jp/watch/${m[5]}`;
+      label = m[5];
+    }
+    result += `<a class="cml2-video-link" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+    last = re.lastIndex;
+  }
+  result += escapeHtml(text.slice(last));
+  return result;
+};
 
 class Mylist2ManagerUI {
   constructor() {
@@ -6119,6 +6354,10 @@ class Mylist2ManagerUI {
       } catch (err) {
       }
     }
+    const memoValue = video.memo;
+    if (memoValue !== void 0) {
+      item.dataset.memo = String(memoValue);
+    }
     const thumbnailElement = item.querySelector(".video-thumbnail");
     if (thumbnailElement) {
       thumbnailElement.src = video.thumbnailUrl;
@@ -6264,6 +6503,7 @@ class Mylist2ManagerUI {
           if (!compositeId) {
             const descFromDom = target.getAttribute("data-description") || void 0;
             const tagsFromDom = target.getAttribute("data-tags") || void 0;
+            const memoFromDom = target.getAttribute("data-memo") || "";
             const fallback = {};
             if (descFromDom) fallback.description = descFromDom;
             if (tagsFromDom) {
@@ -6272,7 +6512,7 @@ class Mylist2ManagerUI {
               } catch (err) {
               }
             }
-            await this.showVideoDetailsModal(fallback);
+            await this.showVideoDetailsModal(fallback, void 0, memoFromDom);
             return;
           }
           try {
@@ -6290,6 +6530,7 @@ class Mylist2ManagerUI {
             db.close();
             const descFromDom = target.getAttribute("data-description") || void 0;
             const tagsFromDom = target.getAttribute("data-tags") || void 0;
+            const memoFromDom = target.getAttribute("data-memo") || "";
             if (video) {
               const enriched = {
                 ...video,
@@ -6302,7 +6543,7 @@ class Mylist2ManagerUI {
                   }
                 })() : void 0)
               };
-              await this.showVideoDetailsModal(enriched);
+              await this.showVideoDetailsModal(enriched, compositeId, memoFromDom);
             } else {
               const fallback = {};
               if (descFromDom) fallback.description = descFromDom;
@@ -6313,7 +6554,7 @@ class Mylist2ManagerUI {
                   void err;
                 }
               }
-              await this.showVideoDetailsModal(fallback);
+              await this.showVideoDetailsModal(fallback, compositeId, memoFromDom);
             }
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
@@ -6331,6 +6572,7 @@ class Mylist2ManagerUI {
         const compositeId = target.getAttribute("data-composite-id") || void 0;
         const descFromDom = target.getAttribute("data-description") || void 0;
         const tagsFromDom = target.getAttribute("data-tags") || void 0;
+        const memoFromDom = target.getAttribute("data-memo") || "";
         try {
           if (!compositeId) {
             const fallback = {};
@@ -6342,7 +6584,7 @@ class Mylist2ManagerUI {
                 void err;
               }
             }
-            await this.showVideoDetailsModal(fallback);
+            await this.showVideoDetailsModal(fallback, compositeId, memoFromDom);
             return;
           }
           const db = await this.manager.getDB();
@@ -6369,7 +6611,7 @@ class Mylist2ManagerUI {
                 }
               })() : void 0)
             };
-            await this.showVideoDetailsModal(enriched);
+            await this.showVideoDetailsModal(enriched, compositeId, memoFromDom);
           } else {
             const fallback = {};
             if (descFromDom) fallback.description = descFromDom;
@@ -6380,7 +6622,7 @@ class Mylist2ManagerUI {
                 void err;
               }
             }
-            await this.showVideoDetailsModal(fallback);
+            await this.showVideoDetailsModal(fallback, compositeId, memoFromDom);
           }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
@@ -6827,8 +7069,8 @@ class Mylist2ManagerUI {
       });
     }
   }
-  // 動画詳細モーダルの表示
-  async showVideoDetailsModal(video) {
+  // 動画詳細モーダルの表示（メモ編集対応）
+  async showVideoDetailsModal(video, compositeId, memoText = "") {
     await Promise.resolve();
     const modalId = "videoDetailsModal";
     let modal = document.getElementById(modalId);
@@ -6846,25 +7088,58 @@ class Mylist2ManagerUI {
                 <strong>タグ</strong>
                 <div class="video-tags"></div>
               </div>
+              <div class="video-details-section" style="margin-top:12px">
+                <strong>メモ</strong>
+                <textarea class="video-memo" rows="4" style="width:100%" placeholder="メモを入力..."></textarea>
+              </div>
             </div>
             <div class="cml2-modal-footer">
+              <button type="button" class="cml2-btn save-memo-button">メモを保存</button>
               <button type="button" class="cml2-btn close-button">閉じる</button>
             </div>
           </div>
         </div>`;
       document.body.insertAdjacentHTML("beforeend", html);
-      modal = document.getElementById(modalId);
+      const found = document.getElementById(modalId);
+      if (found) {
+        modal = found;
+      }
     }
     if (!modal) return;
     const descEl = modal.querySelector(".video-description");
     const tagsEl = modal.querySelector(".video-tags");
-    if (descEl) descEl.textContent = video.description || "(説明なし)";
+    const memoEl = modal.querySelector(".video-memo");
+    if (descEl instanceof HTMLElement) {
+      const text = video.description || "(説明なし)";
+      descEl.innerHTML = linkify(text);
+    }
     if (tagsEl) {
       const tags = video.tags && video.tags.length > 0 ? video.tags : [];
       tagsEl.innerHTML = tags.length > 0 ? tags.map((t) => `<span class="tag" style="display:inline-block;background:#2a2b2c;border:1px solid #444;border-radius:12px;padding:2px 8px;margin:2px 6px 0 0;">${t}</span>`).join("") : "(タグなし)";
     }
+    if (memoEl) {
+      memoEl.value = memoText || "";
+    }
+    if (tagsEl instanceof HTMLElement) {
+      const tags = video.tags && video.tags.length > 0 ? video.tags : [];
+      if (tags.length > 0) {
+        const anchors = tags.map((t) => {
+          const a = document.createElement("a");
+          a.className = "cml2-tag";
+          a.href = `https://dic.nicovideo.jp/a/${encodeURIComponent(t)}`;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = t;
+          return a.outerHTML;
+        }).join("");
+        tagsEl.innerHTML = anchors;
+      } else {
+        tagsEl.innerHTML = "(タグなし)";
+      }
+    }
     modal.style.display = "flex";
     const closeBtn = modal.querySelector(".close-button");
+    const saveBtn = modal.querySelector(".save-memo-button");
     const content = modal.querySelector(".cml2-modal-content");
     const handleClose = () => {
       modal.style.display = "none";
@@ -6879,6 +7154,27 @@ class Mylist2ManagerUI {
       if (!content.contains(e.target)) handleClose();
     };
     if (closeBtn) closeBtn.addEventListener("click", handleClose, { once: true });
+    if (saveBtn && memoEl) {
+      saveBtn.addEventListener("click", () => {
+        void (async () => {
+          const text = memoEl.value || "";
+          if (compositeId) {
+            try {
+              await this.manager.updateVideoMemo(compositeId, text);
+              const item = document.querySelector(`.video-item[data-composite-id="${compositeId}"]`);
+              if (item) {
+                item.setAttribute("data-memo", text);
+              }
+              await this.showCustomAlert("メモを保存しました");
+            } catch {
+              await this.showCustomAlert("メモの保存に失敗しました");
+            }
+          } else {
+            await this.showCustomAlert("メモの保存対象が特定できませんでした");
+          }
+        })();
+      }, { once: true });
+    }
     document.addEventListener("keydown", onKeydown);
     modal.addEventListener("click", onBackdrop);
   }
@@ -6984,7 +7280,8 @@ class Mylist2ManagerUI {
         if (!titleElement || !authorElement) return;
         const title = titleElement.textContent?.toLowerCase() || "";
         const author = authorElement.textContent?.toLowerCase() || "";
-        if (title.includes(searchText) || author.includes(searchText)) {
+        const memo = (item.getAttribute("data-memo") || "").toLowerCase();
+        if (title.includes(searchText) || author.includes(searchText) || memo.includes(searchText)) {
           item.classList.remove("hidden");
         } else {
           item.classList.add("hidden");

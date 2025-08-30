@@ -41,6 +41,7 @@ export interface MylistManager {
   deleteVideo(compositeId: string): Promise<string>;
   fetchVideoInfo(videoId: string): Promise<VideoInfo>;
   updateVideoInfo(compositeId: string, videoInfo: Partial<VideoInfo>): Promise<void>;
+  updateVideoMemo(compositeId: string, memo: string): Promise<void>;
   getAllMylists(): Promise<MylistInfo[]>;
   moveKeyword(keywordId: number, targetMylistId: number): Promise<void>;
   addKeyword(targetMylistId: number, keywordText: string): Promise<number>;

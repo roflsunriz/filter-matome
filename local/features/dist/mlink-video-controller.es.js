@@ -531,7 +531,7 @@ class Mylist2DB {
   }
   constructor() {
     this.dbName = "Mylist2DB";
-    this.version = 7;
+    this.version = 8;
     this.migrationSteps = this.initializeMigrationSteps();
   }
   // マイグレーションステップを初期化
@@ -1269,6 +1269,8 @@ class VideoService {
           length: videoInfo.length || 0,
           description: videoInfo.description || "",
           tags: videoInfo.tags && videoInfo.tags.length > 0 ? videoInfo.tags : void 0,
+          // 任意: VideoInfoにmemoが渡ってくる場合は保持
+          memo: videoInfo.memo ?? void 0,
           addedAt: Date.now()
         };
         const addRequest = store.add(video);
@@ -1362,6 +1364,26 @@ class VideoService {
           tags: newInfo.tags !== void 0 ? newInfo.tags && newInfo.tags.length > 0 ? newInfo.tags : void 0 : existingVideo.tags
         };
         const updateRequest = store.put(updatedVideo);
+        updateRequest.onsuccess = () => resolve();
+        updateRequest.onerror = () => reject(new Error("データベースの更新に失敗しました"));
+      };
+      request.onerror = () => reject(new Error("動画情報の取得に失敗しました"));
+    });
+  }
+  async updateVideoMemo(compositeId, memo) {
+    const database = await this.db.initDB();
+    const transaction = database.transaction(["videos"], "readwrite");
+    const store = transaction.objectStore("videos");
+    return new Promise((resolve, reject) => {
+      const request = store.get(compositeId);
+      request.onsuccess = () => {
+        const existingVideo = request.result;
+        if (!existingVideo) {
+          reject(new Error("動画が見つかりません"));
+          return;
+        }
+        const updated = { ...existingVideo, memo };
+        const updateRequest = store.put(updated);
         updateRequest.onsuccess = () => resolve();
         updateRequest.onerror = () => reject(new Error("データベースの更新に失敗しました"));
       };
@@ -2497,6 +2519,9 @@ class Mylist2Manager {
   }
   async updateVideoInfo(compositeId, newInfo) {
     return this.videoService.updateVideoInfo(compositeId, newInfo);
+  }
+  async updateVideoMemo(compositeId, memo) {
+    return this.videoService.updateVideoMemo(compositeId, memo);
   }
   // キーワード関連のメソッド
   async addKeyword(mylistId, keyword) {
