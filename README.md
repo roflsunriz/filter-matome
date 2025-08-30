@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/roflsunriz/filter-matome.svg)](https://github.com/roflsunriz/filter-matome/releases)
-[![Latest Version](https://img.shields.io/badge/latest-%23190-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
+[![Latest Version](https://img.shields.io/badge/latest-%23191-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
 
 **filter-matome**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
 
@@ -233,20 +233,20 @@ MIT License - Copyright (c) 2017-2025 ◆awd5z.AlOFJq(roflsunriz)
 
 ### 最新バージョン
 
-- **リリース形式**: `#191`, `#192` などの番号形式
+- **リリース形式**: `#192`, `#193` などの番号形式
 - **リリース履歴**: [nlFilters/198_release_notes.md](nlFilters/198_release_notes.md)
 
 ### リリース作成方法（開発者向け）
 ```bash
 # 次のバージョンタグを作成してプッシュ
-git tag "#191"
-git push origin "#191"
+git tag "#192"
+git push origin "#192"
 ```
 
 ```bash
 # 間違えてリリースを作った場合、タグを削除して再度リリースを作成
-git tag -d "#191"
-git push origin :refs/tags/#191
+git tag -d "#192"
+git push origin :refs/tags/#192
 ```
 
 ## 🤝 コントリビューション
