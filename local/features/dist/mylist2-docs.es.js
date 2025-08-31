@@ -793,8 +793,7 @@ const ICONS = {
   bookmark: "bookmark",
   live_tv: "live_tv",
   image: "image",
-  tv: "tv",
-  video_library: "video_library"};
+  tv: "tv"};
 function getIconPath(iconName, style = "outlined") {
   return `/local/images/material-design-icons/${style}/${iconName}.svg`;
 }
@@ -1236,7 +1235,6 @@ class CommonHeader {
                     Mylist2
                   </a>
                   <a href="https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html" target="_blank" title="watch-history">
-                    ${createMaterialIcon(ICONS.video_library, { style: "outlined", color: "white" })}
                     watch-history
                   </a>
                   <a href="https://www.nicovideo.jp/cache/" target="_blank" title="キャッシュ">
@@ -1247,6 +1245,9 @@ class CommonHeader {
                   </a>
                   <a href="https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html" target="_blank" title="CommentFilter2 README">
                     README(CF2)
+                  </a>
+                  <a href="https://github.com/roflsunriz/filter-matome" target="_blank" title="filter-matome">
+                    filter-matome (GitHub)
                   </a>
                 </div>
               </span>
