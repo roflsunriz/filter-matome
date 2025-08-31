@@ -1,23 +1,24 @@
+#requires -Version 7.0
 <#
 .SYNOPSIS
-  NicoCache_nl —p‚Ì `C:\NicoCache_nl\local\list.js` ‚Æ `list.js.map` ‚Ö‚ÌƒVƒ“ƒ{ƒŠƒbƒNƒŠƒ“ƒN‚ğì¬‚·‚éƒXƒNƒŠƒvƒg
+  NicoCache_nl ã® `C:\NicoCache_nl\local\list.js` ã¨ `list.js.map` ã¸ã‚·ãƒ³ãƒœãƒªãƒƒã‚¯ãƒªãƒ³ã‚¯ã‚’å¼µã‚‹ã‚¹ã‚¯ãƒªãƒ—ãƒˆ
 
 .DESCRIPTION
-  w’è‚µ‚½ƒrƒ‹ƒh¬‰Ê•¨i—á: cache-data-manager.es.jsj‚ÖŒÅ’èƒpƒX `C:\NicoCache_nl\local\list.js` ‚ğw‚·ƒVƒ“ƒ{ƒŠƒbƒNƒŠƒ“ƒN‚ğì¬‚µ‚Ü‚·B
-  map ƒtƒ@ƒCƒ‹‚ª‘¶İ‚·‚ê‚Î `list.js.map` ‚àì‚è‚Ü‚·B
+  æŒ‡å®šã®ãƒ“ãƒ«ãƒ‰æˆæœç‰©ï¼ˆä¾‹: cache-data-manager.es.jsï¼‰ã‹ã‚‰ `C:\NicoCache_nl\local\list.js` ã¸ã®ã‚·ãƒ³ãƒœãƒªãƒƒã‚¯ãƒªãƒ³ã‚¯ã‚’ä½œæˆã—ã¾ã™ã€‚
+  map ãƒ•ã‚¡ã‚¤ãƒ«ï¼ˆ<Target>.mapï¼‰ãŒå­˜åœ¨ã™ã‚‹å ´åˆã®ã¿ `list.js.map` ã‚‚ä½œæˆã—ã¾ã™ã€‚
+  .map ãŒå­˜åœ¨ã—ãªã„å ´åˆã¯è‡ªå‹•çš„ã« map é–¢é€£ã®å‡¦ç†ã‚’ã‚¹ã‚­ãƒƒãƒ—ã—ã¾ã™ã€‚
 
 .PARAMETER Target
-  ì¬‚µ‚½‚¢ƒVƒ“ƒ{ƒŠƒbƒNƒŠƒ“ƒN‚Ìƒ^[ƒQƒbƒg‚Æ‚È‚éƒrƒ‹ƒh¬‰Ê•¨‚Ìƒtƒ‹ƒpƒXi—á: C:\NicoCache_nl\local\features\dist\cache-data-manager.es.jsj
+  ã‚·ãƒ³ãƒœãƒªãƒƒã‚¯ãƒªãƒ³ã‚¯ã®ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã¨ãªã‚‹ãƒ“ãƒ«ãƒ‰æˆæœç‰©ã® JS ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ï¼ˆä¾‹: C:\NicoCache_nl\local\features\dist\cache-data-manager.es.jsï¼‰
 
 .PARAMETER LocalBase
-  ƒŠƒ“ƒN‚ğì¬‚·‚éƒ[ƒJƒ‹ƒfƒBƒŒƒNƒgƒŠ‚Ìƒx[ƒXƒpƒXBŠù’è’l‚Í `C:\NicoCache_nl\local`B
+  ãƒ­ãƒ¼ã‚«ãƒ«ã®ãƒªãƒ³ã‚¯è¨­ç½®ãƒ™ãƒ¼ã‚¹ãƒ‘ã‚¹ã€‚æ—¢å®šã¯ `C:\NicoCache_nl\local`ã€‚
 
 .PARAMETER Force
-  Šù‘¶‚Ì `list.js` / `list.js.map` ‚ğ‹­§“I‚Éíœ‚µ‚Äã‘‚«‚·‚éê‡‚ÍƒXƒCƒbƒ`‚ğw’è‚µ‚Ü‚·B
+  æ—¢å­˜ã® `list.js` / `list.js.map` ãŒã‚ã‚‹å ´åˆã«å¼·åˆ¶çš„ã«å‰Šé™¤ã—ã¦ã‹ã‚‰ä½œæˆã—ã¾ã™ã€‚
 
 .EXAMPLE
   .\create-listjs-symlink.ps1 -Target "C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js" -Force
-
 #>
 
 param(
@@ -29,9 +30,9 @@ param(
     [switch]$Force
 )
 
-# ˆø”‚Å Target ‚ª“n‚³‚ê‚Ä‚¢‚È‚¢ê‡‚Íƒvƒƒ“ƒvƒg‚Å“ü—Í‚ğ‘Ò‚Â
+# å¯¾è©±çš„ Target å…¥åŠ›ï¼ˆæœªæŒ‡å®šæ™‚ã¯ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã‚’æ¡ˆå†…ï¼‰
 if (-not $PSBoundParameters.ContainsKey('Target')) {
-    $promptMsg = "Target ‚ğ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢iEnter ‚ÅŠù’è’l '$Target' ‚ğg—pj"
+    $promptMsg = "Target ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ï¼ˆEnter ã§æ—¢å®š '$Target' ã‚’ä½¿ç”¨ï¼‰"
     $userInput = Read-Host $promptMsg
     if ($userInput -ne '') { $Target = $userInput }
 }
@@ -39,18 +40,16 @@ if (-not $PSBoundParameters.ContainsKey('Target')) {
 function Remove-Item-Safely {
     param([string]$PathToRemove)
     if (-not (Test-Path $PathToRemove)) { return }
-    # ƒ†[ƒU[ŠÂ‹«‚É Safe-Remove-Item (sri) ‚ªƒGƒCƒŠƒAƒX‚Æ‚µ‚Ä‘¶İ‚·‚ê‚Îg‚¤
+    # å®‰å…¨ã«æ¶ˆã—ãŸã„ã®ã§ã€sri ã‚³ãƒãƒ³ãƒ‰ãŒã‚ã‚Œã°ãã‚Œã‚’å„ªå…ˆåˆ©ç”¨
     $sriCmd = Get-Command sri -ErrorAction SilentlyContinue
     if ($sriCmd) {
         try {
-            # ‚Ü‚¸ˆê”Ê“I‚Èƒpƒ‰ƒ[ƒ^[Œ`®‚Å‚·i‘½‚­‚ÌÀ‘•‚ª‘Î‰j
             & $sriCmd.Name -Path $PathToRemove -Force -ErrorAction Stop
         } catch {
             try {
-                # -Path/-Force ‚É–¢‘Î‰‚ÈÀ‘•Œü‚¯‚ÉˆÊ’uˆø”‚Å‚·
                 & $sriCmd.Name $PathToRemove -ErrorAction Stop
             } catch {
-                Write-Warning "sri ‚É‚æ‚éíœ‚É¸”s‚µ‚Ü‚µ‚½: $PathToRemove -> $($_.Exception.Message)"
+                Write-Warning "sri ã®å‰Šé™¤ã«å¤±æ•—ã—ã¾ã—ãŸ: $PathToRemove -> $($_.Exception.Message)"
                 throw
             }
         }
@@ -58,58 +57,61 @@ function Remove-Item-Safely {
         try {
             Remove-Item -Path $PathToRemove -Force -ErrorAction Stop
         } catch {
-            Write-Warning "Remove-Item ‚É‚æ‚éíœ‚É¸”s‚µ‚Ü‚µ‚½: $PathToRemove -> $($_.Exception.Message)"
+            Write-Warning "Remove-Item ã®å‰Šé™¤ã«å¤±æ•—ã—ã¾ã—ãŸ: $PathToRemove -> $($_.Exception.Message)"
             throw
         }
     }
 }
 
-# â‘ÎƒpƒX‚É•ÏŠ·
-$linkPath = Join-Path $LocalBase "list.js"
+# ãƒ‘ã‚¹é¡
+$linkPath    = Join-Path $LocalBase "list.js"
 $mapLinkPath = Join-Path $LocalBase "list.js.map"
-$targetMap = "$Target.map"
+$targetMap   = "$Target.map"
+$hasMap      = Test-Path $targetMap
 
-Write-Host "ƒŠƒ“ƒNì¬: $linkPath -> $Target"
+Write-Host "ä½œæˆå¯¾è±¡: $linkPath -> $Target"
+if (-not $hasMap) {
+    Write-Host "map ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ãªã„ãŸã‚ã€list.js.map ã®æ›´æ–°ã¯ã‚¹ã‚­ãƒƒãƒ—ã—ã¾ã™: $targetMap"
+}
 
 if (-not (Test-Path $Target)) {
-    Write-Error "ƒ^[ƒQƒbƒgƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ: $Target"
+    Write-Error "ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒ•ã‚¡ã‚¤ãƒ«ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“: $Target"
     exit 1
 }
 
 try {
-    # Šù‘¶‚ÌƒŠƒ“ƒN/ƒtƒ@ƒCƒ‹‚ğíœiForce w’è‚©Aƒtƒ@ƒCƒ‹‚ª‘¶İ‚·‚éê‡j
+    # æ—¢å­˜ã®ãƒªãƒ³ã‚¯/ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ•´ç†
     if ($Force -or (Test-Path $linkPath)) {
-        Write-Host "Šù‘¶‚Ì $linkPath ‚ğíœ‚µ‚Ü‚·"
+        Write-Host "æ—¢å­˜ $linkPath ã‚’å‰Šé™¤ã—ã¾ã™"
         Remove-Item-Safely -PathToRemove $linkPath
     }
 
-    if ($Force -or (Test-Path $mapLinkPath)) {
-        # map ‚Íƒ^[ƒQƒbƒg‚Ì map ‚ª‘¶İ‚µ‚È‚¢ê‡‚Å‚àíœ‘ÎÛ‚Æ‚È‚é
-        Write-Host "Šù‘¶‚Ì $mapLinkPath ‚ğíœ‚µ‚Ü‚·"
-        Remove-Item-Safely -PathToRemove $mapLinkPath
+    if ($hasMap) {
+        if ($Force -or (Test-Path $mapLinkPath)) {
+            Write-Host "æ—¢å­˜ $mapLinkPath ã‚’å‰Šé™¤ã—ã¾ã™"
+            Remove-Item-Safely -PathToRemove $mapLinkPath
+        }
     }
 
-    # ƒVƒ“ƒ{ƒŠƒbƒNƒŠƒ“ƒN‚ğì¬
+    # ã‚·ãƒ³ãƒœãƒªãƒƒã‚¯ãƒªãƒ³ã‚¯ã‚’ä½œæˆ
     New-Item -ItemType SymbolicLink -Path $linkPath -Target $Target -ErrorAction Stop | Out-Null
-    Write-Host "ì¬‚µ‚Ü‚µ‚½: $linkPath -> $Target"
+    Write-Host "ä½œæˆã—ã¾ã—ãŸ: $linkPath -> $Target"
 
-    if (Test-Path $targetMap) {
+    if ($hasMap) {
         New-Item -ItemType SymbolicLink -Path $mapLinkPath -Target $targetMap -ErrorAction Stop | Out-Null
-        Write-Host "ì¬‚µ‚Ü‚µ‚½: $mapLinkPath -> $targetMap"
-    } else {
-        Write-Host "‘Î‰‚·‚é map ƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ‚Å‚µ‚½: $targetMap"
+        Write-Host "ä½œæˆã—ã¾ã—ãŸ: $mapLinkPath -> $targetMap"
     }
 
-    # Šm”F•\¦
+    # ç¢ºèªå‡ºåŠ›
     Get-Item $linkPath | Select-Object Mode, LinkType, Target | Format-List
     Resolve-Path $linkPath | ForEach-Object { Write-Host "ResolvedPath: $_" }
     Write-Host "Test-Path list.js: $(Test-Path $linkPath)"
+    if (Test-Path $mapLinkPath) { Write-Host "Test-Path list.js.map: $(Test-Path $mapLinkPath)" }
 
 } catch {
-    Write-Error "ˆ—’†‚ÉƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½: $($_.Exception.Message)"
+    Write-Error "å‡¦ç†ä¸­ã«ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸ: $($_.Exception.Message)"
     exit 1
 }
 
-Write-Host "Š®—¹BŠÇ—ÒŒ ŒÀ‚Ü‚½‚ÍŠJ”­Òƒ‚[ƒh‚ª•K—v‚Èê‡‚ª‚ ‚è‚Ü‚·B"
-
+Write-Host "å®Œäº†ã€‚å¿…è¦ã«å¿œã˜ã¦ã‚¢ãƒ—ãƒªå´ã®ã‚³ãƒ¼ãƒ‰ã‚’ç¢ºèªã—ã¦ãã ã•ã„ã€‚"
 
