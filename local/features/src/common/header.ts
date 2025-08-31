@@ -333,8 +333,8 @@ export class CommonHeader implements CommonHeaderInstance {
                   <a href="https://www.nicovideo.jp/recent" target="_blank" title="新着コメント">
                     新着コメント
                   </a>
-                  <a href="https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html" target="_blank" title="Mylist2">
-                    Mylist2
+                  <a href="https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html" target="_blank" title="mylist2">
+                    mylist2
                   </a>
                   <a href="https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html" target="_blank" title="watch-history">
                     watch-history
@@ -342,7 +342,7 @@ export class CommonHeader implements CommonHeaderInstance {
                   <a href="https://www.nicovideo.jp/cache/" target="_blank" title="キャッシュ">
                     キャッシュ
                   </a>
-                  <a href="https://www.nicovideo.jp/local/features/dist/src/docs/mylist2/index.html" target="_blank" title="Mylist2 README">
+                  <a href="https://www.nicovideo.jp/local/features/dist/src/docs/mylist2/index.html" target="_blank" title="mylist2 README">
                     README(ML2)
                   </a>
                   <a href="https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html" target="_blank" title="CommentFilter2 README">
