@@ -4869,113 +4869,44 @@ class CommentRenderer {
 
 class CommentFetcher {
   /**
-   * 動画IDからAPIデータを取得
-   */
-  async getApiData(videoId, signal) {
-    try {
-      window.logger.info(`APIデータの取得を開始するのじゃ！ VideoID: ${videoId}`);
-      const response = await this.makeRequest({
-        method: "GET",
-        url: `https://www.nicovideo.jp/watch/${videoId}`
-      }, signal);
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(response.responseText, "text/html");
-      const metaElement = doc.querySelector('meta[name="server-response"]');
-      if (!metaElement) {
-        throw new Error("server-responseが見つからないのじゃ...");
-      }
-      const parsed = JSON.parse(decodeURIComponent(metaElement.getAttribute("content") || ""));
-      if (!parsed || typeof parsed !== "object" || !("data" in parsed)) {
-        throw new Error("server-responseメタの内容が不正なのじゃ");
-      }
-      const apiDataObj = parsed.data?.response;
-      if (!apiDataObj || !apiDataObj.comment || !apiDataObj.comment.nvComment) {
-        throw new Error("コメントAPIデータが不正なのじゃ");
-      }
-      window.logger.info("APIデータを取得したのじゃ！");
-      return {
-        threadKey: String(apiDataObj.comment.nvComment.threadKey || ""),
-        params: { value: String(apiDataObj.comment.nvComment.params || "") },
-        server: String(apiDataObj.comment.nvComment.server || "")
-      };
-    } catch (error) {
-      window.logger.error("APIデータの取得に失敗したのじゃ...", {
-        error: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : "",
-        videoId
-      });
-      throw error;
-    }
-  }
-  /**
-   * XHRリクエストを実行
-   */
-  makeRequest(options, signal) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open(options.method, options.url);
-      if (options.headers) {
-        Object.entries(options.headers).forEach(([key, value]) => {
-          xhr.setRequestHeader(key, value);
-        });
-      }
-      xhr.onload = () => resolve({
-        status: xhr.status,
-        responseText: xhr.responseText,
-        headers: xhr.getAllResponseHeaders()
-      });
-      xhr.onerror = () => reject(new Error("ネットワークリクエストが失敗したのじゃ..."));
-      if (signal) {
-        signal.addEventListener("abort", () => {
-          xhr.abort();
-          reject(new DOMException("Aborted", "AbortError"));
-        });
-      }
-      xhr.send(options.data);
-    });
-  }
-  /**
-   * APIデータからコメントを取得
-   */
-  async getComments(apiData, signal) {
-    try {
-      const url = `${apiData.server}/v1/threads`;
-      window.logger.info("コメントサーバーへのリクエスト内容なのじゃ：", {
-        url,
-        params: apiData.params,
-        threadKey: apiData.threadKey
-      });
-      const response = await this.makeRequest({
-        method: "POST",
-        url,
-        headers: {
-          "x-client-os-type": "others",
-          "X-Frontend-Id": "6",
-          "X-Frontend-Version": "0",
-          "Content-Type": "application/json"
-        },
-        data: JSON.stringify({
-          params: apiData.params,
-          threadKey: apiData.threadKey,
-          additionals: {}
-        })
-      }, signal);
-      if (!response.responseText) {
-        throw new Error("サーバーからの応答が空なのじゃ...");
-      }
-      const parsedResp = JSON.parse(response.responseText);
-      return parsedResp;
-    } catch (error) {
-      window.logger.error("コメント取得エラーなのじゃ！", error);
-      throw error;
-    }
-  }
-  /**
    * 動画IDからAPIデータを取得し、コメントを取得
    */
-  async fetchAllComments(videoId, signal) {
-    const apiData = await this.getApiData(videoId, signal);
-    return await this.getComments(apiData, signal);
+  async fetchAllComments(videoId) {
+    try {
+      window.logger.info(`コメント一括取得を開始するのじゃ！ VideoID: ${videoId}`);
+      const res = await window.commonHelper.fetchNicoDataWithComments(videoId);
+      if (!res) throw new Error("統合データの取得に失敗したのじゃ");
+      const normalizedComments = res.mainThread.comments.map((c) => {
+        const vpos = Math.round((c.vposMs ?? 0) / 10);
+        const out = {
+          // 共有フィールド
+          id: c.id,
+          no: c.no,
+          body: c.body,
+          commands: c.commands,
+          userId: c.userId,
+          isPremium: c.isPremium,
+          score: c.score,
+          nicoruCount: c.nicoruCount,
+          nicoruId: c.nicoruId,
+          source: c.source,
+          isMyPost: c.isMyPost,
+          // 差分フィールド
+          vpos,
+          vposMs: c.vposMs
+        };
+        return out;
+      });
+      const thread = {
+        commentCount: res.mainThread.commentCount,
+        fork: res.mainThread.fork,
+        comments: normalizedComments
+      };
+      return { data: { threads: [thread] } };
+    } catch (error) {
+      window.logger.error("fetchNicoDataWithCommentsでの取得に失敗したのじゃ...", error);
+      throw error;
+    }
   }
 }
 
@@ -5146,14 +5077,13 @@ class CommentSystem {
       this.abortController.abort();
     }
     this.abortController = new AbortController();
-    const signal = this.abortController.signal;
     if (this.hasReceivedFilteredData) {
       window.logger.info("CommentFilter2のコメントを既に描画しているのでフェッチをスキップするのじゃ");
       return;
     }
     try {
       window.logger.info(`コメント読み込み開始なのじゃ: ${videoId}`);
-      const apiResponse = await this.fetcher.fetchAllComments(videoId, signal);
+      const apiResponse = await this.fetcher.fetchAllComments(videoId);
       window.logger.info(`コメント読み込み完了なのじゃ: ${videoId}`, apiResponse);
       let comments = apiResponse.data.threads.flatMap((thread) => thread.comments);
       window.logger.info(`取得したコメント数なのじゃ: ${comments.length}`);

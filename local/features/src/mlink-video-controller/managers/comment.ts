@@ -45,7 +45,7 @@ export class CommentManager {
 
     try {
       window.logger?.info('コメントを取得中:', effectiveVideoId);
-      await this.apiFetcher.fetchApiData(effectiveVideoId);
+      await this.apiFetcher.fetchAll(effectiveVideoId);
       this.currentVideoId = effectiveVideoId;
       this.notifyDataChanged();
     } catch (error) {

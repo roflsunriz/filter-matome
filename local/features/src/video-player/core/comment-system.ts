@@ -208,7 +208,6 @@ export class CommentSystem {
 
     // 新しいAbortControllerを作成
     this.abortController = new AbortController();
-    const signal = this.abortController.signal;
 
     // 既にCommentFilter2データを適用済みなら最初に抜ける
     if (this.hasReceivedFilteredData) {
@@ -218,7 +217,7 @@ export class CommentSystem {
 
     try {
       window.logger.info(`コメント読み込み開始なのじゃ: ${videoId}`);
-      const apiResponse = await this.fetcher.fetchAllComments(videoId, signal);
+      const apiResponse = await this.fetcher.fetchAllComments(videoId);
       window.logger.info(`コメント読み込み完了なのじゃ: ${videoId}`, apiResponse);
 
       // コメントをフィルタ

@@ -3437,7 +3437,6 @@ class LinkManager {
 
 class NicoApiFetcher {
   constructor() {
-    this.apiData = null;
     this.comments = [];
     this.player = NicoVideoPlayer.getInstance();
   }
@@ -3447,63 +3446,17 @@ class NicoApiFetcher {
     }
     return NicoApiFetcher.instance;
   }
-  async fetchApiData(videoId) {
+  async fetchAll(videoId) {
     try {
-      const response = await fetch(`https://www.nicovideo.jp/watch/${videoId}`);
-      const html = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, "text/html");
-      const metaElement = doc.querySelector('meta[name="server-response"]');
-      if (!metaElement) {
-        throw new Error("APIデータが見つかりませんでした");
-      }
-      const content = decodeURIComponent(metaElement.getAttribute("content") || "");
-      const data = JSON.parse(content);
-      this.apiData = data.data.response;
-      await this.fetchComments();
+      const res = await window.commonHelper.fetchNicoDataWithComments(videoId);
+      if (!res) throw new Error("統合データの取得に失敗しました");
+      this.comments = res.comments.map((c) => ({
+        ...c,
+        vposMs: c.vposMs ?? 0,
+        postedAt: c.postedAt ? String(c.postedAt) : void 0
+      }));
     } catch (error) {
-      window.logger.error("APIデータの取得に失敗しました:", error);
-      throw error;
-    }
-  }
-  async fetchComments() {
-    if (!this.apiData?.comment?.nvComment) {
-      throw new Error("コメントデータが見つかりませんでした");
-    }
-    const { server, params, threadKey } = this.apiData.comment.nvComment;
-    const url = `${server}/v1/threads`;
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "x-client-os-type": "others",
-          "X-Frontend-Id": "6",
-          "X-Frontend-Version": "0",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          params,
-          threadKey,
-          additionals: {}
-        })
-      });
-      if (!response.ok) {
-        throw new Error(`APIリクエスト失敗: ${response.status} ${response.statusText}`);
-      }
-      const data = await response.json();
-      const threads = data?.data?.threads ?? [];
-      const mainThread = threads.filter((thread) => thread.fork === "main").sort((a, b) => b.commentCount - a.commentCount)[0];
-      if (mainThread) {
-        this.comments = mainThread.comments.map((comment) => ({
-          ...comment,
-          vposMs: comment.vposMs ?? 0,
-          postedAt: comment.postedAt ? String(comment.postedAt) : void 0
-        }));
-      } else {
-        throw new Error("メインスレッドが見つかりませんでした");
-      }
-    } catch (error) {
-      window.logger.error("コメントの取得に失敗しました:", error);
+      window.logger.error("統合データの取得に失敗しました:", error);
       throw error;
     }
   }
@@ -3586,7 +3539,7 @@ class CommentManager {
     }
     try {
       window.logger?.info("コメントを取得中:", effectiveVideoId);
-      await this.apiFetcher.fetchApiData(effectiveVideoId);
+      await this.apiFetcher.fetchAll(effectiveVideoId);
       this.currentVideoId = effectiveVideoId;
       this.notifyDataChanged();
     } catch (error) {
