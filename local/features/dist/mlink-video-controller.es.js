@@ -3354,8 +3354,53 @@ class LinkManager {
     }
     return LinkManager.instance;
   }
+  /**
+   * 視聴ページのコンテキスト（videoIdなど）が存在するかどうか
+   */
+  hasWatchContext() {
+    try {
+      const pathname = window.location?.pathname ?? "";
+      return pathname.includes("/watch/");
+    } catch {
+      return false;
+    }
+  }
+  /**
+   * 視聴コンテキストが無い状態でもUIに表示してよいアクションかどうか
+   * - トップページ等へのフォールバックが可能、または文脈非依存のもののみ true
+   */
+  canShowWithoutWatch(action) {
+    const allowed = /* @__PURE__ */ new Set([
+      // custom
+      "customMylist",
+      "AddVideoToCustomMylist",
+      "watchVideoFilter",
+      // services（トップページ等へフォールバック可能 or もとよりルート）
+      "nicochart",
+      "nicolog",
+      "nicoran",
+      "nicozon",
+      "search",
+      "commentviewer",
+      "nicodb",
+      "ikioi",
+      "cytube",
+      "yajuyaju",
+      // dataManagement
+      "cachelist",
+      "videoinfo"
+    ]);
+    return allowed.has(action);
+  }
+  /**
+   * 表示用リンク一覧を返す。非視聴ページでは無効なアクションを除外する。
+   */
   getLinks(group) {
-    return this.LINK_GROUPS[group];
+    const links = this.LINK_GROUPS[group];
+    if (!this.hasWatchContext()) {
+      return links.filter((link) => this.canShowWithoutWatch(link.action));
+    }
+    return links;
   }
   getThreadId() {
     if (this.nicoCache.watch && this.nicoCache.watch.apiData) {
@@ -3396,17 +3441,77 @@ class LinkManager {
         }
       },
       cachelist: "https://www.nicovideo.jp/cache/",
-      cacheinfo: `https://www.nicovideo.jp/cache/info/v2?${videoId}`,
-      mediainfo: `https://www.nicovideo.jp/local/features/dist/src/nl-media-info/index.html?videoId=${videoId}`,
+      cacheinfo: () => {
+        if (!videoId) {
+          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
+          return;
+        }
+        window.open(`https://www.nicovideo.jp/cache/info/v2?${videoId}`);
+      },
+      mediainfo: () => {
+        if (!videoId) {
+          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
+          return;
+        }
+        window.open(`https://www.nicovideo.jp/local/features/dist/src/nl-media-info/index.html?videoId=${videoId}`);
+      },
       videoinfo: "https://www.nicovideo.jp/local/features/dist/src/thumb-info/index.html",
-      savemovie: `https://www.nicovideo.jp/cache/ffmpeg?video=${videoId}`,
-      saveaudio: `https://www.nicovideo.jp/cache/ffmpeg?audio=${videoId}`,
-      savecomment: `https://www.nicovideo.jp/cache/${threadId}.xml`,
-      cache_remove: () => handleVideoOperation("cache_remove", videoId),
-      nicochart: `http://www.nicochart.jp/watch/${videoId}`,
-      nicolog: `https://www.nicolog.jp/watch/${videoId}`,
-      nicoran: `http://nicoranweb.com/watch/${videoId}`,
-      nicozon: `https://www.nicozon.net/watch/${videoId}`,
+      savemovie: () => {
+        if (!videoId) {
+          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
+          return;
+        }
+        window.open(`https://www.nicovideo.jp/cache/ffmpeg?video=${videoId}`);
+      },
+      saveaudio: () => {
+        if (!videoId) {
+          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
+          return;
+        }
+        window.open(`https://www.nicovideo.jp/cache/ffmpeg?audio=${videoId}`);
+      },
+      savecomment: () => {
+        if (!threadId) {
+          window.logger?.warn("コメントスレッド情報がありません。視聴ページで実行してください。");
+          return;
+        }
+        window.open(`https://www.nicovideo.jp/cache/${threadId}.xml`);
+      },
+      cache_remove: () => {
+        if (!videoId) {
+          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
+          return;
+        }
+        handleVideoOperation("cache_remove", videoId);
+      },
+      nicochart: () => {
+        if (!videoId) {
+          window.open("http://www.nicochart.jp/");
+          return;
+        }
+        window.open(`http://www.nicochart.jp/watch/${videoId}`);
+      },
+      nicolog: () => {
+        if (!videoId) {
+          window.open("https://www.nicolog.jp/");
+          return;
+        }
+        window.open(`https://www.nicolog.jp/watch/${videoId}`);
+      },
+      nicoran: () => {
+        if (!videoId) {
+          window.open("http://nicoranweb.com/");
+          return;
+        }
+        window.open(`http://nicoranweb.com/watch/${videoId}`);
+      },
+      nicozon: () => {
+        if (!videoId) {
+          window.open("https://www.nicozon.net/");
+          return;
+        }
+        window.open(`https://www.nicozon.net/watch/${videoId}`);
+      },
       search: "https://gokulin.info/search/",
       commentviewer: "https://yyya-nico.co/nv_comment_viewer/",
       nicodb: "https://nicodb.net/",
@@ -9231,9 +9336,9 @@ class MlinkVideoController extends BasePanel {
     this.moduleRegistry = ModuleRegistry.getInstance();
     this.settingsManager = SettingsManager.getInstance();
     this.settingsUI = SettingsUI.getInstance();
+    this.linkManager = LinkManager.getInstance();
     if (this.isWatchPage) {
       this.player = NicoVideoPlayer.getInstance();
-      this.linkManager = LinkManager.getInstance();
       this.commentManager = CommentManager.getInstance();
       this.heatmapManager = HeatmapManager.getInstance();
       this.playbackHandler = new PlaybackHandler();
@@ -9386,12 +9491,8 @@ class MlinkVideoController extends BasePanel {
         void (async () => {
           const target = e.target;
           const actionCard = target.closest(".action-card");
-          if (actionCard instanceof HTMLElement && actionCard.dataset.action) {
-            if (this.linkManager) {
-              await this.linkManager.handleAction(actionCard.dataset.action);
-            } else {
-              await this.handleStaticAction(actionCard.dataset.action);
-            }
+          if (actionCard instanceof HTMLElement && actionCard.dataset.action && this.linkManager) {
+            await this.linkManager.handleAction(actionCard.dataset.action);
           }
         })();
       });
@@ -9806,166 +9907,13 @@ class MlinkVideoController extends BasePanel {
     }, 2e3);
   }
   renderLinkGroup(group) {
-    let links;
-    if (this.linkManager) {
-      links = this.linkManager.getLinks(group);
-    } else {
-      links = this.getStaticLinks(group);
-    }
+    const links = this.linkManager?.getLinks(group) || [];
     return links.map((link) => `
       <div class="action-card" data-action="${link.action}">
         <img src="${link.icon}" alt="${link.title}" />
         <span>${link.title}</span>
       </div>
     `).join("");
-  }
-  /**
-   * 視聴ページ以外で使用する静的なリンクデータを取得
-   */
-  getStaticLinks(group) {
-    const staticLinks = {
-      custom: [
-        {
-          id: "customMylist",
-          title: "mylist2",
-          icon: getIconPath("playlist_add", "outlined"),
-          action: "customMylist"
-        },
-        {
-          id: "AddToMylist",
-          title: "mylist2に追加",
-          icon: getIconPath("playlist_add_circle", "outlined"),
-          action: "AddToMylist"
-        },
-        {
-          id: "watchVideoFilter",
-          title: "動画非表示設定",
-          icon: getIconPath("filter_list", "outlined"),
-          action: "watchVideoFilter"
-        }
-      ],
-      services: [
-        {
-          id: "nicochart",
-          title: "ニコチャート",
-          icon: getIconPath("trending_up", "outlined"),
-          action: "nicochart"
-        },
-        {
-          id: "nicolog",
-          title: "ニコログ",
-          icon: getIconPath("search", "outlined"),
-          action: "nicolog"
-        },
-        {
-          id: "nicoran",
-          title: "ニコラン",
-          icon: getIconPath("trending_up", "outlined"),
-          action: "nicoran"
-        },
-        {
-          id: "nicozon",
-          title: "nicozon",
-          icon: getIconPath("storage", "outlined"),
-          action: "nicozon"
-        },
-        {
-          id: "search",
-          title: "超検索",
-          icon: getIconPath("search", "outlined"),
-          action: "search"
-        },
-        {
-          id: "commentviewer",
-          title: "コメントビューアー",
-          icon: getIconPath("comment", "outlined"),
-          action: "commentviewer"
-        },
-        {
-          id: "nicodb",
-          title: "ニコ生クリ奨ランキング",
-          icon: getIconPath("live_tv", "outlined"),
-          action: "nicodb"
-        },
-        {
-          id: "ikioi",
-          title: "ニコ生勢いランキング",
-          icon: getIconPath("live_tv", "outlined"),
-          action: "ikioi"
-        },
-        {
-          id: "cytube",
-          title: "CTV☆",
-          icon: getIconPath("star", "outlined"),
-          action: "cytube"
-        },
-        {
-          id: "yajuyaju",
-          title: "ヤジュヤジュ動画",
-          icon: getIconPath("movie", "outlined"),
-          action: "yajuyaju"
-        }
-      ],
-      dataManagement: [
-        {
-          id: "cachelist",
-          title: "キャッシュリスト",
-          icon: getIconPath("storage", "outlined"),
-          action: "cachelist"
-        }
-      ]
-    };
-    return staticLinks[group] || [];
-  }
-  /**
-   * 視聴ページ以外で使用する静的なアクション処理
-   */
-  async handleStaticAction(action) {
-    await Promise.resolve();
-    try {
-      const actionMap = {
-        customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
-        AddToMylist: () => {
-          const mylistHandler = new Mylist2Handler();
-          void mylistHandler.handleAddKeyword();
-        },
-        nicochart: "http://nicochart.jp/",
-        nicolog: "https://nicolog.jp/",
-        nicoran: "http://nicoranweb.com/",
-        nicozon: "http://www.nicozon.net/",
-        search: "https://gokulin.info/search/",
-        commentviewer: "https://yyya-nico.co/nv_comment_viewer/",
-        nicodb: "https://nicodb.net/",
-        ikioi: "https://ikioi-ranking.com/v/nico",
-        cytube: "https://cytube.mm428.net/r/cookie_tv",
-        yajuyaju: "https://yajuvideo.in/",
-        cachelist: "https://www.nicovideo.jp/cache/",
-        watchVideoFilter: () => {
-          const globalThumbnailsFilter = window.ThumbnailsFilter;
-          if (globalThumbnailsFilter && globalThumbnailsFilter.openSettingsPanel) {
-            globalThumbnailsFilter.openSettingsPanel();
-          } else {
-            window.logger.warn("ThumbnailsFilterが利用できません。先にThumbnailsFilterを読み込んでください。");
-          }
-        }
-      };
-      const actionTarget = actionMap[action];
-      if (!actionTarget) {
-        throw new Error(`未知のアクション: ${action}`);
-      }
-      if (typeof actionTarget === "string") {
-        window.open(actionTarget, "_blank", "noopener,noreferrer");
-      } else if (typeof actionTarget === "function") {
-        actionTarget();
-      }
-    } catch (error) {
-      window.logger.error(`[MlinkVideoController] アクション処理エラー (${action}):`, error);
-      if (typeof window !== "undefined" && "toastr" in window) {
-        window.toastr?.error(`アクション「${action}」の実行に失敗しました`);
-      } else {
-        alert(`アクション「${action}」の実行に失敗しました: ${error instanceof Error ? error.message : "エラーが発生しました"}`);
-      }
-    }
   }
   // パネルが閉じられたときにインターバルをクリアする
   closePanel() {

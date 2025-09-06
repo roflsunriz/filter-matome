@@ -125,7 +125,7 @@ export const uiUtils = {
       <h3>動画ID取得</h3>
       <p>動画IDが自動取得できませんでした。</p>
       <p>以下にSMID（例: sm12345678）またはニコニコ動画のURLを入力してください：</p>
-      <input type="text" id="video-id-input" placeholder="sm12345678 または https://www.nicovideo.jp/watch/sm12345678" style="width: 100%; padding: 8px; margin: 8px 0;">
+      <input type="text" id="video-id-input" placeholder="sm12345678 または https://www.nicovideo.jp/watch/sm12345678" style="width: 100%; margin: 8px 0;">
       <div style="text-align: right; margin-top: 10px;">
         <button id="video-id-submit" style="padding: 8px 16px; margin-right: 8px;">取得</button>
         <button id="video-id-cancel" style="padding: 8px 16px;">キャンセル</button>

@@ -7,7 +7,7 @@ import { HeatmapManager } from '../managers/heatmap';
 import { PlaybackHandler } from '../handlers/playback';
 import { VolumeHandler } from '../handlers/volume';
 import { SpeedHandler } from '../handlers/speed';
-import { Mylist2Handler } from '../handlers/mylist2';
+// import removed: Mylist2Handler no longer needed after unification
 
 // 🆕 新規追加: モジュール管理システム
 import { ModuleManager } from '../module-handlers/module-manager';
@@ -17,7 +17,6 @@ import { SettingsUI } from '../module-handlers/settings-ui';
 
 // 型定義のインポート
 import { LinkGroup, LinkData, MlinkVideoComment } from '@/types/mlink-video-controller-types';
-import { ThumbnailsFilterGlobal } from '@/types/thumbnails-filter-types';
 import { TimerHandle } from '@/types/util-types';
 
 // テンプレートの静的インポート
@@ -35,7 +34,7 @@ import { controlsStyles } from '../styles/controls';
 import { commentsStyles } from '../styles/comments';
 import { heatmapStyles } from '../styles/heatmap';
 import { settingsStyles } from '../styles/settings';
-import { materialIconsStyles, createMaterialIcon, getIconPath } from '../../common/material-icons';
+import { materialIconsStyles, createMaterialIcon } from '../../common/material-icons';
 
 export class MlinkVideoController extends BasePanel {
   private player: NicoVideoPlayer | null = null;
@@ -78,10 +77,12 @@ export class MlinkVideoController extends BasePanel {
     this.settingsManager = SettingsManager.getInstance();
     this.settingsUI = SettingsUI.getInstance();
     
+    // LinkManagerは全ページで利用（リンク定義と実行を一元化）
+    this.linkManager = LinkManager.getInstance();
+
     // 視聴ページの場合のみ動画関連サービスを初期化
     if (this.isWatchPage) {
       this.player = NicoVideoPlayer.getInstance();
-      this.linkManager = LinkManager.getInstance();
       this.commentManager = CommentManager.getInstance();
       this.heatmapManager = HeatmapManager.getInstance();
       this.playbackHandler = new PlaybackHandler();
@@ -346,17 +347,11 @@ export class MlinkVideoController extends BasePanel {
     actionCards.forEach(card => {
       card.addEventListener('click', (e) => {
         void (async () => {
-        const target = e.target as HTMLElement;
-        const actionCard = target.closest('.action-card');
-        if (actionCard instanceof HTMLElement && actionCard.dataset.action) {
-          if (this.linkManager) {
-            // 視聴ページの場合は通常のLinkManagerを使用
+          const target = e.target as HTMLElement;
+          const actionCard = target.closest('.action-card');
+          if (actionCard instanceof HTMLElement && actionCard.dataset.action && this.linkManager) {
             await this.linkManager.handleAction(actionCard.dataset.action);
-          } else {
-            // 視聴ページ以外の場合は静的なアクション処理
-            await this.handleStaticAction(actionCard.dataset.action);
           }
-        }
         })();
       });
     });
@@ -917,16 +912,7 @@ export class MlinkVideoController extends BasePanel {
   }
 
   private renderLinkGroup(group: LinkGroup): string {
-    let links;
-    
-    if (this.linkManager) {
-      // 視聴ページの場合は通常のLinkManagerを使用
-      links = this.linkManager.getLinks(group);
-    } else {
-      // 視聴ページ以外の場合は静的なリンクデータを使用
-      links = this.getStaticLinks(group);
-    }
-    
+    const links = this.linkManager?.getLinks(group) || [];
     return links.map((link: LinkData) => `
       <div class="action-card" data-action="${link.action}">
         <img src="${link.icon}" alt="${link.title}" />
@@ -935,165 +921,7 @@ export class MlinkVideoController extends BasePanel {
     `).join('');
   }
 
-  /**
-   * 視聴ページ以外で使用する静的なリンクデータを取得
-   */
-  private getStaticLinks(group: LinkGroup): LinkData[] {
-    const staticLinks = {
-      custom: [
-        {
-          id: 'customMylist',
-          title: 'mylist2',
-          icon: getIconPath('playlist_add', 'outlined'),
-          action: 'customMylist'
-        },
-        {
-          id: 'AddToMylist',
-          title: 'mylist2に追加',
-          icon: getIconPath('playlist_add_circle', 'outlined'),
-          action: 'AddToMylist'
-        },
-        {
-          id: 'watchVideoFilter',
-          title: '動画非表示設定',
-          icon: getIconPath('filter_list', 'outlined'),
-          action: 'watchVideoFilter'
-        }
-      ] as LinkData[],
-      services: [
-        {
-          id: 'nicochart',
-          title: 'ニコチャート',
-          icon: getIconPath('trending_up', 'outlined'),
-          action: 'nicochart'
-        },
-        {
-          id: 'nicolog',
-          title: 'ニコログ',
-          icon: getIconPath('search', 'outlined'),
-          action: 'nicolog'
-        },
-        {
-          id: 'nicoran',
-          title: 'ニコラン',
-          icon: getIconPath('trending_up', 'outlined'),
-          action: 'nicoran'
-        },
-        {
-          id: 'nicozon',
-          title: 'nicozon',
-          icon: getIconPath('storage', 'outlined'),
-          action: 'nicozon'
-        },
-        {
-          id: 'search',
-          title: '超検索',
-          icon: getIconPath('search', 'outlined'),
-          action: 'search'
-        },
-        {
-          id: 'commentviewer',
-          title: 'コメントビューアー',
-          icon: getIconPath('comment', 'outlined'),
-          action: 'commentviewer'
-        },
-        {
-          id: 'nicodb',
-          title: 'ニコ生クリ奨ランキング',
-          icon: getIconPath('live_tv', 'outlined'),
-          action: 'nicodb'
-        },
-        {
-          id: 'ikioi',
-          title: 'ニコ生勢いランキング',
-          icon: getIconPath('live_tv', 'outlined'),
-          action: 'ikioi'
-        },
-        {
-          id: 'cytube',
-          title: 'CTV☆',
-          icon: getIconPath('star', 'outlined'),
-          action: 'cytube'
-        },
-        {
-          id: 'yajuyaju',
-          title: 'ヤジュヤジュ動画',
-          icon: getIconPath('movie', 'outlined'),
-          action: 'yajuyaju'
-        }
-      ] as LinkData[],
-      dataManagement: [
-        {
-          id: 'cachelist',
-          title: 'キャッシュリスト',
-          icon: getIconPath('storage', 'outlined'),
-          action: 'cachelist'
-        }
-      ] as LinkData[]
-    };
 
-    return staticLinks[group] || [];
-  }
-
-  /**
-   * 視聴ページ以外で使用する静的なアクション処理
-   */
-  private async handleStaticAction(action: string): Promise<void> {
-    await Promise.resolve();
-    try {
-      const actionMap: { [key: string]: string | (() => void) } = {
-        customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
-        AddToMylist: () => {
-          const mylistHandler = new Mylist2Handler();
-          void mylistHandler.handleAddKeyword();
-        },
-        nicochart: "http://nicochart.jp/",
-        nicolog: "https://nicolog.jp/",
-        nicoran: "http://nicoranweb.com/",
-        nicozon: "http://www.nicozon.net/",
-        search: "https://gokulin.info/search/",
-        commentviewer: "https://yyya-nico.co/nv_comment_viewer/",
-        nicodb: "https://nicodb.net/",
-        ikioi: "https://ikioi-ranking.com/v/nico",
-        cytube: "https://cytube.mm428.net/r/cookie_tv",
-        yajuyaju: "https://yajuvideo.in/",
-        cachelist: "https://www.nicovideo.jp/cache/",
-        watchVideoFilter: () => {
-          const globalThumbnailsFilter = (window as { ThumbnailsFilter?: ThumbnailsFilterGlobal }).ThumbnailsFilter;
-          if (globalThumbnailsFilter && globalThumbnailsFilter.openSettingsPanel) {
-            globalThumbnailsFilter.openSettingsPanel();
-          } else {
-            window.logger.warn('ThumbnailsFilterが利用できません。先にThumbnailsFilterを読み込んでください。');
-          }
-        }
-      };
-
-      const actionTarget = actionMap[action];
-      if (!actionTarget) {
-        throw new Error(`未知のアクション: ${action}`);
-      }
-
-      if (typeof actionTarget === 'string') {
-        // URLの場合は新しいタブで開く
-        window.open(actionTarget, '_blank', 'noopener,noreferrer');
-        
-      } else if (typeof actionTarget === 'function') {
-        // 関数の場合は実行
-        actionTarget();
-        
-      }
-
-    } catch (error) {
-      window.logger.error(`[MlinkVideoController] アクション処理エラー (${action}):`, error);
-      
-      // エラー通知（可能であれば）
-      if (typeof window !== 'undefined' && 'toastr' in window) {
-        (window as { toastr?: { error: (message: string) => void } }).toastr?.error(`アクション「${action}」の実行に失敗しました`);
-      } else {
-        alert(`アクション「${action}」の実行に失敗しました: ${error instanceof Error ? error.message : 'エラーが発生しました'}`);
-      }
-    }
-  }
   
   // パネルが閉じられたときにインターバルをクリアする
   protected closePanel() {

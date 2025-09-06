@@ -26,6 +26,10 @@ body {
   line-height: 1.5;
 }
 
+#video-id-input-container {
+  color: black;
+}
+
 /* コンテナのスタイル */
 #externalDecodedResults,
 #nicovideoDecodedResults {

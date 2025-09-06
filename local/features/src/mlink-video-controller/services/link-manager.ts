@@ -175,8 +175,47 @@ export class LinkManager {
     return LinkManager.instance;
   }
 
+  /**
+   * 視聴ページのコンテキスト（videoIdなど）が存在するかどうか
+   */
+  private hasWatchContext(): boolean {
+    try {
+      const pathname = window.location?.pathname ?? '';
+      return pathname.includes('/watch/');
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * 視聴コンテキストが無い状態でもUIに表示してよいアクションかどうか
+   * - トップページ等へのフォールバックが可能、または文脈非依存のもののみ true
+   */
+  private canShowWithoutWatch(action: string): boolean {
+    const allowed = new Set<string>([
+      // custom
+      'customMylist',
+      'AddVideoToCustomMylist',
+      'watchVideoFilter',
+      // services（トップページ等へフォールバック可能 or もとよりルート）
+      'nicochart', 'nicolog', 'nicoran', 'nicozon',
+      'search', 'commentviewer', 'nicodb', 'ikioi', 'cytube', 'yajuyaju',
+      // dataManagement
+      'cachelist', 'videoinfo'
+    ]);
+    return allowed.has(action);
+  }
+
+  /**
+   * 表示用リンク一覧を返す。非視聴ページでは無効なアクションを除外する。
+   */
   public getLinks(group: keyof typeof this.LINK_GROUPS): LinkData[] {
-    return this.LINK_GROUPS[group];
+    const links = this.LINK_GROUPS[group];
+    if (!this.hasWatchContext()) {
+      // 視聴ページ以外では、フォールバック不可のアクションは非表示
+      return links.filter(link => this.canShowWithoutWatch(link.action));
+    }
+    return links;
   }
 
   private getThreadId(): string {
@@ -224,17 +263,77 @@ export class LinkManager {
         }
       },
       cachelist: "https://www.nicovideo.jp/cache/",
-      cacheinfo: `https://www.nicovideo.jp/cache/info/v2?${videoId}`,
-      mediainfo: `https://www.nicovideo.jp/local/features/dist/src/nl-media-info/index.html?videoId=${videoId}`,
+      cacheinfo: () => {
+        if (!videoId) {
+          window.logger?.warn('動画情報がありません。視聴ページで実行してください。');
+          return;
+        }
+        window.open(`https://www.nicovideo.jp/cache/info/v2?${videoId}`);
+      },
+      mediainfo: () => {
+        if (!videoId) {
+          window.logger?.warn('動画情報がありません。視聴ページで実行してください。');
+          return;
+        }
+        window.open(`https://www.nicovideo.jp/local/features/dist/src/nl-media-info/index.html?videoId=${videoId}`);
+      },
               videoinfo: "https://www.nicovideo.jp/local/features/dist/src/thumb-info/index.html",
-      savemovie: `https://www.nicovideo.jp/cache/ffmpeg?video=${videoId}`,
-      saveaudio: `https://www.nicovideo.jp/cache/ffmpeg?audio=${videoId}`,
-      savecomment: `https://www.nicovideo.jp/cache/${threadId}.xml`,
-      cache_remove: () => handleVideoOperation("cache_remove", videoId),
-      nicochart: `http://www.nicochart.jp/watch/${videoId}`,
-      nicolog: `https://www.nicolog.jp/watch/${videoId}`,
-      nicoran: `http://nicoranweb.com/watch/${videoId}`,
-      nicozon: `https://www.nicozon.net/watch/${videoId}`,
+      savemovie: () => {
+        if (!videoId) {
+          window.logger?.warn('動画情報がありません。視聴ページで実行してください。');
+          return;
+        }
+        window.open(`https://www.nicovideo.jp/cache/ffmpeg?video=${videoId}`);
+      },
+      saveaudio: () => {
+        if (!videoId) {
+          window.logger?.warn('動画情報がありません。視聴ページで実行してください。');
+          return;
+        }
+        window.open(`https://www.nicovideo.jp/cache/ffmpeg?audio=${videoId}`);
+      },
+      savecomment: () => {
+        if (!threadId) {
+          window.logger?.warn('コメントスレッド情報がありません。視聴ページで実行してください。');
+          return;
+        }
+        window.open(`https://www.nicovideo.jp/cache/${threadId}.xml`);
+      },
+      cache_remove: () => {
+        if (!videoId) {
+          window.logger?.warn('動画情報がありません。視聴ページで実行してください。');
+          return;
+        }
+        handleVideoOperation("cache_remove", videoId);
+      },
+      nicochart: () => {
+        if (!videoId) {
+          window.open('http://www.nicochart.jp/');
+          return;
+        }
+        window.open(`http://www.nicochart.jp/watch/${videoId}`);
+      },
+      nicolog: () => {
+        if (!videoId) {
+          window.open('https://www.nicolog.jp/');
+          return;
+        }
+        window.open(`https://www.nicolog.jp/watch/${videoId}`);
+      },
+      nicoran: () => {
+        if (!videoId) {
+          window.open('http://nicoranweb.com/');
+          return;
+        }
+        window.open(`http://nicoranweb.com/watch/${videoId}`);
+      },
+      nicozon: () => {
+        if (!videoId) {
+          window.open('https://www.nicozon.net/');
+          return;
+        }
+        window.open(`https://www.nicozon.net/watch/${videoId}`);
+      },
       search: "https://gokulin.info/search/",
       commentviewer: "https://yyya-nico.co/nv_comment_viewer/",
       nicodb: "https://nicodb.net/",
