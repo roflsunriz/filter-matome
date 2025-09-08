@@ -1,9 +1,9 @@
-import { ExtendedNicoCache_nl } from '@/types/global-types';
-import { LinkData, ActionMap } from '@/types/mlink-video-controller-types';
-import { ThumbnailsFilterGlobal } from '@/types/thumbnails-filter-types';
-import { Mylist2Handler } from '../handlers/mylist2';
-import { handleVideoOperation } from '../utils/video-util';
-import { getIconPath } from '../../common/material-icons';
+import { ExtendedNicoCache_nl } from "@/types/global-types";
+import { LinkData, ActionMap } from "@/types/mlink-video-controller-types";
+import { ThumbnailsFilterGlobal } from "@/types/thumbnails-filter-types";
+import { Mylist2Handler } from "../handlers/mylist2";
+import { handleVideoOperation } from "../utils/video-util";
+import { getIconPath } from "../../common/material-icons";
 
 export class LinkManager {
   private static instance: LinkManager;
@@ -14,157 +14,161 @@ export class LinkManager {
     favorites: [] as LinkData[],
     custom: [
       {
-        id: 'customMylist',
-        title: 'mylist2',
-        icon: getIconPath('playlist_add', 'outlined'),
-        action: 'customMylist'
+        id: "customMylist",
+        title: "mylist2",
+        icon: getIconPath("playlist_add", "outlined"),
+        action: "customMylist",
       },
       {
-        id: 'AddVideoToCustomMylist',
-        title: 'mylist2に追加',
-        icon: getIconPath('playlist_add_circle', 'outlined'),
-        action: 'AddVideoToCustomMylist'
+        id: "AddVideoToCustomMylist",
+        title: "mylist2に追加",
+        icon: getIconPath("playlist_add_circle", "outlined"),
+        action: "AddVideoToCustomMylist",
       },
       {
-        id: 'commentFilter2',
-        title: 'comment-filter2',
-        icon: getIconPath('filter_list', 'outlined'),
-        action: 'commentFilter2'
+        id: "commentFilter2",
+        title: "comment-filter2",
+        icon: getIconPath("filter_list", "outlined"),
+        action: "commentFilter2",
       },
       {
-        id: 'watchVideoFilter',
-        title: '動画非表示設定',
-        icon: getIconPath('filter_list', 'outlined'),
-        action: 'watchVideoFilter'
-      }
+        id: "watchVideoFilter",
+        title: "動画非表示設定",
+        icon: getIconPath("filter_list", "outlined"),
+        action: "watchVideoFilter",
+      },
+      {
+        id: "watch-history",
+        title: "視聴履歴",
+        icon: getIconPath("history", "outlined"),
+        action: "watch-history",
+      },
     ] as LinkData[],
     services: [
       {
-        id: 'nicochart',
-        title: 'ニコチャート',
-        icon: getIconPath('trending_up', 'outlined'),
-        action: 'nicochart'
+        id: "nicochart",
+        title: "ニコチャート",
+        icon: getIconPath("trending_up", "outlined"),
+        action: "nicochart",
       },
       {
-        id: 'nicolog',
-        title: 'ニコログ',
-        icon: getIconPath('search', 'outlined'),
-        action: 'nicolog'
+        id: "nicolog",
+        title: "ニコログ",
+        icon: getIconPath("search", "outlined"),
+        action: "nicolog",
       },
       {
-        id: 'nicoran',
-        title: 'ニコラン',
-        icon: getIconPath('trending_up', 'outlined'),
-        action: 'nicoran'
+        id: "nicoran",
+        title: "ニコラン",
+        icon: getIconPath("trending_up", "outlined"),
+        action: "nicoran",
       },
       {
-        id: 'nicozon',
-        title: 'nicozon',
-        icon: getIconPath('storage', 'outlined'),
-        action: 'nicozon'
+        id: "nicozon",
+        title: "nicozon",
+        icon: getIconPath("storage", "outlined"),
+        action: "nicozon",
       },
       {
-        id: 'search',
-        title: '超検索',
-        icon: getIconPath('search', 'outlined'),
-        action: 'search'
+        id: "search",
+        title: "超検索",
+        icon: getIconPath("search", "outlined"),
+        action: "search",
       },
       {
-        id: 'commentviewer',
-        title: 'コメントビューア',
-        icon: getIconPath('comment', 'outlined'),
-        action: 'commentviewer'
+        id: "commentviewer",
+        title: "コメントビューア",
+        icon: getIconPath("comment", "outlined"),
+        action: "commentviewer",
       },
       {
-        id: 'nicodb',
-        title: 'ニコ生クリ奨ランキング',
-        icon: getIconPath('live_tv', 'outlined'),
-        action: 'nicodb'
+        id: "nicodb",
+        title: "ニコ生クリ奨ランキング",
+        icon: getIconPath("live_tv", "outlined"),
+        action: "nicodb",
       },
       {
-        id: 'ikioi',
-        title: 'ニコ生勢いランキング',
-        icon: getIconPath('live_tv', 'outlined'),
-        action: 'ikioi'
+        id: "ikioi",
+        title: "ニコ生勢いランキング",
+        icon: getIconPath("live_tv", "outlined"),
+        action: "ikioi",
       },
       {
-        id: 'cytube',
-        title: 'CTV☆',
-        icon: getIconPath('star', 'outlined'),
-        action: 'cytube'
+        id: "cytube",
+        title: "CTV☆",
+        icon: getIconPath("star", "outlined"),
+        action: "cytube",
       },
       {
-        id: 'yajuyaju',
-        title: 'ヤジュヤジュ動画',
-        icon: getIconPath('movie', 'outlined'),
-        action: 'yajuyaju'
-      }
+        id: "yajuyaju",
+        title: "ヤジュヤジュ動画",
+        icon: getIconPath("movie", "outlined"),
+        action: "yajuyaju",
+      },
     ] as LinkData[],
     dataManagement: [
       {
-        id: 'cachelist',
-        title: 'キャッシュリスト',
-        icon: getIconPath('storage', 'outlined'),
-        action: 'cachelist'
+        id: "cachelist",
+        title: "キャッシュリスト",
+        icon: getIconPath("storage", "outlined"),
+        action: "cachelist",
       },
       {
-        id: 'cacheinfo',
-        title: 'キャッシュ情報',
-        icon: getIconPath('info', 'outlined'),
-        action: 'cacheinfo'
+        id: "cacheinfo",
+        title: "キャッシュ情報",
+        icon: getIconPath("info", "outlined"),
+        action: "cacheinfo",
       },
       {
-        id: 'mediainfo',
-        title: 'nlMediaInfo',
-        icon: getIconPath('info', 'outlined'),
-        action: 'mediainfo'
+        id: "mediainfo",
+        title: "nlMediaInfo",
+        icon: getIconPath("info", "outlined"),
+        action: "mediainfo",
       },
       {
-        id: 'videoinfo',
-        title: '概要、コメ情報',
-        icon: getIconPath('description', 'outlined'),
-        action: 'videoinfo'
+        id: "videoinfo",
+        title: "概要、コメ情報",
+        icon: getIconPath("description", "outlined"),
+        action: "videoinfo",
       },
       {
-        id: 'savemovie',
-        title: '保存:動画',
-        icon: getIconPath('download', 'outlined'),
-        action: 'savemovie'
+        id: "savemovie",
+        title: "保存:動画",
+        icon: getIconPath("download", "outlined"),
+        action: "savemovie",
       },
       {
-        id: 'saveaudio',
-        title: '保存:音声',
-        icon: getIconPath('audiotrack', 'outlined'),
-        action: 'saveaudio'
+        id: "saveaudio",
+        title: "保存:音声",
+        icon: getIconPath("audiotrack", "outlined"),
+        action: "saveaudio",
       },
       {
-        id: 'savecomment',
-        title: '保存:コメント',
-        icon: getIconPath('comment', 'outlined'),
-        action: 'savecomment'
+        id: "savecomment",
+        title: "保存:コメント",
+        icon: getIconPath("comment", "outlined"),
+        action: "savecomment",
       },
       {
-        id: 'cache_remove',
-        title: '削除:キャッシュ',
-        icon: getIconPath('clear', 'outlined'),
-        action: 'cache_remove'
-      }
-    ] as LinkData[]
+        id: "cache_remove",
+        title: "削除:キャッシュ",
+        icon: getIconPath("clear", "outlined"),
+        action: "cache_remove",
+      },
+    ] as LinkData[],
   };
 
   private constructor() {
     this.nicoCache = (window as Window & { NicoCache_nl: ExtendedNicoCache_nl }).NicoCache_nl;
-    
+
     // CommentFilter2の初期化完了を監視
-    window.addEventListener('CommentFilter2Ready', () => {
+    window.addEventListener("CommentFilter2Ready", () => {
       this.commentFilterReady = true;
-      
     });
-    
+
     // 既に初期化済みかチェック
     if (window.CommentFilter2Instance) {
       this.commentFilterReady = true;
-      
     }
   }
 
@@ -180,8 +184,8 @@ export class LinkManager {
    */
   private hasWatchContext(): boolean {
     try {
-      const pathname = window.location?.pathname ?? '';
-      return pathname.includes('/watch/');
+      const pathname = window.location?.pathname ?? "";
+      return pathname.includes("/watch/");
     } catch {
       return false;
     }
@@ -194,14 +198,24 @@ export class LinkManager {
   private canShowWithoutWatch(action: string): boolean {
     const allowed = new Set<string>([
       // custom
-      'customMylist',
-      'AddVideoToCustomMylist',
-      'watchVideoFilter',
+      "customMylist",
+      "AddVideoToCustomMylist",
+      "watchVideoFilter",
+      "watch-history",
       // services（トップページ等へフォールバック可能 or もとよりルート）
-      'nicochart', 'nicolog', 'nicoran', 'nicozon',
-      'search', 'commentviewer', 'nicodb', 'ikioi', 'cytube', 'yajuyaju',
+      "nicochart",
+      "nicolog",
+      "nicoran",
+      "nicozon",
+      "search",
+      "commentviewer",
+      "nicodb",
+      "ikioi",
+      "cytube",
+      "yajuyaju",
       // dataManagement
-      'cachelist', 'videoinfo'
+      "cachelist",
+      "videoinfo",
     ]);
     return allowed.has(action);
   }
@@ -213,7 +227,7 @@ export class LinkManager {
     const links = this.LINK_GROUPS[group];
     if (!this.hasWatchContext()) {
       // 視聴ページ以外では、フォールバック不可のアクションは非表示
-      return links.filter(link => this.canShowWithoutWatch(link.action));
+      return links.filter((link) => this.canShowWithoutWatch(link.action));
     }
     return links;
   }
@@ -221,21 +235,20 @@ export class LinkManager {
   private getThreadId(): string {
     if (this.nicoCache.watch && this.nicoCache.watch.apiData) {
       const defaultThread = this.nicoCache.watch.apiData.comment?.threads?.find(
-        (v: { isDefaultPostTarget?: boolean | undefined; }) => v.isDefaultPostTarget === true
+        (v: { isDefaultPostTarget?: boolean | undefined }) => v.isDefaultPostTarget === true
       );
-      return defaultThread?.id || '';
+      return defaultThread?.id || "";
     }
-    return '';
+    return "";
   }
 
   public async handleAction(action: string): Promise<void> {
-    const videoId = this.nicoCache.watch?.getVideoID() || '';
+    const videoId = this.nicoCache.watch?.getVideoID() || "";
     const threadId = this.getThreadId();
     // const commentFilterUI = new CommentFilterUI();
 
-
     const actionMap: ActionMap = {
-              customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
+      customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
       AddVideoToCustomMylist: async () => {
         const mylist2Handler = new Mylist2Handler();
         if (this.nicoCache.watch) {
@@ -248,88 +261,94 @@ export class LinkManager {
         try {
           // CommentFilter2のインスタンスを取得
           const commentFilter2Instance = window.CommentFilter2Instance;
-          
-          if (commentFilter2Instance && typeof commentFilter2Instance.showUI === 'function') {
+
+          if (commentFilter2Instance && typeof commentFilter2Instance.showUI === "function") {
             await commentFilter2Instance.showUI();
           } else {
             if (!this.commentFilterReady) {
-              window.logger.warn('CommentFilter2はまだ初期化中です。しばらく待ってから再試行してください。');
+              window.logger.warn(
+                "CommentFilter2はまだ初期化中です。しばらく待ってから再試行してください。"
+              );
             } else {
-              window.logger.warn('CommentFilter2が利用できません。先にCommentFilter2を読み込んでください。');
+              window.logger.warn(
+                "CommentFilter2が利用できません。先にCommentFilter2を読み込んでください。"
+              );
             }
           }
         } catch (error) {
-          window.logger.error('CommentFilter2の呼び出しに失敗しました:', error);
+          window.logger.error("CommentFilter2の呼び出しに失敗しました:", error);
         }
       },
       cachelist: "https://www.nicovideo.jp/cache/",
       cacheinfo: () => {
         if (!videoId) {
-          window.logger?.warn('動画情報がありません。視聴ページで実行してください。');
+          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
           return;
         }
         window.open(`https://www.nicovideo.jp/cache/info/v2?${videoId}`);
       },
       mediainfo: () => {
         if (!videoId) {
-          window.logger?.warn('動画情報がありません。視聴ページで実行してください。');
+          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
           return;
         }
-        window.open(`https://www.nicovideo.jp/local/features/dist/src/nl-media-info/index.html?videoId=${videoId}`);
+        window.open(
+          `https://www.nicovideo.jp/local/features/dist/src/nl-media-info/index.html?videoId=${videoId}`
+        );
       },
-              videoinfo: "https://www.nicovideo.jp/local/features/dist/src/thumb-info/index.html",
+      videoinfo: "https://www.nicovideo.jp/local/features/dist/src/thumb-info/index.html",
       savemovie: () => {
         if (!videoId) {
-          window.logger?.warn('動画情報がありません。視聴ページで実行してください。');
+          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
           return;
         }
         window.open(`https://www.nicovideo.jp/cache/ffmpeg?video=${videoId}`);
       },
       saveaudio: () => {
         if (!videoId) {
-          window.logger?.warn('動画情報がありません。視聴ページで実行してください。');
+          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
           return;
         }
         window.open(`https://www.nicovideo.jp/cache/ffmpeg?audio=${videoId}`);
       },
       savecomment: () => {
         if (!threadId) {
-          window.logger?.warn('コメントスレッド情報がありません。視聴ページで実行してください。');
+          window.logger?.warn("コメントスレッド情報がありません。視聴ページで実行してください。");
           return;
         }
         window.open(`https://www.nicovideo.jp/cache/${threadId}.xml`);
       },
       cache_remove: () => {
         if (!videoId) {
-          window.logger?.warn('動画情報がありません。視聴ページで実行してください。');
+          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
           return;
         }
         handleVideoOperation("cache_remove", videoId);
       },
       nicochart: () => {
         if (!videoId) {
-          window.open('http://www.nicochart.jp/');
+          window.open("http://www.nicochart.jp/");
           return;
         }
         window.open(`http://www.nicochart.jp/watch/${videoId}`);
       },
       nicolog: () => {
         if (!videoId) {
-          window.open('https://www.nicolog.jp/');
+          window.open("https://www.nicolog.jp/");
           return;
         }
         window.open(`https://www.nicolog.jp/watch/${videoId}`);
       },
       nicoran: () => {
         if (!videoId) {
-          window.open('http://nicoranweb.com/');
+          window.open("http://nicoranweb.com/");
           return;
         }
         window.open(`http://nicoranweb.com/watch/${videoId}`);
       },
       nicozon: () => {
         if (!videoId) {
-          window.open('https://www.nicozon.net/');
+          window.open("https://www.nicozon.net/");
           return;
         }
         window.open(`https://www.nicozon.net/watch/${videoId}`);
@@ -342,23 +361,30 @@ export class LinkManager {
       yajuyaju: "https://yajuvideo.in/",
       watchVideoFilter: () => {
         try {
-          const globalThumbnailsFilter = (window as Window & { ThumbnailsFilter?: ThumbnailsFilterGlobal }).ThumbnailsFilter;
+          const globalThumbnailsFilter = (
+            window as Window & { ThumbnailsFilter?: ThumbnailsFilterGlobal }
+          ).ThumbnailsFilter;
           if (globalThumbnailsFilter && globalThumbnailsFilter.openSettingsPanel) {
             globalThumbnailsFilter.openSettingsPanel();
           } else {
-            window.logger.warn('ThumbnailsFilterが利用できません。先にThumbnailsFilterを読み込んでください。');
+            window.logger.warn(
+              "ThumbnailsFilterが利用できません。先にThumbnailsFilterを読み込んでください。"
+            );
           }
         } catch (error) {
-          window.logger.error('ThumbnailsFilterの呼び出しに失敗しました:', error);
+          window.logger.error("ThumbnailsFilterの呼び出しに失敗しました:", error);
         }
-      }
+      },
+      "watch-history": () => {
+        window.open(`https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html`);
+      },
     };
 
     const actionValue = actionMap[action];
-    if (typeof actionValue === 'function') {
+    if (typeof actionValue === "function") {
       await actionValue();
     } else if (actionValue) {
       window.open(actionValue);
     }
   }
-} 
+}

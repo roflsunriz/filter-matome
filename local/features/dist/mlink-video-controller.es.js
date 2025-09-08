@@ -3225,6 +3225,12 @@ class LinkManager {
           title: "動画非表示設定",
           icon: getIconPath("filter_list", "outlined"),
           action: "watchVideoFilter"
+        },
+        {
+          id: "watch-history",
+          title: "視聴履歴",
+          icon: getIconPath("history", "outlined"),
+          action: "watch-history"
         }
       ],
       services: [
@@ -3375,6 +3381,7 @@ class LinkManager {
       "customMylist",
       "AddVideoToCustomMylist",
       "watchVideoFilter",
+      "watch-history",
       // services（トップページ等へフォールバック可能 or もとよりルート）
       "nicochart",
       "nicolog",
@@ -3431,9 +3438,13 @@ class LinkManager {
             await commentFilter2Instance.showUI();
           } else {
             if (!this.commentFilterReady) {
-              window.logger.warn("CommentFilter2はまだ初期化中です。しばらく待ってから再試行してください。");
+              window.logger.warn(
+                "CommentFilter2はまだ初期化中です。しばらく待ってから再試行してください。"
+              );
             } else {
-              window.logger.warn("CommentFilter2が利用できません。先にCommentFilter2を読み込んでください。");
+              window.logger.warn(
+                "CommentFilter2が利用できません。先にCommentFilter2を読み込んでください。"
+              );
             }
           }
         } catch (error) {
@@ -3453,7 +3464,9 @@ class LinkManager {
           window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
           return;
         }
-        window.open(`https://www.nicovideo.jp/local/features/dist/src/nl-media-info/index.html?videoId=${videoId}`);
+        window.open(
+          `https://www.nicovideo.jp/local/features/dist/src/nl-media-info/index.html?videoId=${videoId}`
+        );
       },
       videoinfo: "https://www.nicovideo.jp/local/features/dist/src/thumb-info/index.html",
       savemovie: () => {
@@ -3524,11 +3537,16 @@ class LinkManager {
           if (globalThumbnailsFilter && globalThumbnailsFilter.openSettingsPanel) {
             globalThumbnailsFilter.openSettingsPanel();
           } else {
-            window.logger.warn("ThumbnailsFilterが利用できません。先にThumbnailsFilterを読み込んでください。");
+            window.logger.warn(
+              "ThumbnailsFilterが利用できません。先にThumbnailsFilterを読み込んでください。"
+            );
           }
         } catch (error) {
           window.logger.error("ThumbnailsFilterの呼び出しに失敗しました:", error);
         }
+      },
+      "watch-history": () => {
+        window.open(`https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html`);
       }
     };
     const actionValue = actionMap[action];
