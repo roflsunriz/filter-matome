@@ -93,7 +93,7 @@
 - **NGワード・NG正規表現**: コメントのNGワード・NG正規表現
 
 ### マルチリンクビデオコントローラー (mlink-video-controller)
-- **リンク提供**: mylist2, comment-filter2, mylist2への追加ボタン、動画非表示設定、ニコニコ動画関連サービスへのリンク、キャッシュリスト、キャッシュ情報、nlMediaInfo, 音声保存、動画保存、コメント保存、キャッシュ削除
+- **リンク提供**: mylist2, comment-filter2, watch-history, mylist2への追加ボタン、動画非表示設定、ニコニコ動画関連サービスへのリンク、キャッシュリスト、キャッシュ情報、nlMediaInfo, 音声保存、動画保存、コメント保存、キャッシュ削除
 - **再生速度調整**: 再生速度の調整
 - **多彩なコントロールボタン**: 再生・一時停止・次の動画・前の動画・繰り返し再生・シークバー・5秒スキップ・10秒スキップ・30秒スキップ・60秒スキップ
 - **コメント検索**: コメントの検索
@@ -182,7 +182,7 @@ Append<
 - **機能別ドキュメント**:(インストール後に表示可能になります)
   - [Comment Filter2 説明](https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html)
   - [Mylist2 説明](https://www.nicovideo.jp/local/features/dist/src/docs/mylist2/index.html)
-  - [視聴履歴](https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html)
+
 
 ## ⚠️ 重要な注意事項
 
@@ -219,7 +219,7 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [Apache Ant](https://ant.apache.org/bindownload.cgi)
 - [Adoptium OpenJDK](https://adoptium.net/temurin/releases/?version=17)
-- [Boucy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest)
+- [Bouncy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest)
 - [WinMerge](https://winmerge.org/?lang=ja)
 - [MediaInfo CLI](https://mediaarea.net/ja/MediaInfo/Download/Windows)
 
@@ -227,26 +227,26 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 
 MIT License - Copyright (c) 2017-2025 ◆awd5z.AlOFJq(roflsunriz)
 
-私の名前を明記している限り、本ソフトウェアは自由に使用、複製、改変、配布できます。詳細は[LICENSE](LICENSE)ファイルをご覧ください。
+私の名前を明記している限り、本ソフトウェアは自由に使用、複製、改変、配布、商用利用、非商用利用できます。詳細は[LICENSE](LICENSE)ファイルをご覧ください。
 
 ## 🚀 リリース情報
 
 ### 最新バージョン
 
-- **リリース形式**: `#192`, `#193` などの番号形式
+- **リリース形式**: `#193`, `#194` などの番号形式
 - **リリース履歴**: [nlFilters/198_release_notes.md](nlFilters/198_release_notes.md)
 
 ### リリース作成方法（開発者向け）
 ```bash
 # 次のバージョンタグを作成してプッシュ
-git tag "#192"
-git push origin "#192"
+git tag "#193"
+git push origin "#193"
 ```
 
 ```bash
 # 間違えてリリースを作った場合、タグを削除して再度リリースを作成
-git tag -d "#192"
-git push origin :refs/tags/#192
+git tag -d "#193"
+git push origin :refs/tags/#193
 ```
 
 ## 🤝 コントリビューション
