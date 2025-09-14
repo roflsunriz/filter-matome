@@ -1,8 +1,8 @@
 /**
- * ニコニコ動画視聴履歴拡張 - メインアプリケーションなのじゃ
+ * ニコニコ動画視聴履歴拡張 - メインアプリケーション
  * 
  * @description 視聴履歴ビューSPAのメインコントローラー
- * @author わらわ（のじゃロリ娘）
+ * @author roflsunriz
  */
 import { applyWatchHistoryStyles } from './styles';
 import { createMaterialIcon } from '../common/material-icons';
@@ -30,7 +30,7 @@ import { watchHistoryDB } from './database';
 
 
 /**
- * 視聴履歴アプリケーションクラスなのじゃ
+ * 視聴履歴アプリケーションクラス
  */
 class WatchHistoryApp {
   private entries: WatchHistoryEntry[] = [];
@@ -71,7 +71,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 非同期ハンドラをイベントリスナー用に安全にラップするのじゃ
+   * 非同期ハンドラをイベントリスナー用に安全にラップする
    */
   private guardEvent<T extends Event>(handler: (ev: T) => void | Promise<void>): (ev: T) => void {
     return (ev: T) => {
@@ -89,7 +89,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * DOM要素を初期化するのじゃ
+   * DOM要素を初期化する
    */
   private initializeElements(): void {
     const elementIds = [
@@ -141,7 +141,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * イベントリスナーを設定するのじゃ
+   * イベントリスナーを設定する
    */
   private setupEventListeners(): void {
     // 検索
@@ -277,7 +277,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 設定を読み込むのじゃ
+   * 設定を読み込む
    */
   private loadConfig(): void {
     const savedConfig = sessionStorage.getItem('watchHistoryConfig');
@@ -287,7 +287,7 @@ class WatchHistoryApp {
         if (parsed && typeof parsed === 'object') {
           this.config = { ...this.config, ...(parsed as Partial<HistoryViewConfig>) };
         }
-        // ===== 読み込んだ検索テキストをサニタイズするのじゃ =====
+        // ===== 読み込んだ検索テキストをサニタイズします =====
         const txt = (this.config.filter.searchText ?? '').trim().toLowerCase();
         if (!txt || txt === 'null' || txt === 'undefined') {
           delete this.config.filter.searchText;
@@ -301,14 +301,14 @@ class WatchHistoryApp {
   }
 
   /**
-   * 設定を保存するのじゃ
+   * 設定を保存する
    */
   private saveConfig(): void {
     sessionStorage.setItem('watchHistoryConfig', JSON.stringify(this.config));
   }
 
   /**
-   * 共通ヘッダーを初期化するのじゃ
+   * 共通ヘッダーを初期化する
    */
   private initializeCommonHeader(): void {
     const container = document.getElementById('common-header-container');
@@ -323,7 +323,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * アプリケーションを初期化するのじゃ
+   * アプリケーションを初期化する
    */
   private async initialize(): Promise<void> {
     try {
@@ -339,7 +339,7 @@ class WatchHistoryApp {
       this.updateUI();
       
     } catch (error) {
-      logger.error('初期化エラー:', error);
+      logger.error('初期化エラーです:', error);
       this.showToast('初期化に失敗しました', 'error');
     } finally {
       this.showLoading(false);
@@ -347,7 +347,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * フィルタオブジェクトをサニタイズして返すのじゃ
+   * フィルタオブジェクトをサニタイズして返す
    */
   private cleanFilter(filter: FilterCondition): FilterCondition {
     const cleaned: FilterCondition = { ...filter };
@@ -383,7 +383,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * データを読み込むのじゃ
+   * データを読み込む
    */
   private async loadData(): Promise<void> {
     try {
@@ -397,7 +397,7 @@ class WatchHistoryApp {
       });
       
       const sanitizedFilter = this.cleanFilter(this.config.filter);
-      // サニタイズ後のフィルタを設定し直すのじゃ
+      // サニタイズ後のフィルタを設定し直す
       this.config.filter = sanitizedFilter;
 
       const entriesResult = await watchHistoryDB.getAllEntries(
@@ -435,7 +435,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * エントリをフィルタリングするのじゃ
+   * エントリをフィルタリングする
    */
   private filterEntries(): void {
     logger.debug('フィルタリング開始:', { 
@@ -447,7 +447,7 @@ class WatchHistoryApp {
       const filter = this.config.filter;
 
       // ===== 検索テキストフィルタ =====
-      // 空文字列や "null" / "undefined" といった無効値は無視するのじゃ
+      // 空文字列や "null" / "undefined" といった無効値は無視する
       const rawSearch = (filter.searchText ?? '').trim().toLowerCase();
       if (rawSearch && rawSearch !== 'null' && rawSearch !== 'undefined') {
         const searchTargets = [
@@ -500,7 +500,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * UIを更新するのじゃ
+   * UIを更新する
    */
   private updateUI(): void {
     this.updateHistoryList();
@@ -510,7 +510,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 履歴リストを更新するのじゃ
+   * 履歴リストを更新する
    */
   private updateHistoryList(): void {
     const historyList = this.elements['history-list'];
@@ -531,7 +531,7 @@ class WatchHistoryApp {
       historyList.innerHTML = items.join('');
     } catch (err) {
       logger.error('履歴アイテム生成で例外:', err);
-      this.showToast('履歴描画でエラー発生なのじゃ', 'error');
+      this.showToast('履歴描画でエラー発生しました', 'error');
     }
         
 
@@ -567,7 +567,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 履歴アイテムのHTMLを生成するのじゃ
+   * 履歴アイテムのHTMLを生成する
    */
   private createHistoryItem(entry: WatchHistoryEntry): string {
     const watchedAtDate = new Date(entry.watchedAt);
@@ -674,7 +674,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 視聴ログの詳細HTMLを作成するのじゃ
+   * 視聴ログの詳細HTMLを作成する
    */
   private createWatchLogsHTML(entry: WatchHistoryEntry): string {
     const watchLogs = entry.watchLogs || [];
@@ -756,7 +756,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 視聴ログアコーディオンを切り替えるのじゃ
+   * 視聴ログアコーディオンを切り替える
    */
   private toggleWatchLogsAccordion(item: HTMLElement): void {
     const videoId = item.getAttribute('data-video-id');
@@ -783,7 +783,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 統計を更新するのじゃ
+   * 統計を更新する
    */
   private updateStats(): void {
     if (!this.stats) return;
@@ -821,7 +821,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * フィルタを更新するのじゃ
+   * フィルタを更新する
    */
   private updateFilters(): void {
     // 投稿者フィルタのオプションを更新
@@ -859,7 +859,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * コンテンツ数を更新するのじゃ
+   * コンテンツ数を更新する
    */
   private updateContentCount(): void {
     const contentCount = this.elements['content-count'];
@@ -869,7 +869,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * グラフを更新するのじゃ
+   * グラフを更新する
    */
   private updateCharts(): void {
     if (!this.stats) return;
@@ -888,7 +888,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 投稿者統計を更新するのじゃ
+   * 投稿者統計を更新する
    */
   private updateCreatorStats(): void {
     const creatorStats = this.elements['creator-stats'];
@@ -909,7 +909,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * タグ統計を計算するのじゃ
+   * タグ統計を計算する
    */
   private calculateTagStats(): { tag: string; count: number; size: string }[] {
     const tagCounts = new Map<string, number>();
@@ -955,7 +955,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * タグクラウドを更新するのじゃ
+   * タグクラウドを更新する
    */
   private updateTagCloud(): void {
     const tagCloudElement = this.elements['tag-cloud'];
@@ -996,7 +996,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * お気に入り動画トップ15を計算するのじゃ
+   * お気に入り動画トップ15を計算する
    */
   private calculateFavoriteVideos(): { entry: WatchHistoryEntry; score: number }[] {
     const list = this.entries.map(entry => {
@@ -1020,7 +1020,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * お気に入り動画リストを更新するのじゃ
+   * お気に入り動画リストを更新する
    */
   private updateFavoriteVideos(): void {
     const container = this.elements['favorite-videos'];
@@ -1060,7 +1060,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * タグで検索するのじゃ
+   * タグで検索する
    */
   private searchByTag(tag: string): void {
     // 履歴タブに切り替え
@@ -1081,7 +1081,7 @@ class WatchHistoryApp {
   // ===== イベントハンドラ =====
 
   /**
-   * 検索を処理するのじゃ
+   * 検索を処理する
    */
   private handleSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -1093,7 +1093,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 検索をクリアするのじゃ
+   * 検索をクリアする
    */
   private clearSearch(): void {
     const searchInput = this.elements['search-input'] as HTMLInputElement;
@@ -1108,7 +1108,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 期間フィルタを一括クリアするのじゃ
+   * 期間フィルタを一括クリアする
    */
   private clearDateRange(): void {
     const startDateInput = this.elements['filter-date-start'] as HTMLInputElement;
@@ -1135,7 +1135,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * ソートを処理するのじゃ
+   * ソートを処理する
    */
   private async handleSort(event: Event): Promise<void> {
     const button = event.currentTarget as HTMLButtonElement;
@@ -1157,7 +1157,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * ソートUIを更新するのじゃ
+   * ソートUIを更新する
    */
   private updateSortUI(): void {
     document.querySelectorAll('.sort-btn').forEach(btn => {
@@ -1181,7 +1181,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * フィルタを処理するのじゃ
+   * フィルタを処理する
    */
   private handleFilter(): void {
     const completedFilter = this.elements['filter-completed'] as HTMLInputElement;
@@ -1214,7 +1214,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * データを更新するのじゃ
+   * データを更新する
    */
   private async refreshData(): Promise<void> {
     try {
@@ -1231,7 +1231,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * エクスポートを処理するのじゃ
+   * エクスポートを処理する
    */
   private async handleExport(): Promise<void> {
     try {
@@ -1259,7 +1259,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * インポートを処理するのじゃ
+   * インポートを処理する
    */
   private handleImport(): void {
     const fileInput = this.elements['import-file'] as HTMLInputElement;
@@ -1269,7 +1269,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * インポートファイルを処理するのじゃ
+   * インポートファイルを処理する
    */
   private async handleImportFile(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
@@ -1306,7 +1306,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * タブを切り替えるのじゃ
+   * タブを切り替える
    */
   private switchTab(tabName: string): void {
     // タブボタンの状態を更新
@@ -1338,7 +1338,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 動画詳細を表示するのじゃ
+   * 動画詳細を表示する
    */
   private showVideoDetail(entry: WatchHistoryEntry): void {
     this.selectedEntry = entry;
@@ -1357,7 +1357,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 動画詳細HTMLを作成するのじゃ
+   * 動画詳細HTMLを作成する
    */
   private createVideoDetailHTML(entry: WatchHistoryEntry): string {
     const watchedAtDate = new Date(entry.watchedAt);
@@ -1420,7 +1420,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * モーダルを閉じるのじゃ
+   * モーダルを閉じる
    */
   private closeModal(): void {
     this.elements['video-detail-modal']?.classList.add('hidden');
@@ -1428,7 +1428,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 動画を開くのじゃ
+   * 動画を開く
    */
   private openVideo(): void {
     if (this.selectedEntry) {
@@ -1437,7 +1437,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * メモ編集を開くのじゃ
+   * メモ編集を開く
    */
   private openMemoEdit(): void {
     if (!this.selectedEntry) return;
@@ -1451,14 +1451,14 @@ class WatchHistoryApp {
   }
 
   /**
-   * メモ編集を閉じるのじゃ
+   * メモ編集を閉じる
    */
   private closeMemoEdit(): void {
     this.elements['memo-edit-modal']?.classList.add('hidden');
   }
 
   /**
-   * メモを保存するのじゃ
+   * メモを保存する
    */
   private async saveMemo(): Promise<void> {
     if (!this.selectedEntry) return;
@@ -1493,7 +1493,7 @@ class WatchHistoryApp {
   // ===== ユーティリティメソッド =====
 
   /**
-   * 読み込み状態を表示するのじゃ
+   * 読み込み状態を表示する
    */
   private showLoading(show: boolean): void {
     const loading = this.elements['loading'];
@@ -1503,7 +1503,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 空の状態を表示するのじゃ
+   * 空の状態を表示する
    */
   private showEmptyState(show: boolean): void {
     const emptyState = this.elements['empty-state'];
@@ -1513,7 +1513,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * トースト通知を表示するのじゃ
+   * トースト通知を表示する
    */
   private showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     const toastContainer = this.elements['toast-container'];
@@ -1545,7 +1545,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 日別グラフを描画するのじゃ
+   * 日別グラフを描画する
    */
   private drawDailyChart(canvas: HTMLCanvasElement, dailyStats: DailyStats[]): void {
     const ctx = canvas.getContext('2d');
@@ -1592,7 +1592,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 時間帯別グラフを描画するのじゃ
+   * 時間帯別グラフを描画する
    */
   private drawHourlyChart(canvas: HTMLCanvasElement, hourlyStats: HourlyStats[]): void {
     const ctx = canvas.getContext('2d');
@@ -1641,7 +1641,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 期間をフォーマットするのじゃ
+   * 期間をフォーマットする
    */
   private formatDuration(seconds: number): string {
     const hours = Math.floor(seconds / 3600);
@@ -1656,7 +1656,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 数値をフォーマットするのじゃ
+   * 数値をフォーマットする
    */
   private formatNumber(num: number): string {
     if (num >= 10000) {
@@ -1666,7 +1666,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * HTMLをエスケープするのじゃ
+   * HTMLをエスケープする
    */
   private escapeHtml(text: string): string {
     const div = document.createElement('div');
@@ -1677,7 +1677,7 @@ class WatchHistoryApp {
   // ===== シリーズ関連メソッド =====
 
   /**
-   * シリーズタブを初期化するのじゃ
+   * シリーズタブを初期化する
    */
   private async initializeSeriesTab(): Promise<void> {
     if (this.seriesStats.length === 0) {
@@ -1687,7 +1687,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラートタブを初期化するのじゃ
+   * シリーズアラートタブを初期化する
    */
   private async initializeSeriesAlertTab(): Promise<void> {
     if (this.seriesAlerts.length === 0) {
@@ -1702,7 +1702,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズデータを読み込むのじゃ
+   * シリーズデータを読み込む
    */
   private async loadSeriesData(): Promise<void> {
     try {
@@ -1724,7 +1724,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラートデータを読み込むのじゃ
+   * シリーズアラートデータを読み込む
    */
   private async loadSeriesAlertData(): Promise<void> {
     try {
@@ -1745,7 +1745,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ統計をフィルタリングするのじゃ
+   * シリーズ統計をフィルタリングする
    */
   private filterSeriesStats(): void {
     this.filteredSeriesStats = this.seriesStats.filter(stats => {
@@ -1783,7 +1783,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズUIを更新するのじゃ
+   * シリーズUIを更新する
    */
   private async updateSeriesUI(): Promise<void> {
     await this.updateSeriesList();
@@ -1791,7 +1791,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラートUIを更新するのじゃ
+   * シリーズアラートUIを更新する
    */
   private updateSeriesAlertUI(): void {
     this.updateSeriesAlertList();
@@ -1799,7 +1799,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ一覧を更新するのじゃ
+   * シリーズ一覧を更新する
    */
   private async updateSeriesList(): Promise<void> {
     const seriesList = this.elements['series-list'];
@@ -1842,7 +1842,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラート一覧を更新するのじゃ
+   * シリーズアラート一覧を更新する
    */
   private updateSeriesAlertList(): void {
     const alertList = this.elements['series-alert-list'];
@@ -1876,7 +1876,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアイテムのHTMLを生成するのじゃ
+   * シリーズアイテムのHTMLを生成する
    */
   private async createSeriesItem(stats: SeriesStats): Promise<string> {
     const lastWatchedDate = new Date(stats.lastWatchedAt);
@@ -1918,7 +1918,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラートアイテムのHTMLを生成するのじゃ
+   * シリーズアラートアイテムのHTMLを生成する
    */
   private createSeriesAlertItem(alert: SeriesAlert): string {
     const lastCheckedDate = new Date(alert.lastCheckedAt);
@@ -1996,7 +1996,7 @@ class WatchHistoryApp {
   // ===== イベントハンドラ（シリーズ関連） =====
 
   /**
-   * シリーズ検索を処理するのじゃ
+   * シリーズ検索を処理する
    */
   private async handleSeriesSearch(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
@@ -2007,7 +2007,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ検索をクリアするのじゃ
+   * シリーズ検索をクリアする
    */
   private async clearSeriesSearch(): Promise<void> {
     const searchInput = this.elements['series-search-input'] as HTMLInputElement;
@@ -2021,7 +2021,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズフィルタを処理するのじゃ
+   * シリーズフィルタを処理する
    */
   private async handleSeriesFilter(): Promise<void> {
     const progressFilter = this.elements['series-progress-filter'] as HTMLSelectElement;
@@ -2032,7 +2032,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズデータを更新するのじゃ
+   * シリーズデータを更新する
    */
   private async refreshSeriesData(): Promise<void> {
     await this.loadSeriesData();
@@ -2041,7 +2041,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラートデータを更新するのじゃ
+   * シリーズアラートデータを更新する
    */
   private async refreshSeriesAlertData(): Promise<void> {
     await this.loadSeriesAlertData();
@@ -2050,7 +2050,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラートモーダルを開くのじゃ
+   * シリーズアラートモーダルを開く
    */
   private openSeriesAlertModal(): void {
     // 通知権限をチェック
@@ -2065,14 +2065,14 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラートモーダルを閉じるのじゃ
+   * シリーズアラートモーダルを閉じる
    */
   private closeSeriesAlertModal(): void {
     this.elements['series-alert-modal']?.classList.add('hidden');
   }
 
   /**
-   * シリーズ詳細モーダルを閉じるのじゃ
+   * シリーズ詳細モーダルを閉じる
    */
   private closeSeriesDetailModal(): void {
     this.elements['series-detail-modal']?.classList.add('hidden');
@@ -2080,7 +2080,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラートを保存するのじゃ
+   * シリーズアラートを保存する
    */
   private async saveSeriesAlert(): Promise<void> {
     const seriesSelect = this.elements['series-alert-series-select'] as HTMLSelectElement;
@@ -2142,7 +2142,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ詳細からアラートを追加するのじゃ
+   * シリーズ詳細からアラートを追加する
    */
   private addAlertFromSeriesDetail(): void {
     if (!this.selectedSeries) return;
@@ -2166,7 +2166,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ詳細を表示するのじゃ
+   * シリーズ詳細を表示する
    */
   private async showSeriesDetail(stats: SeriesStats): Promise<void> {
     this.selectedSeries = stats;
@@ -2212,7 +2212,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ詳細HTMLを作成するのじゃ
+   * シリーズ詳細HTMLを作成する
    */
   private createSeriesDetailHTML(stats: SeriesStats, seriesInfo: SeriesInfo | null): string {
     const lastWatchedDate = new Date(stats.lastWatchedAt);
@@ -2244,7 +2244,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ動画一覧HTMLを作成するのじゃ
+   * シリーズ動画一覧HTMLを作成する
    */
   private createSeriesVideosHTML(videos: WatchHistoryEntry[]): string {
     if (videos.length === 0) {
@@ -2289,7 +2289,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラートを切り替えるのじゃ
+   * シリーズアラートを切り替える
    */
   private async toggleSeriesAlert(alert: SeriesAlert): Promise<void> {
     const updatedAlert = { ...alert, enabled: !alert.enabled, updatedAt: Date.now() };
@@ -2313,7 +2313,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラートを削除するのじゃ
+   * シリーズアラートを削除する
    */
   private async deleteSeriesAlert(alert: SeriesAlert): Promise<void> {
     if (!confirm(`「${alert.seriesTitle}」のアラートを削除しますか？`)) {
@@ -2338,7 +2338,7 @@ class WatchHistoryApp {
   // ===== 視聴履歴削除機能 =====
 
   /**
-   * 個別の視聴履歴エントリを削除するのじゃ
+   * 個別の視聴履歴エントリを削除する
    */
   private async deleteHistoryEntry(entry: WatchHistoryEntry): Promise<void> {
     if (!confirm(`「${entry.title}」の視聴履歴を削除しますか？`)) {
@@ -2364,7 +2364,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 全ての視聴履歴を削除するのじゃ（一括削除）
+   * 全ての視聴履歴を削除する（一括削除）
    */
   private async deleteAllHistoryEntries(): Promise<void> {
     const totalCount = this.entries.length;
@@ -2396,7 +2396,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 条件に一致する視聴履歴を削除するのじゃ
+   * 条件に一致する視聴履歴を削除する
    */
   private async deleteHistoryEntriesByCondition(maxWatchCount: number, maxProgressRate: number): Promise<void> {
     if (maxWatchCount < 0 || maxProgressRate < 0 || maxProgressRate > 100) {
@@ -2437,7 +2437,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 条件付き削除のハンドラーなのじゃ
+   * 条件付き削除のハンドラー
    */
   private handleConditionalDelete(): void {
     const watchCountInput = this.elements['delete-watch-count'] as HTMLInputElement;
@@ -2455,7 +2455,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ選択肢を更新するのじゃ
+   * シリーズ選択肢を更新する
    */
   private updateSeriesSelectOptions(): void {
     const seriesSelect = this.elements['series-alert-series-select'] as HTMLSelectElement;
@@ -2472,7 +2472,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * アラートチェックを開始するのじゃ
+   * アラートチェックを開始する
    */
   private startAlertCheck(): void {
     if (this.alertCheckInterval) {
@@ -2489,7 +2489,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * アラートUIの定期更新を開始するのじゃ
+   * アラートUIの定期更新を開始する
    */
   private startAlertUIUpdater(): void {
     // 10秒間隔でUIを更新（残り時間表示を更新）
@@ -2501,7 +2501,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラートをチェックするのじゃ
+   * シリーズアラートをチェックする
    */
   private async checkSeriesAlerts(): Promise<void> {
     try {
@@ -2519,7 +2519,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 単一のアラートをチェックするのじゃ
+   * 単一のアラートをチェックする
    */
   private async checkSingleAlert(alert: SeriesAlert): Promise<boolean> {
     try {
@@ -2555,7 +2555,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズの新しい動画をチェックするのじゃ
+   * シリーズの新しい動画をチェックする
    */
   private async checkForNewSeriesVideo(alert: SeriesAlert): Promise<boolean> {
     try {
@@ -2602,7 +2602,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ通知を表示するのじゃ（ブラウザ通知のみ）
+   * シリーズ通知を表示する（ブラウザ通知のみ）
    */
   private showSeriesNotification(alert: SeriesAlert): void {
     // ブラウザ通知のみ
@@ -2635,7 +2635,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 手動でアラートをチェックするのじゃ
+   * 手動でアラートをチェックする
    */
   private async manualCheckAlerts(): Promise<void> {
     try {
@@ -2687,7 +2687,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 通知権限を確認・要求するのじゃ
+   * 通知権限を確認・要求する
    */
   private async checkNotificationPermission(): Promise<void> {
     try {
@@ -2734,7 +2734,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 通知権限案内モーダルを開くのじゃ
+   * 通知権限案内モーダルを開く
    */
   private openNotificationPermissionModal(): void {
     this.elements['notification-permission-modal']?.classList.remove('hidden');
@@ -2744,14 +2744,14 @@ class WatchHistoryApp {
   }
 
   /**
-   * 通知権限案内モーダルを閉じるのじゃ
+   * 通知権限案内モーダルを閉じる
    */
   private closeNotificationPermissionModal(): void {
     this.elements['notification-permission-modal']?.classList.add('hidden');
   }
 
   /**
-   * 設定後の通知テストを実行するのじゃ
+   * 設定後の通知テストを実行する
    */
   private async testNotificationAfterSetup(): Promise<void> {
     try {
@@ -2805,7 +2805,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * タブ移動時の通知権限チェックを行うのじゃ
+   * タブ移動時の通知権限チェックを行う
    */
   private checkNotificationPermissionOnTab(): void {
     // シリーズアラートタブに移動したときに通知権限をチェック
@@ -2818,7 +2818,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 現在のブラウザに適した説明を強調表示するのじゃ
+   * 現在のブラウザに適した説明を強調表示する
    */
   private highlightCurrentBrowserInstructions(): void {
     // すべてのブラウザタブをリセット
@@ -2854,7 +2854,7 @@ class WatchHistoryApp {
   // ===== ユーティリティメソッド（シリーズ関連） =====
 
   /**
-   * シリーズ読み込み状態を表示するのじゃ
+   * シリーズ読み込み状態を表示する
    */
   private showSeriesLoading(show: boolean): void {
     const loading = this.elements['series-loading'];
@@ -2864,7 +2864,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラート読み込み状態を表示するのじゃ
+   * シリーズアラート読み込み状態を表示する
    */
   private showSeriesAlertLoading(show: boolean): void {
     const loading = this.elements['series-alert-loading'];
@@ -2874,7 +2874,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ空の状態を表示するのじゃ
+   * シリーズ空の状態を表示する
    */
   private showSeriesEmptyState(show: boolean): void {
     const emptyState = this.elements['series-empty-state'];
@@ -2884,7 +2884,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラート空の状態を表示するのじゃ
+   * シリーズアラート空の状態を表示する
    */
   private showSeriesAlertEmptyState(show: boolean): void {
     const emptyState = this.elements['series-alert-empty-state'];
@@ -2894,7 +2894,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ数を更新するのじゃ
+   * シリーズ数を更新する
    */
   private updateSeriesCount(): void {
     const seriesCount = this.elements['series-count'];
@@ -2904,7 +2904,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズアラート数を更新するのじゃ
+   * シリーズアラート数を更新する
    */
   private updateSeriesAlertCount(): void {
     const alertCount = this.elements['series-alert-count'];
@@ -2914,7 +2914,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズ情報を取得するのじゃ
+   * シリーズ情報を取得する
    */
   private async getSeriesInfo(seriesId: number): Promise<SeriesInfo | null> {
     try {
@@ -2935,7 +2935,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズナビゲーションHTMLを作成するのじゃ
+   * シリーズナビゲーションHTMLを作成する
    */
   private createSeriesNavigationHTML(seriesInfo: SeriesInfo): string {
     const { video } = seriesInfo;
@@ -2986,7 +2986,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * シリーズから動画を開くのじゃ
+   * シリーズから動画を開く
    */
   private openVideoFromSeries(videoId: string): void {
     const url = `https://www.nicovideo.jp/watch/${videoId}`;
@@ -2997,7 +2997,7 @@ class WatchHistoryApp {
   // ===== データベース管理関連メソッド =====
 
   /**
-   * データベース管理モーダルを開くのじゃ
+   * データベース管理モーダルを開く
    */
   private async openDatabaseManagementModal(): Promise<void> {
     // 現在の状態を取得
@@ -3009,14 +3009,14 @@ class WatchHistoryApp {
   }
 
   /**
-   * データベース管理モーダルを閉じるのじゃ
+   * データベース管理モーダルを閉じる
    */
   private closeDatabaseManagementModal(): void {
     this.elements['database-management-modal']?.classList.add('hidden');
   }
 
   /**
-   * 永続化を要求するのじゃ
+   * 永続化を要求する
    */
   private async requestPersistence(): Promise<void> {
     try {
@@ -3040,7 +3040,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 永続化状態を更新するのじゃ
+   * 永続化状態を更新する
    */
   private async refreshPersistenceStatus(): Promise<void> {
     try {
@@ -3057,7 +3057,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * マイグレーションを実行するのじゃ
+   * マイグレーションを実行する
    */
   private async runMigration(): Promise<void> {
     try {
@@ -3074,7 +3074,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * マイグレーション状態を確認するのじゃ
+   * マイグレーション状態を確認する
    */
   private checkMigrationStatus(): void {
     this.migrationProgress = watchHistoryDB.getMigrationProgress();
@@ -3082,7 +3082,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * バックアップを作成するのじゃ
+   * バックアップを作成する
    */
   private async createBackup(): Promise<void> {
     try {
@@ -3111,7 +3111,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * バックアップリストを更新するのじゃ
+   * バックアップリストを更新します
    */
   private async refreshBackupList(): Promise<void> {
     await Promise.resolve();
@@ -3124,7 +3124,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * データベース設定を更新するのじゃ
+   * データベース設定を更新する
    */
   private updateDatabaseConfig(): void {
     const autoMigration = (this.elements['auto-migration-checkbox'] as HTMLInputElement)?.checked || false;
@@ -3144,7 +3144,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * データベース設定を更新するのじゃ
+   * データベース設定を更新
    */
   private async refreshDatabaseConfig(): Promise<void> {
     await Promise.resolve();
@@ -3157,7 +3157,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * マイグレーション進捗を処理するのじゃ
+   * マイグレーション進捗を処理する
    */
   private handleMigrationProgress(event: CustomEvent): void {
     const progress = event.detail as MigrationProgress;
@@ -3166,7 +3166,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * 永続化UIを更新するのじゃ
+   * 永続化UIを更新する
    */
   private updatePersistenceUI(): void {
     if (!this.persistenceStatus) return;
@@ -3198,7 +3198,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * マイグレーションUIを更新するのじゃ
+   * マイグレーションUIを更新する
    */
   private updateMigrationUI(): void {
     if (!this.migrationProgress) return;
@@ -3227,7 +3227,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * データベース設定UIを更新するのじゃ
+   * データベース設定UIを更新する
    */
   private updateDatabaseConfigUI(): void {
     if (!this.databaseConfig) return;
@@ -3252,7 +3252,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * バックアップリストUIを更新するのじゃ
+   * バックアップリストUIを更新する
    */
   private updateBackupListUI(backups: Array<{ key: string; timestamp: number; version: number }>): void {
     const container = this.elements['backup-list-container'];
@@ -3306,7 +3306,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * バックアップを復元するのじゃ
+   * バックアップを復元する
    */
   private async restoreBackup(backupKey: string): Promise<void> {
     if (!confirm('バックアップを復元しますか？現在のデータは失われます。')) {
@@ -3329,7 +3329,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * バックアップを削除するのじゃ
+   * バックアップを削除する
    */
   private deleteBackup(backupKey: string): void {
     if (!confirm('バックアップを削除しますか？')) {
@@ -3347,7 +3347,7 @@ class WatchHistoryApp {
   }
 
   /**
-   * バイト数をフォーマットするのじゃ
+   * バイト数をフォーマットする
    */
   private formatBytes(bytes: number): string {
     if (bytes === 0) return '0 B';

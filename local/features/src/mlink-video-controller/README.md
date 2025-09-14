@@ -385,4 +385,4 @@ localStorage.setItem('debug_module_manager', 'true');
 window.ModuleManagerInstance.getModuleStatus('module_id');
 ```
 
-この文書を参考に、効率的にmlink-video-controllerプロジェクトを編集できるのじゃ！ 
+この文書を参考に、効率的にmlink-video-controllerプロジェクトを編集できます！ 

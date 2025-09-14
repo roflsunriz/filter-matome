@@ -30,7 +30,7 @@ true              &&(function polyfill() {
 
 const formatters = {
   /**
-   * ファイルサイズを解析して数値に変換するのじゃ
+   * ファイルサイズを解析して数値に変換する
    * @param sizeStr - 解析するファイルサイズの文字列
    * @returns KiBに変換されたサイズ
    */
@@ -42,7 +42,7 @@ const formatters = {
     return result;
   },
   /**
-   * ファイルサイズを読みやすい形式に整形するのじゃ
+   * ファイルサイズを読みやすい形式に整形する
    * @param bytes - バイト数
    * @returns 整形されたファイルサイズ
    */
@@ -64,7 +64,7 @@ const MEDIA_TYPES = {
 };
 class StatisticsManager {
   /**
-   * メディアファイルの統計情報を生成するのじゃ
+   * メディアファイルの統計情報を生成する
    * @param mediaFiles - メディアファイルの情報
    * @returns フォーマット別の統計情報
    */
@@ -75,7 +75,7 @@ class StatisticsManager {
     }, {});
   }
   /**
-   * ファイルをフィルタリングするのじゃ
+   * ファイルをフィルタリングする
    */
   static #getMediaRef(file) {
     const media = file.media;
@@ -101,7 +101,7 @@ class StatisticsManager {
     });
   }
   /**
-   * フォーマット別の統計を計算するのじゃ
+   * フォーマット別の統計を計算する
    */
   static #calculateFormatStats(files) {
     const stats = {};
@@ -128,7 +128,7 @@ class StatisticsManager {
     return stats;
   }
   /**
-   * ファイルのフォーマットを取得するのじゃ
+   * ファイルのフォーマットを取得する
    */
   static #getFirstTrack(file) {
     const media = file.media;
@@ -148,7 +148,7 @@ class StatisticsManager {
     return typeof fmt === "string" && fmt.length > 0 ? fmt : "Unknown";
   }
   /**
-   * ファイルサイズを取得するのじゃ
+   * ファイルサイズを取得する
    */
   static #getFileSize(file) {
     const first = this.#getFirstTrack(file);
@@ -158,7 +158,7 @@ class StatisticsManager {
     return Number.isNaN(parsed) ? 0 : parsed;
   }
   /**
-   * 統計情報をHTML形式で出力するのじゃ
+   * 統計情報をHTML形式で出力する
    */
   static generateStatsHTML(stats) {
     let html = "";
@@ -181,7 +181,7 @@ class StatisticsManager {
     return html;
   }
   /**
-   * 合計統計を計算するのじゃ
+   * 合計統計を計算する
    */
   static calculateTotalStats(stats) {
     const totals = {
@@ -288,29 +288,29 @@ class NicoVideoMediaInfo {
     return this.#isRecord(first) ? first : void 0;
   }
   /**
-   * 音声ファイルの情報を取得するのじゃ
+   * 音声ファイルの情報を取得する
    */
   getAudioFiles() {
     const audioFiles = this.mediaInfo.filter((info) => {
       const ref = this.#safeGetMediaRef(info);
       return ref.includes(constants.AudioInitFile) || ref.includes(constants.AudioInitFile2) || ref.includes(constants.AudioInitFile3);
     });
-    console.log("音声ファイルの情報を取得するのじゃ:", audioFiles);
+    console.log("音声ファイルの情報を取得する:", audioFiles);
     return audioFiles;
   }
   /**
-   * 映像ファイルの情報を取得するのじゃ
+   * 映像ファイルの情報を取得する
    */
   getVideoFiles() {
     const videoFiles = this.mediaInfo.filter((info) => {
       const ref = this.#safeGetMediaRef(info);
       return ref.includes(constants.VideoInitFile) || ref.includes(constants.VideoInitFile2) || ref.includes(constants.VideoInitFile3);
     });
-    console.log("映像ファイルの情報を取得するのじゃ:", videoFiles);
+    console.log("映像ファイルの情報を取得する:", videoFiles);
     return videoFiles;
   }
   /**
-   * 全体のファイルサイズを取得するのじゃ
+   * 全体のファイルサイズを取得する
    */
   getTotalFileSize() {
     const totalFileSize = this.mediaInfo.reduce((total, info) => {
@@ -320,11 +320,11 @@ class NicoVideoMediaInfo {
       const fileSize = parseInt(s, 10);
       return total + (Number.isNaN(fileSize) ? 0 : fileSize);
     }, 0);
-    console.log("全体のファイルサイズを取得するのじゃ:", totalFileSize);
+    console.log("全体のファイルサイズを取得する:", totalFileSize);
     return totalFileSize;
   }
   /**
-   * ファイルの作成日時情報を取得するのじゃ
+   * ファイルの作成日時情報を取得する
    */
   getCreationDates() {
     const creationDates = this.mediaInfo.map((info) => {
@@ -336,17 +336,17 @@ class NicoVideoMediaInfo {
         created: typeof createdRaw === "string" ? createdRaw : void 0
       };
     });
-    console.log("ファイルの作成日時情報を取得するのじゃ:", creationDates);
+    console.log("ファイルの作成日時情報を取得する:", creationDates);
     return creationDates;
   }
   /**
-   * メディア情報の詳細を取得するのじゃ
+   * メディア情報の詳細を取得する
    */
   getMediaDetails() {
     const generalInfo = this.#extractGeneralInfo();
     const videoInfo = this.#extractVideoInfo();
     const audioInfo = this.#extractAudioInfo();
-    console.log("メディア情報の詳細を取得するのじゃ:", {
+    console.log("メディア情報の詳細を取得する:", {
         general: generalInfo,
         video: videoInfo,
         audio: audioInfo
@@ -358,25 +358,25 @@ class NicoVideoMediaInfo {
     };
   }
   /**
-   * 統計情報を取得するのじゃ
+   * 統計情報を取得する
    */
   getFormatStats() {
     const formatStats = StatisticsManager.generateFormatStats(this.mediaInfo);
-    console.log("統計情報を取得するのじゃ:", formatStats);
+    console.log("統計情報を取得する:", formatStats);
     return formatStats;
   }
   /**
-   * 一般情報を抽出するのじゃ
+   * 一般情報を抽出する
    */
   #extractGeneralInfo() {
     const master = this.mediaInfo.find((item) => this.#safeGetMediaRef(item).includes(constants.MasterFile));
     const generalTrack = master ? this.#safeFindTrackByType(master, "General") : void 0;
     const generalInfo = generalTrack ?? (master ? this.#safeGetFirstTrack(master) : void 0);
-    console.log("一般情報を抽出するのじゃ:", generalInfo);
+    console.log("一般情報を抽出する:", generalInfo);
     return generalInfo;
   }
   /**
-   * 映像情報を抽出するのじゃ
+   * 映像情報を抽出する
    */
   #extractVideoInfo() {
     const master = this.mediaInfo.find((item) => this.#safeGetMediaRef(item).includes(constants.MasterFile));
@@ -387,11 +387,11 @@ class NicoVideoMediaInfo {
     });
     const initVideoTrack = initVideo ? this.#safeFindTrackByType(initVideo, "Video") ?? this.#safeGetFirstTrack(initVideo) : void 0;
     const videoInfo = videoTrack ?? initVideoTrack;
-    console.log("映像情報を抽出するのじゃ:", videoInfo);
+    console.log("映像情報を抽出する:", videoInfo);
     return videoInfo;
   }
   /**
-   * 音声情報を抽出するのじゃ
+   * 音声情報を抽出する
    */
   #extractAudioInfo() {
     const master = this.mediaInfo.find((item) => this.#safeGetMediaRef(item).includes(constants.MasterFile));
@@ -402,30 +402,30 @@ class NicoVideoMediaInfo {
     });
     const initAudioTrack = initAudio ? this.#safeFindTrackByType(initAudio, "Audio") ?? this.#safeGetFirstTrack(initAudio) : void 0;
     const audioInfo = audioTrack ?? initAudioTrack;
-    console.log("音声情報を抽出するのじゃ:", audioInfo);
+    console.log("音声情報を抽出する:", audioInfo);
     return audioInfo;
   }
 }
 
 const validators = {
   /**
-   * メディアファイルの基本情報をバリデーションするのじゃ
+   * メディアファイルの基本情報をバリデーションする
    * @param mediaInfo - メディア情報オブジェクト
    * @returns バリデーション結果
    */
   isValidMediaInfo(mediaInfo) {
     if (!Array.isArray(mediaInfo)) {
-      console.error("メディア情報が配列ではないのじゃ");
+      console.error("メディア情報が配列ではない");
       return false;
     }
     if (mediaInfo.length === 0) {
-      console.error("メディア情報が空なのじゃ");
+      console.error("メディア情報が空");
       return false;
     }
     return true;
   },
   /**
-   * ファイルサイズの値をバリデーションするのじゃ
+   * ファイルサイズの値をバリデーションする
    * @param size - ファイルサイズ
    * @returns バリデーション結果
    */
@@ -437,7 +437,7 @@ const validators = {
     return !isNaN(parsedSize) && parsedSize >= 0;
   },
   /**
-   * トラック情報をバリデーションするのじゃ
+   * トラック情報をバリデーションする
    * @param track - トラック情報
    * @returns バリデーション結果
    */
@@ -445,7 +445,7 @@ const validators = {
     return !!track && typeof track === "object" && "@type" in track;
   },
   /**
-   * ビットレートの値をバリデーションするのじゃ
+   * ビットレートの値をバリデーションする
    * @param bitrate - ビットレート
    * @returns バリデーション結果
    */
@@ -457,7 +457,7 @@ const validators = {
     return !isNaN(parsedBitrate) && parsedBitrate > 0;
   },
   /**
-   * 解像度の値をバリデーションするのじゃ
+   * 解像度の値をバリデーションする
    * @param width - 幅
    * @param height - 高さ
    * @returns バリデーション結果
@@ -468,7 +468,7 @@ const validators = {
     return !isNaN(parsedWidth) && !isNaN(parsedHeight) && parsedWidth > 0 && parsedHeight > 0;
   },
   /**
-   * メディアファイルの参照パスをバリデーションするのじゃ
+   * メディアファイルの参照パスをバリデーションする
    * @param ref - ファイルの参照パス
    * @returns バリデーション結果
    */
@@ -480,7 +480,7 @@ const validators = {
     return validExtensions.some((ext) => ref.includes(ext));
   },
   /**
-   * エラーメッセージを生成するのじゃ
+   * エラーメッセージを生成する
    * @param message - エラーメッセージ
    * @param value - 問題のある値
    * @returns フォーマットされたエラーメッセージ
@@ -823,7 +823,7 @@ class UIUpdater {
     statsDiv.innerHTML = html;
   }
   /**
-   * タイトルを更新するのじゃ
+   * タイトルを更新する
    * @param videoTitle - 動画のタイトル
    * @param videoId - 動画のID
    */
@@ -832,7 +832,7 @@ class UIUpdater {
     if (titleElement) {
       titleElement.innerHTML = `nlMediaInfo: ${videoTitle} (${videoId})`;
     } else {
-      console.warn("titleタグが見つからないのじゃ");
+      console.warn("titleタグが見つかりません");
     }
   }
 }
@@ -1032,18 +1032,18 @@ function initializeApp() {
   UIUpdater.updateTitle(constants.nlMediaInfoVideoTitle, constants.nlMediaInfoVideoId);
   getMediaInfo(`${constants.nlMediaInfobaseurl}${constants.nlMediaInfoVideoId}`).then((data) => {
     if (!validators.isValidMediaInfo(data)) {
-      throw new Error("メディア情報の形式が不正なのじゃ");
+      throw new Error("メディア情報の形式が不正です");
     }
     const parsedData = MediaInfoParser.parse(data);
     console.log("パース後のデータ:", parsedData);
     return parsedData;
   }).then((parsedData) => {
     if (!parsedData || !parsedData.result) {
-      throw new Error("パースされたデータが不正なのじゃ");
+      throw new Error("パースされたデータが不正です");
     }
     UIUpdater.updateAll(parsedData);
   }).catch((error) => {
-    console.error("メディア情報の取得に失敗したのじゃ:", error);
+    console.error("メディア情報の取得に失敗しました:", error);
     const loadingElement = document.getElementById("loading");
     const errorElement = document.getElementById("error");
     if (loadingElement) loadingElement.style.display = "none";
@@ -1062,7 +1062,7 @@ async function getMediaInfo(url) {
     }
     return await response.json();
   } catch (error) {
-    console.error("メディア情報の取得中にエラーが発生したのじゃ:", error);
+    console.error("メディア情報の取得中にエラーが発生しました:", error);
     throw error;
   }
 }

@@ -7,7 +7,7 @@ import { ExtendedDocument, ExtendedHTMLElement } from '@/types/index.js';
 
 /**
  * シャドウDOM版のプレイヤーコントロール
- * Web Componentsとして実装してスタイル分離を実現するのじゃ
+ * Web Componentsとして実装してスタイル分離を実現
  */
 export class PlayerControlsShadow extends HTMLElement {
   private shadow: ShadowRoot;
@@ -78,7 +78,7 @@ export class PlayerControlsShadow extends HTMLElement {
     const savedControlsMode = localStorage.getItem('controlsMode') || PLAYER_SETTINGS.CONTROLS_MODE.HOVER;
     this.applyControlsMode(savedControlsMode);
     
-    window.logger.info('PlayerControlsShadowの初期化が完了したのじゃ！');
+    window.logger.info('PlayerControlsShadowの初期化が完了しました！');
   }
 
   /**
@@ -86,7 +86,7 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   setVideoElement(video: HTMLVideoElement): void {
     if (!video) {
-      window.logger.error('無効なビデオ要素が渡されたのじゃ');
+      window.logger.error('無効なビデオ要素が渡されました');
       return;
     }
     
@@ -101,7 +101,7 @@ export class PlayerControlsShadow extends HTMLElement {
     // 設定の初期化
     void this.initializeSettings();
     
-    window.logger.info('ビデオ要素が設定されたのじゃ！');
+    window.logger.info('ビデオ要素が設定されました！');
   }
 
   /**
@@ -800,7 +800,7 @@ export class PlayerControlsShadow extends HTMLElement {
         if (!video) return;
         
         if (video.paused) {
-          video.play().catch(e => window.logger.error('再生開始に失敗したのじゃ:', e));
+          video.play().catch(e => window.logger.error('再生開始に失敗しました:', e));
         } else {
           video.pause();
           this.userPaused = true;
@@ -1009,7 +1009,7 @@ export class PlayerControlsShadow extends HTMLElement {
             this.updateNGRegexList(true);
           }
         } catch (e) {
-          window.logger.error('無効な正規表現なのじゃ:', e);
+          window.logger.error('無効な正規表現です:', e);
           ngRegexInput.classList.add('error');
           setTimeout(() => {
             ngRegexInput.classList.remove('error');
@@ -1363,7 +1363,7 @@ export class PlayerControlsShadow extends HTMLElement {
       }
 
     } catch (error) {
-      window.logger.error('コメント設定の読み込みに失敗したのじゃ:', error);
+      window.logger.error('コメント設定の読み込みに失敗しました:', error);
     }
   }
 
@@ -1509,10 +1509,10 @@ export class PlayerControlsShadow extends HTMLElement {
       // 適用成功のフィードバック
       this.showApplyFeedback();
 
-      window.logger.info(`コメント設定を適用したのじゃ！ 透明度: ${this.commentOpacity}, 色: ${this.commentColor}, NGワード: ${this.ngWords.length}件, NG正規表現: ${this.ngRegex.length}件`);
+      window.logger.info(`コメント設定を適用しました！ 透明度: ${this.commentOpacity}, 色: ${this.commentColor}, NGワード: ${this.ngWords.length}件, NG正規表現: ${this.ngRegex.length}件`);
 
     } catch (error) {
-      window.logger.error('コメント設定の適用に失敗したのじゃ:', error);
+      window.logger.error('コメント設定の適用に失敗しました:', error);
     }
   }
 
@@ -1550,7 +1550,7 @@ export class PlayerControlsShadow extends HTMLElement {
         
         if (playerContainer) {
           // デバッグ情報
-          window.logger.info('全画面化を試行するのじゃ:', {
+          window.logger.info('全画面化を試行します:', {
             hasRequestFullscreen: !!playerContainer.requestFullscreen,
             hasMozRequestFullScreen: !!playerContainer.mozRequestFullScreen,
             hasWebkitRequestFullscreen: !!playerContainer.webkitRequestFullscreen,
@@ -1560,29 +1560,29 @@ export class PlayerControlsShadow extends HTMLElement {
           if (playerContainer.requestFullscreen) {
             playerContainer.requestFullscreen()
               .then(() => {
-                window.logger.info('標準全画面API成功したのじゃ');
+                window.logger.info('標準全画面API成功しました');
                 // 成功時にクラスも追加（念のため）
                 document.documentElement.classList.add('fullscreen-active');
                 document.body.classList.add('nc-fullscreen-active');
                 playerContainer.classList.add('nc-fullscreen-player');
               })
               .catch((err: Error) => {
-                window.logger.error('標準全画面APIが失敗したのじゃ:', err);
+                window.logger.error('標準全画面APIが失敗しました:', err);
                 // フォールバック処理
                 this.fallbackFullscreen(playerContainer);
               });
           } else if (playerContainer.mozRequestFullScreen) {
             playerContainer.mozRequestFullScreen();
-            window.logger.info('Firefox全画面API使用したのじゃ');
+            window.logger.info('Firefox全画面API使用しました');
           } else if (playerContainer.webkitRequestFullscreen) {
             playerContainer.webkitRequestFullscreen();
-            window.logger.info('WebKit全画面API使用したのじゃ');
+            window.logger.info('WebKit全画面API使用しました');
           } else if (playerContainer.msRequestFullscreen) {
             playerContainer.msRequestFullscreen();
-            window.logger.info('IE全画面API使用したのじゃ');
+            window.logger.info('IE全画面API使用しました');
           } else {
             // 全APIが使用不可の場合のフォールバック
-            window.logger.warn('全画面APIが利用できないため、フォールバックを使用するのじゃ');
+            window.logger.warn('全画面APIが利用できないため、フォールバックを使用します');
             this.fallbackFullscreen(playerContainer);
           }
         }
@@ -1591,7 +1591,7 @@ export class PlayerControlsShadow extends HTMLElement {
         if (doc.exitFullscreen) {
           doc.exitFullscreen()
             .then(() => {
-              window.logger.info('全画面解除成功したのじゃ');
+              window.logger.info('全画面解除成功しました');
               // クラスも削除
               document.documentElement.classList.remove('fullscreen-active');
               document.body.classList.remove('nc-fullscreen-active');
@@ -1601,7 +1601,7 @@ export class PlayerControlsShadow extends HTMLElement {
               }
             })
             .catch((err: Error) => {
-              window.logger.error('全画面解除が失敗したのじゃ:', err);
+              window.logger.error('全画面解除が失敗しました:', err);
             });
         } else if (doc.mozCancelFullScreen) {
           doc.mozCancelFullScreen();
@@ -1612,7 +1612,7 @@ export class PlayerControlsShadow extends HTMLElement {
         }
       }
     } catch (error) {
-      window.logger.error("全画面切り替えでエラーが発生したのじゃ:", error);
+      window.logger.error("全画面切り替えでエラーが発生しました:", error);
       // エラー時もフォールバックを試行
       const playerContainer = this.closest('.custom-player') as ExtendedHTMLElement;
       if (playerContainer) {
@@ -1625,7 +1625,7 @@ export class PlayerControlsShadow extends HTMLElement {
    * フォールバック全画面処理
    */
   private fallbackFullscreen(playerContainer: HTMLElement): void {
-    window.logger.info('フォールバック全画面モードを使用するのじゃ');
+    window.logger.info('フォールバック全画面モードを使用します');
     
     // クラスベースの全画面モード
     document.documentElement.classList.add('fullscreen-active');
@@ -1639,7 +1639,7 @@ export class PlayerControlsShadow extends HTMLElement {
         document.body.classList.remove('nc-fullscreen-active');
         playerContainer.classList.remove('nc-fullscreen-player');
         document.removeEventListener('keydown', handleEscape);
-        window.logger.info('フォールバック全画面モードを終了したのじゃ');
+        window.logger.info('フォールバック全画面モードを終了しました');
       }
     };
     
@@ -1685,7 +1685,7 @@ export class PlayerControlsShadow extends HTMLElement {
     if (!video) return;
     
     try {
-      window.logger.info('ビデオ要素の強制中央配置を実行するのじゃ');
+      window.logger.info('ビデオ要素の強制中央配置を実行します');
       
       // 画面サイズを取得
       const screenWidth = window.innerWidth;
@@ -1727,15 +1727,15 @@ export class PlayerControlsShadow extends HTMLElement {
           const renderer = (this.commentSystem as unknown as { renderer?: { resizeCanvas?: () => void } }).renderer;
           if (renderer && renderer.resizeCanvas) {
             renderer.resizeCanvas();
-            window.logger.info('コメントキャンバスのリサイズを実行したのじゃ');
+            window.logger.info('コメントキャンバスのリサイズを実行しました');
           }
         }
       }, 50);
       
-      window.logger.info('強制中央配置完了したのじゃ');
+      window.logger.info('強制中央配置完了しました');
       
     } catch (error) {
-      window.logger.error('ビデオ強制中央配置でエラーが発生したのじゃ:', error);
+      window.logger.error('ビデオ強制中央配置でエラーが発生しました:', error);
     }
   }
 
@@ -1766,7 +1766,7 @@ export class PlayerControlsShadow extends HTMLElement {
       case "k":
         e.preventDefault();
         if (this.video.paused) {
-          this.video.play().catch(err => window.logger.error("再生開始に失敗したのじゃ:", err));
+          this.video.play().catch(err => window.logger.error("再生開始に失敗しました:", err));
         } else {
           this.video.pause();
           this.userPaused = true;
@@ -1819,7 +1819,7 @@ export class PlayerControlsShadow extends HTMLElement {
       return;
     }
     
-    this.video.play().catch(err => window.logger.error('自動再生に失敗したのじゃ:', err));
+    this.video.play().catch(err => window.logger.error('自動再生に失敗しました:', err));
   }
 
   /**
@@ -1842,7 +1842,7 @@ export class PlayerControlsShadow extends HTMLElement {
     
     // DOMの準備を確実に待つ
     if (!this.shadow || !this.shadow.firstElementChild) {
-      window.logger.warn('シャドウDOMがまだ準備されていないのじゃ');
+      window.logger.warn('シャドウDOMがまだ準備されていません');
       return;
     }
     
@@ -1850,7 +1850,7 @@ export class PlayerControlsShadow extends HTMLElement {
     this.setupInitialIcons();
     this.initialized = true;
     
-    window.logger.info('PlayerControlsShadowの初期化が完了したのじゃ');
+    window.logger.info('PlayerControlsShadowの初期化が完了しました');
   }
 
   /**
@@ -1942,7 +1942,7 @@ export class PlayerControlsShadow extends HTMLElement {
     if (!video) return;
     
     try {
-      window.logger.info('ビデオ要素のスタイルをリセットするのじゃ');
+      window.logger.info('ビデオ要素のスタイルをリセットします');
       
       // 強制スタイルをクリア
       video.style.position = '';
@@ -1954,10 +1954,10 @@ export class PlayerControlsShadow extends HTMLElement {
       video.style.width = '';
       video.style.height = '';
       
-      window.logger.info('ビデオスタイルリセット完了したのじゃ');
+      window.logger.info('ビデオスタイルリセット完了しました');
       
     } catch (error) {
-      window.logger.error('ビデオスタイルリセットでエラーが発生したのじゃ:', error);
+      window.logger.error('ビデオスタイルリセットでエラーが発生しました:', error);
     }
   }
 }
@@ -1965,7 +1965,7 @@ export class PlayerControlsShadow extends HTMLElement {
 // カスタムエレメントとして登録
 if (!customElements.get('player-controls-shadow')) {
   customElements.define('player-controls-shadow', PlayerControlsShadow);
-  window.logger.info('player-controls-shadowカスタムエレメントを登録したのじゃ！');
+  window.logger.info('player-controls-shadowカスタムエレメントを登録しました！');
 } else {
-  window.logger.info('player-controls-shadowカスタムエレメントは既に登録済みじゃ');
+  window.logger.info('player-controls-shadowカスタムエレメントは既に登録済みです');
 }

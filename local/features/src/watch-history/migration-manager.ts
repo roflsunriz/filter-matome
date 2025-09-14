@@ -1,8 +1,8 @@
 /**
- * ニコニコ動画視聴履歴拡張 - マイグレーション管理なのじゃ
+ * ニコニコ動画視聴履歴拡張 - マイグレーション管理
  * 
  * @description データベースマイグレーション・永続化管理クラス
- * @author わらわ（のじゃロリ娘）
+ * @author roflsunriz
  */
 
 import type { 
@@ -17,7 +17,7 @@ import type {
 import { logger } from '../common/logger';
 
 /**
- * マイグレーション・永続化管理クラスなのじゃ
+ * マイグレーション・永続化管理クラス
  */
 export class MigrationManager {
   private config: DatabaseManagementConfig;
@@ -48,7 +48,7 @@ export class MigrationManager {
   }
 
   /**
-   * マイグレーション定義を初期化するのじゃ
+   * マイグレーション定義を初期化する
    */
   private initializeMigrations(): void {
     // v1 → v2: シリーズ情報を追加
@@ -122,7 +122,7 @@ export class MigrationManager {
   }
 
   /**
-   * 必要なマイグレーションを実行するのじゃ
+   * 必要なマイグレーションを実行する
    */
   async executeMigrations(db: IDBDatabase, oldVersion: number, newVersion: number): Promise<void> {
     const requiredMigrations = this.migrations.filter(
@@ -189,7 +189,7 @@ export class MigrationManager {
   }
 
   /**
-   * データベースの永続化を要求するのじゃ
+   * データベースの永続化を要求する
    */
   async requestPersistence(): Promise<DBResult<boolean>> {
     try {
@@ -219,7 +219,7 @@ export class MigrationManager {
   }
 
   /**
-   * 永続化状態を取得するのじゃ
+   * 永続化状態を取得する
    */
   async getPersistenceStatus(): Promise<DBResult<PersistenceStatus>> {
     try {
@@ -259,7 +259,7 @@ export class MigrationManager {
   }
 
   /**
-   * バックアップを作成するのじゃ
+   * バックアップを作成する
    */
   private async createBackup(db: IDBDatabase): Promise<void> {
     if (!this.config.autoBackup) return;
@@ -306,7 +306,7 @@ export class MigrationManager {
   }
 
   /**
-   * 古いバックアップを削除するのじゃ
+   * 古いバックアップを削除する
    */
   private cleanupOldBackups(): void {
     try {
@@ -329,7 +329,7 @@ export class MigrationManager {
   }
 
   /**
-   * マイグレーション進捗イベントを発行するのじゃ
+   * マイグレーション進捗イベントを発行する
    */
   private dispatchProgressEvent(): void {
     const event = new CustomEvent('migrationProgress', {
@@ -339,21 +339,21 @@ export class MigrationManager {
   }
 
   /**
-   * 現在のマイグレーション進捗を取得するのじゃ
+   * 現在のマイグレーション進捗を取得する
    */
   getMigrationProgress(): MigrationProgress {
     return { ...this.currentProgress };
   }
 
   /**
-   * マイグレーション設定を取得するのじゃ
+   * マイグレーション設定を取得する
    */
   getConfig(): DatabaseManagementConfig {
     return { ...this.config };
   }
 
   /**
-   * マイグレーション設定を更新するのじゃ
+   * マイグレーション設定を更新する
    */
   updateConfig(newConfig: Partial<DatabaseManagementConfig>): void {
     this.config = { ...this.config, ...newConfig };
@@ -361,7 +361,7 @@ export class MigrationManager {
   }
 
   /**
-   * 利用可能なバックアップ一覧を取得するのじゃ
+   * 利用可能なバックアップ一覧を取得する
    */
   getAvailableBackups(): Array<{ key: string; timestamp: number; version: number }> {
     try {
@@ -390,7 +390,7 @@ export class MigrationManager {
   }
 
   /**
-   * バックアップからリストアするのじゃ
+   * バックアップからリストアする
    */
   async restoreFromBackup(backupKey: string): Promise<DBResult<void>> {
     try {

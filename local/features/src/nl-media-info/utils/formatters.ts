@@ -5,7 +5,7 @@ export interface Formatters {
 
 export const formatters: Formatters = {
   /**
-   * ファイルサイズを解析して数値に変換するのじゃ
+   * ファイルサイズを解析して数値に変換する
    * @param sizeStr - 解析するファイルサイズの文字列
    * @returns KiBに変換されたサイズ
    */
@@ -22,7 +22,7 @@ export const formatters: Formatters = {
   },
 
   /**
-   * ファイルサイズを読みやすい形式に整形するのじゃ
+   * ファイルサイズを読みやすい形式に整形する
    * @param bytes - バイト数
    * @returns 整形されたファイルサイズ
    */

@@ -215,4 +215,4 @@ window.NicoCommon.createHeader('container-id', config)
 - **アイコン**: lazy loading対応
 - **通知**: メモリリーク防止
 
-この文書を参考に、効率的にcommonプロジェクトを編集・拡張できるのじゃ！ 
+この文書を参考に、効率的にcommonプロジェクトを編集・拡張できます！ 

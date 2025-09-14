@@ -169,7 +169,7 @@ export class MlinkVideoController extends BasePanel {
       
       const templates = this.loadTemplates();
       if (!templates.panel) {
-        throw new Error('パネルテンプレートが見つからないのじゃ');
+        throw new Error('パネルテンプレートが見つかりません');
       }
 
       const template = document.createElement('template');

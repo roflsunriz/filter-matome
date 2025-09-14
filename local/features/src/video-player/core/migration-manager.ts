@@ -1,6 +1,6 @@
 /**
  * データベースマイグレーション管理システム
- * 自動昇格・バージョン管理を司る重要なシステムなのじゃ
+ * 自動昇格・バージョン管理を司る重要なシステム
  */
 
 import { 
@@ -37,7 +37,7 @@ export class MigrationManager {
   ): Promise<{ success: boolean; error?: string }> {
     
     if (this.migrationInProgress) {
-      return { success: false, error: '既にマイグレーションが実行中なのじゃ' };
+      return { success: false, error: '既にマイグレーションが実行中です' };
     }
 
     this.migrationInProgress = true;
@@ -68,7 +68,7 @@ export class MigrationManager {
       
       return { 
         success: false, 
-        error: error instanceof Error ? error.message : 'マイグレーションに失敗したのじゃ' 
+        error: error instanceof Error ? error.message : 'マイグレーションに失敗しました' 
       };
     } finally {
       this.migrationInProgress = false;
@@ -85,7 +85,7 @@ export class MigrationManager {
     const migration = MIGRATION_CONFIGS[version];
     
     if (!migration) {
-      throw new Error(`バージョン ${version} のマイグレーション設定が見つからないのじゃ`);
+      throw new Error(`バージョン ${version} のマイグレーション設定が見つかりません`);
     }
 
     window.logger?.info(`マイグレーション実行中: v${version} - ${migration.description}`);
@@ -173,7 +173,7 @@ export class MigrationManager {
    */
   private async rollback(db: IDBDatabase, targetVersion: number): Promise<void> {
     if (!this.backupData.stores) {
-      window.logger?.error('バックアップデータが見つからないのじゃ');
+      window.logger?.error('バックアップデータが見つかりません');
       return;
     }
 
@@ -281,7 +281,7 @@ export class MigrationManager {
         localStorage.removeItem(key);
       });
       
-      window.logger?.debug('古いバックアップを削除したのじゃ');
+      window.logger?.debug('古いバックアップを削除しました');
     } catch (error) {
       window.logger?.warn('バックアップクリーンアップ失敗:', error);
     }
@@ -308,7 +308,7 @@ export class MigrationManager {
           resolve(result && typeof result.version === 'number' ? result.version : 1);
         };
         request.onerror = () => {
-          window.logger?.warn('バージョン取得失敗、初期バージョンを返すのじゃ');
+          window.logger?.warn('バージョン取得失敗');
           resolve(1);
         };
       });
@@ -369,7 +369,7 @@ export class MigrationManager {
       const expectedStores = DB_VERSION_HISTORY[DB_CONFIG.CURRENT_VERSION].stores;
       for (const storeName of expectedStores) {
         if (!db.objectStoreNames.contains(storeName)) {
-          errors.push(`必要なストア "${storeName}" が存在しないのじゃ`);
+          errors.push(`必要なストア "${storeName}" が存在しません`);
         }
       }
 

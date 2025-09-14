@@ -22,7 +22,7 @@ if (!customElements.get('comment-list-shadow')) {
 
 /**
  * シャドウDOM版カスタムプレイヤーのメインクラス
- * スタイル分離とコンポーネント化を実現するのじゃ
+ * スタイル分離とコンポーネント化を実現
  */
 export class NicoCachePlayer {
   private urlManager: UrlManager;
@@ -72,17 +72,17 @@ export class NicoCachePlayer {
     script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
     script.async = true;
     script.onload = () => {
-      window.logger.info('HLS.jsライブラリの読み込みが完了したのじゃ！');
+      window.logger.info('HLS.jsライブラリの読み込みが完了しました！');
     };
     script.onerror = () => {
-      window.logger.warn('HLS.jsライブラリの読み込みに失敗したのじゃ。ネイティブHLS再生を試行するのじゃ。');
+      window.logger.warn('HLS.jsライブラリの読み込みに失敗しました。ネイティブHLS再生を試行します。');
     };
     document.head.appendChild(script);
   }
 
   /**
    * グローバルオブジェクトのセットアップ
-   * 削除済み動画プレーヤーのインターフェースを提供するのじゃ
+   * 削除済み動画プレーヤーのインターフェースを提供します
    */
   private setupGlobalInterface(): void {
     // NicoCache_nlオブジェクトが存在しない場合は作成
@@ -114,7 +114,7 @@ export class NicoCachePlayer {
       play: (videoIdOrUrl: string, title?: string) => {
         if (this.floatingDeletedPlayer) {
           this.floatingDeletedPlayer.show(videoIdOrUrl, title);
-          window.logger.info(`削除済み動画プレーヤーで再生開始: ${videoIdOrUrl}`);
+          window.logger.info(`削除済み動画プレーヤーで再生開始しました: ${videoIdOrUrl}`);
         }
       },
 
@@ -124,7 +124,7 @@ export class NicoCachePlayer {
       hide: () => {
         if (this.floatingDeletedPlayer) {
           this.floatingDeletedPlayer.hide();
-          window.logger.info('削除済み動画プレーヤーを非表示にしたのじゃ');
+          window.logger.info('削除済み動画プレーヤーを非表示にしました');
         }
       },
 
@@ -133,7 +133,7 @@ export class NicoCachePlayer {
        */
       help: () => {
         window.logger.info(`
-削除済み動画プレーヤーの使用方法なのじゃ：
+削除済み動画プレーヤーの使用方法：
 
 1. 基本的な使用方法:
    window.NicoCache_nl.deletedVideoPlayer.play("動画IDまたはURL", "タイトル（オプション）");
@@ -163,7 +163,7 @@ export class NicoCachePlayer {
       }
     };
 
-    window.logger.info('削除済み動画プレーヤーのグローバルインターフェースを設定したのじゃ！');
+    window.logger.info('削除済み動画プレーヤーのグローバルインターフェースを設定しました！');
     window.logger.info('使用方法: window.NicoCache_nl.deletedVideoPlayer.help()');
   }
 
@@ -301,8 +301,8 @@ export class NicoCachePlayer {
       if (!isPaymentRequired || hasOriginalSource) {
         window.logger.info(
           isPaymentRequired 
-            ? '元のプレイヤーが正常なので処理をスキップするのじゃ' 
-            : '無料動画なので処理をスキップするのじゃ'
+            ? '元のプレイヤーが正常なので処理をスキップします' 
+            : '無料動画なので処理をスキップします'
         );
         return;
       }
@@ -310,7 +310,7 @@ export class NicoCachePlayer {
       // 有料動画で元のプレイヤーがないなら、カスタムプレイヤーで再生を試みる
       await this.playWithCustomSource(videoId);
     } catch (error) {
-      window.logger.error('動画変更処理でエラーが発生したのじゃ:', error);
+      window.logger.error('動画変更処理でエラーが発生しました:', error);
       this.toastManager.showError('動画の読み込みに失敗しました');
     }
   }
@@ -379,7 +379,7 @@ export class NicoCachePlayer {
       // コメントを読み込む
       await this.loadComments(videoId);
     } catch (error) {
-      window.logger.error('カスタムソースでの再生に失敗したのじゃ:', error);
+      window.logger.error('カスタムソースでの再生に失敗しました:', error);
       throw error;
     }
   }
@@ -455,7 +455,7 @@ export class NicoCachePlayer {
           });
         }
       } catch (e) {
-        window.logger.error('動画の読み込み待機に失敗したのじゃ:', e);
+        window.logger.error('動画の読み込み待機に失敗しました:', e);
       }
 
       // キャッシュ管理の設定
@@ -483,7 +483,7 @@ export class NicoCachePlayer {
           this.videoElement.muted = false;
         }
       } catch (playErr) {
-        window.logger.warn('自動再生がブロックされた可能性があるのじゃ:', playErr);
+        window.logger.warn('自動再生がブロックされた可能性があります:', playErr);
         // 再生失敗時はコントロールを表示してユーザー操作を促す
         this.playerControls?.show();
       }
@@ -497,7 +497,7 @@ export class NicoCachePlayer {
       // 追加のエラーハンドラ
       this.videoElement.addEventListener('error', e => window.logger.error('[VIDEO-ERROR]', e));
     } catch (error) {
-      window.logger.error('動画再生でエラーが発生したのじゃ:', error);
+      window.logger.error('動画再生でエラーが発生しました:', error);
       this.toastManager.showError('動画の再生に失敗しました');
       throw error;
     }
@@ -541,7 +541,7 @@ export class NicoCachePlayer {
         if (typeof this.playerControls.setVideoElement === 'function') {
           this.playerControls.setVideoElement(videoElement);
         } else {
-          window.logger.warn('setVideoElementメソッドが利用できないのじゃ、直接初期化を試みるのじゃ');
+          window.logger.warn('setVideoElementメソッドが利用できないので、直接初期化を試みます');
           // フォールバック：カスタムエレメントが完全に初期化されるまで追加で待機
           await new Promise(resolve => setTimeout(resolve, 200));
           if (typeof this.playerControls.setVideoElement === 'function') {
@@ -549,7 +549,7 @@ export class NicoCachePlayer {
           }
         }
       } else {
-        window.logger.warn('player-controls-shadow要素が見つからないのじゃ');
+        window.logger.warn('player-controls-shadow要素が見つかりません');
       }
 
       // コメントシステムの初期化
@@ -562,9 +562,9 @@ export class NicoCachePlayer {
         }
       }
 
-      window.logger.info('シャドウDOM版カスタムプレイヤーの設置が完了したのじゃ！');
+      window.logger.info('シャドウDOM版カスタムプレイヤーの設置が完了しました！');
     } catch (error) {
-      window.logger.error('プレイヤーの置き換えに失敗したのじゃ:', error);
+      window.logger.error('プレイヤーの置き換えに失敗しました:', error);
       throw error;
     }
   }
@@ -630,7 +630,7 @@ export class NicoCachePlayer {
 
       if (this.videoElement) {
         if (this.videoElement.paused) {
-          this.videoElement.play().catch(err => window.logger.error('再生開始に失敗したのじゃ:', err));
+          this.videoElement.play().catch(err => window.logger.error('再生開始に失敗しました:', err));
         } else {
           this.videoElement.pause();
         }
@@ -655,7 +655,7 @@ export class NicoCachePlayer {
     await Promise.resolve();
     if (!this.videoElement) return;
 
-    window.logger.info('HLS動画の読み込みを開始するのじゃ:', url);
+    window.logger.info('HLS動画の読み込みを開始します:', url);
 
     if (typeof Hls !== 'undefined' && Hls.isSupported()) {
       // HLS.jsが利用可能な場合
@@ -681,7 +681,7 @@ export class NicoCachePlayer {
       }
     } else {
       // HLS.jsが利用できない場合はネイティブ再生を試行
-      window.logger.info('HLS.jsが利用できないため、ネイティブHLS再生を試行するのじゃ');
+      window.logger.info('HLS.jsが利用できないため、ネイティブHLS再生を試行します');
       this.videoElement.src = url;
       this.toastManager.showInfo('ネイティブHLS再生を試行中', 'ブラウザの対応に依存します');
     }
@@ -695,9 +695,9 @@ export class NicoCachePlayer {
       if (!this.commentSystem) return;
       
       await this.commentSystem.loadComments(videoId);
-      window.logger.info('コメントの読み込みが完了したのじゃ！');
+      window.logger.info('コメントの読み込みが完了しました');
     } catch (error) {
-      window.logger.error('コメント読み込みに失敗したのじゃ:', error);
+      window.logger.error('コメント読み込みに失敗しました:', error);
       this.toastManager.showWarning('コメント読み込みに失敗しました', '動画の再生は継続します');
     }
   }

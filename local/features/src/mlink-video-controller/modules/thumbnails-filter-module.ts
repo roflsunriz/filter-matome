@@ -186,7 +186,7 @@ class HideVideoUI {
     modal.innerHTML = `
       <div id="nvfHideVideoModal" class="nvf-modal" style="display:none;">
         <div class="nvf-modal-content">
-          <h2>非表示キーワード設定のじゃ！</h2>
+          <h2>非表示キーワード設定</h2>
           <div class="nvf-status-info">
             <span id="nvfHiddenCount">非表示動画数: 0</span>
             <label class="nvf-toggle-switch">
@@ -543,7 +543,7 @@ class HideVideoUI {
           )
         );
 
-        const message = `${this.hiddenCount}件の動画を非表示にしたのじゃ！`;
+        const message = `${this.hiddenCount}件の動画を非表示にしました！`;
         
         const subtitle = matchedKeywords.length > 0
           ? `マッチしたキーワード: ${matchedKeywords.slice(0, 3).join(", ")}${

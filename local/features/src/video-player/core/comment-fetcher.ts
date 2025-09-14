@@ -10,9 +10,9 @@ export class CommentFetcher {
    */
   async fetchAllComments(videoId: string): Promise<CommentApiResponse> {
     try {
-      window.logger.info(`コメント一括取得を開始するのじゃ！ VideoID: ${videoId}`);
+      window.logger.info(`コメント一括取得を開始します！ VideoID: ${videoId}`);
       const res = await window.commonHelper.fetchNicoDataWithComments(videoId);
-      if (!res) throw new Error('統合データの取得に失敗したのじゃ');
+      if (!res) throw new Error('統合データの取得に失敗しました');
       // 型整合のため、video-player用CommentDataへ正規化
       const normalizedComments: VPCommentData[] = res.mainThread.comments.map((c) => {
         // common-types の CommentData は vposMs 必須・vpos なし
@@ -45,7 +45,7 @@ export class CommentFetcher {
       };
       return { data: { threads: [thread] } } as CommentApiResponse;
     } catch (error) {
-      window.logger.error('fetchNicoDataWithCommentsでの取得に失敗したのじゃ...', error);
+      window.logger.error('fetchNicoDataWithCommentsでの取得に失敗しました...', error);
       throw error;
     }
   }

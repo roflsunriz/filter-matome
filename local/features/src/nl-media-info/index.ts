@@ -27,7 +27,7 @@ function initializeApp(): void {
   getMediaInfo(`${constants.nlMediaInfobaseurl}${constants.nlMediaInfoVideoId}`)
     .then((data: unknown) => {
       if (!validators.isValidMediaInfo(data)) {
-        throw new Error('メディア情報の形式が不正なのじゃ');
+        throw new Error('メディア情報の形式が不正です');
       }
       const parsedData = MediaInfoParser.parse(data);
       if (DEBUG_NLMEDIAINFO) console.log("パース後のデータ:", parsedData);
@@ -35,12 +35,12 @@ function initializeApp(): void {
     })
     .then(parsedData => {
       if (!parsedData || !parsedData.result) {
-        throw new Error('パースされたデータが不正なのじゃ');
+        throw new Error('パースされたデータが不正です');
       }
       UIUpdater.updateAll(parsedData);
     })
     .catch(error => {
-      console.error('メディア情報の取得に失敗したのじゃ:', error);
+      console.error('メディア情報の取得に失敗しました:', error);
       const loadingElement = document.getElementById("loading");
       const errorElement = document.getElementById("error");
       
@@ -56,7 +56,7 @@ function initializeApp(): void {
 }
 
 /**
- * メディア情報を取得する非同期関数なのじゃ
+ * メディア情報を取得する非同期関数
  * @param url - メディア情報のURL
  * @returns メディア情報のJSONオブジェクト
  */
@@ -68,7 +68,7 @@ async function getMediaInfo(url: string): Promise<unknown> {
     }
     return await response.json();
   } catch (error) {
-    console.error('メディア情報の取得中にエラーが発生したのじゃ:', error);
+    console.error('メディア情報の取得中にエラーが発生しました:', error);
     throw error;
   }
 } 

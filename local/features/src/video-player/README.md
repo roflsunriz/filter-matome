@@ -321,12 +321,12 @@ await window.NicoCache_nl.databaseTest.displayDatabaseStats();
 - **🆕 `MigrationManager` - マイグレーション管理**
 - **🆕 `DatabaseIntegrationTest` - 統合テスト**
 
-この文書を参考に、効率的にvideo-playerプロジェクトを編集できるのじゃ！ 
+この文書を参考に、効率的にvideo-playerプロジェクトを編集できます！ 
 
 ## 🆕 永続化昇格機能 詳細ガイド
 
 ### 🎯 **機能概要**
-永続化昇格機能は、video-playerプロジェクトに高度なデータ管理と分析機能を追加する画期的なシステムなのじゃ。
+永続化昇格機能は、video-playerプロジェクトに高度なデータ管理と分析機能を追加する画期的なシステムです。
 
 ### 📊 **管理されるデータ**
 - **プレーヤー設定**: 従来の設定に加えカテゴリ管理
@@ -404,7 +404,7 @@ console.log(debugInfo);
 ```
 
 ### 🔄 **後方互換性**
-従来のAPIは完全に動作し、内部的に昇格機能を使用するのじゃ：
+従来のAPIは完全に動作し、内部的に昇格機能を使用します：
 ```javascript
 // 従来のAPI（内部的に昇格機能を使用）
 await saveSettings('setting_key', 'value');
@@ -437,4 +437,4 @@ const stats = await dbManager.getDatabaseStats();
 - **バッチ処理**: 効率的なデータ処理
 - **メモリ管理**: 自動的なメモリクリーンアップ
 
-この永続化昇格機能により、video-playerは単なる動画プレーヤーから、高度な分析機能を持つ統合プラットフォームへと進化したのじゃ！
+この永続化昇格機能により、video-playerは単なる動画プレーヤーから、高度な分析機能を持つ統合プラットフォームへと進化しました！

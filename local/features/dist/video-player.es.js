@@ -259,7 +259,7 @@ class CacheManager {
     if (url) {
       this.currentUrl = url;
     }
-    window.logger.info("CacheManagerのHLS.jsインスタンスを更新したのじゃ！", {
+    window.logger.info("CacheManagerのHLS.jsインスタンスを更新しました！", {
       hasHls: !!this.hls,
       url: this.currentUrl
     });
@@ -274,7 +274,7 @@ class CacheManager {
       const memoryInfo = window.performance.memory;
       const usedMemory = memoryInfo.usedJSHeapSize;
       if (usedMemory > CACHE_MANAGEMENT.CACHE_SIZE_THRESHOLD_BYTES || playDuration > CACHE_MANAGEMENT.TIME_THRESHOLD_MS / 1e3) {
-        window.logger.info("キャッシュクリーンアップが必要なのじゃ！", {
+        window.logger.info("キャッシュクリーンアップが必要です！", {
           playDuration: `${Math.floor(playDuration / 60)}分${Math.floor(playDuration % 60)}秒`,
           usedMemory: `${(usedMemory / (1024 * 1024)).toFixed(2)}MB`
         });
@@ -282,7 +282,7 @@ class CacheManager {
       }
     } else {
       if (playDuration > CACHE_MANAGEMENT.TIME_THRESHOLD_MS / 1e3) {
-        window.logger.info("再生時間に基づくキャッシュクリーンアップが必要なのじゃ！", {
+        window.logger.info("再生時間に基づくキャッシュクリーンアップが必要です！", {
           playDuration: `${Math.floor(playDuration / 60)}分${Math.floor(playDuration % 60)}秒`
         });
         void this.forceCleanup();
@@ -294,7 +294,7 @@ class CacheManager {
    */
   async forceCleanup() {
     try {
-      window.logger.info("キャッシュクリーンアップを実行するのじゃ！");
+      window.logger.info("キャッシュクリーンアップを実行します！");
       const wasPlaying = !this.video.paused;
       const currentPosition = this.video.currentTime;
       this.addBufferingDisplay();
@@ -306,9 +306,9 @@ class CacheManager {
       this.playStartTime = Date.now();
       this.lastCleanupTime = Date.now();
       this.removeBufferingDisplay();
-      window.logger.info("キャッシュクリーンアップが完了したのじゃ！");
+      window.logger.info("キャッシュクリーンアップが完了しました！");
     } catch (error) {
-      window.logger.error("キャッシュクリーンアップでエラーが発生したのじゃ...", error);
+      window.logger.error("キャッシュクリーンアップでエラーが発生しました...", error);
       this.removeBufferingDisplay();
     }
   }
@@ -317,7 +317,7 @@ class CacheManager {
    */
   async hlsCleanup(wasPlaying, currentPosition) {
     if (!this.hls) return;
-    window.logger.info("HLS.js使用時のキャッシュクリーンアップを実行するのじゃ！");
+    window.logger.info("HLS.js使用時のキャッシュクリーンアップを実行します！");
     try {
       if (typeof this.hls.destroy === "function") {
         const currentSource = this.currentUrl;
@@ -335,17 +335,17 @@ class CacheManager {
           this.hls.loadSource(currentSource);
           this.hls.attachMedia(this.video);
         } else {
-          window.logger.warn("HLS.jsが利用できないため、ネイティブ再生にフォールバックするのじゃ");
+          window.logger.warn("HLS.jsが利用できないため、ネイティブ再生にフォールバックします");
           this.video.src = currentSource;
           await new Promise((resolve) => setTimeout(resolve, 100));
           this.restorePlaybackPosition(wasPlaying, currentPosition);
         }
       } else {
-        window.logger.warn("HLS.jsのdestroyメソッドが利用できないのじゃ");
+        window.logger.warn("HLS.jsのdestroyメソッドが利用できません");
         await this.regularCleanup(wasPlaying, currentPosition);
       }
     } catch (error) {
-      window.logger.error("HLS.jsクリーンアップ中にエラーが発生したのじゃ:", error);
+      window.logger.error("HLS.jsクリーンアップ中にエラーが発生しました:", error);
       await this.regularCleanup(wasPlaying, currentPosition);
     }
   }
@@ -353,7 +353,7 @@ class CacheManager {
    * 通常の動画ファイルのキャッシュクリーンアップ
    */
   async regularCleanup(wasPlaying, currentPosition) {
-    window.logger.info("通常の動画ファイルのキャッシュクリーンアップを実行するのじゃ！");
+    window.logger.info("通常の動画ファイルのキャッシュクリーンアップを実行します！");
     const currentSrc = this.video.src;
     this.video.pause();
     this.video.src = "";
@@ -372,7 +372,7 @@ class CacheManager {
     if (wasPlaying) {
       setTimeout(() => {
         void this.video.play().catch((error) => {
-          window.logger.error("再生の再開に失敗したのじゃ:", error);
+          window.logger.error("再生の再開に失敗しました:", error);
         });
       }, 100);
     }
@@ -840,7 +840,7 @@ class MigrationManager {
    */
   async executeMigration(db, oldVersion, newVersion) {
     if (this.migrationInProgress) {
-      return { success: false, error: "既にマイグレーションが実行中なのじゃ" };
+      return { success: false, error: "既にマイグレーションが実行中です" };
     }
     this.migrationInProgress = true;
     this.db = db;
@@ -858,7 +858,7 @@ class MigrationManager {
       await this.rollback(db, oldVersion);
       return {
         success: false,
-        error: error instanceof Error ? error.message : "マイグレーションに失敗したのじゃ"
+        error: error instanceof Error ? error.message : "マイグレーションに失敗しました"
       };
     } finally {
       this.migrationInProgress = false;
@@ -873,7 +873,7 @@ class MigrationManager {
   async migrateToVersion(db, version) {
     const migration = MIGRATION_CONFIGS[version];
     if (!migration) {
-      throw new Error(`バージョン ${version} のマイグレーション設定が見つからないのじゃ`);
+      throw new Error(`バージョン ${version} のマイグレーション設定が見つかりません`);
     }
     window.logger?.info(`マイグレーション実行中: v${version} - ${migration.description}`);
     const transaction = db.transaction(
@@ -943,7 +943,7 @@ class MigrationManager {
    */
   async rollback(db, targetVersion) {
     if (!this.backupData.stores) {
-      window.logger?.error("バックアップデータが見つからないのじゃ");
+      window.logger?.error("バックアップデータが見つかりません");
       return;
     }
     try {
@@ -1026,7 +1026,7 @@ class MigrationManager {
       backupKeys.sort().reverse().slice(5).forEach((key) => {
         localStorage.removeItem(key);
       });
-      window.logger?.debug("古いバックアップを削除したのじゃ");
+      window.logger?.debug("古いバックアップを削除しました");
     } catch (error) {
       window.logger?.warn("バックアップクリーンアップ失敗:", error);
     }
@@ -1050,7 +1050,7 @@ class MigrationManager {
           resolve(result && typeof result.version === "number" ? result.version : 1);
         };
         request.onerror = () => {
-          window.logger?.warn("バージョン取得失敗、初期バージョンを返すのじゃ");
+          window.logger?.warn("バージョン取得失敗");
           resolve(1);
         };
       });
@@ -1103,7 +1103,7 @@ class MigrationManager {
       const expectedStores = DB_VERSION_HISTORY[DB_CONFIG.CURRENT_VERSION].stores;
       for (const storeName of expectedStores) {
         if (!db.objectStoreNames.contains(storeName)) {
-          errors.push(`必要なストア "${storeName}" が存在しないのじゃ`);
+          errors.push(`必要なストア "${storeName}" が存在しません`);
         }
       }
       return { valid: errors.length === 0, errors };
@@ -1207,9 +1207,9 @@ class DatabaseManager {
   async performInitialization() {
     try {
       this.db = await this.openDatabase();
-      window.logger?.info("データベース初期化完了なのじゃ");
+      window.logger?.info("データベース初期化完了しました！");
     } catch (error) {
-      window.logger?.error("データベース初期化失敗:", error);
+      window.logger?.error("データベース初期化失敗しました！:", error);
       throw error;
     }
   }
@@ -1220,7 +1220,7 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_CONFIG.NAME, DB_CONFIG.CURRENT_VERSION);
       request.onerror = () => {
-        window.logger?.error("データベースのオープンに失敗:", this.toMessage(request.error));
+        window.logger?.error("データベースのオープンに失敗しました！:", this.toMessage(request.error));
         reject(new Error(this.toMessage(request.error)));
       };
       request.onsuccess = () => {
@@ -1232,14 +1232,14 @@ class DatabaseManager {
         const db = event.target.result;
         const oldVersion = event.oldVersion;
         const newVersion = event.newVersion || DB_CONFIG.CURRENT_VERSION;
-        window.logger?.info(`データベース昇格: v${oldVersion} → v${newVersion}`);
+        window.logger?.info(`データベース昇格しました: v${oldVersion} → v${newVersion}`);
         try {
           const result = await this.migrationManager.executeMigration(db, oldVersion, newVersion);
           if (!result.success) {
             throw new Error(result.error || "マイグレーション失敗");
           }
         } catch (error) {
-          window.logger?.error("マイグレーション実行エラー:", error);
+          window.logger?.error("マイグレーション実行エラーが発生しました！:", error);
           throw error;
         }
       };
@@ -1250,10 +1250,10 @@ class DatabaseManager {
    */
   setupDatabaseErrorHandling(db) {
     db.onerror = (event) => {
-      window.logger?.error("データベースエラー:", event);
+      window.logger?.error("データベースエラーが発生しました！:", event);
     };
     db.onversionchange = () => {
-      window.logger?.warn("データベースバージョン変更が検出されたのじゃ");
+      window.logger?.warn("データベースバージョン変更が検出されました！");
       db.close();
       this.db = null;
     };
@@ -1291,7 +1291,7 @@ class DatabaseManager {
         resolve(result && typeof result === "object" && "value" in result && result.value !== void 0 ? result.value : defaultValue);
       };
       request.onerror = () => {
-        window.logger?.warn(`設定取得失敗: ${key}`);
+        window.logger?.warn(`設定取得失敗しました！: ${key}`);
         resolve(defaultValue);
       };
     });
@@ -1487,7 +1487,7 @@ class DatabaseManager {
       await this.cleanupExpiredCache();
       window.logger?.info("データベースクリーンアップ完了");
     } catch (error) {
-      window.logger?.error("クリーンアップエラー:", error);
+      window.logger?.error("クリーンアップエラーが発生しました！:", error);
     }
   }
   /**
@@ -1510,7 +1510,7 @@ class DatabaseManager {
           deletedCount++;
           cursor.continue();
         } else {
-          window.logger?.debug(`視聴履歴 ${deletedCount} 件を削除`);
+          window.logger?.debug(`視聴履歴 ${deletedCount} 件を削除しました！`);
           resolve();
         }
       };
@@ -1537,7 +1537,7 @@ class DatabaseManager {
           deletedCount++;
           cursor.continue();
         } else {
-          window.logger?.debug(`コメント履歴 ${deletedCount} 件を削除`);
+          window.logger?.debug(`コメント履歴 ${deletedCount} 件を削除しました！`);
           resolve();
         }
       };
@@ -1562,7 +1562,7 @@ class DatabaseManager {
             deletedCount++;
           }
         });
-        window.logger?.debug(`期限切れキャッシュ ${deletedCount} 件を削除`);
+        window.logger?.debug(`期限切れキャッシュ ${deletedCount} 件を削除しました！`);
         resolve();
       };
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
@@ -1575,7 +1575,7 @@ class DatabaseManager {
     const interval = DB_CONFIG.CLEANUP_INTERVAL_HOURS * 60 * 60 * 1e3;
     this.cleanupTimer = setInterval(() => {
       this.performCleanup().catch((error) => {
-        window.logger?.error("定期クリーンアップ失敗:", error);
+        window.logger?.error("定期クリーンアップ失敗しました！:", error);
       });
     }, interval);
   }
@@ -1609,7 +1609,7 @@ class DatabaseManager {
     return new Promise((resolve, reject) => {
       const deleteRequest = indexedDB.deleteDatabase(DB_CONFIG.NAME);
       deleteRequest.onsuccess = () => {
-        window.logger?.info("データベースをリセットしたのじゃ");
+        window.logger?.info("データベースをリセットしました！");
         resolve();
       };
       deleteRequest.onerror = () => reject(new Error(this.toMessage(deleteRequest.error)));
@@ -1701,8 +1701,8 @@ const saveSettings = async (key, value) => {
           resolve();
         };
         request.onerror = (event) => {
-          window.logger?.error(`設定 "${key}" の保存に失敗したのじゃ:`, event);
-          reject(new Error(`設定 "${key}" の保存に失敗したのじゃ`));
+          window.logger?.error(`設定 "${key}" の保存に失敗しました:`, event);
+          reject(new Error(`設定 "${key}" の保存に失敗しました`));
         };
         transaction.oncomplete = () => {
           db.close();
@@ -1732,7 +1732,7 @@ const getSettings = async (key, defaultValue) => {
           }
         };
         request.onerror = (event) => {
-          window.logger?.error(`設定 "${key}" の取得に失敗したのじゃ:`, event);
+          window.logger?.error(`設定 "${key}" の取得に失敗しました:`, event);
           resolve(defaultValue);
         };
         transaction.oncomplete = () => {
@@ -1787,7 +1787,7 @@ class PlayerControlsShadow extends HTMLElement {
         case "k":
           e.preventDefault();
           if (this.video.paused) {
-            this.video.play().catch((err) => window.logger.error("再生開始に失敗したのじゃ:", err));
+            this.video.play().catch((err) => window.logger.error("再生開始に失敗しました:", err));
           } else {
             this.video.pause();
             this.userPaused = true;
@@ -1850,21 +1850,21 @@ class PlayerControlsShadow extends HTMLElement {
     this.initialized = true;
     const savedControlsMode = localStorage.getItem("controlsMode") || PLAYER_SETTINGS.CONTROLS_MODE.HOVER;
     this.applyControlsMode(savedControlsMode);
-    window.logger.info("PlayerControlsShadowの初期化が完了したのじゃ！");
+    window.logger.info("PlayerControlsShadowの初期化が完了しました！");
   }
   /**
    * ビデオ要素を設定
    */
   setVideoElement(video) {
     if (!video) {
-      window.logger.error("無効なビデオ要素が渡されたのじゃ");
+      window.logger.error("無効なビデオ要素が渡されました");
       return;
     }
     this.ensureInitialized();
     this.video = video;
     this.setupVideoEvents();
     void this.initializeSettings();
-    window.logger.info("ビデオ要素が設定されたのじゃ！");
+    window.logger.info("ビデオ要素が設定されました！");
   }
   /**
    * コメントシステムを設定
@@ -2536,7 +2536,7 @@ class PlayerControlsShadow extends HTMLElement {
         const video = this.getVideo();
         if (!video) return;
         if (video.paused) {
-          video.play().catch((e) => window.logger.error("再生開始に失敗したのじゃ:", e));
+          video.play().catch((e) => window.logger.error("再生開始に失敗しました:", e));
         } else {
           video.pause();
           this.userPaused = true;
@@ -2690,7 +2690,7 @@ class PlayerControlsShadow extends HTMLElement {
             this.updateNGRegexList(true);
           }
         } catch (e) {
-          window.logger.error("無効な正規表現なのじゃ:", e);
+          window.logger.error("無効な正規表現です:", e);
           ngRegexInput.classList.add("error");
           setTimeout(() => {
             ngRegexInput.classList.remove("error");
@@ -2953,7 +2953,7 @@ class PlayerControlsShadow extends HTMLElement {
         this.commentSystem.setNGRegex(this.ngRegex);
       }
     } catch (error) {
-      window.logger.error("コメント設定の読み込みに失敗したのじゃ:", error);
+      window.logger.error("コメント設定の読み込みに失敗しました:", error);
     }
   }
   /**
@@ -3067,9 +3067,9 @@ class PlayerControlsShadow extends HTMLElement {
         this.commentSystem.setNGRegex(this.ngRegex);
       }
       this.showApplyFeedback();
-      window.logger.info(`コメント設定を適用したのじゃ！ 透明度: ${this.commentOpacity}, 色: ${this.commentColor}, NGワード: ${this.ngWords.length}件, NG正規表現: ${this.ngRegex.length}件`);
+      window.logger.info(`コメント設定を適用しました！ 透明度: ${this.commentOpacity}, 色: ${this.commentColor}, NGワード: ${this.ngWords.length}件, NG正規表現: ${this.ngRegex.length}件`);
     } catch (error) {
-      window.logger.error("コメント設定の適用に失敗したのじゃ:", error);
+      window.logger.error("コメント設定の適用に失敗しました:", error);
     }
   }
   /**
@@ -3095,7 +3095,7 @@ class PlayerControlsShadow extends HTMLElement {
       if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
         const playerContainer = this.closest(".custom-player");
         if (playerContainer) {
-          window.logger.info("全画面化を試行するのじゃ:", {
+          window.logger.info("全画面化を試行します:", {
             hasRequestFullscreen: !!playerContainer.requestFullscreen,
             hasMozRequestFullScreen: !!playerContainer.mozRequestFullScreen,
             hasWebkitRequestFullscreen: !!playerContainer.webkitRequestFullscreen,
@@ -3103,32 +3103,32 @@ class PlayerControlsShadow extends HTMLElement {
           });
           if (playerContainer.requestFullscreen) {
             playerContainer.requestFullscreen().then(() => {
-              window.logger.info("標準全画面API成功したのじゃ");
+              window.logger.info("標準全画面API成功しました");
               document.documentElement.classList.add("fullscreen-active");
               document.body.classList.add("nc-fullscreen-active");
               playerContainer.classList.add("nc-fullscreen-player");
             }).catch((err) => {
-              window.logger.error("標準全画面APIが失敗したのじゃ:", err);
+              window.logger.error("標準全画面APIが失敗しました:", err);
               this.fallbackFullscreen(playerContainer);
             });
           } else if (playerContainer.mozRequestFullScreen) {
             playerContainer.mozRequestFullScreen();
-            window.logger.info("Firefox全画面API使用したのじゃ");
+            window.logger.info("Firefox全画面API使用しました");
           } else if (playerContainer.webkitRequestFullscreen) {
             playerContainer.webkitRequestFullscreen();
-            window.logger.info("WebKit全画面API使用したのじゃ");
+            window.logger.info("WebKit全画面API使用しました");
           } else if (playerContainer.msRequestFullscreen) {
             playerContainer.msRequestFullscreen();
-            window.logger.info("IE全画面API使用したのじゃ");
+            window.logger.info("IE全画面API使用しました");
           } else {
-            window.logger.warn("全画面APIが利用できないため、フォールバックを使用するのじゃ");
+            window.logger.warn("全画面APIが利用できないため、フォールバックを使用します");
             this.fallbackFullscreen(playerContainer);
           }
         }
       } else {
         if (doc.exitFullscreen) {
           doc.exitFullscreen().then(() => {
-            window.logger.info("全画面解除成功したのじゃ");
+            window.logger.info("全画面解除成功しました");
             document.documentElement.classList.remove("fullscreen-active");
             document.body.classList.remove("nc-fullscreen-active");
             const playerContainer = this.closest(".custom-player");
@@ -3136,7 +3136,7 @@ class PlayerControlsShadow extends HTMLElement {
               playerContainer.classList.remove("nc-fullscreen-player");
             }
           }).catch((err) => {
-            window.logger.error("全画面解除が失敗したのじゃ:", err);
+            window.logger.error("全画面解除が失敗しました:", err);
           });
         } else if (doc.mozCancelFullScreen) {
           doc.mozCancelFullScreen();
@@ -3147,7 +3147,7 @@ class PlayerControlsShadow extends HTMLElement {
         }
       }
     } catch (error) {
-      window.logger.error("全画面切り替えでエラーが発生したのじゃ:", error);
+      window.logger.error("全画面切り替えでエラーが発生しました:", error);
       const playerContainer = this.closest(".custom-player");
       if (playerContainer) {
         this.fallbackFullscreen(playerContainer);
@@ -3158,7 +3158,7 @@ class PlayerControlsShadow extends HTMLElement {
    * フォールバック全画面処理
    */
   fallbackFullscreen(playerContainer) {
-    window.logger.info("フォールバック全画面モードを使用するのじゃ");
+    window.logger.info("フォールバック全画面モードを使用します");
     document.documentElement.classList.add("fullscreen-active");
     document.body.classList.add("nc-fullscreen-active");
     playerContainer.classList.add("nc-fullscreen-player");
@@ -3168,7 +3168,7 @@ class PlayerControlsShadow extends HTMLElement {
         document.body.classList.remove("nc-fullscreen-active");
         playerContainer.classList.remove("nc-fullscreen-player");
         document.removeEventListener("keydown", handleEscape);
-        window.logger.info("フォールバック全画面モードを終了したのじゃ");
+        window.logger.info("フォールバック全画面モードを終了しました");
       }
     };
     document.addEventListener("keydown", handleEscape);
@@ -3198,7 +3198,7 @@ class PlayerControlsShadow extends HTMLElement {
     const video = this.getVideo();
     if (!video) return;
     try {
-      window.logger.info("ビデオ要素の強制中央配置を実行するのじゃ");
+      window.logger.info("ビデオ要素の強制中央配置を実行します");
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
       const screenRatio = screenWidth / screenHeight;
@@ -3227,13 +3227,13 @@ class PlayerControlsShadow extends HTMLElement {
           const renderer = this.commentSystem.renderer;
           if (renderer && renderer.resizeCanvas) {
             renderer.resizeCanvas();
-            window.logger.info("コメントキャンバスのリサイズを実行したのじゃ");
+            window.logger.info("コメントキャンバスのリサイズを実行しました");
           }
         }
       }, 50);
-      window.logger.info("強制中央配置完了したのじゃ");
+      window.logger.info("強制中央配置完了しました");
     } catch (error) {
-      window.logger.error("ビデオ強制中央配置でエラーが発生したのじゃ:", error);
+      window.logger.error("ビデオ強制中央配置でエラーが発生しました:", error);
     }
   }
   /**
@@ -3262,7 +3262,7 @@ class PlayerControlsShadow extends HTMLElement {
     if (this.userPaused || !this.video) {
       return;
     }
-    this.video.play().catch((err) => window.logger.error("自動再生に失敗したのじゃ:", err));
+    this.video.play().catch((err) => window.logger.error("自動再生に失敗しました:", err));
   }
   /**
    * コンポーネントの破棄
@@ -3276,13 +3276,13 @@ class PlayerControlsShadow extends HTMLElement {
   ensureInitialized() {
     if (this.initialized) return;
     if (!this.shadow || !this.shadow.firstElementChild) {
-      window.logger.warn("シャドウDOMがまだ準備されていないのじゃ");
+      window.logger.warn("シャドウDOMがまだ準備されていません");
       return;
     }
     this.setupEventListeners();
     this.setupInitialIcons();
     this.initialized = true;
-    window.logger.info("PlayerControlsShadowの初期化が完了したのじゃ");
+    window.logger.info("PlayerControlsShadowの初期化が完了しました");
   }
   /**
    * ビデオ要素を取得（未設定ならDOMから自動検出）
@@ -3355,7 +3355,7 @@ class PlayerControlsShadow extends HTMLElement {
     const video = this.getVideo();
     if (!video) return;
     try {
-      window.logger.info("ビデオ要素のスタイルをリセットするのじゃ");
+      window.logger.info("ビデオ要素のスタイルをリセットします");
       video.style.position = "";
       video.style.top = "";
       video.style.left = "";
@@ -3364,17 +3364,17 @@ class PlayerControlsShadow extends HTMLElement {
       video.style.backgroundColor = "";
       video.style.width = "";
       video.style.height = "";
-      window.logger.info("ビデオスタイルリセット完了したのじゃ");
+      window.logger.info("ビデオスタイルリセット完了しました");
     } catch (error) {
-      window.logger.error("ビデオスタイルリセットでエラーが発生したのじゃ:", error);
+      window.logger.error("ビデオスタイルリセットでエラーが発生しました:", error);
     }
   }
 }
 if (!customElements.get("player-controls-shadow")) {
   customElements.define("player-controls-shadow", PlayerControlsShadow);
-  window.logger.info("player-controls-shadowカスタムエレメントを登録したのじゃ！");
+  window.logger.info("player-controls-shadowカスタムエレメントを登録しました！");
 } else {
-  window.logger.info("player-controls-shadowカスタムエレメントは既に登録済みじゃ");
+  window.logger.info("player-controls-shadowカスタムエレメントは既に登録済みです");
 }
 
 class CommentList extends HTMLElement {
@@ -3563,7 +3563,7 @@ class CommentList extends HTMLElement {
    */
   setupResizeObserver() {
     if (typeof ResizeObserver === "undefined") {
-      window.logger.warn("ResizeObserverが利用できないのじゃ...");
+      window.logger.warn("ResizeObserverが利用できません...");
       window.addEventListener("resize", () => this.syncHeight());
       return;
     }
@@ -3752,7 +3752,7 @@ const CUSTOM_PLAYER_SHADOW_STYLES = `
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    object-position: center center; /* 通常表示時も中央配置を保証 */
+    object-position: center center; /* 通常表示時も中央配置を保証します */
     display: block;
     margin: auto; /* flexboxコンテナ内での中央配置 */
     flex-shrink: 0; /* 縮小を防ぐ */
@@ -4283,12 +4283,12 @@ class CommentRenderer {
    * コメントレンダラーを初期化
    */
   initialize(videoElement) {
-    window.logger.info("CommentRendererの初期化を開始するのじゃ！");
+    window.logger.info("CommentRendererの初期化を開始します！");
     this.videoElement = videoElement;
     this.setupCanvas();
     this.setupVideoEventListeners();
     this.startAnimation();
-    window.logger.info("CommentRendererの初期化が完了したのじゃ！");
+    window.logger.info("CommentRendererの初期化が完了しました！");
   }
   /**
    * 動画要素のイベントリスナーを設定
@@ -4296,30 +4296,30 @@ class CommentRenderer {
   setupVideoEventListeners() {
     if (!this.videoElement) return;
     this.videoElement.addEventListener("play", () => {
-      window.logger.debug("動画再生開始のじゃ！");
+      window.logger.debug("動画再生開始しました！");
       this.isPlaying = true;
       this.lastTime = this.videoElement.currentTime * 1e3;
     });
     this.videoElement.addEventListener("pause", () => {
-      window.logger.debug("動画一時停止のじゃ！");
+      window.logger.debug("動画一時停止しました！");
       this.isPlaying = false;
       this.pausedTime = this.videoElement.currentTime * 1e3;
     });
     this.videoElement.addEventListener("seeking", () => {
-      window.logger.debug("シーク操作を検知したのじゃ！");
+      window.logger.debug("シーク操作を検知しました！");
       this.handleSeek();
     });
     this.videoElement.addEventListener("waiting", () => {
-      window.logger.debug("バッファリング中なのじゃ...");
+      window.logger.debug("バッファリング中です...");
       this.isPlaying = false;
     });
     this.videoElement.addEventListener("playing", () => {
-      window.logger.debug("再生再開したのじゃ！");
+      window.logger.debug("再生再開しました！");
       this.isPlaying = true;
       this.lastTime = this.videoElement.currentTime * 1e3;
     });
     this.videoElement.addEventListener("error", (e) => {
-      window.logger.error("動画再生エラーが発生したのじゃ！", e);
+      window.logger.error("動画再生エラーが発生しました！", e);
     });
   }
   /**
@@ -4346,11 +4346,11 @@ class CommentRenderer {
     }, false);
     const videoContainer = document.querySelector(".video-container");
     if (!videoContainer) {
-      throw new Error("video-containerが見つからないのじゃ！");
+      throw new Error("video-containerが見つかりません！");
     }
     const video = document.getElementById("video-element");
     if (!video) {
-      throw new Error("video要素が見つからないのじゃ！");
+      throw new Error("video要素が見つかりません！");
     }
     video.insertAdjacentElement("afterend", this.canvas);
     this.ctx = this.canvas.getContext("2d");
@@ -4401,7 +4401,7 @@ class CommentRenderer {
           this.canvas.style.width = "100%";
           this.canvas.style.height = "100%";
           this.canvas.style.zIndex = "1";
-          window.logger.info("通常全画面モードでキャンバスサイズを調整するのじゃ:", rect);
+          window.logger.info("通常全画面モードでキャンバスサイズを調整します:", rect);
         }
       } else {
         this.canvas.style.position = "absolute";
@@ -4412,14 +4412,14 @@ class CommentRenderer {
         this.canvas.style.zIndex = "1";
       }
       if (rect.width <= 0 || rect.height <= 0) {
-        window.logger.warn("無効なキャンバスサイズなのじゃ:", rect);
+        window.logger.warn("無効なキャンバスサイズです:", rect);
         const videoContainer = document.querySelector(".video-container");
         if (videoContainer) {
           const containerRect = videoContainer.getBoundingClientRect();
           if (containerRect.width > 0 && containerRect.height > 0) {
             this.canvas.width = containerRect.width;
             this.canvas.height = containerRect.height;
-            window.logger.info("コンテナサイズを使用してキャンバスを調整したのじゃ:", containerRect);
+            window.logger.info("コンテナサイズを使用してキャンバスを調整しました:", containerRect);
           } else {
             return;
           }
@@ -4433,7 +4433,7 @@ class CommentRenderer {
       this.virtualExtendedLeftWidth = Math.ceil(this.canvas.width * this.virtualExtendRatio);
       this.virtualExtendedRightWidth = Math.ceil(this.canvas.width * this.virtualExtendRatio);
       this.virtualCanvasWidth = this.virtualExtendedLeftWidth + this.canvas.width + this.virtualExtendedRightWidth;
-      window.logger.info("仮想拡張キャンバスを設定したのじゃ！", {
+      window.logger.info("仮想拡張キャンバスを設定しました！", {
         visible: this.canvas.width,
         virtualLeft: this.virtualExtendedLeftWidth,
         virtualRight: this.virtualExtendedRightWidth,
@@ -4450,11 +4450,11 @@ class CommentRenderer {
         COMMENT_RENDERER_CONFIG.MAX_LANES_LIMIT
       );
       if (this.maxLanes <= 0) {
-        window.logger.warn("無効なレーン数なのじゃ:", this.maxLanes);
+        window.logger.warn("無効なレーン数です:", this.maxLanes);
         this.maxLanes = 10;
       }
       this.laneStates = Array.from({ length: this.maxLanes }, () => null);
-      window.logger.info("キャンバスとレーンの初期化完了なのじゃ！", {
+      window.logger.info("キャンバスとレーンの初期化完了しました！", {
         width: this.canvas.width,
         height: this.canvas.height,
         fontSize: this.fontSize,
@@ -4464,7 +4464,7 @@ class CommentRenderer {
       });
       this.recalcCommentMetrics();
     } catch (error) {
-      window.logger.error("キャンバスのリサイズに失敗したのじゃ:", error);
+      window.logger.error("キャンバスのリサイズに失敗しました:", error);
       this.maxLanes = 10;
       this.laneStates = Array.from({ length: this.maxLanes }, () => null);
     }
@@ -4778,7 +4778,7 @@ class CommentRenderer {
     this.commentGroups = [];
     this.laneStates = Array.from({ length: this.maxLanes }, () => null);
     this.clearCanvas();
-    window.logger.info("コメントをクリアしたのじゃ！");
+    window.logger.info("コメントをクリアしました！");
   }
   /**
    * 透明度を設定する
@@ -4786,11 +4786,11 @@ class CommentRenderer {
    */
   setOpacity(opacity) {
     if (opacity < 0 || opacity > 1) {
-      window.logger.warn(`透明度の範囲外の値が指定されたのじゃ: ${opacity}、範囲は0.0～1.0なのじゃ`);
+      window.logger.warn(`透明度の範囲外の値が指定されました: ${opacity}、範囲は0.0～1.0です`);
       opacity = Math.max(0, Math.min(1, opacity));
     }
     this.opacity = opacity;
-    window.logger.info(`コメントの透明度を ${opacity} に設定したのじゃ`);
+    window.logger.info(`コメントの透明度を ${opacity} に設定しました`);
   }
   /**
    * デフォルトの色を設定する
@@ -4798,11 +4798,11 @@ class CommentRenderer {
    */
   setDefaultColor(color) {
     if (!/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
-      window.logger.warn(`無効な色コードなのじゃ: ${color}、デフォルト色を使用するのじゃ`);
+      window.logger.warn(`無効な色コードです: ${color}、デフォルト色を使用します`);
       return;
     }
     this.defaultColor = color;
-    window.logger.info(`コメントのデフォルト色を ${color} に設定したのじゃ`);
+    window.logger.info(`コメントのデフォルト色を ${color} に設定しました`);
   }
   /**
    * レンダラーの破棄
@@ -4826,7 +4826,7 @@ class CommentRenderer {
   /**
    * コメント幅・速度をリサイズ後に補正する関数
    * フルスクリーン切り替え時などにフォントサイズが変わっても
-   * 位置連続性を保ったまま正確な幅・速度で削除判定を行うのじゃ
+   * 位置連続性を保ったまま正確な幅・速度で削除判定を行います
    */
   recalcCommentMetrics() {
     if (!this.ctx || !this.canvas) return;
@@ -4858,7 +4858,7 @@ class CommentRenderer {
       const visibleDist = this.canvas.width + newWidth;
       c.speed = visibleDist / this.commentDuration;
     });
-    window.logger.info("コメントの幅・速度を再計算したのじゃ！", {
+    window.logger.info("コメントの幅・速度を再計算しました！", {
       activeComments: this.activeComments.size,
       queuedComments: this.comments.filter((c) => c.startTime === void 0).length,
       fontSize: this.fontSize,
@@ -4873,9 +4873,9 @@ class CommentFetcher {
    */
   async fetchAllComments(videoId) {
     try {
-      window.logger.info(`コメント一括取得を開始するのじゃ！ VideoID: ${videoId}`);
+      window.logger.info(`コメント一括取得を開始します！ VideoID: ${videoId}`);
       const res = await window.commonHelper.fetchNicoDataWithComments(videoId);
-      if (!res) throw new Error("統合データの取得に失敗したのじゃ");
+      if (!res) throw new Error("統合データの取得に失敗しました");
       const normalizedComments = res.mainThread.comments.map((c) => {
         const vpos = Math.round((c.vposMs ?? 0) / 10);
         const out = {
@@ -4904,7 +4904,7 @@ class CommentFetcher {
       };
       return { data: { threads: [thread] } };
     } catch (error) {
-      window.logger.error("fetchNicoDataWithCommentsでの取得に失敗したのじゃ...", error);
+      window.logger.error("fetchNicoDataWithCommentsでの取得に失敗しました...", error);
       throw error;
     }
   }
@@ -4960,7 +4960,7 @@ class CommentSystem {
       const customEvent = event;
       const detail = customEvent.detail;
       if (detail && typeof detail === "object" && "filteredData" in detail) {
-        window.logger.debug("CommentFilter2からフィルタリング済みデータを受け取ったのじゃ！");
+        window.logger.debug("CommentFilter2からフィルタリング済みデータを受け取りました！");
         this.applyFilteredComments(detail.filteredData);
       }
     };
@@ -4974,9 +4974,9 @@ class CommentSystem {
   async initialize(videoElement) {
     await Promise.resolve();
     try {
-      window.logger.info("コメントシステムの初期化を開始するのじゃ！");
+      window.logger.info("コメントシステムの初期化を開始します！");
       if (this.isInitialized) {
-        window.logger.info("既存のコメントシステムをリセットするのじゃ！");
+        window.logger.info("既存のコメントシステムをリセットします！");
         this.renderer.destroy();
         this.commentList.clearComments();
         this.hasReceivedFilteredData = false;
@@ -5009,9 +5009,9 @@ class CommentSystem {
       this.hideOfficialCommentPanel();
       this.hideOfficialCommentOverlay();
       this.isInitialized = true;
-      window.logger.info("コメントシステムの初期化が完了したのじゃ！");
+      window.logger.info("コメントシステムの初期化が完了しました！");
     } catch (error) {
-      window.logger.error("コメントシステムの初期化に失敗したのじゃ...", error);
+      window.logger.error("コメントシステムの初期化に失敗しました...", error);
       throw error;
     }
   }
@@ -5048,11 +5048,11 @@ class CommentSystem {
    * CommentFilter2からのフィルタリング済みコメントを適用
    */
   applyFilteredComments(apiResponse) {
-    window.logger.info("CommentFilter2からフィルタ済みコメントを受け取ったのじゃ", apiResponse);
+    window.logger.info("CommentFilter2からフィルタ済みコメントを受け取りました！", apiResponse);
     this.hasReceivedFilteredData = true;
     if (this.abortController) {
       this.abortController.abort();
-      window.logger.info("既存のAPIフェッチをキャンセルしたのじゃ");
+      window.logger.info("既存のAPIフェッチをキャンセルしました！");
     }
     this.renderer.clearComments();
     this.commentList.clearComments();
@@ -5062,7 +5062,7 @@ class CommentSystem {
       return comment;
     });
     const filteredComments = this.filterNGComments(comments);
-    window.logger.info(`CommentFilter2適用後のコメント数なのじゃ: ${filteredComments.length}`);
+    window.logger.info(`CommentFilter2適用後のコメント数です: ${filteredComments.length}`);
     this.commentList.addComments(filteredComments);
     filteredComments.forEach((c) => this.renderer.addComment(c));
   }
@@ -5078,33 +5078,33 @@ class CommentSystem {
     }
     this.abortController = new AbortController();
     if (this.hasReceivedFilteredData) {
-      window.logger.info("CommentFilter2のコメントを既に描画しているのでフェッチをスキップするのじゃ");
+      window.logger.info("CommentFilter2のコメントを既に描画しているのでフェッチをスキップします！");
       return;
     }
     try {
-      window.logger.info(`コメント読み込み開始なのじゃ: ${videoId}`);
+      window.logger.info(`コメント読み込み開始します: ${videoId}`);
       const apiResponse = await this.fetcher.fetchAllComments(videoId);
-      window.logger.info(`コメント読み込み完了なのじゃ: ${videoId}`, apiResponse);
+      window.logger.info(`コメント読み込み完了しました: ${videoId}`, apiResponse);
       let comments = apiResponse.data.threads.flatMap((thread) => thread.comments);
-      window.logger.info(`取得したコメント数なのじゃ: ${comments.length}`);
+      window.logger.info(`取得したコメント数です: ${comments.length}`);
       comments = comments.map((comment) => {
         comment.vposMs = comment.vpos * 10;
         return comment;
       });
       const filteredComments = this.filterNGComments(comments);
-      window.logger.info(`フィルタ後のコメント数なのじゃ: ${filteredComments.length}`);
+      window.logger.info(`フィルタ後のコメント数です: ${filteredComments.length}`);
       if (this.hasReceivedFilteredData) {
-        window.logger.info("APIフェッチ中にCommentFilter2データが到着したため、API側の描画をキャンセルするのじゃ");
+        window.logger.info("APIフェッチ中にCommentFilter2データが到着したため、API側の描画をキャンセルします！");
         return;
       }
       this.commentList.addComments(filteredComments);
       filteredComments.forEach((c) => this.renderer.addComment(c));
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
-        window.logger.info("CommentFilter2データが先に到着したため、APIフェッチを中断したのじゃ");
+        window.logger.info("CommentFilter2データが先に到着したため、APIフェッチを中断しました！");
         return;
       }
-      window.logger.error("コメント読み込みエラーなのじゃ！", error);
+      window.logger.error("コメント読み込みエラーが発生しました！", error);
       throw error;
     } finally {
       this.abortController = null;
@@ -5170,7 +5170,7 @@ class CommentSystem {
    * リソースのクリーンアップ
    */
   cleanup() {
-    window.logger.info("コメントシステムのクリーンアップを開始するのじゃ");
+    window.logger.info("コメントシステムのクリーンアップを開始します！");
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
@@ -5196,7 +5196,7 @@ class CommentSystem {
     this.hasReceivedFilteredData = false;
     this.renderer.destroy();
     this.commentList.remove();
-    window.logger.info("コメントシステムのリソースをクリーンアップしたのじゃ");
+    window.logger.info("コメントシステムのリソースをクリーンアップしました！");
   }
   /**
    * コメントの透明度を設定
@@ -5205,9 +5205,9 @@ class CommentSystem {
   setOpacity(opacity) {
     try {
       this.renderer.setOpacity(opacity);
-      window.logger.info(`コメント透明度を ${opacity} に設定したのじゃ`);
+      window.logger.info(`コメント透明度を ${opacity} に設定しました！`);
     } catch (error) {
-      window.logger.error("コメント透明度の設定に失敗したのじゃ:", error);
+      window.logger.error("コメント透明度の設定に失敗しました！:", error);
     }
   }
   /**
@@ -5217,9 +5217,9 @@ class CommentSystem {
   setDefaultColor(color) {
     try {
       this.renderer.setDefaultColor(color);
-      window.logger.info(`コメントのデフォルト色を ${color} に設定したのじゃ`);
+      window.logger.info(`コメントのデフォルト色を ${color} に設定しました！`);
     } catch (error) {
-      window.logger.error("コメントのデフォルト色の設定に失敗したのじゃ:", error);
+      window.logger.error("コメントのデフォルト色の設定に失敗しました！:", error);
     }
   }
   /**
@@ -5229,9 +5229,9 @@ class CommentSystem {
   setNGWords(words) {
     try {
       this.ngWords = words.map((word) => word.trim()).filter((word) => word !== "");
-      window.logger.info(`${this.ngWords.length}件のNGワードを設定したのじゃ`);
+      window.logger.info(`${this.ngWords.length}件のNGワードを設定しました！`);
     } catch (error) {
-      window.logger.error("NGワードの設定に失敗したのじゃ:", error);
+      window.logger.error("NGワードの設定に失敗しました！:", error);
     }
   }
   /**
@@ -5245,13 +5245,13 @@ class CommentSystem {
           return new RegExp(str, "i");
         } catch (error) {
           void error;
-          window.logger.warn(`不正な正規表現なので無視するのじゃ: ${str}`);
+          window.logger.warn(`不正な正規表現なので無視します！: ${str}`);
           return null;
         }
       }).filter((regex) => regex !== null);
-      window.logger.info(`${this.ngRegex.length}件のNG正規表現を設定したのじゃ`);
+      window.logger.info(`${this.ngRegex.length}件のNG正規表現を設定しました！`);
     } catch (error) {
-      window.logger.error("NG正規表現の設定に失敗したのじゃ:", error);
+      window.logger.error("NG正規表現の設定に失敗しました！:", error);
     }
   }
   /**
@@ -5277,7 +5277,7 @@ class CommentSystem {
         });
       });
     } catch (error) {
-      window.logger.warn("公式コメントリストを非表示にできなかったのじゃ:", error);
+      window.logger.warn("公式コメントリストを非表示にできなかったので無視します！:", error);
     }
   }
   /**
@@ -5298,9 +5298,9 @@ class CommentSystem {
           el.style.display = "none";
         });
       });
-      window.logger.info("公式コメントオーバーレイを非表示にしたのじゃ");
+      window.logger.info("公式コメントオーバーレイを非表示にしました！");
     } catch (e) {
-      window.logger.warn("公式コメントオーバーレイを非表示にできなかったのじゃ:", e);
+      window.logger.warn("公式コメントオーバーレイを非表示にできなかったので無視します！:", e);
     }
   }
   /**
@@ -5314,7 +5314,7 @@ class CommentSystem {
       }
       return null;
     } catch (error) {
-      window.logger.warn("CommentFilter2のグローバルデータ取得に失敗したのじゃ:", error);
+      window.logger.warn("CommentFilter2のグローバルデータ取得に失敗したので無視します！:", error);
       return null;
     }
   }
@@ -5353,10 +5353,10 @@ class FloatingDeletedPlayer {
     script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
     script.async = true;
     script.onload = () => {
-      window.logger.info("HLS.jsライブラリの読み込みが完了したのじゃ！");
+      window.logger.info("HLS.jsライブラリの読み込みが完了しました！");
     };
     script.onerror = () => {
-      window.logger.warn("HLS.jsライブラリの読み込みに失敗したのじゃ。ネイティブHLS再生を試行するのじゃ。");
+      window.logger.warn("HLS.jsライブラリの読み込みに失敗しました。ネイティブHLS再生を試行します。");
     };
     document.head.appendChild(script);
   }
@@ -5581,7 +5581,7 @@ class FloatingDeletedPlayer {
       }
     } catch (error) {
       window.logger.error("動画読み込みエラー:", error);
-      this.showError(`動画の読み込みに失敗したのじゃ: ${error instanceof Error ? error.message : String(error)}`);
+      this.showError(`動画の読み込みに失敗しました: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   /**
@@ -5625,11 +5625,11 @@ class FloatingDeletedPlayer {
       this.hls.on(Hls.Events.ERROR, (...args) => {
         const [data] = args;
         window.logger.error("HLS Error:", data);
-        this.showError("HLS再生でエラーが発生したのじゃ");
+        this.showError("HLS再生でエラーが発生しました");
       });
       this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
         this.updateStatus("HLS動画読み込み完了！");
-        this.showSuccess("HLSマニフェスト読み込み完了なのじゃ！");
+        this.showSuccess("HLSマニフェスト読み込み完了しました！");
         this.videoElement?.play().catch((e) => {
           window.logger.error("再生開始エラー:", e);
           this.updateStatus("再生準備完了（クリックで再生）");
@@ -5676,7 +5676,7 @@ class FloatingDeletedPlayer {
     });
     this.videoElement.addEventListener("canplay", () => {
       this.updateStatus("再生準備完了");
-      this.showSuccess("動画の読み込みが完了したのじゃ！");
+      this.showSuccess("動画の読み込みが完了しました！");
     });
     this.videoElement.addEventListener("playing", () => {
       this.updateStatus("再生中");
@@ -5689,7 +5689,7 @@ class FloatingDeletedPlayer {
     });
     this.videoElement.addEventListener("error", (e) => {
       window.logger.error("動画エラー:", e);
-      this.showError("動画の再生でエラーが発生したのじゃ");
+      this.showError("動画の再生でエラーが発生しました");
     });
     this.videoElement.volume = 0.3;
   }
@@ -5777,16 +5777,16 @@ class NicoCachePlayer {
     script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
     script.async = true;
     script.onload = () => {
-      window.logger.info("HLS.jsライブラリの読み込みが完了したのじゃ！");
+      window.logger.info("HLS.jsライブラリの読み込みが完了しました！");
     };
     script.onerror = () => {
-      window.logger.warn("HLS.jsライブラリの読み込みに失敗したのじゃ。ネイティブHLS再生を試行するのじゃ。");
+      window.logger.warn("HLS.jsライブラリの読み込みに失敗しました。ネイティブHLS再生を試行します。");
     };
     document.head.appendChild(script);
   }
   /**
    * グローバルオブジェクトのセットアップ
-   * 削除済み動画プレーヤーのインターフェースを提供するのじゃ
+   * 削除済み動画プレーヤーのインターフェースを提供します
    */
   setupGlobalInterface() {
     if (!window.NicoCache_nl) {
@@ -5822,7 +5822,7 @@ class NicoCachePlayer {
       play: (videoIdOrUrl, title) => {
         if (this.floatingDeletedPlayer) {
           this.floatingDeletedPlayer.show(videoIdOrUrl, title);
-          window.logger.info(`削除済み動画プレーヤーで再生開始: ${videoIdOrUrl}`);
+          window.logger.info(`削除済み動画プレーヤーで再生開始しました: ${videoIdOrUrl}`);
         }
       },
       /**
@@ -5831,7 +5831,7 @@ class NicoCachePlayer {
       hide: () => {
         if (this.floatingDeletedPlayer) {
           this.floatingDeletedPlayer.hide();
-          window.logger.info("削除済み動画プレーヤーを非表示にしたのじゃ");
+          window.logger.info("削除済み動画プレーヤーを非表示にしました");
         }
       },
       /**
@@ -5839,7 +5839,7 @@ class NicoCachePlayer {
        */
       help: () => {
         window.logger.info(`
-削除済み動画プレーヤーの使用方法なのじゃ：
+削除済み動画プレーヤーの使用方法：
 
 1. 基本的な使用方法:
    window.NicoCache_nl.deletedVideoPlayer.play("動画IDまたはURL", "タイトル（オプション）");
@@ -5868,7 +5868,7 @@ class NicoCachePlayer {
         `);
       }
     };
-    window.logger.info("削除済み動画プレーヤーのグローバルインターフェースを設定したのじゃ！");
+    window.logger.info("削除済み動画プレーヤーのグローバルインターフェースを設定しました！");
     window.logger.info("使用方法: window.NicoCache_nl.deletedVideoPlayer.help()");
   }
   /**
@@ -5969,13 +5969,13 @@ class NicoCachePlayer {
       const hasOriginalSource = this.hasOriginalSource();
       if (!isPaymentRequired || hasOriginalSource) {
         window.logger.info(
-          isPaymentRequired ? "元のプレイヤーが正常なので処理をスキップするのじゃ" : "無料動画なので処理をスキップするのじゃ"
+          isPaymentRequired ? "元のプレイヤーが正常なので処理をスキップします" : "無料動画なので処理をスキップします"
         );
         return;
       }
       await this.playWithCustomSource(videoId);
     } catch (error) {
-      window.logger.error("動画変更処理でエラーが発生したのじゃ:", error);
+      window.logger.error("動画変更処理でエラーが発生しました:", error);
       this.toastManager.showError("動画の読み込みに失敗しました");
     }
   }
@@ -6026,7 +6026,7 @@ class NicoCachePlayer {
       await this.playVideo(url, videoTitle);
       await this.loadComments(videoId);
     } catch (error) {
-      window.logger.error("カスタムソースでの再生に失敗したのじゃ:", error);
+      window.logger.error("カスタムソースでの再生に失敗しました:", error);
       throw error;
     }
   }
@@ -6085,7 +6085,7 @@ class NicoCachePlayer {
           });
         }
       } catch (e) {
-        window.logger.error("動画の読み込み待機に失敗したのじゃ:", e);
+        window.logger.error("動画の読み込み待機に失敗しました:", e);
       }
       this.cacheManager = new CacheManager(this.videoElement, this.hls || void 0, url);
       this.cacheManager.startMonitoring();
@@ -6103,7 +6103,7 @@ class NicoCachePlayer {
           this.videoElement.muted = false;
         }
       } catch (playErr) {
-        window.logger.warn("自動再生がブロックされた可能性があるのじゃ:", playErr);
+        window.logger.warn("自動再生がブロックされた可能性があります:", playErr);
         this.playerControls?.show();
       }
       this.toastManager.showSuccess(
@@ -6112,7 +6112,7 @@ class NicoCachePlayer {
       );
       this.videoElement.addEventListener("error", (e) => window.logger.error("[VIDEO-ERROR]", e));
     } catch (error) {
-      window.logger.error("動画再生でエラーが発生したのじゃ:", error);
+      window.logger.error("動画再生でエラーが発生しました:", error);
       this.toastManager.showError("動画の再生に失敗しました");
       throw error;
     }
@@ -6140,14 +6140,14 @@ class NicoCachePlayer {
         if (typeof this.playerControls.setVideoElement === "function") {
           this.playerControls.setVideoElement(videoElement);
         } else {
-          window.logger.warn("setVideoElementメソッドが利用できないのじゃ、直接初期化を試みるのじゃ");
+          window.logger.warn("setVideoElementメソッドが利用できないので、直接初期化を試みます");
           await new Promise((resolve) => setTimeout(resolve, 200));
           if (typeof this.playerControls.setVideoElement === "function") {
             this.playerControls.setVideoElement(videoElement);
           }
         }
       } else {
-        window.logger.warn("player-controls-shadow要素が見つからないのじゃ");
+        window.logger.warn("player-controls-shadow要素が見つかりません");
       }
       if (this.commentSystem) {
         await this.commentSystem.initialize(videoElement);
@@ -6155,9 +6155,9 @@ class NicoCachePlayer {
           this.playerControls.setCommentSystem(this.commentSystem);
         }
       }
-      window.logger.info("シャドウDOM版カスタムプレイヤーの設置が完了したのじゃ！");
+      window.logger.info("シャドウDOM版カスタムプレイヤーの設置が完了しました！");
     } catch (error) {
-      window.logger.error("プレイヤーの置き換えに失敗したのじゃ:", error);
+      window.logger.error("プレイヤーの置き換えに失敗しました:", error);
       throw error;
     }
   }
@@ -6203,7 +6203,7 @@ class NicoCachePlayer {
       e.stopPropagation();
       if (this.videoElement) {
         if (this.videoElement.paused) {
-          this.videoElement.play().catch((err) => window.logger.error("再生開始に失敗したのじゃ:", err));
+          this.videoElement.play().catch((err) => window.logger.error("再生開始に失敗しました:", err));
         } else {
           this.videoElement.pause();
         }
@@ -6222,7 +6222,7 @@ class NicoCachePlayer {
   async loadHLSVideo(url) {
     await Promise.resolve();
     if (!this.videoElement) return;
-    window.logger.info("HLS動画の読み込みを開始するのじゃ:", url);
+    window.logger.info("HLS動画の読み込みを開始します:", url);
     if (typeof Hls !== "undefined" && Hls.isSupported()) {
       this.hls = new Hls();
       this.hls.on(Hls.Events.ERROR, (...args) => {
@@ -6240,7 +6240,7 @@ class NicoCachePlayer {
         this.cacheManager.updateHlsInstance(this.hls, url);
       }
     } else {
-      window.logger.info("HLS.jsが利用できないため、ネイティブHLS再生を試行するのじゃ");
+      window.logger.info("HLS.jsが利用できないため、ネイティブHLS再生を試行します");
       this.videoElement.src = url;
       this.toastManager.showInfo("ネイティブHLS再生を試行中", "ブラウザの対応に依存します");
     }
@@ -6252,9 +6252,9 @@ class NicoCachePlayer {
     try {
       if (!this.commentSystem) return;
       await this.commentSystem.loadComments(videoId);
-      window.logger.info("コメントの読み込みが完了したのじゃ！");
+      window.logger.info("コメントの読み込みが完了しました");
     } catch (error) {
-      window.logger.error("コメント読み込みに失敗したのじゃ:", error);
+      window.logger.error("コメント読み込みに失敗しました:", error);
       this.toastManager.showWarning("コメント読み込みに失敗しました", "動画の再生は継続します");
     }
   }

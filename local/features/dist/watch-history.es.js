@@ -3299,7 +3299,7 @@ class MigrationManager {
     return error instanceof Error ? error.message : String(error);
   }
   /**
-   * マイグレーション定義を初期化するのじゃ
+   * マイグレーション定義を初期化する
    */
   initializeMigrations() {
     this.migrations.push({
@@ -3362,7 +3362,7 @@ class MigrationManager {
     });
   }
   /**
-   * 必要なマイグレーションを実行するのじゃ
+   * 必要なマイグレーションを実行する
    */
   async executeMigrations(db, oldVersion, newVersion) {
     const requiredMigrations = this.migrations.filter(
@@ -3413,7 +3413,7 @@ class MigrationManager {
     }
   }
   /**
-   * データベースの永続化を要求するのじゃ
+   * データベースの永続化を要求する
    */
   async requestPersistence() {
     try {
@@ -3440,7 +3440,7 @@ class MigrationManager {
     }
   }
   /**
-   * 永続化状態を取得するのじゃ
+   * 永続化状態を取得する
    */
   async getPersistenceStatus() {
     try {
@@ -3475,7 +3475,7 @@ class MigrationManager {
     }
   }
   /**
-   * バックアップを作成するのじゃ
+   * バックアップを作成する
    */
   async createBackup(db) {
     if (!this.config.autoBackup) return;
@@ -3511,7 +3511,7 @@ class MigrationManager {
     }
   }
   /**
-   * 古いバックアップを削除するのじゃ
+   * 古いバックアップを削除する
    */
   cleanupOldBackups() {
     try {
@@ -3529,7 +3529,7 @@ class MigrationManager {
     }
   }
   /**
-   * マイグレーション進捗イベントを発行するのじゃ
+   * マイグレーション進捗イベントを発行する
    */
   dispatchProgressEvent() {
     const event = new CustomEvent("migrationProgress", {
@@ -3538,26 +3538,26 @@ class MigrationManager {
     document.dispatchEvent(event);
   }
   /**
-   * 現在のマイグレーション進捗を取得するのじゃ
+   * 現在のマイグレーション進捗を取得する
    */
   getMigrationProgress() {
     return { ...this.currentProgress };
   }
   /**
-   * マイグレーション設定を取得するのじゃ
+   * マイグレーション設定を取得する
    */
   getConfig() {
     return { ...this.config };
   }
   /**
-   * マイグレーション設定を更新するのじゃ
+   * マイグレーション設定を更新する
    */
   updateConfig(newConfig) {
     this.config = { ...this.config, ...newConfig };
     logger.info("[MigrationManager] 設定を更新しました:", this.config);
   }
   /**
-   * 利用可能なバックアップ一覧を取得するのじゃ
+   * 利用可能なバックアップ一覧を取得する
    */
   getAvailableBackups() {
     try {
@@ -3580,7 +3580,7 @@ class MigrationManager {
     }
   }
   /**
-   * バックアップからリストアするのじゃ
+   * バックアップからリストアする
    */
   async restoreFromBackup(backupKey) {
     try {
@@ -3665,7 +3665,7 @@ class WatchHistoryDatabase {
     return error instanceof Error ? error.message : String(error);
   }
   /**
-   * データベースを初期化するのじゃ
+   * データベースを初期化する
    */
   async initialize() {
     try {
@@ -3674,7 +3674,7 @@ class WatchHistoryDatabase {
       const initResult = await new Promise((resolve, reject) => {
         request.onerror = () => {
           logger.error("データベース接続失敗");
-          reject(new Error("データベース接続失敗なのじゃ"));
+          reject(new Error("データベース接続失敗"));
         };
         request.onsuccess = () => {
           this.db = request.result;
@@ -3750,11 +3750,11 @@ class WatchHistoryDatabase {
     }
   }
   /**
-   * 視聴履歴エントリを保存するのじゃ（upsert操作）
+   * 視聴履歴エントリを保存する（upsert操作）
    */
   async saveEntry(entry) {
     if (!this.db) {
-      return { success: false, error: "データベース未初期化なのじゃ" };
+      return { success: false, error: "データベース未初期化" };
     }
     try {
       return new Promise((resolve, reject) => {
@@ -3767,7 +3767,7 @@ class WatchHistoryDatabase {
           reject(new Error(`保存失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`));
         };
         transaction.onabort = () => {
-          reject(new Error("保存処理が中断されたのじゃ"));
+          reject(new Error("保存処理が中断されました"));
         };
         const getRequest = store.get(entry.videoId);
         getRequest.onsuccess = () => {
@@ -3801,11 +3801,11 @@ class WatchHistoryDatabase {
     }
   }
   /**
-   * 個別エントリを取得するのじゃ
+   * 個別エントリを取得する
    */
   async getEntry(videoId) {
     if (!this.db) {
-      return { success: false, error: "データベース未初期化なのじゃ" };
+      return { success: false, error: "データベースが未初期化です" };
     }
     try {
       const transaction = this.db.transaction([this.config.storeName], "readonly");
@@ -3818,20 +3818,20 @@ class WatchHistoryDatabase {
       if (result) {
         return { success: true, data: result };
       } else {
-        return { success: false, error: "動画が見つからぬのじゃ" };
+        return { success: false, error: "動画が見つかりません" };
       }
     } catch (error) {
       return { success: false, error: `取得失敗: ${String(error)}` };
     }
   }
   /**
-   * 全エントリを取得するのじゃ（ソート・フィルタ付き）
+   * 全エントリを取得する（ソート・フィルタ付き）
    */
   async getAllEntries(sortBy = "watchedAt", sortOrder = "desc", filter) {
     logger.debug("getAllEntries開始:", { sortBy, sortOrder, filter });
     if (!this.db) {
       logger.error("データベース未初期化");
-      return { success: false, error: "データベース未初期化なのじゃ" };
+      return { success: false, error: "データベース未初期化" };
     }
     try {
       const transaction = this.db.transaction([this.config.storeName], "readonly");
@@ -3859,12 +3859,12 @@ class WatchHistoryDatabase {
     }
   }
   /**
-   * 統計データを計算するのじゃ
+   * 統計データを計算する
    */
   async calculateStats() {
     const entriesResult = await this.getAllEntries();
     if (!entriesResult.success || !entriesResult.data) {
-      return { success: false, error: "統計計算用データ取得失敗なのじゃ" };
+      return { success: false, error: "統計計算用データ取得失敗" };
     }
     const entries = entriesResult.data;
     try {
@@ -3889,12 +3889,12 @@ class WatchHistoryDatabase {
     }
   }
   /**
-   * データをエクスポートするのじゃ
+   * データをエクスポートする
    */
   async exportData() {
     const entriesResult = await this.getAllEntries();
     if (!entriesResult.success || !entriesResult.data) {
-      return { success: false, error: "エクスポート用データ取得失敗なのじゃ" };
+      return { success: false, error: "エクスポート用データ取得失敗" };
     }
     const seriesAlertsResult = await this.getAllSeriesAlerts();
     const seriesAlerts = seriesAlertsResult.success && seriesAlertsResult.data ? seriesAlertsResult.data : [];
@@ -3907,11 +3907,11 @@ class WatchHistoryDatabase {
     return { success: true, data: exportData };
   }
   /**
-   * データをインポートするのじゃ
+   * データをインポートする
    */
   async importData(exportData, config) {
     if (!exportData.entries || !Array.isArray(exportData.entries)) {
-      return { success: false, error: "不正なデータ形式なのじゃ" };
+      return { success: false, error: "不正なデータ形式" };
     }
     let importedCount = 0;
     const maxEntries = config.maxEntries || exportData.entries.length;
@@ -3961,7 +3961,7 @@ class WatchHistoryDatabase {
   }
   // ===== プライベートメソッド =====
   /**
-   * 視聴ログをマージするのじゃ
+   * 視聴ログをマージする
    */
   mergeWatchLogs(existing, newLogs) {
     const merged = [...existing];
@@ -3979,7 +3979,7 @@ class WatchHistoryDatabase {
     return merged.sort((a, b) => a.date - b.date);
   }
   /**
-   * エントリをマージするのじゃ
+   * エントリをマージする
    */
   mergeEntries(existing, newEntry) {
     return {
@@ -3993,7 +3993,7 @@ class WatchHistoryDatabase {
     };
   }
   /**
-   * フィルタを適用するのじゃ
+   * フィルタを適用する
    */
   applyFilter(entries, filter) {
     return entries.filter((entry) => {
@@ -4028,7 +4028,7 @@ class WatchHistoryDatabase {
     });
   }
   /**
-   * ソートを適用するのじゃ
+   * ソートを適用する
    */
   applySorting(entries, sortBy, sortOrder) {
     return entries.sort((a, b) => {
@@ -4093,7 +4093,7 @@ class WatchHistoryDatabase {
     });
   }
   /**
-   * 日別統計を計算するのじゃ
+   * 日別統計を計算する
    */
   calculateDailyStats(entries) {
     const dailyMap = /* @__PURE__ */ new Map();
@@ -4117,7 +4117,7 @@ class WatchHistoryDatabase {
     return Array.from(dailyMap.values()).sort((a, b) => a.date.localeCompare(b.date));
   }
   /**
-   * 時間帯別統計を計算するのじゃ
+   * 時間帯別統計を計算する
    */
   calculateHourlyStats(entries) {
     const hourlyMap = /* @__PURE__ */ new Map();
@@ -4137,7 +4137,7 @@ class WatchHistoryDatabase {
     return hourlyStats;
   }
   /**
-   * 投稿者別統計を計算するのじゃ
+   * 投稿者別統計を計算する
    */
   calculateCreatorStats(entries) {
     const creatorMap = /* @__PURE__ */ new Map();
@@ -4158,12 +4158,12 @@ class WatchHistoryDatabase {
   }
   // ===== シリーズ関連メソッド =====
   /**
-   * シリーズ統計を取得するのじゃ
+   * シリーズ統計を取得する
    */
   async getSeriesStats(filter) {
     const entriesResult = await this.getAllEntries();
     if (!entriesResult.success || !entriesResult.data) {
-      return { success: false, error: "シリーズ統計用データ取得失敗なのじゃ" };
+      return { success: false, error: "シリーズ統計用データ取得失敗" };
     }
     const entries = entriesResult.data;
     const seriesMap = /* @__PURE__ */ new Map();
@@ -4198,12 +4198,12 @@ class WatchHistoryDatabase {
     return { success: true, data: seriesStats };
   }
   /**
-   * シリーズの動画一覧を取得するのじゃ
+   * シリーズの動画一覧を取得する
    */
   async getSeriesVideos(seriesId) {
     const entriesResult = await this.getAllEntries();
     if (!entriesResult.success || !entriesResult.data) {
-      return { success: false, error: "シリーズ動画取得失敗なのじゃ" };
+      return { success: false, error: "シリーズ動画取得失敗" };
     }
     const seriesVideos = entriesResult.data.filter(
       (entry) => entry.series && entry.series.id === seriesId
@@ -4211,11 +4211,11 @@ class WatchHistoryDatabase {
     return { success: true, data: seriesVideos };
   }
   /**
-   * シリーズアラートを保存するのじゃ
+   * シリーズアラートを保存する
    */
   async saveSeriesAlert(alert) {
     if (!this.db) {
-      return { success: false, error: "データベース未初期化なのじゃ" };
+      return { success: false, error: "データベース未初期化" };
     }
     try {
       return new Promise((resolve, reject) => {
@@ -4237,11 +4237,11 @@ class WatchHistoryDatabase {
     }
   }
   /**
-   * シリーズアラートを取得するのじゃ
+   * シリーズアラートを取得する
    */
   async getSeriesAlert(alertId) {
     if (!this.db) {
-      return { success: false, error: "データベース未初期化なのじゃ" };
+      return { success: false, error: "データベース未初期化" };
     }
     try {
       const transaction = this.db.transaction(["seriesAlerts"], "readonly");
@@ -4254,18 +4254,18 @@ class WatchHistoryDatabase {
       if (result) {
         return { success: true, data: result };
       } else {
-        return { success: false, error: "シリーズアラートが見つからぬのじゃ" };
+        return { success: false, error: "シリーズアラートが見つからぬ" };
       }
     } catch (error) {
       return { success: false, error: `シリーズアラート取得失敗: ${String(error)}` };
     }
   }
   /**
-   * 全シリーズアラートを取得するのじゃ
+   * 全シリーズアラートを取得する
    */
   async getAllSeriesAlerts() {
     if (!this.db) {
-      return { success: false, error: "データベース未初期化なのじゃ" };
+      return { success: false, error: "データベース未初期化" };
     }
     try {
       const transaction = this.db.transaction(["seriesAlerts"], "readonly");
@@ -4281,11 +4281,11 @@ class WatchHistoryDatabase {
     }
   }
   /**
-   * シリーズアラートを削除するのじゃ
+   * シリーズアラートを削除する
    */
   async deleteSeriesAlert(alertId) {
     if (!this.db) {
-      return { success: false, error: "データベース未初期化なのじゃ" };
+      return { success: false, error: "データベース未初期化" };
     }
     try {
       return new Promise((resolve, reject) => {
@@ -4308,11 +4308,11 @@ class WatchHistoryDatabase {
   }
   // ===== 視聴履歴削除機能 =====
   /**
-   * 指定した動画IDの視聴履歴を削除するのじゃ（個別削除）
+   * 指定した動画IDの視聴履歴を削除する（個別削除）
    */
   async deleteEntry(videoId) {
     if (!this.db) {
-      return { success: false, error: "データベース未初期化なのじゃ" };
+      return { success: false, error: "データベース未初期化" };
     }
     try {
       return new Promise((resolve, reject) => {
@@ -4334,11 +4334,11 @@ class WatchHistoryDatabase {
     }
   }
   /**
-   * 全ての視聴履歴を削除するのじゃ（一括削除）
+   * 全ての視聴履歴を削除する（一括削除）
    */
   async deleteAllEntries() {
     if (!this.db) {
-      return { success: false, error: "データベース未初期化なのじゃ" };
+      return { success: false, error: "データベース未初期化" };
     }
     try {
       return new Promise((resolve, reject) => {
@@ -4367,16 +4367,16 @@ class WatchHistoryDatabase {
     }
   }
   /**
-   * 条件に一致する視聴履歴を削除するのじゃ（条件付き削除）
+   * 条件に一致する視聴履歴を削除する（条件付き削除）
    * @param maxWatchCount 最大視聴回数（この回数以下を削除）
    * @param maxProgressRate 最大進捗率（この進捗率以下を削除、0-100の範囲）
    */
   async deleteEntriesByCondition(maxWatchCount, maxProgressRate) {
     if (!this.db) {
-      return { success: false, error: "データベース未初期化なのじゃ" };
+      return { success: false, error: "データベース未初期化" };
     }
     if (maxWatchCount < 0 || maxProgressRate < 0 || maxProgressRate > 100) {
-      return { success: false, error: "無効な条件値なのじゃ（視聴回数は0以上、進捗率は0-100の範囲）" };
+      return { success: false, error: "無効な条件値（視聴回数は0以上、進捗率は0-100の範囲）" };
     }
     try {
       return new Promise((resolve, reject) => {
@@ -4415,12 +4415,12 @@ class WatchHistoryDatabase {
     }
   }
   /**
-   * チェックが必要なシリーズアラートを取得するのじゃ
+   * チェックが必要なシリーズアラートを取得する
    */
   async getAlertsToCheck() {
     const alertsResult = await this.getAllSeriesAlerts();
     if (!alertsResult.success || !alertsResult.data) {
-      return { success: false, error: "アラート取得失敗なのじゃ" };
+      return { success: false, error: "アラート取得失敗" };
     }
     const now = Date.now();
     const alertsToCheck = alertsResult.data.filter(
@@ -4429,7 +4429,7 @@ class WatchHistoryDatabase {
     return { success: true, data: alertsToCheck };
   }
   /**
-   * シリーズフィルタを適用するのじゃ
+   * シリーズフィルタを適用する
    */
   applySeriesFilter(seriesStats, filter) {
     return seriesStats.filter((stats) => {
@@ -4469,53 +4469,53 @@ class WatchHistoryDatabase {
   }
   // ===== 永続化・マイグレーション管理メソッド =====
   /**
-   * データベースの永続化状態を取得するのじゃ
+   * データベースの永続化状態を取得する
    */
   async getPersistenceStatus() {
     return await migrationManager.getPersistenceStatus();
   }
   /**
-   * データベースの永続化を要求するのじゃ
+   * データベースの永続化を要求する
    */
   async requestPersistence() {
     return await migrationManager.requestPersistence();
   }
   /**
-   * マイグレーション進捗を取得するのじゃ
+   * マイグレーション進捗を取得する
    */
   getMigrationProgress() {
     return migrationManager.getMigrationProgress();
   }
   /**
-   * マイグレーション設定を取得するのじゃ
+   * マイグレーション設定を取得する
    */
   getMigrationConfig() {
     return migrationManager.getConfig();
   }
   /**
-   * マイグレーション設定を更新するのじゃ
+   * マイグレーション設定を更新する
    */
   updateMigrationConfig(config) {
     migrationManager.updateConfig(config);
   }
   /**
-   * 利用可能なバックアップ一覧を取得するのじゃ
+   * 利用可能なバックアップ一覧を取得する
    */
   getAvailableBackups() {
     return migrationManager.getAvailableBackups();
   }
   /**
-   * バックアップからリストアするのじゃ
+   * バックアップからリストアする
    */
   async restoreFromBackup(backupKey) {
     return await migrationManager.restoreFromBackup(backupKey);
   }
   /**
-   * 手動でマイグレーションを実行するのじゃ
+   * 手動でマイグレーションを実行する
    */
   async runMigration() {
     if (!this.db) {
-      return { success: false, error: "データベース未初期化なのじゃ" };
+      return { success: false, error: "データベース未初期化" };
     }
     try {
       await migrationManager.executeMigrations(this.db, 1, this.config.version);
@@ -4561,7 +4561,7 @@ class WatchHistoryApp {
     applyWatchHistoryStyles();
   }
   /**
-   * 非同期ハンドラをイベントリスナー用に安全にラップするのじゃ
+   * 非同期ハンドラをイベントリスナー用に安全にラップする
    */
   guardEvent(handler) {
     return (ev) => {
@@ -4578,7 +4578,7 @@ class WatchHistoryApp {
     };
   }
   /**
-   * DOM要素を初期化するのじゃ
+   * DOM要素を初期化する
    */
   initializeElements() {
     const elementIds = [
@@ -4702,7 +4702,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * イベントリスナーを設定するのじゃ
+   * イベントリスナーを設定する
    */
   setupEventListeners() {
     this.elements["search-input"]?.addEventListener("input", this.guardEvent((ev) => this.handleSearch(ev)));
@@ -4802,7 +4802,7 @@ class WatchHistoryApp {
     }));
   }
   /**
-   * 設定を読み込むのじゃ
+   * 設定を読み込む
    */
   loadConfig() {
     const savedConfig = sessionStorage.getItem("watchHistoryConfig");
@@ -4824,13 +4824,13 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 設定を保存するのじゃ
+   * 設定を保存する
    */
   saveConfig() {
     sessionStorage.setItem("watchHistoryConfig", JSON.stringify(this.config));
   }
   /**
-   * 共通ヘッダーを初期化するのじゃ
+   * 共通ヘッダーを初期化する
    */
   initializeCommonHeader() {
     const container = document.getElementById("common-header-container");
@@ -4844,7 +4844,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * アプリケーションを初期化するのじゃ
+   * アプリケーションを初期化する
    */
   async initialize() {
     try {
@@ -4853,14 +4853,14 @@ class WatchHistoryApp {
       await this.loadData();
       this.updateUI();
     } catch (error) {
-      logger.error("初期化エラー:", error);
+      logger.error("初期化エラーです:", error);
       this.showToast("初期化に失敗しました", "error");
     } finally {
       this.showLoading(false);
     }
   }
   /**
-   * フィルタオブジェクトをサニタイズして返すのじゃ
+   * フィルタオブジェクトをサニタイズして返す
    */
   cleanFilter(filter) {
     const cleaned = { ...filter };
@@ -4887,7 +4887,7 @@ class WatchHistoryApp {
     return cleaned;
   }
   /**
-   * データを読み込むのじゃ
+   * データを読み込む
    */
   async loadData() {
     try {
@@ -4927,7 +4927,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * エントリをフィルタリングするのじゃ
+   * エントリをフィルタリングする
    */
   filterEntries() {
     logger.debug("フィルタリング開始:", {
@@ -4978,7 +4978,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * UIを更新するのじゃ
+   * UIを更新する
    */
   updateUI() {
     this.updateHistoryList();
@@ -4987,7 +4987,7 @@ class WatchHistoryApp {
     this.updateContentCount();
   }
   /**
-   * 履歴リストを更新するのじゃ
+   * 履歴リストを更新する
    */
   updateHistoryList() {
     const historyList = this.elements["history-list"];
@@ -5003,7 +5003,7 @@ class WatchHistoryApp {
       historyList.innerHTML = items.join("");
     } catch (err) {
       logger.error("履歴アイテム生成で例外:", err);
-      this.showToast("履歴描画でエラー発生なのじゃ", "error");
+      this.showToast("履歴描画でエラー発生しました", "error");
     }
     historyList.querySelectorAll(".history-item").forEach((item, index) => {
       item.addEventListener("click", this.guardEvent((e) => {
@@ -5029,7 +5029,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * 履歴アイテムのHTMLを生成するのじゃ
+   * 履歴アイテムのHTMLを生成する
    */
   createHistoryItem(entry) {
     const watchedAtDate = new Date(entry.watchedAt);
@@ -5131,7 +5131,7 @@ class WatchHistoryApp {
     `;
   }
   /**
-   * 視聴ログの詳細HTMLを作成するのじゃ
+   * 視聴ログの詳細HTMLを作成する
    */
   createWatchLogsHTML(entry) {
     const watchLogs = entry.watchLogs || [];
@@ -5195,7 +5195,7 @@ class WatchHistoryApp {
     `;
   }
   /**
-   * 視聴ログアコーディオンを切り替えるのじゃ
+   * 視聴ログアコーディオンを切り替える
    */
   toggleWatchLogsAccordion(item) {
     const videoId = item.getAttribute("data-video-id");
@@ -5214,7 +5214,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 統計を更新するのじゃ
+   * 統計を更新する
    */
   updateStats() {
     if (!this.stats) return;
@@ -5244,7 +5244,7 @@ class WatchHistoryApp {
     this.updateFavoriteVideos();
   }
   /**
-   * フィルタを更新するのじゃ
+   * フィルタを更新する
    */
   updateFilters() {
     const ownerSelect = this.elements["filter-owner"];
@@ -5271,7 +5271,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * コンテンツ数を更新するのじゃ
+   * コンテンツ数を更新する
    */
   updateContentCount() {
     const contentCount = this.elements["content-count"];
@@ -5280,7 +5280,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * グラフを更新するのじゃ
+   * グラフを更新する
    */
   updateCharts() {
     if (!this.stats) return;
@@ -5294,7 +5294,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 投稿者統計を更新するのじゃ
+   * 投稿者統計を更新する
    */
   updateCreatorStats() {
     const creatorStats = this.elements["creator-stats"];
@@ -5312,7 +5312,7 @@ class WatchHistoryApp {
     creatorStats.innerHTML = html;
   }
   /**
-   * タグ統計を計算するのじゃ
+   * タグ統計を計算する
    */
   calculateTagStats() {
     const tagCounts = /* @__PURE__ */ new Map();
@@ -5346,7 +5346,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * タグクラウドを更新するのじゃ
+   * タグクラウドを更新する
    */
   updateTagCloud() {
     const tagCloudElement = this.elements["tag-cloud"];
@@ -5380,7 +5380,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * お気に入り動画トップ15を計算するのじゃ
+   * お気に入り動画トップ15を計算する
    */
   calculateFavoriteVideos() {
     const list = this.entries.map((entry) => {
@@ -5400,7 +5400,7 @@ class WatchHistoryApp {
     return list.sort((a, b) => b.score - a.score).slice(0, 15);
   }
   /**
-   * お気に入り動画リストを更新するのじゃ
+   * お気に入り動画リストを更新する
    */
   updateFavoriteVideos() {
     const container = this.elements["favorite-videos"];
@@ -5434,7 +5434,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * タグで検索するのじゃ
+   * タグで検索する
    */
   searchByTag(tag) {
     this.switchTab("history");
@@ -5450,7 +5450,7 @@ class WatchHistoryApp {
   }
   // ===== イベントハンドラ =====
   /**
-   * 検索を処理するのじゃ
+   * 検索を処理する
    */
   handleSearch(event) {
     const input = event.target;
@@ -5461,7 +5461,7 @@ class WatchHistoryApp {
     this.saveConfig();
   }
   /**
-   * 検索をクリアするのじゃ
+   * 検索をクリアする
    */
   clearSearch() {
     const searchInput = this.elements["search-input"];
@@ -5475,7 +5475,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 期間フィルタを一括クリアするのじゃ
+   * 期間フィルタを一括クリアする
    */
   clearDateRange() {
     const startDateInput = this.elements["filter-date-start"];
@@ -5494,7 +5494,7 @@ class WatchHistoryApp {
     this.showToast("期間フィルタをクリアしました", "success");
   }
   /**
-   * ソートを処理するのじゃ
+   * ソートを処理する
    */
   async handleSort(event) {
     const button = event.currentTarget;
@@ -5511,7 +5511,7 @@ class WatchHistoryApp {
     this.saveConfig();
   }
   /**
-   * ソートUIを更新するのじゃ
+   * ソートUIを更新する
    */
   updateSortUI() {
     document.querySelectorAll(".sort-btn").forEach((btn) => {
@@ -5531,7 +5531,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * フィルタを処理するのじゃ
+   * フィルタを処理する
    */
   handleFilter() {
     const completedFilter = this.elements["filter-completed"];
@@ -5559,7 +5559,7 @@ class WatchHistoryApp {
     this.saveConfig();
   }
   /**
-   * データを更新するのじゃ
+   * データを更新する
    */
   async refreshData() {
     try {
@@ -5575,7 +5575,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * エクスポートを処理するのじゃ
+   * エクスポートを処理する
    */
   async handleExport() {
     try {
@@ -5599,7 +5599,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * インポートを処理するのじゃ
+   * インポートを処理する
    */
   handleImport() {
     const fileInput = this.elements["import-file"];
@@ -5608,7 +5608,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * インポートファイルを処理するのじゃ
+   * インポートファイルを処理する
    */
   async handleImportFile(event) {
     const input = event.target;
@@ -5638,7 +5638,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * タブを切り替えるのじゃ
+   * タブを切り替える
    */
   switchTab(tabName) {
     document.querySelectorAll(".tab-btn").forEach((btn) => {
@@ -5662,7 +5662,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 動画詳細を表示するのじゃ
+   * 動画詳細を表示する
    */
   showVideoDetail(entry) {
     this.selectedEntry = entry;
@@ -5677,7 +5677,7 @@ class WatchHistoryApp {
     this.elements["video-detail-modal"]?.classList.remove("hidden");
   }
   /**
-   * 動画詳細HTMLを作成するのじゃ
+   * 動画詳細HTMLを作成する
    */
   createVideoDetailHTML(entry) {
     const watchedAtDate = new Date(entry.watchedAt);
@@ -5738,14 +5738,14 @@ class WatchHistoryApp {
     `;
   }
   /**
-   * モーダルを閉じるのじゃ
+   * モーダルを閉じる
    */
   closeModal() {
     this.elements["video-detail-modal"]?.classList.add("hidden");
     this.selectedEntry = null;
   }
   /**
-   * 動画を開くのじゃ
+   * 動画を開く
    */
   openVideo() {
     if (this.selectedEntry) {
@@ -5753,7 +5753,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * メモ編集を開くのじゃ
+   * メモ編集を開く
    */
   openMemoEdit() {
     if (!this.selectedEntry) return;
@@ -5764,13 +5764,13 @@ class WatchHistoryApp {
     this.elements["memo-edit-modal"]?.classList.remove("hidden");
   }
   /**
-   * メモ編集を閉じるのじゃ
+   * メモ編集を閉じる
    */
   closeMemoEdit() {
     this.elements["memo-edit-modal"]?.classList.add("hidden");
   }
   /**
-   * メモを保存するのじゃ
+   * メモを保存する
    */
   async saveMemo() {
     if (!this.selectedEntry) return;
@@ -5796,7 +5796,7 @@ class WatchHistoryApp {
   }
   // ===== ユーティリティメソッド =====
   /**
-   * 読み込み状態を表示するのじゃ
+   * 読み込み状態を表示する
    */
   showLoading(show) {
     const loading = this.elements["loading"];
@@ -5805,7 +5805,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 空の状態を表示するのじゃ
+   * 空の状態を表示する
    */
   showEmptyState(show) {
     const emptyState = this.elements["empty-state"];
@@ -5814,7 +5814,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * トースト通知を表示するのじゃ
+   * トースト通知を表示する
    */
   showToast(message, type = "info") {
     const toastContainer = this.elements["toast-container"];
@@ -5839,7 +5839,7 @@ class WatchHistoryApp {
     }, 5e3);
   }
   /**
-   * 日別グラフを描画するのじゃ
+   * 日別グラフを描画する
    */
   drawDailyChart(canvas, dailyStats) {
     const ctx = canvas.getContext("2d");
@@ -5873,7 +5873,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * 時間帯別グラフを描画するのじゃ
+   * 時間帯別グラフを描画する
    */
   drawHourlyChart(canvas, hourlyStats) {
     const ctx = canvas.getContext("2d");
@@ -5909,7 +5909,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * 期間をフォーマットするのじゃ
+   * 期間をフォーマットする
    */
   formatDuration(seconds) {
     const hours = Math.floor(seconds / 3600);
@@ -5922,7 +5922,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 数値をフォーマットするのじゃ
+   * 数値をフォーマットする
    */
   formatNumber(num) {
     if (num >= 1e4) {
@@ -5931,7 +5931,7 @@ class WatchHistoryApp {
     return num.toLocaleString();
   }
   /**
-   * HTMLをエスケープするのじゃ
+   * HTMLをエスケープする
    */
   escapeHtml(text) {
     const div = document.createElement("div");
@@ -5940,7 +5940,7 @@ class WatchHistoryApp {
   }
   // ===== シリーズ関連メソッド =====
   /**
-   * シリーズタブを初期化するのじゃ
+   * シリーズタブを初期化する
    */
   async initializeSeriesTab() {
     if (this.seriesStats.length === 0) {
@@ -5949,7 +5949,7 @@ class WatchHistoryApp {
     await this.updateSeriesUI();
   }
   /**
-   * シリーズアラートタブを初期化するのじゃ
+   * シリーズアラートタブを初期化する
    */
   async initializeSeriesAlertTab() {
     if (this.seriesAlerts.length === 0) {
@@ -5961,7 +5961,7 @@ class WatchHistoryApp {
     this.checkNotificationPermissionOnTab();
   }
   /**
-   * シリーズデータを読み込むのじゃ
+   * シリーズデータを読み込む
    */
   async loadSeriesData() {
     try {
@@ -5981,7 +5981,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズアラートデータを読み込むのじゃ
+   * シリーズアラートデータを読み込む
    */
   async loadSeriesAlertData() {
     try {
@@ -6000,7 +6000,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズ統計をフィルタリングするのじゃ
+   * シリーズ統計をフィルタリングする
    */
   filterSeriesStats() {
     this.filteredSeriesStats = this.seriesStats.filter((stats) => {
@@ -6033,21 +6033,21 @@ class WatchHistoryApp {
     });
   }
   /**
-   * シリーズUIを更新するのじゃ
+   * シリーズUIを更新する
    */
   async updateSeriesUI() {
     await this.updateSeriesList();
     this.updateSeriesCount();
   }
   /**
-   * シリーズアラートUIを更新するのじゃ
+   * シリーズアラートUIを更新する
    */
   updateSeriesAlertUI() {
     this.updateSeriesAlertList();
     this.updateSeriesAlertCount();
   }
   /**
-   * シリーズ一覧を更新するのじゃ
+   * シリーズ一覧を更新する
    */
   async updateSeriesList() {
     const seriesList = this.elements["series-list"];
@@ -6080,7 +6080,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * シリーズアラート一覧を更新するのじゃ
+   * シリーズアラート一覧を更新する
    */
   updateSeriesAlertList() {
     const alertList = this.elements["series-alert-list"];
@@ -6107,7 +6107,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * シリーズアイテムのHTMLを生成するのじゃ
+   * シリーズアイテムのHTMLを生成する
    */
   async createSeriesItem(stats) {
     const lastWatchedDate = new Date(stats.lastWatchedAt);
@@ -6145,7 +6145,7 @@ class WatchHistoryApp {
     `;
   }
   /**
-   * シリーズアラートアイテムのHTMLを生成するのじゃ
+   * シリーズアラートアイテムのHTMLを生成する
    */
   createSeriesAlertItem(alert) {
     const lastCheckedDate = new Date(alert.lastCheckedAt);
@@ -6215,7 +6215,7 @@ class WatchHistoryApp {
   }
   // ===== イベントハンドラ（シリーズ関連） =====
   /**
-   * シリーズ検索を処理するのじゃ
+   * シリーズ検索を処理する
    */
   async handleSeriesSearch(event) {
     const input = event.target;
@@ -6225,7 +6225,7 @@ class WatchHistoryApp {
     this.updateSeriesCount();
   }
   /**
-   * シリーズ検索をクリアするのじゃ
+   * シリーズ検索をクリアする
    */
   async clearSeriesSearch() {
     const searchInput = this.elements["series-search-input"];
@@ -6238,7 +6238,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズフィルタを処理するのじゃ
+   * シリーズフィルタを処理する
    */
   async handleSeriesFilter() {
     const progressFilter = this.elements["series-progress-filter"];
@@ -6248,7 +6248,7 @@ class WatchHistoryApp {
     this.updateSeriesCount();
   }
   /**
-   * シリーズデータを更新するのじゃ
+   * シリーズデータを更新する
    */
   async refreshSeriesData() {
     await this.loadSeriesData();
@@ -6256,7 +6256,7 @@ class WatchHistoryApp {
     this.showToast("シリーズデータを更新しました", "success");
   }
   /**
-   * シリーズアラートデータを更新するのじゃ
+   * シリーズアラートデータを更新する
    */
   async refreshSeriesAlertData() {
     await this.loadSeriesAlertData();
@@ -6264,7 +6264,7 @@ class WatchHistoryApp {
     this.showToast("シリーズアラートデータを更新しました", "success");
   }
   /**
-   * シリーズアラートモーダルを開くのじゃ
+   * シリーズアラートモーダルを開く
    */
   openSeriesAlertModal() {
     if ("Notification" in window && Notification.permission === "denied") {
@@ -6275,20 +6275,20 @@ class WatchHistoryApp {
     this.elements["series-alert-modal"]?.classList.remove("hidden");
   }
   /**
-   * シリーズアラートモーダルを閉じるのじゃ
+   * シリーズアラートモーダルを閉じる
    */
   closeSeriesAlertModal() {
     this.elements["series-alert-modal"]?.classList.add("hidden");
   }
   /**
-   * シリーズ詳細モーダルを閉じるのじゃ
+   * シリーズ詳細モーダルを閉じる
    */
   closeSeriesDetailModal() {
     this.elements["series-detail-modal"]?.classList.add("hidden");
     this.selectedSeries = null;
   }
   /**
-   * シリーズアラートを保存するのじゃ
+   * シリーズアラートを保存する
    */
   async saveSeriesAlert() {
     const seriesSelect = this.elements["series-alert-series-select"];
@@ -6341,7 +6341,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズ詳細からアラートを追加するのじゃ
+   * シリーズ詳細からアラートを追加する
    */
   addAlertFromSeriesDetail() {
     if (!this.selectedSeries) return;
@@ -6358,7 +6358,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズ詳細を表示するのじゃ
+   * シリーズ詳細を表示する
    */
   async showSeriesDetail(stats) {
     this.selectedSeries = stats;
@@ -6392,7 +6392,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * シリーズ詳細HTMLを作成するのじゃ
+   * シリーズ詳細HTMLを作成する
    */
   createSeriesDetailHTML(stats, seriesInfo) {
     const lastWatchedDate = new Date(stats.lastWatchedAt);
@@ -6422,7 +6422,7 @@ class WatchHistoryApp {
     `;
   }
   /**
-   * シリーズ動画一覧HTMLを作成するのじゃ
+   * シリーズ動画一覧HTMLを作成する
    */
   createSeriesVideosHTML(videos) {
     if (videos.length === 0) {
@@ -6463,7 +6463,7 @@ class WatchHistoryApp {
     `;
   }
   /**
-   * シリーズアラートを切り替えるのじゃ
+   * シリーズアラートを切り替える
    */
   async toggleSeriesAlert(alert) {
     const updatedAlert = { ...alert, enabled: !alert.enabled, updatedAt: Date.now() };
@@ -6485,7 +6485,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズアラートを削除するのじゃ
+   * シリーズアラートを削除する
    */
   async deleteSeriesAlert(alert) {
     if (!confirm(`「${alert.seriesTitle}」のアラートを削除しますか？`)) {
@@ -6507,7 +6507,7 @@ class WatchHistoryApp {
   }
   // ===== 視聴履歴削除機能 =====
   /**
-   * 個別の視聴履歴エントリを削除するのじゃ
+   * 個別の視聴履歴エントリを削除する
    */
   async deleteHistoryEntry(entry) {
     if (!confirm(`「${entry.title}」の視聴履歴を削除しますか？`)) {
@@ -6530,7 +6530,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 全ての視聴履歴を削除するのじゃ（一括削除）
+   * 全ての視聴履歴を削除する（一括削除）
    */
   async deleteAllHistoryEntries() {
     const totalCount = this.entries.length;
@@ -6560,7 +6560,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 条件に一致する視聴履歴を削除するのじゃ
+   * 条件に一致する視聴履歴を削除する
    */
   async deleteHistoryEntriesByCondition(maxWatchCount, maxProgressRate) {
     if (maxWatchCount < 0 || maxProgressRate < 0 || maxProgressRate > 100) {
@@ -6594,7 +6594,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 条件付き削除のハンドラーなのじゃ
+   * 条件付き削除のハンドラー
    */
   handleConditionalDelete() {
     const watchCountInput = this.elements["delete-watch-count"];
@@ -6608,7 +6608,7 @@ class WatchHistoryApp {
     void this.deleteHistoryEntriesByCondition(maxWatchCount, maxProgressRate);
   }
   /**
-   * シリーズ選択肢を更新するのじゃ
+   * シリーズ選択肢を更新する
    */
   updateSeriesSelectOptions() {
     const seriesSelect = this.elements["series-alert-series-select"];
@@ -6622,7 +6622,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * アラートチェックを開始するのじゃ
+   * アラートチェックを開始する
    */
   startAlertCheck() {
     if (this.alertCheckInterval) {
@@ -6634,7 +6634,7 @@ class WatchHistoryApp {
     void this.checkSeriesAlerts();
   }
   /**
-   * アラートUIの定期更新を開始するのじゃ
+   * アラートUIの定期更新を開始する
    */
   startAlertUIUpdater() {
     setInterval(() => {
@@ -6644,7 +6644,7 @@ class WatchHistoryApp {
     }, 10 * 1e3);
   }
   /**
-   * シリーズアラートをチェックするのじゃ
+   * シリーズアラートをチェックする
    */
   async checkSeriesAlerts() {
     try {
@@ -6660,7 +6660,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 単一のアラートをチェックするのじゃ
+   * 単一のアラートをチェックする
    */
   async checkSingleAlert(alert) {
     try {
@@ -6687,7 +6687,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズの新しい動画をチェックするのじゃ
+   * シリーズの新しい動画をチェックする
    */
   async checkForNewSeriesVideo(alert) {
     try {
@@ -6721,7 +6721,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズ通知を表示するのじゃ（ブラウザ通知のみ）
+   * シリーズ通知を表示する（ブラウザ通知のみ）
    */
   showSeriesNotification(alert) {
     if ("Notification" in window) {
@@ -6751,7 +6751,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 手動でアラートをチェックするのじゃ
+   * 手動でアラートをチェックする
    */
   async manualCheckAlerts() {
     try {
@@ -6789,7 +6789,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 通知権限を確認・要求するのじゃ
+   * 通知権限を確認・要求する
    */
   async checkNotificationPermission() {
     try {
@@ -6827,20 +6827,20 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 通知権限案内モーダルを開くのじゃ
+   * 通知権限案内モーダルを開く
    */
   openNotificationPermissionModal() {
     this.elements["notification-permission-modal"]?.classList.remove("hidden");
     this.highlightCurrentBrowserInstructions();
   }
   /**
-   * 通知権限案内モーダルを閉じるのじゃ
+   * 通知権限案内モーダルを閉じる
    */
   closeNotificationPermissionModal() {
     this.elements["notification-permission-modal"]?.classList.add("hidden");
   }
   /**
-   * 設定後の通知テストを実行するのじゃ
+   * 設定後の通知テストを実行する
    */
   async testNotificationAfterSetup() {
     try {
@@ -6884,7 +6884,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * タブ移動時の通知権限チェックを行うのじゃ
+   * タブ移動時の通知権限チェックを行う
    */
   checkNotificationPermissionOnTab() {
     if ("Notification" in window && Notification.permission === "denied") {
@@ -6894,7 +6894,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 現在のブラウザに適した説明を強調表示するのじゃ
+   * 現在のブラウザに適した説明を強調表示する
    */
   highlightCurrentBrowserInstructions() {
     document.querySelectorAll(".browser-tab").forEach((tab) => {
@@ -6920,7 +6920,7 @@ class WatchHistoryApp {
   }
   // ===== ユーティリティメソッド（シリーズ関連） =====
   /**
-   * シリーズ読み込み状態を表示するのじゃ
+   * シリーズ読み込み状態を表示する
    */
   showSeriesLoading(show) {
     const loading = this.elements["series-loading"];
@@ -6929,7 +6929,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズアラート読み込み状態を表示するのじゃ
+   * シリーズアラート読み込み状態を表示する
    */
   showSeriesAlertLoading(show) {
     const loading = this.elements["series-alert-loading"];
@@ -6938,7 +6938,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズ空の状態を表示するのじゃ
+   * シリーズ空の状態を表示する
    */
   showSeriesEmptyState(show) {
     const emptyState = this.elements["series-empty-state"];
@@ -6947,7 +6947,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズアラート空の状態を表示するのじゃ
+   * シリーズアラート空の状態を表示する
    */
   showSeriesAlertEmptyState(show) {
     const emptyState = this.elements["series-alert-empty-state"];
@@ -6956,7 +6956,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズ数を更新するのじゃ
+   * シリーズ数を更新する
    */
   updateSeriesCount() {
     const seriesCount = this.elements["series-count"];
@@ -6965,7 +6965,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズアラート数を更新するのじゃ
+   * シリーズアラート数を更新する
    */
   updateSeriesAlertCount() {
     const alertCount = this.elements["series-alert-count"];
@@ -6974,7 +6974,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズ情報を取得するのじゃ
+   * シリーズ情報を取得する
    */
   async getSeriesInfo(seriesId) {
     try {
@@ -6993,7 +6993,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * シリーズナビゲーションHTMLを作成するのじゃ
+   * シリーズナビゲーションHTMLを作成する
    */
   createSeriesNavigationHTML(seriesInfo) {
     const { video } = seriesInfo;
@@ -7038,7 +7038,7 @@ class WatchHistoryApp {
     `;
   }
   /**
-   * シリーズから動画を開くのじゃ
+   * シリーズから動画を開く
    */
   openVideoFromSeries(videoId) {
     const url = `https://www.nicovideo.jp/watch/${videoId}`;
@@ -7047,7 +7047,7 @@ class WatchHistoryApp {
   }
   // ===== データベース管理関連メソッド =====
   /**
-   * データベース管理モーダルを開くのじゃ
+   * データベース管理モーダルを開く
    */
   async openDatabaseManagementModal() {
     await this.refreshPersistenceStatus();
@@ -7056,13 +7056,13 @@ class WatchHistoryApp {
     this.elements["database-management-modal"]?.classList.remove("hidden");
   }
   /**
-   * データベース管理モーダルを閉じるのじゃ
+   * データベース管理モーダルを閉じる
    */
   closeDatabaseManagementModal() {
     this.elements["database-management-modal"]?.classList.add("hidden");
   }
   /**
-   * 永続化を要求するのじゃ
+   * 永続化を要求する
    */
   async requestPersistence() {
     try {
@@ -7083,7 +7083,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * 永続化状態を更新するのじゃ
+   * 永続化状態を更新する
    */
   async refreshPersistenceStatus() {
     try {
@@ -7099,7 +7099,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * マイグレーションを実行するのじゃ
+   * マイグレーションを実行する
    */
   async runMigration() {
     try {
@@ -7115,14 +7115,14 @@ class WatchHistoryApp {
     }
   }
   /**
-   * マイグレーション状態を確認するのじゃ
+   * マイグレーション状態を確認する
    */
   checkMigrationStatus() {
     this.migrationProgress = watchHistoryDB.getMigrationProgress();
     this.updateMigrationUI();
   }
   /**
-   * バックアップを作成するのじゃ
+   * バックアップを作成する
    */
   async createBackup() {
     try {
@@ -7147,7 +7147,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * バックアップリストを更新するのじゃ
+   * バックアップリストを更新します
    */
   async refreshBackupList() {
     await Promise.resolve();
@@ -7159,7 +7159,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * データベース設定を更新するのじゃ
+   * データベース設定を更新する
    */
   updateDatabaseConfig() {
     const autoMigration = this.elements["auto-migration-checkbox"]?.checked || false;
@@ -7176,7 +7176,7 @@ class WatchHistoryApp {
     this.showToast("設定を更新しました", "success");
   }
   /**
-   * データベース設定を更新するのじゃ
+   * データベース設定を更新
    */
   async refreshDatabaseConfig() {
     await Promise.resolve();
@@ -7188,7 +7188,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * マイグレーション進捗を処理するのじゃ
+   * マイグレーション進捗を処理する
    */
   handleMigrationProgress(event) {
     const progress = event.detail;
@@ -7196,7 +7196,7 @@ class WatchHistoryApp {
     this.updateMigrationUI();
   }
   /**
-   * 永続化UIを更新するのじゃ
+   * 永続化UIを更新する
    */
   updatePersistenceUI() {
     if (!this.persistenceStatus) return;
@@ -7222,7 +7222,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * マイグレーションUIを更新するのじゃ
+   * マイグレーションUIを更新する
    */
   updateMigrationUI() {
     if (!this.migrationProgress) return;
@@ -7245,7 +7245,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * データベース設定UIを更新するのじゃ
+   * データベース設定UIを更新する
    */
   updateDatabaseConfigUI() {
     if (!this.databaseConfig) return;
@@ -7267,7 +7267,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * バックアップリストUIを更新するのじゃ
+   * バックアップリストUIを更新する
    */
   updateBackupListUI(backups) {
     const container = this.elements["backup-list-container"];
@@ -7314,7 +7314,7 @@ class WatchHistoryApp {
     });
   }
   /**
-   * バックアップを復元するのじゃ
+   * バックアップを復元する
    */
   async restoreBackup(backupKey) {
     if (!confirm("バックアップを復元しますか？現在のデータは失われます。")) {
@@ -7334,7 +7334,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * バックアップを削除するのじゃ
+   * バックアップを削除する
    */
   deleteBackup(backupKey) {
     if (!confirm("バックアップを削除しますか？")) {
@@ -7350,7 +7350,7 @@ class WatchHistoryApp {
     }
   }
   /**
-   * バイト数をフォーマットするのじゃ
+   * バイト数をフォーマットする
    */
   formatBytes(bytes) {
     if (bytes === 0) return "0 B";

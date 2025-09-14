@@ -1,6 +1,6 @@
 /**
  * シャドウDOM版カスタムプレイヤーのHTMLテンプレート
- * スタイル分離を実現するために最小限の構造にするのじゃ
+ * スタイル分離を実現するために最小限の構造にします
  */
 export const CUSTOM_PLAYER_SHADOW_HTML = `
   <div id="custom-player" class="custom-player">
@@ -19,7 +19,7 @@ export const CUSTOM_PLAYER_SHADOW_HTML = `
 /**
  * シャドウDOM版プレイヤーの基本スタイル
  * プレイヤーコントロールはシャドウDOM内で管理されるため、
- * ここでは最小限のスタイルのみ定義するのじゃ
+ * ここでは最小限のスタイルのみ定義します
  */
 export const CUSTOM_PLAYER_SHADOW_STYLES = `
   .custom-player {
@@ -52,7 +52,7 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    object-position: center center; /* 通常表示時も中央配置を保証 */
+    object-position: center center; /* 通常表示時も中央配置を保証します */
     display: block;
     margin: auto; /* flexboxコンテナ内での中央配置 */
     flex-shrink: 0; /* 縮小を防ぐ */
@@ -295,7 +295,7 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
 
 /**
  * フローティング削除済み動画プレーヤーのHTMLテンプレート
- * ドラッガブル半透明ガラス効果のおしゃれプレーヤーなのじゃ
+ * ドラッガブル半透明ガラス効果のおしゃれプレーヤーです
  */
 export const FLOATING_DELETED_PLAYER_HTML = `
   <div id="floating-deleted-player" class="floating-deleted-player">
@@ -330,7 +330,7 @@ import { materialIconsStyles } from '../../common/material-icons.js';
 
 /**
  * フローティング削除済み動画プレーヤーのスタイル
- * 半透明ガラス効果とドラッガブル機能を持つおしゃれなデザインなのじゃ
+ * 半透明ガラス効果とドラッガブル機能を持つおしゃれなデザインです
  */
 export const FLOATING_DELETED_PLAYER_STYLES = `
   ${materialIconsStyles}

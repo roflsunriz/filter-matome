@@ -1,7 +1,7 @@
 # NicoCache Auto Updater
 
 ## 概要
-NicoCacheの自動更新ツールなのじゃ。本体とフィルタの更新を自動的にチェックして、新しいバージョンがあれば更新してくれるのじゃ！
+NicoCacheの自動更新ツールです。本体とフィルタの更新を自動的にチェックして、新しいバージョンがあれば更新してくれます！
 
 ## 主な機能
 - NicoCache本体の自動更新
@@ -15,7 +15,7 @@ NicoCacheの自動更新ツールなのじゃ。本体とフィルタの更新�
 - Java（NicoCacheの実行に必要）
 
 ## 必要なパッケージ
-以下のパッケージは自動でインストールされるのじゃ：
+以下のパッケージは自動でインストールされます：
 - requests
 - beautifulsoup4
 - schedule
@@ -24,9 +24,9 @@ NicoCacheの自動更新ツールなのじゃ。本体とフィルタの更新�
 
 ## 使い方
 1. プログラムを起動する
-カレントディレクトリをconfig_editor.pyがあるディレクトリに移動してほしいのじゃ。
+カレントディレクトリをconfig_editor.pyがあるディレクトリに移動してください。
 例 cd C:/NicoCache_nl
-カレントディレクトリを移動した後は、プログラムを起動するのじゃ。
+カレントディレクトリを移動した後は、プログラムを起動してください。
 python autoUpdater.py
 pythonw autoUpdater.py (ウィンドウモードで起動)
 もしくは設定→既定のアプリ→.pyファイルにPythonを関連付ける
@@ -48,23 +48,23 @@ pythonw autoUpdater.py (ウィンドウモードで起動)
 5. 「開始」ボタンで監視開始
 
 ## 注意事項
-- 本体更新時は自動的にNicoCacheを再起動するのじゃ
-- 更新中はJavaプロセスが一時的に停止されるのじゃ
-- 設定は自動的にconfig.jsonに保存されるのじゃ
+- 本体更新時は自動的にNicoCacheを再起動します
+- 更新中はJavaプロセスが一時的に停止されます
+- 設定は自動的にconfig.jsonに保存されます
 
 ## トラブルシューティング
 1. 更新に失敗する場合
-   - インターネット接続を確認するのじゃ
-   - 保存先のフォルダに書き込み権限があるか確認するのじゃ
+   - インターネット接続を確認してください
+   - 保存先のフォルダに書き込み権限があるか確認してください
 
 2. 再起動に失敗する場合
-   - Javaがインストールされているか確認するのじゃ
-   - パスが正しく設定されているか確認するのじゃ
+   - Javaがインストールされているか確認してください
+   - パスが正しく設定されているか確認してください
 
 ## ライセンス
 This is free and unencumbered software released into the public domain.
 For more information, please refer to <http://unlicense.org>
 
 ## 不具合報告
-5ch のNicoCache_nlスレッドにて報告をお願いするのじゃ。
+5ch のNicoCache_nlスレッドにて報告をお願いします。
 [NicoCache掲示板](https://ff5ch.syoboi.jp/?q=NicoCache)

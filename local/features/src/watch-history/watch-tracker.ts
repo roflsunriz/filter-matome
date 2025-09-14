@@ -1,8 +1,8 @@
 /**
- * ニコニコ動画視聴履歴拡張 - 視聴追跡スクリプトなのじゃ
+ * ニコニコ動画視聴履歴拡張 - 視聴追跡スクリプト
  * 
  * @description 視聴ページで動画メタデータを取得し、視聴状況を追跡する
- * @author わらわ（のじゃロリ娘）
+ * @author roflsunriz
  */
 
 import { WatchHistoryEntry, WatchLogEntry, WatchEvent, WatchEventType, VideoStats, SeriesInfo, SeriesVideoInfo } from '@/types/watch-history-types';
@@ -11,7 +11,7 @@ import { watchHistoryDB } from './database';
 import { logger } from '../common/logger';
 
 /**
- * 視聴追跡クラスなのじゃ
+ * 視聴追跡クラス
  */
 export class WatchTracker {
   private currentVideoId: string | null = null;
@@ -32,7 +32,7 @@ export class WatchTracker {
   }
 
   /**
-   * 初期化するのじゃ
+   * 初期化処理
    */
   private async initialize(): Promise<void> {
     try {
@@ -73,7 +73,7 @@ export class WatchTracker {
   }
 
   /**
-   * 動画IDを抽出するのじゃ
+   * 動画IDを抽出する
    */
   private extractVideoId(): string | null {
     // URLから動画IDを取得
@@ -83,7 +83,7 @@ export class WatchTracker {
   }
 
   /**
-   * 動画メタデータを取得するのじゃ
+   * 動画メタデータを取得する
    */
   private async fetchVideoMetadata(): Promise<void> {
     if (!this.currentVideoId) {
@@ -167,7 +167,7 @@ export class WatchTracker {
   }
 
   /**
-   * 視聴追跡を開始するのじゃ
+   * 視聴追跡を開始する
    */
   private async startWatching(): Promise<void> {
     if (!this.currentEntry) {
@@ -200,13 +200,13 @@ export class WatchTracker {
     // 新しい視聴セッションを開始（完了を待つ）
     await this.startNewWatchSession();
     
-    // 進捗追跡はメタデータが読み込まれてから開始するのじゃ（duration が 0 / Infinity となる事象を回避）
-    // loadedmetadata でリスナを張るため、ここでは開始せぬよう変更したのじゃ。
+    // 進捗追跡はメタデータが読み込まれてから開始する（duration が 0 / Infinity となる事象を回避）
+    // loadedmetadata でリスナを張るため、ここでは開始せぬよう変更した。
     
   }
 
   /**
-   * 新しい視聴セッションを開始するのじゃ
+   * 新しい視聴セッションを開始する
    */
   private async startNewWatchSession(): Promise<void> {
     if (!this.currentEntry) return;
@@ -235,7 +235,7 @@ export class WatchTracker {
   }
 
   /**
-   * 最新の視聴セッションを更新するのじゃ
+   * 最新の視聴セッションを更新する
    */
   private updateLatestWatchSession(currentTime: number, isCompleted: boolean, duration?: number): void {
     if (!this.currentEntry) {
@@ -261,7 +261,7 @@ export class WatchTracker {
     // 最新の視聴セッションを取得
     const latestSession = this.currentEntry.watchLogs[this.currentEntry.watchLogs.length - 1];
     
-    // 日時はセッション開始時のまま保持し、上書きせぬのじゃ
+    // 日時はセッション開始時のまま保持し、上書きしません
     latestSession.position = currentTime;
     latestSession.completed = isCompleted;
     
@@ -279,7 +279,7 @@ export class WatchTracker {
   }
 
   /**
-   * video要素のイベントリスナーを設定するのじゃ
+   * video要素のイベントリスナーを設定する
    */
   private setupVideoEventListeners(): void {
     if (!this.videoElement) return;
@@ -292,7 +292,7 @@ export class WatchTracker {
       }
     });
 
-    // 既にメタデータが読み込まれておる場合（readyState >= 1）にも即時開始するのじゃ
+    // 既にメタデータが読み込まれている場合（readyState >= 1）にも即時開始する
     if (this.videoElement.readyState >= 1 && !this.progressTimer) {
       this.startProgressTracking();
     }
@@ -326,7 +326,7 @@ export class WatchTracker {
   }
 
   /**
-   * 進捗追跡を開始するのじゃ
+   * 進捗追跡を開始する
    */
   private startProgressTracking(): void {
     if (this.progressTimer) {
@@ -339,7 +339,7 @@ export class WatchTracker {
   }
 
   /**
-   * 進捗を更新するのじゃ
+   * 進捗を更新する
    */
   private async updateProgress(): Promise<void> {
     if (!this.videoElement || !this.currentEntry) {
@@ -348,7 +348,7 @@ export class WatchTracker {
     }
 
     const currentTime = this.videoElement.currentTime;
-    // duration のフォールバック処理：Infinity や 0 が返る場合は API から取得した lengthSec を用いるのじゃ
+    // duration のフォールバック処理：Infinity や 0 が返る場合は API から取得した lengthSec を用いる
     let duration = this.videoElement.duration;
     if (!isFinite(duration) || duration === 0) {
       duration = this.currentEntry.lengthSec || 0;
@@ -386,7 +386,7 @@ export class WatchTracker {
     // 最新の視聴セッションを更新
     this.updateLatestWatchSession(currentTime, completionRate >= this.COMPLETION_THRESHOLD, duration);
 
-    // データベースへの書き込みは過剰にならぬよう間引くのじゃ
+    // データベースへの書き込みは過剰にならぬよう間引く
     if (now - this.lastSessionRecordTime >= this.SESSION_RECORD_INTERVAL) {
       try {
         await watchHistoryDB.saveEntry(this.currentEntry);
@@ -398,7 +398,7 @@ export class WatchTracker {
   }
 
   /**
-   * 時間更新を処理するのじゃ
+   * 時間更新を処理する
    */
   private async handleTimeUpdate(): Promise<void> {
     if (!this.videoElement || !this.currentEntry) return;
@@ -427,7 +427,7 @@ export class WatchTracker {
   }
 
   /**
-   * 繰り返し再生時に前のセッションを100%完了として記録するのじゃ
+   * 繰り返し再生時に前のセッションを100%完了として記録する
    */
   private async recordRepeatCompletion(): Promise<void> {
     if (!this.currentEntry || !this.videoElement) return;
@@ -464,7 +464,7 @@ export class WatchTracker {
   }
 
   /**
-   * 動画終了を処理するのじゃ
+   * 動画終了を処理する
    */
   private async handleVideoEnded(): Promise<void> {
     if (!this.videoElement || !this.currentEntry) return;
@@ -492,7 +492,7 @@ export class WatchTracker {
   }
 
   /**
-   * 視聴追跡を停止するのじゃ
+   * 視聴追跡を停止する
    */
   private stopWatching(): void {
     if (this.progressTimer) {
@@ -506,7 +506,7 @@ export class WatchTracker {
   }
 
   /**
-   * 視聴イベントを発行するのじゃ
+   * 視聴イベントを発行する
    */
   private emitWatchEvent(type: WatchEventType, currentTime: number): void {
     if (!this.currentEntry) return;
@@ -528,7 +528,7 @@ export class WatchTracker {
   }
 
   /**
-   * 破棄処理なのじゃ
+   * 破棄処理
    */
   public async destroy(): Promise<void> {
     logger.debug('[WatchTracker] 破棄処理を開始します');
@@ -550,7 +550,7 @@ export class WatchTracker {
   }
 
   /**
-   * 同期的な破棄処理（beforeunload用）なのじゃ
+   * 同期的な破棄処理（beforeunload用）
    */
   public destroySync(): void {
     logger.debug('[WatchTracker] 同期的な破棄処理を開始します');
@@ -572,14 +572,14 @@ export class WatchTracker {
   }
 
   /**
-   * ページが背後に回った際など、一時的に進捗のみ保存する公開メソッドなのじゃ
+   * ページが背後に回った際など、一時的に進捗のみ保存する公開メソッド
    */
   public async saveSnapshot(): Promise<void> {
     await this.recordCurrentSession();
   }
 
   /**
-   * 現在の視聴セッションを記録するのじゃ
+   * 現在の視聴セッションを記録する
    */
   private async recordCurrentSession(): Promise<void> {
     if (!this.videoElement || !this.currentEntry || !this.isWatching) return;
@@ -627,7 +627,7 @@ export class WatchTracker {
   }
 
   /**
-   * 現在の視聴セッションを同期的に記録するのじゃ（beforeunload用）
+   * 現在の視聴セッションを同期的に記録する（beforeunload用）
    */
   private recordCurrentSessionSync(): void {
     if (!this.videoElement || !this.currentEntry || !this.isWatching) {
@@ -675,7 +675,7 @@ export class WatchTracker {
   // ===== メタデータ抽出メソッド =====
 
   /**
-   * タイトルを抽出するのじゃ
+   * タイトルを抽出する
    */
   private extractTitle(apiData: NicoApiData): string | null {
     try {
@@ -693,7 +693,7 @@ export class WatchTracker {
   }
 
   /**
-   * 投稿者IDを抽出するのじゃ
+   * 投稿者IDを抽出する
    */
   private extractOwnerId(apiData: NicoApiData): string | null {
     try {
@@ -713,7 +713,7 @@ export class WatchTracker {
   }
 
   /**
-   * 投稿者名を抽出するのじゃ
+   * 投稿者名を抽出する
    */
   private extractOwnerName(apiData: NicoApiData): string | null {
     try {
@@ -733,7 +733,7 @@ export class WatchTracker {
   }
 
   /**
-   * 動画長を抽出するのじゃ
+   * 動画長を抽出する
    */
   private extractLengthSec(apiData: NicoApiData): number | null {
     try {
@@ -748,7 +748,7 @@ export class WatchTracker {
   }
 
   /**
-   * 統計情報を抽出するのじゃ
+   * 統計情報を抽出する
    */
   private extractStats(apiData: NicoApiData): VideoStats | null {
     try {
@@ -772,7 +772,7 @@ export class WatchTracker {
   }
 
   /**
-   * タグを抽出するのじゃ
+   * タグを抽出する
    */
   private extractTags(apiData: NicoApiData): string[] | null {
     try {
@@ -787,7 +787,7 @@ export class WatchTracker {
   }
 
   /**
-   * サムネイルURLを抽出するのじゃ
+   * サムネイルURLを抽出する
    */
   private extractThumbnailUrl(apiData: NicoApiData): string | null {
     try {
@@ -808,7 +808,7 @@ export class WatchTracker {
   }
 
   /**
-   * シリーズ情報を抽出するのじゃ
+   * シリーズ情報を抽出する
    */
   private extractSeries(apiData: NicoApiData): SeriesInfo | null {
     try {
@@ -918,7 +918,7 @@ document.addEventListener('visibilitychange', () => {
   if (watchTracker && document.visibilityState === 'hidden') {
     logger.debug('[WatchTracker] ページが非表示になりました - 進捗を一時保存します');
     void watchTracker.saveSnapshot();
-    // 背景でも tracking は継続するゆえ destroy は行わぬのじゃ
+    // 背景でも tracking は継続するゆえ destroy は行いません
   }
 });
 

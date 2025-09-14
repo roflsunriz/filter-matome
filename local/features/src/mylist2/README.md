@@ -406,7 +406,7 @@ await manager.scheduleAutoDatabaseBackup(24);
 - **災害復旧**: 自動バックアップによる安全なデータ復旧
 - **運用効率**: 自動監視によるメンテナンス負荷軽減
 
-この文書を参考に、効率的にmylist2プロジェクトを編集できるのじゃ！ 
+この文書を参考に、効率的にmylist2プロジェクトを編集できます！ 
 
 ## ☁️ クラウドバックアップ対応（Google Drive / OneDrive / Dropbox / MEGA β）
 

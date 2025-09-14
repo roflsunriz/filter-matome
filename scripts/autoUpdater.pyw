@@ -31,7 +31,7 @@ REQUIRED_PACKAGES = {
 }
 
 def is_package_installed(package_name):
-    """パッケージがインストール済みかどうかを確認するのじゃ！"""
+    """パッケージがインストール済みかどうかを確認します！"""
     try:
         importlib.import_module(package_name)
         return True
@@ -39,15 +39,15 @@ def is_package_installed(package_name):
         return False
 
 def install_packages():
-    """必要なパッケージを自動インストールするのじゃ！"""
+    """必要なパッケージを自動インストールします！"""
     for package in REQUIRED_PACKAGES:
         if not is_package_installed(package):
-            print(f"{package}をインストールするのじゃ！")
+            print(f"{package}をインストールします！")
             try:
                 subprocess.check_call([sys.executable, '-m', 'pip', 'install', package])
-                print(f"{package}のインストールに成功したのじゃ！")
+                print(f"{package}のインストールに成功しました！")
             except subprocess.CalledProcessError as e:
-                print(f"{package}のインストールに失敗したのじゃ。エラー: {e}")
+                print(f"{package}のインストールに失敗しました。エラー: {e}")
                 sys.exit(1)
 
 class NicoCacheGUI:
@@ -136,20 +136,20 @@ class NicoCacheGUI:
             }
             try:
                 self.save_config()
-                self.log("新しい設定ファイルを作成したのじゃ！")
+                self.log("新しい設定ファイルを作成しました！")
             except Exception as e:
-                self.log(f"設定ファイルの作成に失敗したのじゃ: {e}")
+                self.log(f"設定ファイルの作成に失敗しました: {e}")
                 messagebox.showerror('エラー', 
-                    '設定ファイルの作成に失敗したのじゃ！\n'
-                    'アプリケーションの実行権限を確認するのじゃ。')
+                    '設定ファイルの作成に失敗しました！\n'
+                    'アプリケーションの実行権限を確認してください。')
         except json.JSONDecodeError:
-            self.log("設定ファイルの形式が不正なのじゃ！")
+            self.log("設定ファイルの形式が不正です！")
             # 破損した設定ファイルをバックアップ
             try:
                 shutil.copy2('config.json', 'config.json.bak')
-                self.log("破損した設定ファイルをバックアップしたのじゃ")
+                self.log("破損した設定ファイルをバックアップしました")
             except Exception as e:
-                self.log(f"バックアップの作成に失敗したのじゃ: {e}")
+                self.log(f"バックアップの作成に失敗しました: {e}")
             
             # 新しい設定ファイルを作成
             self.config = {
@@ -190,10 +190,10 @@ class NicoCacheGUI:
             
         except Exception as e:
             if hasattr(self, 'log_text'):
-                self.log(f"設定の保存に失敗したのじゃ: {e}")
+                self.log(f"設定の保存に失敗しました: {e}")
             messagebox.showerror('エラー', 
-                '設定の保存に失敗したのじゃ！\n'
-                'ファイルの書き込み権限を確認するのじゃ。')
+                '設定の保存に失敗しました！\n'
+                'ファイルの書き込み権限を確認してください。')
 
     def create_gui(self):
         # プリセット選択部分を追加
@@ -329,7 +329,7 @@ class NicoCacheGUI:
             self.dir_entry.insert(0, dir_path)
 
     def toggle_interval_input(self):
-        """更新間隔の入力方式を切り替えるのじゃ！"""
+        """更新間隔の入力方式を切り替えます！"""
         if self.interval_type.get() == 'preset':
             self.preset_frame.pack(side='left', padx=5)
             self.custom_frame.pack_forget()
@@ -339,7 +339,7 @@ class NicoCacheGUI:
             self.update_custom_interval_input()
 
     def update_custom_interval_input(self):
-        """カスタム間隔の入力値を更新するのじゃ"""
+        """カスタム間隔の入力値を更新します"""
         total_minutes = self.config.get('interval', 60)
         hours = total_minutes // 60
         minutes = total_minutes % 60
@@ -363,7 +363,7 @@ class NicoCacheGUI:
                         raise ValueError
                     interval = hours * 60 + minutes
                 except ValueError:
-                    messagebox.showerror('エラー', '時間は0以上の整数、分は0-59の間で入力するのじゃ！')
+                    messagebox.showerror('エラー', '時間は0以上の整数、分は0-59の間で入力してください！')
                     return
             self.config['interval'] = interval
 
@@ -385,9 +385,9 @@ class NicoCacheGUI:
                 current_preset['keywords'] = self.keywords_text.get('1.0', tk.END).strip().split('\n')
             
             self.save_config()
-            messagebox.showinfo('成功', '設定を保存したのじゃ！')
+            messagebox.showinfo('成功', '設定を保存しました！')
         except ValueError:
-            messagebox.showerror('エラー', '正しい数値を入力するのじゃ！')
+            messagebox.showerror('エラー', '正しい数値を入力してください！')
             return
 
     def log(self, message):
@@ -404,7 +404,7 @@ class NicoCacheGUI:
         self.update_thread.start()
         self.start_button.config(state='disabled')
         self.stop_button.config(state='normal')
-        self.log('監視を開始したのじゃ！')
+        self.log('監視を開始しました！')
 
     def stop_monitoring(self):
         self.running = False
@@ -416,7 +416,7 @@ class NicoCacheGUI:
         
         self.start_button.config(state='normal')
         self.stop_button.config(state='disabled')
-        self.log('監視を停止したのじゃ！')
+        self.log('監視を停止しました！')
 
     def update_loop(self):
         while self.running and not self.stop_event.is_set():
@@ -426,13 +426,13 @@ class NicoCacheGUI:
                 if self.stop_event.wait(timeout=self.config['interval'] * 60):
                     break
             except Exception as e:
-                self.log(f'更新ループでエラーが発生したのじゃ: {e}')
+                self.log(f'更新ループでエラーが発生しました: {e}')
                 # エラー発生時も停止イベントをチェック
                 if self.stop_event.is_set():
                     break
 
     def update_form_from_preset(self):
-        """選択されたプリセットに基づいてフォームを更新するのじゃ"""
+        """選択されたプリセットに基づいてフォームを更新します"""
         selected_name = self.selected_preset.get()
         preset = next(p for p in self.presets if p['name'] == selected_name)
         
@@ -444,7 +444,7 @@ class NicoCacheGUI:
         self.keywords_text.insert('1.0', '\n'.join(preset['keywords']))
 
     def update_gui_from_config(self):
-        """設定値でGUIを更新するのじゃ"""
+        """設定値でGUIを更新します"""
         if hasattr(self, 'dir_entry'):
             self.dir_entry.delete(0, tk.END)
             self.dir_entry.insert(0, self.config['target_dir'])
@@ -474,17 +474,17 @@ class NicoCacheDownloader:
             return None
 
     def _kill_java_processes(self):
-        """Javaプロセスを終了するのじゃ！"""
+        """Javaプロセスを終了します！"""
         try:
             for proc in psutil.process_iter(['pid', 'name']):
                 if proc.info['name'] in ['java.exe', 'javaw.exe']:
                     proc.kill()
-            self.gui.log("Javaプロセスを終了したのじゃ！")
+            self.gui.log("Javaプロセスを終了しました！")
         except Exception as e:
             self.gui.log(f"プロセス終了エラー: {e}")
 
     def _restart_nicocache(self):
-        """NicoCacheを再起動するのじゃ！"""
+        """NicoCacheを再起動します！"""
         try:
             target_dir = Path(self.config['target_dir'])
             jar_name = 'NicoCache_nl.jar'
@@ -493,7 +493,7 @@ class NicoCacheDownloader:
             self.gui.log(f"対象のJARファイルのパス: {jar_path}")
             
             if not jar_path.exists():
-                self.gui.log(f"エラー: JARファイルが見つからないのじゃ！: {jar_path}")
+                self.gui.log(f"エラー: JARファイルが見つかりません！: {jar_path}")
                 return
             
             # 現在の作業ディレクトリを保存
@@ -513,12 +513,12 @@ class NicoCacheDownloader:
                 process = subprocess.Popen(command)
                 self.gui.log(f"プロセスID: {process.pid}")
                 
-                self.gui.log("NicoCacheを再起動したのじゃ！")
+                self.gui.log("NicoCacheを再起動しました！")
                 
             finally:
                 # 作業ディレクトリを元に戻す
                 os.chdir(original_dir)
-                self.gui.log(f"作業ディレクトリを元に戻したのじゃ: {original_dir}")
+                self.gui.log(f"作業ディレクトリを元に戻しました: {original_dir}")
                 
         except Exception as e:
             self.gui.log(f"再起動エラー: {e}")
@@ -528,7 +528,7 @@ class NicoCacheDownloader:
 
     def check_for_updates(self):
         try:
-            self.gui.log('更新チェックを開始するのじゃ！')
+            self.gui.log('更新チェックを開始します！')
             
             # 現在のプリセットを取得
             current_preset = next(
@@ -546,7 +546,7 @@ class NicoCacheDownloader:
                 else:
                     self.gui.log(f'既存ファイルから推測した現在のバージョン: {existing_file_time}')
             else:
-                self.gui.log('既存ファイルが見つからないため初回更新とみなすのじゃ')
+                self.gui.log('既存ファイルが見つからないため初回更新とみなします')
             
             response = requests.get(self.config['url'])
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -580,35 +580,35 @@ class NicoCacheDownloader:
                             self.gui.log(f'日付のパースに失敗: {date_str}')
             
             if latest_file:
-                self.gui.log(f'最新のファイルを見つけたのじゃ: {latest_file}')
+                self.gui.log(f'最新のファイルを見つけました: {latest_file}')
                 latest_file_time = datetime.strptime(latest_file['date'], '%Y/%m/%d %H:%M:%S')
                 
                 # カスタムプリセットの場合は更新日チェックをスキップ
                 if current_preset['name'].startswith('カスタム'):
                     should_update = True
-                    self.gui.log('カスタムプリセットのため日時チェックをスキップするのじゃ')
+                    self.gui.log('カスタムプリセットのため日時チェックをスキップします')
                 else:
                     # 既存のファイルと日付を比較（1分の誤差を許容）
                     if not existing_file_time:
                         should_update = True
-                        self.gui.log('既存ファイルが見つからないため更新するのじゃ')
+                        self.gui.log('既存ファイルが見つからないため更新します')
                     else:
                         time_diff = (latest_file_time - existing_file_time).total_seconds()
                         should_update = time_diff > 60  # 1分以上の差がある場合のみ更新
                         self.gui.log(f'日時比較: ウェブ版={latest_file_time}, ローカル版={existing_file_time}, 差={time_diff:.0f}秒')
                 
                 if not should_update:
-                    self.gui.log('既存のファイルが最新なのでスキップするのじゃ！')
+                    self.gui.log('既存のファイルが最新なのでスキップします！')
                     return
                 
                 # 更新確認ダイアログを表示
                 current_version_str = existing_file_time.strftime('%Y/%m/%d %H:%M:%S') if existing_file_time else '未インストール'
                 if not messagebox.askyesno('更新確認', 
-                    f'新しいバージョンが見つかったのじゃ！\n\n'
+                    f'新しいバージョンが見つかったので更新します！\n\n'
                     f'現在のバージョン: {current_version_str}\n'
                     f'新しいバージョン: {latest_file_time.strftime("%Y/%m/%d %H:%M:%S")}\n\n'
-                    f'更新を実行するのじゃ？'):
-                    self.gui.log('更新をキャンセルしたのじゃ！')
+                    f'更新を実行しますか？'):
+                    self.gui.log('更新をキャンセルしました！')
                     return
                 
                 # ダウンロードと更新を実行
@@ -616,21 +616,21 @@ class NicoCacheDownloader:
                 if download_link:
                     if current_preset['name'] == '本体更新':
                         # 本体更新時は先にプロセスを停止
-                        self.gui.log('本体更新のためJavaプロセスを停止するのじゃ...')
+                        self.gui.log('本体更新のためJavaプロセスを停止します...')
                         self._kill_java_processes()
                         
                         # ダウンロードと展開
                         self._handle_download(download_link, latest_file)
                         
                         # 本体更新後に再起動
-                        self.gui.log('本体を再起動するのじゃ！')
+                        self.gui.log('本体を再起動します！')
                         self._restart_nicocache()
                     else:
                         # 本体以外は通常の更新処理
                         self._handle_download(download_link, latest_file)
             
         except Exception as e:
-            self.gui.log(f'エラーが発生したのじゃ: {e}')
+            self.gui.log(f'エラーが発生しました: {e}')
 
     def __del__(self):
         # オブジェクト破棄時にドライバーを閉じる
@@ -679,11 +679,11 @@ class NicoCacheDownloader:
         }
 
         def is_system_file(file_path):
-            """システムファイルかどうかをチェックするのじゃ"""
+            """システムファイルかどうかをチェックします"""
             return file_path.name.lower() in SYSTEM_FILES
 
         def is_excluded_file(file_path):
-            """除外ファイルかどうかをチェックするのじゃ"""
+            """除外ファイルかどうかをチェックします"""
             file_name = file_path.name.lower()
             exclude_list = [x.lower() for x in self.config.get('exclude_files', []) if x.strip()]
             return any(exclude_pattern in file_name for exclude_pattern in exclude_list)
@@ -703,7 +703,7 @@ class NicoCacheDownloader:
             
             # 保存先ディレクトリが存在しない場合は作成
             if not target_dir.exists():
-                self.gui.log(f"保存先ディレクトリが存在しないので作成するのじゃ: {target_dir}")
+                self.gui.log(f"保存先ディレクトリが存在しないので作成します: {target_dir}")
                 target_dir.mkdir(parents=True, exist_ok=True)
             
             # まず一時ディレクトリに展開
@@ -782,7 +782,7 @@ class NicoCacheDownloader:
                                 self.gui.log(f"ファイルコピーエラー - {rel_path}: {e}")
                                 continue
                 else:
-                    self.gui.log("展開されたアイテムが見つからないのじゃ...")
+                    self.gui.log("展開されたアイテムが見つかりません...")
                     raise Exception("No items found in archive")
             else:
                 # カスタムプリセットの通常展開（同様の処理を適用）
@@ -854,13 +854,13 @@ class NicoCacheDownloader:
                     
                     self.gui.log(f"更新完了: {item.name}")
             
-            # 更新後にファイルの更新日時をウェブサイトの公開日時に設定するのじゃ！
+            # 更新後にファイルの更新日時をウェブサイトの公開日時に設定します！
             self._update_file_timestamps(file_info)
             
-            self.gui.log("更新完了したのじゃ！(๑•̀ㅂ•́)و✧")
+            self.gui.log("更新完了しました！(๑•̀ㅂ•́)و✧")
             
         except Exception as e:
-            self.gui.log(f"更新中にエラーが発生したのじゃ: {e}")
+            self.gui.log(f"更新中にエラーが発生しました: {e}")
             raise
         finally:
             # 一時ファイルとディレクトリの削除
@@ -876,26 +876,26 @@ class NicoCacheDownloader:
                             os.chmod(os.path.join(root, name), 0o777)
                     shutil.rmtree(temp_extract_dir)
             except Exception as e:
-                self.gui.log(f"一時ファイルの削除中にエラー: {e}")
+                self.gui.log(f"一時ファイルの削除中にエラーが発生しました: {e}")
 
     def _get_metadata_file_path(self):
-        """メタデータファイルのパスを取得するのじゃ！"""
+        """メタデータファイルのパスを取得します！"""
         target_dir = Path(self.config['target_dir'])
         return target_dir / 'update_metadata.json'
 
     def _load_update_metadata(self):
-        """更新メタデータを読み込むのじゃ！"""
+        """更新メタデータを読み込みます！"""
         try:
             metadata_file = self._get_metadata_file_path()
             if metadata_file.exists():
                 with open(metadata_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception as e:
-            self.gui.log(f"メタデータの読み込み中にエラー: {e}")
+            self.gui.log(f"メタデータの読み込み中にエラーが発生しました: {e}")
         return {}
 
     def _save_update_metadata(self, preset_name, file_info):
-        """更新メタデータを保存するのじゃ！"""
+        """更新メタデータを保存します！"""
         try:
             metadata_file = self._get_metadata_file_path()
             
@@ -916,13 +916,13 @@ class NicoCacheDownloader:
             with open(metadata_file, 'w', encoding='utf-8') as f:
                 json.dump(metadata, f, indent=4, ensure_ascii=False)
             
-            self.gui.log(f'メタデータを保存したのじゃ: {preset_name}')
+            self.gui.log(f'メタデータを保存しました: {preset_name}')
             
         except Exception as e:
-            self.gui.log(f"メタデータの保存中にエラー: {e}")
+            self.gui.log(f"メタデータの保存中にエラーが発生しました: {e}")
 
     def _get_current_version_info(self, preset_name):
-        """現在のバージョン情報を取得するのじゃ！"""
+        """現在のバージョン情報を取得します！"""
         try:
             metadata = self._load_update_metadata()
             if preset_name in metadata:
@@ -932,11 +932,11 @@ class NicoCacheDownloader:
                 # メタデータが存在しない場合、既存ファイルから推測を試みる
                 return self._try_get_existing_file_time(preset_name)
         except Exception as e:
-            self.gui.log(f"現在のバージョン情報取得中にエラー: {e}")
+            self.gui.log(f"現在のバージョン情報取得中にエラーが発生しました: {e}")
         return None
 
     def _try_get_existing_file_time(self, preset_name):
-        """既存ファイルから更新日時を推測するのじゃ！（メタデータがない場合）"""
+        """既存ファイルから更新日時を推測します！（メタデータがない場合）"""
         try:
             target_dir = Path(self.config['target_dir'])
             
@@ -962,7 +962,7 @@ class NicoCacheDownloader:
         return None
 
     def _update_file_timestamps(self, file_info):
-        """更新されたファイルの更新日時をウェブサイトの公開日時に設定するのじゃ！"""
+        """更新されたファイルの更新日時をウェブサイトの公開日時に設定します！"""
         try:
             # ウェブサイトの公開日時を取得
             web_date = datetime.strptime(file_info['date'], '%Y/%m/%d %H:%M:%S')
@@ -981,24 +981,24 @@ class NicoCacheDownloader:
                 jar_path = target_dir / 'NicoCache_nl.jar'
                 if jar_path.exists():
                     os.utime(str(jar_path), (web_timestamp, web_timestamp))
-                    self.gui.log(f'jarファイルの更新日時を設定したのじゃ: {web_date}')
+                    self.gui.log(f'jarファイルの更新日時を設定しました: {web_date}')
                 
             elif current_preset['name'] == 'フィルタまとめ':
                 # フィルタまとめの場合はReleaseNotesの日時を設定
                 release_notes_path = target_dir / 'nlFilters' / '198_release_notes.md'
                 if release_notes_path.exists():
                     os.utime(str(release_notes_path), (web_timestamp, web_timestamp))
-                    self.gui.log(f'ReleaseNotesの更新日時を設定したのじゃ: {web_date}')
+                    self.gui.log(f'ReleaseNotesの更新日時を設定しました: {web_date}')
             
             # メタデータを保存
             self._save_update_metadata(current_preset['name'], file_info)
             
         except Exception as e:
-            self.gui.log(f"ファイル更新日時の設定中にエラー: {e}")
+            self.gui.log(f"ファイル更新日時の設定中にエラーが発生しました: {e}")
 
     def on_update_error(self, error_message):
         # エラーダイアログを表示
-        messagebox.showerror('エラー', f'更新中にエラーが発生したのじゃ！\n{error_message}')
+        messagebox.showerror('エラー', f'更新中にエラーが発生しました！\n{error_message}')
         # 監視を停止
         self.stop_monitoring()
 
@@ -1018,7 +1018,7 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
-    print("必要なパッケージを確認するのじゃ...")
+    print("必要なパッケージを確認します...")
     install_packages()
     try:
         import requests
@@ -1026,10 +1026,10 @@ if __name__ == "__main__":
         import schedule
         import py7zr
         import psutil
-        print("全てのパッケージの準備が整ったのじゃ！")
+        print("全てのパッケージの準備が整いました！")
         root = tk.Tk()
         app = NicoCacheGUI(root)
         root.mainloop()
     except ImportError as e:
-        print(f"重要なパッケージのインポートに失敗したのじゃ: {e}")
+        print(f"重要なパッケージのインポートに失敗しました: {e}")
         sys.exit(1)

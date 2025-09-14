@@ -1,7 +1,7 @@
 import type { MediaItem, MediaTrack } from '@/types/nl-media-info-types';
 
 /**
- * メディア情報のバリデーション用ユーティリティなのじゃ
+ * メディア情報のバリデーション用ユーティリティ
  */
 export interface Validators {
   isValidMediaInfo(mediaInfo: unknown): mediaInfo is MediaItem[];
@@ -15,18 +15,18 @@ export interface Validators {
 
 export const validators: Validators = {
   /**
-   * メディアファイルの基本情報をバリデーションするのじゃ
+   * メディアファイルの基本情報をバリデーションする
    * @param mediaInfo - メディア情報オブジェクト
    * @returns バリデーション結果
    */
   isValidMediaInfo(mediaInfo: unknown): mediaInfo is MediaItem[] {
     if (!Array.isArray(mediaInfo)) {
-      console.error('メディア情報が配列ではないのじゃ');
+      console.error('メディア情報が配列ではない');
       return false;
     }
 
     if (mediaInfo.length === 0) {
-      console.error('メディア情報が空なのじゃ');
+      console.error('メディア情報が空');
       return false;
     }
 
@@ -34,7 +34,7 @@ export const validators: Validators = {
   },
 
   /**
-   * ファイルサイズの値をバリデーションするのじゃ
+   * ファイルサイズの値をバリデーションする
    * @param size - ファイルサイズ
    * @returns バリデーション結果
    */
@@ -48,7 +48,7 @@ export const validators: Validators = {
   },
 
   /**
-   * トラック情報をバリデーションするのじゃ
+   * トラック情報をバリデーションする
    * @param track - トラック情報
    * @returns バリデーション結果
    */
@@ -59,7 +59,7 @@ export const validators: Validators = {
   },
 
   /**
-   * ビットレートの値をバリデーションするのじゃ
+   * ビットレートの値をバリデーションする
    * @param bitrate - ビットレート
    * @returns バリデーション結果
    */
@@ -73,7 +73,7 @@ export const validators: Validators = {
   },
 
   /**
-   * 解像度の値をバリデーションするのじゃ
+   * 解像度の値をバリデーションする
    * @param width - 幅
    * @param height - 高さ
    * @returns バリデーション結果
@@ -89,7 +89,7 @@ export const validators: Validators = {
   },
 
   /**
-   * メディアファイルの参照パスをバリデーションするのじゃ
+   * メディアファイルの参照パスをバリデーションする
    * @param ref - ファイルの参照パス
    * @returns バリデーション結果
    */
@@ -104,7 +104,7 @@ export const validators: Validators = {
   },
 
   /**
-   * エラーメッセージを生成するのじゃ
+   * エラーメッセージを生成する
    * @param message - エラーメッセージ
    * @param value - 問題のある値
    * @returns フォーマットされたエラーメッセージ
@@ -115,7 +115,7 @@ export const validators: Validators = {
 };
 
 /**
- * バリデーションエラーを表すカスタムエラークラスなのじゃ
+ * バリデーションエラーを表すカスタムエラークラス
  */
 export class MediaInfoValidationError extends Error {
   public readonly invalidValue: unknown;

@@ -350,4 +350,4 @@ window.プロジェクトInstance.getDebugInfo()
 3. **共通機能活用** - `src/common/` で重複実装回避
 4. **モジュール化検討** - `mlink-video-controller` で統合管理
 
-この文書を参考に、効率的にNicoCache_nlプロジェクト全体を編集・拡張できるのじゃ！ 
+この文書を参考に、効率的にNicoCache_nlプロジェクト全体を編集・拡張できます！ 

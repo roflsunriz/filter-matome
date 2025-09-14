@@ -6,7 +6,7 @@ import { HlsInstance, CacheInfoResponse, CacheUrlResult } from '@/types/video-ty
 
 /**
  * フローティング削除済み動画プレーヤークラス
- * ドラッガブル半透明ガラス効果のおしゃれプレーヤーなのじゃ
+ * ドラッガブル半透明ガラス効果のおしゃれプレーヤー
  */
 export class FloatingDeletedPlayer {
   private container: HTMLElement | null = null;
@@ -49,10 +49,10 @@ export class FloatingDeletedPlayer {
     script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
     script.async = true;
     script.onload = () => {
-      window.logger.info('HLS.jsライブラリの読み込みが完了したのじゃ！');
+      window.logger.info('HLS.jsライブラリの読み込みが完了しました！');
     };
     script.onerror = () => {
-      window.logger.warn('HLS.jsライブラリの読み込みに失敗したのじゃ。ネイティブHLS再生を試行するのじゃ。');
+      window.logger.warn('HLS.jsライブラリの読み込みに失敗しました。ネイティブHLS再生を試行します。');
     };
     document.head.appendChild(script);
   }
@@ -366,7 +366,7 @@ export class FloatingDeletedPlayer {
       }
     } catch (error) {
       window.logger.error('動画読み込みエラー:', error);
-      this.showError(`動画の読み込みに失敗したのじゃ: ${error instanceof Error ? error.message : String(error)}`);
+      this.showError(`動画の読み込みに失敗しました: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -426,12 +426,12 @@ export class FloatingDeletedPlayer {
       this.hls.on(Hls.Events.ERROR, (...args: unknown[]) => {
         const [data] = args;
         window.logger.error('HLS Error:', data);
-        this.showError('HLS再生でエラーが発生したのじゃ');
+        this.showError('HLS再生でエラーが発生しました');
       });
 
       this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
         this.updateStatus('HLS動画読み込み完了！');
-        this.showSuccess('HLSマニフェスト読み込み完了なのじゃ！');
+        this.showSuccess('HLSマニフェスト読み込み完了しました！');
         this.videoElement?.play().catch((e: Error) => {
           window.logger.error('再生開始エラー:', e);
           this.updateStatus('再生準備完了（クリックで再生）');
@@ -495,7 +495,7 @@ export class FloatingDeletedPlayer {
 
     this.videoElement.addEventListener('canplay', () => {
       this.updateStatus('再生準備完了');
-      this.showSuccess('動画の読み込みが完了したのじゃ！');
+      this.showSuccess('動画の読み込みが完了しました！');
     });
 
     this.videoElement.addEventListener('playing', () => {
@@ -512,7 +512,7 @@ export class FloatingDeletedPlayer {
 
     this.videoElement.addEventListener('error', (e: Event) => {
       window.logger.error('動画エラー:', e);
-      this.showError('動画の再生でエラーが発生したのじゃ');
+      this.showError('動画の再生でエラーが発生しました');
     });
 
     // 音量を適切に設定

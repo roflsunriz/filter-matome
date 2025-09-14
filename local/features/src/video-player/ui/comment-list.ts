@@ -2,7 +2,7 @@ import { Comment } from '@/types/index.js';
 
 /**
  * シャドウDOM版コメントリスト表示クラス
- * Web Componentsとして実装してスタイル分離を実現するのじゃ
+ * Web Componentsとして実装してスタイル分離を実現
  */
 export class CommentList extends HTMLElement {
   private shadow: ShadowRoot;
@@ -201,7 +201,7 @@ export class CommentList extends HTMLElement {
    */
   private setupResizeObserver(): void {
     if (typeof ResizeObserver === 'undefined') {
-      window.logger.warn("ResizeObserverが利用できないのじゃ...");
+      window.logger.warn("ResizeObserverが利用できません...");
       window.addEventListener("resize", () => this.syncHeight());
       return;
     }

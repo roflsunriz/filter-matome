@@ -204,4 +204,4 @@ window.commonHelper.fetchNicoDataWithComments('sm12345678')
 - API通信: 適切なヘッダー設定
 - 外部リソース: Content Security Policy考慮
 
-この文書を参考に、効率的に thumb-info プロジェクトを編集・拡張できるのじゃ！ 
+この文書を参考に、効率的に thumb-info プロジェクトを編集・拡張できます！ 

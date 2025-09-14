@@ -192,4 +192,4 @@ window.logger?.debug('デバッグ情報')
 - **共通ライブラリ**: `features/src/common/`
 - **型定義**: `features/src/types/`
 
-この文書を参考に、効率的にdocsプロジェクトを編集・拡張できるのじゃ！ 
+この文書を参考に、効率的にdocsプロジェクトを編集・拡張できます！ 

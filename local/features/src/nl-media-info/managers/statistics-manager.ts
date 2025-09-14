@@ -36,7 +36,7 @@ export interface TotalStats {
 
 export class StatisticsManager {
   /**
-   * メディアファイルの統計情報を生成するのじゃ
+   * メディアファイルの統計情報を生成する
    * @param mediaFiles - メディアファイルの情報
    * @returns フォーマット別の統計情報
    */
@@ -48,7 +48,7 @@ export class StatisticsManager {
   }
 
   /**
-   * ファイルをフィルタリングするのじゃ
+   * ファイルをフィルタリングする
    */
   static #getMediaRef(file: MediaItem): string {
     const media = (file as unknown as { media?: unknown }).media;
@@ -76,7 +76,7 @@ export class StatisticsManager {
   }
 
   /**
-   * フォーマット別の統計を計算するのじゃ
+   * フォーマット別の統計を計算する
    */
   static #calculateFormatStats(files: MediaItem[]): CategoryStats {
     const stats: CategoryStats = {};
@@ -101,7 +101,7 @@ export class StatisticsManager {
       stats[format].maxSize = Math.max(stats[format].maxSize, fileSize);
     });
 
-    // 平均サイズを計算するのじゃ
+    // 平均サイズを計算する
     Object.values(stats).forEach(stat => {
       stat.averageSize = stat.totalSize / stat.count;
     });
@@ -110,7 +110,7 @@ export class StatisticsManager {
   }
 
   /**
-   * ファイルのフォーマットを取得するのじゃ
+   * ファイルのフォーマットを取得する
    */
   static #getFirstTrack(file: MediaItem): Record<string, unknown> | undefined {
     const media = (file as unknown as { media?: unknown }).media;
@@ -132,7 +132,7 @@ export class StatisticsManager {
   }
 
   /**
-   * ファイルサイズを取得するのじゃ
+   * ファイルサイズを取得する
    */
   static #getFileSize(file: MediaItem): number {
     const first = this.#getFirstTrack(file);
@@ -143,7 +143,7 @@ export class StatisticsManager {
   }
 
   /**
-   * 統計情報をHTML形式で出力するのじゃ
+   * 統計情報をHTML形式で出力する
    */
   static generateStatsHTML(stats: AllStats): string {
     let html = "";
@@ -171,7 +171,7 @@ export class StatisticsManager {
   }
 
   /**
-   * 合計統計を計算するのじゃ
+   * 合計統計を計算する
    */
   static calculateTotalStats(stats: AllStats): TotalStats {
     const totals: TotalStats = {

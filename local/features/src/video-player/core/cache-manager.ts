@@ -69,7 +69,7 @@ export class CacheManager {
     if (url) {
       this.currentUrl = url;
     }
-    window.logger.info('CacheManagerのHLS.jsインスタンスを更新したのじゃ！', {
+    window.logger.info('CacheManagerのHLS.jsインスタンスを更新しました！', {
       hasHls: !!this.hls,
       url: this.currentUrl
     });
@@ -91,7 +91,7 @@ export class CacheManager {
           if (usedMemory > CACHE_MANAGEMENT.CACHE_SIZE_THRESHOLD_BYTES || 
           playDuration > CACHE_MANAGEMENT.TIME_THRESHOLD_MS / 1000) {
         
-        window.logger.info('キャッシュクリーンアップが必要なのじゃ！', {
+        window.logger.info('キャッシュクリーンアップが必要です！', {
           playDuration: `${Math.floor(playDuration / 60)}分${Math.floor(playDuration % 60)}秒`,
           usedMemory: `${(usedMemory / (1024 * 1024)).toFixed(2)}MB`
         });
@@ -101,7 +101,7 @@ export class CacheManager {
     } else {
       // メモリ情報が取得できない場合は時間だけで判断
       if (playDuration > CACHE_MANAGEMENT.TIME_THRESHOLD_MS / 1000) {
-        window.logger.info('再生時間に基づくキャッシュクリーンアップが必要なのじゃ！', {
+        window.logger.info('再生時間に基づくキャッシュクリーンアップが必要です！', {
           playDuration: `${Math.floor(playDuration / 60)}分${Math.floor(playDuration % 60)}秒`
         });
         
@@ -115,7 +115,7 @@ export class CacheManager {
    */
   private async forceCleanup(): Promise<void> {
     try {
-      window.logger.info('キャッシュクリーンアップを実行するのじゃ！');
+      window.logger.info('キャッシュクリーンアップを実行します！');
       
       // 現在の再生状態を保存
       const wasPlaying = !this.video.paused;
@@ -139,9 +139,9 @@ export class CacheManager {
       // バッファリング表示を削除
       this.removeBufferingDisplay();
       
-      window.logger.info('キャッシュクリーンアップが完了したのじゃ！');
+      window.logger.info('キャッシュクリーンアップが完了しました！');
     } catch (error) {
-      window.logger.error('キャッシュクリーンアップでエラーが発生したのじゃ...', error);
+      window.logger.error('キャッシュクリーンアップでエラーが発生しました...', error);
       this.removeBufferingDisplay();
     }
   }
@@ -152,7 +152,7 @@ export class CacheManager {
   private async hlsCleanup(wasPlaying: boolean, currentPosition: number): Promise<void> {
     if (!this.hls) return;
 
-    window.logger.info('HLS.js使用時のキャッシュクリーンアップを実行するのじゃ！');
+    window.logger.info('HLS.js使用時のキャッシュクリーンアップを実行します！');
 
     try {
       // HLS.jsの内部バッファをクリア
@@ -185,18 +185,18 @@ export class CacheManager {
           this.hls.loadSource(currentSource);
           this.hls.attachMedia(this.video);
         } else {
-          window.logger.warn('HLS.jsが利用できないため、ネイティブ再生にフォールバックするのじゃ');
+          window.logger.warn('HLS.jsが利用できないため、ネイティブ再生にフォールバックします');
           this.video.src = currentSource;
           await new Promise(resolve => setTimeout(resolve, 100));
           this.restorePlaybackPosition(wasPlaying, currentPosition);
         }
       } else {
-        window.logger.warn('HLS.jsのdestroyメソッドが利用できないのじゃ');
+        window.logger.warn('HLS.jsのdestroyメソッドが利用できません');
         // フォールバック：通常の方法でクリーンアップ
         await this.regularCleanup(wasPlaying, currentPosition);
       }
     } catch (error) {
-      window.logger.error('HLS.jsクリーンアップ中にエラーが発生したのじゃ:', error);
+      window.logger.error('HLS.jsクリーンアップ中にエラーが発生しました:', error);
       // エラー時は通常のクリーンアップにフォールバック
       await this.regularCleanup(wasPlaying, currentPosition);
     }
@@ -206,7 +206,7 @@ export class CacheManager {
    * 通常の動画ファイルのキャッシュクリーンアップ
    */
   private async regularCleanup(wasPlaying: boolean, currentPosition: number): Promise<void> {
-    window.logger.info('通常の動画ファイルのキャッシュクリーンアップを実行するのじゃ！');
+    window.logger.info('通常の動画ファイルのキャッシュクリーンアップを実行します！');
 
     // 現在のソースを保存
     const currentSrc = this.video.src;
@@ -240,7 +240,7 @@ export class CacheManager {
       // 少し待ってから再生を試行
       setTimeout(() => {
         void this.video.play().catch((error) => {
-          window.logger.error('再生の再開に失敗したのじゃ:', error);
+          window.logger.error('再生の再開に失敗しました:', error);
         });
       }, 100);
     }

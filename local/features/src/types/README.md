@@ -267,4 +267,4 @@ const rule: NGWordRule = { /* ... */ };
 const settings: UIFilterSettings = { /* ... */ };
 ```
 
-この文書を参考に、効率的にtypes型定義システムを編集・拡張できるのじゃ！ 
+この文書を参考に、効率的にtypes型定義システムを編集・拡張できます！ 

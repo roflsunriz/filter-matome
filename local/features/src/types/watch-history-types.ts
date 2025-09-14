@@ -1,8 +1,8 @@
 /**
- * ニコニコ動画視聴履歴拡張 - 型定義なのじゃ
+ * ニコニコ動画視聴履歴拡張 - 型定義
  * 
  * @description ニコニコ動画の50件制限を打破する無制限履歴機能の型定義
- * @author わらわ（のじゃロリ娘）
+ * @author roflsunriz
  */
 
 // ===== 基本データ型 =====
@@ -10,7 +10,7 @@
 
 
 /**
- * 視聴ログエントリ - 各視聴セッションの記録なのじゃ
+ * 視聴ログエントリ - 各視聴セッションの記録
  */
 export interface WatchLogEntry {
   /** 視聴日時 (Epoch ms) */
@@ -22,7 +22,7 @@ export interface WatchLogEntry {
 }
 
 /**
- * 動画統計情報 - ニコニコ動画APIから取得する値なのじゃ
+ * 動画統計情報 - ニコニコ動画APIから取得する値
  */
 export interface VideoStats {
   /** 再生数 */
@@ -38,7 +38,7 @@ export interface VideoStats {
 }
 
 /**
- * シリーズ内の動画情報なのじゃ
+ * シリーズ内の動画情報
  */
 export interface SeriesVideoInfo {
   /** 動画タイプ */
@@ -92,7 +92,7 @@ export interface SeriesVideoInfo {
 }
 
 /**
- * シリーズ情報なのじゃ
+ * シリーズ情報
  */
 export interface SeriesInfo {
   /** シリーズID */
@@ -115,7 +115,7 @@ export interface SeriesInfo {
 }
 
 /**
- * シリーズアラート情報なのじゃ
+ * シリーズアラート情報
  */
 export interface SeriesAlert {
   /** アラートID */
@@ -143,7 +143,7 @@ export interface SeriesAlert {
 }
 
 /**
- * 視聴履歴エントリ - IndexedDBに保存する中核データなのじゃ
+ * 視聴履歴エントリ - IndexedDBに保存する中核データ
  */
 export interface WatchHistoryEntry {
   /** 動画ID (KeyPath) - sm12345 等 */
@@ -183,7 +183,7 @@ export interface WatchHistoryEntry {
 // ===== UI関連型 =====
 
 /**
- * ソート基準なのじゃ
+ * ソート基準
  */
 export type SortBy = 
   | 'watchedAt'     // 視聴日時
@@ -199,12 +199,12 @@ export type SortBy =
   | 'uploadedAt';   // 投稿日時
 
 /**
- * ソート順序なのじゃ
+ * ソート順序
  */
 export type SortOrder = 'asc' | 'desc';
 
 /**
- * フィルタ条件なのじゃ
+ * フィルタ条件
  */
 export interface FilterCondition {
   /** 検索キーワード */
@@ -221,7 +221,7 @@ export interface FilterCondition {
 }
 
 /**
- * 履歴ビュー設定なのじゃ
+ * 履歴ビュー設定
  */
 export interface HistoryViewConfig {
   /** ソート基準 */
@@ -239,7 +239,7 @@ export interface HistoryViewConfig {
 // ===== 統計関連型 =====
 
 /**
- * 日別統計データなのじゃ
+ * 日別統計データ
  */
 export interface DailyStats {
   /** 日付 (YYYY-MM-DD) */
@@ -253,7 +253,7 @@ export interface DailyStats {
 }
 
 /**
- * 時間帯別統計データなのじゃ
+ * 時間帯別統計データ
  */
 export interface HourlyStats {
   /** 時間帯 (0-23) */
@@ -263,7 +263,7 @@ export interface HourlyStats {
 }
 
 /**
- * 投稿者別統計データなのじゃ
+ * 投稿者別統計データ
  */
 export interface CreatorStats {
   /** 投稿者ID */
@@ -277,7 +277,7 @@ export interface CreatorStats {
 }
 
 /**
- * 全体統計データなのじゃ
+ * 全体統計データ
  */
 export interface OverallStats {
   /** 総視聴動画数 */
@@ -297,7 +297,7 @@ export interface OverallStats {
 // ===== データベース操作型 =====
 
 /**
- * IndexedDB操作結果なのじゃ
+ * IndexedDB操作結果
  */
 export interface DBResult<T = unknown> {
   success: boolean;
@@ -306,7 +306,7 @@ export interface DBResult<T = unknown> {
 }
 
 /**
- * データベース設定なのじゃ
+ * データベース設定
  */
 export interface DatabaseConfig {
   /** データベース名 */
@@ -320,7 +320,7 @@ export interface DatabaseConfig {
 // ===== イベント型 =====
 
 /**
- * 視聴イベント型なのじゃ
+ * 視聴イベント型
  */
 export type WatchEventType = 
   | 'start'      // 視聴開始
@@ -330,7 +330,7 @@ export type WatchEventType =
   | 'resume';    // 再開
 
 /**
- * 視聴イベントなのじゃ
+ * 視聴イベント
  */
 export interface WatchEvent {
   /** イベント種別 */
@@ -348,7 +348,7 @@ export interface WatchEvent {
 // ===== エクスポート・インポート型 =====
 
 /**
- * エクスポートデータ形式なのじゃ
+ * エクスポートデータ形式
  */
 export interface WatchHistoryExportData {
   /** エクスポート日時 */
@@ -362,7 +362,7 @@ export interface WatchHistoryExportData {
 }
 
 /**
- * インポート設定なのじゃ
+ * インポート設定
  */
 export interface ImportConfig {
   /** 重複時の処理 */
@@ -374,7 +374,7 @@ export interface ImportConfig {
 // ===== シリーズ関連型 =====
 
 /**
- * シリーズ統計情報なのじゃ
+ * シリーズ統計情報
  */
 export interface SeriesStats {
   /** シリーズID */
@@ -396,7 +396,7 @@ export interface SeriesStats {
 }
 
 /**
- * シリーズフィルタ条件なのじゃ
+ * シリーズフィルタ条件
  */
 export interface SeriesFilterCondition {
   /** テキスト検索 */
@@ -411,7 +411,7 @@ export interface SeriesFilterCondition {
 }
 
 /**
- * シリーズアラート通知結果なのじゃ
+ * シリーズアラート通知結果
  */
 export interface SeriesAlertNotification {
   /** アラートID */
@@ -431,7 +431,7 @@ export interface SeriesAlertNotification {
 }
 
 /**
- * シリーズアラート設定なのじゃ
+ * シリーズアラート設定
  */
 export interface SeriesAlertConfig {
   /** デフォルトのチェック間隔（ミリ秒） */
@@ -447,7 +447,7 @@ export interface SeriesAlertConfig {
 // ===== マイグレーション・永続化関連型 =====
 
 /**
- * データベースマイグレーション情報なのじゃ
+ * データベースマイグレーション情報
  */
 export interface MigrationInfo {
   /** マイグレーションID */
@@ -463,7 +463,7 @@ export interface MigrationInfo {
 }
 
 /**
- * データベース永続化状態なのじゃ
+ * データベース永続化状態
  */
 export interface PersistenceStatus {
   /** 永続化されているかどうか */
@@ -479,7 +479,7 @@ export interface PersistenceStatus {
 }
 
 /**
- * マイグレーション進捗状態なのじゃ
+ * マイグレーション進捗状態
  */
 export interface MigrationProgress {
   /** 実行中かどうか */
@@ -497,7 +497,7 @@ export interface MigrationProgress {
 }
 
 /**
- * データベース管理設定なのじゃ
+ * データベース管理設定
  */
 export interface DatabaseManagementConfig {
   /** 自動マイグレーションを有効にするかどうか */

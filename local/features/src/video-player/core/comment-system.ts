@@ -38,11 +38,11 @@ export class CommentSystem {
   async initialize(videoElement: HTMLVideoElement): Promise<void> {
     await Promise.resolve();
     try {
-      window.logger.info("コメントシステムの初期化を開始するのじゃ！");
+      window.logger.info("コメントシステムの初期化を開始します！");
       
       // ★追加: 前回の状態を完全リセット
       if (this.isInitialized) {
-        window.logger.info("既存のコメントシステムをリセットするのじゃ！");
+        window.logger.info("既存のコメントシステムをリセットします！");
         this.renderer.destroy();               // アニメーション停止 & canvas削除
         this.commentList.clearComments();      // リストを空に
         this.hasReceivedFilteredData = false;  // 重複フラグを戻す
@@ -103,9 +103,9 @@ export class CommentSystem {
 
       this.isInitialized = true;
 
-      window.logger.info("コメントシステムの初期化が完了したのじゃ！");
+      window.logger.info("コメントシステムの初期化が完了しました！");
     } catch (error) {
-      window.logger.error("コメントシステムの初期化に失敗したのじゃ...", error);
+      window.logger.error("コメントシステムの初期化に失敗しました...", error);
       throw error;
     }
   }
@@ -144,7 +144,7 @@ export class CommentSystem {
     const detail: unknown = customEvent.detail;
     
     if (detail && typeof detail === 'object' && 'filteredData' in (detail as Record<string, unknown>)) {
-      window.logger.debug('CommentFilter2からフィルタリング済みデータを受け取ったのじゃ！');
+      window.logger.debug('CommentFilter2からフィルタリング済みデータを受け取りました！');
       this.applyFilteredComments((detail as { filteredData: CommentApiResponse }).filteredData);
     }
   };
@@ -164,13 +164,13 @@ export class CommentSystem {
    * CommentFilter2からのフィルタリング済みコメントを適用
    */
   private applyFilteredComments(apiResponse: CommentApiResponse): void {
-    window.logger.info('CommentFilter2からフィルタ済みコメントを受け取ったのじゃ', apiResponse);
+    window.logger.info('CommentFilter2からフィルタ済みコメントを受け取りました！', apiResponse);
     this.hasReceivedFilteredData = true;
 
     // 既存のAPIフェッチがあればキャンセル
     if (this.abortController) {
       this.abortController.abort();
-      window.logger.info('既存のAPIフェッチをキャンセルしたのじゃ');
+      window.logger.info('既存のAPIフェッチをキャンセルしました！');
     }
 
     // 既存のコメントをクリア
@@ -186,7 +186,7 @@ export class CommentSystem {
 
     // 追加のNGフィルタを適用
     const filteredComments = this.filterNGComments(comments as unknown as Comment[]);
-    window.logger.info(`CommentFilter2適用後のコメント数なのじゃ: ${filteredComments.length}`);
+    window.logger.info(`CommentFilter2適用後のコメント数です: ${filteredComments.length}`);
 
     // コメントを追加
     this.commentList.addComments(filteredComments);
@@ -211,18 +211,18 @@ export class CommentSystem {
 
     // 既にCommentFilter2データを適用済みなら最初に抜ける
     if (this.hasReceivedFilteredData) {
-      window.logger.info('CommentFilter2のコメントを既に描画しているのでフェッチをスキップするのじゃ');
+      window.logger.info('CommentFilter2のコメントを既に描画しているのでフェッチをスキップします！');
       return;
     }
 
     try {
-      window.logger.info(`コメント読み込み開始なのじゃ: ${videoId}`);
+      window.logger.info(`コメント読み込み開始します: ${videoId}`);
       const apiResponse = await this.fetcher.fetchAllComments(videoId);
-      window.logger.info(`コメント読み込み完了なのじゃ: ${videoId}`, apiResponse);
+      window.logger.info(`コメント読み込み完了しました: ${videoId}`, apiResponse);
 
       // コメントをフィルタ
       let comments = apiResponse.data.threads.flatMap(thread => thread.comments);
-      window.logger.info(`取得したコメント数なのじゃ: ${comments.length}`);
+      window.logger.info(`取得したコメント数です: ${comments.length}`);
 
       // vposをミリ秒に変換
       comments = comments.map(comment => {
@@ -232,11 +232,11 @@ export class CommentSystem {
 
       // NGコメントをフィルタ
       const filteredComments = this.filterNGComments(comments as unknown as Comment[]);
-      window.logger.info(`フィルタ後のコメント数なのじゃ: ${filteredComments.length}`);
+      window.logger.info(`フィルタ後のコメント数です: ${filteredComments.length}`);
 
       // API取得が完了した瞬間に再度チェック
       if (this.hasReceivedFilteredData) {
-        window.logger.info('APIフェッチ中にCommentFilter2データが到着したため、API側の描画をキャンセルするのじゃ');
+        window.logger.info('APIフェッチ中にCommentFilter2データが到着したため、API側の描画をキャンセルします！');
         return;
       }
 
@@ -244,10 +244,10 @@ export class CommentSystem {
       filteredComments.forEach(c => this.renderer.addComment(c));
     } catch (error: unknown) {
       if (error instanceof DOMException && error.name === 'AbortError') {
-        window.logger.info('CommentFilter2データが先に到着したため、APIフェッチを中断したのじゃ');
+        window.logger.info('CommentFilter2データが先に到着したため、APIフェッチを中断しました！');
         return;
       }
-      window.logger.error('コメント読み込みエラーなのじゃ！', error);
+      window.logger.error('コメント読み込みエラーが発生しました！', error);
       throw error;
     } finally {
       // 処理が完了したらabortControllerをリセット
@@ -334,7 +334,7 @@ export class CommentSystem {
    * リソースのクリーンアップ
    */
   cleanup(): void {
-    window.logger.info('コメントシステムのクリーンアップを開始するのじゃ');
+    window.logger.info('コメントシステムのクリーンアップを開始します！');
     // 既存のフェッチがあればキャンセル
     if (this.abortController) {
       this.abortController.abort();
@@ -374,7 +374,7 @@ export class CommentSystem {
     this.renderer.destroy();
     this.commentList.remove();
     
-    window.logger.info("コメントシステムのリソースをクリーンアップしたのじゃ");
+    window.logger.info("コメントシステムのリソースをクリーンアップしました！");
   }
 
   /**
@@ -384,9 +384,9 @@ export class CommentSystem {
   setOpacity(opacity: number): void {
     try {
       this.renderer.setOpacity(opacity);
-      window.logger.info(`コメント透明度を ${opacity} に設定したのじゃ`);
+      window.logger.info(`コメント透明度を ${opacity} に設定しました！`);
     } catch (error) {
-      window.logger.error("コメント透明度の設定に失敗したのじゃ:", error);
+      window.logger.error("コメント透明度の設定に失敗しました！:", error);
     }
   }
 
@@ -397,9 +397,9 @@ export class CommentSystem {
   setDefaultColor(color: string): void {
     try {
       this.renderer.setDefaultColor(color);
-      window.logger.info(`コメントのデフォルト色を ${color} に設定したのじゃ`);
+      window.logger.info(`コメントのデフォルト色を ${color} に設定しました！`);
     } catch (error) {
-      window.logger.error("コメントのデフォルト色の設定に失敗したのじゃ:", error);
+      window.logger.error("コメントのデフォルト色の設定に失敗しました！:", error);
     }
   }
 
@@ -410,9 +410,9 @@ export class CommentSystem {
   setNGWords(words: string[]): void {
     try {
       this.ngWords = words.map(word => word.trim()).filter(word => word !== "");
-      window.logger.info(`${this.ngWords.length}件のNGワードを設定したのじゃ`);
+      window.logger.info(`${this.ngWords.length}件のNGワードを設定しました！`);
     } catch (error) {
-      window.logger.error("NGワードの設定に失敗したのじゃ:", error);
+      window.logger.error("NGワードの設定に失敗しました！:", error);
     }
   }
 
@@ -428,15 +428,15 @@ export class CommentSystem {
             return new RegExp(str, "i");
           } catch (error) {
             void error;
-            window.logger.warn(`不正な正規表現なので無視するのじゃ: ${str}`);
+            window.logger.warn(`不正な正規表現なので無視します！: ${str}`);
             return null;
           }
         })
         .filter((regex): regex is RegExp => regex !== null);
       
-      window.logger.info(`${this.ngRegex.length}件のNG正規表現を設定したのじゃ`);
+      window.logger.info(`${this.ngRegex.length}件のNG正規表現を設定しました！`);
     } catch (error) {
-      window.logger.error("NG正規表現の設定に失敗したのじゃ:", error);
+      window.logger.error("NG正規表現の設定に失敗しました！:", error);
     }
   }
 
@@ -464,7 +464,7 @@ export class CommentSystem {
         });
       });
     } catch (error) {
-      window.logger.warn('公式コメントリストを非表示にできなかったのじゃ:', error);
+      window.logger.warn('公式コメントリストを非表示にできなかったので無視します！:', error);
     }
   }
   
@@ -488,9 +488,9 @@ export class CommentSystem {
         });
       });
       
-      window.logger.info('公式コメントオーバーレイを非表示にしたのじゃ');
+      window.logger.info('公式コメントオーバーレイを非表示にしました！');
     } catch (e) {
-      window.logger.warn('公式コメントオーバーレイを非表示にできなかったのじゃ:', e);
+      window.logger.warn('公式コメントオーバーレイを非表示にできなかったので無視します！:', e);
     }
   }
 
@@ -515,7 +515,7 @@ export class CommentSystem {
       
       return null;
     } catch (error) {
-      window.logger.warn('CommentFilter2のグローバルデータ取得に失敗したのじゃ:', error);
+      window.logger.warn('CommentFilter2のグローバルデータ取得に失敗したので無視します！:', error);
       return null;
     }
   }

@@ -277,4 +277,4 @@ typeof window.FlexSearch !== 'undefined';
 - **スタイルが崩れる** → `styles/styles.ts`のCSS競合確認
 - **型エラー** → `types/index.ts`の型定義更新
 
-この文書を参考に、効率的にCache Data Managerプロジェクトを編集できるのじゃ！ 
+この文書を参考に、効率的にCache Data Managerプロジェクトを編集できます！ 

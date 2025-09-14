@@ -1,6 +1,6 @@
 "use strict";
 
-// グローバル型定義はglobal.d.tsで管理されているのじゃ
+// グローバル型定義はglobal.d.tsで管理されています
 import "../types/global.d.ts";
 import { 
   NicoApiData, 

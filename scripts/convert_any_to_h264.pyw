@@ -14,16 +14,16 @@ def install_tkdnd():
         # pipをインポート（通常はPython 3.4以降で標準搭載）
         import pip
     except ImportError:
-        messagebox.showerror("エラー", "pipが見つからないのじゃ！Pythonを再インストールするのじゃ！")
+        messagebox.showerror("エラー", "pipが見つかりません！Pythonを再インストールしてください！")
         sys.exit(1)
     
     try:
-        messagebox.showinfo("インストール", "TkinterDnD2をインストールするのじゃ！\nしばらく待つのじゃ...")
+        messagebox.showinfo("インストール", "TkinterDnD2をインストールします！\nしばらく待ってください...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "tkinterdnd2"])
-        messagebox.showinfo("成功", "インストールが完了したのじゃ！\nプログラムを再起動するのじゃ！")
+        messagebox.showinfo("成功", "インストールが完了しました！\nプログラムを再起動してください！")
         sys.exit(0)
     except subprocess.CalledProcessError as e:
-        messagebox.showerror("エラー", f"インストールに失敗したのじゃ！\nエラー: {e}")
+        messagebox.showerror("エラー", f"インストールに失敗しました！\nエラー: {e}")
         sys.exit(1)
 
 # TkinterDnD2のインポートを試みる
@@ -32,17 +32,17 @@ try:
 except ImportError:
     response = messagebox.askyesno(
         "確認",
-        "TkinterDnD2がインストールされていないのじゃ！\n"
-        "自動でインストールするのじゃ？\n\n"
-        "※インストール後は自動的に再起動するのじゃ！"
+        "TkinterDnD2がインストールされていません！\n"
+        "自動でインストールしますか？\n\n"
+        "※インストール後は自動的に再起動します！"
     )
     if response:
         install_tkdnd()
     else:
         messagebox.showinfo(
             "情報",
-            "ドラッグ・アンド・ドロップ機能なしで起動するのじゃ！\n"
-            "手動でインストールする場合は以下のコマンドを実行するのじゃ：\n"
+            "ドラッグ・アンド・ドロップ機能なしで起動します！\n"
+            "手動でインストールする場合は以下のコマンドを実行してください：\n"
             "pip install tkinterdnd2"
         )
         DND_FILES = None
@@ -89,14 +89,14 @@ class VideoConverterGUI:
         ttk.Button(file_button_frame, text="出力フォルダを開く", command=self.open_output_folder).pack(side=tk.LEFT, padx=5)
         
         # コーデック選択部分
-        codec_frame = ttk.LabelFrame(main_frame, text="コーデックを選択するのじゃ！", padding="10")
+        codec_frame = ttk.LabelFrame(main_frame, text="コーデックを選択してください！", padding="10")
         codec_frame.pack(fill=tk.X, padx=5, pady=5)
         
         self.selected_codec = tk.StringVar(value="1")
         codecs = [
-            ("AVC (H.264) - 互換性重視なのじゃ", "1"),
-            ("HEVC (H.265) - 圧縮効率が良いのじゃ", "2"),
-            ("AV1 - 最新の圧縮技術なのじゃ", "3")
+            ("AVC (H.264) - 互換性重視", "1"),
+            ("HEVC (H.265) - 圧縮効率が良い", "2"),
+            ("AV1 - 最新の圧縮技術", "3")
         ]
         
         for text, value in codecs:
@@ -126,7 +126,7 @@ class VideoConverterGUI:
         self.log_text.pack(fill=tk.BOTH, expand=True)
         
         # 状態表示ラベル
-        self.status_label = ttk.Label(main_frame, text="ファイルをドロップするか追加するのじゃ！")
+        self.status_label = ttk.Label(main_frame, text="ファイルをドロップするか追加してください！")
         self.status_label.pack(pady=5)
 
     def setup_drop_target(self):
@@ -150,7 +150,7 @@ class VideoConverterGUI:
 
     def add_path(self, path):
         if is_system_file(path):
-            self.log(f"システムファイルなのでスキップするのじゃ: {path}")
+            self.log(f"システムファイルなのでスキップします: {path}")
             return
         
         if path not in self.input_paths:
@@ -217,7 +217,7 @@ class VideoConverterGUI:
         }
         
         codec_info = codecs_config[self.selected_codec.get()]
-        self.log(f"{codec_info['name'].upper()}で変換を開始するのじゃ！")
+        self.log(f"{codec_info['name'].upper()}で変換を開始します！")
         
         # 変換処理を別スレッドで実行
         thread = threading.Thread(target=self.convert_all, args=(codec_info,))
@@ -241,7 +241,7 @@ class VideoConverterGUI:
         try:
             msg_type, value = self.process_queue.get_nowait()
             if msg_type == "完了":
-                self.status_label.config(text=f"完了！ {value}/{len(self.input_paths)} 個の変換に成功したのじゃ！")
+                self.status_label.config(text=f"完了！ {value}/{len(self.input_paths)} 個の変換に成功しました！")
                 self.start_button.state(['!disabled'])
                 for child in self.root.winfo_children():
                     if isinstance(child, ttk.Radiobutton):
@@ -254,7 +254,7 @@ class VideoConverterGUI:
     def convert_media(self, input_path, codec_info):
         input_path = Path(input_path)
         if not input_path.exists():
-            self.log(f"エラー: パスが見つからないのじゃ: {input_path}")
+            self.log(f"エラー: パスが見つかりません: {input_path}")
             return False
 
         output_name = f"convert_{input_path.stem}.mp4"
@@ -277,7 +277,7 @@ class VideoConverterGUI:
     def convert_normal_file(self, input_path, output_path, codec_info):
         vcodec_in, acodec = self.get_codec_info(str(input_path))
         if vcodec_in == codec_info["name"] and acodec == "aac":
-            self.log("コーデックが既に適切なのでストリームコピーするのじゃ...")
+            self.log("コーデックが既に適切なのでストリームコピーします...")
             cmd = ["ffmpeg", "-i", str(input_path), "-c", "copy", output_path]
         else:
             cmd = (f'ffmpeg -i "{input_path}" {codec_info["vcodec"]} -vf format=pix_fmts=yuv420p '
@@ -309,7 +309,7 @@ class VideoConverterGUI:
             if return_code == 0:
                 return True
             else:
-                self.log(f"エラー: FFmpegがコード {return_code} で終了したのじゃ")
+                self.log(f"エラー: FFmpegがコード {return_code} で終了しました")
                 return False
                 
         except subprocess.CalledProcessError as e:
@@ -359,8 +359,8 @@ class VideoConverterGUI:
                 break
             
             if playlist_path:
-                self.log(f"playlist.m3u8を見つけたのじゃ: {playlist_path}")
-                self.log("旧形式HLSを変換中なのじゃ...")
+                self.log(f"playlist.m3u8を見つけました: {playlist_path}")
+                self.log("旧形式HLSを変換中です...")
                 
                 cmd = [
                     "ffmpeg",
@@ -389,8 +389,8 @@ class VideoConverterGUI:
                 
                 return self.run_ffmpeg(cmd)
             else:
-                self.log("エラー: playlist.m3u8が見つからないのじゃ！")
-                self.log("フォルダ構造を確認するのじゃ！")
+                self.log("エラー: playlist.m3u8が見つかりません！")
+                self.log("フォルダ構造を確認してください！")
                 return False
 
     def get_codec_info(self, file_path):
@@ -414,10 +414,10 @@ class VideoConverterGUI:
             folder = os.path.dirname(self.output_paths[-1])
             os.startfile(folder)
         else:
-            messagebox.showinfo("情報", "まだファイルを変換していないのじゃ！")
+            messagebox.showinfo("情報", "まだファイルを変換していません！")
 
 def is_system_file(file_path):
-    # システムファイルや隠しファイルをチェックするのじゃ
+    # システムファイルや隠しファイルをチェックします
     path = Path(file_path)
     system_files = ['desktop.ini', 'thumbs.db', '.ds_store']
     return (

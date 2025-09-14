@@ -1,14 +1,14 @@
 /**
- * ニコニコ動画視聴履歴拡張 - 動的スタイル適用なのじゃ
+ * ニコニコ動画視聴履歴拡張 - 動的スタイル適用
  * 
  * @description 視聴履歴ビューSPAの美しいUIを動的に適用する
- * @author わらわ（のじゃロリ娘）
+ * @author roflsunriz
  */
 
 import { materialIconsStyles } from '../common/material-icons';
 
 /**
- * 視聴履歴のスタイルを動的に適用するのじゃ
+ * 視聴履歴のスタイルを動的に適用する
  */
 export function applyWatchHistoryStyles(): void {
   // 既存のスタイルがあるかチェック
@@ -1378,7 +1378,7 @@ ${seriesStyles}
 }
 
 /**
- * 視聴履歴のスタイルを削除するのじゃ
+ * 視聴履歴のスタイルを削除する
  */
 export function removeWatchHistoryStyles(): void {
   const styleElement = document.getElementById('watch-history-styles');

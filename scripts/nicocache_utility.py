@@ -9,7 +9,7 @@ import glob  # 追加
 import ctypes
 
 def _root_path(*paths: str) -> str:
-    """リポジトリルートからの絶対パスを返すのじゃ"""
+    """リポジトリルートからの絶対パスを返す"""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
     return os.path.join(root_dir, *paths)
@@ -160,7 +160,7 @@ def kill_java_processes():
 
 def run_ant_extract_jar():
     try:
-        # ルートに移動して実行するのじゃ
+        # ルートに移動して実行する
         root_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir))
         os.chdir(root_dir)
         print(f"作業ディレクトリを設定しました: {os.getcwd()}")

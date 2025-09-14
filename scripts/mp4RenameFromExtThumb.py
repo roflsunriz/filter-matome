@@ -12,12 +12,12 @@ from multiprocessing import Pool, cpu_count
 from functools import partial
 
 def install_requests():
-    print("requestsモジュールが見つからないのじゃ...")
+    print("requestsモジュールが見つかりません...")
     confirm = input("requestsモジュールをインストールしますか？ (y/n): ")
     if confirm.lower() == 'y':
         print("requestsモジュールをインストール中...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-        print("インストール完了したのじゃ！")
+        print("インストール完了しました！")
         return True
     return False
 
@@ -30,7 +30,7 @@ def import_requests():
             import requests
             return requests
         else:
-            print("requestsモジュールが必要なのじゃ。プログラムを終了します。")
+            print("requestsモジュールが必要です。プログラムを終了します。")
             sys.exit(1)
 
 def get_video_info(video_id, requests):
@@ -49,7 +49,7 @@ def get_video_info(video_id, requests):
 
 def get_video_info_ffprobe(file_path):
     try:
-        # ffprobeコマンドを実行して動画情報を取得するのじゃ
+        # ffprobeコマンドを実行して動画情報を取得する
         cmd = [
             'ffprobe',
             '-v', 'quiet',
@@ -60,14 +60,14 @@ def get_video_info_ffprobe(file_path):
         
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            print(f"ffprobeの実行に失敗したのじゃ: {result.stderr}")
+            print(f"ffprobeの実行に失敗しました: {result.stderr}")
             return None, None
             
         data = json.loads(result.stdout)
         
-        # ビデオストリームから解像度を取得するのじゃ
+        # ビデオストリームから解像度を取得する
         resolution = None
-        # オーディオストリームからビットレートを取得するのじゃ
+        # オーディオストリームからビットレートを取得する
         audio_bitrate = None
         
         for stream in data['streams']:
@@ -75,19 +75,19 @@ def get_video_info_ffprobe(file_path):
                 height = stream.get('height', 0)
                 resolution = f"{height}p"
             elif stream['codec_type'] == 'audio':
-                # ビットレートをkbpsで取得するのじゃ
+                # ビットレートをkbpsで取得する
                 bitrate = stream.get('bit_rate', None)
                 if bitrate:
                     audio_bitrate = str(int(int(bitrate) / 1000))
         
         return resolution, audio_bitrate
     except Exception as e:
-        print(f"ffprobeでの情報取得に失敗したのじゃ: {e}")
+        print(f"ffprobeでの情報取得に失敗しました: {e}")
         return None, None
 
 def sanitize_filename(filename):
-    # Windowsで使用できない文字を置換するのじゃ
-    # \ / : * ? " < > | は使えないのじゃ
+    # Windowsで使用できない文字を置換する
+    # \ / : * ? " < > | は使えません
     invalid_chars = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
     for char in invalid_chars:
         filename = filename.replace(char, '／')
@@ -99,7 +99,7 @@ class DistributedMP4Scanner:
         self.num_processes = cpu_count()  # CPU数に基づいてプロセス数を決定
     
     def scan_chunk(self, subdirs):
-        """各プロセスで実行される検索処理なのじゃ"""
+        """各プロセスで実行される検索処理"""
         mp4_files = []
         for subdir in subdirs:
             try:
@@ -112,7 +112,7 @@ class DistributedMP4Scanner:
         return mp4_files
 
     def distribute_scan(self):
-        """検索処理を分散実行するのじゃ"""
+        """検索処理を分散実行する"""
         try:
             # サブディレクトリのリストを取得
             all_subdirs = [d for d in self.root_dir.iterdir() if d.is_dir()]
@@ -161,9 +161,9 @@ def find_mp4_files_distributed(directory, cache_file='.mp4_cache'):
                     if time.time() - cached_data['timestamp'] < cache_ttl:
                         return cached_data['files']
                     else:
-                        print("キャッシュの有効期限が切れているのじゃ...")
+                        print("キャッシュの有効期限が切れています...")
         except Exception as e:
-            print(f"キャッシュの読み込みに失敗したのじゃ: {e}")
+            print(f"キャッシュの読み込みに失敗しました: {e}")
     
     # 分散処理で検索実行
     scanner = DistributedMP4Scanner(directory)
@@ -178,7 +178,7 @@ def find_mp4_files_distributed(directory, cache_file='.mp4_cache'):
         with open(cache_file, 'wb') as f:
             pickle.dump(cache_data, f)
     except Exception as e:
-        print(f"キャッシュの保存に失敗したのじゃ: {e}")
+        print(f"キャッシュの保存に失敗しました: {e}")
     
     return mp4_files
 
@@ -187,18 +187,19 @@ def check_pattern(data):
     filepath, pattern = data
     match = re.search(r'((?:sm|so)\d+)', Path(filepath).name)
     is_valid = bool(re.match(pattern, Path(filepath).name))
-    print(f"チェック結果のじゃ: {Path(filepath).name} -> match: {match.group(1) if match else None}, is_valid: {is_valid}")
+    print(f"チェック結果: {Path(filepath).name} -> match: {match.group(1) if match else None}, is_valid: {is_valid}")
     return (Path(filepath), match.group(1) if match else None, is_valid)
 
 def fetch_single_video(data, requests):
     """動画情報を取得する関数（グローバルスコープで定義）"""
+    mp4_file, video_id = data
     mp4_file, video_id = data
     title = get_video_info(video_id, requests)
     resolution, audio_bitrate = get_video_info_ffprobe(mp4_file)
     return (mp4_file, video_id, title, resolution or "720p", audio_bitrate or "192")
 
 def get_video_info_batch(video_files, requests):
-    # 並列処理用のデータを準備するのじゃ
+    # 並列処理用のデータを準備する
     video_data = []
     pattern = r'(?:sm|so)\d+\[\d+p,\d+\]_.*\.mp4$'
     
@@ -216,7 +217,7 @@ def get_video_info_batch(video_files, requests):
         for mp4_file, video_id, is_valid in check_results:
             if video_id and not is_valid:  # 既に正しい形式のファイルはスキップ
                 video_data.append((mp4_file, video_id))
-                print(f"処理対象に追加: {mp4_file.name}")
+                print(f"処理対象に追加しました: {mp4_file.name}")
             else:
                 print(f"スキップ: {mp4_file.name} (video_id: {video_id}, is_valid: {is_valid})")
 
@@ -232,11 +233,11 @@ def get_video_info_batch(video_files, requests):
                 result = future.result()
                 if result[2]:  # titleが取得できた場合のみ追加
                     results.append(result)
-                    print(f"情報取得成功: {result[0].name}")
+                    print(f"情報取得成功しました: {result[0].name}")
                 else:
                     print(f"情報取得失敗: {result[0].name}")
             except Exception as e:
-                print(f"エラーが発生したのじゃ: {e}")
+                print(f"エラーが発生しました: {e}")
 
     return results
 
@@ -246,12 +247,12 @@ def process_video_files(cache_dir, requests):
     
     mp4_files = find_mp4_files_distributed(cache_dir)
     if not mp4_files:
-        print("mp4ファイルが見つからなかったのじゃ...")
+        print("mp4ファイルが見つかりません...")
         return
 
     print(f"見つかったmp4ファイル数: {len(mp4_files)}")
     
-    # 一括で動画情報を取得するのじゃ
+    # 一括で動画情報を取得する
     video_info_results = get_video_info_batch(mp4_files, requests)
     
     rename_plans = []
@@ -272,17 +273,17 @@ def process_video_files(cache_dir, requests):
             
         rename_plans.append((mp4_file, new_path, mp4_file.name, new_name))
 
-    # リネーム予定がない場合は終了するのじゃ
+    # リネーム予定がない場合は終了する
     if not rename_plans:
-        print("\nリネーム可能なファイルが見つからなかったのじゃ...")
+        print("\nリネーム可能なファイルが見つかりません...")
         if skipped_files:
             print("\nスキップしたファイル:")
             for file in skipped_files:
                 print(f"- {file}")
         return
     
-    # リネーム予定を表示するのじゃ
-    print("\n以下のファイルをリネームする予定なのじゃ：")
+    # リネーム予定を表示する
+    print("\n以下のファイルをリネームする予定です：")
     for i, (_, _, old_name, new_name) in enumerate(rename_plans, 1):
         print(f"{i}. {old_name} -> {new_name}")
     
@@ -291,13 +292,13 @@ def process_video_files(cache_dir, requests):
         for file in skipped_files:
             print(f"- {file}")
     
-    # 一括確認を取るのじゃ
+    # 一括確認を取る
     confirm = input("\nこれらすべてのファイルをリネームしますか？ (y/n): ")
     if confirm.lower() != 'y':
-        print("リネームを中止したのじゃ。")
+        print("リネームを中止しました。")
         return
     
-    # 一括でリネームを実行するのじゃ
+    # 一括でリネームを実行する
     print("\nリネームを実行中...")
     success_count = 0
     error_count = 0
@@ -305,20 +306,20 @@ def process_video_files(cache_dir, requests):
     for mp4_file, new_path, old_name, new_name in rename_plans:
         try:
             mp4_file.rename(new_path)
-            print(f"成功: {old_name} -> {new_name}")
+            print(f"成功しました: {old_name} -> {new_name}")
             success_count += 1
         except Exception as e:
-            print(f"エラー: {old_name}: {e}")
+            print(f"エラーが発生しました: {old_name}: {e}")
             error_count += 1
     
-    # 結果を表示するのじゃ
-    print(f"\nリネーム完了なのじゃ！")
-    print(f"成功: {success_count}件")
-    print(f"失敗: {error_count}件")
-    print(f"スキップ: {len(skipped_files)}件")
+    # 結果を表示する
+    print(f"\nリネーム完了しました！")
+    print(f"成功しました: {success_count}件")
+    print(f"失敗しました: {error_count}件")
+    print(f"スキップしました: {len(skipped_files)}件")
 
 if __name__ == "__main__":
     requests = import_requests()
-    # カレントディレクトリからの相対パスに変更するのじゃ
+    # カレントディレクトリからの相対パスに変更する
     cache_dir = Path("cache")
     process_video_files(cache_dir, requests)

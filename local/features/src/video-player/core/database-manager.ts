@@ -1,6 +1,6 @@
 /**
  * データベース統合管理システム
- * 永続化昇格機能の中核システム、複数ストアの統合管理を行うのじゃ
+ * 永続化昇格機能の中核システム、複数ストアの統合管理を行います！
  */
 
 import { MigrationManager } from './migration-manager';
@@ -63,9 +63,9 @@ export class DatabaseManager {
   private async performInitialization(): Promise<void> {
     try {
       this.db = await this.openDatabase();
-      window.logger?.info('データベース初期化完了なのじゃ');
+      window.logger?.info('データベース初期化完了しました！');
     } catch (error) {
-      window.logger?.error('データベース初期化失敗:', error);
+      window.logger?.error('データベース初期化失敗しました！:', error);
       throw error;
     }
   }
@@ -78,7 +78,7 @@ export class DatabaseManager {
       const request = indexedDB.open(DB_CONFIG.NAME, DB_CONFIG.CURRENT_VERSION);
 
       request.onerror = () => {
-        window.logger?.error('データベースのオープンに失敗:', this.toMessage(request.error));
+        window.logger?.error('データベースのオープンに失敗しました！:', this.toMessage(request.error));
         reject(new Error(this.toMessage(request.error)));
       };
 
@@ -93,7 +93,7 @@ export class DatabaseManager {
         const oldVersion = event.oldVersion;
         const newVersion = event.newVersion || DB_CONFIG.CURRENT_VERSION;
 
-        window.logger?.info(`データベース昇格: v${oldVersion} → v${newVersion}`);
+        window.logger?.info(`データベース昇格しました: v${oldVersion} → v${newVersion}`);
 
         try {
           // マイグレーション実行
@@ -103,7 +103,7 @@ export class DatabaseManager {
             throw new Error(result.error || 'マイグレーション失敗');
           }
         } catch (error) {
-          window.logger?.error('マイグレーション実行エラー:', error);
+          window.logger?.error('マイグレーション実行エラーが発生しました！:', error);
           throw error;
         }
       };
@@ -115,11 +115,11 @@ export class DatabaseManager {
    */
   private setupDatabaseErrorHandling(db: IDBDatabase): void {
     db.onerror = (event) => {
-      window.logger?.error('データベースエラー:', event);
+      window.logger?.error('データベースエラーが発生しました！:', event);
     };
 
     db.onversionchange = () => {
-      window.logger?.warn('データベースバージョン変更が検出されたのじゃ');
+      window.logger?.warn('データベースバージョン変更が検出されました！');
       db.close();
       this.db = null;
     };
@@ -164,7 +164,7 @@ export class DatabaseManager {
         resolve(result && typeof result === 'object' && 'value' in result && result.value !== undefined ? (result.value as T) : defaultValue);
       };
       request.onerror = () => {
-        window.logger?.warn(`設定取得失敗: ${key}`);
+        window.logger?.warn(`設定取得失敗しました！: ${key}`);
         resolve(defaultValue);
       };
     });
@@ -412,7 +412,7 @@ export class DatabaseManager {
 
       window.logger?.info('データベースクリーンアップ完了');
     } catch (error) {
-      window.logger?.error('クリーンアップエラー:', error);
+      window.logger?.error('クリーンアップエラーが発生しました！:', error);
     }
   }
 
@@ -440,7 +440,7 @@ export class DatabaseManager {
           deletedCount++;
           cursor.continue();
         } else {
-          window.logger?.debug(`視聴履歴 ${deletedCount} 件を削除`);
+          window.logger?.debug(`視聴履歴 ${deletedCount} 件を削除しました！`);
           resolve();
         }
       };
@@ -472,7 +472,7 @@ export class DatabaseManager {
           deletedCount++;
           cursor.continue();
         } else {
-          window.logger?.debug(`コメント履歴 ${deletedCount} 件を削除`);
+          window.logger?.debug(`コメント履歴 ${deletedCount} 件を削除しました！`);
           resolve();
         }
       };
@@ -501,7 +501,7 @@ export class DatabaseManager {
           }
         });
 
-        window.logger?.debug(`期限切れキャッシュ ${deletedCount} 件を削除`);
+        window.logger?.debug(`期限切れキャッシュ ${deletedCount} 件を削除しました！`);
         resolve();
       };
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
@@ -516,7 +516,7 @@ export class DatabaseManager {
     
     this.cleanupTimer = setInterval(() => {
       this.performCleanup().catch(error => {
-        window.logger?.error('定期クリーンアップ失敗:', error);
+        window.logger?.error('定期クリーンアップ失敗しました！:', error);
       });
     }, interval);
   }
@@ -556,7 +556,7 @@ export class DatabaseManager {
     return new Promise((resolve, reject) => {
       const deleteRequest = indexedDB.deleteDatabase(DB_CONFIG.NAME);
       deleteRequest.onsuccess = () => {
-        window.logger?.info('データベースをリセットしたのじゃ');
+        window.logger?.info('データベースをリセットしました！');
         resolve();
       };
       deleteRequest.onerror = () => reject(new Error(this.toMessage(deleteRequest.error)));

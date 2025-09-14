@@ -1,6 +1,6 @@
 /**
  * IndexedDBの操作を簡略化するユーティリティ
- * 永続化昇格機能対応版なのじゃ
+ * 永続化昇格機能対応版です
  */
 
 import { ModeValue } from '../../types';
@@ -82,8 +82,8 @@ export const saveSettings = async (key: string, value: ModeValue): Promise<void>
         };
 
         request.onerror = (event) => {
-          window.logger?.error(`設定 "${key}" の保存に失敗したのじゃ:`, event);
-          reject(new Error(`設定 "${key}" の保存に失敗したのじゃ`));
+          window.logger?.error(`設定 "${key}" の保存に失敗しました:`, event);
+          reject(new Error(`設定 "${key}" の保存に失敗しました`));
         };
 
         transaction.oncomplete = () => {
@@ -127,7 +127,7 @@ export const getSettings = async <T>(key: string, defaultValue: T): Promise<T> =
         };
 
         request.onerror = (event) => {
-          window.logger?.error(`設定 "${key}" の取得に失敗したのじゃ:`, event);
+          window.logger?.error(`設定 "${key}" の取得に失敗しました:`, event);
           // エラーが発生してもデフォルト値を返す
           resolve(defaultValue);
         };
@@ -174,8 +174,8 @@ export const getAllSettings = async (): Promise<Record<string, ModeValue>> => {
         };
 
         request.onerror = (event) => {
-          window.logger?.error('設定の一括取得に失敗したのじゃ:', event);
-          reject(new Error('設定の一括取得に失敗したのじゃ'));
+          window.logger?.error('設定の一括取得に失敗しました:', event);
+          reject(new Error('設定の一括取得に失敗しました'));
         };
 
         transaction.oncomplete = () => {

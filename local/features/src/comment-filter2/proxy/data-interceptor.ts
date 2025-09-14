@@ -2,7 +2,7 @@
 import { CONSTANTS } from '../utils/constants';
 import { CF2CommentApiResponse, CommentFilter2GlobalData, CF2Thread, toCompatibleGlobalData } from '@/types/filter-types';
 
-// グローバル型定義は types/global.d.ts で管理されているのじゃ
+// グローバル型定義は types/global.d.ts で管理されています
 
 export class DataInterceptor {
   private originalFetch: typeof fetch;

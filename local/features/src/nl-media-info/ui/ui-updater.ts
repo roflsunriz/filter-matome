@@ -282,7 +282,7 @@ export class UIUpdater {
   }
 
   /**
-   * タイトルを更新するのじゃ
+   * タイトルを更新する
    * @param videoTitle - 動画のタイトル
    * @param videoId - 動画のID
    */
@@ -292,7 +292,7 @@ export class UIUpdater {
     if (titleElement) {
       titleElement.innerHTML = `nlMediaInfo: ${videoTitle} (${videoId})`;
     } else {
-      console.warn('titleタグが見つからないのじゃ');
+      console.warn('titleタグが見つかりません');
     }
   }
 } 

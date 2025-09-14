@@ -1,8 +1,8 @@
 /**
- * ニコニコ動画視聴履歴拡張 - データベース操作なのじゃ
+ * ニコニコ動画視聴履歴拡張 - データベース操作
  * 
  * @description IndexedDBを使った視聴履歴の保存・取得・統計計算
- * @author わらわ（のじゃロリ娘）
+ * @author roflsunriz
  */
 
 import type { 
@@ -30,7 +30,7 @@ import { logger } from '../common/logger';
 import { migrationManager } from './migration-manager';
 
 /**
- * 視聴履歴データベース操作クラスなのじゃ
+ * 視聴履歴データベース操作クラス
  */
 export class WatchHistoryDatabase {
   private db: IDBDatabase | null = null;
@@ -49,7 +49,7 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * データベースを初期化するのじゃ
+   * データベースを初期化する
    */
   async initialize(): Promise<DBResult<void>> {
     try {
@@ -59,7 +59,7 @@ export class WatchHistoryDatabase {
       const initResult = await new Promise<DBResult<void>>((resolve, reject) => {
         request.onerror = () => {
           logger.error('データベース接続失敗');
-          reject(new Error('データベース接続失敗なのじゃ'));
+          reject(new Error('データベース接続失敗'));
         };
 
         request.onsuccess = () => {
@@ -159,11 +159,11 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * 視聴履歴エントリを保存するのじゃ（upsert操作）
+   * 視聴履歴エントリを保存する（upsert操作）
    */
   async saveEntry(entry: WatchHistoryEntry): Promise<DBResult<void>> {
     if (!this.db) {
-      return { success: false, error: 'データベース未初期化なのじゃ' };
+      return { success: false, error: 'データベース未初期化' };
     }
 
     try {
@@ -180,7 +180,7 @@ export class WatchHistoryDatabase {
         };
         
         transaction.onabort = () => {
-          reject(new Error('保存処理が中断されたのじゃ'));
+          reject(new Error('保存処理が中断されました'));
         };
         
         // 既存エントリの確認
@@ -223,11 +223,11 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * 個別エントリを取得するのじゃ
+   * 個別エントリを取得する
    */
   async getEntry(videoId: string): Promise<DBResult<WatchHistoryEntry>> {
     if (!this.db) {
-      return { success: false, error: 'データベース未初期化なのじゃ' };
+      return { success: false, error: 'データベースが未初期化です' };
     }
 
     try {
@@ -243,7 +243,7 @@ export class WatchHistoryDatabase {
       if (result) {
         return { success: true, data: result };
       } else {
-        return { success: false, error: '動画が見つからぬのじゃ' };
+        return { success: false, error: '動画が見つかりません' };
       }
     } catch (error) {
       return { success: false, error: `取得失敗: ${String(error)}` };
@@ -251,7 +251,7 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * 全エントリを取得するのじゃ（ソート・フィルタ付き）
+   * 全エントリを取得する（ソート・フィルタ付き）
    */
   async getAllEntries(
     sortBy: SortBy = 'watchedAt',
@@ -262,7 +262,7 @@ export class WatchHistoryDatabase {
     
     if (!this.db) {
       logger.error('データベース未初期化');
-      return { success: false, error: 'データベース未初期化なのじゃ' };
+      return { success: false, error: 'データベース未初期化' };
     }
 
     try {
@@ -302,12 +302,12 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * 統計データを計算するのじゃ
+   * 統計データを計算する
    */
   async calculateStats(): Promise<DBResult<OverallStats>> {
     const entriesResult = await this.getAllEntries();
     if (!entriesResult.success || !entriesResult.data) {
-      return { success: false, error: '統計計算用データ取得失敗なのじゃ' };
+      return { success: false, error: '統計計算用データ取得失敗' };
     }
 
     const entries = entriesResult.data;
@@ -344,12 +344,12 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * データをエクスポートするのじゃ
+   * データをエクスポートする
    */
   async exportData(): Promise<DBResult<WatchHistoryExportData>> {
     const entriesResult = await this.getAllEntries();
     if (!entriesResult.success || !entriesResult.data) {
-      return { success: false, error: 'エクスポート用データ取得失敗なのじゃ' };
+      return { success: false, error: 'エクスポート用データ取得失敗' };
     }
 
     const seriesAlertsResult = await this.getAllSeriesAlerts();
@@ -366,11 +366,11 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * データをインポートするのじゃ
+   * データをインポートする
    */
   async importData(exportData: WatchHistoryExportData, config: ImportConfig): Promise<DBResult<number>> {
     if (!exportData.entries || !Array.isArray(exportData.entries)) {
-      return { success: false, error: '不正なデータ形式なのじゃ' };
+      return { success: false, error: '不正なデータ形式' };
     }
 
     let importedCount = 0;
@@ -436,7 +436,7 @@ export class WatchHistoryDatabase {
   // ===== プライベートメソッド =====
 
   /**
-   * 視聴ログをマージするのじゃ
+   * 視聴ログをマージする
    */
   private mergeWatchLogs(existing: WatchLogEntry[], newLogs: WatchLogEntry[]): WatchLogEntry[] {
     const merged = [...existing];
@@ -460,7 +460,7 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * エントリをマージするのじゃ
+   * エントリをマージする
    */
   private mergeEntries(existing: WatchHistoryEntry, newEntry: WatchHistoryEntry): WatchHistoryEntry {
     return {
@@ -475,12 +475,12 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * フィルタを適用するのじゃ
+   * フィルタを適用する
    */
   private applyFilter(entries: WatchHistoryEntry[], filter: FilterCondition): WatchHistoryEntry[] {
     return entries.filter(entry => {
       // ===== 検索テキストフィルタ =====
-      // 空文字列や "null" / "undefined" といった無効値は無視するのじゃ
+      // 空文字列や "null" / "undefined" といった無効値は無視する
       const rawSearch = (filter.searchText ?? '').trim().toLowerCase();
       if (rawSearch && rawSearch !== 'null' && rawSearch !== 'undefined') {
         const searchTargets = [
@@ -521,7 +521,7 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * ソートを適用するのじゃ
+   * ソートを適用する
    */
   private applySorting(entries: WatchHistoryEntry[], sortBy: SortBy, sortOrder: SortOrder): WatchHistoryEntry[] {
     return entries.sort((a, b) => {
@@ -589,7 +589,7 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * 日別統計を計算するのじゃ
+   * 日別統計を計算する
    */
   private calculateDailyStats(entries: WatchHistoryEntry[]): DailyStats[] {
     const dailyMap = new Map<string, DailyStats>();
@@ -618,7 +618,7 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * 時間帯別統計を計算するのじゃ
+   * 時間帯別統計を計算する
    */
   private calculateHourlyStats(entries: WatchHistoryEntry[]): HourlyStats[] {
     const hourlyMap = new Map<number, number>();
@@ -642,7 +642,7 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * 投稿者別統計を計算するのじゃ
+   * 投稿者別統計を計算する
    */
   private calculateCreatorStats(entries: WatchHistoryEntry[]): CreatorStats[] {
     const creatorMap = new Map<string, CreatorStats>();
@@ -668,12 +668,12 @@ export class WatchHistoryDatabase {
   // ===== シリーズ関連メソッド =====
 
   /**
-   * シリーズ統計を取得するのじゃ
+   * シリーズ統計を取得する
    */
   async getSeriesStats(filter?: SeriesFilterCondition): Promise<DBResult<SeriesStats[]>> {
     const entriesResult = await this.getAllEntries();
     if (!entriesResult.success || !entriesResult.data) {
-      return { success: false, error: 'シリーズ統計用データ取得失敗なのじゃ' };
+      return { success: false, error: 'シリーズ統計用データ取得失敗' };
     }
 
     const entries = entriesResult.data;
@@ -717,12 +717,12 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * シリーズの動画一覧を取得するのじゃ
+   * シリーズの動画一覧を取得する
    */
   async getSeriesVideos(seriesId: number): Promise<DBResult<WatchHistoryEntry[]>> {
     const entriesResult = await this.getAllEntries();
     if (!entriesResult.success || !entriesResult.data) {
-      return { success: false, error: 'シリーズ動画取得失敗なのじゃ' };
+      return { success: false, error: 'シリーズ動画取得失敗' };
     }
 
     const seriesVideos = entriesResult.data.filter(entry => 
@@ -733,11 +733,11 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * シリーズアラートを保存するのじゃ
+   * シリーズアラートを保存する
    */
   async saveSeriesAlert(alert: SeriesAlert): Promise<DBResult<void>> {
     if (!this.db) {
-      return { success: false, error: 'データベース未初期化なのじゃ' };
+      return { success: false, error: 'データベース未初期化' };
     }
 
     try {
@@ -764,11 +764,11 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * シリーズアラートを取得するのじゃ
+   * シリーズアラートを取得する
    */
   async getSeriesAlert(alertId: string): Promise<DBResult<SeriesAlert>> {
     if (!this.db) {
-      return { success: false, error: 'データベース未初期化なのじゃ' };
+      return { success: false, error: 'データベース未初期化' };
     }
 
     try {
@@ -784,7 +784,7 @@ export class WatchHistoryDatabase {
       if (result) {
         return { success: true, data: result };
       } else {
-        return { success: false, error: 'シリーズアラートが見つからぬのじゃ' };
+        return { success: false, error: 'シリーズアラートが見つからぬ' };
       }
     } catch (error) {
       return { success: false, error: `シリーズアラート取得失敗: ${String(error)}` };
@@ -792,11 +792,11 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * 全シリーズアラートを取得するのじゃ
+   * 全シリーズアラートを取得する
    */
   async getAllSeriesAlerts(): Promise<DBResult<SeriesAlert[]>> {
     if (!this.db) {
-      return { success: false, error: 'データベース未初期化なのじゃ' };
+      return { success: false, error: 'データベース未初期化' };
     }
 
     try {
@@ -816,11 +816,11 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * シリーズアラートを削除するのじゃ
+   * シリーズアラートを削除する
    */
   async deleteSeriesAlert(alertId: string): Promise<DBResult<void>> {
     if (!this.db) {
-      return { success: false, error: 'データベース未初期化なのじゃ' };
+      return { success: false, error: 'データベース未初期化' };
     }
 
     try {
@@ -849,11 +849,11 @@ export class WatchHistoryDatabase {
   // ===== 視聴履歴削除機能 =====
 
   /**
-   * 指定した動画IDの視聴履歴を削除するのじゃ（個別削除）
+   * 指定した動画IDの視聴履歴を削除する（個別削除）
    */
   async deleteEntry(videoId: string): Promise<DBResult<void>> {
     if (!this.db) {
-      return { success: false, error: 'データベース未初期化なのじゃ' };
+      return { success: false, error: 'データベース未初期化' };
     }
 
     try {
@@ -880,11 +880,11 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * 全ての視聴履歴を削除するのじゃ（一括削除）
+   * 全ての視聴履歴を削除する（一括削除）
    */
   async deleteAllEntries(): Promise<DBResult<number>> {
     if (!this.db) {
-      return { success: false, error: 'データベース未初期化なのじゃ' };
+      return { success: false, error: 'データベース未初期化' };
     }
 
     try {
@@ -924,17 +924,17 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * 条件に一致する視聴履歴を削除するのじゃ（条件付き削除）
+   * 条件に一致する視聴履歴を削除する（条件付き削除）
    * @param maxWatchCount 最大視聴回数（この回数以下を削除）
    * @param maxProgressRate 最大進捗率（この進捗率以下を削除、0-100の範囲）
    */
   async deleteEntriesByCondition(maxWatchCount: number, maxProgressRate: number): Promise<DBResult<number>> {
     if (!this.db) {
-      return { success: false, error: 'データベース未初期化なのじゃ' };
+      return { success: false, error: 'データベース未初期化' };
     }
 
     if (maxWatchCount < 0 || maxProgressRate < 0 || maxProgressRate > 100) {
-      return { success: false, error: '無効な条件値なのじゃ（視聴回数は0以上、進捗率は0-100の範囲）' };
+      return { success: false, error: '無効な条件値（視聴回数は0以上、進捗率は0-100の範囲）' };
     }
 
     try {
@@ -994,12 +994,12 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * チェックが必要なシリーズアラートを取得するのじゃ
+   * チェックが必要なシリーズアラートを取得する
    */
   async getAlertsToCheck(): Promise<DBResult<SeriesAlert[]>> {
     const alertsResult = await this.getAllSeriesAlerts();
     if (!alertsResult.success || !alertsResult.data) {
-      return { success: false, error: 'アラート取得失敗なのじゃ' };
+      return { success: false, error: 'アラート取得失敗' };
     }
 
     const now = Date.now();
@@ -1011,7 +1011,7 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * シリーズフィルタを適用するのじゃ
+   * シリーズフィルタを適用する
    */
   private applySeriesFilter(seriesStats: SeriesStats[], filter: SeriesFilterCondition): SeriesStats[] {
     return seriesStats.filter(stats => {
@@ -1059,60 +1059,60 @@ export class WatchHistoryDatabase {
   // ===== 永続化・マイグレーション管理メソッド =====
 
   /**
-   * データベースの永続化状態を取得するのじゃ
+   * データベースの永続化状態を取得する
    */
   async getPersistenceStatus(): Promise<DBResult<PersistenceStatus>> {
     return await migrationManager.getPersistenceStatus();
   }
 
   /**
-   * データベースの永続化を要求するのじゃ
+   * データベースの永続化を要求する
    */
   async requestPersistence(): Promise<DBResult<boolean>> {
     return await migrationManager.requestPersistence();
   }
 
   /**
-   * マイグレーション進捗を取得するのじゃ
+   * マイグレーション進捗を取得する
    */
   getMigrationProgress(): MigrationProgress {
     return migrationManager.getMigrationProgress();
   }
 
   /**
-   * マイグレーション設定を取得するのじゃ
+   * マイグレーション設定を取得する
    */
   getMigrationConfig(): DatabaseManagementConfig {
     return migrationManager.getConfig();
   }
 
   /**
-   * マイグレーション設定を更新するのじゃ
+   * マイグレーション設定を更新する
    */
   updateMigrationConfig(config: Partial<DatabaseManagementConfig>): void {
     migrationManager.updateConfig(config);
   }
 
   /**
-   * 利用可能なバックアップ一覧を取得するのじゃ
+   * 利用可能なバックアップ一覧を取得する
    */
   getAvailableBackups(): Array<{ key: string; timestamp: number; version: number }> {
     return migrationManager.getAvailableBackups();
   }
 
   /**
-   * バックアップからリストアするのじゃ
+   * バックアップからリストアする
    */
   async restoreFromBackup(backupKey: string): Promise<DBResult<void>> {
     return await migrationManager.restoreFromBackup(backupKey);
   }
 
   /**
-   * 手動でマイグレーションを実行するのじゃ
+   * 手動でマイグレーションを実行する
    */
   async runMigration(): Promise<DBResult<void>> {
     if (!this.db) {
-      return { success: false, error: 'データベース未初期化なのじゃ' };
+      return { success: false, error: 'データベース未初期化' };
     }
 
     try {

@@ -4,26 +4,26 @@ from typing import Dict, List, TypedDict, Optional
 
 class ConfigEditor:
     def __init__(self, config_path: Optional[str] = None):
-        # スクリプトの場所とリポジトリルートを特定するのじゃ
+        # スクリプトの場所とリポジトリルートを特定します
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
         self.root_dir = os.path.abspath(os.path.join(self.script_dir, os.pardir))
 
-        # ルートの config.properties を既定とするのじゃ
+        # ルートの config.properties を既定とします
         self.config_path = (
             os.path.join(self.root_dir, "config.properties")
             if config_path is None else config_path
         )
 
-        # ルートの defaults ディレクトリを参照するのじゃ
+        # ルートの defaults ディレクトリを参照します
         self.defaults_dir = os.path.join(self.root_dir, "defaults")
         self.settings: Dict[str, str] = {}
         self.comments: Dict[str, str] = {}
         self.load_config()
 
     def load_config(self):
-        """現在の設定ファイルを読み込むのじゃ"""
+        """現在の設定ファイルを読み込みます"""
         if os.path.exists(self.config_path):
-            # 文字コードを自動判定するのじゃ
+            # 文字コードを自動判定します
             encodings = ['utf-8', 'shift-jis', 'cp932', 'euc-jp']
             for encoding in encodings:
                 try:
@@ -39,9 +39,9 @@ class ConfigEditor:
                                 self.settings[key] = value.strip()
                                 self.comments[key] = '\n'.join(current_comment)
                                 current_comment = []
-                    return  # 正常に読み込めた場合はループを抜けるのじゃ
+                    return  # 正常に読み込めた場合はループを抜けます
                 except UnicodeDecodeError:
-                    continue  # エラーの場合は次の文字コードを試すのじゃ
+                    continue  # エラーの場合は次の文字コードを試します
             
             print("警告: ファイルの文字コードを判定できませんでした。")
 
@@ -51,15 +51,15 @@ class ConfigEditor:
         source: str
 
     def get_available_settings(self) -> Dict[str, "ConfigEditor.AvailableSetting"]:
-        """defaultsフォルダから利用可能な設定を取得するのじゃ"""
+        """defaultsフォルダから利用可能な設定を取得します"""
         available_settings: Dict[str, ConfigEditor.AvailableSetting] = {}
-        # フォルダが無い場合は空で返すのじゃ
+        # フォルダが無い場合は空で返します
         if not os.path.isdir(self.defaults_dir):
             return available_settings
 
         for file in os.listdir(self.defaults_dir):
             if file.endswith('.properties'):
-                # 文字コードを自動判定するのじゃ
+                # 文字コードを自動判定します
                 encodings = ['utf-8', 'shift-jis', 'cp932', 'euc-jp']
                 for encoding in encodings:
                     try:
@@ -79,14 +79,14 @@ class ConfigEditor:
                                             'source': file
                                         }
                                     current_comment = []
-                            break  # 正常に読み込めた場合はループを抜けるのじゃ
+                            break  # 正常に読み込めた場合はループを抜けます
                     except UnicodeDecodeError:
-                        continue  # エラーの場合は次の文字コードを試すのじゃ
+                        continue  # エラーの場合は次の文字コードを試します
         return available_settings
 
     def add_setting(self, key: str, value: str, comment: str = "", default_value: str = ""):
-        """設定を追加するのじゃ"""
-        # 値が空の場合はデフォルト値を使用するのじゃ
+        """設定を追加します"""
+        # 値が空の場合はデフォルト値を使用します
         if not value.strip() and default_value:
             value = default_value
             print(f"デフォルト値を使用します: {value}")
@@ -97,7 +97,7 @@ class ConfigEditor:
         self.save_config()
 
     def remove_setting(self, key: str):
-        """設定を削除するのじゃ"""
+        """設定を削除します"""
         if key in self.settings:
             del self.settings[key]
             if key in self.comments:
@@ -105,9 +105,9 @@ class ConfigEditor:
         self.save_config()
 
     def edit_setting(self, key: str, value: str):
-        """設定を編集するのじゃ"""
+        """設定を編集します"""
         if key in self.settings:
-            # 値が空の場合は、defaultsフォルダから設定を探すのじゃ
+            # 値が空の場合は、defaultsフォルダから設定を探します
             if not value.strip():
                 available = self.get_available_settings()
                 if key in available:
@@ -118,10 +118,10 @@ class ConfigEditor:
             self.save_config()
 
     def detect_encoding(self, file_path: str) -> str:
-        """ファイルの文字コードを検出するのじゃ"""
+        """ファイルの文字コードを検出します"""
         encodings = ['utf-8', 'shift-jis', 'cp932', 'euc-jp']
         
-        # ファイルが存在しない場合はデフォルトでUTF-8を使うのじゃ
+        # ファイルが存在しない場合はデフォルトでUTF-8を使います
         if not os.path.exists(file_path):
             return 'utf-8'
         
@@ -133,30 +133,30 @@ class ConfigEditor:
             except UnicodeDecodeError:
                 continue
         
-        # どの文字コードでも読めない場合はUTF-8を使うのじゃ
+        # どの文字コードでも読めない場合はUTF-8を使います
         return 'utf-8'
 
     def save_config(self):
-        """設定をファイルに保存するのじゃ"""
-        # 既存のファイルの文字コードを検出するのじゃ
+        """設定をファイルに保存します"""
+        # 既存のファイルの文字コードを検出します
         encoding = self.detect_encoding(self.config_path)
         print(f"文字コード {encoding} で保存します...")
         
         with open(self.config_path, 'w', encoding=encoding) as f:
-            # 文字コード判定用の行は1回だけ書き込むのじゃ
+            # 文字コード判定用の行は1回だけ書き込みます
             f.write("# NicoCache_nl 設定ファイル(文字コード判定用なのでこの行は削除しないこと)\n\n")
             
-            # コメントと設定値を書き込むのじゃ
-            written_settings = set()  # 書き込み済みの設定を記録するのじゃ
+            # コメントと設定値を書き込みます
+            written_settings = set()  # 書き込み済みの設定を記録します
             
             for key, value in self.settings.items():
-                if key not in written_settings:  # 重複チェックを行うのじゃ
+                if key not in written_settings:  # 重複チェックを行います
                     if key in self.comments:
                         comment = self.comments[key].replace(
                             "# NicoCache_nl 設定ファイル(文字コード判定用なのでこの行は削除しないこと)", 
                             ""
                         ).strip()
-                        if comment:  # 空のコメントは書き込まないのじゃ
+                        if comment:  # 空のコメントは書き込みません
                             f.write(f"\n{comment}\n")
                     f.write(f"{key}={value}\n")
                     written_settings.add(key)
@@ -197,7 +197,7 @@ def main():
                     key, 
                     value, 
                     available[key]['comment'],
-                    available[key]['value']  # デフォルト値を渡すのじゃ
+                    available[key]['value']  # デフォルト値を渡します
                 )
                 print("設定を追加しました！")
             else:
@@ -210,7 +210,7 @@ def main():
             
             key = input("\n編集する設定名を入力: ")
             if key in editor.settings:
-                # デフォルト値を表示するのじゃ
+                # デフォルト値を表示します
                 available = editor.get_available_settings()
                 default_value = available[key]['value'] if key in available else ""
                 if default_value:
