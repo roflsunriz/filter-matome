@@ -343,7 +343,7 @@ def set_proxy_registry():
         key_path = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
         proxy_url = "http://127.0.0.1:8080/proxy.pac"
         
-        # レジストリに���定を追加
+        # レジストリに設定を追加
         result = subprocess.run(
             ['reg', 'ADD', 
              f"HKEY_CURRENT_USER\\{key_path}",
@@ -429,7 +429,7 @@ def set_firefox_proxy():
         # デフォルトプロファイルを探す
         default_profiles = glob.glob(os.path.join(profile_base, '*.default*'))
         if not default_profiles:
-            print("エラー: デフォルト���ロファイルが見つかりません！")
+            print("エラー: デフォルトプロファイルが見つかりません！")
             return
             
         profile_dir = default_profiles[0]
@@ -457,7 +457,7 @@ def set_firefox_proxy():
             print("user.jsを作成しました！")
             
         print("\nFirefoxのプロキシ設定が完了しました！")
-        print("設定を反映させるには、Firefoxを再起動してく��さい。")
+        print("設定を反映させるには、Firefoxを再起動してください。")
     except Exception as e:
         print(f"エラーが発生しました: {e}")
 
@@ -529,7 +529,7 @@ def delete_certificate():
                 print(result.stderr)
                 
     except Exception as e:
-        print(f"エラーが発生しまし���: {e}")
+        print(f"エラーが発生しました: {e}")
 
 def add_certificate():
     try:
@@ -640,20 +640,20 @@ def create_scheduled_task():
     try:
         print("\n=== タスクスケジューラーへの登録を開始 ===")
         
-        # ��スクを作成
+        # タスクを作成
         result = subprocess.run(
             ['SCHTASKS', '/Create', 
              '/RU', 'Users', 
              '/SC', 'ONLOGON', 
-             '/TN', 'sc_NicoCache_onlogon', 
-             '/TR', 'C:\\NicoCache_nl\\NicoCacheGUILauncher.bat'
+             '/TN', 'NicoCache_nl_AutoLaunch', 
+             '/TR', 'cmd.exe /c "cd /d C:\\NicoCache_nl && NicoCacheGUILauncher.bat"'
             ],
             capture_output=True,
             text=True
         )
         
         if result.returncode == 0:
-            print("sc_NicoCache_onlogon が登録されました！")
+            print("NicoCache_nl_AutoLaunch が登録されました！")
             print("タスクスケジューラーで確認してください。")
         else:
             print("エラー: タスクの登録に失敗しました。")
