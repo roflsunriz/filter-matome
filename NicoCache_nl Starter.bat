@@ -1,3 +1,2 @@
 rem @echo off
-cd /d %~dp0
-start /MIN "" "NicoCache_nl.bat"
+start /MIN "NicoCache_nl Starter - 2025/09/16" "NicoCache_nl.bat"
