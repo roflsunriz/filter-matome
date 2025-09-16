@@ -22,3 +22,6 @@ Thumbs.db
 
 # 不要画像ファイル
 local/background-images/favorites/
+
+# config
+scripts/config.json

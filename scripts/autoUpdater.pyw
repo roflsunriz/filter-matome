@@ -13,6 +13,7 @@ import re
 import os
 import urllib.parse
 import shutil
+import webbrowser
 
 # 標準ライブラリとサードパーティライブラリを分類
 STANDARD_LIBS = {
@@ -29,6 +30,8 @@ REQUIRED_PACKAGES = {
     'psutil',
     'bs4'  # beautifulsoup4の別名
 }
+
+FILTER_RELEASE_URL = 'https://github.com/roflsunriz/filter-matome/releases'
 
 def is_package_installed(package_name):
     """パッケージがインストール済みかどうかを確認します！"""
@@ -315,6 +318,14 @@ class NicoCacheGUI:
         self.save_button = ttk.Button(button_frame, text='設定保存', command=self.update_config)
         self.save_button.pack(side='left', padx=5)
         
+        # フィルタまとめリリースページを開くボタン
+        self.filter_matome_button = ttk.Button(
+            button_frame,
+            text='フィルタまとめ',
+            command=self.open_filter_matome_releases
+        )
+        self.filter_matome_button.pack(side='left', padx=5)
+        
         # 終了ボタンを追加
         self.exit_button = ttk.Button(button_frame, text='終了', command=self.on_closing)
         self.exit_button.pack(side='left', padx=5)
@@ -327,6 +338,15 @@ class NicoCacheGUI:
         if dir_path:
             self.dir_entry.delete(0, tk.END)
             self.dir_entry.insert(0, dir_path)
+
+    def open_filter_matome_releases(self):
+        try:
+            webbrowser.open(FILTER_RELEASE_URL, new=2)
+            self.log('フィルタまとめのリリースページをブラウザで開きました。')
+        except Exception as e:
+            error_message = f'フィルタまとめのリリースページを開けませんでした: {e}'
+            self.log(error_message)
+            messagebox.showerror('エラー', f'フィルタまとめのリリースページを開けませんでした:\n{e}')
 
     def toggle_interval_input(self):
         """更新間隔の入力方式を切り替えます！"""
@@ -950,7 +970,7 @@ class NicoCacheDownloader:
                     
             elif preset_name == 'フィルタまとめ':
                 # フィルタまとめの場合はReleaseNotesをチェック
-                release_notes_path = target_dir / 'nlFilters' / '198_ReleaseNotes.md'
+                release_notes_path = target_dir / 'nlFilters' / '198_release_notes.md'
                 if release_notes_path.exists():
                     file_time = datetime.fromtimestamp(release_notes_path.stat().st_mtime)
                     self.gui.log(f'既存のReleaseNotesから日時を取得: {file_time}')
@@ -1033,3 +1053,4 @@ if __name__ == "__main__":
     except ImportError as e:
         print(f"重要なパッケージのインポートに失敗しました: {e}")
         sys.exit(1)
+
