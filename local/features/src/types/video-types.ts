@@ -10,6 +10,11 @@ export interface PlayerSettings {
     ALWAYS: string;
     HOVER: string;
   };
+  VOLUME: {
+    DEFAULT: number;
+    MIN: number;
+    MAX: number;
+  };
   COMMENT: {
     OPACITY: {
       DEFAULT: number;

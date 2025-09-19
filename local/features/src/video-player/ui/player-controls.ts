@@ -5,6 +5,8 @@ import { CommentSystem } from '../core/comment-system.js';
 import * as IndexedDBUtils from '../utils/indexed-db-utils.js';
 import { ExtendedDocument, ExtendedHTMLElement } from '@/types/index.js';
 
+const PLAYER_VOLUME_STORAGE_KEY = 'playerVolume';
+
 /**
  * シャドウDOM版のプレイヤーコントロール
  * Web Componentsとして実装してスタイル分離を実現
@@ -94,6 +96,7 @@ export class PlayerControlsShadow extends HTMLElement {
     this.ensureInitialized();
     
     this.video = video;
+    this.initializeVolumeState();
     
     // ビデオイベントのセットアップ
     this.setupVideoEvents();
@@ -129,6 +132,7 @@ export class PlayerControlsShadow extends HTMLElement {
    * HTMLテンプレートを取得
    */
   private getTemplate(): string {
+    const initialVolumePercent = Math.round(PLAYER_SETTINGS.VOLUME.DEFAULT * 100);
     return `
       <style>
         ${this.getStyles()}
@@ -143,7 +147,7 @@ export class PlayerControlsShadow extends HTMLElement {
             <button id="play-pause" title="再生/一時停止">${PLAYER_ICONS.play}</button>
             <div class="volume-control">
               <button id="mute" title="ミュート切替">${PLAYER_ICONS.volume}</button>
-              <input type="range" id="volume" class="custom-slider" min="0" max="100" value="100">
+              <input type="range" id="volume" class="custom-slider" min="0" max="100" value="${initialVolumePercent}" style="--volume: ${initialVolumePercent}%;">
             </div>
           </div>
           <div class="controls-center">
@@ -880,20 +884,28 @@ export class PlayerControlsShadow extends HTMLElement {
    * 音量コントロールの設定
    */
   private setupVolumeControls(): void {
-    const volumeBar = this.shadow.querySelector('#volume') as HTMLInputElement;
-    const muteBtn = this.shadow.querySelector('#mute') as HTMLElement;
+    const volumeBar = this.shadow.querySelector<HTMLInputElement>('#volume');
+    const muteBtn = this.shadow.querySelector<HTMLButtonElement>('#mute');
     
     if (!volumeBar || !muteBtn) return;
+
+    const initialPercent = Math.round(PLAYER_SETTINGS.VOLUME.DEFAULT * 100);
+    volumeBar.style.setProperty('--volume', `${initialPercent}%`);
 
     // 音量スライダーの更新
     volumeBar.addEventListener('input', () => {
       const video = this.getVideo();
       if (!video) return;
       
-      const volumeValue = Number(volumeBar.value) / 100;
+      const volumeValue = this.clampVolume(Number(volumeBar.value) / 100);
       video.volume = volumeValue;
-      
-      volumeBar.style.setProperty('--volume', `${volumeBar.value}%`);
+
+      if (volumeValue > 0 && video.muted) {
+        video.muted = false;
+      }
+
+      this.updateVolumeSlider(volumeValue);
+      localStorage.setItem(PLAYER_VOLUME_STORAGE_KEY, volumeValue.toString());
       this.updateVolumeIcon();
     });
 
@@ -905,6 +917,74 @@ export class PlayerControlsShadow extends HTMLElement {
       video.muted = !video.muted;
       this.updateVolumeIcon();
     });
+  }
+
+  /**
+   * 音量値を許容範囲にクランプ
+   */
+  private clampVolume(volume: number): number {
+    const { MIN, MAX, DEFAULT } = PLAYER_SETTINGS.VOLUME;
+    if (Number.isNaN(volume)) {
+      return DEFAULT;
+    }
+    return Math.min(Math.max(volume, MIN), MAX);
+  }
+
+  /**
+   * 音量スライダーのUI更新
+   */
+  private updateVolumeSlider(volume: number): void {
+    const volumeBar = this.shadow.querySelector<HTMLInputElement>('#volume');
+    if (!volumeBar) return;
+
+    const clamped = this.clampVolume(volume);
+    const percent = Math.round(clamped * 100);
+    volumeBar.value = percent.toString();
+    volumeBar.style.setProperty('--volume', `${percent}%`);
+  }
+
+  /**
+   * 動画要素の音量とUIを同期
+   */
+  private syncVolumeFromVideo(): void {
+    const video = this.getVideo();
+    if (!video) return;
+
+    this.updateVolumeSlider(video.volume);
+    this.updateVolumeIcon();
+  }
+
+  /**
+   * 初期音量の適用
+   */
+  private initializeVolumeState(): void {
+    const video = this.getVideo();
+    if (!video) return;
+
+    const savedVolumeRaw = localStorage.getItem(PLAYER_VOLUME_STORAGE_KEY);
+    let volume = PLAYER_SETTINGS.VOLUME.DEFAULT;
+
+    if (savedVolumeRaw !== null) {
+      const parsed = Number(savedVolumeRaw);
+      if (!Number.isNaN(parsed)) {
+        volume = parsed;
+      }
+    } else {
+      const currentVolume = this.clampVolume(video.volume);
+      if (currentVolume !== 1) {
+        volume = currentVolume;
+      }
+    }
+
+    volume = this.clampVolume(volume);
+    video.volume = volume;
+
+    if (volume > 0 && video.muted) {
+      video.muted = false;
+    }
+
+    this.updateVolumeSlider(volume);
+    this.updateVolumeIcon();
   }
 
   /**
@@ -1100,12 +1180,17 @@ export class PlayerControlsShadow extends HTMLElement {
     video.addEventListener('loadedmetadata', () => {
       this.updateDurationDisplay();
     });
-    
+
     // 動画長取得失敗への対処（duration変更時にも再試行）
     video.addEventListener('durationchange', () => {
       this.updateDurationDisplay();
     });
-    
+
+    // 外部から音量が変更された場合にもUIを同期
+    video.addEventListener('volumechange', () => {
+      this.syncVolumeFromVideo();
+    });
+
     // 即座に長さを確認（すでに読み込み済みの場合）
     if (video.duration && !isNaN(video.duration)) {
       this.updateDurationDisplay();

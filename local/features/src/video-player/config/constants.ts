@@ -39,6 +39,11 @@ export const PLAYER_SETTINGS: PlayerSettings = {
     ALWAYS: "always",
     HOVER: "hover"
   },
+  VOLUME: {
+    DEFAULT: 0.3,
+    MIN: 0,
+    MAX: 1
+  },
   COMMENT: {
     OPACITY: {
       DEFAULT: 0.75,
