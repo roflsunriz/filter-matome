@@ -2,7 +2,7 @@
 cd %~dp0
 setlocal enabledelayedexpansion
 
-echo ドラッグ・アンド・ドロップされたファイル/フォルダを処理するのじゃ！
+echo ドラッグ・アンド・ドロップされたファイル/フォルダを処理します！
 
 rem デバッグ情報の表示
 echo 引数の数: %#
@@ -11,41 +11,41 @@ echo.
 
 :CODEC_MENU
 echo.
-echo 変換後のコーデックを選択するのじゃ！
-echo 1: AVC (H.264) - 互換性重視なのじゃ
-echo 2: HEVC (H.265) - 圧縮効率が良いのじゃ
-echo 3: AV1 - 最新の圧縮技術なのじゃ
+echo 変換後のコーデックを選択します！
+echo 1: AVC (H.264) - 互換性重視
+echo 2: HEVC (H.265) - 圧縮効率が良い
+echo 3: AV1 - 最新の圧縮技術
 echo.
-set /p codec_choice="番号を入力するのじゃ (デフォルト:1): "
+set /p codec_choice="番号を入力してください (デフォルト:1): "
 if "!codec_choice!"=="" set codec_choice=1
 
 rem コーデック設定
 if !codec_choice!==1 (
     set "vcodec=-c:v libx264 -preset slower -crf 23 -profile:v high -tune animation"
     set "target_codec=h264"
-    echo AVC (H.264^)で変換するのじゃ！
+    echo AVC (H.264^)で変換します！
 ) else if !codec_choice!==2 (
     set "vcodec=-c:v libx265 -preset medium -crf 28 -profile:v main -tune animation"
     set "target_codec=hevc"
-    echo HEVC (H.265^)で変換するのじゃ！
+    echo HEVC (H.265^)で変換します！
 ) else if !codec_choice!==3 (
     set "vcodec=-c:v libsvtav1 -preset 4 -crf 30"
     set "target_codec=av1"
-    echo AV1で変換するのじゃ！
+    echo AV1で変換します！
 ) else (
-    echo 無効な選択なのじゃ！AVC (H.264^)を使うのじゃ！
+    echo 無効な選択です！AVC (H.264^)を使います！
     set "vcodec=-c:v libx264 -preset slower -crf 23 -profile:v high -tune animation"
     set "target_codec=h264"
 )
 
 echo.
-echo 処理を開始するのじゃ！
+echo 処理を開始します！
 echo.
 
 rem ドロップされたパスをチェック
 if "%~1"=="" (
-    echo ファイルがドロップされていないのじゃ！
-    echo 動画ファイルまたはHLSフォルダをドロップしてほしいのじゃ！
+    echo ファイルがドロップされていません！
+    echo 動画ファイルまたはHLSフォルダをドロップしてください！
     pause
     exit /b
 )
@@ -62,9 +62,9 @@ rem キャッシュ途中のファイルをチェック
 echo !output_name! | findstr /r /c:"^nltmp_" >nul
 if !errorlevel! equ 0 (
     echo.
-    echo 警告: キャッシュ途中のファイルなのじゃ！
+    echo 警告: キャッシュ途中のファイルです！
     echo "!full_path!"
-    echo ダウンロードが完了するまで待つのじゃ！
+    echo ダウンロードが完了するまで待ってください！
     echo.
     pause
     exit /b
@@ -75,19 +75,19 @@ echo 出力ファイル名: "convert_!output_name!.mp4"
 
 rem パスの存在確認
 if not exist "!full_path!" (
-    echo エラー: パスが見つからないのじゃ: "!full_path!"
-    echo 正しいパスかどうか確認するのじゃ！
+    echo エラー: パスが見つかりません: "!full_path!"
+    echo 正しいパスかどうか確認してください！
     pause
     exit /b
 )
 
 rem HLSフォルダかどうかをチェック
 if exist "!full_path!\master.m3u8" (
-    echo HLS形式を検出したのじゃ: "!full_path!"
+    echo HLS形式を検出しました: "!full_path!"
     
     rem フォルダ構造を確認
     echo.
-    echo フォルダ構造を確認するのじゃ:
+    echo フォルダ構造を確認します:
     dir "!full_path!" /s /b
     echo.
     
@@ -96,14 +96,14 @@ if exist "!full_path!\master.m3u8" (
         set "video_path=!full_path!\video.m3u8"
         set "audio_path=!full_path!\audio.m3u8"
         
-        echo 新形式HLSを変換中なのじゃ...
+        echo 新形式HLSを変換中です...
         echo 動画パス: "!video_path!"
         echo 音声パス: "!audio_path!"
         ffmpeg -protocol_whitelist "file,http,https,tcp,tls,crypto,data" -allowed_extensions "ALL" -i "!video_path!" -protocol_whitelist "file,http,https,tcp,tls,crypto,data" -allowed_extensions "ALL" -i "!audio_path!" !vcodec! -vf format=pix_fmts=yuv420p -movflags +faststart -c:a aac -profile:a aac_low -b:a 192k -ar 48000 -ac 2 -strict experimental -fps_mode cfr -vsync 1 -async 1 "convert_!output_name!.mp4"
         if !errorlevel! equ 0 (
-            echo 新形式HLSの変換が成功したのじゃ: "!full_path!"
+            echo 新形式HLSの変換が成功しました: "!full_path!"
         ) else (
-            echo 新形式HLSの変換に失敗したのじゃ: "!full_path!"
+            echo 新形式HLSの変換に失敗しました: "!full_path!"
         )
     ) else (
         rem playlist.m3u8の場所を探す
@@ -112,17 +112,17 @@ if exist "!full_path!\master.m3u8" (
         )
         
         if defined playlist_path (
-            echo playlist.m3u8を見つけたのじゃ: "!playlist_path!"
-            echo 旧形式HLSを変換中なのじゃ...
+            echo playlist.m3u8を見つけました: "!playlist_path!"
+            echo 旧形式HLSを変換中です...
             ffmpeg -protocol_whitelist "file,http,https,tcp,tls,crypto,data" -allowed_extensions "ALL" -i "!playlist_path!" !vcodec! -vf format=pix_fmts=yuv420p -movflags +faststart -c:a aac -profile:a aac_low -b:a 192k -ar 48000 -ac 2 -strict experimental -fps_mode cfr -vsync 1 -async 1 "convert_!output_name!.mp4"
             if !errorlevel! equ 0 (
-                echo 旧形式HLSの変換が成功したのじゃ: "!full_path!"
+                echo 旧形式HLSの変換が成功しました: "!full_path!"
             ) else (
-                echo 旧形式HLSの変換に失敗したのじゃ: "!full_path!"
+                echo 旧形式HLSの変換に失敗しました: "!full_path!"
             )
         ) else (
-            echo エラー: playlist.m3u8が見つからないのじゃ！
-            echo フォルダ構造を確認するのじゃ！
+            echo エラー: playlist.m3u8が見つかりません！
+            echo フォルダ構造を確認してください！
             pause
             exit /b
         )
@@ -133,21 +133,21 @@ if exist "!full_path!\master.m3u8" (
     for /f "tokens=*" %%a in ('ffprobe -v error -select_streams a:0 -show_entries stream^=codec_name -of default^=noprint_wrappers^=1:nokey^=1 "!full_path!"') do set acodec=%%a
 
     if "!vcodec_in!"=="!target_codec!" if "!acodec!"=="aac" (
-        echo コーデックが既に!target_codec!/AACなのでストリームコピーするのじゃ...
+        echo コーデックが既に!target_codec!/AACなのでストリームコピーします...
         ffmpeg -i "!full_path!" -c copy "convert_!output_name!.mp4"
-        echo ストリームコピーが完了したのじゃ: "!full_path!"
+        echo ストリームコピーが完了しました: "!full_path!"
     ) else (
-        echo 通常ファイルを変換中なのじゃ...
+        echo 通常ファイルを変換中です...
         ffmpeg -i "!full_path!" !vcodec! -vf format=pix_fmts=yuv420p -movflags +faststart -c:a aac -profile:a aac_low -b:a 192k -ar 48000 -ac 2 -strict experimental -fps_mode cfr -vsync 1 -async 1 "convert_!output_name!.mp4"
         if !errorlevel! equ 0 (
-            echo 変換が成功したのじゃ: "!full_path!"
+            echo 変換が成功しました: "!full_path!"
         ) else (
-            echo 変換に失敗したのじゃ: "!full_path!"
+            echo 変換に失敗しました: "!full_path!"
         )
     )
 )
 
 echo.
-echo 全ての処理が終わったのじゃ！お疲れ様なのじゃ！
+echo 全ての処理が終わりました！お疲れ様でした！
 pause
 exit /b
