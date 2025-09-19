@@ -27,12 +27,6 @@ export const STANDALONE_PAGE_STYLES = [
   ".nc-series { display: flex; flex-direction: column; gap: 8px; }",
   ".nc-series__item { padding: 10px 14px; border-radius: 12px; background: rgba(32, 38, 60, 0.72); display: flex; flex-direction: column; gap: 4px; }",
   ".nc-section-title { font-size: 16px; font-weight: 600; color: #d9e2ff; }",
-  ".nc-related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }",
-  ".nc-related-card { background: rgba(21, 24, 36, 0.9); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: inset 0 0 0 1px rgba(112, 138, 210, 0.2); }",
-  ".nc-related-card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }",
-  ".nc-related-card__body { padding: 12px; display: flex; flex-direction: column; gap: 6px; }",
-  ".nc-related-card__title { font-size: 14px; font-weight: 500; line-height: 1.4; }",
-  ".nc-related-card__meta { font-size: 12px; color: #93a0c4; }",
   ".nc-empty { color: #7d86a8; font-size: 13px; }",
   "@media (max-width: 1024px) { .nc-main { gap: 20px; } .video-with-comments { grid-template-columns: 1fr; } }"
 ].join('\n');

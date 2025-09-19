@@ -18,15 +18,6 @@ type TagItemShape = {
   isLocked?: boolean;
 };
 
-type RelatedItemShape = {
-  id?: string;
-  title?: string;
-  thumbnail?: { url?: string };
-  registeredAt?: string;
-  duration?: number;
-  count?: { view?: number };
-};
-
 const isRecord = (value: unknown): value is RecordLike => {
   return typeof value === 'object' && value !== null;
 };
@@ -350,65 +341,6 @@ const toApiData = (source: NicoApiData, fallbackVideoId: string): ApiData => {
     }
   }
 
-  const relatedKeys = ['related', 'videoRelated', 'recommend', 'recommendations'];
-  let related: ApiData['related'] | undefined;
-  for (const key of relatedKeys) {
-    const candidate = ensureRecord(root[key]);
-    if (!candidate) {
-      continue;
-    }
-    const rawItems = candidate['items'];
-    const rawContents = candidate['contents'];
-    const itemsSource: unknown[] = Array.isArray(rawItems) ? rawItems : Array.isArray(rawContents) ? rawContents : [];
-    const items: RelatedItemShape[] = [];
-    for (const rawItem of itemsSource) {
-      if (!isRecord(rawItem)) {
-        continue;
-      }
-      const id = readString(rawItem, 'id') ?? readString(rawItem, 'watchId');
-      const title = readString(rawItem, 'title');
-      const thumbnailUrl = pickFirstString(ensureRecord(rawItem['thumbnail']), ['url', 'middleUrl', 'largeUrl', 'ogp', 'player']);
-      const registeredAt = readString(rawItem, 'registeredAt');
-      const duration = readNumber(rawItem, 'duration');
-      const countRecord = ensureRecord(rawItem['count']);
-      const viewCount = readNumber(countRecord, 'view');
-      const hasRelatedData =
-        id !== undefined ||
-        title !== undefined ||
-        thumbnailUrl !== undefined ||
-        registeredAt !== undefined ||
-        typeof duration === 'number' ||
-        typeof viewCount === 'number';
-      if (!hasRelatedData) {
-        continue;
-      }
-      const relatedItem: RelatedItemShape = {};
-      if (id) {
-        relatedItem.id = id;
-      }
-      if (title) {
-        relatedItem.title = title;
-      }
-      if (thumbnailUrl) {
-        relatedItem.thumbnail = { url: thumbnailUrl };
-      }
-      if (registeredAt) {
-        relatedItem.registeredAt = registeredAt;
-      }
-      if (typeof duration === 'number') {
-        relatedItem.duration = duration;
-      }
-      if (typeof viewCount === 'number') {
-        relatedItem.count = { view: viewCount };
-      }
-      items.push(relatedItem);
-    }
-    if (items.length) {
-      related = { items };
-      break;
-    }
-  }
-
   const giftRecord = ensureRecord(root['gift']);
   const totalPoint = readNumber(giftRecord, 'totalPoint');
   const gift = totalPoint !== undefined ? { totalPoint } : undefined;
@@ -438,9 +370,6 @@ const toApiData = (source: NicoApiData, fallbackVideoId: string): ApiData => {
   }
   if (comment) {
     result.comment = comment;
-  }
-  if (related) {
-    result.related = related;
   }
   if (gift) {
     result.gift = gift;
@@ -709,83 +638,6 @@ const renderSeries = (container: HTMLElement, apiData: ApiData): void => {
   }
 };
 
-const renderRelated = (grid: HTMLElement, placeholder: HTMLElement, apiData: ApiData): void => {
-  grid.innerHTML = '';
-  const items = apiData.related?.items ?? [];
-  const candidates = items.filter(item => isRecord(item));
-
-  if (!candidates.length) {
-    placeholder.style.display = '';
-    grid.style.display = 'none';
-    return;
-  }
-
-  placeholder.style.display = 'none';
-  grid.style.display = 'grid';
-
-  candidates.slice(0, 12).forEach(item => {
-    const idValue = item['id'];
-    const id = typeof idValue === 'string' ? idValue : undefined;
-    const titleValue = item['title'];
-    const title = typeof titleValue === 'string' && titleValue.trim() ? titleValue : 'タイトル未設定';
-
-    let thumb = '';
-    const thumbValue = item['thumbnail'];
-    if (isRecord(thumbValue) && typeof thumbValue['url'] === 'string') {
-      thumb = thumbValue['url'];
-    }
-
-    let viewCount: number | undefined;
-    const countValue = item['count'];
-    if (isRecord(countValue) && typeof countValue['view'] === 'number') {
-      viewCount = countValue['view'];
-    }
-
-    const durationValue = item['duration'];
-    const duration = typeof durationValue === 'number' ? durationValue : undefined;
-
-    const card = document.createElement('article');
-    card.className = 'nc-related-card';
-
-    if (thumb) {
-      const img = document.createElement('img');
-      img.src = thumb;
-      img.alt = title;
-      img.loading = 'lazy';
-      card.append(img);
-    }
-
-    const body = document.createElement('div');
-    body.className = 'nc-related-card__body';
-
-    const titleEl = document.createElement('a');
-    titleEl.className = 'nc-related-card__title';
-    titleEl.textContent = title;
-    titleEl.href = id ? 'https://www.nicovideo.jp/watch/' + id : '#';
-    titleEl.target = '_blank';
-    titleEl.rel = 'noopener noreferrer';
-    if (!id) {
-      titleEl.style.pointerEvents = 'none';
-      titleEl.setAttribute('aria-disabled', 'true');
-    }
-
-    const meta = document.createElement('span');
-    meta.className = 'nc-related-card__meta';
-    const metaParts: string[] = [];
-    if (typeof viewCount === 'number') {
-      metaParts.push('再生 ' + formatNumber(viewCount));
-    }
-    if (typeof duration === 'number') {
-      metaParts.push('長さ ' + formatDuration(duration));
-    }
-    meta.textContent = metaParts.join(' / ');
-
-    body.append(titleEl, meta);
-    card.append(body);
-    grid.append(card);
-  });
-};
-
 const assignWatchContext = (videoId: string, apiData: ApiData): void => {
   if (!window.NicoCache_nl) {
     return;
@@ -830,7 +682,6 @@ const main = async (): Promise<void> => {
     renderDescription(layout.description, apiData);
     renderOwner(layout, apiData);
     renderSeries(layout.seriesList, apiData);
-    renderRelated(layout.relatedGrid, layout.relatedPlaceholder, apiData);
 
     assignWatchContext(videoId, apiData);
 

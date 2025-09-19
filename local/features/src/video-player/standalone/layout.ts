@@ -14,8 +14,6 @@ export interface StandaloneLayout {
   ownerName: HTMLElement;
   ownerLink: HTMLAnchorElement;
   seriesList: HTMLElement;
-  relatedGrid: HTMLElement;
-  relatedPlaceholder: HTMLElement;
 }
 
 const createBreadcrumbs = (): HTMLElement => {
@@ -120,18 +118,7 @@ export const createStandaloneLayout = (): StandaloneLayout => {
   const seriesList = document.createElement('div');
   seriesList.className = 'nc-series';
 
-  const relatedTitle = document.createElement('h2');
-  relatedTitle.className = 'nc-section-title';
-  relatedTitle.textContent = '関連動画';
-
-  const relatedPlaceholder = document.createElement('p');
-  relatedPlaceholder.className = 'nc-empty';
-  relatedPlaceholder.textContent = '関連動画は取得できませんでした。';
-
-  const relatedGrid = document.createElement('div');
-  relatedGrid.className = 'nc-related-grid';
-
-  infoCard.append(statsList, tags, ownerContainer, seriesTitle, seriesList, relatedTitle, relatedPlaceholder, relatedGrid);
+  infoCard.append(statsList, tags, ownerContainer, seriesTitle, seriesList);
 
   main.append(playerSurface, infoCard);
 
@@ -153,8 +140,6 @@ export const createStandaloneLayout = (): StandaloneLayout => {
     ownerAvatar,
     ownerName,
     ownerLink,
-    seriesList,
-    relatedGrid,
-    relatedPlaceholder
+    seriesList
   };
 };
