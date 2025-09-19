@@ -1,3 +1,5 @@
+https://www.nicovideo.jp/cache/info/v2?(videoId)
+
 # 1) 最小構造（TypeScript 型）
 
 ```ts
