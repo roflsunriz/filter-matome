@@ -11,7 +11,7 @@ export const STANDALONE_PAGE_STYLES = [
   ".nc-main { display: flex; flex-direction: column; gap: 28px; }",
   ".nc-player-surface { background: rgba(14, 16, 25, 0.9); border-radius: 18px; padding: 20px; box-shadow: 0 28px 60px rgba(0, 0, 0, 0.35); box-sizing: border-box; }",
   ".video-with-comments { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; }",
-  ".video-with-comments .comment-container { background: rgba(23, 26, 38, 0.92); border-radius: 12px; padding: 12px; max-height: 520px; overflow-y: auto; box-shadow: inset 0 0 0 1px rgba(127, 158, 255, 0.16); }",
+  ".video-with-comments .comment-container { background: rgba(23, 26, 38, 0.92); border-radius: 12px; padding: 12px; box-shadow: inset 0 0 0 1px rgba(127, 158, 255, 0.16); }",
   ".nc-info-card { background: rgba(20, 24, 36, 0.88); border-radius: 16px; padding: 20px; box-shadow: inset 0 0 0 1px rgba(112, 138, 210, 0.22); display: flex; flex-direction: column; gap: 22px; }",
   ".nc-stat-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }",
   ".nc-stat-item { background: rgba(34, 40, 64, 0.82); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; box-shadow: inset 0 0 0 1px rgba(142, 170, 255, 0.18); }",
