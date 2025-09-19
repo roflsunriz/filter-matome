@@ -14,8 +14,8 @@ Match<
 >
 Replace<
 $1
-<!--- 有料動画でのキャッシュ利用（公式動画ページ用） --->
+<!--- 有料動画ルーティング（公式動画ページ用） --->
 <script type="module" src="/local/features/dist/video-player.es.js"></script>
-<!--- End of 有料動画でのキャッシュ利用（公式動画ページ用） --->
+<!--- End of 有料動画ルーティング（公式動画ページ用） --->
 $2
 >

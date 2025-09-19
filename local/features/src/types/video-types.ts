@@ -116,6 +116,7 @@ export interface ApiData {
       view: number;
       comment: number;
       mylist: number;
+      like?: number;
     };
     thumbnail: {
       url: string;
@@ -124,21 +125,64 @@ export interface ApiData {
     duration: number;
     /** ニコ動の動画説明（任意） */
     description?: string;
+    /** ウォッチページ用の短い説明（任意） */
+    shortDescription?: string;
+    /** いいね数 */
+    likeCount?: number;
+    /** 広告ポイント */
+    advertisePoint?: number;
+    /** ギフトポイント */
+    giftPoint?: number;
+    /** 有料判定用の視聴権限 */
+    watchableUserTypeForPayment?: string;
+    /** ジャンル情報 */
+    genre?: {
+      id?: string;
+      label?: string;
+    } | string;
   };
   owner?: {
+    id?: number | string;
     nickname: string;
+    iconUrl?: string;
+    userPageUrl?: string;
+    description?: string;
   };
   channel?: {
+    id?: number | string;
     name: string;
+    iconUrl?: string;
+    url?: string;
   };
   /** タグ情報（任意、watchページのみ想定） */
   tag?: {
     items?: Array<{
       name?: string;
-      [key: string]: unknown;
+      isCategory?: boolean;
+      isCategoryCandidate?: boolean;
+      isLocked?: boolean;
     }>;
     hasR18Tag?: boolean;
-    [key: string]: unknown;
+  };
+  series?: {
+    id?: string | number;
+    title?: string;
+    description?: string;
+    thumbnailUrl?: string;
+    current?: {
+      id?: string;
+      title?: string;
+      thumbnailUrl?: string;
+      description?: string;
+    };
+    next?: {
+      id?: string;
+      title?: string;
+    };
+    prev?: {
+      id?: string;
+      title?: string;
+    };
   };
   payment?: {
     video: {
@@ -155,6 +199,23 @@ export interface ApiData {
       server: string;
       params: object;
     };
+  };
+  related?: {
+    items?: Array<{
+      id?: string;
+      title?: string;
+      thumbnail?: {
+        url?: string;
+      };
+      registeredAt?: string;
+      duration?: number;
+      count?: {
+        view?: number;
+      };
+    }>;
+  };
+  gift?: {
+    totalPoint?: number;
   };
 }
 

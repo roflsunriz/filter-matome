@@ -22,6 +22,7 @@ const scripts = [
   'build:mylist2-service-worker',
   'build:comment-filter2-docs',
   'build:video-player',
+  'build:video-player-standalone',
   'build:common',
   'build:mlink-video-controller',
   'build:comment-filter2',

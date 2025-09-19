@@ -213,7 +213,6 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
     display: flex !important;
     align-items: flex-start;
     gap: 10px;
-    width: 136%;
     padding: 10px;
     max-width: 1920px;
     margin: 0 auto;
