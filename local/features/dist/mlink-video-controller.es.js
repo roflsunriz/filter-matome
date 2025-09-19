@@ -366,15 +366,9 @@ class NicoVideoPlayer {
   setVolume(volume) {
     try {
       const video = this.getVideoElement();
+      const finalVolume = Math.max(0, Math.min(100, volume));
       if (video) {
-        let finalVolume = volume;
-        if (this.isInitializing) {
-          finalVolume = this.clampToSafeRange(volume, "VOLUME");
-          if (finalVolume !== volume) {
-            window.logger.warn(`[NicoVideoPlayer] Volume value ${volume} was clamped to safe range: ${finalVolume}`);
-          }
-        }
-        const normalizedVolume = Math.max(0, Math.min(100, finalVolume)) / 100;
+        const normalizedVolume = finalVolume / 100;
         video.volume = normalizedVolume;
         this.currentVolume = finalVolume;
         this.saveSettings();

@@ -167,6 +167,9 @@ export class StandalonePlayer {
       this.playerControls?.show();
     }
 
+    // 再生開始時に一度コントロールを表示する
+    this.playerControls?.show();
+
     this.videoElement.addEventListener('error', evt => {
       window.logger.error('[VIDEO-ERROR]', evt);
     });
