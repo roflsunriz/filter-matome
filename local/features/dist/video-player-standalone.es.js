@@ -7274,10 +7274,6 @@ class StandalonePlayer {
     this.videoContainer = null;
     this.customPlayerContainer = null;
     this.hls = null;
-    this.lastStallSec = -1;
-    this.consecutiveStalls = 0;
-    this.handlePlaybackStall = null;
-    this.blobFallbackInProgress = false;
     this.mount = options.mount;
     ensureCustomElements();
     this.loadHLSLibrary();
@@ -7304,7 +7300,6 @@ class StandalonePlayer {
     if (!this.videoElement) {
       throw new Error("動画要素が生成できませんでした");
     }
-    this.videoElement.preload = "auto";
     try {
       await this.commentSystem.initialize(this.videoElement);
     } catch (error) {
@@ -7341,29 +7336,19 @@ class StandalonePlayer {
     if (!this.videoElement) {
       throw new Error("動画要素が初期化されていません");
     }
-    this.lastStallSec = -1;
-    this.consecutiveStalls = 0;
-    this.blobFallbackInProgress = false;
-    if (this.handlePlaybackStall) {
-      const stallListener = this.handlePlaybackStall;
-      this.videoElement.removeEventListener("stalled", stallListener);
-      this.videoElement.removeEventListener("waiting", stallListener);
-      this.handlePlaybackStall = null;
-    }
     const isHls = this.isHLSUrl(url);
     if (isHls) {
       this.loadHLSVideo(url);
     } else {
       this.videoElement.src = url;
-      this.videoElement.load();
     }
     try {
       await new Promise((resolve, reject) => {
-        const onCanPlay = (_event) => {
+        const onCanPlay = () => {
           cleanup();
           resolve();
         };
-        const onError = (_event) => {
+        const onError = () => {
           cleanup();
           reject(new Error("動画読み込みエラー"));
         };
@@ -7395,75 +7380,11 @@ class StandalonePlayer {
       window.logger.warn("自動再生がブロックされた可能性があります", error);
       this.playerControls?.show();
     }
-    const onStall = (_event) => {
-      if (!this.videoElement) {
-        return;
-      }
-      const stalledAt = Math.floor(this.videoElement.currentTime);
-      this.consecutiveStalls = stalledAt === this.lastStallSec ? this.consecutiveStalls + 1 : 1;
-      this.lastStallSec = stalledAt;
-      try {
-        const position = this.videoElement.currentTime;
-        this.videoElement.pause();
-        this.videoElement.currentTime = Math.max(0, position - 0.05);
-        void this.videoElement.play().catch(() => {
-        });
-      } catch {
-      }
-      if (!isHls && this.consecutiveStalls >= 2) {
-        void this.fallbackToBlob(url);
-      }
-    };
-    this.handlePlaybackStall = onStall;
-    this.videoElement.addEventListener("stalled", onStall);
-    this.videoElement.addEventListener("waiting", onStall);
     this.playerControls?.show();
     this.videoElement.addEventListener("error", (evt) => {
       window.logger.error("[VIDEO-ERROR]", evt);
     });
-    this.toastManager.showSuccess(url + " で再生できました", title);
-  }
-  async fallbackToBlob(url) {
-    if (!this.videoElement || this.blobFallbackInProgress) {
-      return;
-    }
-    this.blobFallbackInProgress = true;
-    try {
-      const resumePosition = this.videoElement.currentTime || 0;
-      const response = await fetch(url, { mode: "cors", credentials: "omit" });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const video = this.videoElement;
-      const revokeObjectUrl = () => {
-        URL.revokeObjectURL(objectUrl);
-        video.removeEventListener("ended", revokeObjectUrl);
-        video.removeEventListener("error", revokeObjectUrl);
-      };
-      video.addEventListener("ended", revokeObjectUrl, { once: true });
-      video.addEventListener("error", revokeObjectUrl, { once: true });
-      video.src = objectUrl;
-      video.load();
-      if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
-        video.currentTime = resumePosition;
-      } else {
-        const onLoadedMetadata = () => {
-          video.removeEventListener("loadedmetadata", onLoadedMetadata);
-          video.currentTime = resumePosition;
-        };
-        video.addEventListener("loadedmetadata", onLoadedMetadata, { once: true });
-      }
-      await video.play();
-      this.consecutiveStalls = 0;
-      window.logger.info("Blobフォールバックで再生継続");
-    } catch (error) {
-      const details = error instanceof Error ? error : new Error(String(error));
-      window.logger.error("Blobフォールバック失敗", details);
-    } finally {
-      this.blobFallbackInProgress = false;
-    }
+    this.toastManager.showSuccess(url + " で再生します", title);
   }
   setupHoverControls() {
     if (!this.videoContainer || !this.playerControls) {
@@ -7485,11 +7406,10 @@ class StandalonePlayer {
       }, 2e3);
     });
     this.videoContainer.addEventListener("mouseleave", () => {
-      if (hoverTimer !== null) {
-        clearTimeout(hoverTimer);
-        hoverTimer = null;
+      if (!this.playerControls) {
+        return;
       }
-      if (this.playerControls && !this.playerControls.classList.contains("always-visible")) {
+      if (!this.playerControls.classList.contains("always-visible")) {
         this.playerControls.hide();
       }
     });
@@ -7518,7 +7438,6 @@ class StandalonePlayer {
     if (!this.videoElement) {
       return;
     }
-    this.videoElement.preload = "auto";
     if (typeof Hls !== "undefined" && Hls.isSupported()) {
       this.hls = new Hls();
       this.hls.on(Hls.Events.ERROR, (_event, data) => {
@@ -7529,7 +7448,6 @@ class StandalonePlayer {
       this.hls.attachMedia(this.videoElement);
     } else {
       this.videoElement.src = url;
-      this.videoElement.load();
       this.toastManager.showInfo("ネイティブHLS再生を試行します");
     }
   }
@@ -7568,15 +7486,6 @@ class StandalonePlayer {
       this.cacheManager.stopMonitoring();
       this.cacheManager = null;
     }
-    if (this.videoElement && this.handlePlaybackStall) {
-      const stallListener = this.handlePlaybackStall;
-      this.videoElement.removeEventListener("stalled", stallListener);
-      this.videoElement.removeEventListener("waiting", stallListener);
-      this.handlePlaybackStall = null;
-    }
-    this.lastStallSec = -1;
-    this.consecutiveStalls = 0;
-    this.blobFallbackInProgress = false;
     if (this.videoElement) {
       this.videoElement.pause();
       this.videoElement.src = "";
