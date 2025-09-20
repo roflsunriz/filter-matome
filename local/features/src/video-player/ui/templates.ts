@@ -5,7 +5,7 @@
 export const CUSTOM_PLAYER_SHADOW_HTML = `
   <div id="custom-player" class="custom-player">
     <div class="video-container">
-      <video id="video-element" playsinline>
+      <video id="video-element" playsinline preload="auto" crossorigin="anonymous">
         <source src="" type="video/mp4">
         <p>お使いのブラウザはHTML5ビデオをサポートしていません。</p>
       </video>
@@ -313,7 +313,7 @@ export const FLOATING_DELETED_PLAYER_HTML = `
         <div class="video-id-display"></div>
       </div>
       <div class="video-container">
-        <video id="floating-video-element" playsinline controls>
+        <video id="floating-video-element" playsinline preload="auto" crossorigin="anonymous" controls>
           <source src="" type="video/mp4">
           <p>お使いのブラウザはHTML5ビデオをサポートしていません。</p>
         </video>
