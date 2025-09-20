@@ -1967,13 +1967,7 @@ class CacheManager {
    */
   async regularCleanup(wasPlaying, currentPosition) {
     window.logger.info("通常の動画ファイルのキャッシュクリーンアップを実行します！");
-    const currentSrc = this.video.src;
-    this.video.pause();
-    this.video.src = "";
-    this.video.load();
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    this.video.src = currentSrc;
-    this.video.load();
+    await new Promise((resolve) => setTimeout(resolve, 0));
     this.restorePlaybackPosition(wasPlaying, currentPosition);
   }
   /**

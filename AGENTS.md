@@ -23,3 +23,4 @@
 - mlink-video-controller には各モジュールのソースコードがあります。modulesフォルダとmodule-handlersフォルダには各モジュールのソースコードがあります。モジュールの読み込みと管理はmodule-handlersフォルダにあります。モジュールの設定はsettings-manager.tsとsettings-ui.tsで管理されています。
 - 各プロジェクトのルートにREADME.mdがあります。これは各プロジェクトの説明と編集ガイドが書かれています。これを読み込んでからプロジェクトの編集にかかるとスムーズに編集できます。変更後はREADME.mdを更新してください。
 - local/features/config/ にはViteの設定ファイルがあります。
+- npm run build:comment-filter2 などのコマンドで個別ビルドして時間を短縮できます。詳細はlocal/features/package.jsonを参照してください。

@@ -208,20 +208,27 @@ export class CacheManager {
   private async regularCleanup(wasPlaying: boolean, currentPosition: number): Promise<void> {
     window.logger.info('通常の動画ファイルのキャッシュクリーンアップを実行します！');
 
-    // 現在のソースを保存
-    const currentSrc = this.video.src;
-    
-    // メディアソースをリセット
-    this.video.pause();
-    this.video.src = '';
-    this.video.load();
-    
-    // 少し待ってからメディアを再読み込み
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // メディアソースを復元
-    this.video.src = currentSrc;
-    this.video.load();
+    /*
+     * faststart 変換により、強制的な一時停止とキャッシュクリアを行わない
+     * 以前の処理は下記。
+     *
+     * // 現在のソースを保存
+     * const currentSrc = this.video.src;
+     *
+     * // メディアソースをリセット
+     * this.video.pause();
+     * this.video.src = '';
+     * this.video.load();
+     *
+     * // 少し待ってからメディアを再読み込み
+     * await new Promise(resolve => setTimeout(resolve, 100));
+     *
+     * // メディアソースを復元
+     * this.video.src = currentSrc;
+     * this.video.load();
+     */
+
+    await new Promise(resolve => setTimeout(resolve, 0));
 
     // 位置と再生状態を復元
     this.restorePlaybackPosition(wasPlaying, currentPosition);
