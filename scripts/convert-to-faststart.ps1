@@ -1,0 +1,121 @@
+<# 
+.SYNOPSIS
+  mp4 を faststart（moov 先頭）化して _faststart 付きで保存
+
+.PARAMETER Path
+  入力ルートフォルダ（既定: カレント）
+
+.PARAMETER Recurse
+  サブフォルダも再帰処理
+
+.PARAMETER Overwrite
+  出力が既にある場合に上書き
+
+.PARAMETER DryRun
+  実行せず予定だけ表示
+
+.EXAMPLE
+  # カレント配下を再帰で処理
+  .\Convert-ToFaststart.ps1 -Recurse
+
+.EXAMPLE
+  # D:\videos を処理（上書き許可）
+  .\Convert-ToFaststart.ps1 -Path D:\videos -Recurse -Overwrite
+#>
+
+[CmdletBinding(SupportsShouldProcess=$true)]
+param(
+  [Parameter(Position=0)]
+  [string]$Path = (Get-Location).Path,
+  [switch]$Recurse,
+  [switch]$Overwrite,
+  [switch]$DryRun
+)
+
+# --- 前提チェック ---
+$ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
+if (-not $ffmpeg) {
+  Write-Error "ffmpeg が見つかりません。PATH を通すか、フルパス指定にしてください。"
+  return 1
+}
+
+# --- 取得 ---
+$searchOpt = @{ Path = $Path; Filter = '*.mp4'; File = $true }
+if ($Recurse) { $searchOpt.Recurse = $true }
+
+$files = Get-ChildItem @searchOpt | Sort-Object FullName
+if (-not $files) {
+  Write-Warning "対象の .mp4 が見つかりませんでした: $Path"
+  return 0
+}
+
+# --- 進行 ---
+$processed = 0
+$skipped   = 0
+$errors    = 0
+
+foreach ($f in $files) {
+  $dir  = $f.DirectoryName
+  $base = [System.IO.Path]::GetFileNameWithoutExtension($f.Name)
+  $out  = Join-Path $dir ($base + '_faststart' + $f.Extension)
+
+  # すでに _faststart 付き or 同名出力がある場合
+  $alreadyFaststartName = $f.BaseName.EndsWith('_faststart')
+  if ($alreadyFaststartName) {
+    Write-Verbose "名前的に faststart 済みと判断: $($f.FullName)"
+    $skipped++; continue
+  }
+  if ((Test-Path -LiteralPath $out) -and (-not $Overwrite)) {
+    Write-Verbose "出力が既に存在: $out  （-Overwrite で上書き可能）"
+    $skipped++; continue
+  }
+
+  $cmd = @(
+    '-hide_banner'
+    '-y' # Overwrite は ffmpeg 側は常に -y。PowerShellで制御
+    '-i', $f.FullName
+    '-c', 'copy'                # 再エンコード無し
+    '-movflags', '+faststart'   # moov を先頭へ
+    $out
+  )
+
+  if ($DryRun) {
+    Write-Host "[DRYRUN] ffmpeg $($cmd -join ' ')" -ForegroundColor Yellow
+    $processed++; continue
+  }
+
+  if ($PSCmdlet.ShouldProcess($f.FullName, "to $out")) {
+    # 既存出力は PowerShell 側で制御
+    if ((Test-Path -LiteralPath $out) -and $Overwrite) {
+      Remove-Item -LiteralPath $out -Force -ErrorAction SilentlyContinue
+    }
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName  = $ffmpeg.Source
+    # ArgumentList は読み取り専用のコレクションなので Add で詰める
+    foreach ($a in $cmd) { [void]$psi.ArgumentList.Add($a) }
+    $psi.RedirectStandardError = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.UseShellExecute = $false
+
+    $p = [System.Diagnostics.Process]::Start($psi)
+    $stderr = $p.StandardError.ReadToEnd()
+    $p.WaitForExit()
+
+    if ($p.ExitCode -eq 0 -and (Test-Path -LiteralPath $out)) {
+      # タイムスタンプ継承（任意）
+      try {
+        (Get-Item -LiteralPath $out).LastWriteTimeUtc = (Get-Item -LiteralPath $f.FullName).LastWriteTimeUtc
+      } catch {}
+      Write-Host "OK  $($f.Name)  ->  $(Split-Path -Leaf $out)"
+      $processed++
+    } else {
+      Write-Host "NG  $($f.Name)" -ForegroundColor Red
+      if ($stderr) { Write-Verbose $stderr }
+      $errors++
+    }
+  }
+}
+
+Write-Host "`nDone. processed=$processed, skipped=$skipped, errors=$errors"
+exit $errors

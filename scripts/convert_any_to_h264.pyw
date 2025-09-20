@@ -203,15 +203,15 @@ class VideoConverterGUI:
         # コーデック設定
         codecs_config = {
             "1": {
-                "vcodec": "-c:v libx264 -preset slower -crf 23 -profile:v high -tune animation",
+                "vcodec": "-c:v libx264 -preset slower -crf 23 -profile:v high -tune animation -movflags +faststart",
                 "name": "h264"
             },
             "2": {
-                "vcodec": "-c:v libx265 -preset medium -crf 28 -profile:v main -tune animation",
+                "vcodec": "-c:v libx265 -preset medium -crf 28 -profile:v main -tune animation -movflags +faststart",
                 "name": "hevc"
             },
             "3": {
-                "vcodec": "-c:v libsvtav1 -preset 4 -crf 30",
+                "vcodec": "-c:v libsvtav1 -preset 4 -crf 30 -movflags +faststart",
                 "name": "av1"
             }
         }

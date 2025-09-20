@@ -54,9 +54,20 @@ NicoCache Utilityは、NicoCacheの運用・管理を支援するPythonスクリ
    - 証明書ファイルが存在するか確認
 
 ## ライセンス
-This is free and unencumbered software released into the public domain.
-For more information, please refer to <http://unlicense.org>
+This software is released under the MIT License.
+For more information, please refer to <https://opensource.org/licenses/MIT>
 
-## 不具合報告・要望
-不具合や機能の要望は以下の掲示板にて報告をお願いします：
-[NicoCache掲示板](https://ff5ch.syoboi.jp/?q=NicoCache)
+## 不具合報告
+filter-matomeのGitHubのIssueにて報告をお願いします。
+[filter-matome](https://github.com/roflsunriz/filter-matome/issues)
+
+Issueに含めるべき情報について
+*OS環境 (例：Windows 10/11, macOS 10.15, Linux Ubuntu 20.04)
+*NicoCache_nlのバージョン (例：2025-08-26)
+*Pythonのバージョン (例：3.7.0)
+*Javaのバージョン (例：17.0.11)
+*PowerShellのバージョン (例：7.3.5)
+*filter-matomeのバージョン (例：#193.2)
+*コンソールログ
+*エラーログ
+*実行コマンド

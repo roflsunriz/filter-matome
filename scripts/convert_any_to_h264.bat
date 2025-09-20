@@ -21,20 +21,20 @@ if "!codec_choice!"=="" set codec_choice=1
 
 rem コーデック設定
 if !codec_choice!==1 (
-    set "vcodec=-c:v libx264 -preset slower -crf 23 -profile:v high -tune animation"
+    set "vcodec=-c:v libx264 -preset slower -crf 23 -profile:v high -tune animation -movflags +faststart"
     set "target_codec=h264"
     echo AVC (H.264^)で変換します！
 ) else if !codec_choice!==2 (
-    set "vcodec=-c:v libx265 -preset medium -crf 28 -profile:v main -tune animation"
+    set "vcodec=-c:v libx265 -preset medium -crf 28 -profile:v main -tune animation -movflags +faststart"
     set "target_codec=hevc"
     echo HEVC (H.265^)で変換します！
 ) else if !codec_choice!==3 (
-    set "vcodec=-c:v libsvtav1 -preset 4 -crf 30"
+    set "vcodec=-c:v libsvtav1 -preset 4 -crf 30 -movflags +faststart"
     set "target_codec=av1"
     echo AV1で変換します！
 ) else (
     echo 無効な選択です！AVC (H.264^)を使います！
-    set "vcodec=-c:v libx264 -preset slower -crf 23 -profile:v high -tune animation"
+    set "vcodec=-c:v libx264 -preset slower -crf 23 -profile:v high -tune animation -movflags +faststart"
     set "target_codec=h264"
 )
 
