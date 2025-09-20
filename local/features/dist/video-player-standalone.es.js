@@ -1525,14 +1525,14 @@ const TOAST_CONFIG = {
     ERROR: "error"
   },
   TIMEOUTS: {
-    PLAYABLE_MS: 25e3,
-    // 25秒
-    WARN_MS: 15e3,
-    // 15秒
-    START_MS: 5e3,
-    // 5秒
-    ERROR_MS: 45e3
-    // 45秒
+    PLAYABLE_MS: 1500,
+    // 1.5秒
+    WARN_MS: 1500,
+    // 1.5秒
+    START_MS: 1500,
+    // 1.5秒
+    ERROR_MS: 1500
+    // 1.5秒
   }
 };
 const PLAYER_SETTINGS = {

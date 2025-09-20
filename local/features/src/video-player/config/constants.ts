@@ -14,10 +14,10 @@ export const TOAST_CONFIG: ToastConfig = {
     ERROR: "error"
   },
   TIMEOUTS: {
-    PLAYABLE_MS: 25000,  // 25秒
-    WARN_MS: 15000,      // 15秒
-    START_MS: 5000,      // 5秒
-    ERROR_MS: 45000      // 45秒
+    PLAYABLE_MS: 1500,  // 1.5秒
+    WARN_MS: 1500,      // 1.5秒
+    START_MS: 1500,      // 1.5秒
+    ERROR_MS: 1500      // 1.5秒
   }
 };
 
