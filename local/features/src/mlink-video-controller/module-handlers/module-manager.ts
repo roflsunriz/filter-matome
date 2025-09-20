@@ -9,6 +9,7 @@ import {
   DependencyChecker,
   ModuleCategory
 } from '@/types/module-types';
+import { isWatchLikePage } from '../utils/page-detect';
 import { SettingsManager } from './settings-manager';
 import { ModuleRegistry } from './module-registry';
 
@@ -20,7 +21,7 @@ class PageDetectorImpl implements PageDetector {
     const url = window.location.href;
     const pathname = window.location.pathname;
     
-    if (pathname.includes('/watch/')) {
+    if (isWatchLikePage()) {
       return PageType.WATCH;
     } else if (pathname.includes('/search/')) {
       return PageType.SEARCH;

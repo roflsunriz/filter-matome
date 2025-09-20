@@ -666,6 +666,8 @@ const main = async (): Promise<void> => {
 
   setBreadcrumbVideoId(videoId);
 
+  const player = new StandalonePlayer({ mount: layout.playerMount });
+
   try {
     const result = await window.commonHelper.fetchWatchPage(videoId);
     if (!result) {
@@ -685,7 +687,6 @@ const main = async (): Promise<void> => {
 
     assignWatchContext(videoId, apiData);
 
-    const player = new StandalonePlayer({ mount: layout.playerMount });
     await player.initialize(videoId, apiData);
   } catch (error) {
     window.logger.error('Standalone player failed', error);

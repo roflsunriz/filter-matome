@@ -9,6 +9,7 @@ import {
 } from '@/types/thumbnails-filter-types';
 // import { ToastrInstance } from '@/types/toastr-types';
 import { createMaterialIcon } from '../../common/material-icons';
+import { isWatchLikePage } from '../utils/page-detect';
 
 // 設定管理クラス
 class HideVideoSettings {
@@ -348,7 +349,7 @@ class HideVideoUI {
 
   detectPageType(): PageType {
     const url = window.location.pathname;
-    if (url.includes(URL_PATTERNS.WATCH)) return "watch";
+    if (isWatchLikePage()) return "watch";
     if (url.includes(URL_PATTERNS.TAG)) return "tag";
     if (url.includes(URL_PATTERNS.SEARCH)) return "search";
     if (url.includes(URL_PATTERNS.RANKING)) return "ranking";

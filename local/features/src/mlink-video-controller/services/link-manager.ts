@@ -3,11 +3,12 @@ import { LinkData, ActionMap } from "@/types/mlink-video-controller-types";
 import { ThumbnailsFilterGlobal } from "@/types/thumbnails-filter-types";
 import { Mylist2Handler } from "../handlers/mylist2";
 import { handleVideoOperation, getActiveVideoId } from "../utils/video-util";
+import { isWatchLikePage } from "../utils/page-detect";
 import { getIconPath } from "../../common/material-icons";
 
 export class LinkManager {
   private static instance: LinkManager;
-  private nicoCache: ExtendedNicoCache_nl;
+  private nicoCache: ExtendedNicoCache_nl | null = null;
   private commentFilterReady: boolean = false;
 
   private readonly LINK_GROUPS = {
@@ -159,7 +160,7 @@ export class LinkManager {
   };
 
   private constructor() {
-    this.nicoCache = (window as Window & { NicoCache_nl: ExtendedNicoCache_nl }).NicoCache_nl;
+    this.nicoCache = this.resolveNicoCache();
 
     // CommentFilter2の初期化完了を監視
     window.addEventListener("CommentFilter2Ready", () => {
@@ -170,6 +171,18 @@ export class LinkManager {
     if (window.CommentFilter2Instance) {
       this.commentFilterReady = true;
     }
+  }
+
+  private resolveNicoCache(): ExtendedNicoCache_nl | null {
+    const global = (window as Window & { NicoCache_nl?: ExtendedNicoCache_nl }).NicoCache_nl;
+    return global ?? null;
+  }
+
+  private getNicoCache(): ExtendedNicoCache_nl | null {
+    if (!this.nicoCache) {
+      this.nicoCache = this.resolveNicoCache();
+    }
+    return this.nicoCache;
   }
 
   public static getInstance(): LinkManager {
@@ -184,8 +197,12 @@ export class LinkManager {
    */
   private hasWatchContext(): boolean {
     try {
-      const pathname = window.location?.pathname ?? "";
-      return pathname.includes("/watch/");
+      if (isWatchLikePage()) {
+        return true;
+      }
+      const nicoCache = this.getNicoCache();
+      const videoId = getActiveVideoId(nicoCache ?? undefined);
+      return videoId.length > 0;
     } catch {
       return false;
     }
@@ -233,8 +250,9 @@ export class LinkManager {
   }
 
   private getThreadId(): string {
-    if (this.nicoCache.watch && this.nicoCache.watch.apiData) {
-      const defaultThread = this.nicoCache.watch.apiData.comment?.threads?.find(
+    const nicoCache = this.getNicoCache();
+    if (nicoCache?.watch && nicoCache.watch.apiData) {
+      const defaultThread = nicoCache.watch.apiData.comment?.threads?.find(
         (v: { isDefaultPostTarget?: boolean | undefined }) => v.isDefaultPostTarget === true
       );
       return defaultThread?.id || "";
@@ -243,7 +261,8 @@ export class LinkManager {
   }
 
   public async handleAction(action: string): Promise<void> {
-    const videoId = getActiveVideoId(this.nicoCache);
+    const nicoCache = this.getNicoCache();
+    const videoId = getActiveVideoId(nicoCache ?? undefined);
     const threadId = this.getThreadId();
     // const commentFilterUI = new CommentFilterUI();
 
@@ -251,7 +270,7 @@ export class LinkManager {
       customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
       AddVideoToCustomMylist: async () => {
         const mylist2Handler = new Mylist2Handler();
-        if (this.nicoCache.watch) {
+        if (nicoCache?.watch) {
           await mylist2Handler.handleAddVideo();
         } else {
           await mylist2Handler.handleAddKeyword();

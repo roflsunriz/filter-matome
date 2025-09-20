@@ -7970,6 +7970,7 @@ const main = async () => {
     return;
   }
   setBreadcrumbVideoId(videoId);
+  const player = new StandalonePlayer({ mount: layout.playerMount });
   try {
     const result = await window.commonHelper.fetchWatchPage(videoId);
     if (!result) {
@@ -7985,7 +7986,6 @@ const main = async () => {
     renderOwner(layout, apiData);
     renderSeries(layout.seriesList, apiData);
     assignWatchContext(videoId, apiData);
-    const player = new StandalonePlayer({ mount: layout.playerMount });
     await player.initialize(videoId, apiData);
   } catch (error) {
     window.logger.error("Standalone player failed", error);
@@ -17343,8 +17343,73 @@ const handleCacheRemove = (videoId) => {
   }
 };
 
+const STANDALONE_PLAYER_PATH = "/local/features/dist/src/video-player/standalone/index.html";
+const VIDEO_ID_QUERY = /[?&]videoId=([a-z]{2}\d+)/i;
+const getLocationSafe = (loc) => {
+  return loc ?? window.location;
+};
+const hasVideoIdInQuery = (search) => {
+  if (typeof search !== "string") {
+    return false;
+  }
+  return VIDEO_ID_QUERY.test(search);
+};
+const hasVideoIdInCache = (nicoCache) => {
+  if (!nicoCache) {
+    return false;
+  }
+  const apiId = nicoCache.watch?.apiData?.video?.id;
+  if (typeof apiId === "string" && apiId.trim().length > 0) {
+    return true;
+  }
+  const getter = nicoCache.watch?.getVideoID;
+  if (typeof getter === "function") {
+    try {
+      const value = getter();
+      if (typeof value === "string" && value.trim().length > 0) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  }
+  return false;
+};
+const resolveNicoCache = () => {
+  const global = window.NicoCache_nl;
+  return global ?? null;
+};
+const isStandalonePlayerRoute = (loc) => {
+  try {
+    const location = getLocationSafe(loc);
+    const pathname = location.pathname ?? "";
+    if (!pathname.endsWith(STANDALONE_PLAYER_PATH)) {
+      return false;
+    }
+    if (hasVideoIdInQuery(location.search ?? "")) {
+      return true;
+    }
+    return hasVideoIdInCache(resolveNicoCache());
+  } catch {
+    return false;
+  }
+};
+const isWatchLikePage = (loc) => {
+  try {
+    const location = getLocationSafe(loc);
+    const pathname = location.pathname ?? "";
+    if (pathname.includes("/watch/")) {
+      return true;
+    }
+    return isStandalonePlayerRoute(location);
+  } catch {
+    return false;
+  }
+};
+
 class LinkManager {
   constructor() {
+    this.nicoCache = null;
     this.commentFilterReady = false;
     this.LINK_GROUPS = {
       favorites: [],
@@ -17493,13 +17558,23 @@ class LinkManager {
         }
       ]
     };
-    this.nicoCache = window.NicoCache_nl;
+    this.nicoCache = this.resolveNicoCache();
     window.addEventListener("CommentFilter2Ready", () => {
       this.commentFilterReady = true;
     });
     if (window.CommentFilter2Instance) {
       this.commentFilterReady = true;
     }
+  }
+  resolveNicoCache() {
+    const global = window.NicoCache_nl;
+    return global ?? null;
+  }
+  getNicoCache() {
+    if (!this.nicoCache) {
+      this.nicoCache = this.resolveNicoCache();
+    }
+    return this.nicoCache;
   }
   static getInstance() {
     if (!LinkManager.instance) {
@@ -17512,8 +17587,12 @@ class LinkManager {
    */
   hasWatchContext() {
     try {
-      const pathname = window.location?.pathname ?? "";
-      return pathname.includes("/watch/");
+      if (isWatchLikePage()) {
+        return true;
+      }
+      const nicoCache = this.getNicoCache();
+      const videoId = getActiveVideoId(nicoCache ?? void 0);
+      return videoId.length > 0;
     } catch {
       return false;
     }
@@ -17557,8 +17636,9 @@ class LinkManager {
     return links;
   }
   getThreadId() {
-    if (this.nicoCache.watch && this.nicoCache.watch.apiData) {
-      const defaultThread = this.nicoCache.watch.apiData.comment?.threads?.find(
+    const nicoCache = this.getNicoCache();
+    if (nicoCache?.watch && nicoCache.watch.apiData) {
+      const defaultThread = nicoCache.watch.apiData.comment?.threads?.find(
         (v) => v.isDefaultPostTarget === true
       );
       return defaultThread?.id || "";
@@ -17566,13 +17646,14 @@ class LinkManager {
     return "";
   }
   async handleAction(action) {
-    const videoId = getActiveVideoId(this.nicoCache);
+    const nicoCache = this.getNicoCache();
+    const videoId = getActiveVideoId(nicoCache ?? void 0);
     const threadId = this.getThreadId();
     const actionMap = {
       customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
       AddVideoToCustomMylist: async () => {
         const mylist2Handler = new Mylist2Handler();
-        if (this.nicoCache.watch) {
+        if (nicoCache?.watch) {
           await mylist2Handler.handleAddVideo();
         } else {
           await mylist2Handler.handleAddKeyword();
@@ -18992,7 +19073,7 @@ class PageDetectorImpl {
   getCurrentPageType() {
     const url = window.location.href;
     const pathname = window.location.pathname;
-    if (pathname.includes("/watch/")) {
+    if (isWatchLikePage()) {
       return PageType.WATCH;
     } else if (pathname.includes("/search/")) {
       return PageType.SEARCH;
@@ -23522,14 +23603,7 @@ class MlinkVideoController extends BasePanel {
    * - /local/features/dist/src/video-player/standalone/index.html?videoId=... も対象
    */
   detectWatchPage() {
-    const { pathname, search } = window.location;
-    if (pathname.includes("/watch/")) {
-      return true;
-    }
-    if (pathname.endsWith("/local/features/dist/src/video-player/standalone/index.html") && /[?&]videoId=[a-z]{2}\d+/i.test(search)) {
-      return true;
-    }
-    return false;
+    return isWatchLikePage();
   }
   async loadStyles() {
     await Promise.resolve();
@@ -31359,7 +31433,6 @@ const NICOVIDEO_SELECTORS = {
   }
 };
 const URL_PATTERNS = {
-  WATCH: "/watch/",
   TAG: "/tag/",
   SEARCH: "/search/",
   RANKING: "/ranking",
@@ -31574,7 +31647,7 @@ class HideVideoUI {
   }
   detectPageType() {
     const url = window.location.pathname;
-    if (url.includes(URL_PATTERNS.WATCH)) return "watch";
+    if (isWatchLikePage()) return "watch";
     if (url.includes(URL_PATTERNS.TAG)) return "tag";
     if (url.includes(URL_PATTERNS.SEARCH)) return "search";
     if (url.includes(URL_PATTERNS.RANKING)) return "ranking";

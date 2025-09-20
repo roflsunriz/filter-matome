@@ -35,6 +35,7 @@ import { commentsStyles } from '../styles/comments';
 import { heatmapStyles } from '../styles/heatmap';
 import { settingsStyles } from '../styles/settings';
 import { materialIconsStyles, createMaterialIcon } from '../../common/material-icons';
+import { isWatchLikePage } from '../utils/page-detect';
 
 export class MlinkVideoController extends BasePanel {
   private player: NicoVideoPlayer | null = null;
@@ -106,19 +107,7 @@ export class MlinkVideoController extends BasePanel {
    * - /local/features/dist/src/video-player/standalone/index.html?videoId=... も対象
    */
   private detectWatchPage(): boolean {
-    const { pathname, search } = window.location;
-    // 公式視聴ページ
-    if (pathname.includes('/watch/')) {
-      return true;
-    }
-    // スタンドアロンプレイヤー（videoIdパラメータ必須）
-    if (
-      pathname.endsWith('/local/features/dist/src/video-player/standalone/index.html') &&
-      /[?&]videoId=[a-z]{2}\d+/i.test(search)
-    ) {
-      return true;
-    }
-    return false;
+    return isWatchLikePage();
   }
 
   private async loadStyles(): Promise<string> {
