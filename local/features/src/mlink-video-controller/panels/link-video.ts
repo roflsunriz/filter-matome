@@ -102,10 +102,23 @@ export class MlinkVideoController extends BasePanel {
 
   /**
    * 現在のページが視聴ページかどうかを判定
+   * - /watch/ を含む公式視聴ページ
+   * - /local/features/dist/src/video-player/standalone/index.html?videoId=... も対象
    */
   private detectWatchPage(): boolean {
-    const pathname = window.location.pathname;
-    return pathname.includes('/watch/');
+    const { pathname, search } = window.location;
+    // 公式視聴ページ
+    if (pathname.includes('/watch/')) {
+      return true;
+    }
+    // スタンドアロンプレイヤー（videoIdパラメータ必須）
+    if (
+      pathname.endsWith('/local/features/dist/src/video-player/standalone/index.html') &&
+      /[?&]videoId=[a-z]{2}\d+/i.test(search)
+    ) {
+      return true;
+    }
+    return false;
   }
 
   private async loadStyles(): Promise<string> {

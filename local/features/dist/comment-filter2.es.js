@@ -5766,6 +5766,19 @@ class VideoPlayerBridge {
   initialize() {
     this.startVideoPlayerDetection();
   }
+  resolveCurrentSmid(globalData) {
+    const smid = globalData?.currentSmid;
+    if (typeof smid === "string" && smid.trim().length > 0) {
+      return smid;
+    }
+    const href = window.location.href;
+    const watchMatch = href.match(/\/watch\/([a-z]{2}\d+)/i);
+    if (watchMatch) {
+      return watchMatch[1].toLowerCase();
+    }
+    const genericMatch = href.match(/([a-z]{2}\d+)/i);
+    return genericMatch ? genericMatch[1].toLowerCase() : "";
+  }
   /**
    * video_playerの検知を開始（MutationObserver使用でパフォーマンス向上）
    */
@@ -5888,7 +5901,7 @@ class VideoPlayerBridge {
         return;
       }
       if (globalData.filteredData) {
-        const currentSmid = globalData.currentSmid;
+        const currentSmid = this.resolveCurrentSmid(globalData);
         if (this.lastNotifiedSmid !== null && this.lastNotifiedSmid !== currentSmid) {
           this.hasSuccessfullyNotified = false;
           this.lastDataHash = "";
@@ -5922,8 +5935,9 @@ class VideoPlayerBridge {
   notifyVideoPlayerWithDiffCheck(filteredData, skipRateLimit = false) {
     try {
       const globalData = this.getGlobalData();
+      const smid = this.resolveCurrentSmid(globalData);
       const dataString = JSON.stringify({
-        smid: globalData?.currentSmid || "",
+        smid,
         threadCount: filteredData.data?.threads?.length || 0,
         commentCount: filteredData.data?.threads?.reduce((sum, thread) => sum + (thread.comments?.length || 0), 0) || 0,
         lastUpdated: globalData?.lastUpdated || 0
@@ -6055,7 +6069,7 @@ class VideoPlayerBridge {
       const success = this.notifyVideoPlayerWithDiffCheck(globalData.filteredData, true);
       if (success) {
         this.hasSuccessfullyNotified = true;
-        this.lastNotifiedSmid = globalData.currentSmid;
+        this.lastNotifiedSmid = this.resolveCurrentSmid(globalData);
         this.stopMonitoring();
         window.logger?.info("[CommentFilter2] Force sync completed successfully");
       } else {
@@ -6161,12 +6175,28 @@ class CommentFilter2 {
   /**
    * コメントデータの処理
    */
+  extractSmidFromLocation() {
+    try {
+      const href = window.location.href;
+      const watchMatch = href.match(/\/watch\/([a-z]{2}\d+)/i);
+      if (watchMatch) {
+        return watchMatch[1].toLowerCase();
+      }
+      const genericMatch = href.match(/([a-z]{2}\d+)/i);
+      return genericMatch ? genericMatch[1].toLowerCase() : null;
+    } catch (error) {
+      window.logger?.warn("[CommentFilter2] Failed to extract SMID from URL:", error);
+      return null;
+    }
+  }
   async processCommentData() {
     await Promise.resolve();
     try {
       const globalData = DataInterceptor.getGlobalData();
-      if (globalData?.originalData && globalData?.currentSmid) {
-        await this.uiManager.applyFilter(globalData.currentSmid);
+      const fallbackSmid = this.extractSmidFromLocation();
+      const smid = globalData?.currentSmid ?? fallbackSmid;
+      if (globalData?.originalData && smid) {
+        await this.uiManager.applyFilter(smid);
         this.videoPlayerBridge.forceSync();
       }
     } catch (error) {

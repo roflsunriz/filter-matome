@@ -116,14 +116,19 @@ export function sanitizeReplaceString(replace: string): string {
  */
 export function sanitizeSmid(smid: string): string {
   const cleaned = smid.trim();
-  
-  // ALLまたはsmXXXXXXXX形式のみ許可
-  if (cleaned === 'ALL' || /^sm\d+$/.test(cleaned)) {
-    return cleaned;
+  const upper = cleaned.toUpperCase();
+
+  if (upper === 'ALL') {
+    return 'ALL';
   }
-  
-  return 'ALL'; // デフォルト値
+
+  if (/^[a-z]{2}\d+$/i.test(cleaned)) {
+    return cleaned.toLowerCase();
+  }
+
+  return 'ALL';
 }
+
 
 /**
  * ニコる数をサニタイズ

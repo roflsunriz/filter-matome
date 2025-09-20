@@ -3039,6 +3039,53 @@ Mylist2`,
   }
 }
 
+const WATCH_VIDEO_ID_PATTERN = /\/watch\/([a-z]{2}\d+)/i;
+const GENERIC_VIDEO_ID_PATTERN = /([a-z]{2}\d+)/i;
+const normalizeVideoId = (value) => {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed.toLowerCase() : null;
+};
+const extractVideoIdFromUrl = (url) => {
+  const watchMatch = url.match(WATCH_VIDEO_ID_PATTERN);
+  if (watchMatch) {
+    return normalizeVideoId(watchMatch[1]);
+  }
+  const genericMatch = url.match(GENERIC_VIDEO_ID_PATTERN);
+  if (genericMatch) {
+    return normalizeVideoId(genericMatch[1]);
+  }
+  return null;
+};
+const getVideoIdFromNicoCache = (nicoCache) => {
+  const fromApi = normalizeVideoId(nicoCache?.watch?.apiData?.video?.id ?? null);
+  if (fromApi) {
+    return fromApi;
+  }
+  const getter = nicoCache?.watch?.getVideoID;
+  if (typeof getter === "function") {
+    try {
+      const result = normalizeVideoId(getter());
+      if (result) {
+        return result;
+      }
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+const getActiveVideoId = (nicoCache) => {
+  const cacheSource = nicoCache ?? window.NicoCache_nl;
+  const fromCache = getVideoIdFromNicoCache(cacheSource);
+  if (fromCache) {
+    return fromCache;
+  }
+  const fromUrl = extractVideoIdFromUrl(window.location.href);
+  return fromUrl ?? "";
+};
 const handleVideoOperation = (operation, videoId) => {
   switch (operation) {
     case "cache_remove":
@@ -3413,7 +3460,7 @@ class LinkManager {
     return "";
   }
   async handleAction(action) {
-    const videoId = this.nicoCache.watch?.getVideoID() || "";
+    const videoId = getActiveVideoId(this.nicoCache);
     const threadId = this.getThreadId();
     const actionMap = {
       customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
@@ -9365,10 +9412,18 @@ class MlinkVideoController extends BasePanel {
   }
   /**
    * 現在のページが視聴ページかどうかを判定
+   * - /watch/ を含む公式視聴ページ
+   * - /local/features/dist/src/video-player/standalone/index.html?videoId=... も対象
    */
   detectWatchPage() {
-    const pathname = window.location.pathname;
-    return pathname.includes("/watch/");
+    const { pathname, search } = window.location;
+    if (pathname.includes("/watch/")) {
+      return true;
+    }
+    if (pathname.endsWith("/local/features/dist/src/video-player/standalone/index.html") && /[?&]videoId=[a-z]{2}\d+/i.test(search)) {
+      return true;
+    }
+    return false;
   }
   async loadStyles() {
     await Promise.resolve();

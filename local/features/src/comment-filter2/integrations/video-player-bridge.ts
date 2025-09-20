@@ -48,6 +48,23 @@ export class VideoPlayerBridge implements IVideoPlayerBridge {
     this.startVideoPlayerDetection();
   }
 
+
+  private resolveCurrentSmid(globalData: CommentFilter2GlobalData | null): string {
+    const smid = globalData?.currentSmid;
+    if (typeof smid === 'string' && smid.trim().length > 0) {
+      return smid;
+    }
+
+    const href = window.location.href;
+    const watchMatch = href.match(/\/watch\/([a-z]{2}\d+)/i);
+    if (watchMatch) {
+      return watchMatch[1].toLowerCase();
+    }
+
+    const genericMatch = href.match(/([a-z]{2}\d+)/i);
+    return genericMatch ? genericMatch[1].toLowerCase() : '';
+  }
+
   /**
    * video_playerの検知を開始（MutationObserver使用でパフォーマンス向上）
    */
@@ -203,7 +220,7 @@ export class VideoPlayerBridge implements IVideoPlayerBridge {
       }
       
       if (globalData.filteredData) {
-        const currentSmid = globalData.currentSmid;
+        const currentSmid = this.resolveCurrentSmid(globalData);
         
         // SMIDが変わったら通知状態をリセット
         if (this.lastNotifiedSmid !== null && this.lastNotifiedSmid !== currentSmid) {
@@ -252,8 +269,9 @@ export class VideoPlayerBridge implements IVideoPlayerBridge {
     try {
       // データのハッシュを計算（簡易版）
       const globalData = this.getGlobalData();
+      const smid = this.resolveCurrentSmid(globalData);
       const dataString = JSON.stringify({
-        smid: globalData?.currentSmid || '',
+        smid,
         threadCount: filteredData.data?.threads?.length || 0,
         commentCount: filteredData.data?.threads?.reduce((sum, thread) => sum + (thread.comments?.length || 0), 0) || 0,
         lastUpdated: globalData?.lastUpdated || 0
@@ -419,7 +437,7 @@ export class VideoPlayerBridge implements IVideoPlayerBridge {
       const success = this.notifyVideoPlayerWithDiffCheck(globalData.filteredData, true); // forceSync時はレートリミットを無視
       if (success) {
         this.hasSuccessfullyNotified = true;
-        this.lastNotifiedSmid = globalData.currentSmid;
+        this.lastNotifiedSmid = this.resolveCurrentSmid(globalData);
         this.stopMonitoring(); // 成功時は監視を完全停止
         window.logger?.info('[CommentFilter2] Force sync completed successfully');
       } else {

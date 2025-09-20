@@ -84,14 +84,32 @@ export class CommentFilter2 {
   /**
    * コメントデータの処理
    */
+
+  private extractSmidFromLocation(): string | null {
+    try {
+      const href = window.location.href;
+      const watchMatch = href.match(/\/watch\/([a-z]{2}\d+)/i);
+      if (watchMatch) {
+        return watchMatch[1].toLowerCase();
+      }
+      const genericMatch = href.match(/([a-z]{2}\d+)/i);
+      return genericMatch ? genericMatch[1].toLowerCase() : null;
+    } catch (error) {
+      window.logger?.warn('[CommentFilter2] Failed to extract SMID from URL:', error);
+      return null;
+    }
+  }
+
   private async processCommentData(): Promise<void> {
     await Promise.resolve();
     try {
       const globalData = DataInterceptor.getGlobalData();
+      const fallbackSmid = this.extractSmidFromLocation();
+      const smid = globalData?.currentSmid ?? fallbackSmid;
       
-      if (globalData?.originalData && globalData?.currentSmid) {
+      if (globalData?.originalData && smid) {
         // フィルターを適用
-        await this.uiManager.applyFilter(globalData.currentSmid);
+        await this.uiManager.applyFilter(smid);
         
         // video_playerとの同期を実行
         this.videoPlayerBridge.forceSync();

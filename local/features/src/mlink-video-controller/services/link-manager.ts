@@ -2,7 +2,7 @@ import { ExtendedNicoCache_nl } from "@/types/global-types";
 import { LinkData, ActionMap } from "@/types/mlink-video-controller-types";
 import { ThumbnailsFilterGlobal } from "@/types/thumbnails-filter-types";
 import { Mylist2Handler } from "../handlers/mylist2";
-import { handleVideoOperation } from "../utils/video-util";
+import { handleVideoOperation, getActiveVideoId } from "../utils/video-util";
 import { getIconPath } from "../../common/material-icons";
 
 export class LinkManager {
@@ -243,7 +243,7 @@ export class LinkManager {
   }
 
   public async handleAction(action: string): Promise<void> {
-    const videoId = this.nicoCache.watch?.getVideoID() || "";
+    const videoId = getActiveVideoId(this.nicoCache);
     const threadId = this.getThreadId();
     // const commentFilterUI = new CommentFilterUI();
 

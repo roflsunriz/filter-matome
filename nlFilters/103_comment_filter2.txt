@@ -4,7 +4,7 @@
 #Requires common.es.js
 [Replace]
 Name = Comment Filter2（視聴ページ用）
-FullURL = (?:https?:\/\/www\.nicovideo\.jp\/watch\/|https:\/\/www\.nicovideo\.jp\/local\/features\/dist\/src\/video-player\/standalone\/index\.html?videoId=[a-z]{2}\d+)
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/[a-z]{2}\d+
 Match<
 (\r\n)?(</head>)
 >
