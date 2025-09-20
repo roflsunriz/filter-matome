@@ -4,7 +4,7 @@
 #Requires common.es.js
 [Replace]
 Name = Multi Link Video Controller（ニコニコ動画全体用）
-FullURL = https?:\/\/(?:www|q|qa|news|3d|koken|commons|ch|anime|live|live2|dic|seiga|site|blog|account|creator-support)\.nicovideo\.jp\/.*
+FullURL = (?:https?:\/\/(?:www|q|qa|news|3d|koken|commons|ch|anime|live|live2|dic|seiga|site|blog|account|creator-support)\.nicovideo\.jp\/.*|https:\/\/www\.nicovideo\.jp\/local\/features\/dist\/src\/video-player\/standalone\/index\.html?videoId=[a-z]{2}\d+)
 Match<
 (\r\n)?(</head>)
 >
