@@ -29,7 +29,7 @@
 
 - <code>standalone/index.html</code> で共通ライブラリ（<code>../common/index.ts</code>）と <code>standalone/main.ts</code> を読み込む。
 - <code>createStandaloneLayout</code> がレイアウト（ヘッダー、プレイヤー領域、情報カード、関連動画、説明文）を組み立てる。
-- <code>StandalonePlayer</code> は <code>UrlManager</code>・<code>CacheManager</code>・<code>CommentSystem</code>・<code>PlayerControlsShadow</code> など既存モジュールを再利用し、ビルド済みの <code>video-player.es.js</code>（Vite出力）としてバンドルされる想定。
+- <code>StandalonePlayer</code> は <code>UrlManager</code>・<code>CommentSystem</code>・<code>PlayerControlsShadow</code> など既存モジュールを再利用し、ビルド済みの <code>video-player.es.js</code>（Vite出力）としてバンドルされる想定。
 - <code>assignWatchContext</code> で <code>window.NicoCache_nl.watch</code> に <code>videoId</code> と <code>apiData</code> を再設定し、既存の共通機能（コメントフィルター等）が同じインターフェースで利用できるようにする。
 
 ### データ取得と共有
@@ -64,7 +64,7 @@
 - <code>StandalonePlayer.initialize</code> がプレイヤーシェルを構築し、カスタムコメントシステムを初期化する。
 - <code>UrlManager.findFirstAvailableUrl(videoId)</code> でキャッシュ済みソースを検索し、HLS か否かで再生パイプラインを切り替える。
 - プレイヤーコントロールは既存の <code>player-controls-shadow</code> Web Component を再利用し、コメント／再生制御との連携を維持する。
-- 再生開始後は <code>CacheManager</code> がバッファを監視し、トースト通知を通じて状況をユーザーにフィードバックする。
+- MP4ソースは faststart 変換を前提としており、追加のキャッシュクリーンアップ処理なしに滑らかな再生を維持する。
 
 ## エラーとフォールバック
 

@@ -1569,16 +1569,6 @@ const PLAYER_SETTINGS = {
     }
   }
 };
-const CACHE_MANAGEMENT = {
-  TIME_THRESHOLD_MS: 9 * 60 * 1e3,
-  // 9分（ミリ秒単位）
-  CACHE_SIZE_THRESHOLD_BYTES: 18 * 1024 * 1024,
-  // 18MB
-  CHECK_INTERVAL_MS: 30 * 1e3,
-  // 30秒ごとにチェック
-  CLEANUP_BUFFER_SECONDS: 5
-  // クリーンアップ時に保持する秒数
-};
 const COMMENT_RENDERER_CONFIG = {
   OPACITY: 0.75,
   // コメントの不透明度
@@ -1804,203 +1794,6 @@ class UrlManager {
       }
     }
     return null;
-  }
-}
-
-class CacheManager {
-  /**
-   * @param videoElement 管理対象のビデオ要素
-   * @param hlsInstance HLS.jsのインスタンス（HLS再生時のみ）
-   * @param url 現在の動画URL
-   */
-  constructor(videoElement, hlsInstance, url) {
-    this.playStartTime = 0;
-    this.lastCleanupTime = 0;
-    this.cacheCheckInterval = null;
-    this.hls = null;
-    this.currentUrl = "";
-    // イベントハンドラー
-    this.handleEmptied = () => {
-      if (this.cacheCheckInterval !== null) {
-        window.clearInterval(this.cacheCheckInterval);
-        this.cacheCheckInterval = null;
-      }
-    };
-    this.handleWaiting = () => {
-      this.addBufferingDisplay();
-    };
-    this.handlePlaying = () => {
-      this.removeBufferingDisplay();
-    };
-    this.video = videoElement;
-    this.hls = hlsInstance || null;
-    this.currentUrl = url || "";
-    this.playStartTime = Date.now();
-    this.lastCleanupTime = Date.now();
-  }
-  /**
-   * キャッシュ管理を開始します
-   */
-  startMonitoring() {
-    if (this.cacheCheckInterval !== null) return;
-    this.cacheCheckInterval = window.setInterval(() => {
-      if (!this.video.paused) {
-        this.checkCacheState();
-      }
-    }, CACHE_MANAGEMENT.CHECK_INTERVAL_MS);
-    this.video.addEventListener("emptied", this.handleEmptied);
-    this.video.addEventListener("waiting", this.handleWaiting);
-    this.video.addEventListener("playing", this.handlePlaying);
-  }
-  /**
-   * キャッシュ管理を停止します
-   */
-  stopMonitoring() {
-    if (this.cacheCheckInterval !== null) {
-      window.clearInterval(this.cacheCheckInterval);
-      this.cacheCheckInterval = null;
-    }
-    this.video.removeEventListener("emptied", this.handleEmptied);
-    this.video.removeEventListener("waiting", this.handleWaiting);
-    this.video.removeEventListener("playing", this.handlePlaying);
-  }
-  /**
-   * HLS.jsインスタンスを更新します（HLS再生への切り替え時）
-   */
-  updateHlsInstance(hlsInstance, url) {
-    this.hls = hlsInstance;
-    if (url) {
-      this.currentUrl = url;
-    }
-    window.logger.info("CacheManagerのHLS.jsインスタンスを更新しました！", {
-      hasHls: !!this.hls,
-      url: this.currentUrl
-    });
-  }
-  /**
-   * キャッシュの状態をチェックします
-   */
-  checkCacheState() {
-    const currentTime = Date.now();
-    const playDuration = (currentTime - this.playStartTime) / 1e3;
-    if (window.performance && "memory" in window.performance && window.performance.memory) {
-      const memoryInfo = window.performance.memory;
-      const usedMemory = memoryInfo.usedJSHeapSize;
-      if (usedMemory > CACHE_MANAGEMENT.CACHE_SIZE_THRESHOLD_BYTES || playDuration > CACHE_MANAGEMENT.TIME_THRESHOLD_MS / 1e3) {
-        window.logger.info("キャッシュクリーンアップが必要です！", {
-          playDuration: `${Math.floor(playDuration / 60)}分${Math.floor(playDuration % 60)}秒`,
-          usedMemory: `${(usedMemory / (1024 * 1024)).toFixed(2)}MB`
-        });
-        void this.forceCleanup();
-      }
-    } else {
-      if (playDuration > CACHE_MANAGEMENT.TIME_THRESHOLD_MS / 1e3) {
-        window.logger.info("再生時間に基づくキャッシュクリーンアップが必要です！", {
-          playDuration: `${Math.floor(playDuration / 60)}分${Math.floor(playDuration % 60)}秒`
-        });
-        void this.forceCleanup();
-      }
-    }
-  }
-  /**
-   * キャッシュの強制クリーンアップを実行します
-   */
-  async forceCleanup() {
-    try {
-      window.logger.info("キャッシュクリーンアップを実行します！");
-      const wasPlaying = !this.video.paused;
-      const currentPosition = this.video.currentTime;
-      this.addBufferingDisplay();
-      if (this.hls) {
-        await this.hlsCleanup(wasPlaying, currentPosition);
-      } else {
-        await this.regularCleanup(wasPlaying, currentPosition);
-      }
-      this.playStartTime = Date.now();
-      this.lastCleanupTime = Date.now();
-      this.removeBufferingDisplay();
-      window.logger.info("キャッシュクリーンアップが完了しました！");
-    } catch (error) {
-      window.logger.error("キャッシュクリーンアップでエラーが発生しました...", error);
-      this.removeBufferingDisplay();
-    }
-  }
-  /**
-   * HLS.js使用時のキャッシュクリーンアップ
-   */
-  async hlsCleanup(wasPlaying, currentPosition) {
-    if (!this.hls) return;
-    window.logger.info("HLS.js使用時のキャッシュクリーンアップを実行します！");
-    try {
-      if (typeof this.hls.destroy === "function") {
-        const currentSource = this.currentUrl;
-        this.hls.destroy();
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        if (typeof Hls !== "undefined" && Hls.isSupported()) {
-          this.hls = new Hls();
-          this.hls.on(Hls.Events.ERROR, (...args) => {
-            const [, data] = args;
-            window.logger.error("HLS Error during cleanup:", data);
-          });
-          this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            this.restorePlaybackPosition(wasPlaying, currentPosition);
-          });
-          this.hls.loadSource(currentSource);
-          this.hls.attachMedia(this.video);
-        } else {
-          window.logger.warn("HLS.jsが利用できないため、ネイティブ再生にフォールバックします");
-          this.video.src = currentSource;
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          this.restorePlaybackPosition(wasPlaying, currentPosition);
-        }
-      } else {
-        window.logger.warn("HLS.jsのdestroyメソッドが利用できません");
-        await this.regularCleanup(wasPlaying, currentPosition);
-      }
-    } catch (error) {
-      window.logger.error("HLS.jsクリーンアップ中にエラーが発生しました:", error);
-      await this.regularCleanup(wasPlaying, currentPosition);
-    }
-  }
-  /**
-   * 通常の動画ファイルのキャッシュクリーンアップ
-   */
-  async regularCleanup(wasPlaying, currentPosition) {
-    window.logger.info("通常の動画ファイルのキャッシュクリーンアップを実行します！");
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    this.restorePlaybackPosition(wasPlaying, currentPosition);
-  }
-  /**
-   * 再生位置と再生状態を復元
-   */
-  restorePlaybackPosition(wasPlaying, currentPosition) {
-    const safePosition = Math.max(0, currentPosition - CACHE_MANAGEMENT.CLEANUP_BUFFER_SECONDS);
-    this.video.currentTime = safePosition;
-    if (wasPlaying) {
-      setTimeout(() => {
-        void this.video.play().catch((error) => {
-          window.logger.error("再生の再開に失敗しました:", error);
-        });
-      }, 100);
-    }
-  }
-  /**
-   * バッファリング表示を追加します
-   */
-  addBufferingDisplay() {
-    const playerContainer = document.querySelector(".custom-player");
-    if (playerContainer) {
-      playerContainer.classList.add("buffering");
-    }
-  }
-  /**
-   * バッファリング表示を削除します
-   */
-  removeBufferingDisplay() {
-    const playerContainer = document.querySelector(".custom-player");
-    if (playerContainer) {
-      playerContainer.classList.remove("buffering");
-    }
   }
 }
 
@@ -7262,7 +7055,6 @@ class StandalonePlayer {
     this.toastManager = new ToastManager();
     this.commentSystem = new CommentSystem();
     this.floatingDeletedPlayer = new FloatingDeletedPlayer();
-    this.cacheManager = null;
     this.playerControls = null;
     this.videoElement = null;
     this.videoContainer = null;
@@ -7356,8 +7148,6 @@ class StandalonePlayer {
     } catch (error) {
       window.logger.warn("動画メタデータ取得に失敗しました", error);
     }
-    this.cacheManager = new CacheManager(this.videoElement, this.hls || void 0, url);
-    this.cacheManager.startMonitoring();
     const wasMuted = this.videoElement.muted;
     try {
       if (!wasMuted) {
@@ -7475,10 +7265,6 @@ class StandalonePlayer {
     if (this.hls) {
       this.hls.destroy();
       this.hls = null;
-    }
-    if (this.cacheManager) {
-      this.cacheManager.stopMonitoring();
-      this.cacheManager = null;
     }
     if (this.videoElement) {
       this.videoElement.pause();

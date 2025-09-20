@@ -1,5 +1,4 @@
 import { UrlManager } from '../core/url-manager.js';
-import { CacheManager } from '../core/cache-manager.js';
 import { ToastManager } from '../utils/toast.js';
 import { applyStyles } from '../utils/dom-utils.js';
 import { PlayerControlsShadow } from '../ui/player-controls.js';
@@ -33,7 +32,6 @@ export class StandalonePlayer {
   private readonly commentSystem = new CommentSystem();
   private readonly floatingDeletedPlayer = new FloatingDeletedPlayer();
 
-  private cacheManager: CacheManager | null = null;
   private playerControls: PlayerControlsShadow | null = null;
   private videoElement: HTMLVideoElement | null = null;
   private videoContainer: HTMLElement | null = null;
@@ -146,9 +144,6 @@ export class StandalonePlayer {
     } catch (error) {
       window.logger.warn('動画メタデータ取得に失敗しました', error);
     }
-
-    this.cacheManager = new CacheManager(this.videoElement, this.hls || undefined, url);
-    this.cacheManager.startMonitoring();
 
     const wasMuted = this.videoElement.muted;
     try {
@@ -283,11 +278,6 @@ export class StandalonePlayer {
     if (this.hls) {
       this.hls.destroy();
       this.hls = null;
-    }
-
-    if (this.cacheManager) {
-      this.cacheManager.stopMonitoring();
-      this.cacheManager = null;
     }
 
     if (this.videoElement) {

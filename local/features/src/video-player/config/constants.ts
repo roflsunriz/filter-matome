@@ -1,4 +1,4 @@
-import { ToastConfig, PlayerSettings, CacheManagementConfig, CommentRendererConfig } from '@/types/index.js';
+import { ToastConfig, PlayerSettings, CommentRendererConfig } from '@/types/index.js';
 
 // URLの設定
 export const URLS = {
@@ -67,14 +67,6 @@ export const PLAYER_SETTINGS: PlayerSettings = {
       MAX_REGEX: 10
     }
   }
-};
-
-// キャッシュ管理の設定
-export const CACHE_MANAGEMENT: CacheManagementConfig = {
-  TIME_THRESHOLD_MS: 9 * 60 * 1000,         // 9分（ミリ秒単位）
-  CACHE_SIZE_THRESHOLD_BYTES: 18 * 1024 * 1024, // 18MB
-  CHECK_INTERVAL_MS: 30 * 1000,             // 30秒ごとにチェック
-  CLEANUP_BUFFER_SECONDS: 5                  // クリーンアップ時に保持する秒数
 };
 
 // コメントレンダラーの設定

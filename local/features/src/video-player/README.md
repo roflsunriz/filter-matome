@@ -10,7 +10,6 @@ features/src/video-player/
 │   ├── database-config.ts                # 🆕 データベース設定・マイグレーション (8KB)
 │   └── icons.ts                          # マテリアルアイコン定義 (700B)
 ├── core/
-│   ├── cache-manager.ts                  # キャッシュ・メモリ管理 (12KB)
 │   ├── comment-fetcher.ts                # コメントAPI取得 (5.5KB)
 │   ├── comment-renderer.ts               # コメント描画エンジン (36KB)
 │   ├── comment-system.ts                 # コメントシステム統合 (21KB)
@@ -46,6 +45,8 @@ comment-system.ts ─── コメント統合管理
 コメント描画・再生制御
 ```
 
+> MP4ソースは faststart 変換済みのため、追加のキャッシュクリーンアップ処理は不要です。
+
 ### コメントサブシステム
 ```
 comment-fetcher.ts ─── APIからコメント取得
@@ -55,15 +56,6 @@ comment-system.ts ─── フィルタリング・統合処理
     ↓ └─── comment-list.ts ─── リスト表示
     ↓
 プレーヤー画面表示
-```
-
-### キャッシュ・メモリ管理
-```
-cache-manager.ts ─── メモリ監視・クリーンアップ
-    ↓
-HLS.js / ネイティブ再生 ─── 動画データ管理
-    ↓
-最適化された再生パフォーマンス
 ```
 
 ### 🆕 永続化昇格サブシステム
@@ -145,16 +137,11 @@ database-manager.ts ─── データベース統合管理
 - **機能**: API認証、コメントデータ取得、エラーハンドリング
 - **編集タイミング**: API仕様変更対応、認証方式変更
 
-#### `core/cache-manager.ts` - キャッシュ・メモリ管理
-- **役割**: ブラウザメモリ最適化・キャッシュクリーンアップ
-- **機能**: メモリ監視、HLS.js管理、自動クリーンアップ
-- **編集タイミング**: メモリ効率改善、新しいクリーンアップ戦略
-
 ### ⚙️ **設定・ユーティリティ**
 
 #### `config/constants.ts` - 設定・定数定義
 - **役割**: システム全体の設定値・定数管理
-- **機能**: URL設定、トースト設定、プレーヤー設定、キャッシュ設定
+- **機能**: URL設定、トースト設定、プレーヤー設定
 - **編集タイミング**: 新しい設定項目追加、デフォルト値変更
 
 #### 🆕 `config/database-config.ts` - データベース設定・マイグレーション
@@ -218,7 +205,7 @@ database-manager.ts ─── データベース統合管理
 - **キャッシュ連携**: `index.ts`, `ui/floating-player.ts`
 
 ### 🚀 **パフォーマンスを改善したい**
-- **メモリ管理**: `core/cache-manager.ts`
+- **再生シーケンス**: `standalone/player.ts`
 - **描画最適化**: `core/comment-renderer.ts`
 - **DOM操作**: `utils/dom-utils.ts`
 - **UI応答**: `ui/player-controls.ts`
@@ -315,7 +302,7 @@ await window.NicoCache_nl.databaseTest.displayDatabaseStats();
 - `NicoCachePlayer` - メインプレーヤー統制
 - `CommentRenderer` - コメント描画エンジン
 - `CommentSystem` - コメント統合管理
-- `CacheManager` - メモリ最適化
+- `UrlManager` - 動画ソース解決
 - `FloatingDeletedPlayer` - 削除済み動画プレーヤー
 - **🆕 `DatabaseManager` - データベース統合管理**
 - **🆕 `MigrationManager` - マイグレーション管理**
