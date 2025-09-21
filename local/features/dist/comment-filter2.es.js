@@ -180,7 +180,7 @@ class DataInterceptor {
     }
   }
   /**
-   * URLからSMIDを抽出（SPA対応強化版）
+   * URLやwindowからSMID（動画ID）を抽出（共通ヘルパー利用・SPA対応）
    */
   extractSmidFromUrl(url) {
     try {
@@ -188,20 +188,16 @@ class DataInterceptor {
         window.logger?.debug(`[CommentFilter2] Using cached SMID: ${this.currentSmid}`);
         return this.currentSmid;
       }
-      const currentUrl = window.location.href;
-      const smidMatch = currentUrl.match(/\/watch\/([a-z]{2}\d+)/i);
-      if (smidMatch) {
-        const smid = smidMatch[1];
-        this.currentSmid = smid;
-        window.logger?.debug(`[CommentFilter2] SMID extracted from URL: ${smid}`);
-        return smid;
-      }
-      const apiSmidMatch = url.match(/threadId=([^&]+)/);
-      if (apiSmidMatch) {
-        window.logger?.debug(`[CommentFilter2] ThreadId found in API URL: ${apiSmidMatch[1]}`);
+      if (typeof window.commonHelper?.getVideoIdWithFallback === "function") {
+        const smid = window.commonHelper.getVideoIdWithFallback(url);
+        if (smid) {
+          this.currentSmid = smid;
+          window.logger?.debug(`[CommentFilter2] SMID extracted by commonHelper: ${smid}`);
+          return smid;
+        }
       }
       window.logger?.warn("[CommentFilter2] Could not extract SMID:", {
-        currentUrl: currentUrl?.substring(0, 50) + "...",
+        currentUrl: window.location.href?.substring(0, 50) + "...",
         apiUrl: url?.substring(0, 80) + "..."
       });
       return null;
@@ -6190,17 +6186,18 @@ class CommentFilter2 {
   /**
    * コメントデータの処理
    */
+  /**
+   * 共通ヘルパー経由でSMID（動画ID）を抽出
+   */
   extractSmidFromLocation() {
     try {
-      const href = window.location.href;
-      const watchMatch = href.match(/\/watch\/([a-z]{2}\d+)/i);
-      if (watchMatch) {
-        return watchMatch[1].toLowerCase();
+      if (typeof window.commonHelper?.getVideoIdWithFallback === "function") {
+        return window.commonHelper.getVideoIdWithFallback(window.location.href);
       }
-      const genericMatch = href.match(/([a-z]{2}\d+)/i);
-      return genericMatch ? genericMatch[1].toLowerCase() : null;
+      window.logger?.warn("[CommentFilter2] commonHelper.getVideoIdWithFallbackが未定義です");
+      return null;
     } catch (error) {
-      window.logger?.warn("[CommentFilter2] Failed to extract SMID from URL:", error);
+      window.logger?.warn("[CommentFilter2] Failed to extract SMID via commonHelper:", error);
       return null;
     }
   }

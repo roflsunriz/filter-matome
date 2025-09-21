@@ -207,7 +207,7 @@ export class DataInterceptor {
   }
 
   /**
-   * URLからSMIDを抽出（SPA対応強化版）
+   * URLやwindowからSMID（動画ID）を抽出（共通ヘルパー利用・SPA対応）
    */
   private extractSmidFromUrl(url: string): string | null {
     try {
@@ -216,27 +216,20 @@ export class DataInterceptor {
         window.logger?.debug(`[CommentFilter2] Using cached SMID: ${this.currentSmid}`);
         return this.currentSmid;
       }
-      
-      // 2. 現在のページURLから直接SMIDを抽出
-      const currentUrl = window.location.href;
-      const smidMatch = currentUrl.match(/\/watch\/([a-z]{2}\d+)/i);
-      
-      if (smidMatch) {
-        const smid = smidMatch[1];
-        this.currentSmid = smid; // キャッシュに保存
-        window.logger?.debug(`[CommentFilter2] SMID extracted from URL: ${smid}`);
-        return smid;
+
+      // 2. 共通ヘルパーで動画ID抽出（window.commonHelper.getVideoIdWithFallbackを利用）
+      //    urlはフォールバック用引数として渡す
+      if (typeof window.commonHelper?.getVideoIdWithFallback === 'function') {
+        const smid = window.commonHelper.getVideoIdWithFallback(url);
+        if (smid) {
+          this.currentSmid = smid;
+          window.logger?.debug(`[CommentFilter2] SMID extracted by commonHelper: ${smid}`);
+          return smid;
+        }
       }
-      
-      // 3. APIリクエストURLからの抽出も試行（フォールバック）
-      const apiSmidMatch = url.match(/threadId=([^&]+)/);
-      if (apiSmidMatch) {
-        // threadIdから推定（必要に応じて変換ロジックを追加）
-        window.logger?.debug(`[CommentFilter2] ThreadId found in API URL: ${apiSmidMatch[1]}`);
-      }
-      
+
       window.logger?.warn('[CommentFilter2] Could not extract SMID:', {
-        currentUrl: currentUrl?.substring(0, 50) + '...',
+        currentUrl: window.location.href?.substring(0, 50) + '...',
         apiUrl: url?.substring(0, 80) + '...'
       });
       return null;

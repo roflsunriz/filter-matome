@@ -85,17 +85,18 @@ export class CommentFilter2 {
    * コメントデータの処理
    */
 
+  /**
+   * 共通ヘルパー経由でSMID（動画ID）を抽出
+   */
   private extractSmidFromLocation(): string | null {
     try {
-      const href = window.location.href;
-      const watchMatch = href.match(/\/watch\/([a-z]{2}\d+)/i);
-      if (watchMatch) {
-        return watchMatch[1].toLowerCase();
+      if (typeof window.commonHelper?.getVideoIdWithFallback === 'function') {
+        return window.commonHelper.getVideoIdWithFallback(window.location.href);
       }
-      const genericMatch = href.match(/([a-z]{2}\d+)/i);
-      return genericMatch ? genericMatch[1].toLowerCase() : null;
+      window.logger?.warn('[CommentFilter2] commonHelper.getVideoIdWithFallbackが未定義です');
+      return null;
     } catch (error) {
-      window.logger?.warn('[CommentFilter2] Failed to extract SMID from URL:', error);
+      window.logger?.warn('[CommentFilter2] Failed to extract SMID via commonHelper:', error);
       return null;
     }
   }
