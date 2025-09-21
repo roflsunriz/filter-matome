@@ -1937,7 +1937,85 @@ class FilterLogger {
     // リトライ回数
     this.RETRY_DELAY = 1e3;
   }
-  // リトライ間隔（ミリ秒）
+  static {
+    // リトライ間隔（ミリ秒）
+    this.DEBOUNCE_DELAY = 5e3;
+  }
+  static {
+    // 最後のログ追加から送信までの待機時間（ミリ秒）
+    // ログバッファリング用の静的プロパティ
+    this.logBuffer = [];
+  }
+  static {
+    this.sendTimerId = null;
+  }
+  static {
+    this.isLogSendingEnabled = true;
+  }
+  // ログ送信機能の有効/無効フラグ
+  /**
+   * ログ送信機能の有効/無効を設定
+   */
+  static setLogSendingEnabled(enabled) {
+    this.isLogSendingEnabled = enabled;
+    if (!enabled && this.sendTimerId !== null) {
+      clearTimeout(this.sendTimerId);
+      this.sendTimerId = null;
+    }
+  }
+  /**
+   * ログをバッファに追加（重複チェック付き）
+   */
+  static addLogsToBuffer(logs) {
+    if (!this.isLogSendingEnabled || logs.length === 0) {
+      return;
+    }
+    const createLogKey = (log) => {
+      return `${log.videoId}:${log.userId}:${log.comment}:${JSON.stringify(log.filterDetails)}`;
+    };
+    const existingKeys = new Set(this.logBuffer.map(createLogKey));
+    const newLogs = logs.filter((log) => !existingKeys.has(createLogKey(log)));
+    if (newLogs.length > 0) {
+      this.logBuffer.push(...newLogs);
+      window.logger?.debug(`[FilterLogger] Added ${newLogs.length} new logs to buffer (total: ${this.logBuffer.length})`);
+      this.scheduleDebouncedSend();
+    }
+  }
+  /**
+   * debounceされた送信をスケジュール
+   */
+  static scheduleDebouncedSend() {
+    if (this.sendTimerId !== null) {
+      clearTimeout(this.sendTimerId);
+    }
+    this.sendTimerId = window.setTimeout(() => {
+      void this.flushLogBuffer();
+    }, this.DEBOUNCE_DELAY);
+  }
+  /**
+   * バッファ内のログをすぐに送信
+   */
+  static async flushLogBuffer() {
+    if (this.logBuffer.length === 0) {
+      window.logger?.debug("[FilterLogger] No logs in buffer to flush");
+      return;
+    }
+    if (this.sendTimerId !== null) {
+      clearTimeout(this.sendTimerId);
+      this.sendTimerId = null;
+    }
+    const logsToSend = [...this.logBuffer];
+    this.logBuffer = [];
+    window.logger?.info(`[FilterLogger] Flushing ${logsToSend.length} logs from buffer`);
+    try {
+      const success = await this.sendFilterLogs(logsToSend);
+      if (!success) {
+        window.logger?.warn("[FilterLogger] Failed to send some or all logs");
+      }
+    } catch (error) {
+      window.logger?.error("[FilterLogger] Error while flushing log buffer:", error);
+    }
+  }
   /**
    * フィルターログを一括でCommentFilterLogger.javaに送信
    */
@@ -2173,6 +2251,7 @@ class CommentFilter {
   updateSettings(settings) {
     this.settings = settings;
     this.debugMode = settings.debugMode;
+    FilterLogger.setLogSendingEnabled(settings?.logToCommentFilterLogger || false);
   }
   /**
    * メインのフィルタリング処理
@@ -2201,7 +2280,9 @@ class CommentFilter {
       if (this.debugMode) {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
       }
-      void this.sendFilterLogsAsync();
+      if (this.settings?.logToCommentFilterLogger && this.filterLogs.length > 0) {
+        FilterLogger.addLogsToBuffer(this.filterLogs);
+      }
       return filteredData;
     } catch (error) {
       window.logger?.error("[CommentFilter2] Filtering failed:", error);
@@ -2579,41 +2660,6 @@ class CommentFilter {
     return processedComment;
   }
   /**
-   * フィルターログを非同期で送信
-   */
-  async sendFilterLogsAsync() {
-    await Promise.resolve();
-    if (!this.settings?.logToCommentFilterLogger) {
-      if (this.debugMode) {
-        window.logger?.debug("[CommentFilter2] Filter log sending is disabled in settings");
-      }
-      return;
-    }
-    if (this.filterLogs.length === 0) {
-      if (this.debugMode) {
-        window.logger?.debug("[CommentFilter2] No filter logs to send");
-      }
-      return;
-    }
-    try {
-      if (this.debugMode) {
-        window.logger?.info(`[CommentFilter2] Scheduling send of ${this.filterLogs.length} filter logs`);
-      }
-      setTimeout(async () => {
-        try {
-          const success = await FilterLogger.sendFilterLogs(this.filterLogs);
-          if (this.debugMode) {
-            window.logger?.info(`[CommentFilter2] Filter logs send result: ${success ? "success" : "failed"}`);
-          }
-        } catch (error) {
-          window.logger?.warn("[CommentFilter2] Failed to send filter logs:", error);
-        }
-      }, 100);
-    } catch (error) {
-      window.logger?.error("[CommentFilter2] Error in sendFilterLogsAsync:", error);
-    }
-  }
-  /**
    * フィルターログエントリーを追加
    */
   addFilterLog(comment, rule, ruleType, matched, hidden, currentSmid) {
@@ -2674,6 +2720,7 @@ class JsonCommentFilter {
   updateSettings(settings) {
     this.settings = settings;
     this.debugMode = settings.debugMode;
+    FilterLogger.setLogSendingEnabled(settings?.logToCommentFilterLogger || false);
   }
   /**
    * メインのフィルタリング処理（JSON形式ルール対応）
@@ -2702,7 +2749,9 @@ class JsonCommentFilter {
       if (this.debugMode) {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
       }
-      void this.sendFilterLogsAsync();
+      if (this.settings?.logToCommentFilterLogger && this.filterLogs.length > 0) {
+        FilterLogger.addLogsToBuffer(this.filterLogs);
+      }
       return filteredData;
     } catch (error) {
       window.logger?.error("[CommentFilter2] JSON filtering failed:", error);
@@ -3036,41 +3085,6 @@ class JsonCommentFilter {
    */
   setDebugMode(enabled) {
     this.debugMode = enabled;
-  }
-  /**
-   * フィルターログを非同期で送信
-   */
-  async sendFilterLogsAsync() {
-    await Promise.resolve();
-    if (!this.settings?.logToCommentFilterLogger) {
-      if (this.debugMode) {
-        window.logger?.debug("[CommentFilter2] Filter log sending is disabled in settings");
-      }
-      return;
-    }
-    if (this.filterLogs.length === 0) {
-      if (this.debugMode) {
-        window.logger?.debug("[CommentFilter2] No filter logs to send");
-      }
-      return;
-    }
-    try {
-      if (this.debugMode) {
-        window.logger?.info(`[CommentFilter2] Scheduling send of ${this.filterLogs.length} filter logs`);
-      }
-      setTimeout(async () => {
-        try {
-          const success = await FilterLogger.sendFilterLogs(this.filterLogs);
-          if (this.debugMode) {
-            window.logger?.info(`[CommentFilter2] Filter logs send result: ${success ? "success" : "failed"}`);
-          }
-        } catch (error) {
-          window.logger?.warn("[CommentFilter2] Failed to send filter logs:", error);
-        }
-      }, 100);
-    } catch (error) {
-      window.logger?.error("[CommentFilter2] Error in sendFilterLogsAsync:", error);
-    }
   }
   /**
    * フィルターログエントリーを追加
@@ -4905,6 +4919,7 @@ class UIManager {
     try {
       this.currentSettings = await this.storage.getSettings();
       this.filter.setDebugMode(this.currentSettings.debugMode);
+      FilterLogger.setLogSendingEnabled(this.currentSettings.logToCommentFilterLogger ?? false);
     } catch (error) {
       window.logger?.error("[CommentFilter2] Failed to load settings:", error);
     }

@@ -24,6 +24,8 @@ export class JsonCommentFilter {
   public updateSettings(settings: Settings): void {
     this.settings = settings;
     this.debugMode = settings.debugMode;
+    // FilterLoggerの設定も更新
+    FilterLogger.setLogSendingEnabled(settings?.logToCommentFilterLogger || false);
   }
 
   /**
@@ -63,8 +65,10 @@ export class JsonCommentFilter {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
       }
 
-      // フィルターログを送信（非同期・ノンブロッキング）
-      void this.sendFilterLogsAsync();
+      // フィルターログをバッファに追加（FilterLoggerが自動的にdebounce送信する）
+      if (this.settings?.logToCommentFilterLogger && this.filterLogs.length > 0) {
+        FilterLogger.addLogsToBuffer(this.filterLogs);
+      }
 
       return filteredData;
     } catch (error) {
@@ -522,44 +526,6 @@ export class JsonCommentFilter {
     this.debugMode = enabled;
   }
 
-  /**
-   * フィルターログを非同期で送信
-   */
-  private async sendFilterLogsAsync(): Promise<void> {
-    await Promise.resolve();
-    if (!this.settings?.logToCommentFilterLogger) {
-      if (this.debugMode) {
-        window.logger?.debug('[CommentFilter2] Filter log sending is disabled in settings');
-      }
-      return;
-    }
-
-    if (this.filterLogs.length === 0) {
-      if (this.debugMode) {
-        window.logger?.debug('[CommentFilter2] No filter logs to send');
-      }
-      return;
-    }
-
-    try {
-      if (this.debugMode) {
-        window.logger?.info(`[CommentFilter2] Scheduling send of ${this.filterLogs.length} filter logs`);
-      }
-
-      setTimeout(async () => {
-        try {
-          const success = await FilterLogger.sendFilterLogs(this.filterLogs);
-          if (this.debugMode) {
-            window.logger?.info(`[CommentFilter2] Filter logs send result: ${success ? 'success' : 'failed'}`);
-          }
-        } catch (error) {
-          window.logger?.warn('[CommentFilter2] Failed to send filter logs:', error);
-        }
-      }, 100);
-    } catch (error) {
-      window.logger?.error('[CommentFilter2] Error in sendFilterLogsAsync:', error);
-    }
-  }
 
   /**
    * フィルターログエントリーを追加

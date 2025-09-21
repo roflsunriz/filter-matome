@@ -7,11 +7,104 @@ export class FilterLogger {
   private static readonly MAX_BATCH_SIZE = 100; // 一度に送信するログの最大数
   private static readonly RETRY_ATTEMPTS = 3; // リトライ回数
   private static readonly RETRY_DELAY = 1000; // リトライ間隔（ミリ秒）
+  private static readonly DEBOUNCE_DELAY = 5000; // 最後のログ追加から送信までの待機時間（ミリ秒）
+
+  // ログバッファリング用の静的プロパティ
+  private static logBuffer: CF2FilterLogEntry[] = [];
+  private static sendTimerId: number | null = null;
+  private static isLogSendingEnabled = true; // ログ送信機能の有効/無効フラグ
+
+  /**
+   * ログ送信機能の有効/無効を設定
+   */
+  public static setLogSendingEnabled(enabled: boolean): void {
+    this.isLogSendingEnabled = enabled;
+    if (!enabled && this.sendTimerId !== null) {
+      clearTimeout(this.sendTimerId);
+      this.sendTimerId = null;
+    }
+  }
+
+  /**
+   * ログをバッファに追加（重複チェック付き）
+   */
+  public static addLogsToBuffer(logs: CF2FilterLogEntry[]): void {
+    if (!this.isLogSendingEnabled || logs.length === 0) {
+      return;
+    }
+
+    // 重複チェック用のキー生成関数
+    const createLogKey = (log: CF2FilterLogEntry): string => {
+      return `${log.videoId}:${log.userId}:${log.comment}:${JSON.stringify(log.filterDetails)}`;
+    };
+
+    // 既存のログのキーセットを作成
+    const existingKeys = new Set(this.logBuffer.map(createLogKey));
+
+    // 重複していないログのみを追加
+    const newLogs = logs.filter(log => !existingKeys.has(createLogKey(log)));
+    
+    if (newLogs.length > 0) {
+      this.logBuffer.push(...newLogs);
+      window.logger?.debug(`[FilterLogger] Added ${newLogs.length} new logs to buffer (total: ${this.logBuffer.length})`);
+
+      // debounce送信をスケジュール
+      this.scheduleDebouncedSend();
+    }
+  }
+
+  /**
+   * debounceされた送信をスケジュール
+   */
+  private static scheduleDebouncedSend(): void {
+    // 既存のタイマーをキャンセル
+    if (this.sendTimerId !== null) {
+      clearTimeout(this.sendTimerId);
+    }
+
+    // 新しいタイマーを設定
+    this.sendTimerId = window.setTimeout(() => {
+      void this.flushLogBuffer();
+    }, this.DEBOUNCE_DELAY);
+  }
+
+  /**
+   * バッファ内のログをすぐに送信
+   */
+  public static async flushLogBuffer(): Promise<void> {
+    if (this.logBuffer.length === 0) {
+      window.logger?.debug('[FilterLogger] No logs in buffer to flush');
+      return;
+    }
+
+    // タイマーをクリア
+    if (this.sendTimerId !== null) {
+      clearTimeout(this.sendTimerId);
+      this.sendTimerId = null;
+    }
+
+    // バッファからログを取り出す（バッファをクリア）
+    const logsToSend = [...this.logBuffer];
+    this.logBuffer = [];
+
+    window.logger?.info(`[FilterLogger] Flushing ${logsToSend.length} logs from buffer`);
+
+    // ログを送信
+    try {
+      const success = await this.sendFilterLogs(logsToSend);
+      if (!success) {
+        // 送信失敗時は警告のみ（ログは失われる）
+        window.logger?.warn('[FilterLogger] Failed to send some or all logs');
+      }
+    } catch (error) {
+      window.logger?.error('[FilterLogger] Error while flushing log buffer:', error);
+    }
+  }
 
   /**
    * フィルターログを一括でCommentFilterLogger.javaに送信
    */
-  public static async sendFilterLogs(logs: CF2FilterLogEntry[]): Promise<boolean> {
+  private static async sendFilterLogs(logs: CF2FilterLogEntry[]): Promise<boolean> {
     if (logs.length === 0) {
       window.logger?.debug('[FilterLogger] No logs to send');
       return true;

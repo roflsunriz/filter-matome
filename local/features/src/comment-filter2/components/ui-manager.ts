@@ -7,6 +7,7 @@ import { sanitizeCommentCommands } from '../utils/sanitizer';
 import { parseJsonl, stringifyJsonl } from '../utils/jsonl-parser';
 import { mainUITemplate, UI_ELEMENTS, CSS_CLASSES } from '../templates/main-ui';
 import { CommentFilter2MainStyles } from '../styles/main';
+import { FilterLogger } from '../utils/filter-logger';
 // CSSスタイルを直接インポート
 
 // グローバル型定義は既に globalTypes.ts で定義済み
@@ -413,6 +414,8 @@ export class UIManager {
     try {
       this.currentSettings = await this.storage.getSettings();
       this.filter.setDebugMode(this.currentSettings.debugMode);
+      // FilterLoggerの設定も初期化
+      FilterLogger.setLogSendingEnabled(this.currentSettings.logToCommentFilterLogger ?? false);
     } catch (error) {
       window.logger?.error('[CommentFilter2] Failed to load settings:', error);
     }
