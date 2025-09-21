@@ -390,6 +390,21 @@ const getVideoIdFromQuery = (): string | null => {
   return params.get('videoId');
 };
 
+const getStandaloneModeFromQuery = (): 'normal' | 'deleted' => {
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get('mode');
+  return mode === 'deleted' ? 'deleted' : 'normal';
+};
+
+const getDisplayTitleFromQuery = (): string | undefined => {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('title');
+  if (raw && raw.trim().length > 0) {
+    return raw.trim();
+  }
+  return undefined;
+};
+
 const setBreadcrumbVideoId = (videoId: string): void => {
   const current = document.getElementById('nc-current-video-id');
   if (current) {
@@ -656,7 +671,8 @@ const assignWatchContext = (videoId: string, apiData: ApiData): void => {
 
 const main = async (): Promise<void> => {
   const videoId = getVideoIdFromQuery();
-  const layout = createStandaloneLayout();
+  const mode = getStandaloneModeFromQuery();
+  const layout = createStandaloneLayout({ mode });
 
   if (!videoId) {
     layout.title.textContent = '動画IDが指定されていません';
@@ -667,6 +683,29 @@ const main = async (): Promise<void> => {
   setBreadcrumbVideoId(videoId);
 
   const player = new StandalonePlayer({ mount: layout.playerMount });
+
+  if (mode === 'deleted') {
+    const displayTitle = getDisplayTitleFromQuery() ?? `Deleted Video (${videoId})`;
+    layout.title.textContent = displayTitle;
+    document.title = 'NicoCache Player - ' + displayTitle;
+
+    layout.metaList.style.display = 'none';
+    layout.infoCard.style.display = 'none';
+    layout.description.style.display = 'none';
+
+    try {
+      await player.initialize(videoId, {
+        displayTitle,
+        enableComments: false
+      });
+    } catch (error) {
+      window.logger.error('Standalone deleted video player failed', error);
+      layout.description.style.display = '';
+      layout.description.textContent = 'キャッシュ再生に失敗しました: ' + (error instanceof Error ? error.message : String(error));
+    }
+
+    return;
+  }
 
   try {
     const result = await window.commonHelper.fetchWatchPage(videoId);
@@ -687,7 +726,7 @@ const main = async (): Promise<void> => {
 
     assignWatchContext(videoId, apiData);
 
-    await player.initialize(videoId, apiData);
+    await player.initialize(videoId, { apiData });
   } catch (error) {
     window.logger.error('Standalone player failed', error);
     layout.title.textContent = '動画情報の取得に失敗しました';

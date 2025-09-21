@@ -16004,6 +16004,10 @@ class DeletedVideoDetector {
     this.lastUrl = "";
     this.isEnabled = false;
     this.initialized = false;
+    this.retryCounts = /* @__PURE__ */ new Map();
+    this.processingVideoId = null;
+    this.currentHandledVideoId = null;
+    this.retryTimer = null;
     this.handlePopState = () => {
       if (this.isEnabled) {
         void this.handleUnavailableVideo();
@@ -16065,6 +16069,13 @@ class DeletedVideoDetector {
     this.observer = new MutationObserver(() => {
       if (this.isEnabled && location.href !== this.lastUrl) {
         this.lastUrl = location.href;
+        this.processingVideoId = null;
+        this.currentHandledVideoId = null;
+        this.retryCounts.clear();
+        if (this.retryTimer !== null) {
+          clearTimeout(this.retryTimer);
+          this.retryTimer = null;
+        }
         void this.handleUnavailableVideo();
       }
     });
@@ -16160,28 +16171,70 @@ class DeletedVideoDetector {
     if (!this.isEnabled) return;
     const videoId = window.location.pathname.match(/watch\/(sm\d+)/)?.[1];
     if (!videoId) return;
-    const isUnavailable = this.detectUnavailableVideo();
-    const isApiUnavailable = await this.checkVideoAvailability(videoId);
-    window.logger.debug("[DeletedVideoDetector] 判定結果", {
-      videoId,
-      domDetected: isUnavailable,
-      apiDetected: isApiUnavailable
-    });
-    if (isUnavailable || isApiUnavailable) {
-      const deletedVideoPlayer = window.NicoCache_nl.deletedVideoPlayer;
-      if (!deletedVideoPlayer) {
-        window.logger.warn("[DeletedVideoDetector] 削除動画プレーヤーが利用できません");
-        return;
+    if (this.processingVideoId && this.processingVideoId === videoId) {
+      window.logger.debug("[DeletedVideoDetector] 同一動画の処理中のためスキップ", videoId);
+      return;
+    }
+    if (this.currentHandledVideoId && this.currentHandledVideoId !== videoId) {
+      this.currentHandledVideoId = null;
+    }
+    if (this.currentHandledVideoId === videoId) {
+      window.logger.debug("[DeletedVideoDetector] 既に削除動画プレーヤーを起動済み", videoId);
+      return;
+    }
+    this.processingVideoId = videoId;
+    try {
+      if (!this.retryCounts.has(videoId)) {
+        this.retryCounts.set(videoId, 0);
       }
-      const videoTitle = this.getVideoTitle();
-      try {
-        window.logger.info("[DeletedVideoDetector] 削除動画プレーヤーを起動します", {
-          videoId,
-          videoTitle
-        });
-        deletedVideoPlayer.play(videoId, videoTitle);
-      } catch (error) {
-        window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
+      const isUnavailable = this.detectUnavailableVideo();
+      const isApiUnavailable = await this.checkVideoAvailability(videoId);
+      window.logger.debug("[DeletedVideoDetector] 判定結果", {
+        videoId,
+        domDetected: isUnavailable,
+        apiDetected: isApiUnavailable
+      });
+      if (isUnavailable || isApiUnavailable) {
+        const deletedVideoPlayer = window.NicoCache_nl.deletedVideoPlayer;
+        if (!deletedVideoPlayer) {
+          const attempts = this.retryCounts.get(videoId) ?? 0;
+          if (attempts === 0) {
+            window.logger.warn("[DeletedVideoDetector] 削除動画プレーヤーが利用できません");
+          }
+          if (attempts < 3) {
+            if (this.retryTimer === null) {
+              this.retryCounts.set(videoId, attempts + 1);
+              this.retryTimer = window.setTimeout(() => {
+                this.retryTimer = null;
+                if (this.isEnabled) {
+                  void this.handleUnavailableVideo();
+                }
+              }, 1e3);
+            }
+          }
+          return;
+        }
+        this.retryCounts.delete(videoId);
+        if (this.retryTimer !== null) {
+          clearTimeout(this.retryTimer);
+          this.retryTimer = null;
+        }
+        const videoTitle = this.getVideoTitle();
+        try {
+          window.logger.info("[DeletedVideoDetector] 削除動画プレーヤーを起動します", {
+            videoId,
+            videoTitle
+          });
+          this.currentHandledVideoId = videoId;
+          deletedVideoPlayer.play(videoId, videoTitle);
+        } catch (error) {
+          window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
+          this.currentHandledVideoId = null;
+        }
+      }
+    } finally {
+      if (this.processingVideoId === videoId) {
+        this.processingVideoId = null;
       }
     }
   }
@@ -16213,6 +16266,11 @@ class DeletedVideoDetector {
     }
     window.removeEventListener("popstate", this.handlePopState);
     document.removeEventListener("DOMContentLoaded", this.handleDOMContentLoaded);
+    this.retryCounts.clear();
+    if (this.retryTimer !== null) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = null;
+    }
   }
   /**
    * モジュールの状態を取得

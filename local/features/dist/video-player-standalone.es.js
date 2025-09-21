@@ -1647,12 +1647,15 @@ const createBreadcrumbs = () => {
   nav.append(rootLink, divider1, featureLink, divider2, current);
   return nav;
 };
-const createStandaloneLayout = () => {
+const createStandaloneLayout = (options = {}) => {
   document.body.classList.add("nc-standalone-body");
   applyStyles(STANDALONE_PAGE_STYLES);
   const container = document.getElementById("nc-standalone-player-root") ?? document.body;
   const root = document.createElement("div");
   root.className = "nc-standalone-page";
+  if (options.mode === "deleted") {
+    root.classList.add("nc-standalone-page--deleted");
+  }
   const header = document.createElement("header");
   header.className = "nc-header";
   const breadcrumbs = createBreadcrumbs();
@@ -1717,7 +1720,8 @@ const createStandaloneLayout = () => {
     ownerAvatar,
     ownerName,
     ownerLink,
-    seriesList
+    seriesList,
+    infoCard
   };
 };
 
@@ -3150,6 +3154,17 @@ class PlayerControlsShadow extends HTMLElement {
       this.commentSystem.setNGRegex(this.ngRegex);
     }
   }
+  disableComments() {
+    this.ensureInitialized();
+    const commentToggle = this.shadow.querySelector("#comment-toggle");
+    if (commentToggle instanceof HTMLElement) {
+      commentToggle.style.display = "none";
+    }
+    const commentSettingsSection = this.shadow.querySelector('[data-settings-section="comment"]');
+    if (commentSettingsSection instanceof HTMLElement) {
+      commentSettingsSection.style.display = "none";
+    }
+  }
   /**
    * HTMLテンプレートを取得
    */
@@ -3200,7 +3215,7 @@ class PlayerControlsShadow extends HTMLElement {
     return `
       <div class="settings-container">
         <!-- プレイヤー設定部分 -->
-        <div class="settings-section">
+        <div class="settings-section" data-settings-section="player">
           <h3 class="settings-heading">プレイヤー設定</h3>
           <div class="settings-item">
             <span>コントロール表示</span>
@@ -3212,7 +3227,7 @@ class PlayerControlsShadow extends HTMLElement {
         </div>
         
         <!-- コメント設定部分 -->
-        <div class="settings-section">
+        <div class="settings-section" data-settings-section="comment">
           <h3 class="settings-heading">コメント設定</h3>
           
           <!-- コメント透明度 -->
@@ -6420,657 +6435,6 @@ const CUSTOM_PLAYER_SHADOW_STYLES = `
     }
   }
 `;
-const FLOATING_DELETED_PLAYER_HTML = `
-  <div id="floating-deleted-player" class="floating-deleted-player">
-    <div class="floating-player-header">
-      <div class="floating-player-title">
-        <span class="video-icon" data-material-icon="video_library"></span>
-        <span class="title-text">削除済み動画プレーヤー</span>
-      </div>
-      <div class="floating-player-controls">
-        <button class="minimize-btn" title="最小化">−</button>
-        <button class="close-btn" title="閉じる">×</button>
-      </div>
-    </div>
-    <div class="floating-player-content">
-      <div class="video-info">
-        <div class="video-id-display"></div>
-      </div>
-      <div class="video-container">
-        <video id="floating-video-element" playsinline preload="auto" crossorigin="anonymous" controls>
-          <source src="" type="video/mp4">
-          <p>お使いのブラウザはHTML5ビデオをサポートしていません。</p>
-        </video>
-      </div>
-      <div class="player-status">
-        <span class="status-text">待機中...</span>
-      </div>
-    </div>
-  </div>
-`;
-const FLOATING_DELETED_PLAYER_STYLES = `
-  ${materialIconsStyles}
-  .floating-deleted-player {
-    position: fixed;
-    top: 100px;
-    right: 20px;
-    width: 400px;
-    min-height: 300px;
-    max-width: 80vw;
-    max-height: 80vh;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    color: white;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    z-index: 10000;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    user-select: none;
-    resize: none;
-  }
-
-  .floating-deleted-player:hover {
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
-    transform: translateY(-2px);
-  }
-
-  .floating-deleted-player.minimized {
-    height: 60px;
-    min-height: 60px;
-  }
-
-  .floating-deleted-player.minimized .floating-player-content {
-    display: none;
-  }
-
-  .floating-player-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    cursor: move;
-    user-select: none;
-  }
-
-  .floating-player-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
-    font-size: 14px;
-  }
-
-  .video-icon {
-    font-size: 16px;
-    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
-  }
-
-  .floating-player-controls {
-    display: flex;
-    gap: 8px;
-  }
-
-  .minimize-btn,
-  .close-btn {
-    width: 24px;
-    height: 24px;
-    border: none;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: bold;
-    transition: all 0.2s ease;
-  }
-
-  .minimize-btn:hover {
-    background: rgba(255, 193, 7, 0.8);
-    transform: scale(1.1);
-  }
-
-  .close-btn:hover {
-    background: rgba(220, 53, 69, 0.8);
-    transform: scale(1.1);
-  }
-
-  .floating-player-content {
-    padding: 16px;
-  }
-
-  .video-info {
-    margin-bottom: 12px;
-  }
-
-  .video-id-display {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.8);
-    background: rgba(255, 255, 255, 0.1);
-    padding: 6px 10px;
-    border-radius: 8px;
-    text-align: center;
-    word-break: break-all;
-  }
-
-  .video-container {
-    position: relative;
-    width: 100%;
-    height: 200px; /* デフォルト高さ、JSで動的に調整 */
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 12px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  #floating-video-element {
-    width: auto;
-    height: auto;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    object-position: center center; /* 中央配置を保証 */
-    display: block;
-    background: #000;
-    margin: auto; /* flexboxコンテナ内での中央配置 */
-    flex-shrink: 0; /* 縮小を防ぐ */
-  }
-
-  .player-status {
-    text-align: center;
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-  }
-
-  .status-text {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  /* ドラッグ中のスタイル */
-  .floating-deleted-player.dragging {
-    transform: rotate(2deg) scale(1.02);
-    box-shadow: 0 16px 64px rgba(0, 0, 0, 0.8);
-    z-index: 10001;
-  }
-
-  /* レスポンシブ対応 */
-  @media (max-width: 768px) {
-    .floating-deleted-player {
-      width: calc(100vw - 40px);
-      max-width: 400px;
-      right: 20px;
-      left: 20px;
-    }
-  }
-
-  /* アニメーション */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .floating-deleted-player {
-    animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  /* HLS.js エラー表示用 */
-  .hls-error {
-    background: rgba(220, 53, 69, 0.2);
-    border: 1px solid rgba(220, 53, 69, 0.5);
-    color: #ff6b6b;
-    padding: 8px;
-    border-radius: 8px;
-    margin-top: 8px;
-    font-size: 12px;
-  }
-
-  /* 成功表示用 */
-  .hls-success {
-    background: rgba(40, 167, 69, 0.2);
-    border: 1px solid rgba(40, 167, 69, 0.5);
-    color: #51cf66;
-    padding: 8px;
-    border-radius: 8px;
-    margin-top: 8px;
-    font-size: 12px;
-  }
-`;
-
-class FloatingDeletedPlayer {
-  constructor() {
-    this.container = null;
-    this.videoElement = null;
-    this.hls = null;
-    this.isDragging = false;
-    this.dragOffset = { x: 0, y: 0 };
-    this.isMinimized = false;
-    this.originalVideoSize = null;
-    this.resizeObserver = null;
-    this.setupStyles();
-    this.loadHLSLibrary();
-  }
-  /**
-   * スタイルの適用
-   */
-  setupStyles() {
-    applyStyles(FLOATING_DELETED_PLAYER_STYLES);
-  }
-  /**
-   * HLS.jsライブラリの動的読み込み
-   */
-  loadHLSLibrary() {
-    if (typeof Hls !== "undefined") {
-      return;
-    }
-    if (document.querySelector('script[src*="hls.js"]')) {
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/hls.js@latest";
-    script.async = true;
-    script.onload = () => {
-      window.logger.info("HLS.jsライブラリの読み込みが完了しました！");
-    };
-    script.onerror = () => {
-      window.logger.warn("HLS.jsライブラリの読み込みに失敗しました。ネイティブHLS再生を試行します。");
-    };
-    document.head.appendChild(script);
-  }
-  /**
-   * プレーヤーを表示
-   */
-  show(videoIdOrUrl, title) {
-    this.hide();
-    this.createPlayer(videoIdOrUrl, title);
-  }
-  /**
-   * プレーヤーを非表示
-   */
-  hide() {
-    if (this.container) {
-      this.container.remove();
-      this.container = null;
-    }
-    if (this.hls) {
-      this.hls.destroy();
-      this.hls = null;
-    }
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-      this.resizeObserver = null;
-    }
-    this.videoElement = null;
-    this.originalVideoSize = null;
-  }
-  /**
-   * プレーヤーの作成
-   */
-  createPlayer(videoIdOrUrl, title) {
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = FLOATING_DELETED_PLAYER_HTML;
-    this.container = tempDiv.firstElementChild;
-    document.body.appendChild(this.container);
-    const videoIdDisplay = this.container.querySelector(".video-id-display");
-    if (videoIdDisplay) {
-      videoIdDisplay.textContent = title ? `${videoIdOrUrl} (${title})` : videoIdOrUrl;
-    }
-    this.videoElement = this.container.querySelector("#floating-video-element");
-    this.setupEventListeners();
-    this.initializeIcons();
-    void this.loadVideo(videoIdOrUrl);
-  }
-  /**
-   * アイコンの初期化
-   */
-  initializeIcons() {
-    if (!this.container) return;
-    const iconElements = this.container.querySelectorAll("[data-material-icon]");
-    iconElements.forEach((element) => {
-      const iconName = element.getAttribute("data-material-icon");
-      if (iconName) {
-        element.innerHTML = createMaterialIcon(iconName, {
-          style: "outlined",
-          color: "white"
-        });
-      }
-    });
-  }
-  /**
-   * イベントリスナーの設定
-   */
-  setupEventListeners() {
-    if (!this.container) return;
-    const header = this.container.querySelector(".floating-player-header");
-    if (header) {
-      header.addEventListener("mousedown", this.onDragStart.bind(this));
-    }
-    const minimizeBtn = this.container.querySelector(".minimize-btn");
-    if (minimizeBtn) {
-      minimizeBtn.addEventListener("click", this.toggleMinimize.bind(this));
-    }
-    const closeBtn = this.container.querySelector(".close-btn");
-    if (closeBtn) {
-      closeBtn.addEventListener("click", this.hide.bind(this));
-    }
-    document.addEventListener("mousemove", this.onDragMove.bind(this));
-    document.addEventListener("mouseup", this.onDragEnd.bind(this));
-    this.setupResizeObserver();
-  }
-  /**
-   * ドラッグ開始
-   */
-  onDragStart(e) {
-    if (!this.container) return;
-    this.isDragging = true;
-    this.container.classList.add("dragging");
-    const rect = this.container.getBoundingClientRect();
-    this.dragOffset.x = e.clientX - rect.left;
-    this.dragOffset.y = e.clientY - rect.top;
-    e.preventDefault();
-  }
-  /**
-   * ドラッグ中
-   */
-  onDragMove(e) {
-    if (!this.isDragging || !this.container) return;
-    const x = e.clientX - this.dragOffset.x;
-    const y = e.clientY - this.dragOffset.y;
-    const maxX = window.innerWidth - this.container.offsetWidth;
-    const maxY = window.innerHeight - this.container.offsetHeight;
-    const clampedX = Math.max(0, Math.min(x, maxX));
-    const clampedY = Math.max(0, Math.min(y, maxY));
-    this.container.style.left = `${clampedX}px`;
-    this.container.style.top = `${clampedY}px`;
-    this.container.style.right = "auto";
-  }
-  /**
-   * ドラッグ終了
-   */
-  onDragEnd() {
-    if (!this.isDragging || !this.container) return;
-    this.isDragging = false;
-    this.container.classList.remove("dragging");
-  }
-  /**
-   * リサイズ監視の設定
-   */
-  setupResizeObserver() {
-    if (!window.ResizeObserver) return;
-    this.resizeObserver = new ResizeObserver(() => {
-      if (this.originalVideoSize && !this.isMinimized) {
-        this.resizePlayer();
-      }
-    });
-    this.resizeObserver.observe(document.body);
-  }
-  /**
-   * 最適なプレーヤーサイズを計算
-   */
-  calculateOptimalSize() {
-    if (!this.originalVideoSize) {
-      return { width: 400, height: 300 };
-    }
-    const viewportHeight = window.innerHeight;
-    const maxHeight = Math.floor(viewportHeight * 0.65);
-    const targetHeight = Math.min(this.originalVideoSize.height, maxHeight);
-    const aspectRatio = this.originalVideoSize.width / this.originalVideoSize.height;
-    const targetWidth = Math.floor(targetHeight * aspectRatio);
-    const minWidth = 300;
-    const maxWidth = Math.floor(window.innerWidth * 0.8);
-    const finalWidth = Math.max(minWidth, Math.min(targetWidth, maxWidth));
-    const finalHeight = Math.floor(finalWidth / aspectRatio);
-    return { width: finalWidth, height: finalHeight };
-  }
-  /**
-   * プレーヤーサイズの調整
-   */
-  resizePlayer() {
-    if (!this.container || this.isMinimized) return;
-    const { width, height } = this.calculateOptimalSize();
-    this.container.style.width = `${width}px`;
-    this.container.style.minHeight = `${height + 120}px`;
-    const videoContainer = this.container.querySelector(".video-container");
-    if (videoContainer) {
-      videoContainer.style.height = `${height}px`;
-    }
-    this.adjustPosition();
-  }
-  /**
-   * 画面外に出ないように位置を調整
-   */
-  adjustPosition() {
-    if (!this.container) return;
-    const rect = this.container.getBoundingClientRect();
-    const maxX = window.innerWidth - rect.width;
-    const maxY = window.innerHeight - rect.height;
-    const currentX = parseInt(this.container.style.left) || rect.left;
-    const currentY = parseInt(this.container.style.top) || rect.top;
-    if (currentX > maxX) {
-      this.container.style.left = `${Math.max(0, maxX)}px`;
-      this.container.style.right = "auto";
-    }
-    if (currentY > maxY) {
-      this.container.style.top = `${Math.max(0, maxY)}px`;
-    }
-  }
-  /**
-   * 最小化切り替え
-   */
-  toggleMinimize() {
-    if (!this.container) return;
-    this.isMinimized = !this.isMinimized;
-    this.container.classList.toggle("minimized", this.isMinimized);
-    const minimizeBtn = this.container.querySelector(".minimize-btn");
-    if (minimizeBtn) {
-      minimizeBtn.textContent = this.isMinimized ? "□" : "−";
-      minimizeBtn.title = this.isMinimized ? "復元" : "最小化";
-    }
-  }
-  /**
-   * 動画の読み込み
-   */
-  async loadVideo(videoIdOrUrl) {
-    if (!this.videoElement) return;
-    this.updateStatus("動画を読み込み中...");
-    try {
-      let finalUrl;
-      let isHLS;
-      if (videoIdOrUrl.startsWith("http://") || videoIdOrUrl.startsWith("https://")) {
-        finalUrl = videoIdOrUrl;
-        isHLS = videoIdOrUrl.toLowerCase().includes("hls") || videoIdOrUrl.includes(".m3u8");
-      } else {
-        this.updateStatus("キャッシュ情報を取得中...");
-        const cacheResult = await this.getCacheUrl(videoIdOrUrl);
-        finalUrl = cacheResult.url;
-        isHLS = cacheResult.isHLS;
-        if (cacheResult.title && this.container) {
-          const videoIdDisplay = this.container.querySelector(".video-id-display");
-          if (videoIdDisplay) {
-            videoIdDisplay.textContent = `${videoIdOrUrl} (${cacheResult.title})`;
-          }
-        }
-      }
-      if (isHLS) {
-        await this.loadHLSVideo(finalUrl);
-      } else {
-        await this.loadRegularVideo(finalUrl);
-      }
-    } catch (error) {
-      window.logger.error("動画読み込みエラー:", error);
-      this.showError(`動画の読み込みに失敗しました: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-  /**
-   * キャッシュURLの取得
-   */
-  async getCacheUrl(videoId) {
-    const infoUrl = `https://www.nicovideo.jp/cache/info/v2?${videoId}`;
-    try {
-      const response = await fetch(infoUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const jsonUnknown = await response.json();
-      const data = jsonUnknown;
-      if (!data || !(videoId in data)) {
-        throw new Error("動画情報が見つかりません");
-      }
-      const videoInfo = data[videoId];
-      if (!videoInfo.preferred) {
-        throw new Error("この動画は現在利用できません");
-      }
-      const cacheId = videoInfo.preferred;
-      const title = videoInfo.caches && videoInfo.caches[cacheId] ? String(videoInfo.caches[cacheId].title ?? "") : "";
-      const isHLS = cacheId.endsWith(".hls");
-      const url = isHLS ? `https://www.nicovideo.jp/cache/${cacheId}` : `https://www.nicovideo.jp/cache/${videoId}/auto/movie`;
-      return { url, isHLS, title };
-    } catch (error) {
-      window.logger.error("キャッシュ情報取得エラー:", error);
-      throw new Error(`キャッシュ情報の取得に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-  /**
-   * HLS動画の読み込み
-   */
-  async loadHLSVideo(url) {
-    await Promise.resolve();
-    if (!this.videoElement) return;
-    this.updateStatus("HLS動画を読み込み中...");
-    if (typeof Hls !== "undefined" && Hls.isSupported()) {
-      this.hls = new Hls();
-      this.hls.on(Hls.Events.ERROR, (...args) => {
-        const [data] = args;
-        window.logger.error("HLS Error:", data);
-        this.showError("HLS再生でエラーが発生しました");
-      });
-      this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        this.updateStatus("HLS動画読み込み完了！");
-        this.showSuccess("HLSマニフェスト読み込み完了しました！");
-        this.videoElement?.play().catch((e) => {
-          window.logger.error("再生開始エラー:", e);
-          this.updateStatus("再生準備完了（クリックで再生）");
-        });
-      });
-      this.hls.on(Hls.Events.MEDIA_ATTACHED, () => {
-      });
-      this.hls.loadSource(url);
-      this.hls.attachMedia(this.videoElement);
-    } else {
-      this.videoElement.src = url;
-      this.updateStatus("ネイティブHLS再生を試行中...");
-    }
-    this.setupVideoEvents();
-  }
-  /**
-   * 通常動画の読み込み
-   */
-  async loadRegularVideo(url) {
-    await Promise.resolve();
-    if (!this.videoElement) return;
-    this.updateStatus("動画を読み込み中...");
-    this.videoElement.src = url;
-    this.setupVideoEvents();
-  }
-  /**
-   * 動画イベントの設定
-   */
-  setupVideoEvents() {
-    if (!this.videoElement) return;
-    this.videoElement.addEventListener("loadstart", () => {
-      this.updateStatus("読み込み開始...");
-    });
-    this.videoElement.addEventListener("loadedmetadata", () => {
-      this.updateStatus("メタデータ読み込み完了");
-      if (this.videoElement) {
-        this.originalVideoSize = {
-          width: this.videoElement.videoWidth,
-          height: this.videoElement.videoHeight
-        };
-        this.resizePlayer();
-        window.logger.info(`動画サイズ: ${this.originalVideoSize.width}x${this.originalVideoSize.height}`);
-      }
-    });
-    this.videoElement.addEventListener("canplay", () => {
-      this.updateStatus("再生準備完了");
-      this.showSuccess("動画の読み込みが完了しました！");
-    });
-    this.videoElement.addEventListener("playing", () => {
-      this.updateStatus("再生中");
-    });
-    this.videoElement.addEventListener("pause", () => {
-      this.updateStatus("一時停止中");
-    });
-    this.videoElement.addEventListener("waiting", () => {
-      this.updateStatus("バッファリング中...");
-    });
-    this.videoElement.addEventListener("error", (e) => {
-      window.logger.error("動画エラー:", e);
-      this.showError("動画の再生でエラーが発生しました");
-    });
-    this.videoElement.volume = 0.3;
-  }
-  /**
-   * ステータス更新
-   */
-  updateStatus(message) {
-    if (!this.container) return;
-    const statusText = this.container.querySelector(".status-text");
-    if (statusText) {
-      statusText.textContent = message;
-    }
-  }
-  /**
-   * エラー表示
-   */
-  showError(message) {
-    this.updateStatus("エラー");
-    this.showMessage(message, "hls-error");
-  }
-  /**
-   * 成功表示
-   */
-  showSuccess(message) {
-    this.showMessage(message, "hls-success");
-  }
-  /**
-   * メッセージ表示
-   */
-  showMessage(message, className) {
-    if (!this.container) return;
-    const existingMessages = this.container.querySelectorAll(".hls-error, .hls-success");
-    existingMessages.forEach((msg) => msg.remove());
-    const messageDiv = document.createElement("div");
-    messageDiv.className = className;
-    messageDiv.textContent = message;
-    const playerStatus = this.container.querySelector(".player-status");
-    if (playerStatus) {
-      playerStatus.appendChild(messageDiv);
-      setTimeout(() => {
-        if (messageDiv.parentNode) {
-          messageDiv.remove();
-        }
-      }, 5e3);
-    }
-  }
-}
 
 const ensureCustomElements = () => {
   if (!customElements.get("player-controls-shadow")) {
@@ -7086,21 +6450,25 @@ class StandalonePlayer {
     this.urlManager = new UrlManager();
     this.toastManager = new ToastManager();
     this.commentSystem = new CommentSystem();
-    this.floatingDeletedPlayer = new FloatingDeletedPlayer();
     this.playerControls = null;
     this.videoElement = null;
     this.videoContainer = null;
     this.customPlayerContainer = null;
     this.hls = null;
+    this.enableComments = true;
     this.mount = options.mount;
     ensureCustomElements();
     this.loadHLSLibrary();
     this.setupGlobalInterface();
   }
-  async initialize(videoId, apiData) {
+  async initialize(videoId, options = {}) {
+    this.enableComments = options.enableComments !== false;
     await this.preparePlayerShell();
-    await this.playWithCustomSource(videoId, apiData.video.title);
-    await this.loadComments(videoId);
+    const displayTitle = options.displayTitle ?? options.apiData?.video.title ?? videoId;
+    await this.playWithCustomSource(videoId, displayTitle);
+    if (this.enableComments) {
+      await this.loadComments(videoId);
+    }
   }
   async preparePlayerShell() {
     this.mount.innerHTML = "";
@@ -7118,18 +6486,23 @@ class StandalonePlayer {
     if (!this.videoElement) {
       throw new Error("動画要素が生成できませんでした");
     }
-    try {
-      await this.commentSystem.initialize(this.videoElement);
-    } catch (error) {
-      window.logger.error("コメントシステムの初期化に失敗しました", error);
+    if (this.enableComments) {
+      try {
+        await this.commentSystem.initialize(this.videoElement);
+      } catch (error) {
+        window.logger.error("コメントシステムの初期化に失敗しました", error);
+      }
     }
     if (this.playerControls) {
       const initControls = () => {
         if (typeof this.playerControls?.setVideoElement === "function") {
           this.playerControls.setVideoElement(this.videoElement);
         }
-        if (typeof this.playerControls?.setCommentSystem === "function") {
+        if (this.enableComments && typeof this.playerControls?.setCommentSystem === "function") {
           this.playerControls.setCommentSystem(this.commentSystem);
+        }
+        if (!this.enableComments && typeof this.playerControls?.disableComments === "function") {
+          this.playerControls.disableComments();
         }
       };
       if (typeof this.playerControls.setVideoElement === "function") {
@@ -7268,6 +6641,9 @@ class StandalonePlayer {
     }
   }
   async loadComments(videoId) {
+    if (!this.enableComments) {
+      return;
+    }
     try {
       await this.commentSystem.loadComments(videoId);
     } catch (error) {
@@ -7329,17 +6705,6 @@ class StandalonePlayer {
         }
       };
     }
-    window.NicoCache_nl.deletedVideoPlayer = {
-      play: (videoIdOrUrl, title) => {
-        this.floatingDeletedPlayer.show(videoIdOrUrl, title);
-      },
-      hide: () => {
-        this.floatingDeletedPlayer.hide();
-      },
-      help: () => {
-        window.logger.info('window.NicoCache_nl.deletedVideoPlayer.play("sm9"); で再生できます');
-      }
-    };
   }
 }
 
@@ -7727,6 +7092,19 @@ const getVideoIdFromQuery = () => {
   const params = new URLSearchParams(window.location.search);
   return params.get("videoId");
 };
+const getStandaloneModeFromQuery = () => {
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get("mode");
+  return mode === "deleted" ? "deleted" : "normal";
+};
+const getDisplayTitleFromQuery = () => {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("title");
+  if (raw && raw.trim().length > 0) {
+    return raw.trim();
+  }
+  return void 0;
+};
 const setBreadcrumbVideoId = (videoId) => {
   const current = document.getElementById("nc-current-video-id");
   if (current) {
@@ -7963,7 +7341,8 @@ const assignWatchContext = (videoId, apiData) => {
 };
 const main = async () => {
   const videoId = getVideoIdFromQuery();
-  const layout = createStandaloneLayout();
+  const mode = getStandaloneModeFromQuery();
+  const layout = createStandaloneLayout({ mode });
   if (!videoId) {
     layout.title.textContent = "動画IDが指定されていません";
     layout.description.textContent = "URLに videoId パラメーターを指定してください。";
@@ -7971,6 +7350,25 @@ const main = async () => {
   }
   setBreadcrumbVideoId(videoId);
   const player = new StandalonePlayer({ mount: layout.playerMount });
+  if (mode === "deleted") {
+    const displayTitle = getDisplayTitleFromQuery() ?? `Deleted Video (${videoId})`;
+    layout.title.textContent = displayTitle;
+    document.title = "NicoCache Player - " + displayTitle;
+    layout.metaList.style.display = "none";
+    layout.infoCard.style.display = "none";
+    layout.description.style.display = "none";
+    try {
+      await player.initialize(videoId, {
+        displayTitle,
+        enableComments: false
+      });
+    } catch (error) {
+      window.logger.error("Standalone deleted video player failed", error);
+      layout.description.style.display = "";
+      layout.description.textContent = "キャッシュ再生に失敗しました: " + (error instanceof Error ? error.message : String(error));
+    }
+    return;
+  }
   try {
     const result = await window.commonHelper.fetchWatchPage(videoId);
     if (!result) {
@@ -7986,7 +7384,7 @@ const main = async () => {
     renderOwner(layout, apiData);
     renderSeries(layout.seriesList, apiData);
     assignWatchContext(videoId, apiData);
-    await player.initialize(videoId, apiData);
+    await player.initialize(videoId, { apiData });
   } catch (error) {
     window.logger.error("Standalone player failed", error);
     layout.title.textContent = "動画情報の取得に失敗しました";
@@ -32025,6 +31423,10 @@ class DeletedVideoDetector {
     this.lastUrl = "";
     this.isEnabled = false;
     this.initialized = false;
+    this.retryCounts = /* @__PURE__ */ new Map();
+    this.processingVideoId = null;
+    this.currentHandledVideoId = null;
+    this.retryTimer = null;
     this.handlePopState = () => {
       if (this.isEnabled) {
         void this.handleUnavailableVideo();
@@ -32086,6 +31488,13 @@ class DeletedVideoDetector {
     this.observer = new MutationObserver(() => {
       if (this.isEnabled && location.href !== this.lastUrl) {
         this.lastUrl = location.href;
+        this.processingVideoId = null;
+        this.currentHandledVideoId = null;
+        this.retryCounts.clear();
+        if (this.retryTimer !== null) {
+          clearTimeout(this.retryTimer);
+          this.retryTimer = null;
+        }
         void this.handleUnavailableVideo();
       }
     });
@@ -32181,28 +31590,70 @@ class DeletedVideoDetector {
     if (!this.isEnabled) return;
     const videoId = window.location.pathname.match(/watch\/(sm\d+)/)?.[1];
     if (!videoId) return;
-    const isUnavailable = this.detectUnavailableVideo();
-    const isApiUnavailable = await this.checkVideoAvailability(videoId);
-    window.logger.debug("[DeletedVideoDetector] 判定結果", {
-      videoId,
-      domDetected: isUnavailable,
-      apiDetected: isApiUnavailable
-    });
-    if (isUnavailable || isApiUnavailable) {
-      const deletedVideoPlayer = window.NicoCache_nl.deletedVideoPlayer;
-      if (!deletedVideoPlayer) {
-        window.logger.warn("[DeletedVideoDetector] 削除動画プレーヤーが利用できません");
-        return;
+    if (this.processingVideoId && this.processingVideoId === videoId) {
+      window.logger.debug("[DeletedVideoDetector] 同一動画の処理中のためスキップ", videoId);
+      return;
+    }
+    if (this.currentHandledVideoId && this.currentHandledVideoId !== videoId) {
+      this.currentHandledVideoId = null;
+    }
+    if (this.currentHandledVideoId === videoId) {
+      window.logger.debug("[DeletedVideoDetector] 既に削除動画プレーヤーを起動済み", videoId);
+      return;
+    }
+    this.processingVideoId = videoId;
+    try {
+      if (!this.retryCounts.has(videoId)) {
+        this.retryCounts.set(videoId, 0);
       }
-      const videoTitle = this.getVideoTitle();
-      try {
-        window.logger.info("[DeletedVideoDetector] 削除動画プレーヤーを起動します", {
-          videoId,
-          videoTitle
-        });
-        deletedVideoPlayer.play(videoId, videoTitle);
-      } catch (error) {
-        window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
+      const isUnavailable = this.detectUnavailableVideo();
+      const isApiUnavailable = await this.checkVideoAvailability(videoId);
+      window.logger.debug("[DeletedVideoDetector] 判定結果", {
+        videoId,
+        domDetected: isUnavailable,
+        apiDetected: isApiUnavailable
+      });
+      if (isUnavailable || isApiUnavailable) {
+        const deletedVideoPlayer = window.NicoCache_nl.deletedVideoPlayer;
+        if (!deletedVideoPlayer) {
+          const attempts = this.retryCounts.get(videoId) ?? 0;
+          if (attempts === 0) {
+            window.logger.warn("[DeletedVideoDetector] 削除動画プレーヤーが利用できません");
+          }
+          if (attempts < 3) {
+            if (this.retryTimer === null) {
+              this.retryCounts.set(videoId, attempts + 1);
+              this.retryTimer = window.setTimeout(() => {
+                this.retryTimer = null;
+                if (this.isEnabled) {
+                  void this.handleUnavailableVideo();
+                }
+              }, 1e3);
+            }
+          }
+          return;
+        }
+        this.retryCounts.delete(videoId);
+        if (this.retryTimer !== null) {
+          clearTimeout(this.retryTimer);
+          this.retryTimer = null;
+        }
+        const videoTitle = this.getVideoTitle();
+        try {
+          window.logger.info("[DeletedVideoDetector] 削除動画プレーヤーを起動します", {
+            videoId,
+            videoTitle
+          });
+          this.currentHandledVideoId = videoId;
+          deletedVideoPlayer.play(videoId, videoTitle);
+        } catch (error) {
+          window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
+          this.currentHandledVideoId = null;
+        }
+      }
+    } finally {
+      if (this.processingVideoId === videoId) {
+        this.processingVideoId = null;
       }
     }
   }
@@ -32234,6 +31685,11 @@ class DeletedVideoDetector {
     }
     window.removeEventListener("popstate", this.handlePopState);
     document.removeEventListener("DOMContentLoaded", this.handleDOMContentLoaded);
+    this.retryCounts.clear();
+    if (this.retryTimer !== null) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = null;
+    }
   }
   /**
    * モジュールの状態を取得

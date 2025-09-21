@@ -128,6 +128,20 @@ export class PlayerControlsShadow extends HTMLElement {
     }
   }
 
+  disableComments(): void {
+    this.ensureInitialized();
+
+    const commentToggle = this.shadow.querySelector('#comment-toggle');
+    if (commentToggle instanceof HTMLElement) {
+      commentToggle.style.display = 'none';
+    }
+
+    const commentSettingsSection = this.shadow.querySelector('[data-settings-section="comment"]');
+    if (commentSettingsSection instanceof HTMLElement) {
+      commentSettingsSection.style.display = 'none';
+    }
+  }
+
   /**
    * HTMLテンプレートを取得
    */
@@ -179,7 +193,7 @@ export class PlayerControlsShadow extends HTMLElement {
     return `
       <div class="settings-container">
         <!-- プレイヤー設定部分 -->
-        <div class="settings-section">
+        <div class="settings-section" data-settings-section="player">
           <h3 class="settings-heading">プレイヤー設定</h3>
           <div class="settings-item">
             <span>コントロール表示</span>
@@ -191,7 +205,7 @@ export class PlayerControlsShadow extends HTMLElement {
         </div>
         
         <!-- コメント設定部分 -->
-        <div class="settings-section">
+        <div class="settings-section" data-settings-section="comment">
           <h3 class="settings-heading">コメント設定</h3>
           
           <!-- コメント透明度 -->

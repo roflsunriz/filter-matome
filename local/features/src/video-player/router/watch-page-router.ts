@@ -99,9 +99,20 @@ const isWatchPage = (): boolean => {
   return WATCH_HOST_PATTERN.test(window.location.hostname) && window.location.pathname.startsWith('/watch/');
 };
 
-const buildStandaloneUrl = (videoId: string): string => {
+export interface StandaloneUrlOptions {
+  mode?: 'normal' | 'deleted';
+  title?: string;
+}
+
+export const buildStandaloneUrl = (videoId: string, options: StandaloneUrlOptions = {}): string => {
   const params = new URLSearchParams();
   params.set('videoId', videoId);
+  if (options.mode) {
+    params.set('mode', options.mode);
+  }
+  if (options.title) {
+    params.set('title', options.title);
+  }
   return '/local/features/dist/src/video-player/standalone/index.html?' + params.toString();
 };
 

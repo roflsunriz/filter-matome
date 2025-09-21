@@ -72,9 +72,15 @@ const hasCacheForVideo = async (videoId) => {
 const isWatchPage = () => {
   return WATCH_HOST_PATTERN.test(window.location.hostname) && window.location.pathname.startsWith("/watch/");
 };
-const buildStandaloneUrl = (videoId) => {
+const buildStandaloneUrl = (videoId, options = {}) => {
   const params = new URLSearchParams();
   params.set("videoId", videoId);
+  if (options.mode) {
+    params.set("mode", options.mode);
+  }
+  if (options.title) {
+    params.set("title", options.title);
+  }
   return "/local/features/dist/src/video-player/standalone/index.html?" + params.toString();
 };
 const initWatchPageRouter = async () => {
@@ -112,10 +118,82 @@ const initWatchPageRouter = async () => {
   }
 };
 
+const DELETED_PLAYER_WINDOW_FEATURES = "noopener,noreferrer";
+const extractVideoId = (value) => {
+  const match = value.match(/[ns][mo]\d+/i);
+  return match ? match[0] : value;
+};
+const ensureNicoCacheBase = () => {
+  if (!window.NicoCache_nl) {
+    window.NicoCache_nl = {
+      watch: {
+        getVideoID: () => "",
+        apiData: {},
+        addEventListener: () => {
+        }
+      },
+      cacheUtil: {
+        formatCacheInfo: async () => {
+          await Promise.resolve();
+          return false;
+        }
+      },
+      cc: {
+        MainVideoPlayerWidthHeightReturner: async () => {
+          await Promise.resolve();
+          return 0;
+        }
+      },
+      handleError: () => {
+      }
+    };
+  }
+};
+const setupDeletedVideoPlayerInterface = () => {
+  ensureNicoCacheBase();
+  let popupWindow = null;
+  let lastVideoId = null;
+  window.NicoCache_nl.deletedVideoPlayer = {
+    play: (videoIdOrUrl, title) => {
+      const videoId = extractVideoId(videoIdOrUrl);
+      const url = buildStandaloneUrl(videoId, {
+        mode: "deleted",
+        title
+      });
+      if (popupWindow && !popupWindow.closed) {
+        if (lastVideoId === videoId) {
+          popupWindow.focus();
+          return;
+        }
+        popupWindow.location.href = url;
+        popupWindow.focus();
+        lastVideoId = videoId;
+        return;
+      }
+      popupWindow = window.open(url, "_blank", DELETED_PLAYER_WINDOW_FEATURES) ?? null;
+      if (!popupWindow) {
+        window.logger.warn("削除動画プレーヤーのウィンドウを開けませんでした。ポップアップブロックを解除してください。");
+        return;
+      }
+      lastVideoId = videoId;
+    },
+    hide: () => {
+      if (popupWindow && !popupWindow.closed) {
+        popupWindow.close();
+      }
+      popupWindow = null;
+      lastVideoId = null;
+    },
+    help: () => {
+      window.logger.info('window.NicoCache_nl.deletedVideoPlayer.play("sm9"); でスタンドアロンプレイヤーを開けます');
+    }
+  };
+};
 const isStandalonePage = () => {
   return window.location.pathname.startsWith("/local/features/dist/src/video-player/");
 };
 const bootstrap = () => {
+  setupDeletedVideoPlayerInterface();
   if (isStandalonePage()) {
     window.logger.info("スタンドアロンプレイヤーページではrouterは実行しません");
     return;

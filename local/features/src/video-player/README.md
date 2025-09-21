@@ -18,7 +18,6 @@ features/src/video-player/
 │   └── url-manager.ts                    # URL・キャッシュ管理 (5KB)
 ├── ui/
 │   ├── comment-list.ts                   # コメントリスト表示 (16KB)
-│   ├── floating-player.ts                # フローティングプレーヤー (24KB)
 │   ├── player-controls.ts                # プレーヤーコントロール (77KB)
 │   └── templates.ts                      # HTMLテンプレート (推定20KB)
 ├── utils/
@@ -115,11 +114,6 @@ database-manager.ts ─── データベース統合管理
 - **機能**: コメント一覧表示、時間同期、自動スクロール、シーク機能
 - **編集タイミング**: リスト表示の改善、新しい表示形式、レスポンシブ対応
 
-#### `ui/floating-player.ts` - フローティングプレーヤー
-- **役割**: 削除済み動画用独立プレーヤー
-- **機能**: ドラッガブル半透明プレーヤー、HLS/MP4対応、リサイズ対応
-- **編集タイミング**: 削除済み動画機能拡張、プレーヤーデザイン変更
-
 #### `ui/templates.ts` - HTMLテンプレート
 - **役割**: UIのHTML構造・スタイル定義
 - **機能**: プレーヤーHTML、CSS定義
@@ -202,7 +196,7 @@ database-manager.ts ─── データベース統合管理
 ### 🌐 **API・ネットワーク機能を変更したい**
 - **URL管理**: `core/url-manager.ts`
 - **コメント取得**: `core/comment-fetcher.ts`
-- **キャッシュ連携**: `index.ts`, `ui/floating-player.ts`
+- **キャッシュ連携**: `index.ts`, `standalone/player.ts`
 
 ### 🚀 **パフォーマンスを改善したい**
 - **再生シーケンス**: `standalone/player.ts`
@@ -211,9 +205,9 @@ database-manager.ts ─── データベース統合管理
 - **UI応答**: `ui/player-controls.ts`
 
 ### 🎬 **削除済み動画機能を拡張したい**
-- **メイン**: `ui/floating-player.ts`
+- **メイン**: `standalone/player.ts`
 - **統合**: `index.ts` (グローバルインターフェース)
-- **UI**: `ui/templates.ts`
+- **UI**: `standalone/main.ts`（deletedモード）, `ui/templates.ts`
 
 ### 🆕 **永続化機能を拡張したい**
 - **メイン**: `core/database-manager.ts`
@@ -303,7 +297,7 @@ await window.NicoCache_nl.databaseTest.displayDatabaseStats();
 - `CommentRenderer` - コメント描画エンジン
 - `CommentSystem` - コメント統合管理
 - `UrlManager` - 動画ソース解決
-- `FloatingDeletedPlayer` - 削除済み動画プレーヤー
+- `StandalonePlayer` - スタンドアロンプレーヤー本体（削除動画再生にも利用）
 - **🆕 `DatabaseManager` - データベース統合管理**
 - **🆕 `MigrationManager` - マイグレーション管理**
 - **🆕 `DatabaseIntegrationTest` - 統合テスト**

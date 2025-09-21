@@ -5,7 +5,6 @@ import { PlayerControlsShadow } from '../ui/player-controls.js';
 import { CommentList } from '../ui/comment-list.js';
 import { CommentSystem } from '../core/comment-system.js';
 import { CUSTOM_PLAYER_SHADOW_HTML, CUSTOM_PLAYER_SHADOW_STYLES } from '../ui/templates.js';
-import { FloatingDeletedPlayer } from '../ui/floating-player.js';
 import type { ApiData } from '@/types/index.js';
 import type { HlsInstance } from '@/types/video-types.js';
 
@@ -25,18 +24,24 @@ export interface StandalonePlayerOptions {
   mount: HTMLElement;
 }
 
+export interface StandalonePlayerInitOptions {
+  apiData?: ApiData;
+  displayTitle?: string;
+  enableComments?: boolean;
+}
+
 export class StandalonePlayer {
   private readonly mount: HTMLElement;
   private readonly urlManager = new UrlManager();
   private readonly toastManager = new ToastManager();
   private readonly commentSystem = new CommentSystem();
-  private readonly floatingDeletedPlayer = new FloatingDeletedPlayer();
 
   private playerControls: PlayerControlsShadow | null = null;
   private videoElement: HTMLVideoElement | null = null;
   private videoContainer: HTMLElement | null = null;
   private customPlayerContainer: HTMLElement | null = null;
   private hls: HlsInstance | null = null;
+  private enableComments = true;
 
   constructor(options: StandalonePlayerOptions) {
     this.mount = options.mount;
@@ -45,10 +50,17 @@ export class StandalonePlayer {
     this.setupGlobalInterface();
   }
 
-  public async initialize(videoId: string, apiData: ApiData): Promise<void> {
+  public async initialize(videoId: string, options: StandalonePlayerInitOptions = {}): Promise<void> {
+    this.enableComments = options.enableComments !== false;
+
     await this.preparePlayerShell();
-    await this.playWithCustomSource(videoId, apiData.video.title);
-    await this.loadComments(videoId);
+
+    const displayTitle = options.displayTitle ?? options.apiData?.video.title ?? videoId;
+    await this.playWithCustomSource(videoId, displayTitle);
+
+    if (this.enableComments) {
+      await this.loadComments(videoId);
+    }
   }
 
   private async preparePlayerShell(): Promise<void> {
@@ -72,10 +84,12 @@ export class StandalonePlayer {
       throw new Error('動画要素が生成できませんでした');
     }
 
-    try {
-      await this.commentSystem.initialize(this.videoElement);
-    } catch (error) {
-      window.logger.error('コメントシステムの初期化に失敗しました', error);
+    if (this.enableComments) {
+      try {
+        await this.commentSystem.initialize(this.videoElement);
+      } catch (error) {
+        window.logger.error('コメントシステムの初期化に失敗しました', error);
+      }
     }
 
     if (this.playerControls) {
@@ -83,8 +97,11 @@ export class StandalonePlayer {
         if (typeof this.playerControls?.setVideoElement === 'function') {
           this.playerControls.setVideoElement(this.videoElement!);
         }
-        if (typeof this.playerControls?.setCommentSystem === 'function') {
+        if (this.enableComments && typeof this.playerControls?.setCommentSystem === 'function') {
           this.playerControls.setCommentSystem(this.commentSystem);
+        }
+        if (!this.enableComments && typeof this.playerControls?.disableComments === 'function') {
+          this.playerControls.disableComments();
         }
       };
 
@@ -247,6 +264,9 @@ export class StandalonePlayer {
   }
 
   private async loadComments(videoId: string): Promise<void> {
+    if (!this.enableComments) {
+      return;
+    }
     try {
       await this.commentSystem.loadComments(videoId);
     } catch (error) {
@@ -311,16 +331,6 @@ export class StandalonePlayer {
       };
     }
 
-    window.NicoCache_nl.deletedVideoPlayer = {
-      play: (videoIdOrUrl: string, title?: string): void => {
-        this.floatingDeletedPlayer.show(videoIdOrUrl, title);
-      },
-      hide: (): void => {
-        this.floatingDeletedPlayer.hide();
-      },
-      help: (): void => {
-        window.logger.info('window.NicoCache_nl.deletedVideoPlayer.play("sm9"); で再生できます');
-      }
-    };
+    // deletedVideoPlayer インターフェースは watch ページ側で再定義されるためここでは設定しない
   }
 }

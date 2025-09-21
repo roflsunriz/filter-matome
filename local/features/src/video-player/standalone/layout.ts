@@ -14,6 +14,11 @@ export interface StandaloneLayout {
   ownerName: HTMLElement;
   ownerLink: HTMLAnchorElement;
   seriesList: HTMLElement;
+  infoCard: HTMLElement;
+}
+
+export interface StandaloneLayoutOptions {
+  mode?: 'normal' | 'deleted';
 }
 
 const createBreadcrumbs = (): HTMLElement => {
@@ -42,7 +47,7 @@ const createBreadcrumbs = (): HTMLElement => {
   return nav;
 };
 
-export const createStandaloneLayout = (): StandaloneLayout => {
+export const createStandaloneLayout = (options: StandaloneLayoutOptions = {}): StandaloneLayout => {
   document.body.classList.add('nc-standalone-body');
   applyStyles(STANDALONE_PAGE_STYLES);
 
@@ -50,6 +55,9 @@ export const createStandaloneLayout = (): StandaloneLayout => {
 
   const root = document.createElement('div');
   root.className = 'nc-standalone-page';
+  if (options.mode === 'deleted') {
+    root.classList.add('nc-standalone-page--deleted');
+  }
 
   const header = document.createElement('header');
   header.className = 'nc-header';
@@ -140,6 +148,7 @@ export const createStandaloneLayout = (): StandaloneLayout => {
     ownerAvatar,
     ownerName,
     ownerLink,
-    seriesList
+    seriesList,
+    infoCard
   };
 };

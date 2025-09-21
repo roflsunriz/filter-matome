@@ -11,6 +11,10 @@ export class DeletedVideoDetector {
   private lastUrl: string = '';
   private isEnabled: boolean = false;
   private initialized: boolean = false;
+  private retryCounts: Map<string, number> = new Map();
+  private processingVideoId: string | null = null;
+  private currentHandledVideoId: string | null = null;
+  private retryTimer: number | null = null;
 
   private constructor() {
     void this.initializeNicoCache();
@@ -80,6 +84,13 @@ export class DeletedVideoDetector {
     this.observer = new MutationObserver(() => {
       if (this.isEnabled && location.href !== this.lastUrl) {
         this.lastUrl = location.href;
+        this.processingVideoId = null;
+        this.currentHandledVideoId = null;
+        this.retryCounts.clear();
+        if (this.retryTimer !== null) {
+          clearTimeout(this.retryTimer);
+          this.retryTimer = null;
+        }
         void this.handleUnavailableVideo();
       }
     });
@@ -204,6 +215,27 @@ export class DeletedVideoDetector {
     const videoId: string | undefined = window.location.pathname.match(/watch\/(sm\d+)/)?.[1];
     if (!videoId) return;
 
+    if (this.processingVideoId && this.processingVideoId === videoId) {
+      window.logger.debug('[DeletedVideoDetector] 同一動画の処理中のためスキップ', videoId);
+      return;
+    }
+
+    if (this.currentHandledVideoId && this.currentHandledVideoId !== videoId) {
+      this.currentHandledVideoId = null;
+    }
+
+    if (this.currentHandledVideoId === videoId) {
+      window.logger.debug('[DeletedVideoDetector] 既に削除動画プレーヤーを起動済み', videoId);
+      return;
+    }
+
+    this.processingVideoId = videoId;
+
+    try {
+      if (!this.retryCounts.has(videoId)) {
+      this.retryCounts.set(videoId, 0);
+    }
+
     const isUnavailable: boolean = this.detectUnavailableVideo();
     const isApiUnavailable: boolean = await this.checkVideoAvailability(videoId);
 
@@ -216,8 +248,29 @@ export class DeletedVideoDetector {
     if (isUnavailable || isApiUnavailable) {
       const deletedVideoPlayer = window.NicoCache_nl.deletedVideoPlayer;
       if (!deletedVideoPlayer) {
-        window.logger.warn("[DeletedVideoDetector] 削除動画プレーヤーが利用できません");
+        const attempts = this.retryCounts.get(videoId) ?? 0;
+        if (attempts === 0) {
+          window.logger.warn("[DeletedVideoDetector] 削除動画プレーヤーが利用できません");
+        }
+
+        if (attempts < 3) {
+          if (this.retryTimer === null) {
+            this.retryCounts.set(videoId, attempts + 1);
+            this.retryTimer = window.setTimeout(() => {
+              this.retryTimer = null;
+              if (this.isEnabled) {
+                void this.handleUnavailableVideo();
+              }
+            }, 1000);
+          }
+        }
         return;
+      }
+
+      this.retryCounts.delete(videoId);
+      if (this.retryTimer !== null) {
+        clearTimeout(this.retryTimer);
+        this.retryTimer = null;
       }
 
       const videoTitle = this.getVideoTitle();
@@ -227,9 +280,16 @@ export class DeletedVideoDetector {
           videoId,
           videoTitle
         });
+        this.currentHandledVideoId = videoId;
         deletedVideoPlayer.play(videoId, videoTitle);
       } catch (error) {
         window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
+        this.currentHandledVideoId = null;
+      }
+    }
+    } finally {
+      if (this.processingVideoId === videoId) {
+        this.processingVideoId = null;
       }
     }
   }
@@ -269,6 +329,12 @@ export class DeletedVideoDetector {
     // イベントリスナーを削除
     window.removeEventListener('popstate', this.handlePopState);
     document.removeEventListener('DOMContentLoaded', this.handleDOMContentLoaded);
+
+    this.retryCounts.clear();
+    if (this.retryTimer !== null) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = null;
+    }
   }
 
   /**
