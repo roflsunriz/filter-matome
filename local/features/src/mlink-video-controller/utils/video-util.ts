@@ -4,56 +4,10 @@ import "../../types/global.d.ts"
 import { VideoOperation, SimpleVideoInfo, ExtendedApiData, CacheInfoResponse } from '@/types/video-types';
 import { NicoCache_nlInterface } from '@/types/global-types';
 
-const WATCH_VIDEO_ID_PATTERN = /\/watch\/([a-z]{2}\d+)/i;
-const GENERIC_VIDEO_ID_PATTERN = /([a-z]{2}\d+)/i;
-
-const normalizeVideoId = (value?: string | null): string | null => {
-  if (typeof value !== 'string') {
-    return null;
-  }
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed.toLowerCase() : null;
-};
-
-const extractVideoIdFromUrl = (url: string): string | null => {
-  const watchMatch = url.match(WATCH_VIDEO_ID_PATTERN);
-  if (watchMatch) {
-    return normalizeVideoId(watchMatch[1]);
-  }
-  const genericMatch = url.match(GENERIC_VIDEO_ID_PATTERN);
-  if (genericMatch) {
-    return normalizeVideoId(genericMatch[1]);
-  }
-  return null;
-};
-
-const getVideoIdFromNicoCache = (nicoCache?: NicoCache_nlInterface): string | null => {
-  const fromApi = normalizeVideoId(nicoCache?.watch?.apiData?.video?.id ?? null);
-  if (fromApi) {
-    return fromApi;
-  }
-  const getter = nicoCache?.watch?.getVideoID;
-  if (typeof getter === 'function') {
-    try {
-      const result = normalizeVideoId(getter());
-      if (result) {
-        return result;
-      }
-    } catch {
-      return null;
-    }
-  }
-  return null;
-};
-
-export const getActiveVideoId = (nicoCache?: NicoCache_nlInterface): string => {
-  const cacheSource = nicoCache ?? (window as Window & { NicoCache_nl?: NicoCache_nlInterface }).NicoCache_nl;
-  const fromCache = getVideoIdFromNicoCache(cacheSource);
-  if (fromCache) {
-    return fromCache;
-  }
-  const fromUrl = extractVideoIdFromUrl(window.location.href);
-  return fromUrl ?? '';
+// 統一された動画ID抽出処理 (common.tsのgetVideoIdWithFallbackを使用)
+export const getActiveVideoId = (): string => {
+  const videoId = window.commonHelper?.getVideoIdWithFallback() ?? null;
+  return videoId ?? '';
 };
 
 export const handleVideoOperation = (operation: VideoOperation, videoId: string): void => {
@@ -69,7 +23,7 @@ export const getVideoInfo = (): SimpleVideoInfo => {
   const nicoCache = (window as Window & { NicoCache_nl: NicoCache_nlInterface }).NicoCache_nl;
   const videoTitle = nicoCache?.watch?.apiData?.video ? 
     nicoCache.watch.apiData.video.title || '' : '';
-  const videoId = getActiveVideoId(nicoCache);
+  const videoId = getActiveVideoId();
   
   return {
     videoId,

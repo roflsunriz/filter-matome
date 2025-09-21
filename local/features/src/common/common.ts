@@ -13,6 +13,72 @@ import {
   CommentThread,
 } from "../types/common-types";
 
+type VideoIdSource = string | URL | Location | {
+  href?: string | null;
+  pathname?: string | null;
+  search?: string | null;
+  hash?: string | null;
+};
+
+const WATCH_VIDEO_ID_PATTERN = /\/watch\/([a-z]{2}\d+)/i;
+const VIDEO_ID_QUERY_PATTERN = /[?&]videoId=([a-z]{2}\d+)/i;
+const GENERIC_VIDEO_ID_PATTERN = /([a-z]{2}\d+)/i;
+
+const normalizeVideoId = (value?: string | null): string | null => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed.toLowerCase() : null;
+};
+
+const resolveUrlString = (input?: VideoIdSource | null): string | null => {
+  if (!input) {
+    return null;
+  }
+  if (typeof input === 'string') {
+    return input;
+  }
+  try {
+    if (input instanceof URL) {
+      return input.href;
+    }
+  } catch {
+    // ignore environments without URL constructor support
+  }
+  const hrefCandidate = (input as { href?: unknown }).href;
+  if (typeof hrefCandidate === 'string') {
+    return hrefCandidate;
+  }
+  const pathname = (input as { pathname?: unknown }).pathname;
+  if (typeof pathname === 'string') {
+    const search = typeof (input as { search?: unknown }).search === 'string'
+      ? (input as { search: string }).search
+      : '';
+    const hash = typeof (input as { hash?: unknown }).hash === 'string'
+      ? (input as { hash: string }).hash
+      : '';
+    return `${pathname}${search}${hash}`;
+  }
+  return null;
+};
+
+const extractVideoIdFromString = (value: string): string | null => {
+  const watchMatch = WATCH_VIDEO_ID_PATTERN.exec(value);
+  if (watchMatch) {
+    return normalizeVideoId(watchMatch[1]);
+  }
+  const queryMatch = VIDEO_ID_QUERY_PATTERN.exec(value);
+  if (queryMatch) {
+    return normalizeVideoId(queryMatch[1]);
+  }
+  const genericMatch = GENERIC_VIDEO_ID_PATTERN.exec(value);
+  if (genericMatch) {
+    return normalizeVideoId(genericMatch[1]);
+  }
+  return null;
+};
+
 window.commonHelper = {
   // 共通のfetch関数
   fetchRequest: (url: string, options: FetchOptions = {}): Promise<Response> => {
@@ -23,6 +89,30 @@ window.commonHelper = {
     };
     
     return fetch(url, defaultOptions);
+  },
+
+  extractVideoIdFromUrl: (input?: VideoIdSource | null): string | null => {
+    try {
+      const primarySource = resolveUrlString(input);
+      if (primarySource) {
+        const candidate = extractVideoIdFromString(primarySource);
+        if (candidate) {
+          return candidate;
+        }
+      }
+      if (!input) {
+        const fallback = resolveUrlString(window.location);
+        if (fallback) {
+          const fallbackCandidate = extractVideoIdFromString(fallback);
+          if (fallbackCandidate) {
+            return fallbackCandidate;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[commonHelper] extractVideoIdFromUrl failed', error);
+    }
+    return null;
   },
 
   checkCache404: (url: string): Promise<boolean | void> => {
@@ -123,6 +213,43 @@ window.commonHelper = {
       };
     } catch (error) {
       console.error("コメントデータ取得エラー:", error);
+    }
+  },
+
+  // NicoCache_nl.watch.getVideoIDをチェックして、取得できない場合にURLから動画IDを抽出するフォールバック機能
+  getVideoIdWithFallback: (input?: VideoIdSource | null): string | null => {
+    try {
+      // 1. 最優先: NicoCache_nl.watch.getVideoIDから取得を試行
+      const windowWithNico = window as Window & { NicoCache_nl?: { watch?: { getVideoID?: () => string; apiData?: { video?: { id?: string } } } } };
+      const nicoCache = windowWithNico.NicoCache_nl;
+      if (nicoCache?.watch?.getVideoID && typeof nicoCache.watch.getVideoID === 'function') {
+        try {
+          const fromApi = nicoCache.watch.getVideoID();
+          if (fromApi && typeof fromApi === 'string') {
+            const normalized = normalizeVideoId(fromApi);
+            if (normalized) {
+              return normalized;
+            }
+          }
+        } catch (error) {
+          console.warn('[commonHelper] NicoCache_nl.watch.getVideoID failed:', error);
+        }
+      }
+
+      // 2. フォールバック: APIデータから取得を試行
+      const videoId = nicoCache?.watch?.apiData?.video?.id;
+      if (videoId && typeof videoId === 'string') {
+        const fromApiData = normalizeVideoId(videoId);
+        if (fromApiData) {
+          return fromApiData;
+        }
+      }
+
+      // 3. フォールバック: URLから抽出
+      return window.commonHelper.extractVideoIdFromUrl(input);
+    } catch (error) {
+      console.error('[commonHelper] getVideoIdWithFallback failed:', error);
+      return null;
     }
   },
 

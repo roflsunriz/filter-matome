@@ -28,6 +28,56 @@ true              &&(function polyfill() {
 	}
 }());
 
+const WATCH_VIDEO_ID_PATTERN = /\/watch\/([a-z]{2}\d+)/i;
+const VIDEO_ID_QUERY_PATTERN = /[?&]videoId=([a-z]{2}\d+)/i;
+const GENERIC_VIDEO_ID_PATTERN = /([a-z]{2}\d+)/i;
+const normalizeVideoId = (value) => {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed.toLowerCase() : null;
+};
+const resolveUrlString = (input) => {
+  if (!input) {
+    return null;
+  }
+  if (typeof input === "string") {
+    return input;
+  }
+  try {
+    if (input instanceof URL) {
+      return input.href;
+    }
+  } catch {
+  }
+  const hrefCandidate = input.href;
+  if (typeof hrefCandidate === "string") {
+    return hrefCandidate;
+  }
+  const pathname = input.pathname;
+  if (typeof pathname === "string") {
+    const search = typeof input.search === "string" ? input.search : "";
+    const hash = typeof input.hash === "string" ? input.hash : "";
+    return `${pathname}${search}${hash}`;
+  }
+  return null;
+};
+const extractVideoIdFromString = (value) => {
+  const watchMatch = WATCH_VIDEO_ID_PATTERN.exec(value);
+  if (watchMatch) {
+    return normalizeVideoId(watchMatch[1]);
+  }
+  const queryMatch = VIDEO_ID_QUERY_PATTERN.exec(value);
+  if (queryMatch) {
+    return normalizeVideoId(queryMatch[1]);
+  }
+  const genericMatch = GENERIC_VIDEO_ID_PATTERN.exec(value);
+  if (genericMatch) {
+    return normalizeVideoId(genericMatch[1]);
+  }
+  return null;
+};
 window.commonHelper = {
   // 共通のfetch関数
   fetchRequest: (url, options = {}) => {
@@ -37,6 +87,29 @@ window.commonHelper = {
       ...options
     };
     return fetch(url, defaultOptions);
+  },
+  extractVideoIdFromUrl: (input) => {
+    try {
+      const primarySource = resolveUrlString(input);
+      if (primarySource) {
+        const candidate = extractVideoIdFromString(primarySource);
+        if (candidate) {
+          return candidate;
+        }
+      }
+      if (!input) {
+        const fallback = resolveUrlString(window.location);
+        if (fallback) {
+          const fallbackCandidate = extractVideoIdFromString(fallback);
+          if (fallbackCandidate) {
+            return fallbackCandidate;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("[commonHelper] extractVideoIdFromUrl failed", error);
+    }
+    return null;
   },
   checkCache404: (url) => {
     return window.commonHelper.fetchRequest(url).then((response) => {
@@ -117,6 +190,37 @@ window.commonHelper = {
       };
     } catch (error) {
       console.error("コメントデータ取得エラー:", error);
+    }
+  },
+  // NicoCache_nl.watch.getVideoIDをチェックして、取得できない場合にURLから動画IDを抽出するフォールバック機能
+  getVideoIdWithFallback: (input) => {
+    try {
+      const windowWithNico = window;
+      const nicoCache = windowWithNico.NicoCache_nl;
+      if (nicoCache?.watch?.getVideoID && typeof nicoCache.watch.getVideoID === "function") {
+        try {
+          const fromApi = nicoCache.watch.getVideoID();
+          if (fromApi && typeof fromApi === "string") {
+            const normalized = normalizeVideoId(fromApi);
+            if (normalized) {
+              return normalized;
+            }
+          }
+        } catch (error) {
+          console.warn("[commonHelper] NicoCache_nl.watch.getVideoID failed:", error);
+        }
+      }
+      const videoId = nicoCache?.watch?.apiData?.video?.id;
+      if (videoId && typeof videoId === "string") {
+        const fromApiData = normalizeVideoId(videoId);
+        if (fromApiData) {
+          return fromApiData;
+        }
+      }
+      return window.commonHelper.extractVideoIdFromUrl(input);
+    } catch (error) {
+      console.error("[commonHelper] getVideoIdWithFallback failed:", error);
+      return null;
     }
   },
   // ニコニコ動画のAPIデータとコメントデータを一度に取得するヘルパー関数
@@ -16685,52 +16789,9 @@ Mylist2`,
   }
 }
 
-const WATCH_VIDEO_ID_PATTERN = /\/watch\/([a-z]{2}\d+)/i;
-const GENERIC_VIDEO_ID_PATTERN = /([a-z]{2}\d+)/i;
-const normalizeVideoId = (value) => {
-  if (typeof value !== "string") {
-    return null;
-  }
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed.toLowerCase() : null;
-};
-const extractVideoIdFromUrl = (url) => {
-  const watchMatch = url.match(WATCH_VIDEO_ID_PATTERN);
-  if (watchMatch) {
-    return normalizeVideoId(watchMatch[1]);
-  }
-  const genericMatch = url.match(GENERIC_VIDEO_ID_PATTERN);
-  if (genericMatch) {
-    return normalizeVideoId(genericMatch[1]);
-  }
-  return null;
-};
-const getVideoIdFromNicoCache = (nicoCache) => {
-  const fromApi = normalizeVideoId(nicoCache?.watch?.apiData?.video?.id ?? null);
-  if (fromApi) {
-    return fromApi;
-  }
-  const getter = nicoCache?.watch?.getVideoID;
-  if (typeof getter === "function") {
-    try {
-      const result = normalizeVideoId(getter());
-      if (result) {
-        return result;
-      }
-    } catch {
-      return null;
-    }
-  }
-  return null;
-};
-const getActiveVideoId = (nicoCache) => {
-  const cacheSource = nicoCache ?? window.NicoCache_nl;
-  const fromCache = getVideoIdFromNicoCache(cacheSource);
-  if (fromCache) {
-    return fromCache;
-  }
-  const fromUrl = extractVideoIdFromUrl(window.location.href);
-  return fromUrl ?? "";
+const getActiveVideoId = () => {
+  const videoId = window.commonHelper?.getVideoIdWithFallback() ?? null;
+  return videoId ?? "";
 };
 const handleVideoOperation = (operation, videoId) => {
   switch (operation) {
@@ -17003,8 +17064,7 @@ class LinkManager {
       if (isWatchLikePage()) {
         return true;
       }
-      const nicoCache = this.getNicoCache();
-      const videoId = getActiveVideoId(nicoCache ?? void 0);
+      const videoId = getActiveVideoId();
       return videoId.length > 0;
     } catch {
       return false;
@@ -17059,14 +17119,13 @@ class LinkManager {
     return "";
   }
   async handleAction(action) {
-    const nicoCache = this.getNicoCache();
-    const videoId = getActiveVideoId(nicoCache ?? void 0);
+    const videoId = getActiveVideoId();
     const threadId = this.getThreadId();
     const actionMap = {
       customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
       AddVideoToCustomMylist: async () => {
         const mylist2Handler = new Mylist2Handler();
-        if (nicoCache?.watch) {
+        if (videoId && videoId.length > 0) {
           await mylist2Handler.handleAddVideo();
         } else {
           await mylist2Handler.handleAddKeyword();
@@ -17295,20 +17354,7 @@ class CommentManager {
     return CommentManager.instance;
   }
   extractVideoIdFromUrl() {
-    try {
-      const url = new URL(window.location.href);
-      const queryVideoId = url.searchParams.get("videoId");
-      if (queryVideoId && /[a-z]{2}\d+/i.test(queryVideoId)) {
-        return queryVideoId;
-      }
-      const pathMatch = url.pathname.match(/[a-z]{2}\d+/i);
-      if (pathMatch) {
-        return pathMatch[0];
-      }
-    } catch (error) {
-      window.logger?.warn("[CommentManager] 動画IDの抽出に失敗しました:", error);
-    }
-    return null;
+    return window.commonHelper?.getVideoIdWithFallback() ?? null;
   }
   async fetchComments(videoId) {
     const effectiveVideoId = videoId || this.extractVideoIdFromUrl();

@@ -200,8 +200,7 @@ export class LinkManager {
       if (isWatchLikePage()) {
         return true;
       }
-      const nicoCache = this.getNicoCache();
-      const videoId = getActiveVideoId(nicoCache ?? undefined);
+      const videoId = getActiveVideoId();
       return videoId.length > 0;
     } catch {
       return false;
@@ -261,8 +260,7 @@ export class LinkManager {
   }
 
   public async handleAction(action: string): Promise<void> {
-    const nicoCache = this.getNicoCache();
-    const videoId = getActiveVideoId(nicoCache ?? undefined);
+    const videoId = getActiveVideoId();
     const threadId = this.getThreadId();
     // const commentFilterUI = new CommentFilterUI();
 
@@ -270,7 +268,8 @@ export class LinkManager {
       customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
       AddVideoToCustomMylist: async () => {
         const mylist2Handler = new Mylist2Handler();
-        if (nicoCache?.watch) {
+        // 動画IDが取得できる場合は動画を追加、そうでなければキーワードを追加
+        if (videoId && videoId.length > 0) {
           await mylist2Handler.handleAddVideo();
         } else {
           await mylist2Handler.handleAddKeyword();

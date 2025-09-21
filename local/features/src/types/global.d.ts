@@ -12,6 +12,13 @@ import {
   CommentThread
 } from "./common-types";
 
+type CommonHelperVideoIdSource = string | URL | Location | {
+  href?: string | null;
+  pathname?: string | null;
+  search?: string | null;
+  hash?: string | null;
+};
+
 declare global {
   // グローバルスコープでのtoastr宣言（型のみ。値は存在する前提）
   const toastr: ToastrInstance;
@@ -20,6 +27,9 @@ declare global {
     NicoCache_nl: NicoCache_nlInterface;
     commonHelper: {
       // 既存の関数
+      extractVideoIdFromUrl: (input?: CommonHelperVideoIdSource | null) => string | null;
+      // NicoCache_nl.watch.getVideoIDをチェックして、取得できない場合にURLから動画IDを抽出するフォールバック機能
+      getVideoIdWithFallback: (input?: CommonHelperVideoIdSource | null) => string | null;
       checkCache404: (url: string) => Promise<boolean | void>;
       fetchWatchPage: (SMID?: string) => Promise<ExtendedFetchWatchPageResult | void>;
       

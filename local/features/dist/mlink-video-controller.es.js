@@ -3039,52 +3039,9 @@ Mylist2`,
   }
 }
 
-const WATCH_VIDEO_ID_PATTERN = /\/watch\/([a-z]{2}\d+)/i;
-const GENERIC_VIDEO_ID_PATTERN = /([a-z]{2}\d+)/i;
-const normalizeVideoId = (value) => {
-  if (typeof value !== "string") {
-    return null;
-  }
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed.toLowerCase() : null;
-};
-const extractVideoIdFromUrl = (url) => {
-  const watchMatch = url.match(WATCH_VIDEO_ID_PATTERN);
-  if (watchMatch) {
-    return normalizeVideoId(watchMatch[1]);
-  }
-  const genericMatch = url.match(GENERIC_VIDEO_ID_PATTERN);
-  if (genericMatch) {
-    return normalizeVideoId(genericMatch[1]);
-  }
-  return null;
-};
-const getVideoIdFromNicoCache = (nicoCache) => {
-  const fromApi = normalizeVideoId(nicoCache?.watch?.apiData?.video?.id ?? null);
-  if (fromApi) {
-    return fromApi;
-  }
-  const getter = nicoCache?.watch?.getVideoID;
-  if (typeof getter === "function") {
-    try {
-      const result = normalizeVideoId(getter());
-      if (result) {
-        return result;
-      }
-    } catch {
-      return null;
-    }
-  }
-  return null;
-};
-const getActiveVideoId = (nicoCache) => {
-  const cacheSource = nicoCache ?? window.NicoCache_nl;
-  const fromCache = getVideoIdFromNicoCache(cacheSource);
-  if (fromCache) {
-    return fromCache;
-  }
-  const fromUrl = extractVideoIdFromUrl(window.location.href);
-  return fromUrl ?? "";
+const getActiveVideoId = () => {
+  const videoId = window.commonHelper?.getVideoIdWithFallback() ?? null;
+  return videoId ?? "";
 };
 const handleVideoOperation = (operation, videoId) => {
   switch (operation) {
@@ -3484,8 +3441,7 @@ class LinkManager {
       if (isWatchLikePage()) {
         return true;
       }
-      const nicoCache = this.getNicoCache();
-      const videoId = getActiveVideoId(nicoCache ?? void 0);
+      const videoId = getActiveVideoId();
       return videoId.length > 0;
     } catch {
       return false;
@@ -3540,14 +3496,13 @@ class LinkManager {
     return "";
   }
   async handleAction(action) {
-    const nicoCache = this.getNicoCache();
-    const videoId = getActiveVideoId(nicoCache ?? void 0);
+    const videoId = getActiveVideoId();
     const threadId = this.getThreadId();
     const actionMap = {
       customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
       AddVideoToCustomMylist: async () => {
         const mylist2Handler = new Mylist2Handler();
-        if (nicoCache?.watch) {
+        if (videoId && videoId.length > 0) {
           await mylist2Handler.handleAddVideo();
         } else {
           await mylist2Handler.handleAddKeyword();
@@ -3776,20 +3731,7 @@ class CommentManager {
     return CommentManager.instance;
   }
   extractVideoIdFromUrl() {
-    try {
-      const url = new URL(window.location.href);
-      const queryVideoId = url.searchParams.get("videoId");
-      if (queryVideoId && /[a-z]{2}\d+/i.test(queryVideoId)) {
-        return queryVideoId;
-      }
-      const pathMatch = url.pathname.match(/[a-z]{2}\d+/i);
-      if (pathMatch) {
-        return pathMatch[0];
-      }
-    } catch (error) {
-      window.logger?.warn("[CommentManager] 動画IDの抽出に失敗しました:", error);
-    }
-    return null;
+    return window.commonHelper?.getVideoIdWithFallback() ?? null;
   }
   async fetchComments(videoId) {
     const effectiveVideoId = videoId || this.extractVideoIdFromUrl();

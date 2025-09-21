@@ -1,3 +1,53 @@
+const WATCH_VIDEO_ID_PATTERN = /\/watch\/([a-z]{2}\d+)/i;
+const VIDEO_ID_QUERY_PATTERN = /[?&]videoId=([a-z]{2}\d+)/i;
+const GENERIC_VIDEO_ID_PATTERN = /([a-z]{2}\d+)/i;
+const normalizeVideoId = (value) => {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed.toLowerCase() : null;
+};
+const resolveUrlString = (input) => {
+  if (!input) {
+    return null;
+  }
+  if (typeof input === "string") {
+    return input;
+  }
+  try {
+    if (input instanceof URL) {
+      return input.href;
+    }
+  } catch {
+  }
+  const hrefCandidate = input.href;
+  if (typeof hrefCandidate === "string") {
+    return hrefCandidate;
+  }
+  const pathname = input.pathname;
+  if (typeof pathname === "string") {
+    const search = typeof input.search === "string" ? input.search : "";
+    const hash = typeof input.hash === "string" ? input.hash : "";
+    return `${pathname}${search}${hash}`;
+  }
+  return null;
+};
+const extractVideoIdFromString = (value) => {
+  const watchMatch = WATCH_VIDEO_ID_PATTERN.exec(value);
+  if (watchMatch) {
+    return normalizeVideoId(watchMatch[1]);
+  }
+  const queryMatch = VIDEO_ID_QUERY_PATTERN.exec(value);
+  if (queryMatch) {
+    return normalizeVideoId(queryMatch[1]);
+  }
+  const genericMatch = GENERIC_VIDEO_ID_PATTERN.exec(value);
+  if (genericMatch) {
+    return normalizeVideoId(genericMatch[1]);
+  }
+  return null;
+};
 window.commonHelper = {
   // 共通のfetch関数
   fetchRequest: (url, options = {}) => {
@@ -7,6 +57,29 @@ window.commonHelper = {
       ...options
     };
     return fetch(url, defaultOptions);
+  },
+  extractVideoIdFromUrl: (input) => {
+    try {
+      const primarySource = resolveUrlString(input);
+      if (primarySource) {
+        const candidate = extractVideoIdFromString(primarySource);
+        if (candidate) {
+          return candidate;
+        }
+      }
+      if (!input) {
+        const fallback = resolveUrlString(window.location);
+        if (fallback) {
+          const fallbackCandidate = extractVideoIdFromString(fallback);
+          if (fallbackCandidate) {
+            return fallbackCandidate;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("[commonHelper] extractVideoIdFromUrl failed", error);
+    }
+    return null;
   },
   checkCache404: (url) => {
     return window.commonHelper.fetchRequest(url).then((response) => {
@@ -87,6 +160,37 @@ window.commonHelper = {
       };
     } catch (error) {
       console.error("コメントデータ取得エラー:", error);
+    }
+  },
+  // NicoCache_nl.watch.getVideoIDをチェックして、取得できない場合にURLから動画IDを抽出するフォールバック機能
+  getVideoIdWithFallback: (input) => {
+    try {
+      const windowWithNico = window;
+      const nicoCache = windowWithNico.NicoCache_nl;
+      if (nicoCache?.watch?.getVideoID && typeof nicoCache.watch.getVideoID === "function") {
+        try {
+          const fromApi = nicoCache.watch.getVideoID();
+          if (fromApi && typeof fromApi === "string") {
+            const normalized = normalizeVideoId(fromApi);
+            if (normalized) {
+              return normalized;
+            }
+          }
+        } catch (error) {
+          console.warn("[commonHelper] NicoCache_nl.watch.getVideoID failed:", error);
+        }
+      }
+      const videoId = nicoCache?.watch?.apiData?.video?.id;
+      if (videoId && typeof videoId === "string") {
+        const fromApiData = normalizeVideoId(videoId);
+        if (fromApiData) {
+          return fromApiData;
+        }
+      }
+      return window.commonHelper.extractVideoIdFromUrl(input);
+    } catch (error) {
+      console.error("[commonHelper] getVideoIdWithFallback failed:", error);
+      return null;
     }
   },
   // ニコニコ動画のAPIデータとコメントデータを一度に取得するヘルパー関数
