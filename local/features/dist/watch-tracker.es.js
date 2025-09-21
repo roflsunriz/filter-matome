@@ -1366,6 +1366,34 @@ class WatchHistoryDatabase {
 }
 const watchHistoryDB = new WatchHistoryDatabase();
 
+const WATCH_PAGE_PATH_REGEX = /^\/watch\/[a-z]{2}\d+$/;
+const VIDEO_ID_IN_PATH_REGEX = /[a-z]{2}\d+/;
+const VIDEO_ID_PARAM_REGEX = /^[a-z]{2}\d+$/;
+const STANDALONE_PLAYER_PATH = "/local/features/dist/src/video-player/standalone/index.html";
+const extractVideoIdFromQuery = (search) => {
+  if (typeof search !== "string" || search.length === 0) {
+    return null;
+  }
+  try {
+    const params = new URLSearchParams(search);
+    const videoId = params.get("videoId");
+    if (videoId && VIDEO_ID_PARAM_REGEX.test(videoId)) {
+      return videoId;
+    }
+  } catch (error) {
+    logger.warn("[WatchTracker] URLSearchParamsの解析に失敗しました", error);
+  }
+  return null;
+};
+const isStandalonePlayerLocation = (loc = location) => {
+  if (loc.pathname !== STANDALONE_PLAYER_PATH) {
+    return false;
+  }
+  return extractVideoIdFromQuery(loc.search) !== null;
+};
+const isWatchPageLocation = (loc = location) => {
+  return WATCH_PAGE_PATH_REGEX.test(loc.pathname);
+};
 class WatchTracker {
   // 10秒以内の重複記録を防ぐ
   constructor() {
@@ -1413,8 +1441,11 @@ class WatchTracker {
    * 動画IDを抽出する
    */
   extractVideoId() {
-    const match = /[ns][mo][0-9]+/.exec(location.pathname);
-    return match ? match[0] : null;
+    const pathMatch = VIDEO_ID_IN_PATH_REGEX.exec(location.pathname);
+    if (pathMatch) {
+      return pathMatch[0];
+    }
+    return extractVideoIdFromQuery(location.search);
   }
   /**
    * 動画メタデータを取得する
@@ -1955,7 +1986,9 @@ class WatchTracker {
 }
 let watchTracker = null;
 async function initializeWatchTracker() {
-  if (!/\/watch\/[ns][mo][0-9]+/.test(location.pathname)) {
+  const isWatchPage = isWatchPageLocation();
+  const isStandalonePlayer = isStandalonePlayerLocation();
+  if (!isWatchPage && !isStandalonePlayer) {
     return;
   }
   if (watchTracker) {
@@ -1974,7 +2007,7 @@ let currentUrl = location.href;
 const observer = new MutationObserver(() => {
   if (location.href !== currentUrl) {
     currentUrl = location.href;
-    if (/\/watch\/[ns][mo][0-9]+/.test(location.pathname)) {
+    if (isWatchPageLocation() || isStandalonePlayerLocation()) {
       setTimeout(() => {
         void initializeWatchTracker();
       }, 1e3);
