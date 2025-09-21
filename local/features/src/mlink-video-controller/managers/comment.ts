@@ -27,8 +27,21 @@ export class CommentManager {
   }
 
   private extractVideoIdFromUrl(): string | null {
-    const match = location.pathname.match(/[a-z]{2}\d+/);
-    return match ? match[0] : null;
+    try {
+      const url = new URL(window.location.href);
+      const queryVideoId = url.searchParams.get('videoId');
+      if (queryVideoId && /[a-z]{2}\d+/i.test(queryVideoId)) {
+        return queryVideoId;
+      }
+
+      const pathMatch = url.pathname.match(/[a-z]{2}\d+/i);
+      if (pathMatch) {
+        return pathMatch[0];
+      }
+    } catch (error) {
+      window.logger?.warn('[CommentManager] 動画IDの抽出に失敗しました:', error);
+    }
+    return null;
   }
 
   public async fetchComments(videoId?: string): Promise<boolean> {
@@ -217,3 +230,5 @@ export class CommentManager {
     });
   }
 } 
+
+

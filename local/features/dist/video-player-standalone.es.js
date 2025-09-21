@@ -9340,7 +9340,85 @@ class FilterLogger {
     // リトライ回数
     this.RETRY_DELAY = 1e3;
   }
-  // リトライ間隔（ミリ秒）
+  static {
+    // リトライ間隔（ミリ秒）
+    this.DEBOUNCE_DELAY = 5e3;
+  }
+  static {
+    // 最後のログ追加から送信までの待機時間（ミリ秒）
+    // ログバッファリング用の静的プロパティ
+    this.logBuffer = [];
+  }
+  static {
+    this.sendTimerId = null;
+  }
+  static {
+    this.isLogSendingEnabled = true;
+  }
+  // ログ送信機能の有効/無効フラグ
+  /**
+   * ログ送信機能の有効/無効を設定
+   */
+  static setLogSendingEnabled(enabled) {
+    this.isLogSendingEnabled = enabled;
+    if (!enabled && this.sendTimerId !== null) {
+      clearTimeout(this.sendTimerId);
+      this.sendTimerId = null;
+    }
+  }
+  /**
+   * ログをバッファに追加（重複チェック付き）
+   */
+  static addLogsToBuffer(logs) {
+    if (!this.isLogSendingEnabled || logs.length === 0) {
+      return;
+    }
+    const createLogKey = (log) => {
+      return `${log.videoId}:${log.userId}:${log.comment}:${JSON.stringify(log.filterDetails)}`;
+    };
+    const existingKeys = new Set(this.logBuffer.map(createLogKey));
+    const newLogs = logs.filter((log) => !existingKeys.has(createLogKey(log)));
+    if (newLogs.length > 0) {
+      this.logBuffer.push(...newLogs);
+      window.logger?.debug(`[FilterLogger] Added ${newLogs.length} new logs to buffer (total: ${this.logBuffer.length})`);
+      this.scheduleDebouncedSend();
+    }
+  }
+  /**
+   * debounceされた送信をスケジュール
+   */
+  static scheduleDebouncedSend() {
+    if (this.sendTimerId !== null) {
+      clearTimeout(this.sendTimerId);
+    }
+    this.sendTimerId = window.setTimeout(() => {
+      void this.flushLogBuffer();
+    }, this.DEBOUNCE_DELAY);
+  }
+  /**
+   * バッファ内のログをすぐに送信
+   */
+  static async flushLogBuffer() {
+    if (this.logBuffer.length === 0) {
+      window.logger?.debug("[FilterLogger] No logs in buffer to flush");
+      return;
+    }
+    if (this.sendTimerId !== null) {
+      clearTimeout(this.sendTimerId);
+      this.sendTimerId = null;
+    }
+    const logsToSend = [...this.logBuffer];
+    this.logBuffer = [];
+    window.logger?.info(`[FilterLogger] Flushing ${logsToSend.length} logs from buffer`);
+    try {
+      const success = await this.sendFilterLogs(logsToSend);
+      if (!success) {
+        window.logger?.warn("[FilterLogger] Failed to send some or all logs");
+      }
+    } catch (error) {
+      window.logger?.error("[FilterLogger] Error while flushing log buffer:", error);
+    }
+  }
   /**
    * フィルターログを一括でCommentFilterLogger.javaに送信
    */
@@ -9576,6 +9654,7 @@ class CommentFilter {
   updateSettings(settings) {
     this.settings = settings;
     this.debugMode = settings.debugMode;
+    FilterLogger.setLogSendingEnabled(settings?.logToCommentFilterLogger || false);
   }
   /**
    * メインのフィルタリング処理
@@ -9604,7 +9683,9 @@ class CommentFilter {
       if (this.debugMode) {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
       }
-      void this.sendFilterLogsAsync();
+      if (this.settings?.logToCommentFilterLogger && this.filterLogs.length > 0) {
+        FilterLogger.addLogsToBuffer(this.filterLogs);
+      }
       return filteredData;
     } catch (error) {
       window.logger?.error("[CommentFilter2] Filtering failed:", error);
@@ -9982,41 +10063,6 @@ class CommentFilter {
     return processedComment;
   }
   /**
-   * フィルターログを非同期で送信
-   */
-  async sendFilterLogsAsync() {
-    await Promise.resolve();
-    if (!this.settings?.logToCommentFilterLogger) {
-      if (this.debugMode) {
-        window.logger?.debug("[CommentFilter2] Filter log sending is disabled in settings");
-      }
-      return;
-    }
-    if (this.filterLogs.length === 0) {
-      if (this.debugMode) {
-        window.logger?.debug("[CommentFilter2] No filter logs to send");
-      }
-      return;
-    }
-    try {
-      if (this.debugMode) {
-        window.logger?.info(`[CommentFilter2] Scheduling send of ${this.filterLogs.length} filter logs`);
-      }
-      setTimeout(async () => {
-        try {
-          const success = await FilterLogger.sendFilterLogs(this.filterLogs);
-          if (this.debugMode) {
-            window.logger?.info(`[CommentFilter2] Filter logs send result: ${success ? "success" : "failed"}`);
-          }
-        } catch (error) {
-          window.logger?.warn("[CommentFilter2] Failed to send filter logs:", error);
-        }
-      }, 100);
-    } catch (error) {
-      window.logger?.error("[CommentFilter2] Error in sendFilterLogsAsync:", error);
-    }
-  }
-  /**
    * フィルターログエントリーを追加
    */
   addFilterLog(comment, rule, ruleType, matched, hidden, currentSmid) {
@@ -10077,6 +10123,7 @@ class JsonCommentFilter {
   updateSettings(settings) {
     this.settings = settings;
     this.debugMode = settings.debugMode;
+    FilterLogger.setLogSendingEnabled(settings?.logToCommentFilterLogger || false);
   }
   /**
    * メインのフィルタリング処理（JSON形式ルール対応）
@@ -10105,7 +10152,9 @@ class JsonCommentFilter {
       if (this.debugMode) {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
       }
-      void this.sendFilterLogsAsync();
+      if (this.settings?.logToCommentFilterLogger && this.filterLogs.length > 0) {
+        FilterLogger.addLogsToBuffer(this.filterLogs);
+      }
       return filteredData;
     } catch (error) {
       window.logger?.error("[CommentFilter2] JSON filtering failed:", error);
@@ -10439,41 +10488,6 @@ class JsonCommentFilter {
    */
   setDebugMode(enabled) {
     this.debugMode = enabled;
-  }
-  /**
-   * フィルターログを非同期で送信
-   */
-  async sendFilterLogsAsync() {
-    await Promise.resolve();
-    if (!this.settings?.logToCommentFilterLogger) {
-      if (this.debugMode) {
-        window.logger?.debug("[CommentFilter2] Filter log sending is disabled in settings");
-      }
-      return;
-    }
-    if (this.filterLogs.length === 0) {
-      if (this.debugMode) {
-        window.logger?.debug("[CommentFilter2] No filter logs to send");
-      }
-      return;
-    }
-    try {
-      if (this.debugMode) {
-        window.logger?.info(`[CommentFilter2] Scheduling send of ${this.filterLogs.length} filter logs`);
-      }
-      setTimeout(async () => {
-        try {
-          const success = await FilterLogger.sendFilterLogs(this.filterLogs);
-          if (this.debugMode) {
-            window.logger?.info(`[CommentFilter2] Filter logs send result: ${success ? "success" : "failed"}`);
-          }
-        } catch (error) {
-          window.logger?.warn("[CommentFilter2] Failed to send filter logs:", error);
-        }
-      }, 100);
-    } catch (error) {
-      window.logger?.error("[CommentFilter2] Error in sendFilterLogsAsync:", error);
-    }
   }
   /**
    * フィルターログエントリーを追加
@@ -12240,6 +12254,7 @@ class UIManager {
     try {
       this.currentSettings = await this.storage.getSettings();
       this.filter.setDebugMode(this.currentSettings.debugMode);
+      FilterLogger.setLogSendingEnabled(this.currentSettings.logToCommentFilterLogger ?? false);
     } catch (error) {
       window.logger?.error("[CommentFilter2] Failed to load settings:", error);
     }
@@ -17280,8 +17295,20 @@ class CommentManager {
     return CommentManager.instance;
   }
   extractVideoIdFromUrl() {
-    const match = location.pathname.match(/[a-z]{2}\d+/);
-    return match ? match[0] : null;
+    try {
+      const url = new URL(window.location.href);
+      const queryVideoId = url.searchParams.get("videoId");
+      if (queryVideoId && /[a-z]{2}\d+/i.test(queryVideoId)) {
+        return queryVideoId;
+      }
+      const pathMatch = url.pathname.match(/[a-z]{2}\d+/i);
+      if (pathMatch) {
+        return pathMatch[0];
+      }
+    } catch (error) {
+      window.logger?.warn("[CommentManager] 動画IDの抽出に失敗しました:", error);
+    }
+    return null;
   }
   async fetchComments(videoId) {
     const effectiveVideoId = videoId || this.extractVideoIdFromUrl();
@@ -17553,7 +17580,7 @@ class HeatmapManager {
       const maxAttempts = 50;
       const checkVideoReady = () => {
         attempts++;
-        const videoElement = document.querySelector('video[data-name="video-content"]');
+        const videoElement = document.querySelector('video[data-name="video-content"]') || document.querySelector("#video-element");
         if (videoElement && videoElement.readyState >= 2 && // HAVE_CURRENT_DATA以上
         videoElement.duration > 0 && !videoElement.paused) {
           resolve();
@@ -17571,7 +17598,7 @@ class HeatmapManager {
   }
   createOverlayHeatmapInternal() {
     this.clearAllDisplays();
-    const videoElement = document.querySelector('video[data-name="video-content"]');
+    const videoElement = document.querySelector('video[data-name="video-content"]') || document.querySelector("#video-element");
     if (!videoElement) {
       window.logger.warn("[HeatmapManager] 動画要素が見つかりません");
       return;
@@ -17911,7 +17938,7 @@ class HeatmapManager {
           mutation.addedNodes.forEach((node) => {
             if (node.nodeType === Node.ELEMENT_NODE) {
               const element = node;
-              const videoElement = element.querySelector?.('video[data-name="video-content"]');
+              const videoElement = element.querySelector?.('video[data-name="video-content"]') || element.querySelector?.("#video-element");
               if (videoElement && videoElement !== this.currentVideoElement) {
                 window.logger.info("[HeatmapManager] 新しい動画プレイヤーを検知");
                 this.currentVideoElement = videoElement;
@@ -31427,14 +31454,16 @@ class DeletedVideoDetector {
     this.processingVideoId = null;
     this.currentHandledVideoId = null;
     this.retryTimer = null;
+    this.debounceTimer = null;
+    this.processingLock = false;
     this.handlePopState = () => {
       if (this.isEnabled) {
-        void this.handleUnavailableVideo();
+        this.debouncedHandleUnavailableVideo();
       }
     };
     this.handleDOMContentLoaded = () => {
       if (this.isEnabled) {
-        void this.handleUnavailableVideo();
+        this.debouncedHandleUnavailableVideo();
       }
     };
     void this.initializeNicoCache();
@@ -31468,7 +31497,7 @@ class DeletedVideoDetector {
     this.isEnabled = true;
     this.setupUrlObserver();
     this.setupEventListeners();
-    await this.handleUnavailableVideo();
+    this.debouncedHandleUnavailableVideo();
   }
   /**
    * モジュールを無効化
@@ -31491,11 +31520,16 @@ class DeletedVideoDetector {
         this.processingVideoId = null;
         this.currentHandledVideoId = null;
         this.retryCounts.clear();
+        this.processingLock = false;
         if (this.retryTimer !== null) {
           clearTimeout(this.retryTimer);
           this.retryTimer = null;
         }
-        void this.handleUnavailableVideo();
+        if (this.debounceTimer !== null) {
+          clearTimeout(this.debounceTimer);
+          this.debounceTimer = null;
+        }
+        this.debouncedHandleUnavailableVideo();
       }
     });
     this.observer.observe(document.body, {
@@ -31513,6 +31547,18 @@ class DeletedVideoDetector {
     } else {
       this.handleDOMContentLoaded();
     }
+  }
+  /**
+   * デバウンス処理付きのhandleUnavailableVideo呼び出し
+   */
+  debouncedHandleUnavailableVideo() {
+    if (this.debounceTimer !== null) {
+      clearTimeout(this.debounceTimer);
+    }
+    this.debounceTimer = window.setTimeout(() => {
+      this.debounceTimer = null;
+      void this.handleUnavailableVideo();
+    }, 100);
   }
   /**
    * 削除動画を検出（文言ベースでドキュメント全体を検索）
@@ -31588,19 +31634,24 @@ class DeletedVideoDetector {
    */
   async handleUnavailableVideo() {
     if (!this.isEnabled) return;
+    if (this.processingLock) {
+      window.logger.debug("[DeletedVideoDetector] 別の処理が実行中のためスキップ");
+      return;
+    }
     const videoId = window.location.pathname.match(/watch\/(sm\d+)/)?.[1];
     if (!videoId) return;
-    if (this.processingVideoId && this.processingVideoId === videoId) {
-      window.logger.debug("[DeletedVideoDetector] 同一動画の処理中のためスキップ", videoId);
+    if (this.processingVideoId === videoId || this.currentHandledVideoId === videoId) {
+      window.logger.debug("[DeletedVideoDetector] 既に処理中または処理済み", {
+        videoId,
+        processing: this.processingVideoId === videoId,
+        handled: this.currentHandledVideoId === videoId
+      });
       return;
     }
     if (this.currentHandledVideoId && this.currentHandledVideoId !== videoId) {
       this.currentHandledVideoId = null;
     }
-    if (this.currentHandledVideoId === videoId) {
-      window.logger.debug("[DeletedVideoDetector] 既に削除動画プレーヤーを起動済み", videoId);
-      return;
-    }
+    this.processingLock = true;
     this.processingVideoId = videoId;
     try {
       if (!this.retryCounts.has(videoId)) {
@@ -31614,6 +31665,10 @@ class DeletedVideoDetector {
         apiDetected: isApiUnavailable
       });
       if (isUnavailable || isApiUnavailable) {
+        if (this.currentHandledVideoId === videoId) {
+          window.logger.debug("[DeletedVideoDetector] 非同期処理中に既に起動済みになった", videoId);
+          return;
+        }
         const deletedVideoPlayer = window.NicoCache_nl.deletedVideoPlayer;
         if (!deletedVideoPlayer) {
           const attempts = this.retryCounts.get(videoId) ?? 0;
@@ -31625,6 +31680,7 @@ class DeletedVideoDetector {
               this.retryCounts.set(videoId, attempts + 1);
               this.retryTimer = window.setTimeout(() => {
                 this.retryTimer = null;
+                this.processingLock = false;
                 if (this.isEnabled) {
                   void this.handleUnavailableVideo();
                 }
@@ -31640,11 +31696,11 @@ class DeletedVideoDetector {
         }
         const videoTitle = this.getVideoTitle();
         try {
+          this.currentHandledVideoId = videoId;
           window.logger.info("[DeletedVideoDetector] 削除動画プレーヤーを起動します", {
             videoId,
             videoTitle
           });
-          this.currentHandledVideoId = videoId;
           deletedVideoPlayer.play(videoId, videoTitle);
         } catch (error) {
           window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
@@ -31655,6 +31711,7 @@ class DeletedVideoDetector {
       if (this.processingVideoId === videoId) {
         this.processingVideoId = null;
       }
+      this.processingLock = false;
     }
   }
   /**
@@ -31685,11 +31742,18 @@ class DeletedVideoDetector {
     }
     window.removeEventListener("popstate", this.handlePopState);
     document.removeEventListener("DOMContentLoaded", this.handleDOMContentLoaded);
-    this.retryCounts.clear();
     if (this.retryTimer !== null) {
       clearTimeout(this.retryTimer);
       this.retryTimer = null;
     }
+    if (this.debounceTimer !== null) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    this.retryCounts.clear();
+    this.processingLock = false;
+    this.processingVideoId = null;
+    this.currentHandledVideoId = null;
   }
   /**
    * モジュールの状態を取得

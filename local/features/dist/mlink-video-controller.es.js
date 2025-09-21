@@ -3776,8 +3776,20 @@ class CommentManager {
     return CommentManager.instance;
   }
   extractVideoIdFromUrl() {
-    const match = location.pathname.match(/[a-z]{2}\d+/);
-    return match ? match[0] : null;
+    try {
+      const url = new URL(window.location.href);
+      const queryVideoId = url.searchParams.get("videoId");
+      if (queryVideoId && /[a-z]{2}\d+/i.test(queryVideoId)) {
+        return queryVideoId;
+      }
+      const pathMatch = url.pathname.match(/[a-z]{2}\d+/i);
+      if (pathMatch) {
+        return pathMatch[0];
+      }
+    } catch (error) {
+      window.logger?.warn("[CommentManager] 動画IDの抽出に失敗しました:", error);
+    }
+    return null;
   }
   async fetchComments(videoId) {
     const effectiveVideoId = videoId || this.extractVideoIdFromUrl();
@@ -4049,7 +4061,7 @@ class HeatmapManager {
       const maxAttempts = 50;
       const checkVideoReady = () => {
         attempts++;
-        const videoElement = document.querySelector('video[data-name="video-content"]');
+        const videoElement = document.querySelector('video[data-name="video-content"]') || document.querySelector("#video-element");
         if (videoElement && videoElement.readyState >= 2 && // HAVE_CURRENT_DATA以上
         videoElement.duration > 0 && !videoElement.paused) {
           resolve();
@@ -4067,7 +4079,7 @@ class HeatmapManager {
   }
   createOverlayHeatmapInternal() {
     this.clearAllDisplays();
-    const videoElement = document.querySelector('video[data-name="video-content"]');
+    const videoElement = document.querySelector('video[data-name="video-content"]') || document.querySelector("#video-element");
     if (!videoElement) {
       window.logger.warn("[HeatmapManager] 動画要素が見つかりません");
       return;
@@ -4407,7 +4419,7 @@ class HeatmapManager {
           mutation.addedNodes.forEach((node) => {
             if (node.nodeType === Node.ELEMENT_NODE) {
               const element = node;
-              const videoElement = element.querySelector?.('video[data-name="video-content"]');
+              const videoElement = element.querySelector?.('video[data-name="video-content"]') || element.querySelector?.("#video-element");
               if (videoElement && videoElement !== this.currentVideoElement) {
                 window.logger.info("[HeatmapManager] 新しい動画プレイヤーを検知");
                 this.currentVideoElement = videoElement;

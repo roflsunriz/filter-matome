@@ -168,8 +168,7 @@ export class HeatmapManager {
         attempts++;
         
         // 動画要素を取得
-        const videoElement = document.querySelector('video[data-name="video-content"]') as HTMLVideoElement;
-        
+        const videoElement = document.querySelector('video[data-name="video-content"]') as HTMLVideoElement || document.querySelector('#video-element') as HTMLVideoElement;
         if (videoElement && 
             videoElement.readyState >= 2 && // HAVE_CURRENT_DATA以上
             videoElement.duration > 0 &&
@@ -199,7 +198,7 @@ export class HeatmapManager {
     this.clearAllDisplays();
     
     // 動画要素を取得
-    const videoElement = document.querySelector('video[data-name="video-content"]') as HTMLVideoElement;
+    const videoElement = document.querySelector('video[data-name="video-content"]') as HTMLVideoElement || document.querySelector('#video-element') as HTMLVideoElement;
     if (!videoElement) {
       window.logger.warn('[HeatmapManager] 動画要素が見つかりません');
       return;
@@ -663,7 +662,7 @@ export class HeatmapManager {
           mutation.addedNodes.forEach((node) => {
             if (node.nodeType === Node.ELEMENT_NODE) {
               const element = node as Element;
-              const videoElement = element.querySelector?.('video[data-name="video-content"]') as HTMLVideoElement;
+              const videoElement = element.querySelector?.('video[data-name="video-content"]') as HTMLVideoElement || element.querySelector?.('#video-element') as HTMLVideoElement;
               
               if (videoElement && videoElement !== this.currentVideoElement) {
                 window.logger.info('[HeatmapManager] 新しい動画プレイヤーを検知');
