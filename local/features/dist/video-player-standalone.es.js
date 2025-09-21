@@ -17530,6 +17530,9 @@ class HeatmapManager {
     this.currentVideoElement = null;
     // ResizeObserver管理用を追加
     this.resizeObserver = null;
+    // フルスクリーン状態管理
+    this.isFullscreen = false;
+    this.fullscreenChangeHandler = null;
     // ローカルストレージのキー
     this.STORAGE_KEYS = {
       DISPLAY_MODE: "heatmapDisplayMode",
@@ -17540,6 +17543,7 @@ class HeatmapManager {
     this.apiFetcher = NicoApiFetcher.getInstance();
     this.restoreSettings();
     this.startVideoPlayerObserver();
+    this.startFullscreenObserver();
   }
   static getInstance() {
     if (!HeatmapManager.instance) {
@@ -17641,6 +17645,7 @@ class HeatmapManager {
   }
   createOverlayHeatmapInternal() {
     this.clearAllDisplays();
+    this.injectHeatmapStyles();
     const videoElement = document.querySelector('video[data-name="video-content"]') || document.querySelector("#video-element");
     if (!videoElement) {
       window.logger.warn("[HeatmapManager] 動画要素が見つかりません");
@@ -17658,38 +17663,11 @@ class HeatmapManager {
     });
     this.overlayContainer = document.createElement("div");
     this.overlayContainer.className = "heatmap-overlay-container";
-    this.overlayContainer.style.cssText = `
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 40px;
-      pointer-events: none;
-      z-index: 1000;
-    `;
+    this.applyOverlayContainerStyles(this.overlayContainer);
     this.overlayCanvas = document.createElement("canvas");
     this.overlayCanvas.className = "heatmap-overlay-canvas";
-    this.overlayCanvas.style.cssText = `
-      width: 100%;
-      height: 100%;
-      pointer-events: auto;
-      cursor: pointer;
-    `;
     this.overlayTooltip = document.createElement("div");
     this.overlayTooltip.className = "heatmap-overlay-tooltip";
-    this.overlayTooltip.style.cssText = `
-      position: absolute;
-      display: none;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      pointer-events: none;
-      z-index: 1001;
-      transform: translateX(-50%);
-      bottom: 45px;
-    `;
     this.overlayContainer.appendChild(this.overlayCanvas);
     this.overlayContainer.appendChild(this.overlayTooltip);
     if (getComputedStyle(videoContainer).position === "static") {
@@ -17702,6 +17680,8 @@ class HeatmapManager {
     }
     this.setupOverlayEventListeners();
     this.resizeOverlayCanvas();
+    this.isFullscreen = this.checkFullscreenState();
+    this.applyOverlayContainerStyles(this.overlayContainer);
     this.renderOverlay();
     this.resizeObserver = new ResizeObserver(() => {
       this.resizeOverlayCanvas();
@@ -17744,6 +17724,9 @@ class HeatmapManager {
     });
     this.fabCanvas.addEventListener("click", (e) => {
       if (this.displayMode === "fab") {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         const rect = this.fabCanvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const position = x / rect.width;
@@ -17764,6 +17747,9 @@ class HeatmapManager {
       this.hideTooltip(this.overlayTooltip);
     });
     this.overlayCanvas.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       const rect = this.overlayCanvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const position = x / rect.width;
@@ -18023,10 +18009,175 @@ class HeatmapManager {
       this.videoPlayerObserver = null;
     }
   }
+  // フルスクリーン状態監視を開始
+  startFullscreenObserver() {
+    this.fullscreenChangeHandler = () => {
+      const wasFullscreen = this.isFullscreen;
+      this.isFullscreen = this.checkFullscreenState();
+      if (wasFullscreen !== this.isFullscreen) {
+        window.logger.info("[HeatmapManager] フルスクリーン状態が変更されました:", this.isFullscreen);
+        this.handleFullscreenChange();
+      }
+    };
+    document.addEventListener("fullscreenchange", this.fullscreenChangeHandler);
+    document.addEventListener("webkitfullscreenchange", this.fullscreenChangeHandler);
+    document.addEventListener("mozfullscreenchange", this.fullscreenChangeHandler);
+    document.addEventListener("MSFullscreenChange", this.fullscreenChangeHandler);
+    this.isFullscreen = this.checkFullscreenState();
+  }
+  // フルスクリーン状態監視を停止
+  stopFullscreenObserver() {
+    if (this.fullscreenChangeHandler) {
+      document.removeEventListener("fullscreenchange", this.fullscreenChangeHandler);
+      document.removeEventListener("webkitfullscreenchange", this.fullscreenChangeHandler);
+      document.removeEventListener("mozfullscreenchange", this.fullscreenChangeHandler);
+      document.removeEventListener("MSFullscreenChange", this.fullscreenChangeHandler);
+      this.fullscreenChangeHandler = null;
+    }
+  }
+  // フルスクリーン状態をチェック
+  checkFullscreenState() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+  }
+  // フルスクリーン状態変更時の処理
+  handleFullscreenChange() {
+    if (this.displayMode === "overlay" && this.overlayContainer) {
+      this.applyOverlayContainerStyles(this.overlayContainer);
+      const computedStyle = getComputedStyle(this.overlayContainer);
+      window.logger.info("[HeatmapManager] フルスクリーン状態に応じてオーバーレイスタイルを更新しました:", {
+        isFullscreen: this.isFullscreen,
+        className: this.overlayContainer.className,
+        position: computedStyle.position,
+        bottom: computedStyle.bottom,
+        zIndex: computedStyle.zIndex,
+        visibility: computedStyle.visibility,
+        display: computedStyle.display
+      });
+    }
+  }
+  // ヒートマップ用のCSSスタイルを挿入
+  injectHeatmapStyles() {
+    const styleId = "heatmap-overlay-styles";
+    if (document.getElementById(styleId)) {
+      return;
+    }
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+      /* ヒートマップオーバーレイのベーススタイル */
+      .heatmap-overlay-container {
+        height: 40px;
+        pointer-events: none !important;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      
+      /* 通常時のスタイル */
+      .heatmap-overlay-container.heatmap-windowed {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 998 !important;
+        pointer-events: none !important;
+      }
+      
+      /* フルスクリーン時のスタイル - プレーヤーコントロールより下のレイヤー */
+      .heatmap-overlay-container.heatmap-fullscreen,
+      body .heatmap-overlay-container.heatmap-fullscreen,
+      html .heatmap-overlay-container.heatmap-fullscreen {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        width: 100vw !important;
+        height: 40px !important;
+        z-index: 1999 !important;
+        background: rgba(0, 0, 0, 0.4) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: none !important;
+        visibility: visible !important;
+        display: block !important;
+        pointer-events: none !important;
+      }
+      
+      /* キャンバスのスタイル - ポインターイベントを限定的に有効化 */
+      .heatmap-overlay-canvas {
+        width: 100% !important;
+        height: 100% !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        display: block !important;
+        position: relative !important;
+        z-index: 1 !important;
+      }
+      
+      /* フルスクリーン時のキャンバス */
+      .heatmap-fullscreen .heatmap-overlay-canvas {
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+      
+      /* 通常時のキャンバス */
+      .heatmap-windowed .heatmap-overlay-canvas {
+        pointer-events: auto !important;
+      }
+      
+      /* ツールチップのスタイル */
+      .heatmap-overlay-tooltip {
+        position: absolute;
+        display: none;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        pointer-events: none;
+        z-index: 2147483648;
+        transform: translateX(-50%);
+        bottom: 45px;
+        white-space: nowrap;
+      }
+    `;
+    document.head.appendChild(style);
+    window.logger.info("[HeatmapManager] ヒートマップ用CSSスタイルを挿入しました");
+  }
+  // オーバーレイコンテナのスタイルを適用
+  applyOverlayContainerStyles(container) {
+    container.classList.remove("heatmap-fullscreen", "heatmap-windowed");
+    if (this.isFullscreen) {
+      container.classList.add("heatmap-fullscreen");
+      const videoElement = document.querySelector('video[data-name="video-content"]') || document.querySelector("#video-element");
+      const videoContainer = videoElement?.parentElement;
+      if (videoContainer && container.parentElement !== videoContainer) {
+        videoContainer.appendChild(container);
+        window.logger.info("[HeatmapManager] フルスクリーン時にヒートマップコンテナをフルスクリーン要素内に配置しました");
+      }
+    } else {
+      container.classList.add("heatmap-windowed");
+      const videoElement = document.querySelector('video[data-name="video-content"]') || document.querySelector("#video-element");
+      const videoContainer = videoElement?.parentElement;
+      if (videoContainer && container.parentElement !== videoContainer && videoContainer !== document.body) {
+        if (getComputedStyle(videoContainer).position === "static") {
+          videoContainer.style.position = "relative";
+        }
+        videoContainer.appendChild(container);
+        window.logger.info("[HeatmapManager] 通常時にヒートマップコンテナを動画コンテナに配置しました");
+      }
+    }
+  }
   // インスタンス破棄時の処理
   destroy() {
     this.stopPeriodicUpdate();
     this.stopVideoPlayerObserver();
+    this.stopFullscreenObserver();
     this.clearAllDisplays();
     const allOverlays = document.querySelectorAll(".heatmap-overlay-container");
     allOverlays.forEach((overlay) => {
