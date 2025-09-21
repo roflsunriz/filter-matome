@@ -1,4 +1,5 @@
 import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
+import { isWatchLikePage } from '../utils/page-detect';
 
 /**
  * マトリックス背景モジュール
@@ -106,7 +107,7 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
    * Watch Pageかどうかの判定
    */
   private isWatchPage(): boolean {
-    return /\/watch\//.test(window.location.pathname);
+    return isWatchLikePage();
   }
 
   /**

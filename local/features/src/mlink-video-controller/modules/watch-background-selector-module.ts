@@ -2,6 +2,7 @@ import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types
 import { BackgroundImageSettings } from './background-image-settings';
 import { BackgroundImageItem } from '@/types/background-image-types';
 import { createMaterialIcon } from '../../common/material-icons';
+import { isWatchLikePage } from '../utils/page-detect';
 
 /**
  * 背景セレクターモジュール
@@ -133,7 +134,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
    * Watch Pageかどうかの判定
    */
   private isWatchPage(): boolean {
-    return /\/watch\//.test(window.location.pathname);
+    return isWatchLikePage();
   }
 
   /**
@@ -588,7 +589,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
         background-blend-mode: var(--bg-bl-m);
         background-clip: var(--bg-cl);
         background-color: var(--bg-col);
-        background-image: var(--bg-img);
+        background-image: var(--bg-img) !important;
         background-origin: var(--bg-org);
         background-position: var(--bg-pos);
         background-repeat: var(--bg-rep);

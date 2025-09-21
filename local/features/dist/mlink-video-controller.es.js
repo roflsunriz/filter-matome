@@ -13243,7 +13243,7 @@ class WatchBackgroundSelectorModule {
    * Watch Pageかどうかの判定
    */
   isWatchPage() {
-    return /\/watch\//.test(window.location.pathname);
+    return isWatchLikePage();
   }
   /**
    * Shadow DOM作成
@@ -13631,7 +13631,7 @@ class WatchBackgroundSelectorModule {
         background-blend-mode: var(--bg-bl-m);
         background-clip: var(--bg-cl);
         background-color: var(--bg-col);
-        background-image: var(--bg-img);
+        background-image: var(--bg-img) !important;
         background-origin: var(--bg-org);
         background-position: var(--bg-pos);
         background-repeat: var(--bg-rep);
@@ -13891,7 +13891,7 @@ class WatchMatrixBackgroundModule {
    * Watch Pageかどうかの判定
    */
   isWatchPage() {
-    return /\/watch\//.test(window.location.pathname);
+    return isWatchLikePage();
   }
   /**
    * CSSを読み込み
