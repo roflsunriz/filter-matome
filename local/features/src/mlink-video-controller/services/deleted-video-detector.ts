@@ -15,6 +15,8 @@ export class DeletedVideoDetector {
   private processingVideoId: string | null = null;
   private currentHandledVideoId: string | null = null;
   private retryTimer: number | null = null;
+  private debounceTimer: number | null = null;
+  private processingLock: boolean = false;
 
   private constructor() {
     void this.initializeNicoCache();
@@ -54,8 +56,8 @@ export class DeletedVideoDetector {
     this.setupUrlObserver();
     this.setupEventListeners();
     
-    // 初回チェック
-    await this.handleUnavailableVideo();
+    // 初回チェック（デバウンス付き）
+    this.debouncedHandleUnavailableVideo();
     
     
   }
@@ -87,11 +89,16 @@ export class DeletedVideoDetector {
         this.processingVideoId = null;
         this.currentHandledVideoId = null;
         this.retryCounts.clear();
+        this.processingLock = false;
         if (this.retryTimer !== null) {
           clearTimeout(this.retryTimer);
           this.retryTimer = null;
         }
-        void this.handleUnavailableVideo();
+        if (this.debounceTimer !== null) {
+          clearTimeout(this.debounceTimer);
+          this.debounceTimer = null;
+        }
+        this.debouncedHandleUnavailableVideo();
       }
     });
 
@@ -119,12 +126,26 @@ export class DeletedVideoDetector {
   }
 
   private handlePopState = (): void => {
-    if (this.isEnabled) { void this.handleUnavailableVideo(); }
+    if (this.isEnabled) { this.debouncedHandleUnavailableVideo(); }
   };
 
   private handleDOMContentLoaded = (): void => {
-    if (this.isEnabled) { void this.handleUnavailableVideo(); }
+    if (this.isEnabled) { this.debouncedHandleUnavailableVideo(); }
   };
+
+  /**
+   * デバウンス処理付きのhandleUnavailableVideo呼び出し
+   */
+  private debouncedHandleUnavailableVideo(): void {
+    if (this.debounceTimer !== null) {
+      clearTimeout(this.debounceTimer);
+    }
+    
+    this.debounceTimer = window.setTimeout(() => {
+      this.debounceTimer = null;
+      void this.handleUnavailableVideo();
+    }, 100);
+  }
 
   /**
    * 削除動画を検出（文言ベースでドキュメント全体を検索）
@@ -212,85 +233,105 @@ export class DeletedVideoDetector {
   private async handleUnavailableVideo(): Promise<void> {
     if (!this.isEnabled) return;
 
-    const videoId: string | undefined = window.location.pathname.match(/watch\/(sm\d+)/)?.[1];
-    if (!videoId) return;
-
-    if (this.processingVideoId && this.processingVideoId === videoId) {
-      window.logger.debug('[DeletedVideoDetector] 同一動画の処理中のためスキップ', videoId);
+    // 処理中ロックチェック
+    if (this.processingLock) {
+      window.logger.debug('[DeletedVideoDetector] 別の処理が実行中のためスキップ');
       return;
     }
 
+    const videoId: string | undefined = window.location.pathname.match(/watch\/(sm\d+)/)?.[1];
+    if (!videoId) return;
+
+    // 既に処理中または処理済みの動画IDチェック
+    if (this.processingVideoId === videoId || this.currentHandledVideoId === videoId) {
+      window.logger.debug('[DeletedVideoDetector] 既に処理中または処理済み', { 
+        videoId, 
+        processing: this.processingVideoId === videoId,
+        handled: this.currentHandledVideoId === videoId
+      });
+      return;
+    }
+
+    // 別の動画に移動した場合はリセット
     if (this.currentHandledVideoId && this.currentHandledVideoId !== videoId) {
       this.currentHandledVideoId = null;
     }
 
-    if (this.currentHandledVideoId === videoId) {
-      window.logger.debug('[DeletedVideoDetector] 既に削除動画プレーヤーを起動済み', videoId);
-      return;
-    }
-
+    // 処理ロックを取得
+    this.processingLock = true;
     this.processingVideoId = videoId;
 
     try {
       if (!this.retryCounts.has(videoId)) {
-      this.retryCounts.set(videoId, 0);
-    }
+        this.retryCounts.set(videoId, 0);
+      }
 
-    const isUnavailable: boolean = this.detectUnavailableVideo();
-    const isApiUnavailable: boolean = await this.checkVideoAvailability(videoId);
+      const isUnavailable: boolean = this.detectUnavailableVideo();
+      const isApiUnavailable: boolean = await this.checkVideoAvailability(videoId);
 
-    window.logger.debug('[DeletedVideoDetector] 判定結果', {
-      videoId,
-      domDetected: isUnavailable,
-      apiDetected: isApiUnavailable
-    });
+      window.logger.debug('[DeletedVideoDetector] 判定結果', {
+        videoId,
+        domDetected: isUnavailable,
+        apiDetected: isApiUnavailable
+      });
 
-    if (isUnavailable || isApiUnavailable) {
-      const deletedVideoPlayer = window.NicoCache_nl.deletedVideoPlayer;
-      if (!deletedVideoPlayer) {
-        const attempts = this.retryCounts.get(videoId) ?? 0;
-        if (attempts === 0) {
-          window.logger.warn("[DeletedVideoDetector] 削除動画プレーヤーが利用できません");
+      if (isUnavailable || isApiUnavailable) {
+        // 再度、処理済みチェック（非同期処理中に変更された可能性）
+        if (this.currentHandledVideoId === videoId) {
+          window.logger.debug('[DeletedVideoDetector] 非同期処理中に既に起動済みになった', videoId);
+          return;
         }
 
-        if (attempts < 3) {
-          if (this.retryTimer === null) {
-            this.retryCounts.set(videoId, attempts + 1);
-            this.retryTimer = window.setTimeout(() => {
-              this.retryTimer = null;
-              if (this.isEnabled) {
-                void this.handleUnavailableVideo();
-              }
-            }, 1000);
+        const deletedVideoPlayer = window.NicoCache_nl.deletedVideoPlayer;
+        if (!deletedVideoPlayer) {
+          const attempts = this.retryCounts.get(videoId) ?? 0;
+          if (attempts === 0) {
+            window.logger.warn("[DeletedVideoDetector] 削除動画プレーヤーが利用できません");
           }
+
+          if (attempts < 3) {
+            if (this.retryTimer === null) {
+              this.retryCounts.set(videoId, attempts + 1);
+              this.retryTimer = window.setTimeout(() => {
+                this.retryTimer = null;
+                this.processingLock = false;
+                if (this.isEnabled) {
+                  void this.handleUnavailableVideo();
+                }
+              }, 1000);
+            }
+          }
+          return;
         }
-        return;
-      }
 
-      this.retryCounts.delete(videoId);
-      if (this.retryTimer !== null) {
-        clearTimeout(this.retryTimer);
-        this.retryTimer = null;
-      }
+        this.retryCounts.delete(videoId);
+        if (this.retryTimer !== null) {
+          clearTimeout(this.retryTimer);
+          this.retryTimer = null;
+        }
 
-      const videoTitle = this.getVideoTitle();
+        const videoTitle = this.getVideoTitle();
 
-      try {
-        window.logger.info('[DeletedVideoDetector] 削除動画プレーヤーを起動します', {
-          videoId,
-          videoTitle
-        });
-        this.currentHandledVideoId = videoId;
-        deletedVideoPlayer.play(videoId, videoTitle);
-      } catch (error) {
-        window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
-        this.currentHandledVideoId = null;
+        try {
+          // プレイヤー起動前に状態を設定（二重起動防止）
+          this.currentHandledVideoId = videoId;
+          
+          window.logger.info('[DeletedVideoDetector] 削除動画プレーヤーを起動します', {
+            videoId,
+            videoTitle
+          });
+          
+          deletedVideoPlayer.play(videoId, videoTitle);
+        } catch (error) {
+          window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
+          this.currentHandledVideoId = null;
+        }
       }
-    }
     } finally {
       if (this.processingVideoId === videoId) {
         this.processingVideoId = null;
       }
+      this.processingLock = false;
     }
   }
 
@@ -330,11 +371,21 @@ export class DeletedVideoDetector {
     window.removeEventListener('popstate', this.handlePopState);
     document.removeEventListener('DOMContentLoaded', this.handleDOMContentLoaded);
 
-    this.retryCounts.clear();
+    // タイマーをクリア
     if (this.retryTimer !== null) {
       clearTimeout(this.retryTimer);
       this.retryTimer = null;
     }
+    if (this.debounceTimer !== null) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+
+    // 状態をリセット
+    this.retryCounts.clear();
+    this.processingLock = false;
+    this.processingVideoId = null;
+    this.currentHandledVideoId = null;
   }
 
   /**

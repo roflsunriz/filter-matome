@@ -16008,14 +16008,16 @@ class DeletedVideoDetector {
     this.processingVideoId = null;
     this.currentHandledVideoId = null;
     this.retryTimer = null;
+    this.debounceTimer = null;
+    this.processingLock = false;
     this.handlePopState = () => {
       if (this.isEnabled) {
-        void this.handleUnavailableVideo();
+        this.debouncedHandleUnavailableVideo();
       }
     };
     this.handleDOMContentLoaded = () => {
       if (this.isEnabled) {
-        void this.handleUnavailableVideo();
+        this.debouncedHandleUnavailableVideo();
       }
     };
     void this.initializeNicoCache();
@@ -16049,7 +16051,7 @@ class DeletedVideoDetector {
     this.isEnabled = true;
     this.setupUrlObserver();
     this.setupEventListeners();
-    await this.handleUnavailableVideo();
+    this.debouncedHandleUnavailableVideo();
   }
   /**
    * モジュールを無効化
@@ -16072,11 +16074,16 @@ class DeletedVideoDetector {
         this.processingVideoId = null;
         this.currentHandledVideoId = null;
         this.retryCounts.clear();
+        this.processingLock = false;
         if (this.retryTimer !== null) {
           clearTimeout(this.retryTimer);
           this.retryTimer = null;
         }
-        void this.handleUnavailableVideo();
+        if (this.debounceTimer !== null) {
+          clearTimeout(this.debounceTimer);
+          this.debounceTimer = null;
+        }
+        this.debouncedHandleUnavailableVideo();
       }
     });
     this.observer.observe(document.body, {
@@ -16094,6 +16101,18 @@ class DeletedVideoDetector {
     } else {
       this.handleDOMContentLoaded();
     }
+  }
+  /**
+   * デバウンス処理付きのhandleUnavailableVideo呼び出し
+   */
+  debouncedHandleUnavailableVideo() {
+    if (this.debounceTimer !== null) {
+      clearTimeout(this.debounceTimer);
+    }
+    this.debounceTimer = window.setTimeout(() => {
+      this.debounceTimer = null;
+      void this.handleUnavailableVideo();
+    }, 100);
   }
   /**
    * 削除動画を検出（文言ベースでドキュメント全体を検索）
@@ -16169,19 +16188,24 @@ class DeletedVideoDetector {
    */
   async handleUnavailableVideo() {
     if (!this.isEnabled) return;
+    if (this.processingLock) {
+      window.logger.debug("[DeletedVideoDetector] 別の処理が実行中のためスキップ");
+      return;
+    }
     const videoId = window.location.pathname.match(/watch\/(sm\d+)/)?.[1];
     if (!videoId) return;
-    if (this.processingVideoId && this.processingVideoId === videoId) {
-      window.logger.debug("[DeletedVideoDetector] 同一動画の処理中のためスキップ", videoId);
+    if (this.processingVideoId === videoId || this.currentHandledVideoId === videoId) {
+      window.logger.debug("[DeletedVideoDetector] 既に処理中または処理済み", {
+        videoId,
+        processing: this.processingVideoId === videoId,
+        handled: this.currentHandledVideoId === videoId
+      });
       return;
     }
     if (this.currentHandledVideoId && this.currentHandledVideoId !== videoId) {
       this.currentHandledVideoId = null;
     }
-    if (this.currentHandledVideoId === videoId) {
-      window.logger.debug("[DeletedVideoDetector] 既に削除動画プレーヤーを起動済み", videoId);
-      return;
-    }
+    this.processingLock = true;
     this.processingVideoId = videoId;
     try {
       if (!this.retryCounts.has(videoId)) {
@@ -16195,6 +16219,10 @@ class DeletedVideoDetector {
         apiDetected: isApiUnavailable
       });
       if (isUnavailable || isApiUnavailable) {
+        if (this.currentHandledVideoId === videoId) {
+          window.logger.debug("[DeletedVideoDetector] 非同期処理中に既に起動済みになった", videoId);
+          return;
+        }
         const deletedVideoPlayer = window.NicoCache_nl.deletedVideoPlayer;
         if (!deletedVideoPlayer) {
           const attempts = this.retryCounts.get(videoId) ?? 0;
@@ -16206,6 +16234,7 @@ class DeletedVideoDetector {
               this.retryCounts.set(videoId, attempts + 1);
               this.retryTimer = window.setTimeout(() => {
                 this.retryTimer = null;
+                this.processingLock = false;
                 if (this.isEnabled) {
                   void this.handleUnavailableVideo();
                 }
@@ -16221,11 +16250,11 @@ class DeletedVideoDetector {
         }
         const videoTitle = this.getVideoTitle();
         try {
+          this.currentHandledVideoId = videoId;
           window.logger.info("[DeletedVideoDetector] 削除動画プレーヤーを起動します", {
             videoId,
             videoTitle
           });
-          this.currentHandledVideoId = videoId;
           deletedVideoPlayer.play(videoId, videoTitle);
         } catch (error) {
           window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
@@ -16236,6 +16265,7 @@ class DeletedVideoDetector {
       if (this.processingVideoId === videoId) {
         this.processingVideoId = null;
       }
+      this.processingLock = false;
     }
   }
   /**
@@ -16266,11 +16296,18 @@ class DeletedVideoDetector {
     }
     window.removeEventListener("popstate", this.handlePopState);
     document.removeEventListener("DOMContentLoaded", this.handleDOMContentLoaded);
-    this.retryCounts.clear();
     if (this.retryTimer !== null) {
       clearTimeout(this.retryTimer);
       this.retryTimer = null;
     }
+    if (this.debounceTimer !== null) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    this.retryCounts.clear();
+    this.processingLock = false;
+    this.processingVideoId = null;
+    this.currentHandledVideoId = null;
   }
   /**
    * モジュールの状態を取得
