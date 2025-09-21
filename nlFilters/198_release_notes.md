@@ -110,8 +110,10 @@
 - ✨新機能(New)：     
 - video-playerでmlink-video-controller, comment-filter2, 背景画像モジュール、マトリックス風背景モジュールが動作するように改良した。
 - video-playerでfloating-playerの代わりにスタンドアロンプレイヤーで削除動画が再生できるようにした。
+- #194.1: convert_to_hls.pyを追加。動画をHLS形式に変換するスクリプト。
 - ✅️修正(Fixed)：   
 - 削除動画検出モジュールが動作するように修正。
+- #194.1: comment-filter2のログ送信機能を修正。大量送信を引き起こしていたバグを修正し処理後に一括送信するようにした。
 - 🔴変更(Changed)：           
 - なし
 - ❌️未修正(Unfixed)：     
