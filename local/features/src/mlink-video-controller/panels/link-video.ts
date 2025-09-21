@@ -749,13 +749,18 @@ export class MlinkVideoController extends BasePanel {
     }
 
     // コメントデータの初期取得
-    this.commentManager?.fetchComments().then(() => {
-      // コメントデータ取得後にヒートマップを更新
-      this.heatmapManager?.updateComments();
-      
-    }).catch(error => {
-      window.logger.error('コメントの取得に失敗しました:', error);
-    });
+    this.commentManager?.fetchComments()
+      .then(success => {
+        if (success) {
+          // コメントデータ取得後にヒートマップを更新
+          this.heatmapManager?.updateComments();
+        } else {
+          window.logger.warn('コメントの取得に失敗しました (初期化時)');
+        }
+      })
+      .catch(error => {
+        window.logger.error('コメント取得処理で予期しないエラーが発生しました (初期化時):', error);
+      });
 
     // ===============================
     // 🚀 SPA対応処理を追加
@@ -970,14 +975,20 @@ export class MlinkVideoController extends BasePanel {
       this.initializeHeatmapDetailSettings();
       
       // コメントデータを取得してヒートマップに反映
-      this.commentManager.fetchComments().then(() => {
-        if (this.heatmapManager) {
-          this.heatmapManager.updateComments();
-          
-        }
-      }).catch(error => {
-        window.logger.error('[MlinkVideoController] コメントデータの取得に失敗:', error);
-      });
+      this.commentManager.fetchComments()
+        .then(success => {
+          if (!success) {
+            window.logger.warn('[MlinkVideoController] コメントデータの取得に失敗しました (ヒートマップ更新)');
+            return;
+          }
+
+          if (this.heatmapManager) {
+            this.heatmapManager.updateComments();
+          }
+        })
+        .catch(error => {
+          window.logger.error('[MlinkVideoController] コメント取得処理で予期しないエラーが発生しました (ヒートマップ更新):', error);
+        });
     } else {
       window.logger.warn('[MlinkVideoController] ヒートマップ要素が見つかりません');
     }

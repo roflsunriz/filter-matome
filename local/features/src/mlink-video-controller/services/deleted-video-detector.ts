@@ -116,12 +116,35 @@ export class DeletedVideoDetector {
   };
 
   /**
-   * 削除動画を検出（DOM要素ベース）
+   * 削除動画を検出（文言ベースでドキュメント全体を検索）
+   * パフォーマンスに配慮し、body内のテキストノードのみを走査する
    */
   private detectUnavailableVideo(): boolean {
+    const unavailableMessage = "お探しの動画は視聴できません";
+    // まず、従来の要素検索でヒットすれば即返す
     const errorMessage: Element | null = document.querySelector(".fs_xl.fw_bold");
-    if (errorMessage && errorMessage.textContent === "お探しの動画は視聴できません") {
+    if (errorMessage && errorMessage.textContent === unavailableMessage) {
       return true;
+    }
+    // パフォーマンス配慮のためbody直下のテキストノードのみを走査
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          if (typeof node.nodeValue === "string" && node.nodeValue.includes(unavailableMessage)) {
+            return NodeFilter.FILTER_ACCEPT;
+          }
+          return NodeFilter.FILTER_SKIP;
+        }
+      }
+    );
+    let currentNode = walker.nextNode();
+    while (currentNode) {
+      if (currentNode.nodeValue?.includes(unavailableMessage)) {
+        return true;
+      }
+      currentNode = walker.nextNode();
     }
     return false;
   }
@@ -131,7 +154,7 @@ export class DeletedVideoDetector {
    */
   private async checkVideoAvailability(videoId: string): Promise<boolean> {
     const apiUrl: string = `https://ext.nicovideo.jp/api/getthumbinfo/${videoId}`;
-    
+
     try {
       const response: Response = await fetch(apiUrl);
       const text: string = await response.text();
@@ -145,7 +168,29 @@ export class DeletedVideoDetector {
       }
       return false;
     } catch (error) {
-      window.logger.error('[DeletedVideoDetector] API check failed:', error);
+      window.logger.debug('[DeletedVideoDetector] ext.nicovideo API check failed, fallback to watch page status確認:', error);
+    }
+
+    // Fallback: watchページをHEADリクエストしてHTTPステータスを確認
+    try {
+      const response: Response = await fetch(`https://www.nicovideo.jp/watch/${videoId}`, {
+        method: 'HEAD',
+        credentials: 'include',
+        redirect: 'manual'
+      });
+
+      window.logger.debug('[DeletedVideoDetector] HEAD status check', {
+        videoId,
+        status: response.status
+      });
+
+      if ([400, 403, 404, 410].includes(response.status)) {
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      window.logger.error('[DeletedVideoDetector] watchページのステータス確認に失敗しました:', error);
       return false;
     }
   }
@@ -162,10 +207,53 @@ export class DeletedVideoDetector {
     const isUnavailable: boolean = this.detectUnavailableVideo();
     const isApiUnavailable: boolean = await this.checkVideoAvailability(videoId);
 
+    window.logger.debug('[DeletedVideoDetector] 判定結果', {
+      videoId,
+      domDetected: isUnavailable,
+      apiDetected: isApiUnavailable
+    });
+
     if (isUnavailable || isApiUnavailable) {
-      
-      window.NicoCache_nl.deletedVideoPlayer?.play(videoId, window.NicoCache_nl.watch.apiData.video.title);
+      const deletedVideoPlayer = window.NicoCache_nl.deletedVideoPlayer;
+      if (!deletedVideoPlayer) {
+        window.logger.warn("[DeletedVideoDetector] 削除動画プレーヤーが利用できません");
+        return;
+      }
+
+      const videoTitle = this.getVideoTitle();
+
+      try {
+        window.logger.info('[DeletedVideoDetector] 削除動画プレーヤーを起動します', {
+          videoId,
+          videoTitle
+        });
+        deletedVideoPlayer.play(videoId, videoTitle);
+      } catch (error) {
+        window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
+      }
     }
+  }
+
+  /**
+   * 動画タイトルの取得を試みる（APIデータが無い場合はDOMからフォールバック）
+   */
+  private getVideoTitle(): string | undefined {
+    const titleFromApi = window.NicoCache_nl?.watch?.apiData?.video?.title;
+    if (titleFromApi && titleFromApi.length > 0) {
+      return titleFromApi;
+    }
+
+    const ogTitle = document.querySelector<HTMLMetaElement>("meta[property='og:title']")?.content;
+    if (ogTitle && ogTitle.length > 0) {
+      return ogTitle;
+    }
+
+    const documentTitle = document.title.trim();
+    if (documentTitle.length > 0) {
+      return documentTitle;
+    }
+
+    return undefined;
   }
 
   /**

@@ -17,18 +17,24 @@ export class NicoApiFetcher {
     return NicoApiFetcher.instance;
   }
 
-  public async fetchAll(videoId: string): Promise<void> {
+  public async fetchAll(videoId: string): Promise<boolean> {
     try {
       const res = await window.commonHelper.fetchNicoDataWithComments(videoId);
-      if (!res) throw new Error('統合データの取得に失敗しました');
+      if (!res) {
+        window.logger.warn('[NicoApiFetcher] 統合データの取得に失敗しました (レスポンスなし)');
+        this.comments = [];
+        return false;
+      }
       this.comments = res.comments.map(c => ({
         ...c,
         vposMs: c.vposMs ?? 0,
         postedAt: c.postedAt ? String(c.postedAt) : undefined,
       }));
+      return true;
     } catch (error) {
       window.logger.error('統合データの取得に失敗しました:', error);
-      throw error;
+      this.comments = [];
+      return false;
     }
   }
 

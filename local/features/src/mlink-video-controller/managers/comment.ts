@@ -31,26 +31,33 @@ export class CommentManager {
     return match ? match[0] : null;
   }
 
-  public async fetchComments(videoId?: string): Promise<void> {
+  public async fetchComments(videoId?: string): Promise<boolean> {
     const effectiveVideoId = videoId || this.extractVideoIdFromUrl();
     if (!effectiveVideoId) {
-      throw new Error('動画IDが指定されていません');
+      window.logger?.warn('動画IDが指定されていません');
+      return false;
     }
 
     // 同じ動画IDの場合はスキップ
     if (this.currentVideoId === effectiveVideoId) {
       window.logger?.debug('同じ動画IDのため、コメント取得をスキップしました:', effectiveVideoId);
-      return;
+      return true;
     }
 
     try {
       window.logger?.info('コメントを取得中:', effectiveVideoId);
-      await this.apiFetcher.fetchAll(effectiveVideoId);
+      const success = await this.apiFetcher.fetchAll(effectiveVideoId);
+      if (!success) {
+        window.logger?.warn('コメントの取得に失敗しました (APIレスポンスなし):', effectiveVideoId);
+        return false;
+      }
+
       this.currentVideoId = effectiveVideoId;
       this.notifyDataChanged();
+      return true;
     } catch (error) {
       window.logger.error('コメントの取得に失敗しました:', error);
-      throw error;
+      return false;
     }
   }
 
@@ -132,9 +139,15 @@ export class CommentManager {
       const currentVideoId = this.extractVideoIdFromUrl();
       if (currentVideoId && currentVideoId !== this.currentVideoId) {
         window.logger?.info('URL変更を検出、コメントを再取得:', currentVideoId);
-        this.fetchComments(currentVideoId).catch(error => {
-          window.logger?.error('URL変更時のコメント取得に失敗:', error);
-        });
+        this.fetchComments(currentVideoId)
+          .then(success => {
+            if (!success) {
+              window.logger?.warn('URL変更時のコメント取得に失敗:', currentVideoId);
+            }
+          })
+          .catch(error => {
+            window.logger?.error('URL変更時のコメント取得処理で予期しないエラー:', error);
+          });
       }
     };
 

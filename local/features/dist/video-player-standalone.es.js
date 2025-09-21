@@ -17800,15 +17800,21 @@ class NicoApiFetcher {
   async fetchAll(videoId) {
     try {
       const res = await window.commonHelper.fetchNicoDataWithComments(videoId);
-      if (!res) throw new Error("統合データの取得に失敗しました");
+      if (!res) {
+        window.logger.warn("[NicoApiFetcher] 統合データの取得に失敗しました (レスポンスなし)");
+        this.comments = [];
+        return false;
+      }
       this.comments = res.comments.map((c) => ({
         ...c,
         vposMs: c.vposMs ?? 0,
         postedAt: c.postedAt ? String(c.postedAt) : void 0
       }));
+      return true;
     } catch (error) {
       window.logger.error("統合データの取得に失敗しました:", error);
-      throw error;
+      this.comments = [];
+      return false;
     }
   }
   getComments() {
@@ -17882,20 +17888,26 @@ class CommentManager {
   async fetchComments(videoId) {
     const effectiveVideoId = videoId || this.extractVideoIdFromUrl();
     if (!effectiveVideoId) {
-      throw new Error("動画IDが指定されていません");
+      window.logger?.warn("動画IDが指定されていません");
+      return false;
     }
     if (this.currentVideoId === effectiveVideoId) {
       window.logger?.debug("同じ動画IDのため、コメント取得をスキップしました:", effectiveVideoId);
-      return;
+      return true;
     }
     try {
       window.logger?.info("コメントを取得中:", effectiveVideoId);
-      await this.apiFetcher.fetchAll(effectiveVideoId);
+      const success = await this.apiFetcher.fetchAll(effectiveVideoId);
+      if (!success) {
+        window.logger?.warn("コメントの取得に失敗しました (APIレスポンスなし):", effectiveVideoId);
+        return false;
+      }
       this.currentVideoId = effectiveVideoId;
       this.notifyDataChanged();
+      return true;
     } catch (error) {
       window.logger.error("コメントの取得に失敗しました:", error);
-      throw error;
+      return false;
     }
   }
   getComments() {
@@ -17962,8 +17974,12 @@ class CommentManager {
       const currentVideoId = this.extractVideoIdFromUrl();
       if (currentVideoId && currentVideoId !== this.currentVideoId) {
         window.logger?.info("URL変更を検出、コメントを再取得:", currentVideoId);
-        this.fetchComments(currentVideoId).catch((error) => {
-          window.logger?.error("URL変更時のコメント取得に失敗:", error);
+        this.fetchComments(currentVideoId).then((success) => {
+          if (!success) {
+            window.logger?.warn("URL変更時のコメント取得に失敗:", currentVideoId);
+          }
+        }).catch((error) => {
+          window.logger?.error("URL変更時のコメント取得処理で予期しないエラー:", error);
         });
       }
     };
@@ -24038,10 +24054,14 @@ class MlinkVideoController extends BasePanel {
         });
       }
     }
-    this.commentManager?.fetchComments().then(() => {
-      this.heatmapManager?.updateComments();
+    this.commentManager?.fetchComments().then((success) => {
+      if (success) {
+        this.heatmapManager?.updateComments();
+      } else {
+        window.logger.warn("コメントの取得に失敗しました (初期化時)");
+      }
     }).catch((error) => {
-      window.logger.error("コメントの取得に失敗しました:", error);
+      window.logger.error("コメント取得処理で予期しないエラーが発生しました (初期化時):", error);
     });
     this.commentManager?.startUrlWatching();
     this.commentDataChangedUnsubscribe = this.commentManager?.onDataChanged(() => {
@@ -24193,12 +24213,16 @@ class MlinkVideoController extends BasePanel {
       this.heatmapManager.initialize(heatmapCanvas, heatmapTooltip);
       this.applySavedHeatmapSettings();
       this.initializeHeatmapDetailSettings();
-      this.commentManager.fetchComments().then(() => {
+      this.commentManager.fetchComments().then((success) => {
+        if (!success) {
+          window.logger.warn("[MlinkVideoController] コメントデータの取得に失敗しました (ヒートマップ更新)");
+          return;
+        }
         if (this.heatmapManager) {
           this.heatmapManager.updateComments();
         }
       }).catch((error) => {
-        window.logger.error("[MlinkVideoController] コメントデータの取得に失敗:", error);
+        window.logger.error("[MlinkVideoController] コメント取得処理で予期しないエラーが発生しました (ヒートマップ更新):", error);
       });
     } else {
       window.logger.warn("[MlinkVideoController] ヒートマップ要素が見つかりません");
@@ -32082,12 +32106,33 @@ class DeletedVideoDetector {
     }
   }
   /**
-   * 削除動画を検出（DOM要素ベース）
+   * 削除動画を検出（文言ベースでドキュメント全体を検索）
+   * パフォーマンスに配慮し、body内のテキストノードのみを走査する
    */
   detectUnavailableVideo() {
+    const unavailableMessage = "お探しの動画は視聴できません";
     const errorMessage = document.querySelector(".fs_xl.fw_bold");
-    if (errorMessage && errorMessage.textContent === "お探しの動画は視聴できません") {
+    if (errorMessage && errorMessage.textContent === unavailableMessage) {
       return true;
+    }
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          if (typeof node.nodeValue === "string" && node.nodeValue.includes(unavailableMessage)) {
+            return NodeFilter.FILTER_ACCEPT;
+          }
+          return NodeFilter.FILTER_SKIP;
+        }
+      }
+    );
+    let currentNode = walker.nextNode();
+    while (currentNode) {
+      if (currentNode.nodeValue?.includes(unavailableMessage)) {
+        return true;
+      }
+      currentNode = walker.nextNode();
     }
     return false;
   }
@@ -32108,7 +32153,24 @@ class DeletedVideoDetector {
       }
       return false;
     } catch (error) {
-      window.logger.error("[DeletedVideoDetector] API check failed:", error);
+      window.logger.debug("[DeletedVideoDetector] ext.nicovideo API check failed, fallback to watch page status確認:", error);
+    }
+    try {
+      const response = await fetch(`https://www.nicovideo.jp/watch/${videoId}`, {
+        method: "HEAD",
+        credentials: "include",
+        redirect: "manual"
+      });
+      window.logger.debug("[DeletedVideoDetector] HEAD status check", {
+        videoId,
+        status: response.status
+      });
+      if ([400, 403, 404, 410].includes(response.status)) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      window.logger.error("[DeletedVideoDetector] watchページのステータス確認に失敗しました:", error);
       return false;
     }
   }
@@ -32121,9 +32183,46 @@ class DeletedVideoDetector {
     if (!videoId) return;
     const isUnavailable = this.detectUnavailableVideo();
     const isApiUnavailable = await this.checkVideoAvailability(videoId);
+    window.logger.debug("[DeletedVideoDetector] 判定結果", {
+      videoId,
+      domDetected: isUnavailable,
+      apiDetected: isApiUnavailable
+    });
     if (isUnavailable || isApiUnavailable) {
-      window.NicoCache_nl.deletedVideoPlayer?.play(videoId, window.NicoCache_nl.watch.apiData.video.title);
+      const deletedVideoPlayer = window.NicoCache_nl.deletedVideoPlayer;
+      if (!deletedVideoPlayer) {
+        window.logger.warn("[DeletedVideoDetector] 削除動画プレーヤーが利用できません");
+        return;
+      }
+      const videoTitle = this.getVideoTitle();
+      try {
+        window.logger.info("[DeletedVideoDetector] 削除動画プレーヤーを起動します", {
+          videoId,
+          videoTitle
+        });
+        deletedVideoPlayer.play(videoId, videoTitle);
+      } catch (error) {
+        window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
+      }
     }
+  }
+  /**
+   * 動画タイトルの取得を試みる（APIデータが無い場合はDOMからフォールバック）
+   */
+  getVideoTitle() {
+    const titleFromApi = window.NicoCache_nl?.watch?.apiData?.video?.title;
+    if (titleFromApi && titleFromApi.length > 0) {
+      return titleFromApi;
+    }
+    const ogTitle = document.querySelector("meta[property='og:title']")?.content;
+    if (ogTitle && ogTitle.length > 0) {
+      return ogTitle;
+    }
+    const documentTitle = document.title.trim();
+    if (documentTitle.length > 0) {
+      return documentTitle;
+    }
+    return void 0;
   }
   /**
    * クリーンアップ処理
