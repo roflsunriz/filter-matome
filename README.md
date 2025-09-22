@@ -209,7 +209,7 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 
 ### コミュニティ
 - [NicoCache_nl Wiki](https://w.atwiki.jp/nicocachenlwiki/)
-- [5ちゃんねる 本スレッド](https://find.5ch.net/search?q=NicoCache_nl)
+- [5ちゃんねる 本スレッド](https://find.5ch.net/search?q=NicoCache)
 - [Talk スレッド](https://talk.jp/boards/software/1675038388)
 - [おーぷん2ちゃんねる スレッド](https://ana.open2ch.net/test/read.cgi/software/1675001508/)
 - [LibreJP 開発スレッド](https://sportschan.org/librejp/thread/16592.html)
