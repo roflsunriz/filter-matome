@@ -220,6 +220,8 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 - [Apache Ant](https://ant.apache.org/bindownload.cgi)
 - [Adoptium OpenJDK](https://adoptium.net/temurin/releases/?version=17)
 - [Bouncy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest)
+- [Python](https://www.python.org/downloads/)
+- [Powershell](https://learn.microsoft.com/ja-jp/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5#msi)
 - [WinMerge](https://winmerge.org/?lang=ja)
 - [MediaInfo CLI](https://mediaarea.net/ja/MediaInfo/Download/Windows)
 
