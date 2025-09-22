@@ -74,7 +74,7 @@ export const COMMENT_RENDERER_CONFIG: CommentRendererConfig = {
   OPACITY: 0.75,                   // コメントの不透明度
   COMMENT_DURATION_MS: 6000,       // コメントの表示時間（ミリ秒）
   DEFAULT_FONT_SIZE: 32,           // デフォルトフォントサイズ
-  MIN_FONT_SIZE: 16,               // 最小フォントサイズ
+  MIN_FONT_SIZE: 10,               // 最小フォントサイズ
   DEFAULT_COLOR: "#FFFFFF",        // デフォルト色
   MAX_COMMENT_LENGTH: 75,          // コメント最大文字数（切り捨て用）
   STROKE_WIDTH: 4,                 // 縁取り幅

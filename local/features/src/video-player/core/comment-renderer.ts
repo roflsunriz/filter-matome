@@ -529,7 +529,7 @@ export class CommentRenderer {
    */
   private calculateFontSize(): void {
     if (!this.canvas) return;
-    const targetLines = 11; // 目標の行数
+    const targetLines = 17; // 目標の行数
     const calculatedSize = Math.floor(this.canvas.height / targetLines);
     this.fontSize = Math.max(COMMENT_RENDERER_CONFIG.MIN_FONT_SIZE, calculatedSize);
   }

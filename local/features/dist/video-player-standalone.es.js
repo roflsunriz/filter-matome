@@ -1703,7 +1703,7 @@ const COMMENT_RENDERER_CONFIG = {
   // コメントの表示時間（ミリ秒）
   DEFAULT_FONT_SIZE: 32,
   // デフォルトフォントサイズ
-  MIN_FONT_SIZE: 16,
+  MIN_FONT_SIZE: 10,
   // 最小フォントサイズ
   DEFAULT_COLOR: "#FFFFFF",
   // デフォルト色
@@ -5549,7 +5549,7 @@ class CommentRenderer {
    */
   calculateFontSize() {
     if (!this.canvas) return;
-    const targetLines = 11;
+    const targetLines = 17;
     const calculatedSize = Math.floor(this.canvas.height / targetLines);
     this.fontSize = Math.max(COMMENT_RENDERER_CONFIG.MIN_FONT_SIZE, calculatedSize);
   }
