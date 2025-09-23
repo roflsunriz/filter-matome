@@ -1,5 +1,6 @@
 
 import type { CacheInfoResponse } from '@/types/video-types.js';
+import { URLS } from '../config/constants.js';
 
 type CacheInfoEntry = {
   preferred?: unknown;
@@ -73,6 +74,33 @@ const existsCompletedCache = (entry: CacheInfoEntry): boolean => {
   return false;
 };
 
+/**
+ * CustomCacheReturnerからキャッシュ情報を取得してキャッシュ存在を確認
+ * @param cacheId キャッシュID (so30413239 形式)
+ * @returns キャッシュが存在する場合はtrue
+ */
+const hasCustomCacheForId = async (cacheId: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`${URLS.BASE}/cache/find_cache?${cacheId}`);
+
+    if (!response.ok) {
+      window.logger.warn(`Custom cache search failed for ${cacheId}: ${response.status}`);
+      return false;
+    }
+
+    const data: unknown = await response.json();
+    const availablePaths = (data && typeof data === 'object' && 'paths' in (data as Record<string, unknown>)
+      ? (data as { paths?: unknown }).paths
+      : []) as unknown[];
+
+    // パスが存在すればキャッシュありとみなす
+    return Array.isArray(availablePaths) && availablePaths.length > 0;
+  } catch (error) {
+    window.logger.warn(`Custom cache search error for ${cacheId}:`, error);
+    return false;
+  }
+};
+
 const hasCacheForVideo = async (videoId: string): Promise<boolean> => {
   try {
     const response = await fetch(`${CACHE_INFO_ENDPOINT}${encodeURIComponent(videoId)}`);
@@ -96,7 +124,32 @@ const hasCacheForVideo = async (videoId: string): Promise<boolean> => {
     }
 
     const entry = entryUnknown as CacheInfoEntry;
-    return existsCompletedCache(entry);
+
+    // 既存のロジックでキャッシュ存在を確認
+    if (existsCompletedCache(entry)) {
+      return true;
+    }
+
+    // CustomCacheReturnerから情報を取得して確認
+    // preferred キャッシュIDを使用
+    const preferredValue = entry.preferred;
+    const preferred = typeof preferredValue === 'string' ? preferredValue : '';
+    if (preferred && await hasCustomCacheForId(preferred)) {
+      return true;
+    }
+
+    // caches オブジェクトからキャッシュIDを取得
+    const cachesValue = entry.caches;
+    if (cachesValue && typeof cachesValue === 'object' && !Array.isArray(cachesValue)) {
+      const cacheRecord = cachesValue as Record<string, unknown>;
+      for (const cacheId of Object.keys(cacheRecord)) {
+        if (await hasCustomCacheForId(cacheId)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   } catch (error) {
     window.logger.warn('キャッシュ情報取得中にエラーが発生したためローカルプレイヤーへの遷移をスキップします', error);
     return false;

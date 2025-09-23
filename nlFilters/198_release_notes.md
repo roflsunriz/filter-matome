@@ -113,7 +113,7 @@
 - ✅️修正(Fixed)：   
 - なし
 - 🔴変更(Changed)：           
-- なし
+- #195.1: video-playerでキャッシュ情報APIを使用してキャッシュ情報を取得するようにした。CustomCacheReturnerの情報を取得するようにした。
 - ❌️未修正(Unfixed)：     
 - なし
 - ℹ️その他

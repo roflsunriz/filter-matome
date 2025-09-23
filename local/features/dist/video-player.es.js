@@ -1,3 +1,7 @@
+const URLS = {
+  BASE: "https://www.nicovideo.jp"
+};
+
 const WATCH_HOST_PATTERN = /\.nicovideo\.jp$/;
 const CACHE_INFO_ENDPOINT = "https://www.nicovideo.jp/cache/info/v2?";
 const PLAYER_CHOICE_KEY = "nicocache-player-choice";
@@ -44,6 +48,21 @@ const existsCompletedCache = (entry) => {
   }
   return false;
 };
+const hasCustomCacheForId = async (cacheId) => {
+  try {
+    const response = await fetch(`${URLS.BASE}/cache/find_cache?${cacheId}`);
+    if (!response.ok) {
+      window.logger.warn(`Custom cache search failed for ${cacheId}: ${response.status}`);
+      return false;
+    }
+    const data = await response.json();
+    const availablePaths = data && typeof data === "object" && "paths" in data ? data.paths : [];
+    return Array.isArray(availablePaths) && availablePaths.length > 0;
+  } catch (error) {
+    window.logger.warn(`Custom cache search error for ${cacheId}:`, error);
+    return false;
+  }
+};
 const hasCacheForVideo = async (videoId) => {
   try {
     const response = await fetch(`${CACHE_INFO_ENDPOINT}${encodeURIComponent(videoId)}`);
@@ -64,7 +83,24 @@ const hasCacheForVideo = async (videoId) => {
       return false;
     }
     const entry = entryUnknown;
-    return existsCompletedCache(entry);
+    if (existsCompletedCache(entry)) {
+      return true;
+    }
+    const preferredValue = entry.preferred;
+    const preferred = typeof preferredValue === "string" ? preferredValue : "";
+    if (preferred && await hasCustomCacheForId(preferred)) {
+      return true;
+    }
+    const cachesValue = entry.caches;
+    if (cachesValue && typeof cachesValue === "object" && !Array.isArray(cachesValue)) {
+      const cacheRecord = cachesValue;
+      for (const cacheId of Object.keys(cacheRecord)) {
+        if (await hasCustomCacheForId(cacheId)) {
+          return true;
+        }
+      }
+    }
+    return false;
   } catch (error) {
     window.logger.warn("キャッシュ情報取得中にエラーが発生したためローカルプレイヤーへの遷移をスキップします", error);
     return false;
