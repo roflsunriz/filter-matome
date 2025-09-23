@@ -62,7 +62,7 @@ jobs:
           
           # mime.typesをコピー
           cp local/mime.types release/NicoCache_nl/local/ || echo "Warning: mime.types not found in local folder"
-          
+
           # 空フォルダを確実に含めるため.gitkeepファイルを作成
           touch release/NicoCache_nl/local/cache/.gitkeep || true
           
@@ -87,14 +87,14 @@ jobs:
           find release/NicoCache_nl -name "tsconfig.json" -type f -delete || true
           find release/NicoCache_nl -name ".eslintrc.json" -type f -delete || true
           find release/NicoCache_nl -name "playwright.config.ts" -type f -delete || true
-          
+
           # テスト関連ファイルは除外
           find release/NicoCache_nl -name "tests" -type d -exec rm -rf {} + || true
           find release/NicoCache_nl -name "tests-examples" -type d -exec rm -rf {} + || true
           
           # 7zアーカイブを作成
           cd release
-          7z a -t7z ../NicoCache_nl-${GITHUB_REF#refs/tags/}.7z NicoCache_nl/
+          7z a -t7z ../filter-matome-${GITHUB_REF#refs/tags/}.7z NicoCache_nl/
 
       - name: Extract version from tag
         id: version
@@ -104,13 +104,13 @@ jobs:
         id: release_notes
         run: |
           # リリースノートを生成
-          echo "## 🎉 NicoCache_nl フィルタまとめ${GITHUB_REF#refs/tags/}" > release_notes.md
+          echo "## 🎉 filter-matome ${GITHUB_REF#refs/tags/}" > release_notes.md
           echo "" >> release_notes.md
           echo "### 📦 ダウンロード" >> release_notes.md
-          echo "- **7Z**: \`NicoCache_nl-${GITHUB_REF#refs/tags/}.7z\`" >> release_notes.md
+          echo "- **7Z**: \`filter-matome-${GITHUB_REF#refs/tags/}.7z\`" >> release_notes.md
           echo "" >> release_notes.md
           echo "### 🔄 導入方法" >> release_notes.md
-          echo "1. 既存のNicoCache_nlのバックアップを作成" >> release_notes.md
+          echo "1. 既存のfilter-matomeのバックアップを作成" >> release_notes.md
           echo "2. ダウンロードしたアーカイブを展開" >> release_notes.md
           echo "3. \`nlFilters\`, \`local\`, \`extensions\`フォルダを上書きコピー" >> release_notes.md
           echo "4. 必要に応じて\`mime.types\`を上書きコピー" >> release_notes.md
@@ -129,17 +129,17 @@ jobs:
           
           # 最新のコミットメッセージを追加
           echo "### 📝 このリリースの変更内容" >> release_notes.md
-          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release_notes.md || echo "- フィルタまとめ${GITHUB_REF#refs/tags/} リリース" >> release_notes.md
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release_notes.md || echo "- filter-matome ${GITHUB_REF#refs/tags/} リリース" >> release_notes.md
 
           echo "" >> release_notes.md
           echo "### 📄 nlFilters リリースノート抜粋" >> release_notes.md
-          SECTION_TITLE="### フィルタまとめ${GITHUB_REF#refs/tags/} "
+          SECTION_TITLE="### filter-matome #${GITHUB_REF#refs/tags/} "
           if grep -q "^${SECTION_TITLE}" nlFilters/198_release_notes.md; then
             # 見出し行から次の見出し直前までを抽出
             awk -v t="${SECTION_TITLE}" '
               BEGIN { p=0 }
               $0 ~ "^" t { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
-              p && /^### フィルタまとめ#/ { p=0; print ""; print "</details>" }
+              p && /^### filter-matome #/ { p=0; print ""; print "</details>" }
               p { print }
               END { if (p==1) { print ""; print "</details>" } }
             ' nlFilters/198_release_notes.md >> release_notes.md
@@ -153,12 +153,12 @@ jobs:
           case "$TAG" in
             *.*)
               TAG_MAJOR="${TAG%%.*}"
-              SECTION_TITLE="### フィルタまとめ${TAG_MAJOR} "
+              SECTION_TITLE="### filter-matome #${TAG_MAJOR} "
               if grep -q "^${SECTION_TITLE}" nlFilters/198_release_notes.md; then
                 awk -v t="${SECTION_TITLE}" '
                   BEGIN { p=0 }
                   $0 ~ "^" t { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
-                  p && /^### フィルタまとめ/ { p=0; print ""; print "</details>" }
+                  p && /^### filter-matome #/ { p=0; print ""; print "</details>" }
                   p { print }
                   END { if (p==1) { print ""; print "</details>" } }
                 ' nlFilters/198_release_notes.md >> release_notes.md
@@ -170,7 +170,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            NicoCache_nl-${{ github.ref_name }}.7z
+            filter-matome-${{ github.ref_name }}.7z
           body_path: release_notes.md
           draft: false
           prerelease: false
@@ -181,5 +181,5 @@ jobs:
       - name: Update release badge
         run: |
           echo "✅ Release ${{ github.ref_name }} created successfully!"
-          echo "📦 Archive: NicoCache_nl-${{ github.ref_name }}.7z"
+          echo "📦 Archive: filter-matome-${{ github.ref_name }}.7z"
           echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
