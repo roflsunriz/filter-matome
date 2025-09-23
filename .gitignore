@@ -6,6 +6,7 @@ node_modules/
 # テストや一時ファイル
 tests/
 tests-examples/
+.playwright-mcp/
 playwright.config.ts
 *.bak
 
