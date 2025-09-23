@@ -1,5 +1,6 @@
 const WATCH_HOST_PATTERN = /\.nicovideo\.jp$/;
 const CACHE_INFO_ENDPOINT = "https://www.nicovideo.jp/cache/info/v2?";
+const PLAYER_CHOICE_KEY = "nicocache-player-choice";
 const hasCompletedCache = (entry, cacheId, completesSet) => {
   if (!cacheId) {
     return false;
@@ -69,6 +70,34 @@ const hasCacheForVideo = async (videoId) => {
     return false;
   }
 };
+const getPlayerChoiceSettings = () => {
+  try {
+    const stored = localStorage.getItem(PLAYER_CHOICE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed === "object") {
+        const settings = parsed;
+        return {
+          preference: settings.preference === "standalone" || settings.preference === "official" || settings.preference === "ask" ? settings.preference : "ask",
+          rememberChoice: typeof settings.rememberChoice === "boolean" ? settings.rememberChoice : false
+        };
+      }
+    }
+  } catch (error) {
+    window.logger.warn("プレイヤー選択設定の読み込みに失敗しました", error);
+  }
+  return {
+    preference: "ask",
+    rememberChoice: false
+  };
+};
+const savePlayerChoiceSettings = (settings) => {
+  try {
+    localStorage.setItem(PLAYER_CHOICE_KEY, JSON.stringify(settings));
+  } catch (error) {
+    window.logger.warn("プレイヤー選択設定の保存に失敗しました", error);
+  }
+};
 const isWatchPage = () => {
   return WATCH_HOST_PATTERN.test(window.location.hostname) && window.location.pathname.startsWith("/watch/");
 };
@@ -82,6 +111,92 @@ const buildStandaloneUrl = (videoId, options = {}) => {
     params.set("title", options.title);
   }
   return "/local/features/dist/src/video-player/standalone/index.html?" + params.toString();
+};
+const showPlayerChoice = (_videoId) => {
+  return new Promise((resolve) => {
+    let isResolved = false;
+    let rememberChoice = false;
+    const resolveChoice = (choice) => {
+      if (isResolved) return;
+      isResolved = true;
+      if (rememberChoice) {
+        savePlayerChoiceSettings({
+          preference: choice,
+          rememberChoice: true
+        });
+      }
+      resolve(choice);
+    };
+    const messageHtml = `
+      <div style="margin-bottom: 12px;">
+        <strong>プレイヤーを選択してください</strong>
+      </div>
+      <div style="margin-bottom: 8px;">
+        <button id="btn-standalone-player" style="
+          background: #0066cc; 
+          color: white; 
+          border: none; 
+          padding: 8px 16px; 
+          margin-right: 8px; 
+          border-radius: 4px; 
+          cursor: pointer;
+          font-size: 13px;
+        ">ローカルプレイヤーで再生</button>
+        <button id="btn-official-player" style="
+          background: #666; 
+          color: white; 
+          border: none; 
+          padding: 8px 16px; 
+          border-radius: 4px; 
+          cursor: pointer;
+          font-size: 13px;
+        ">公式プレイヤーで継続</button>
+      </div>
+      <div>
+        <label style="font-size: 12px; color: #ccc; cursor: pointer;">
+          <input type="checkbox" id="remember-choice" style="margin-right: 4px;"> 
+          今後自動で選択する
+        </label>
+      </div>
+    `;
+    const toastElement = window.toastr.info(messageHtml, "キャッシュが利用可能です", {
+      timeOut: 0,
+      // 自動で閉じない
+      closeButton: false,
+      tapToDismiss: false,
+      escapeHtml: false,
+      positionClass: "toast-top-center"
+    });
+    if (!toastElement) {
+      window.logger.warn("トースト通知の作成に失敗しました。デフォルトで公式プレイヤーを使用します。");
+      resolve("official");
+      return;
+    }
+    const standaloneBtn = toastElement.querySelector("#btn-standalone-player");
+    const officialBtn = toastElement.querySelector("#btn-official-player");
+    const rememberCheckbox = toastElement.querySelector("#remember-choice");
+    if (standaloneBtn) {
+      standaloneBtn.addEventListener("click", () => {
+        rememberChoice = rememberCheckbox?.checked ?? false;
+        window.toastr.removeToast(toastElement);
+        resolveChoice("standalone");
+      });
+    }
+    if (officialBtn) {
+      officialBtn.addEventListener("click", () => {
+        rememberChoice = rememberCheckbox?.checked ?? false;
+        window.toastr.removeToast(toastElement);
+        resolveChoice("official");
+      });
+    }
+    setTimeout(() => {
+      if (!isResolved) {
+        window.toastr.removeToast(toastElement);
+        window.logger.info("プレイヤー選択がタイムアウトしました。公式プレイヤーを使用します。");
+        resolveChoice("official");
+      }
+    }, 1e4);
+  });
 };
 const initWatchPageRouter = async () => {
   if (!isWatchPage()) {
@@ -107,14 +222,27 @@ const initWatchPageRouter = async () => {
       window.logger.info("有料動画ですがキャッシュが存在しないためローカルプレイヤーへの遷移をスキップします", videoId);
       return;
     }
-    const targetUrl = buildStandaloneUrl(videoId);
     if (window.location.pathname === "/local/features/dist/src/video-player/standalone/index.html") {
       return;
     }
-    window.logger.info("有料動画かつキャッシュが存在するためローカルプレイヤーへ遷移します", videoId);
-    window.location.href = targetUrl;
+    const settings = getPlayerChoiceSettings();
+    let playerChoice;
+    if (settings.rememberChoice && settings.preference !== "ask") {
+      playerChoice = settings.preference;
+      window.logger.info(`記憶された設定により${playerChoice === "standalone" ? "ローカル" : "公式"}プレイヤーを使用します`, videoId);
+    } else {
+      window.logger.info("有料動画かつキャッシュが存在するためプレイヤー選択を表示します", videoId);
+      playerChoice = await showPlayerChoice(videoId);
+    }
+    if (playerChoice === "standalone") {
+      const targetUrl = buildStandaloneUrl(videoId);
+      window.logger.info("ローカルプレイヤーへ遷移します", videoId);
+      window.location.href = targetUrl;
+    } else {
+      window.logger.info("公式プレイヤーで継続します", videoId);
+    }
   } catch (error) {
-    window.logger.warn("有料動画判定に失敗したため遷移をスキップします", error);
+    window.logger.warn("プレイヤー選択処理に失敗したため公式プレイヤーで継続します", error);
   }
 };
 

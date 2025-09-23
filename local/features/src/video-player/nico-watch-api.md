@@ -126,8 +126,8 @@ export interface Payment {
     isAdmission: boolean;
     isContinuationBenefit: boolean;
     isPremium: boolean;
-    watchableUserType: 'purchaser'|'premium'|'free'|string;
-    commentableUserType: 'purchaser'|'premium'|'free'|string;
+    watchableUserType: 'purchaser'|'member'|'all'|string;
+    commentableUserType: 'purchaser'|'member'|'all'|string;
     billingType: 'custom'|string;
   };
   preview?: {
