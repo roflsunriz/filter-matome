@@ -22,12 +22,7 @@ const ensureNicoCacheBase = (): void => {
           return false;
         }
       },
-      cc: {
-        MainVideoPlayerWidthHeightReturner: async () => {
-          await Promise.resolve();
-          return 0;
-        }
-      },
+      // ccはwindow.commonHelperに移行し、MainVideoPlayerWidthHeightReturnerも不要になったため削除
       handleError: () => {}
     };
   }

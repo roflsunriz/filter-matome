@@ -38,9 +38,6 @@ export interface NicoCache_nlInterface {
   cacheUtil: {
     formatCacheInfo: () => Promise<boolean>;
   };
-  cc: {
-    MainVideoPlayerWidthHeightReturner: (param: string) => Promise<number>;
-  };
   handleError: (context: string, method: string, error: Error) => void;
   deletedVideoPlayer?: DeletedVideoPlayerInterface;
 }
