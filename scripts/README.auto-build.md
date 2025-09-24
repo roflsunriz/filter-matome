@@ -2,16 +2,16 @@
 
 ## 概要
 NicoCacheのビルドを自動化するPowerShellスクリプト群です。
-- `easy_AutoBuild.ps1`: メインプログラムのビルド
-- `easy_ExtensionsAutoBuild.ps1`: 拡張機能のビルド
+- `auto-build.ps1`: メインプログラムのビルド
+- `auto-build-extensions.ps1`: 拡張機能のビルド
 
 ## 主な機能
-### easy_AutoBuild.ps1
+### auto-build.ps1
 - Antを使用したビルド自動化
 - 分かりやすい緑背景の実行画面
 - jarファイルの自動生成
 
-### easy_ExtensionsAutoBuild.ps1
+### auto-build-extensions.ps1
 - 拡張機能の一括コンパイル
 - nlMovieFetcher.javaの選択的コンパイル
 - コンパイルエラーの視覚的表示
@@ -26,12 +26,12 @@ NicoCacheのビルドを自動化するPowerShellスクリプト群です。
 
 ## 使い方
 ### メインプログラムのビルド
-1. `easy_AutoBuild.ps1`を右クリックしてPowerShellで実行を選ぶ
+1. `auto-build.ps1`を右クリックしてPowerShellで実行を選ぶ
 2. ビルド完了まで待機
 3. 完了後、任意のキーを押して終了
 
 ### 拡張機能のビルド
-1. `easy_ExtensionsAutoBuild.ps1`を右クリックしてPowerShellで実行を選ぶ
+1. `auto-build-extensions.ps1`を右クリックしてPowerShellで実行を選ぶ
 2. nlMovieFetcher.javaのコンパイルを選択（y/n）
 3. コンパイル結果を確認
 4. 完了後、任意のキーを押して終了

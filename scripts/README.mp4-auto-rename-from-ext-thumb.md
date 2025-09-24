@@ -1,4 +1,4 @@
-# mp4RenameFromExtThumb.py
+# mp4-auto-rename-from-ext-thumb.py
 
 ## 概要
 ニコニコ動画のキャッシュファイル（mp4）を、動画IDと解像度、音声ビットレート、タイトルを含むファイル名に一括リネームするツールです。
@@ -18,11 +18,11 @@
 
 ## 使い方
 1. プログラムをダウンロードして、NicoCache_nlフォルダに配置してください。
-2. カレントディレクトリをconfig_editor.pyがあるディレクトリに移動してください。
+2. カレントディレクトリをmp4-auto-rename-from-ext-thumb.pyがあるディレクトリに移動してください。
 例 cd C:/NicoCache_nl
 カレントディレクトリを移動した後は、プログラムを起動してください。
 3. コマンドライン(bash)で以下を実行：
-    python mp4RenameFromExtThumb.py
+    python mp4-auto-rename-from-ext-thumb.py
 4. もしくは設定→既定のアプリ→.pyファイルにPythonを関連付ける
     その後 .pyをダブルクリック
 

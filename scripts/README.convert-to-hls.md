@@ -1,7 +1,7 @@
-# HLS変換ツール (convert_to_hls.py)
+# HLS変換ツール (convert-to-hls.py)
 
 ## 概要
-`convert_to_hls.py` は、入力動画が H.264/MP4 の場合は映像・音声をコピーして高速に CMAF 構成の HLS (fMP4) を生成し、それ以外のコーデックは H.264/AAC に再エンコードして同じ構成へ変換する Python スクリプトです。
+`convert-to-hls.py` は、入力動画が H.264/MP4 の場合は映像・音声をコピーして高速に CMAF 構成の HLS (fMP4) を生成し、それ以外のコーデックは H.264/AAC に再エンコードして同じ構成へ変換する Python スクリプトです。
 
 ## 主な機能
 - H.264/MP4 は映像・音声ストリームをコピーして高速変換
@@ -42,25 +42,25 @@
 
 2. 変換したい動画ファイルを指定して実行します。
    ```powershell
-   python convert_to_hls.py "C:\Videos\sample.mp4"
+   python convert-to-hls.py "C:\Videos\sample.mp4"
    ```
    - 出力は入力ファイルと同じ階層に `sample.HLS` フォルダとして生成されます。
 
 3. 複数ファイルをまとめて処理する場合は、フォルダを指定します。
    ```powershell
-   python convert_to_hls.py "D:\BatchTargets" --recursive
+   python convert-to-hls.py "D:\BatchTargets" --recursive
    ```
    - `--recursive` を付けるとサブフォルダも探索します。
 
 4. 出力ルートをまとめたい場合は `--output` を指定します。
    ```powershell
-   python convert_to_hls.py "C:\Videos\movie.mkv" "C:\Videos\clip.mov" --output "D:\HLS-Outputs"
+   python convert-to-hls.py "C:\Videos\movie.mkv" "C:\Videos\clip.mov" --output "D:\HLS-Outputs"
    ```
    - 各ファイルごとに `<ファイル名>.HLS` フォルダが `D:\HLS-Outputs` 配下に作成されます。
 
 5. コマンドだけを確認したい場合は `--dry-run` を利用します。
    ```powershell
-   python convert_to_hls.py "sample.mp4" --dry-run
+   python convert-to-hls.py "sample.mp4" --dry-run
    ```
 
 ## 主なオプション

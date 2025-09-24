@@ -1,7 +1,7 @@
-# ConfigEditor
+# Config-Editor
 
 ## 概要
-ConfigEditorは、プロパティファイル形式の設定ファイルを簡単に編集・管理するためのPythonプログラムです。
+Config-Editorは、プロパティファイル形式の設定ファイルを簡単に編集・管理するためのPythonプログラムです。
 複数の文字コード（UTF-8、Shift-JIS、CP932、EUC-JP）に対応しており、設定ファイルを安全に編集できます。
 
 ## 主な機能
@@ -12,10 +12,10 @@ ConfigEditorは、プロパティファイル形式の設定ファイルを簡�
 - 文字コードの自動判定
 
 ## 使用方法
-カレントディレクトリをconfig_editor.pyがあるディレクトリに移動してください。
+カレントディレクトリをconfig-editor.pyがあるディレクトリに移動してください。
 例 cd C:/NicoCache_nl
 カレントディレクトリを移動した後は、プログラムを起動してください。
-python config_editor.py
+python config-editor.py
 もしくは設定→既定のアプリ→.pyファイルにPythonを関連付ける
 その後 .pyをダブルクリック
 

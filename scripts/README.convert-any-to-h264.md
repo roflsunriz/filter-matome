@@ -1,4 +1,4 @@
-#動画変換ツール (convert_any_to_h264.py)
+#動画変換ツール (convert-any-to-h264.py)
 
 ## 概要
 このツールは、様々な形式の動画ファイルをH.264、HEVC (H.265)、AV1形式に変換できる便利なGUIアプリケーションです！
@@ -22,11 +22,11 @@
 
 ## 使い方
 1. プログラムを起動する
-- カレントディレクトリをconfig_editor.pyがあるディレクトリに移動してください。
+- カレントディレクトリをconvert-any-to-h264.pyがあるディレクトリに移動してください。
     例 cd C:/NicoCache_nl
 - カレントディレクトリを移動した後は、プログラムを起動してください。
-    python autoUpdater.py
-    pythonw autoUpdater.py (ウィンドウモードで起動)
+    python convert-any-to-h264.py
+    pythonw convert-any-to-h264.py (ウィンドウモードで起動)
 - もしくは設定→既定のアプリ→.pyファイルにPythonを関連付ける
 - その後 .pyをダブルクリック
 2. 以下のいずれかの方法でファイルを追加:

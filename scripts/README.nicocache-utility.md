@@ -1,7 +1,7 @@
-# NicoCache Utility
+# NicoCache-Utility
 
 ## 概要
-NicoCache Utilityは、NicoCacheの運用・管理を支援するPythonスクリプトです。Java環境の設定、証明書の管理、プロキシ設定など、複雑な作業を簡単に実行できます。
+NicoCache-Utilityは、NicoCacheの運用・管理を支援するPythonスクリプトです。Java環境の設定、証明書の管理、プロキシ設定など、複雑な作業を簡単に実行できます。
 
 ## 主な機能
 - NicoCacheの起動管理（最小化起動、GUI起動）
@@ -23,10 +23,10 @@ NicoCache Utilityは、NicoCacheの運用・管理を支援するPythonスクリ
 
 ## 使い方
 1. スクリプトを実行します：
-- カレントディレクトリをnicocache_utility.pyがあるディレクトリに移動してください。
+- カレントディレクトリをnicocache-utility.pyがあるディレクトリに移動してください。
     例 cd C:/NicoCache_nl
 - カレントディレクトリを移動した後は、プログラムを起動します。
-    python nicocache_utility.py
+    python nicocache-utility.py
 - もしくは設定→既定のアプリ→.pyファイルにPythonを関連付ける
 - その後 .pyをダブルクリック
 

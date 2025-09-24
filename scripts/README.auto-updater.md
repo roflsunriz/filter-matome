@@ -28,8 +28,8 @@ NicoCacheの自動更新ツールです。本体とフィルタの更新を自�
 カレントディレクトリをconfig_editor.pyがあるディレクトリに移動してください。
 例 cd C:/NicoCache_nl
 カレントディレクトリを移動した後は、プログラムを起動してください。
-python autoUpdater.py
-pythonw autoUpdater.py (ウィンドウモードで起動)
+python auto-updater.py
+pythonw auto-updater.py (ウィンドウモードで起動)
 もしくは設定→既定のアプリ→.pyファイルにPythonを関連付ける
 その後 .pyをダブルクリック
 
