@@ -646,7 +646,7 @@ def create_scheduled_task():
              '/RU', 'Users', 
              '/SC', 'ONLOGON', 
              '/TN', 'NicoCache_nl_AutoLaunch', 
-             '/TR', 'cmd.exe /c "cd /d C:\\NicoCache_nl && NicoCacheGUILauncher.bat"'
+             '/TR', 'cmd.exe /c "cd /d C:\\NicoCache_nl && nicocache-gui-launcher.bat"'
             ],
             capture_output=True,
             text=True
@@ -761,7 +761,7 @@ def open_adoptium():
 def show_menu():
     print("=== NicoCache Utility ===")
     print("1. NicoCache_nl.batを最小化状態で起動")
-    print("2. NicoCacheGUILauncher.batを起動")
+    print("2. nicocache-gui-launcher.batを起動")
     print("3. java.exeとjavaw.exeを強制終了")
     print("4. ant extract jarを実行")
     print("5. 拡張機能(extensions)をコンパイル")
