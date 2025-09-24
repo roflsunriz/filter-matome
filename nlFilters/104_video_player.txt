@@ -1,11 +1,12 @@
 # nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
 
-#キャッシュ済みの有料動画(視聴期限切れ)などをコメント付きで視聴するための機能。
-#正しいIDを動画ファイルに指定し、cacheフォルダに置くことで任意の動画に任意のコメントを被せて
-#視聴することも可能。
-#mlink-video-controller内のモジュールのdeleted-video-detectorで削除済み動画を検知し、
-#その動画をこのプレイヤーで再生する機能も有する。
-#Requires common.es.js
+# キャッシュ済みの有料動画(視聴期限切れ)などをコメント付きで視聴するための機能。
+# 正しいIDを動画ファイルに指定し、local/cacheまたはcacheフォルダに置くことで任意の動画に任意のコメントを被せて
+# 視聴することも可能。mp4-auto-rename-from-ext-thumb.pyを使用して動画ファイル名を動画IDに変更することを推奨。
+# local/cacheにキャッシュファイルを置く場合のファイル命名規則は動画ID.mp4または動画ID.hlsのみ。
+# mlink-video-controller内のモジュールのdeleted-video-detectorで削除済み動画を検知し、
+# その動画をこのプレイヤーで再生する機能も有する。
+# Requires common.es.js
 [Replace]
 Name = 有料動画でのキャッシュ利用（公式動画ページ用）
 FullURL = https?://www\.nicovideo\.jp\/watch\/.*?

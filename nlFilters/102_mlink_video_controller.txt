@@ -1,7 +1,7 @@
 # nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
 
-#カスタムマイリスト2やサムネイル動画非表示の設定画面起動、メディア情報表示、リンクなどを提供する。
-#Requires common.es.js
+# mylist2やサムネイル動画非表示の設定画面起動、メディア情報表示、リンクなどを提供する。
+# Requires common.es.js
 [Replace]
 Name = Multi Link Video Controller（ニコニコ動画全体用）
 FullURL = https?:\/\/(?:www|q|qa|news|3d|koken|commons|ch|anime|live|live2|dic|seiga|site|blog|account|creator-support)\.nicovideo\.jp\/.*
