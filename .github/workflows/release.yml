@@ -134,7 +134,7 @@ jobs:
           echo "" >> release_notes.md
           echo "### 📄 nlFilters リリースノート抜粋" >> release_notes.md
           SECTION_TITLE="### filter-matome #${GITHUB_REF#refs/tags/} "
-          if grep -q "^${SECTION_TITLE}" nlFilters/198_release_notes.md; then
+          if grep -qF -- "^${SECTION_TITLE}" nlFilters/198_release_notes.md; then
             # 見出し行から次の見出し直前までを抽出
             awk -v t="${SECTION_TITLE}" '
               BEGIN { p=0 }
@@ -154,7 +154,7 @@ jobs:
             *.*)
               TAG_MAJOR="${TAG%%.*}"
               SECTION_TITLE="### filter-matome #${TAG_MAJOR} "
-              if grep -q "^${SECTION_TITLE}" nlFilters/198_release_notes.md; then
+              if grep -qF -- "^${SECTION_TITLE}" nlFilters/198_release_notes.md; then
                 awk -v t="${SECTION_TITLE}" '
                   BEGIN { p=0 }
                   $0 ~ "^" t { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
