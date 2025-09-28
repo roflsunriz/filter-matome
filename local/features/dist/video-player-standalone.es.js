@@ -29372,15 +29372,15 @@ class WatchBackgroundSelectorModule {
        * 背景画像適用（bodyに対して）
        *-------------------------*/
       body {
-        background-attachment: var(--bg-att);
-        background-blend-mode: var(--bg-bl-m);
-        background-clip: var(--bg-cl);
-        background-color: var(--bg-col);
+        background-attachment: var(--bg-att) !important;
+        background-blend-mode: var(--bg-bl-m) !important;
+        background-clip: var(--bg-cl) !important;
+        background-color: var(--bg-col) !important;
         background-image: var(--bg-img) !important;
-        background-origin: var(--bg-org);
-        background-position: var(--bg-pos);
-        background-repeat: var(--bg-rep);
-        background-size: var(--bg-siz);
+        background-origin: var(--bg-org) !important;
+        background-position: var(--bg-pos) !important;
+        background-repeat: var(--bg-rep) !important;
+        background-size: var(--bg-siz) !important;
       }
     `;
     document.head.appendChild(style);
