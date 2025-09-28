@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #196 (2025/09/29) リリースノート](#filter-matome-196-20250929-リリースノート)
 - [filter-matome #195 (2025/09/23) リリースノート](#filter-matome-195-20250923-リリースノート)
 - [filter-matome #194 (2025/09/21) リリースノート](#filter-matome-194-20250921-リリースノート)
 - [filter-matome #193 (2025/09/19) リリースノート](#filter-matome-193-20250919-リリースノート)
@@ -106,6 +107,20 @@
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
 
+### filter-matome #196 (2025/09/29) リリースノート
+
+- ✨新機能(New)：     
+- mlink-video-controllerでタブセッション制限緩和モジュールを追加。
+- video-playerで共通ヘッダを追加。背景画像のCSSに!importantを追加して確実に上書きされるようにした。
+- ✅️修正(Fixed)：   
+- なし
+- 🔴変更(Changed)：           
+- video-playerでコメントリストのヘッダを削除。
+- ❌️未修正(Unfixed)：     
+- なし
+- ℹ️その他(Others)：     
+- スクリプトのファイル名をケバブケースに統一。
+
 ### filter-matome #195 (2025/09/23) リリースノート
 
 - ✨新機能(New)：     
@@ -116,7 +131,8 @@
 - #195.1: video-playerでキャッシュ情報APIを使用してキャッシュ情報を取得するようにした。CustomCacheReturnerの情報を取得するようにした。
 - ❌️未修正(Unfixed)：     
 - なし
-- ℹ️その他
+- ℹ️その他(Others)：     
+- なし
 
 ### filter-matome #194 (2025/09/21) リリースノート
 
