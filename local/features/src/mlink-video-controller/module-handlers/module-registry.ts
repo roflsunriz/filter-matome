@@ -114,6 +114,18 @@ export class ModuleRegistry {
       icon: createMaterialIcon('edit', { style: 'outlined', color: 'white' })
     });
 
+    this.registerModule({
+      id: 'watch_tab_sessions',
+      name: 'タブセッション拡張',
+      description: 'Watchページのタブセッション制限を緩和します',
+      version: '1.0.0',
+      enabled: false,
+      targetPages: [PageType.WATCH],
+      dependencies: [],
+      category: ModuleCategory.FUNCTIONALITY,
+      icon: createMaterialIcon('tab', { style: 'outlined', color: 'white' })
+    });
+
     // Thumbnails Filter モジュール
     this.registerModule({
       id: 'thumbnails_filter',

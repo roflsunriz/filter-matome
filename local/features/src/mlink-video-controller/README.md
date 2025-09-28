@@ -30,6 +30,7 @@ features/src/mlink-video-controller/
 │   ├── watch-background-selector-module.ts # 背景セレクター (28KB)
 │   ├── watch-matrix-background-module.ts # マトリックス背景 (7.2KB)
 │   ├── watch-mylist-selector-module.ts   # マイリストセレクタ (6.1KB)
+│   ├── watch-tab-sessions-module.ts      # タブセッション拡張 (12KB)
 │   └── watch-page-module.ts              # Watchページ統合 (26KB)
 ├── panels/
 │   ├── base.ts                           # ベースパネル (6.1KB)
@@ -167,12 +168,18 @@ UI更新
   - **🆕 自動バックアップ**: 5世代自動バックアップ・リストア機能
 - **編集タイミング**: 画像管理機能拡張、新しい画像形式対応、マイグレーション処理追加
 
+#### `modules/watch-tab-sessions-module.ts` - タブセッション拡張（12KB）
+- **役割**: localStorage 読み取りをフィルタしてタブセッション上限を実質的に緩和
+- **機能**: getItem/storageイベントのフック、プロパティアクセサ上書き、自タブ優先フィルタ、解析失敗時の安全なフォールバック
+- **編集タイミング**: フィルタポリシー調整、対象キー変更、互換性検証が必要なとき
+
 #### その他モジュール
 - `header-module.ts` - ヘッダープライバシー機能
 - `search-page-module.ts` - 検索結果8列表示
 - `nico-info-page-module.ts` - ニコインフォページ機能
 - `watch-matrix-background-module.ts` - マトリックス背景
 - `watch-mylist-selector-module.ts` - マイリストセレクタ
+- `watch-tab-sessions-module.ts` - タブセッション読み取りフィルタ
 - `deleted-video-detector-module.ts` - 削除動画検出
 
 ### 🔌 **サービス層**

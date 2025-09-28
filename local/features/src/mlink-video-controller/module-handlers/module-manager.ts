@@ -437,6 +437,12 @@ export class ModuleManager {
           break;
         }
 
+        case 'watch_tab_sessions': {
+          const { WatchTabSessionsModule } = await import('../modules/watch-tab-sessions-module');
+          instance = new WatchTabSessionsModule(config);
+          break;
+        }
+
         case 'thumbnails_filter': {
           const { ThumbnailsFilterModule } = await import('../modules/thumbnails-filter-module');
           instance = new ThumbnailsFilterModule(config);

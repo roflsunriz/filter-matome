@@ -18663,6 +18663,17 @@ class ModuleRegistry {
       icon: createMaterialIcon("edit", { style: "outlined", color: "white" })
     });
     this.registerModule({
+      id: "watch_tab_sessions",
+      name: "タブセッション拡張",
+      description: "Watchページのタブセッション制限を緩和します",
+      version: "1.0.0",
+      enabled: false,
+      targetPages: [PageType.WATCH],
+      dependencies: [],
+      category: ModuleCategory.FUNCTIONALITY,
+      icon: createMaterialIcon("tab", { style: "outlined", color: "white" })
+    });
+    this.registerModule({
       id: "thumbnails_filter",
       name: "サムネイルフィルター",
       description: "キーワードに基づいて動画サムネイルを非表示にします",
@@ -19053,6 +19064,11 @@ class ModuleManager {
         case "watch_mylist_selector": {
           const { WatchMylistSelectorModule } = await __vitePreload(async () => { const { WatchMylistSelectorModule } = await Promise.resolve().then(() => watchMylistSelectorModule);return { WatchMylistSelectorModule }},true              ?void 0:void 0);
           instance = new WatchMylistSelectorModule(config);
+          break;
+        }
+        case "watch_tab_sessions": {
+          const { WatchTabSessionsModule } = await __vitePreload(async () => { const { WatchTabSessionsModule } = await Promise.resolve().then(() => watchTabSessionsModule);return { WatchTabSessionsModule }},true              ?void 0:void 0);
+          instance = new WatchTabSessionsModule(config);
           break;
         }
         case "thumbnails_filter": {
@@ -31089,6 +31105,368 @@ class WatchMylistSelectorModule {
 const watchMylistSelectorModule = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
 	__proto__: null,
 	WatchMylistSelectorModule
+}, Symbol.toStringTag, { value: 'Module' }));
+
+class WatchTabSessionsModule {
+  constructor(config) {
+    this.originalGetItemRef = null;
+    this.originalSetItemRef = null;
+    this.originalRemoveItemRef = null;
+    this.boundGetItem = null;
+    this.boundSetItem = null;
+    this.boundRemoveItem = null;
+    this.originalPropertyDescriptor = null;
+    this.storageListener = null;
+    this.dispatchingSyntheticEvent = false;
+    this.parseErrorLogged = false;
+    this.ownSessionKey = null;
+    this.isModuleActive = false;
+    this.config = config;
+  }
+  static {
+    this.TARGET_KEY = "nvpc:watch:tab-sessions";
+  }
+  static {
+    this.MAX_VISIBLE_SESSIONS = 3;
+  }
+  async initialize() {
+    if (this.isModuleActive) {
+      await Promise.resolve();
+      return;
+    }
+    if (!isWatchLikePage()) {
+      await Promise.resolve();
+      return;
+    }
+    try {
+      this.overrideStorageAPIs();
+      this.registerStorageListener();
+      this.isModuleActive = true;
+    } catch (error) {
+      window.logger?.error("[WatchTabSessionsModule] 初期化に失敗しました", error);
+      this.restoreOverrides();
+      throw error;
+    }
+  }
+  destroy() {
+    if (!this.isModuleActive) return;
+    this.restoreOverrides();
+    this.isModuleActive = false;
+  }
+  isActive() {
+    return this.isModuleActive;
+  }
+  getStatus() {
+    return this.isModuleActive ? ModuleStatus.ACTIVE : ModuleStatus.INACTIVE;
+  }
+  overrideStorageAPIs() {
+    this.overrideGetItem();
+    this.overrideSetItem();
+    this.overrideRemoveItem();
+    this.overrideDirectPropertyAccess();
+  }
+  overrideGetItem() {
+    if (this.originalGetItemRef) return;
+    this.originalGetItemRef = localStorage.getItem;
+    this.boundGetItem = localStorage.getItem.bind(localStorage);
+    localStorage.getItem = (key) => {
+      const rawValue = this.boundGetItem ? this.boundGetItem(key) : this.originalGetItemRef ? this.originalGetItemRef.call(localStorage, key) : null;
+      if (!this.shouldFilter(key)) {
+        return rawValue;
+      }
+      return this.filterSessions(rawValue);
+    };
+  }
+  overrideSetItem() {
+    if (this.originalSetItemRef) return;
+    this.originalSetItemRef = localStorage.setItem;
+    this.boundSetItem = localStorage.setItem.bind(localStorage);
+    localStorage.setItem = (key, value) => {
+      let previousRaw = null;
+      if (this.shouldFilter(key)) {
+        previousRaw = this.getRawValue();
+      }
+      if (this.boundSetItem) {
+        this.boundSetItem(key, value);
+      } else {
+        this.originalSetItemRef?.call(localStorage, key, value);
+      }
+      if (this.shouldFilter(key)) {
+        this.identifyOwnSession(previousRaw, value);
+      }
+    };
+  }
+  overrideRemoveItem() {
+    if (this.originalRemoveItemRef) return;
+    this.originalRemoveItemRef = localStorage.removeItem;
+    this.boundRemoveItem = localStorage.removeItem.bind(localStorage);
+    localStorage.removeItem = (key) => {
+      if (this.boundRemoveItem) {
+        this.boundRemoveItem(key);
+      } else {
+        this.originalRemoveItemRef?.call(localStorage, key);
+      }
+      if (this.shouldFilter(key)) {
+        this.ownSessionKey = null;
+      }
+    };
+  }
+  overrideDirectPropertyAccess() {
+    if (this.originalPropertyDescriptor) return;
+    try {
+      this.originalPropertyDescriptor = Object.getOwnPropertyDescriptor(localStorage, WatchTabSessionsModule.TARGET_KEY) || null;
+      Object.defineProperty(localStorage, WatchTabSessionsModule.TARGET_KEY, {
+        configurable: true,
+        enumerable: true,
+        get: () => this.filterSessions(this.getRawValue()),
+        set: (value) => {
+          const nextValue = String(value);
+          if (this.boundSetItem) {
+            this.boundSetItem(WatchTabSessionsModule.TARGET_KEY, nextValue);
+          } else {
+            this.originalSetItemRef?.call(localStorage, WatchTabSessionsModule.TARGET_KEY, nextValue);
+          }
+        }
+      });
+    } catch (error) {
+      window.logger?.warn("[WatchTabSessionsModule] プロパティオーバーライドに失敗しました", error);
+    }
+  }
+  registerStorageListener() {
+    if (this.storageListener) return;
+    this.storageListener = (event) => {
+      if (this.dispatchingSyntheticEvent) {
+        return;
+      }
+      if (!event || !this.shouldFilter(event.key)) {
+        return;
+      }
+      const sanitizedNewValue = this.filterSessions(event.newValue);
+      const sanitizedOldValue = this.filterSessions(event.oldValue);
+      if (sanitizedNewValue === event.newValue && sanitizedOldValue === event.oldValue) {
+        return;
+      }
+      try {
+        event.stopImmediatePropagation?.();
+      } catch (stopError) {
+        window.logger?.warn("[WatchTabSessionsModule] StorageEventの伝播停止に失敗しました", stopError);
+      }
+      this.dispatchSyntheticStorageEvent(event, sanitizedNewValue, sanitizedOldValue);
+    };
+    window.addEventListener("storage", this.storageListener, true);
+  }
+  dispatchSyntheticStorageEvent(event, newValue, oldValue) {
+    const init = {
+      key: event.key ?? WatchTabSessionsModule.TARGET_KEY,
+      newValue,
+      oldValue,
+      url: event.url,
+      storageArea: event.storageArea ?? localStorage
+    };
+    this.dispatchingSyntheticEvent = true;
+    try {
+      let syntheticEvent;
+      if (typeof StorageEvent === "function") {
+        syntheticEvent = new StorageEvent("storage", init);
+      } else {
+        const legacyEvent = document.createEvent("StorageEvent");
+        legacyEvent.initStorageEvent(
+          "storage",
+          false,
+          false,
+          init.key ?? null,
+          init.oldValue ?? null,
+          init.newValue ?? null,
+          init.url ?? document.URL,
+          init.storageArea ?? localStorage
+        );
+        syntheticEvent = legacyEvent;
+      }
+      window.dispatchEvent(syntheticEvent);
+    } catch (error) {
+      window.logger?.error("[WatchTabSessionsModule] StorageEventの再発行に失敗しました", error);
+    } finally {
+      this.dispatchingSyntheticEvent = false;
+    }
+  }
+  restoreOverrides() {
+    if (this.storageListener) {
+      window.removeEventListener("storage", this.storageListener, true);
+      this.storageListener = null;
+    }
+    if (this.originalGetItemRef) {
+      localStorage.getItem = this.originalGetItemRef;
+      this.originalGetItemRef = null;
+      this.boundGetItem = null;
+    }
+    if (this.originalSetItemRef) {
+      localStorage.setItem = this.originalSetItemRef;
+      this.originalSetItemRef = null;
+      this.boundSetItem = null;
+    }
+    if (this.originalRemoveItemRef) {
+      localStorage.removeItem = this.originalRemoveItemRef;
+      this.originalRemoveItemRef = null;
+      this.boundRemoveItem = null;
+    }
+    if (this.originalPropertyDescriptor) {
+      try {
+        Object.defineProperty(localStorage, WatchTabSessionsModule.TARGET_KEY, this.originalPropertyDescriptor);
+      } catch (error) {
+        window.logger?.warn("[WatchTabSessionsModule] プロパティ復元に失敗しました", error);
+      }
+      this.originalPropertyDescriptor = null;
+    } else {
+      try {
+        delete localStorage[WatchTabSessionsModule.TARGET_KEY];
+      } catch {
+      }
+    }
+  }
+  filterSessions(rawValue) {
+    if (rawValue === null || rawValue === "") {
+      return rawValue;
+    }
+    const entries = this.parseSessions(rawValue);
+    if (entries === null) {
+      return rawValue;
+    }
+    if (entries.length <= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) {
+      return rawValue;
+    }
+    const selected = this.selectEntries(entries);
+    const filtered = {};
+    for (const entry of selected) {
+      filtered[entry.key] = entry.value;
+    }
+    try {
+      return JSON.stringify(filtered);
+    } catch (error) {
+      window.logger?.warn("[WatchTabSessionsModule] フィルタ結果のシリアライズに失敗しました", error);
+      return rawValue;
+    }
+  }
+  parseSessions(rawValue) {
+    if (!rawValue) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(rawValue);
+      if (!parsed || typeof parsed !== "object") {
+        return null;
+      }
+      return Object.entries(parsed).map(([key, value], index) => ({
+        key,
+        value,
+        index
+      }));
+    } catch (error) {
+      if (!this.parseErrorLogged) {
+        window.logger?.warn("[WatchTabSessionsModule] タブセッション情報の解析に失敗しました", error);
+        this.parseErrorLogged = true;
+      }
+      return null;
+    }
+  }
+  selectEntries(entries) {
+    const selected = [];
+    const seen = /* @__PURE__ */ new Set();
+    const push = (entry) => {
+      if (!entry) return;
+      if (seen.has(entry.key)) return;
+      if (selected.length >= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) return;
+      selected.push(entry);
+      seen.add(entry.key);
+    };
+    if (this.ownSessionKey) {
+      const ownEntry = entries.find((entry) => entry.key === this.ownSessionKey);
+      push(ownEntry);
+    }
+    const sortedByIndexDesc = [...entries].sort((a, b) => b.index - a.index);
+    for (const entry of sortedByIndexDesc) {
+      if (selected.length >= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) {
+        break;
+      }
+      push(entry);
+    }
+    for (const entry of entries) {
+      if (selected.length >= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) {
+        break;
+      }
+      push(entry);
+    }
+    return selected.sort((a, b) => a.index - b.index);
+  }
+  identifyOwnSession(previousRaw, currentRaw) {
+    const currentEntries = this.parseSessions(currentRaw);
+    if (!currentEntries || currentEntries.length === 0) {
+      return;
+    }
+    const previousEntries = this.parseSessions(previousRaw);
+    if (!previousEntries) {
+      const latest2 = currentEntries[currentEntries.length - 1];
+      if (latest2) {
+        this.ownSessionKey = latest2.key;
+      }
+      return;
+    }
+    const previousMap = new Map(previousEntries.map((entry) => [entry.key, entry.value]));
+    const additions = currentEntries.filter((entry) => !previousMap.has(entry.key));
+    if (additions.length === 1) {
+      this.ownSessionKey = additions[0].key;
+      return;
+    }
+    const changes = currentEntries.filter((entry) => {
+      if (!previousMap.has(entry.key)) {
+        return false;
+      }
+      return !this.areValuesEqual(previousMap.get(entry.key), entry.value);
+    });
+    if (changes.length === 1) {
+      this.ownSessionKey = changes[0].key;
+      return;
+    }
+    if (additions.length > 1) {
+      this.ownSessionKey = additions[additions.length - 1].key;
+      return;
+    }
+    const latest = currentEntries[currentEntries.length - 1];
+    if (latest) {
+      this.ownSessionKey = latest.key;
+    }
+  }
+  areValuesEqual(a, b) {
+    if (typeof a === "object" || typeof b === "object") {
+      try {
+        return JSON.stringify(a) === JSON.stringify(b);
+      } catch {
+        return false;
+      }
+    }
+    return a === b;
+  }
+  getRawValue() {
+    try {
+      if (this.boundGetItem) {
+        return this.boundGetItem(WatchTabSessionsModule.TARGET_KEY);
+      }
+      if (this.originalGetItemRef) {
+        return this.originalGetItemRef.call(localStorage, WatchTabSessionsModule.TARGET_KEY);
+      }
+      return localStorage.getItem(WatchTabSessionsModule.TARGET_KEY);
+    } catch (error) {
+      window.logger?.warn("[WatchTabSessionsModule] localStorage.raw取得に失敗しました", error);
+      return null;
+    }
+  }
+  shouldFilter(key) {
+    return key === WatchTabSessionsModule.TARGET_KEY;
+  }
+}
+
+const watchTabSessionsModule = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+	__proto__: null,
+	WatchTabSessionsModule
 }, Symbol.toStringTag, { value: 'Module' }));
 
 class HideVideoSettings {
