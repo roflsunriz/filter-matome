@@ -4905,9 +4905,6 @@ class CommentList extends HTMLElement {
         ${this.getStyles()}
       </style>
       <div class="comment-list-container">
-        <div class="comment-list-header">
-          <span>コメントリスト</span>
-        </div>
         <div class="comment-list"></div>
       </div>
     `;
@@ -4936,14 +4933,7 @@ class CommentList extends HTMLElement {
         flex-direction: column;
       }
 
-      .comment-list-header {
-        background: rgba(0, 123, 255, 0.8);
-        padding: 12px 16px;
-        font-weight: bold;
-        font-size: 14px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        text-align: center;
-      }
+
 
       .comment-list {
         flex: 1;
@@ -5027,10 +5017,6 @@ class CommentList extends HTMLElement {
           border-radius: 0;
         }
 
-        .comment-list-header {
-          padding: 10px 12px;
-          font-size: 13px;
-        }
 
         .comment-item {
           padding: 6px 10px;
@@ -6528,11 +6514,6 @@ const CUSTOM_PLAYER_SHADOW_STYLES = `
     flex-direction: column;
     border-radius: 4px;
     transition: all 0.3s ease;
-  }
-
-  .comment-list-header {
-    padding: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   }
 
   .comment-list {
