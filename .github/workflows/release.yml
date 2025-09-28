@@ -133,13 +133,15 @@ jobs:
 
           echo "" >> release_notes.md
           echo "### 📄 nlFilters リリースノート抜粋" >> release_notes.md
-          SECTION_TITLE="### filter-matome #${GITHUB_REF#refs/tags/} "
-          if grep -qF -- "^${SECTION_TITLE}" nlFilters/198_release_notes.md; then
-            # 見出し行から次の見出し直前までを抽出
-            awk -v t="${SECTION_TITLE}" '
-              BEGIN { p=0 }
-              $0 ~ "^" t { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
-              p && /^### filter-matome #/ { p=0; print ""; print "</details>" }
+          TAG="${GITHUB_REF#refs/tags/}"
+          # allow flexible spacing (ASCII space or fullwidth U+3000), zero or more occurrences
+          SECTION_RE="^###[ 　]*filter-matome[ 　]*#${TAG}([ 　]*)?$"
+          if grep -E -q -- "${SECTION_RE}" nlFilters/198_release_notes.md; then
+            # 見出し行から次の見出し直前までを抽出（スペースの有無や全角スペースに対応）
+            awk -v tag="${TAG}" '
+              BEGIN { p=0; re="^###[ 　]*filter-matome[ 　]*#" tag "([ 　]*)?$" }
+              $0 ~ re { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
+              p && $0 ~ "^###[ 　]*filter-matome" { p=0; print ""; print "</details>" }
               p { print }
               END { if (p==1) { print ""; print "</details>" } }
             ' nlFilters/198_release_notes.md >> release_notes.md
@@ -153,12 +155,12 @@ jobs:
           case "$TAG" in
             *.*)
               TAG_MAJOR="${TAG%%.*}"
-              SECTION_TITLE="### filter-matome #${TAG_MAJOR} "
-              if grep -qF -- "^${SECTION_TITLE}" nlFilters/198_release_notes.md; then
-                awk -v t="${SECTION_TITLE}" '
-                  BEGIN { p=0 }
-                  $0 ~ "^" t { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
-                  p && /^### filter-matome #/ { p=0; print ""; print "</details>" }
+              SECTION_RE="^###[ 　]*filter-matome[ 　]*#${TAG_MAJOR}([ 　]*)?$"
+              if grep -E -q -- "${SECTION_RE}" nlFilters/198_release_notes.md; then
+                awk -v tag="${TAG_MAJOR}" '
+                  BEGIN { p=0; re="^###[ 　]*filter-matome[ 　]*#" tag "([ 　]*)?$" }
+                  $0 ~ re { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
+                  p && $0 ~ "^###[ 　]*filter-matome" { p=0; print ""; print "</details>" }
                   p { print }
                   END { if (p==1) { print ""; print "</details>" } }
                 ' nlFilters/198_release_notes.md >> release_notes.md
