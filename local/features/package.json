@@ -205,7 +205,7 @@
     "wrappy": "^1.0.2",
     "yocto-queue": "^1.2.1"
   },
-  "version": "195.1",
+  "version": "196",
   "description": "",
   "main": "index.js",
   "directories": {

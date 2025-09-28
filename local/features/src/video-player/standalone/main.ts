@@ -687,7 +687,7 @@ const main = async (): Promise<void> => {
   if (mode === 'deleted') {
     const displayTitle = getDisplayTitleFromQuery() ?? `Deleted Video (${videoId})`;
     layout.title.textContent = displayTitle;
-    document.title = 'NicoCache Player - ' + displayTitle;
+    document.title = 'video-player - ' + displayTitle;
 
     layout.metaList.style.display = 'none';
     layout.infoCard.style.display = 'none';
@@ -715,7 +715,7 @@ const main = async (): Promise<void> => {
 
     const apiData = toApiData(result.apiData, videoId);
     layout.title.textContent = apiData.video.title;
-    document.title = 'NicoCache Player - ' + apiData.video.title;
+    document.title = 'video-player - ' + apiData.video.title;
 
     renderMeta(layout.metaList, apiData);
     renderStats(layout.statsList, apiData);

@@ -1606,6 +1606,9 @@ const CSS_CONSTANTS = `
   --header-mylist2-docs-left: -43px;
   --header-comment-filter2-docs-top: -22px;
   --header-comment-filter2-docs-left: -22px;
+  --header-video-player-width: 102vw;
+  --header-video-player-top: -32px;
+  --header-video-player-left: -134px;
   
   /* ヘッダー背景・色関連 */
   --header-bg-color: #252525;

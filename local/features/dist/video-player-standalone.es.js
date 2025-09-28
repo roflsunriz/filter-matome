@@ -1579,6 +1579,9 @@ const CSS_CONSTANTS = `
   --header-mylist2-docs-left: -43px;
   --header-comment-filter2-docs-top: -22px;
   --header-comment-filter2-docs-left: -22px;
+  --header-video-player-width: 102vw;
+  --header-video-player-top: -32px;
+  --header-video-player-left: -134px;
   
   /* ヘッダー背景・色関連 */
   --header-bg-color: #252525;
@@ -1732,17 +1735,37 @@ const applyStyles = (styles) => {
   return styleElement;
 };
 
+const VIDEO_PLAYER_HEADER_ADJUSTMENT_STYLES = `
+/**
+ * video-player環境専用のヘッダー位置調整
+ * CSS Custom Propertiesを上書きして各環境に最適化
+ */
+
+:root {
+  /* video-player環境での位置調整 */
+  --header-offset-top: var(--header-video-player-top);
+  --header-offset-left: var(--header-video-player-left);
+  --header-width: var(--header-video-player-width);
+}
+`;
+const headerAdjustments = () => {
+  const styleElement = document.createElement("style");
+  styleElement.textContent = VIDEO_PLAYER_HEADER_ADJUSTMENT_STYLES;
+  document.head.appendChild(styleElement);
+  return styleElement;
+};
+
 const createBreadcrumbs = () => {
   const nav = document.createElement("nav");
   nav.className = "nc-header__breadcrumbs";
   const rootLink = document.createElement("a");
   rootLink.href = "/";
-  rootLink.textContent = "NicoCache";
+  rootLink.textContent = "niconico";
   const divider1 = document.createElement("span");
   divider1.textContent = "›";
   const featureLink = document.createElement("a");
   featureLink.href = "/local/features/dist/src/video-player/standalone/index.html";
-  featureLink.textContent = "Video Player";
+  featureLink.textContent = "video-player";
   const divider2 = document.createElement("span");
   divider2.textContent = "›";
   const current = document.createElement("span");
@@ -1760,6 +1783,9 @@ const createStandaloneLayout = (options = {}) => {
   if (options.mode === "deleted") {
     root.classList.add("nc-standalone-page--deleted");
   }
+  const commonHeaderContainer = document.createElement("div");
+  commonHeaderContainer.id = "headerContainer";
+  commonHeaderContainer.className = "nc-common-header-container";
   const header = document.createElement("header");
   header.className = "nc-header";
   const breadcrumbs = createBreadcrumbs();
@@ -1810,8 +1836,24 @@ const createStandaloneLayout = (options = {}) => {
   main.append(playerSurface, infoCard);
   const description = document.createElement("section");
   description.className = "nc-description";
-  root.append(header, main, description);
+  root.append(commonHeaderContainer, header, main, description);
   container.append(root);
+  const typedWindow = window;
+  if (typedWindow.NicoCommon?.createHeader) {
+    try {
+      typedWindow.NicoCommon.createHeader("headerContainer", {
+        title: "video-player",
+        showSearch: true,
+        showMoreLinks: true,
+        enableFixedMode: false
+      });
+    } catch {
+    }
+  }
+  try {
+    headerAdjustments();
+  } catch {
+  }
   return {
     root,
     playerMount,
@@ -7486,7 +7528,7 @@ const main = async () => {
   if (mode === "deleted") {
     const displayTitle = getDisplayTitleFromQuery() ?? `Deleted Video (${videoId})`;
     layout.title.textContent = displayTitle;
-    document.title = "NicoCache Player - " + displayTitle;
+    document.title = "video-player - " + displayTitle;
     layout.metaList.style.display = "none";
     layout.infoCard.style.display = "none";
     layout.description.style.display = "none";
@@ -7509,7 +7551,7 @@ const main = async () => {
     }
     const apiData = toApiData(result.apiData, videoId);
     layout.title.textContent = apiData.video.title;
-    document.title = "NicoCache Player - " + apiData.video.title;
+    document.title = "video-player - " + apiData.video.title;
     renderMeta(layout.metaList, apiData);
     renderStats(layout.statsList, apiData);
     renderTags(layout.tags, apiData);

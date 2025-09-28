@@ -1,5 +1,6 @@
 import { STANDALONE_PAGE_STYLES } from './styles.js';
 import { applyStyles } from '../utils/dom-utils.js';
+import { headerAdjustments } from './header-adjustments.js';
 
 export interface StandaloneLayout {
   root: HTMLElement;
@@ -27,14 +28,14 @@ const createBreadcrumbs = (): HTMLElement => {
 
   const rootLink = document.createElement('a');
   rootLink.href = '/';
-  rootLink.textContent = 'NicoCache';
+  rootLink.textContent = 'niconico';
 
   const divider1 = document.createElement('span');
   divider1.textContent = '›';
 
   const featureLink = document.createElement('a');
   featureLink.href = '/local/features/dist/src/video-player/standalone/index.html';
-  featureLink.textContent = 'Video Player';
+  featureLink.textContent = 'video-player';
 
   const divider2 = document.createElement('span');
   divider2.textContent = '›';
@@ -58,6 +59,11 @@ export const createStandaloneLayout = (options: StandaloneLayoutOptions = {}): S
   if (options.mode === 'deleted') {
     root.classList.add('nc-standalone-page--deleted');
   }
+
+  // 共通ヘッダーを挿入するコンテナ（Shadow DOM を付与する CommonHeader がここにアタッチされます）
+  const commonHeaderContainer = document.createElement('div');
+  commonHeaderContainer.id = 'headerContainer';
+  commonHeaderContainer.className = 'nc-common-header-container';
 
   const header = document.createElement('header');
   header.className = 'nc-header';
@@ -133,8 +139,41 @@ export const createStandaloneLayout = (options: StandaloneLayoutOptions = {}): S
   const description = document.createElement('section');
   description.className = 'nc-description';
 
-  root.append(header, main, description);
+  // commonHeaderContainer を上部に置いた上で既存の動画用ヘッダを配置
+  root.append(commonHeaderContainer, header, main, description);
   container.append(root);
+
+  // グローバル共通ヘッダーが利用可能なら初期化する（型安全なキャストを使用）
+  const typedWindow = window as unknown as {
+    NicoCommon?: {
+      createHeader?: (containerId: string, config?: {
+        title?: string;
+        showSearch?: boolean;
+        showMoreLinks?: boolean;
+        enableFixedMode?: boolean;
+      }) => void;
+    };
+  };
+
+  if (typedWindow.NicoCommon?.createHeader) {
+    try {
+      typedWindow.NicoCommon.createHeader('headerContainer', {
+        title: 'video-player',
+        showSearch: true,
+        showMoreLinks: true,
+        enableFixedMode: false
+      });
+    } catch {
+      // 初期化失敗は致命的ではないので無視
+    }
+  }
+
+  // video-player専用のヘッダー位置調整スタイルを適用
+  try {
+    headerAdjustments();
+  } catch {
+    // スタイル適用が失敗しても致命的ではない
+  }
 
   return {
     root,
