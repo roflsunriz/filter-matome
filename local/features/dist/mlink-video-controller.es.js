@@ -15470,25 +15470,29 @@ const watchMylistSelectorModule = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object
 
 class WatchTabSessionsModule {
   constructor(config) {
-    this.originalGetItemRef = null;
-    this.originalSetItemRef = null;
-    this.originalRemoveItemRef = null;
-    this.boundGetItem = null;
-    this.boundSetItem = null;
-    this.boundRemoveItem = null;
-    this.originalPropertyDescriptor = null;
+    this.storagePrototype = null;
+    this.originalPrototypeGetItem = null;
+    this.originalPrototypeSetItem = null;
+    this.originalPrototypeRemoveItem = null;
+    this.originalInstanceDescriptor = null;
     this.storageListener = null;
     this.dispatchingSyntheticEvent = false;
     this.parseErrorLogged = false;
-    this.ownSessionKey = null;
     this.isModuleActive = false;
+    this.ownSessionKey = null;
+    this.sanitizedCacheRaw = null;
+    this.sanitizedCache = null;
     this.config = config;
+    this.storage = window.localStorage;
   }
   static {
     this.TARGET_KEY = "nvpc:watch:tab-sessions";
   }
   static {
     this.MAX_VISIBLE_SESSIONS = 3;
+  }
+  static {
+    this.OWN_KEY_SESSION_STORAGE = "mlink_watch_tab_sessions_key";
   }
   async initialize() {
     if (this.isModuleActive) {
@@ -15500,8 +15504,12 @@ class WatchTabSessionsModule {
       return;
     }
     try {
-      this.overrideStorageAPIs();
+      this.restoreOwnSessionKey();
+      this.overrideStoragePrototype();
+      this.overrideDirectAccessor();
       this.registerStorageListener();
+      this.invalidateCache();
+      this.primeSanitizedSnapshot();
       this.isModuleActive = true;
     } catch (error) {
       window.logger?.error("[WatchTabSessionsModule] 初期化に失敗しました", error);
@@ -15520,90 +15528,57 @@ class WatchTabSessionsModule {
   getStatus() {
     return this.isModuleActive ? ModuleStatus.ACTIVE : ModuleStatus.INACTIVE;
   }
-  overrideStorageAPIs() {
-    this.overrideGetItem();
-    this.overrideSetItem();
-    this.overrideRemoveItem();
-    this.overrideDirectPropertyAccess();
+  overrideStoragePrototype() {
+    const prototype = Object.getPrototypeOf(this.storage);
+    if (!prototype) {
+      window.logger?.warn("[WatchTabSessionsModule] Storageプロトタイプを取得できませんでした");
+      return;
+    }
+    this.storagePrototype = prototype;
+    if (!this.originalPrototypeGetItem) {
+      this.originalPrototypeGetItem = prototype.getItem;
+      const getItemPatch = this.createGetItemPatch();
+      prototype.getItem = function patchedGetItem(key) {
+        return getItemPatch(this, key);
+      };
+    }
+    if (!this.originalPrototypeSetItem) {
+      this.originalPrototypeSetItem = prototype.setItem;
+      const setItemPatch = this.createSetItemPatch();
+      prototype.setItem = function patchedSetItem(key, value) {
+        setItemPatch(this, key, value);
+      };
+    }
+    if (!this.originalPrototypeRemoveItem) {
+      this.originalPrototypeRemoveItem = prototype.removeItem;
+      const removeItemPatch = this.createRemoveItemPatch();
+      prototype.removeItem = function patchedRemoveItem(key) {
+        removeItemPatch(this, key);
+      };
+    }
   }
-  overrideGetItem() {
-    if (this.originalGetItemRef) return;
-    this.originalGetItemRef = localStorage.getItem;
-    this.boundGetItem = localStorage.getItem.bind(localStorage);
-    localStorage.getItem = (key) => {
-      const rawValue = this.boundGetItem ? this.boundGetItem(key) : this.originalGetItemRef ? this.originalGetItemRef.call(localStorage, key) : null;
-      if (!this.shouldFilter(key)) {
-        return rawValue;
-      }
-      return this.filterSessions(rawValue);
-    };
-  }
-  overrideSetItem() {
-    if (this.originalSetItemRef) return;
-    this.originalSetItemRef = localStorage.setItem;
-    this.boundSetItem = localStorage.setItem.bind(localStorage);
-    localStorage.setItem = (key, value) => {
-      let previousRaw = null;
-      if (this.shouldFilter(key)) {
-        previousRaw = this.getRawValue();
-      }
-      if (this.boundSetItem) {
-        this.boundSetItem(key, value);
-      } else {
-        this.originalSetItemRef?.call(localStorage, key, value);
-      }
-      if (this.shouldFilter(key)) {
-        this.identifyOwnSession(previousRaw, value);
-      }
-    };
-  }
-  overrideRemoveItem() {
-    if (this.originalRemoveItemRef) return;
-    this.originalRemoveItemRef = localStorage.removeItem;
-    this.boundRemoveItem = localStorage.removeItem.bind(localStorage);
-    localStorage.removeItem = (key) => {
-      if (this.boundRemoveItem) {
-        this.boundRemoveItem(key);
-      } else {
-        this.originalRemoveItemRef?.call(localStorage, key);
-      }
-      if (this.shouldFilter(key)) {
-        this.ownSessionKey = null;
-      }
-    };
-  }
-  overrideDirectPropertyAccess() {
-    if (this.originalPropertyDescriptor) return;
+  overrideDirectAccessor() {
     try {
-      this.originalPropertyDescriptor = Object.getOwnPropertyDescriptor(localStorage, WatchTabSessionsModule.TARGET_KEY) || null;
-      Object.defineProperty(localStorage, WatchTabSessionsModule.TARGET_KEY, {
+      this.originalInstanceDescriptor = Object.getOwnPropertyDescriptor(this.storage, WatchTabSessionsModule.TARGET_KEY) || null;
+      Object.defineProperty(this.storage, WatchTabSessionsModule.TARGET_KEY, {
         configurable: true,
         enumerable: true,
-        get: () => this.filterSessions(this.getRawValue()),
+        get: () => this.getSanitizedValue(this.callOriginalGetItem(this.storage, WatchTabSessionsModule.TARGET_KEY)),
         set: (value) => {
-          const nextValue = String(value);
-          if (this.boundSetItem) {
-            this.boundSetItem(WatchTabSessionsModule.TARGET_KEY, nextValue);
-          } else {
-            this.originalSetItemRef?.call(localStorage, WatchTabSessionsModule.TARGET_KEY, nextValue);
-          }
+          this.callOriginalSetItem(this.storage, WatchTabSessionsModule.TARGET_KEY, String(value));
         }
       });
     } catch (error) {
-      window.logger?.warn("[WatchTabSessionsModule] プロパティオーバーライドに失敗しました", error);
+      window.logger?.warn("[WatchTabSessionsModule] direct accessor 差し替えに失敗しました", error);
     }
   }
   registerStorageListener() {
     if (this.storageListener) return;
     this.storageListener = (event) => {
-      if (this.dispatchingSyntheticEvent) {
-        return;
-      }
-      if (!event || !this.shouldFilter(event.key)) {
-        return;
-      }
-      const sanitizedNewValue = this.filterSessions(event.newValue);
-      const sanitizedOldValue = this.filterSessions(event.oldValue);
+      if (this.dispatchingSyntheticEvent) return;
+      if (!event || !this.shouldIntercept(event.storageArea ?? this.storage, event.key)) return;
+      const sanitizedNewValue = this.getSanitizedValue(event.newValue);
+      const sanitizedOldValue = this.getSanitizedValue(event.oldValue);
       if (sanitizedNewValue === event.newValue && sanitizedOldValue === event.oldValue) {
         return;
       }
@@ -15622,7 +15597,7 @@ class WatchTabSessionsModule {
       newValue,
       oldValue,
       url: event.url,
-      storageArea: event.storageArea ?? localStorage
+      storageArea: event.storageArea ?? this.storage
     };
     this.dispatchingSyntheticEvent = true;
     try {
@@ -15639,7 +15614,7 @@ class WatchTabSessionsModule {
           init.oldValue ?? null,
           init.newValue ?? null,
           init.url ?? document.URL,
-          init.storageArea ?? localStorage
+          init.storageArea ?? this.storage
         );
         syntheticEvent = legacyEvent;
       }
@@ -15650,113 +15625,13 @@ class WatchTabSessionsModule {
       this.dispatchingSyntheticEvent = false;
     }
   }
-  restoreOverrides() {
-    if (this.storageListener) {
-      window.removeEventListener("storage", this.storageListener, true);
-      this.storageListener = null;
-    }
-    if (this.originalGetItemRef) {
-      localStorage.getItem = this.originalGetItemRef;
-      this.originalGetItemRef = null;
-      this.boundGetItem = null;
-    }
-    if (this.originalSetItemRef) {
-      localStorage.setItem = this.originalSetItemRef;
-      this.originalSetItemRef = null;
-      this.boundSetItem = null;
-    }
-    if (this.originalRemoveItemRef) {
-      localStorage.removeItem = this.originalRemoveItemRef;
-      this.originalRemoveItemRef = null;
-      this.boundRemoveItem = null;
-    }
-    if (this.originalPropertyDescriptor) {
-      try {
-        Object.defineProperty(localStorage, WatchTabSessionsModule.TARGET_KEY, this.originalPropertyDescriptor);
-      } catch (error) {
-        window.logger?.warn("[WatchTabSessionsModule] プロパティ復元に失敗しました", error);
-      }
-      this.originalPropertyDescriptor = null;
-    } else {
-      try {
-        delete localStorage[WatchTabSessionsModule.TARGET_KEY];
-      } catch {
-      }
-    }
+  handleAfterWrite(previousRaw, writtenRaw) {
+    this.identifyOwnSession(previousRaw, writtenRaw);
+    this.invalidateCache();
+    this.persistOwnSessionKey();
   }
-  filterSessions(rawValue) {
-    if (rawValue === null || rawValue === "") {
-      return rawValue;
-    }
-    const entries = this.parseSessions(rawValue);
-    if (entries === null) {
-      return rawValue;
-    }
-    if (entries.length <= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) {
-      return rawValue;
-    }
-    const selected = this.selectEntries(entries);
-    const filtered = {};
-    for (const entry of selected) {
-      filtered[entry.key] = entry.value;
-    }
-    try {
-      return JSON.stringify(filtered);
-    } catch (error) {
-      window.logger?.warn("[WatchTabSessionsModule] フィルタ結果のシリアライズに失敗しました", error);
-      return rawValue;
-    }
-  }
-  parseSessions(rawValue) {
-    if (!rawValue) {
-      return [];
-    }
-    try {
-      const parsed = JSON.parse(rawValue);
-      if (!parsed || typeof parsed !== "object") {
-        return null;
-      }
-      return Object.entries(parsed).map(([key, value], index) => ({
-        key,
-        value,
-        index
-      }));
-    } catch (error) {
-      if (!this.parseErrorLogged) {
-        window.logger?.warn("[WatchTabSessionsModule] タブセッション情報の解析に失敗しました", error);
-        this.parseErrorLogged = true;
-      }
-      return null;
-    }
-  }
-  selectEntries(entries) {
-    const selected = [];
-    const seen = /* @__PURE__ */ new Set();
-    const push = (entry) => {
-      if (!entry) return;
-      if (seen.has(entry.key)) return;
-      if (selected.length >= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) return;
-      selected.push(entry);
-      seen.add(entry.key);
-    };
-    if (this.ownSessionKey) {
-      const ownEntry = entries.find((entry) => entry.key === this.ownSessionKey);
-      push(ownEntry);
-    }
-    const sortedByIndexDesc = [...entries].sort((a, b) => b.index - a.index);
-    for (const entry of sortedByIndexDesc) {
-      if (selected.length >= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) {
-        break;
-      }
-      push(entry);
-    }
-    for (const entry of entries) {
-      if (selected.length >= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) {
-        break;
-      }
-      push(entry);
-    }
-    return selected.sort((a, b) => a.index - b.index);
+  handleAfterRemove() {
+    this.invalidateCache();
   }
   identifyOwnSession(previousRaw, currentRaw) {
     const currentEntries = this.parseSessions(currentRaw);
@@ -15796,6 +15671,229 @@ class WatchTabSessionsModule {
       this.ownSessionKey = latest.key;
     }
   }
+  getSanitizedValue(rawValue) {
+    if (rawValue === null || rawValue === "") {
+      return rawValue;
+    }
+    if (this.sanitizedCacheRaw === rawValue) {
+      return this.sanitizedCache;
+    }
+    const filtered = this.filterSessions(rawValue);
+    this.sanitizedCacheRaw = rawValue;
+    this.sanitizedCache = filtered;
+    return filtered;
+  }
+  filterSessions(rawValue) {
+    if (rawValue === null) {
+      return null;
+    }
+    const entries = this.parseSessions(rawValue);
+    if (entries === null) {
+      return rawValue;
+    }
+    if (entries.length <= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) {
+      return rawValue;
+    }
+    const selected = this.selectEntries(entries);
+    const result = {};
+    for (const entry of selected) {
+      result[entry.key] = entry.value;
+    }
+    try {
+      return JSON.stringify(result);
+    } catch (error) {
+      window.logger?.warn("[WatchTabSessionsModule] フィルタ結果のシリアライズに失敗しました", error);
+      return rawValue;
+    }
+  }
+  selectEntries(entries) {
+    const selected = [];
+    const seen = /* @__PURE__ */ new Set();
+    const push = (entry) => {
+      if (!entry) return;
+      if (seen.has(entry.key)) return;
+      if (selected.length >= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) return;
+      selected.push(entry);
+      seen.add(entry.key);
+    };
+    if (this.ownSessionKey) {
+      push(entries.find((entry) => entry.key === this.ownSessionKey));
+    }
+    const sortedByValueDesc = [...entries].sort((a, b) => {
+      const aValue = typeof a.value === "number" ? a.value : Number(a.value) || 0;
+      const bValue = typeof b.value === "number" ? b.value : Number(b.value) || 0;
+      return bValue - aValue;
+    });
+    for (const entry of sortedByValueDesc) {
+      push(entry);
+      if (selected.length >= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) {
+        break;
+      }
+    }
+    for (const entry of entries) {
+      push(entry);
+      if (selected.length >= WatchTabSessionsModule.MAX_VISIBLE_SESSIONS) {
+        break;
+      }
+    }
+    return selected.sort((a, b) => a.index - b.index);
+  }
+  parseSessions(rawValue) {
+    if (!rawValue) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(rawValue);
+      if (!parsed || typeof parsed !== "object") {
+        return null;
+      }
+      return Object.entries(parsed).map(([key, value], index) => ({
+        key,
+        value,
+        index
+      }));
+    } catch (error) {
+      if (!this.parseErrorLogged) {
+        window.logger?.warn("[WatchTabSessionsModule] タブセッション情報の解析に失敗しました", error);
+        this.parseErrorLogged = true;
+      }
+      return null;
+    }
+  }
+  createGetItemPatch() {
+    return (storage, key) => {
+      const rawValue = this.callOriginalGetItem(storage, key);
+      if (!this.shouldIntercept(storage, key)) {
+        return rawValue;
+      }
+      return this.getSanitizedValue(rawValue);
+    };
+  }
+  createSetItemPatch() {
+    return (storage, key, value) => {
+      const shouldFilter = this.shouldIntercept(storage, key);
+      let previousRaw = null;
+      if (shouldFilter) {
+        previousRaw = this.callOriginalGetItem(storage, key);
+      }
+      this.callOriginalSetItem(storage, key, value);
+      if (shouldFilter) {
+        this.handleAfterWrite(previousRaw, value);
+      }
+    };
+  }
+  createRemoveItemPatch() {
+    return (storage, key) => {
+      const shouldFilter = this.shouldIntercept(storage, key);
+      this.callOriginalRemoveItem(storage, key);
+      if (shouldFilter) {
+        this.handleAfterRemove();
+      }
+    };
+  }
+  callOriginalGetItem(target, key) {
+    try {
+      if (this.originalPrototypeGetItem) {
+        return this.originalPrototypeGetItem.call(target, key);
+      }
+      return target.getItem(key);
+    } catch (error) {
+      window.logger?.warn("[WatchTabSessionsModule] original getItem 呼び出しに失敗しました", error);
+      return null;
+    }
+  }
+  callOriginalSetItem(target, key, value) {
+    try {
+      if (this.originalPrototypeSetItem) {
+        this.originalPrototypeSetItem.call(target, key, value);
+        return;
+      }
+      target.setItem(key, value);
+    } catch (error) {
+      window.logger?.error("[WatchTabSessionsModule] original setItem 呼び出しに失敗しました", error);
+    }
+  }
+  callOriginalRemoveItem(target, key) {
+    try {
+      if (this.originalPrototypeRemoveItem) {
+        this.originalPrototypeRemoveItem.call(target, key);
+        return;
+      }
+      target.removeItem(key);
+    } catch (error) {
+      window.logger?.error("[WatchTabSessionsModule] original removeItem 呼び出しに失敗しました", error);
+    }
+  }
+  shouldIntercept(storage, key) {
+    if (!storage || !key) {
+      return false;
+    }
+    return key === WatchTabSessionsModule.TARGET_KEY && this.isTargetStorage(storage);
+  }
+  isTargetStorage(storage) {
+    try {
+      return storage === this.storage;
+    } catch {
+      return false;
+    }
+  }
+  restoreOwnSessionKey() {
+    try {
+      this.ownSessionKey = sessionStorage.getItem(WatchTabSessionsModule.OWN_KEY_SESSION_STORAGE);
+    } catch {
+      this.ownSessionKey = null;
+    }
+  }
+  persistOwnSessionKey() {
+    if (!this.ownSessionKey) {
+      return;
+    }
+    try {
+      sessionStorage.setItem(WatchTabSessionsModule.OWN_KEY_SESSION_STORAGE, this.ownSessionKey);
+    } catch {
+    }
+  }
+  primeSanitizedSnapshot() {
+    const raw = this.callOriginalGetItem(this.storage, WatchTabSessionsModule.TARGET_KEY);
+    if (raw !== null && raw !== void 0) {
+      this.getSanitizedValue(raw);
+    }
+  }
+  invalidateCache() {
+    this.sanitizedCacheRaw = null;
+    this.sanitizedCache = null;
+  }
+  restoreOverrides() {
+    if (this.storageListener) {
+      window.removeEventListener("storage", this.storageListener, true);
+      this.storageListener = null;
+    }
+    if (this.storagePrototype) {
+      if (this.originalPrototypeGetItem) {
+        this.storagePrototype.getItem = this.originalPrototypeGetItem;
+        this.originalPrototypeGetItem = null;
+      }
+      if (this.originalPrototypeSetItem) {
+        this.storagePrototype.setItem = this.originalPrototypeSetItem;
+        this.originalPrototypeSetItem = null;
+      }
+      if (this.originalPrototypeRemoveItem) {
+        this.storagePrototype.removeItem = this.originalPrototypeRemoveItem;
+        this.originalPrototypeRemoveItem = null;
+      }
+    }
+    try {
+      if (this.originalInstanceDescriptor) {
+        Object.defineProperty(this.storage, WatchTabSessionsModule.TARGET_KEY, this.originalInstanceDescriptor);
+      } else {
+        delete this.storage[WatchTabSessionsModule.TARGET_KEY];
+      }
+    } catch (error) {
+      window.logger?.warn("[WatchTabSessionsModule] direct accessor の復元に失敗しました", error);
+    }
+    this.originalInstanceDescriptor = null;
+    this.storagePrototype = null;
+  }
   areValuesEqual(a, b) {
     if (typeof a === "object" || typeof b === "object") {
       try {
@@ -15805,23 +15903,6 @@ class WatchTabSessionsModule {
       }
     }
     return a === b;
-  }
-  getRawValue() {
-    try {
-      if (this.boundGetItem) {
-        return this.boundGetItem(WatchTabSessionsModule.TARGET_KEY);
-      }
-      if (this.originalGetItemRef) {
-        return this.originalGetItemRef.call(localStorage, WatchTabSessionsModule.TARGET_KEY);
-      }
-      return localStorage.getItem(WatchTabSessionsModule.TARGET_KEY);
-    } catch (error) {
-      window.logger?.warn("[WatchTabSessionsModule] localStorage.raw取得に失敗しました", error);
-      return null;
-    }
-  }
-  shouldFilter(key) {
-    return key === WatchTabSessionsModule.TARGET_KEY;
   }
 }
 
