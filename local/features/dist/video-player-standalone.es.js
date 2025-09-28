@@ -13809,7 +13809,7 @@ function initializeCommentFilter2() {
     window.CommentFilter2Instance = commentFilter2Instance;
     window.dispatchEvent(new CustomEvent("CommentFilter2Ready"));
     window.logger?.info("[CommentFilter2] Auto-initialization completed");
-    window.logger?.info("[CommentFilter2] Use Ctrl+Shift+F to toggle UI or call via links_video_controller");
+    window.logger?.info("[CommentFilter2] Use Ctrl+Shift+F to toggle UI or call via mlink-video-controller");
     window.logger?.info("[CommentFilter2] Access via window.CommentFilter2Instance for debugging");
   } catch (error) {
     window.logger?.error("[CommentFilter2] Auto-initialization failed:", error);
