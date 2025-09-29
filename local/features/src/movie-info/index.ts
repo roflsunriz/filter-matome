@@ -63,6 +63,32 @@ const updateUrlWithVideoId = (videoId: string): void => {
   }
 };
 
+const sanitizeFileSegment = (value: string | null | undefined, fallback: string): string => {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^[-]+|[-]+$/g, "");
+  return normalized.length > 0 ? normalized : fallback;
+};
+
+const createJsonDownloadDescriptor = (
+  videoId: string | null,
+  suffix: string,
+  supplier: () => unknown,
+): DownloadDescriptor => {
+  const safeId = sanitizeFileSegment(videoId, "unknown-video");
+  const safeSuffix = sanitizeFileSegment(suffix, "data");
+  return {
+    fileName: safeId + "-" + safeSuffix + ".json",
+    payloadSupplier: () => JSON.stringify(supplier(), null, 2),
+  };
+};
+
 const createSummaryGrid = (rows: Array<{ label: string; value: string }>): HTMLElement => {
   const dl = document.createElement("dl");
   dl.className = "summary-grid";
@@ -349,6 +375,10 @@ document.addEventListener("DOMContentLoaded", () => {
     panels.thumb.setSummaryContent(null);
     panels.media.setStatus("loading", "MediaInfoを取得中です...");
     panels.media.setSummaryContent(null);
+    panels.watch.setDownloadDescriptor(null);
+    panels.cache.setDownloadDescriptor(null);
+    panels.thumb.setDownloadDescriptor(null);
+    panels.media.setDownloadDescriptor(null);
 
     try {
       const [apiData, cacheInfo, thumbInfo, mediaInfo] = await Promise.all([
@@ -361,18 +391,30 @@ document.addEventListener("DOMContentLoaded", () => {
       panels.watch.setStatus("success", "apiDataを取得しました");
       panels.watch.setSummaryContent(buildApiSummary(apiData));
       panels.watch.setJsonData(apiData);
+      panels.watch.setDownloadDescriptor(
+        createJsonDownloadDescriptor(currentVideoId, "api-data", () => apiData),
+      );
 
       panels.cache.setStatus("success", "キャッシュ情報を取得しました");
       panels.cache.setSummaryContent(buildCacheSummary(cacheInfo));
       panels.cache.setJsonData(cacheInfo);
+      panels.cache.setDownloadDescriptor(
+        createJsonDownloadDescriptor(currentVideoId, "cache-info", () => cacheInfo),
+      );
 
       panels.thumb.setStatus("success", "サムネイル情報を取得しました");
       panels.thumb.setSummaryContent(buildThumbSummary(thumbInfo));
       panels.thumb.setJsonData(thumbInfo);
+      panels.thumb.setDownloadDescriptor(
+        createJsonDownloadDescriptor(currentVideoId, "thumb-info", () => thumbInfo),
+      );
 
       panels.media.setStatus("success", "MediaInfoを取得しました");
       panels.media.setSummaryContent(buildMediaSummary(mediaInfo));
       panels.media.setJsonData(mediaInfo);
+      panels.media.setDownloadDescriptor(
+        createJsonDownloadDescriptor(currentVideoId, "media-info", () => mediaInfo),
+      );
 
       setStatusText(globalStatus, "データ取得が完了しました");
     } catch (error) {
@@ -397,17 +439,17 @@ document.addEventListener("DOMContentLoaded", () => {
     commentButton.disabled = true;
     commentButton.textContent = "取得中...";
     panels.comments.setStatus("loading", "コメントを取得中です...");
+    panels.comments.setDownloadDescriptor(null);
 
     try {
-      const data = await fetchCommentsWithApi(currentVideoId);      const preview = createCommentPreview(data);
+      const data = await fetchCommentsWithApi(currentVideoId);
+      const preview = createCommentPreview(data);
       panels.comments.setStatus("success", "コメントを取得しました");
       panels.comments.setSummaryContent(buildCommentSummary(preview));
       panels.comments.setJsonData(preview);
-      const descriptor: DownloadDescriptor = {
-        fileName: currentVideoId + "-comments.json",
-        payloadSupplier: () => JSON.stringify(data, null, 2),
-      };
-      panels.comments.setDownloadDescriptor(descriptor);
+      panels.comments.setDownloadDescriptor(
+        createJsonDownloadDescriptor(currentVideoId, "comments", () => data),
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       panels.comments.setStatus("error", "コメント取得に失敗しました: " + message);

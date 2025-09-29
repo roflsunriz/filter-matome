@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #197 (2025/09/29) リリースノート](#filter-matome-197-20250929-リリースノート)
 - [filter-matome #196 (2025/09/29) リリースノート](#filter-matome-196-20250929-リリースノート)
 - [filter-matome #195 (2025/09/23) リリースノート](#filter-matome-195-20250923-リリースノート)
 - [filter-matome #194 (2025/09/21) リリースノート](#filter-matome-194-20250921-リリースノート)
@@ -106,6 +107,21 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+
+### filter-matome #197 (2025/09/29) リリースノート
+
+- ✨新機能(New)：     
+- movie-infoダッシュボードを追加し、thumb-infoとnl-media-infoを廃止した。movie-infoダッシュボードで統合的に情報を確認できる。
+- mlink-video-controllerから不要となったリンク(nlMediaInfo、概要コメ情報、キャッシュ情報)を削除しmovie-infoダッシュボードに統合した。
+- ✅️修正(Fixed)：   
+- なし
+- 🔴変更(Changed)：           
+- なし
+- ❌️未修正(Unfixed)：     
+- なし
+- ℹ️その他(Others)：     
+- api-infoフォルダにapi情報を集約した。
 
 ### filter-matome #196 (2025/09/29) リリースノート
 
