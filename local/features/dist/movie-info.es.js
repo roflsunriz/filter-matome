@@ -1799,6 +1799,7 @@ const applyMovieInfoDashboardStyles = () => {
     ".video-hint { margin: 8px 0 0 0; font-size: 0.88rem; color: #475569; }",
     ".global-status { font-size: 0.9rem; color: #1f2933; margin-top: 8px; }",
     ".panel-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }",
+    "@media (min-width: 680px) { #panel-comments { grid-column: span 2; } }",
     ".info-panel { background: #ffffff; border-radius: 14px; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08); display: flex; flex-direction: column; min-height: 280px; overflow: hidden; }",
     ".panel-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }",
     ".panel-header h2 { margin: 0; font-size: 1.1rem; font-weight: 600; color: #0f172a; }",
