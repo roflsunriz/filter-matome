@@ -23,6 +23,7 @@
     "build:comment-filter2": "vite build --config config/vite.comment-filter2.config.js",
     "build:ALL": "node scripts/build-all.mjs",
     "build:cache-data-manager": "vite build --config config/vite.cache-data-manager.config.js",
+    "build:movie-info": "vite build --config config/vite.movie-info.config.js",
     "build:nl-media-info": "vite build --config config/vite.nl-media-info.config.js",
     "build:mylist2-docs": "vite build --config config/vite.mylist2-docs.config.js",
     "build:watch-tracker": "vite build --config config/vite.watch-tracker.config.js",

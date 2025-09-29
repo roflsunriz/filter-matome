@@ -30,6 +30,7 @@ const scripts = [
   'build:watch-tracker',
   'build:watch-history',
   'build:cache-data-manager',
+  'build:movie-info',
   'build:nl-media-info'
 ];
 for (const scriptName of scripts) {
