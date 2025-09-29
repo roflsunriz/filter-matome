@@ -335,7 +335,7 @@ class VideoConverterGUI:
             # vcodecを分割して追加
             cmd.extend(vcodec.split())
             
-            # 残りのオプ���ョンを追加
+            # 残りのオプションを追加
             cmd.extend([
                 "-vf", "format=pix_fmts=yuv420p",
                 "-movflags", "+faststart",
