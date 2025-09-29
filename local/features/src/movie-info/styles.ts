@@ -12,7 +12,7 @@ export const applyMovieInfoDashboardStyles = (): void => {
     "#movie-info-app { max-width: 1240px; margin: 0 auto; padding: 32px 24px 64px; }",
     "#common-header-container { margin-bottom: 16px; }",
     ".app-main { display: flex; flex-direction: column; gap: 24px; }",
-    ".video-selector { background: #ffffff; border-radius: 14px; padding: 20px 24px; box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08); position: sticky; top: 16px; z-index: 5; }",
+    ".video-selector { background: #ffffff; border-radius: 14px; padding: 20px 24px; box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08); z-index: 5; }",
     ".video-selector h1 { margin: 0 0 12px 0; font-size: 1.6rem; font-weight: 600; }",
     ".video-input-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }",
     ".video-input-row label { font-weight: 600; }",
