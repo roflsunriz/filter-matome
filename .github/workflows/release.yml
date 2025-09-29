@@ -136,11 +136,11 @@ jobs:
           TAG="${GITHUB_REF#refs/tags/}"
           # allow flexible spacing (ASCII space or fullwidth U+3000), zero or more occurrences
           # allow optional trailing text after the tag (e.g. "(2025/09/29) リリースノート")
-          SECTION_RE="^###[ 　]*filter-matome[ 　]*#${TAG}"
+          SECTION_RE="^###[ 　]*filter-matome[ 　]*${TAG}"
           if grep -E -q -- "${SECTION_RE}" nlFilters/198_release_notes.md; then
             # 見出し行から次の見出し直前までを抽出（スペースの有無や全角スペースに対応）
             awk -v tag="${TAG}" '
-              BEGIN { p=0; re="^###[ 　]*filter-matome[ 　]*#" tag "" }
+              BEGIN { p=0; re="^###[ 　]*filter-matome[ 　]*" tag "" }
               $0 ~ re { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
               p && $0 ~ "^###[ 　]*filter-matome" { p=0; print ""; print "</details>" }
               p { print }
@@ -156,10 +156,10 @@ jobs:
           case "$TAG" in
             *.*)
               TAG_MAJOR="${TAG%%.*}"
-              SECTION_RE="^###[ 　]*filter-matome[ 　]*#${TAG_MAJOR}"
+              SECTION_RE="^###[ 　]*filter-matome[ 　]*${TAG_MAJOR}"
               if grep -E -q -- "${SECTION_RE}" nlFilters/198_release_notes.md; then
                 awk -v tag="${TAG_MAJOR}" '
-                  BEGIN { p=0; re="^###[ 　]*filter-matome[ 　]*#" tag "" }
+                  BEGIN { p=0; re="^###[ 　]*filter-matome[ 　]*" tag "" }
                   $0 ~ re { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
                   p && $0 ~ "^###[ 　]*filter-matome" { p=0; print ""; print "</details>" }
                   p { print }
