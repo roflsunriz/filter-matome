@@ -11,7 +11,7 @@ import type {
   ThumbInfo,
   ThumbTagInfo,
   DownloadDescriptor,
-} from "./types";
+} from "../types/movie-info-types";
 
 const COMMENT_PREVIEW_LIMIT = 200;
 

@@ -1,4 +1,4 @@
-import type { CommentData, CommentThread, NicoApiData } from "../types/common-types";
+import type { CommentData, CommentThread, NicoApiData } from "./common-types";
 
 export type PanelStatus = "idle" | "loading" | "success" | "error";
 

@@ -38,6 +38,24 @@ export * from './mlink-video-controller-types';
 // Cache Data Manager 関連の型
 export * from './cache-data-manager-types';
 
+// Movie Info 関連の型
+export type {
+  PanelStatus as MovieInfoPanelStatus,
+  CacheItem as MovieInfoCacheItem,
+  CacheEntry as MovieInfoCacheEntry,
+  CacheInfoResponse as MovieInfoCacheInfoResponse,
+  ThumbTagInfo as MovieInfoThumbTagInfo,
+  ThumbOwnerInfo as MovieInfoThumbOwnerInfo,
+  ThumbInfo as MovieInfoThumbInfo,
+  MediaInfoTrack as MovieInfoMediaInfoTrack,
+  MediaInfoItem as MovieInfoMediaInfoItem,
+  MediaInfoResponse as MovieInfoMediaInfoResponse,
+  CommentPreview as MovieInfoCommentPreview,
+  DashboardState as MovieInfoDashboardState,
+  DownloadDescriptor as MovieInfoDownloadDescriptor,
+  PanelSummaryBuilder as MovieInfoPanelSummaryBuilder,
+} from './movie-info-types';
+
 
 // データベース関連の型（重複エクスポートを避けるため必要なもののみ明示的に再エクスポート）
 export type {
