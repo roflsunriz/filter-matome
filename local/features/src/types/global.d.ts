@@ -57,9 +57,6 @@ declare global {
       fetchProxyEnabled: boolean;
     };
     videoPlayer?: VideoPlayerInstance;
-    // thumb-info関連の関数
-    setCurrentVideoId?: (videoId: string) => void;
-    startCommentProcessingWithVideoId?: (videoId: string) => Promise<void>;
     // CommentFilter2のグローバルデータ
     [key: string]: unknown; // 動的プロパティアクセス用
   }

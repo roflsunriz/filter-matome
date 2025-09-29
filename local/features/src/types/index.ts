@@ -38,8 +38,6 @@ export * from './mlink-video-controller-types';
 // Cache Data Manager 関連の型
 export * from './cache-data-manager-types';
 
-// NL Media Info 関連の型
-export * from './nl-media-info-types';
 
 // データベース関連の型（重複エクスポートを避けるため必要なもののみ明示的に再エクスポート）
 export type {
@@ -91,5 +89,3 @@ export type {
 
 // Vite環境の型定義
 import './vite-env.d.ts';
-
-// 重複する型定義は上記で明示的にエクスポート済み

@@ -10,7 +10,7 @@ NicoCache_nl/
 │       │   ├── comment-filter2/          # NGコメントフィルタリング (8.6KB README)
 │       │   ├── video-player/             # 動画プレイヤー (11KB README)
 │       │   ├── mylist2/                  # カスタムマイリスト管理 (14KB README)
-│       │   ├── thumb-info/               # 動画情報・コメント取得 (8.9KB README)
+│       │   ├── movie-info/               # 動画情報ダッシュボード
 │       │   ├── mlink-video-controller/   # モジュール管理システム (18KB README)
 │       │   ├── common/                   # 共通ライブラリ・ヘッダー (8.9KB README)
 │       │   ├── types/                    # 型定義システム (12KB README)
@@ -50,7 +50,7 @@ NicoCache_nl/
 comment-filter2 ─── NGコメント機能
 video-player    ─── 動画再生機能
 mylist2         ─── マイリスト機能
-thumb-info      ─── 情報取得機能
+movie-info      ─── 統合情報ダッシュボード
   ↓
 【システム統合層】
 mlink-video-controller ─── モジュール管理・統合制御
@@ -76,7 +76,7 @@ common/common.ts ─── API通信統一化
     ↓ ┌─── comment-filter2 ─── NGフィルタリング
     ↓ ├─── video-player ─── 動画再生制御
     ↓ ├─── mylist2 ─── マイリスト管理
-    ↓ ├─── thumb-info ─── 情報表示
+    ↓ ├─── movie-info ─── 情報ダッシュボード
     ↓ └─── mlink-video-controller ─── 統合制御
     ↓
 ユーザー体験向上
@@ -115,11 +115,11 @@ dist/*.es.js ─── 本番ファイル出力
 - **編集対象**: マイリスト機能拡張、UI改善、データ管理機能追加
 - **📚 詳細**: `src/mylist2/README.md`
 
-#### `src/thumb-info/` - 動画情報・コメント取得
-- **役割**: 動画のメタデータ・コメント情報表示
-- **主要ファイル**: `comment-handler.ts` (14KB), `video-info-handler.ts` (12KB)
-- **編集対象**: 情報表示機能拡張、新API対応、UI改善
-- **📚 詳細**: `src/thumb-info/README.md`
+#### `src/movie-info/` - 動画情報ダッシュボード
+- **役割**: キャッシュ情報・サムネイルAPI・MediaInfo・watch apiData を集約し俯瞰表示
+- **主要ファイル**: `index.ts` (ダッシュボード制御), `api-clients.ts` (API取得), `ui.ts` (パネル管理)
+- **編集対象**: 取得APIの拡張、UIサマリー、コメントプレビュー/ダウンロード制御
+- **📚 詳細**: `src/movie-info/README.md`
 
 #### `src/mlink-video-controller/` - モジュール管理システム
 - **役割**: 機能モジュールの統合管理・設定UI
@@ -165,7 +165,7 @@ dist/*.es.js ─── 本番ファイル出力
 
 #### 🎬 **動画関連機能**
 1. **プレイヤー機能**: `src/video-player/` - プレイヤー制御、コメント描画
-2. **情報取得機能**: `src/thumb-info/` - 動画メタデータ、API連携
+2. **情報取得機能**: `src/movie-info/` - 動画関連APIダッシュボード
 3. **統合制御**: `src/mlink-video-controller/` - モジュール化して統合
 
 #### 🗂️ **マイリスト・フィルター機能**
@@ -336,7 +336,7 @@ window.プロジェクトInstance.getDebugInfo()
 → `src/comment-filter2/README.md` から開始
 
 #### 📊 **情報取得・表示**
-→ `src/thumb-info/README.md` から開始
+→ `src/movie-info/README.md` から開始
 
 #### 🔧 **システム統合・管理**
 → `src/mlink-video-controller/README.md` から開始

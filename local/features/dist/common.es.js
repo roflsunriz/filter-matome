@@ -1522,7 +1522,10 @@ const CSS_CONSTANTS = `
   --header-video-player-width: 102vw;
   --header-video-player-top: -32px;
   --header-video-player-left: -134px;
-  
+  --header-movie-info-width: 101vw;
+  --header-movie-info-top: -32px;
+  --header-movie-info-left: -340px;
+
   /* ヘッダー背景・色関連 */
   --header-bg-color: #252525;
   --header-text-color: #fff;

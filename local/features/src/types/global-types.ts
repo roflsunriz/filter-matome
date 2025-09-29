@@ -59,9 +59,6 @@ interface WindowExtensionInterface {
   CommentFilter2Data?: CommentFilter2GlobalData;
   // 後方互換用（任意）
   commentFilter2GlobalData?: CompatibleCommentFilter2GlobalData;
-  // thumb-info関連の関数
-  setCurrentVideoId?: (videoId: string) => void;
-  initializeThumbInfoWithVideoId?: (videoId: string) => Promise<void>;
   logger: {
     info: (...args: unknown[]) => void;
     log: (...args: unknown[]) => void;

@@ -11,8 +11,7 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@nlmi/*": ["src/nl-media-info/*"]
+      "@/*": ["src/*"]
     },
     "skipLibCheck": true,
     "lib": ["DOM", "ES2020"],

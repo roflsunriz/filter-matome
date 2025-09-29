@@ -17,7 +17,6 @@ function getNpmInvokeCommand(scriptName) {
 }
 
 const scripts = [
-  'build:thumb-info',
   'build:mylist2',
   'build:mylist2-service-worker',
   'build:comment-filter2-docs',
@@ -31,7 +30,6 @@ const scripts = [
   'build:watch-history',
   'build:cache-data-manager',
   'build:movie-info',
-  'build:nl-media-info'
 ];
 for (const scriptName of scripts) {
   const cmd = getNpmInvokeCommand(scriptName);

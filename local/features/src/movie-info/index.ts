@@ -301,7 +301,7 @@ type PanelMap = {
 
 document.addEventListener("DOMContentLoaded", () => {
   applyMovieInfoDashboardStyles();
-headerAdjustments();
+  headerAdjustments();
 
   const headerContainer = document.getElementById("common-header-container");
   if (headerContainer && (window as unknown as { NicoCommon?: { createHeader?: (id: string, config: Record<string, unknown>) => void } }).NicoCommon?.createHeader) {

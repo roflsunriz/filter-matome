@@ -1582,7 +1582,10 @@ const CSS_CONSTANTS = `
   --header-video-player-width: 102vw;
   --header-video-player-top: -32px;
   --header-video-player-left: -134px;
-  
+  --header-movie-info-width: 101vw;
+  --header-movie-info-top: -32px;
+  --header-movie-info-left: -340px;
+
   /* ヘッダー背景・色関連 */
   --header-bg-color: #252525;
   --header-text-color: #fff;
@@ -17057,22 +17060,10 @@ class LinkManager {
           action: "cachelist"
         },
         {
-          id: "cacheinfo",
-          title: "キャッシュ情報",
-          icon: getIconPath("info", "outlined"),
-          action: "cacheinfo"
-        },
-        {
-          id: "mediainfo",
-          title: "nlMediaInfo",
-          icon: getIconPath("info", "outlined"),
-          action: "mediainfo"
-        },
-        {
-          id: "videoinfo",
-          title: "概要、コメ情報",
-          icon: getIconPath("description", "outlined"),
-          action: "videoinfo"
+          id: "movieinfo",
+          title: "Movie Info",
+          icon: getIconPath("dashboard", "outlined"),
+          action: "movieinfo"
         },
         {
           id: "savemovie",
@@ -17162,7 +17153,7 @@ class LinkManager {
       "yajuyaju",
       // dataManagement
       "cachelist",
-      "videoinfo"
+      "movieinfo"
     ]);
     return allowed.has(action);
   }
@@ -17220,29 +17211,17 @@ class LinkManager {
         }
       },
       cachelist: "https://www.nicovideo.jp/cache/",
-      cacheinfo: () => {
-        if (!videoId) {
-          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
-          return;
-        }
-        window.open(`https://www.nicovideo.jp/cache/info/v2?${videoId}`);
+      movieinfo: () => {
+        const baseUrl = "https://www.nicovideo.jp/local/features/dist/src/movie-info/index.html";
+        const targetUrl = videoId ? baseUrl + "?videoId=" + videoId : baseUrl;
+        window.open(targetUrl);
       },
-      mediainfo: () => {
-        if (!videoId) {
-          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
-          return;
-        }
-        window.open(
-          `https://www.nicovideo.jp/local/features/dist/src/nl-media-info/index.html?videoId=${videoId}`
-        );
-      },
-      videoinfo: "https://www.nicovideo.jp/local/features/dist/src/thumb-info/index.html",
       savemovie: () => {
         if (!videoId) {
           window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
           return;
         }
-        window.open(`https://www.nicovideo.jp/cache/ffmpeg?video=${videoId}`);
+        window.open("https://www.nicovideo.jp/cache/ffmpeg?video=" + videoId);
       },
       saveaudio: () => {
         if (!videoId) {
