@@ -31,10 +31,12 @@ import dareka.NLMain;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
 import java.nio.file.Files;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class downloadThruFFmpeg implements Extension2, Processor {
     
-    public static final int REVISION = 240701;
+    public static final int REVISION = 251002004;  // 2025/10/02 v004 - Remove -f hls, add compatibility options
     public static final String VER_STRING = "downloadThruFFmpeg_"+REVISION;
     private static final String[] PROCESSOR_SUPPORTED_METHODS = { "GET" };
     private static final Pattern PROCESSOR_SUPPORTED_PATTERN = Pattern.compile(
@@ -44,6 +46,9 @@ public class downloadThruFFmpeg implements Extension2, Processor {
 
     private static JTextArea logArea;
     private static final int MAX_LOG_LENGTH = 100000;
+    
+    // 処理中のリクエストを管理するセット
+    private static final Set<String> processingRequests = ConcurrentHashMap.newKeySet();
     
     public void registerExtensions(ExtensionManager mgr) {
         mgr.registerProcessor(this);
@@ -80,55 +85,104 @@ public class downloadThruFFmpeg implements Extension2, Processor {
         if (m.find()) {
             String type = m.group(1);
             String altid = m.group(2);
-            VideoDescriptor video = Cache.getPreferredCachedVideo(altid);
-            File hlsFile = new Cache(video).getCacheFile();
             
-            // 元ファイル名を取得
-            String originalName = hlsFile.getName();
-            // 拡張子と.hlsを除去
-            String baseName = originalName.replaceFirst("\\.hls$", "").replaceFirst("\\.[^.]+$", "");
+            // リクエストの一意識別子を作成
+            String requestKey = String.format("%s_%s", type, altid);
             
-            // 日時情報を追加
-            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String defaultName = String.format("%s_%s.%s", 
-                baseName,
-                timestamp,
-                type.equals("video") ? "mp4" : "aac"
-            );
-            
-            // 保存ダイアログ表示
-            JFileChooser chooser = new JFileChooser(CACHE_DIR);
-            chooser.setSelectedFile(new File(defaultName));
-            chooser.setDialogTitle("変換ファイルの保存場所を選択");
-            
-            // 親フレームを取得（NLMainのフレームを使用）
-            java.awt.Frame parentFrame = java.awt.Frame.getFrames()[0];
-            
-            int result = chooser.showSaveDialog(parentFrame);
-            if (result != JFileChooser.APPROVE_OPTION) {
-                logError("保存がキャンセルされたのじゃ！");
-                throw new IOException("ユーザーが保存をキャンセルしたのじゃ");
-            }
-            
-            File outputFile = chooser.getSelectedFile();
-            
-            if (outputFile == null) {
-                logError("出力ファイルが選択されていないのじゃ！");
-                return StringResource.getNotFound();
-            }
-            
-            if (!outputFile.exists()) {
-                boolean success = convertWithFFmpeg(hlsFile, outputFile, type);
-                if (!success) return StringResource.getNotFound();
-            }
-            
-            if (outputFile.exists()) {
-                StringResource r = new StringResource(new byte[0]);
-                r.addResponseHeader("Content-Length", "0");
-                r.addResponseHeader("X-File-Path", outputFile.getAbsolutePath());
-                r.addResponseHeader(HttpHeader.CONTENT_TYPE, "text/plain");
+            // 既に処理中の場合は即座にレスポンスを返す
+            if (!processingRequests.add(requestKey)) {
+                logInfo("既に処理中のリクエストです: " + requestKey);
+                StringResource r = new StringResource("Processing in progress".getBytes());
+                r.addResponseHeader("Content-Type", "text/plain");
+                r.addResponseHeader("X-Status", "Already Processing");
                 r.addNoCacheResponseHeaders();
                 return r;
+            }
+            
+            try {
+                VideoDescriptor video = Cache.getPreferredCachedVideo(altid);
+                File hlsFile = new Cache(video).getCacheFile();
+                
+                // 元ファイル名を取得
+                String originalName = hlsFile.getName();
+                // 拡張子と.hlsを除去
+                String baseName = originalName.replaceFirst("\\.hls$", "").replaceFirst("\\.[^.]+$", "");
+                
+                // 日時情報を追加
+                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                String defaultName = String.format("%s_%s.%s", 
+                    baseName,
+                    timestamp,
+                    type.equals("video") ? "mp4" : "aac"
+                );
+                
+                // 保存ダイアログ表示
+                JFileChooser chooser = new JFileChooser(CACHE_DIR);
+                chooser.setSelectedFile(new File(defaultName));
+                chooser.setDialogTitle("変換ファイルの保存場所を選択");
+                
+                // 親フレームを取得（NLMainのフレームを使用）
+                java.awt.Frame parentFrame = java.awt.Frame.getFrames()[0];
+                
+                int result = chooser.showSaveDialog(parentFrame);
+                if (result != JFileChooser.APPROVE_OPTION) {
+                    logError("保存がキャンセルされました");
+                    StringResource r = new StringResource("Cancelled".getBytes());
+                    r.addResponseHeader("Content-Type", "text/plain");
+                    r.addResponseHeader("X-Status", "Cancelled");
+                    r.addNoCacheResponseHeaders();
+                    return r;
+                }
+                
+                File outputFile = chooser.getSelectedFile();
+                
+                if (outputFile == null) {
+                    logError("出力ファイルが選択されていません");
+                    return StringResource.getNotFound();
+                }
+                
+                if (!outputFile.exists()) {
+                    // 変換処理を別スレッドで実行
+                    Thread converterThread = new Thread(() -> {
+                        try {
+                            logInfo("変換処理を開始: " + outputFile.getName());
+                            boolean success = convertWithFFmpeg(hlsFile, outputFile, type);
+                            if (success) {
+                                logInfo("変換完了: " + outputFile.getAbsolutePath());
+                            } else {
+                                logError("変換失敗: " + outputFile.getName());
+                            }
+                        } finally {
+                            // 処理完了後にセットから削除
+                            processingRequests.remove(requestKey);
+                        }
+                    });
+                    converterThread.start();
+                    
+                    // 即座にレスポンスを返す
+                    StringResource r = new StringResource("Processing started".getBytes());
+                    r.addResponseHeader("Content-Type", "text/plain");
+                    r.addResponseHeader("X-File-Path", outputFile.getAbsolutePath());
+                    r.addResponseHeader("X-Status", "Processing");
+                    r.addNoCacheResponseHeaders();
+                    return r;
+                }
+                
+                // ファイルが既に存在する場合
+                if (outputFile.exists()) {
+                    StringResource r = new StringResource(new byte[0]);
+                    r.addResponseHeader("Content-Length", "0");
+                    r.addResponseHeader("X-File-Path", outputFile.getAbsolutePath());
+                    r.addResponseHeader(HttpHeader.CONTENT_TYPE, "text/plain");
+                    r.addResponseHeader("X-Status", "Already Exists");
+                    r.addNoCacheResponseHeaders();
+                    return r;
+                }
+            } finally {
+                // ファイルが既に存在する場合などの即座に処理が終わるケースで削除
+                if (!Thread.currentThread().getName().contains("Thread-")) {
+                    processingRequests.remove(requestKey);
+                }
             }
         }
         return StringResource.getNotFound();
@@ -145,25 +199,28 @@ public class downloadThruFFmpeg implements Extension2, Processor {
             // HLSフォルダ処理
             if (new File(input, "audio.m3u8").exists()) {
                 // 新形式HLS (video.m3u8 + audio.m3u8)
-                cmdList.add("-protocol_whitelist");
-                cmdList.add("file,http,https,tcp,tls,crypto,data");
-                cmdList.add("-allowed_extensions");
-                cmdList.add("ALL");
-                cmdList.add("-i");
-                cmdList.add(new File(input, "video.m3u8").getPath());
                 
+                // ビデオストリーム用
                 cmdList.add("-protocol_whitelist");
                 cmdList.add("file,http,https,tcp,tls,crypto,data");
                 cmdList.add("-allowed_extensions");
                 cmdList.add("ALL");
                 cmdList.add("-i");
-                cmdList.add(new File(input, "audio.m3u8").getPath());
+                cmdList.add(new File(input, "video.m3u8").getAbsolutePath());
+                
+                // オーディオストリーム用  
+                cmdList.add("-protocol_whitelist");
+                cmdList.add("file,http,https,tcp,tls,crypto,data");
+                cmdList.add("-allowed_extensions");
+                cmdList.add("ALL");
+                cmdList.add("-i");
+                cmdList.add(new File(input, "audio.m3u8").getAbsolutePath());
                 
             } else {
                 // 旧形式HLS (playlist.m3u8を検索)
                 playlistPath = findPlaylistM3u8(input);
                 if (playlistPath == null) {
-                    logError("HLSフォーマットが不正なのじゃ！ playlist.m3u8が見つからないのじゃ");
+                    logError("HLSフォーマットが不正です。playlist.m3u8が見つかりません");
                     return false;
                 }
                 cmdList.add("-protocol_whitelist");
@@ -171,12 +228,12 @@ public class downloadThruFFmpeg implements Extension2, Processor {
                 cmdList.add("-allowed_extensions");
                 cmdList.add("ALL");
                 cmdList.add("-i");
-                cmdList.add(playlistPath.getPath());
+                cmdList.add(playlistPath.getAbsolutePath());
             }
         } else {
             // 通常ファイル処理
             cmdList.add("-i");
-            cmdList.add(input.getPath());
+            cmdList.add(input.getAbsolutePath());
         }
 
         // コーデック設定
@@ -193,6 +250,8 @@ public class downloadThruFFmpeg implements Extension2, Processor {
             cmdList.add("animation");
             cmdList.add("-vf");
             cmdList.add("format=pix_fmts=yuv420p");
+            cmdList.add("-movflags");
+            cmdList.add("+faststart");
         } else {
             cmdList.add("-vn");
         }
@@ -209,31 +268,56 @@ public class downloadThruFFmpeg implements Extension2, Processor {
         cmdList.add("-ac");
         cmdList.add("2");
 
-        // 共通オプション
-        cmdList.add("-movflags");
-        cmdList.add("faststart");
+        // 互換性オプション（convert-any-to-h264.batから）
+        cmdList.add("-strict");
+        cmdList.add("experimental");
         cmdList.add("-fps_mode");
         cmdList.add("cfr");
+        cmdList.add("-vsync");
+        cmdList.add("1");
+        cmdList.add("-async");
+        cmdList.add("1");
+        
+        // 上書きフラグ
         cmdList.add("-y");
-        cmdList.add(output.getPath());
+        cmdList.add(output.getAbsolutePath());
 
-        String[] cmdarray = cmdList.toArray(new String[0]);
+        // コマンドをログに出力（デバッグ用）
+        logInfo("実行コマンド: " + String.join(" ", cmdList));
         
         Process proc = null;
         try {
-            proc = Runtime.getRuntime().exec(cmdarray);
+            ProcessBuilder pb = new ProcessBuilder(cmdList);
+            // 作業ディレクトリをキャッシュディレクトリに設定
+            pb.directory(CACHE_DIR);
+            // エラーストリームを標準出力にマージしない（個別に処理）
+            pb.redirectErrorStream(false);
+            
+            proc = pb.start();
             
             // ログ収集用スレッド起動
             startLogCollector(proc.getInputStream(), "INFO");
             startLogCollector(proc.getErrorStream(), "ERROR");
 
             int exitCode = proc.waitFor();
+            
+            if (exitCode != 0) {
+                logError("FFmpegが異常終了しました。終了コード: " + exitCode);
+            }
+            
             return exitCode == 0;
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             logError("FFmpeg実行エラー: " + e.getMessage());
             if (proc != null) {
                 proc.destroyForcibly();
             }
+            return false;
+        } catch (InterruptedException e) {
+            logError("FFmpeg処理が中断されました: " + e.getMessage());
+            if (proc != null) {
+                proc.destroyForcibly();
+            }
+            Thread.currentThread().interrupt();
             return false;
         } finally {
             if (proc != null) {
@@ -270,6 +354,21 @@ public class downloadThruFFmpeg implements Extension2, Processor {
             
             javax.swing.SwingUtilities.invokeLater(() -> {
                 logArea.append(errorMessage);
+                logArea.setCaretPosition(logArea.getDocument().getLength());
+            });
+        }
+    }
+    
+    private void logInfo(String message) {
+        if (logArea != null) {
+            final String infoMessage = String.format(
+                "[%s] INFO: %s\n",
+                new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()),
+                message
+            );
+            
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                logArea.append(infoMessage);
                 logArea.setCaretPosition(logArea.getDocument().getLength());
             });
         }
