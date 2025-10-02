@@ -30232,8 +30232,8 @@ class WatchPageModule {
     this.config = {
       id: "watch_page",
       name: "Watch Page統合",
-      description: "Watch Pageの各種機能を統合管理（タグカウンター、ヘッダー一行化）",
-      version: "1.0.0",
+      description: "Watch Pageの各種機能を統合管理（タグカウンター）",
+      version: "2.0.0",
       enabled: true,
       targetPages: [PageType.WATCH],
       dependencies: [],
@@ -30249,20 +30249,10 @@ class WatchPageModule {
     // ページ遷移監視用
     this.pageObserver = null;
     this.currentVideoId = null;
+    this.pageTransitionDebounced = null;
     // デフォルト設定
     this.defaultSettings = {
-      tag_counter: true,
-      header_one_row: true
-    };
-    // ラジアルセレクター機能は独立モジュール（WatchBackgroundSelectorModule）に移行済み
-    /**
-     * フルスクリーン変更ハンドラー
-     */
-    this.handleFullscreenChange = () => {
-      const header = document.querySelector("header");
-      if (header) {
-        header.style.display = document.fullscreenElement ? "none" : "flex";
-      }
+      tag_counter: true
     };
     this.initializeSubModules();
     window.watchPageModule = this;
@@ -30281,18 +30271,6 @@ class WatchPageModule {
       initialize: this.initializeTagCounter.bind(this),
       destroy: this.destroyTagCounter.bind(this),
       isActive: () => !!document.getElementById("TagItemsCounter")
-    });
-    this.subModules.set("header_one_row", {
-      id: "header_one_row",
-      name: "ヘッダー一行化",
-      description: "ヘッダー要素を一行に統合",
-      enabled: savedSettings.header_one_row,
-      initialize: this.initializeHeaderOneRow.bind(this),
-      destroy: this.destroyHeaderOneRow.bind(this),
-      isActive: () => {
-        const header = document.querySelector("header");
-        return header ? header.style.position === "sticky" : false;
-      }
     });
   }
   /**
@@ -30329,6 +30307,7 @@ class WatchPageModule {
       this.pageObserver.disconnect();
       this.pageObserver = null;
     }
+    this.pageTransitionDebounced = null;
     for (const [, subModule] of this.subModules) {
       try {
         if (subModule.isActive()) {
@@ -30447,7 +30426,7 @@ class WatchPageModule {
       // 利用可能なサブモジュール一覧
       list: () => {
         this.getSubModules().forEach((sub) => {
-          window.logger.debug(`${sub.id}: ${sub.enabled ? "有効" : "無効"}`);
+          window.logger.info(`${sub.id}: ${sub.enabled ? "有効" : "無効"}`);
         });
       }
     };
@@ -30486,28 +30465,7 @@ class WatchPageModule {
     this.updateTagCounterDebounced = null;
   }
   // 背景セレクター機能は独立モジュールに移行済み
-  /**
-   * ヘッダー一行化初期化
-   */
-  async initializeHeaderOneRow() {
-    document.addEventListener("fullscreenchange", this.handleFullscreenChange);
-    await this.setupHeaderObserver();
-  }
-  /**
-   * ヘッダー一行化破棄
-   */
-  destroyHeaderOneRow() {
-    document.removeEventListener("fullscreenchange", this.handleFullscreenChange);
-    const header = document.querySelector("header");
-    if (header) {
-      header.style.position = "";
-      header.style.top = "";
-      header.style.display = "";
-      header.style.alignItems = "";
-      header.style.gap = "";
-      header.style.padding = "";
-    }
-  }
+  // ヘッダー一行化機能は削除されました（SPA遷移時のエラーのため）
   /**
    * タグカウンター再試行機能
    */
@@ -30648,53 +30606,7 @@ https://nico.ms/${currentVideoInfo.videoId}`;
     }
     return { title, videoId };
   }
-  /**
-   * ヘッダー監視設定
-   */
-  setupHeaderObserver() {
-    return new Promise((resolve) => {
-      const observer = new MutationObserver((mutations, obs) => {
-        const commonHeader = document.getElementById("CommonHeader");
-        const header = document.querySelector("header");
-        if (commonHeader && header && commonHeader.children.length > 0 && header.children.length > 0) {
-          this.reorganizeHeader(header, commonHeader);
-          obs.disconnect();
-          resolve();
-        }
-      });
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-        attributes: true
-      });
-    });
-  }
-  /**
-   * ヘッダー再構成
-   */
-  reorganizeHeader(header, commonHeader) {
-    const elements = {
-      menuButton: header.querySelector('button[aria-label="サイドメニューを開く"]'),
-      nicovideoLogo: header.querySelector('a[title="ニコニコ動画"]'),
-      accountMenuServiceLinks: commonHeader.querySelector('div:has(img[src*="/nicoaccount/usericon"])')?.parentElement || null,
-      searchBar: header.querySelector('form[role="search"]'),
-      feedbackNewsSection: header.querySelector("div.d_flex.gap_base.ai_center"),
-      premiumLink: commonHeader.querySelector('a[href*="/premium/register"]')?.parentElement || null
-    };
-    const elementsToMove = Object.values(elements).filter(Boolean);
-    while (header.firstChild) {
-      header.removeChild(header.firstChild);
-    }
-    elementsToMove.forEach((element) => header.appendChild(element));
-    const headerElement = header;
-    headerElement.style.top = "0";
-    headerElement.style.position = "sticky";
-    headerElement.style.display = "flex";
-    headerElement.style.alignItems = "center";
-    headerElement.style.gap = "1rem";
-    headerElement.style.padding = "0.5rem 1rem";
-  }
+  // ラジアルセレクター機能は独立モジュール（WatchBackgroundSelectorModule）に移行済み
   /**
    * タグ監視Observer設定
    */
@@ -30792,21 +30704,15 @@ https://nico.ms/${currentVideoInfo.videoId}`;
    */
   setupPageObserver() {
     this.currentVideoId = this.getCurrentVideoId();
+    this.pageTransitionDebounced = this.debounce(() => {
+      this.handlePageTransition();
+    }, 200);
     this.pageObserver = new MutationObserver(() => {
       const newVideoId = this.getCurrentVideoId();
       if (newVideoId && newVideoId !== this.currentVideoId) {
         this.currentVideoId = newVideoId;
-        const tagCounterModule = this.subModules.get("tag_counter");
-        if (tagCounterModule?.enabled) {
-          this.destroyTagCounter();
-          setTimeout(async () => {
-            try {
-              this.destroyTagCounter();
-              await this.initializeTagCounter();
-            } catch (error) {
-              window.logger.error("[WatchPageModule] ページ遷移時のタグカウンター再初期化失敗:", error);
-            }
-          }, 500);
+        if (this.pageTransitionDebounced) {
+          this.pageTransitionDebounced();
         }
       }
     });
@@ -30814,6 +30720,24 @@ https://nico.ms/${currentVideoInfo.videoId}`;
       childList: true,
       subtree: true
     });
+  }
+  /**
+   * ページ遷移時の処理
+   */
+  handlePageTransition() {
+    window.logger.info("[WatchPageModule] ページ遷移を検知しました");
+    const tagCounterModule = this.subModules.get("tag_counter");
+    if (tagCounterModule?.enabled) {
+      this.destroyTagCounter();
+      setTimeout(async () => {
+        try {
+          this.destroyTagCounter();
+          await this.initializeTagCounter();
+        } catch (error) {
+          window.logger.error("[WatchPageModule] ページ遷移時のタグカウンター再初期化失敗:", error);
+        }
+      }, 500);
+    }
   }
   /**
    * 現在の動画IDを取得

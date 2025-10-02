@@ -9,8 +9,8 @@ export class WatchPageModule implements ModuleInstance {
   public readonly config: ModuleConfig = {
     id: 'watch_page',
     name: 'Watch Page統合',
-    description: 'Watch Pageの各種機能を統合管理（タグカウンター、ヘッダー一行化）',
-    version: '1.0.0',
+    description: 'Watch Pageの各種機能を統合管理（タグカウンター）',
+    version: '2.0.0',
     enabled: true,
     targetPages: [PageType.WATCH],
     dependencies: [],
@@ -29,11 +29,11 @@ export class WatchPageModule implements ModuleInstance {
   // ページ遷移監視用
   private pageObserver: MutationObserver | null = null;
   private currentVideoId: string | null = null;
+  private pageTransitionDebounced: (() => void) | null = null;
 
   // デフォルト設定
   private readonly defaultSettings = {
-    tag_counter: true,
-    header_one_row: true
+    tag_counter: true
   };
 
   constructor() {
@@ -59,23 +59,6 @@ export class WatchPageModule implements ModuleInstance {
       initialize: this.initializeTagCounter.bind(this),
       destroy: this.destroyTagCounter.bind(this),
       isActive: () => !!document.getElementById('TagItemsCounter')
-    });
-
-    // 背景セレクターは独立モジュールに移行
-    // 既存の統合モジュールからは削除
-
-    // ヘッダー一行化サブモジュール
-    this.subModules.set('header_one_row', {
-      id: 'header_one_row',
-      name: 'ヘッダー一行化',
-      description: 'ヘッダー要素を一行に統合',
-      enabled: savedSettings.header_one_row,
-      initialize: this.initializeHeaderOneRow.bind(this),
-      destroy: this.destroyHeaderOneRow.bind(this),
-      isActive: () => {
-        const header = document.querySelector('header');
-        return header ? header.style.position === 'sticky' : false;
-      }
     });
   }
 
@@ -131,6 +114,9 @@ export class WatchPageModule implements ModuleInstance {
       this.pageObserver.disconnect();
       this.pageObserver = null;
     }
+    
+    // デバウンス関数をクリア
+    this.pageTransitionDebounced = null;
 
     // 全サブモジュールを破棄
     for (const [, subModule] of this.subModules) {
@@ -285,7 +271,7 @@ export class WatchPageModule implements ModuleInstance {
       list: () => {
         
         this.getSubModules().forEach(sub => {
-          window.logger.debug(`${sub.id}: ${sub.enabled ? '有効' : '無効'}`);
+          window.logger.info(`${sub.id}: ${sub.enabled ? '有効' : '無効'}`);
         });
       }
     };
@@ -343,35 +329,7 @@ export class WatchPageModule implements ModuleInstance {
   }
 
   // 背景セレクター機能は独立モジュールに移行済み
-
-  /**
-   * ヘッダー一行化初期化
-   */
-  private async initializeHeaderOneRow(): Promise<void> {
-    // フルスクリーン変更検知
-    document.addEventListener("fullscreenchange", this.handleFullscreenChange);
-
-    // ヘッダー要素の監視と統合
-    await this.setupHeaderObserver();
-  }
-
-  /**
-   * ヘッダー一行化破棄
-   */
-  private destroyHeaderOneRow(): void {
-    document.removeEventListener("fullscreenchange", this.handleFullscreenChange);
-    
-    // ヘッダーのスタイルをリセット
-    const header = document.querySelector("header") as HTMLElement;
-    if (header) {
-      header.style.position = '';
-      header.style.top = '';
-      header.style.display = '';
-      header.style.alignItems = '';
-      header.style.gap = '';
-      header.style.padding = '';
-    }
-  }
+  // ヘッダー一行化機能は削除されました（SPA遷移時のエラーのため）
 
   /**
    * タグカウンター再試行機能
@@ -565,73 +523,6 @@ export class WatchPageModule implements ModuleInstance {
 
   // ラジアルセレクター機能は独立モジュール（WatchBackgroundSelectorModule）に移行済み
 
-  /**
-   * フルスクリーン変更ハンドラー
-   */
-  private handleFullscreenChange = (): void => {
-    const header = document.querySelector("header") as HTMLElement;
-    if (header) {
-      header.style.display = document.fullscreenElement ? "none" : "flex";
-    }
-  };
-
-  /**
-   * ヘッダー監視設定
-   */
-  private setupHeaderObserver(): Promise<void> {
-    return new Promise((resolve) => {
-      const observer = new MutationObserver((mutations, obs) => {
-        const commonHeader = document.getElementById("CommonHeader");
-        const header = document.querySelector("header");
-        
-        if (commonHeader && header && commonHeader.children.length > 0 && header.children.length > 0) {
-          this.reorganizeHeader(header, commonHeader);
-          obs.disconnect();
-          resolve();
-        }
-      });
-      
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-        attributes: true,
-      });
-    });
-  }
-
-  /**
-   * ヘッダー再構成
-   */
-  private reorganizeHeader(header: Element, commonHeader: Element): void {
-    const elements = {
-      menuButton: header.querySelector('button[aria-label="サイドメニューを開く"]'),
-      nicovideoLogo: header.querySelector('a[title="ニコニコ動画"]'),
-      accountMenuServiceLinks: commonHeader.querySelector('div:has(img[src*="/nicoaccount/usericon"])')?.parentElement || null,
-      searchBar: header.querySelector('form[role="search"]'),
-      feedbackNewsSection: header.querySelector("div.d_flex.gap_base.ai_center"),
-      premiumLink: commonHeader.querySelector('a[href*="/premium/register"]')?.parentElement || null,
-    };
-
-    const elementsToMove = Object.values(elements).filter(Boolean) as Element[];
-    
-    // ヘッダーの内容をクリア
-    while (header.firstChild) {
-      header.removeChild(header.firstChild);
-    }
-    
-    // 保存した要素を新しい順序で追加
-    elementsToMove.forEach((element) => header.appendChild(element));
-    
-    // スタイル調整
-    const headerElement = header as HTMLElement;
-    headerElement.style.top = "0";
-    headerElement.style.position = "sticky";
-    headerElement.style.display = "flex";
-    headerElement.style.alignItems = "center";
-    headerElement.style.gap = "1rem";
-    headerElement.style.padding = "0.5rem 1rem";
-  }
 
   /**
    * タグ監視Observer設定
@@ -761,7 +652,12 @@ export class WatchPageModule implements ModuleInstance {
     // 現在の動画IDを記録
     this.currentVideoId = this.getCurrentVideoId();
 
-    // ページ遷移を監視
+    // デバウンス関数を作成（200ms間隔でページ遷移処理）
+    this.pageTransitionDebounced = this.debounce(() => {
+      this.handlePageTransition();
+    }, 200);
+
+    // ページ遷移を監視（DOM変更のみ検知、処理はデバウンス）
     this.pageObserver = new MutationObserver(() => {
       const newVideoId = this.getCurrentVideoId();
       
@@ -769,22 +665,9 @@ export class WatchPageModule implements ModuleInstance {
       if (newVideoId && newVideoId !== this.currentVideoId) {
         this.currentVideoId = newVideoId;
         
-        // タグカウンターサブモジュールが有効な場合は再初期化
-        const tagCounterModule = this.subModules.get('tag_counter');
-        if (tagCounterModule?.enabled) {
-          // 即座に古い要素を削除
-          this.destroyTagCounter();
-          
-          setTimeout(async () => {
-            try {
-              // 念のため再度削除を実行
-              this.destroyTagCounter();
-              // 新しいページで再初期化
-              await this.initializeTagCounter();
-            } catch (error) {
-              window.logger.error('[WatchPageModule] ページ遷移時のタグカウンター再初期化失敗:', error);
-            }
-          }, 500); // 少し遅延させてDOMの更新を待つ
+        // デバウンスで処理を遅延実行
+        if (this.pageTransitionDebounced) {
+          this.pageTransitionDebounced();
         }
       }
     });
@@ -794,6 +677,31 @@ export class WatchPageModule implements ModuleInstance {
       childList: true,
       subtree: true
     });
+  }
+
+  /**
+   * ページ遷移時の処理
+   */
+  private handlePageTransition(): void {
+    window.logger.info('[WatchPageModule] ページ遷移を検知しました');
+    
+    // タグカウンターサブモジュールが有効な場合は再初期化
+    const tagCounterModule = this.subModules.get('tag_counter');
+    if (tagCounterModule?.enabled) {
+      // 即座に古い要素を削除
+      this.destroyTagCounter();
+      
+      setTimeout(async () => {
+        try {
+          // 念のため再度削除を実行
+          this.destroyTagCounter();
+          // 新しいページで再初期化
+          await this.initializeTagCounter();
+        } catch (error) {
+          window.logger.error('[WatchPageModule] ページ遷移時のタグカウンター再初期化失敗:', error);
+        }
+      }, 500); // 少し遅延させてDOMの更新を待つ
+    }
   }
 
   /**

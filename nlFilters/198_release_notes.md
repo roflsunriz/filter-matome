@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #198 (2025/10/02) リリースノート](#filter-matome-198-20251002-リリースノート)
 - [filter-matome #197 (2025/09/29) リリースノート](#filter-matome-197-20250929-リリースノート)
 - [filter-matome #196 (2025/09/29) リリースノート](#filter-matome-196-20250929-リリースノート)
 - [filter-matome #195 (2025/09/23) リリースノート](#filter-matome-195-20250923-リリースノート)
@@ -107,6 +108,19 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #198 (2025/10/02) リリースノート
+
+- ✨新機能(New)：     
+- なし
+- ✅️修正(Fixed)：   
+- なし
+- 🔴変更(Changed)：           
+- mlink-video-controllerから不要となったヘッダー一行化サブモジュールを削除。機能ON時にページ遷移時にエラーを引き起こしていたのを修正。
+- ❌️未修正(Unfixed)：     
+- なし
+- ℹ️その他(Others)：     
+- なし
 
 
 ### filter-matome #197 (2025/09/29) リリースノート
