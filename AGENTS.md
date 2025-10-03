@@ -6,6 +6,7 @@
 - 常に日本語で応答してください
 - Typescriptのファイル編集後は npm run lint, npm run type-check, npm run buildを実行してコード品質を確認してください。必要があればクリーンになるまで修正してください
 - Typescriptではない場合はnpm run lint, npm run type-check, npm run buildは必要ありません。
+- 作業が完了したら、新規ファイルを含む git diff を確認し、変更内容を要約した 5 行までのコミットメッセージを生成してください。
 
 ## Environment
 
