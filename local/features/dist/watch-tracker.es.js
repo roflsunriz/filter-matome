@@ -10,13 +10,13 @@ var LogLevel = /* @__PURE__ */ ((LogLevel2) => {
 
 class Logger {
   constructor() {
-    this.currentLevel = LogLevel.ERROR;
+    this.currentLevel = LogLevel.DEBUG;
     this.enabledFiles = /* @__PURE__ */ new Set();
     this.disabledFiles = /* @__PURE__ */ new Set();
     this.initializeLoggerConfig();
   }
   initializeLoggerConfig() {
-    this.setLevel(LogLevel.ERROR);
+    this.setLevel(LogLevel.DEBUG);
   }
   static getInstance() {
     if (!Logger.instance) {

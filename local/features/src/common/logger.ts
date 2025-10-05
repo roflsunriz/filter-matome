@@ -4,7 +4,7 @@ class Logger {
   private static instance: Logger;
   private enabledFiles: Set<string>;
   private disabledFiles: Set<string>;
-  private currentLevel: LogLevel = LogLevel.ERROR;
+  private currentLevel: LogLevel = LogLevel.DEBUG;
 
   private constructor() {
     this.enabledFiles = new Set();
@@ -18,7 +18,7 @@ class Logger {
     //this.enableLogging("watch-history");
     //this.enableLogging("database");
     // ログレベルは最後に設定
-    this.setLevel(LogLevel.ERROR);
+    this.setLevel(LogLevel.DEBUG);
   }
 
   public static getInstance(): Logger {
