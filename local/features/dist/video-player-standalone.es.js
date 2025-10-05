@@ -7683,13 +7683,13 @@ class DataInterceptor {
   }
   /**
    * 現在のURLからSMIDを抽出（SPA対応版）
+   * 共通ヘルパーのgetVideoIdWithFallbackを利用
    */
   extractSmidFromCurrentUrl() {
     try {
-      const currentUrl = window.location.href;
-      const smidMatch = currentUrl.match(/\/watch\/([a-z]{2}\d+)/i);
-      if (smidMatch) {
-        return smidMatch[1];
+      const smid = window.commonHelper?.getVideoIdWithFallback?.(window.location);
+      if (smid && typeof smid === "string") {
+        return smid;
       }
       return null;
     } catch (error) {

@@ -91,18 +91,15 @@ export class DataInterceptor {
 
   /**
    * 現在のURLからSMIDを抽出（SPA対応版）
+   * 共通ヘルパーのgetVideoIdWithFallbackを利用
    */
   private extractSmidFromCurrentUrl(): string | null {
     try {
-      const currentUrl = window.location.href;
-      
-      // ニコニコ動画の視聴ページ形式: /watch/sm123456 (大文字小文字無視)
-      const smidMatch = currentUrl.match(/\/watch\/([a-z]{2}\d+)/i);
-      
-      if (smidMatch) {
-        return smidMatch[1];
+      // window.commonHelper.getVideoIdWithFallbackはURL等から動画IDを抽出する
+      const smid = window.commonHelper?.getVideoIdWithFallback?.(window.location);
+      if (smid && typeof smid === 'string') {
+        return smid;
       }
-      
       return null;
     } catch (error) {
       window.logger?.error('[CommentFilter2] SMID extraction from current URL failed:', error);
