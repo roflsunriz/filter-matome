@@ -29,7 +29,7 @@ declare global {
       // 既存の関数
       extractVideoIdFromUrl: (input?: CommonHelperVideoIdSource | null) => string | null;
       // NicoCache_nl.watch.getVideoIDをチェックして、取得できない場合にURLから動画IDを抽出するフォールバック機能
-      getVideoIdWithFallback: (input?: CommonHelperVideoIdSource | null) => string | null;
+      getVideoIdWithFallback: (input?: CommonHelperVideoIdSource | null) => Promise<string | null>;
       checkCache404: (url: string) => Promise<boolean | void>;
       fetchWatchPage: (SMID?: string) => Promise<ExtendedFetchWatchPageResult | void>;
       

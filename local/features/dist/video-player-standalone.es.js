@@ -193,8 +193,24 @@ window.commonHelper = {
     }
   },
   // NicoCache_nl.watch.getVideoIDをチェックして、取得できない場合にURLから動画IDを抽出するフォールバック機能
-  getVideoIdWithFallback: (input) => {
+  getVideoIdWithFallback: async (input) => {
     try {
+      await new Promise((resolve) => {
+        let attempts = 0;
+        const maxAttempts = 50;
+        const checkReady = () => {
+          attempts++;
+          const windowWithNico2 = window;
+          const nicoCache2 = windowWithNico2.NicoCache_nl;
+          const isReady = nicoCache2?.watch?.getVideoID || nicoCache2?.watch?.apiData?.video?.id;
+          if (isReady || attempts >= maxAttempts) {
+            resolve();
+          } else {
+            setTimeout(checkReady, 100);
+          }
+        };
+        checkReady();
+      });
       const windowWithNico = window;
       const nicoCache = windowWithNico.NicoCache_nl;
       if (nicoCache?.watch?.getVideoID && typeof nicoCache.watch.getVideoID === "function") {
@@ -217,7 +233,22 @@ window.commonHelper = {
           return fromApiData;
         }
       }
-      return window.commonHelper.extractVideoIdFromUrl(input);
+      const urlVideoId = window.commonHelper.extractVideoIdFromUrl(input);
+      if (urlVideoId) {
+        return urlVideoId;
+      }
+      try {
+        const watchPageResult = await window.commonHelper.fetchWatchPage();
+        if (watchPageResult?.apiData?.video?.id && typeof watchPageResult.apiData.video.id === "string") {
+          const fromFetch = normalizeVideoId(watchPageResult.apiData.video.id);
+          if (fromFetch) {
+            return fromFetch;
+          }
+        }
+      } catch (error) {
+        console.warn("[commonHelper] fetchWatchPage fallback failed:", error);
+      }
+      return null;
     } catch (error) {
       console.error("[commonHelper] getVideoIdWithFallback failed:", error);
       return null;
@@ -7645,7 +7676,7 @@ class DataInterceptor {
     if (!window.commentFilter2GlobalData) {
       window.commentFilter2GlobalData = toCompatibleGlobalData(globalData);
     }
-    this.updateCurrentSmid();
+    void this.updateCurrentSmid();
   }
   /**
    * SPA ナビゲーション対応セットアップ
@@ -7653,22 +7684,22 @@ class DataInterceptor {
   setupSPANavigation() {
     history.pushState = (...args) => {
       this.originalPushState(...args);
-      setTimeout(() => this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 0);
     };
     history.replaceState = (...args) => {
       this.originalReplaceState(...args);
-      setTimeout(() => this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 0);
     };
     window.addEventListener("popstate", () => {
-      setTimeout(() => this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 0);
     });
     window.logger?.debug("[CommentFilter2] SPA navigation hooks initialized");
   }
   /**
    * 現在のSMIDを更新
    */
-  updateCurrentSmid() {
-    const newSmid = this.extractSmidFromCurrentUrl();
+  async updateCurrentSmid() {
+    const newSmid = await this.extractSmidFromCurrentUrl();
     if (newSmid !== this.currentSmid) {
       this.currentSmid = newSmid;
       const global = window[CONSTANTS.GLOBAL_DATA_KEY];
@@ -7685,9 +7716,9 @@ class DataInterceptor {
    * 現在のURLからSMIDを抽出（SPA対応版）
    * 共通ヘルパーのgetVideoIdWithFallbackを利用
    */
-  extractSmidFromCurrentUrl() {
+  async extractSmidFromCurrentUrl() {
     try {
-      const smid = window.commonHelper?.getVideoIdWithFallback?.(window.location);
+      const smid = await window.commonHelper?.getVideoIdWithFallback?.(window.location);
       if (smid && typeof smid === "string") {
         return smid;
       }
@@ -7736,7 +7767,7 @@ class DataInterceptor {
    */
   async processCommentData(data, url) {
     try {
-      const smid = this.extractSmidFromUrl(url);
+      const smid = await this.extractSmidFromUrl(url);
       const processedData = this.selectMainThread(data);
       const global = window[CONSTANTS.GLOBAL_DATA_KEY];
       global.originalData = processedData;
@@ -7763,14 +7794,14 @@ class DataInterceptor {
   /**
    * URLやwindowからSMID（動画ID）を抽出（共通ヘルパー利用・SPA対応）
    */
-  extractSmidFromUrl(url) {
+  async extractSmidFromUrl(url) {
     try {
       if (this.currentSmid) {
         window.logger?.debug(`[CommentFilter2] Using cached SMID: ${this.currentSmid}`);
         return this.currentSmid;
       }
       if (typeof window.commonHelper?.getVideoIdWithFallback === "function") {
-        const smid = window.commonHelper.getVideoIdWithFallback(url);
+        const smid = await window.commonHelper.getVideoIdWithFallback(url);
         if (smid) {
           this.currentSmid = smid;
           window.logger?.debug(`[CommentFilter2] SMID extracted by commonHelper: ${smid}`);
@@ -13702,10 +13733,10 @@ class CommentFilter2 {
   /**
    * 共通ヘルパー経由でSMID（動画ID）を抽出
    */
-  extractSmidFromLocation() {
+  async extractSmidFromLocation() {
     try {
       if (typeof window.commonHelper?.getVideoIdWithFallback === "function") {
-        return window.commonHelper.getVideoIdWithFallback(window.location.href);
+        return await window.commonHelper.getVideoIdWithFallback(window.location.href);
       }
       window.logger?.warn("[CommentFilter2] commonHelper.getVideoIdWithFallbackが未定義です");
       return null;
@@ -13718,7 +13749,7 @@ class CommentFilter2 {
     await Promise.resolve();
     try {
       const globalData = DataInterceptor.getGlobalData();
-      const fallbackSmid = this.extractSmidFromLocation();
+      const fallbackSmid = await this.extractSmidFromLocation();
       const smid = globalData?.currentSmid ?? fallbackSmid;
       if (globalData?.originalData && smid) {
         await this.uiManager.applyFilter(smid);
@@ -16860,8 +16891,8 @@ Mylist2`,
   }
 }
 
-const getActiveVideoId = () => {
-  const videoId = window.commonHelper?.getVideoIdWithFallback() ?? null;
+const getActiveVideoId = async () => {
+  const videoId = await window.commonHelper?.getVideoIdWithFallback() ?? null;
   return videoId ?? "";
 };
 const handleVideoOperation = (operation, videoId) => {
@@ -17118,12 +17149,12 @@ class LinkManager {
   /**
    * 視聴ページのコンテキスト（videoIdなど）が存在するかどうか
    */
-  hasWatchContext() {
+  async hasWatchContext() {
     try {
       if (isWatchLikePage()) {
         return true;
       }
-      const videoId = getActiveVideoId();
+      const videoId = await getActiveVideoId();
       return videoId.length > 0;
     } catch {
       return false;
@@ -17160,9 +17191,9 @@ class LinkManager {
   /**
    * 表示用リンク一覧を返す。非視聴ページでは無効なアクションを除外する。
    */
-  getLinks(group) {
+  async getLinks(group) {
     const links = this.LINK_GROUPS[group];
-    if (!this.hasWatchContext()) {
+    if (!await this.hasWatchContext()) {
       return links.filter((link) => this.canShowWithoutWatch(link.action));
     }
     return links;
@@ -17178,7 +17209,7 @@ class LinkManager {
     return "";
   }
   async handleAction(action) {
-    const videoId = getActiveVideoId();
+    const videoId = await getActiveVideoId();
     const threadId = this.getThreadId();
     const actionMap = {
       customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
@@ -17400,11 +17431,11 @@ class CommentManager {
     }
     return CommentManager.instance;
   }
-  extractVideoIdFromUrl() {
-    return window.commonHelper?.getVideoIdWithFallback() ?? null;
+  async extractVideoIdFromUrl() {
+    return await window.commonHelper?.getVideoIdWithFallback() ?? null;
   }
   async fetchComments(videoId) {
-    const effectiveVideoId = videoId || this.extractVideoIdFromUrl();
+    const effectiveVideoId = videoId || await this.extractVideoIdFromUrl();
     if (!effectiveVideoId) {
       window.logger?.warn("動画IDが指定されていません");
       return false;
@@ -17488,8 +17519,8 @@ class CommentManager {
       return;
     }
     this.isWatchingUrl = true;
-    const checkUrl = () => {
-      const currentVideoId = this.extractVideoIdFromUrl();
+    const checkUrl = async () => {
+      const currentVideoId = await this.extractVideoIdFromUrl();
       if (currentVideoId && currentVideoId !== this.currentVideoId) {
         window.logger?.info("URL変更を検出、コメントを再取得:", currentVideoId);
         this.fetchComments(currentVideoId).then((success) => {
@@ -23366,7 +23397,7 @@ class MlinkVideoController extends BasePanel {
       const template = document.createElement("template");
       let panelHtml = templates.panel;
       let linksHtml = templates.links;
-      linksHtml = linksHtml.replace("<!-- カスタムリンクがここに挿入されます -->", this.renderLinkGroup("custom")).replace("<!-- 関連サービスのリンクがここに挿入されます -->", this.renderLinkGroup("services")).replace("<!-- データ管理のリンクがここに挿入されます -->", this.renderLinkGroup("dataManagement"));
+      linksHtml = linksHtml.replace("<!-- カスタムリンクがここに挿入されます -->", await this.renderLinkGroup("custom")).replace("<!-- 関連サービスのリンクがここに挿入されます -->", await this.renderLinkGroup("services")).replace("<!-- データ管理のリンクがここに挿入されます -->", await this.renderLinkGroup("dataManagement"));
       panelHtml = panelHtml.replace("<!-- links.htmlの内容がここに挿入されます -->", linksHtml).replace("<!-- comments.htmlの内容がここに挿入されます -->", templates.comments).replace("<!-- playback.htmlの内容がここに挿入されます -->", templates.playback).replace("<!-- speed.htmlの内容がここに挿入されます -->", templates.speed).replace("<!-- volume.htmlの内容がここに挿入されます -->", templates.volume).replace("<!-- settings.htmlの内容がここに挿入されます -->", templates.settings);
       template.innerHTML = panelHtml;
       this.shadow.appendChild(style);
@@ -23858,8 +23889,8 @@ class MlinkVideoController extends BasePanel {
       tooltip.remove();
     }, 2e3);
   }
-  renderLinkGroup(group) {
-    const links = this.linkManager?.getLinks(group) || [];
+  async renderLinkGroup(group) {
+    const links = await this.linkManager?.getLinks(group) || [];
     return links.map((link) => `
       <div class="action-card" data-action="${link.action}">
         <img src="${link.icon}" alt="${link.title}" />

@@ -182,9 +182,9 @@ export class MlinkVideoController extends BasePanel {
       // リンクテンプレートにリンクを挿入
       let linksHtml = templates.links;
       linksHtml = linksHtml
-        .replace('<!-- カスタムリンクがここに挿入されます -->', this.renderLinkGroup('custom'))
-        .replace('<!-- 関連サービスのリンクがここに挿入されます -->', this.renderLinkGroup('services'))
-        .replace('<!-- データ管理のリンクがここに挿入されます -->', this.renderLinkGroup('dataManagement'));
+        .replace('<!-- カスタムリンクがここに挿入されます -->', await this.renderLinkGroup('custom'))
+        .replace('<!-- 関連サービスのリンクがここに挿入されます -->', await this.renderLinkGroup('services'))
+        .replace('<!-- データ管理のリンクがここに挿入されます -->', await this.renderLinkGroup('dataManagement'));
       
       panelHtml = panelHtml
         .replace('<!-- links.htmlの内容がここに挿入されます -->', linksHtml)
@@ -918,8 +918,8 @@ export class MlinkVideoController extends BasePanel {
     }, 2000);
   }
 
-  private renderLinkGroup(group: LinkGroup): string {
-    const links = this.linkManager?.getLinks(group) || [];
+  private async renderLinkGroup(group: LinkGroup): Promise<string> {
+    const links = (await this.linkManager?.getLinks(group)) || [];
     return links.map((link: LinkData) => `
       <div class="action-card" data-action="${link.action}">
         <img src="${link.icon}" alt="${link.title}" />

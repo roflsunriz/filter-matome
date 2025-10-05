@@ -3039,8 +3039,8 @@ Mylist2`,
   }
 }
 
-const getActiveVideoId = () => {
-  const videoId = window.commonHelper?.getVideoIdWithFallback() ?? null;
+const getActiveVideoId = async () => {
+  const videoId = await window.commonHelper?.getVideoIdWithFallback() ?? null;
   return videoId ?? "";
 };
 const handleVideoOperation = (operation, videoId) => {
@@ -3424,12 +3424,12 @@ class LinkManager {
   /**
    * 視聴ページのコンテキスト（videoIdなど）が存在するかどうか
    */
-  hasWatchContext() {
+  async hasWatchContext() {
     try {
       if (isWatchLikePage()) {
         return true;
       }
-      const videoId = getActiveVideoId();
+      const videoId = await getActiveVideoId();
       return videoId.length > 0;
     } catch {
       return false;
@@ -3466,9 +3466,9 @@ class LinkManager {
   /**
    * 表示用リンク一覧を返す。非視聴ページでは無効なアクションを除外する。
    */
-  getLinks(group) {
+  async getLinks(group) {
     const links = this.LINK_GROUPS[group];
-    if (!this.hasWatchContext()) {
+    if (!await this.hasWatchContext()) {
       return links.filter((link) => this.canShowWithoutWatch(link.action));
     }
     return links;
@@ -3484,7 +3484,7 @@ class LinkManager {
     return "";
   }
   async handleAction(action) {
-    const videoId = getActiveVideoId();
+    const videoId = await getActiveVideoId();
     const threadId = this.getThreadId();
     const actionMap = {
       customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
@@ -3706,11 +3706,11 @@ class CommentManager {
     }
     return CommentManager.instance;
   }
-  extractVideoIdFromUrl() {
-    return window.commonHelper?.getVideoIdWithFallback() ?? null;
+  async extractVideoIdFromUrl() {
+    return await window.commonHelper?.getVideoIdWithFallback() ?? null;
   }
   async fetchComments(videoId) {
-    const effectiveVideoId = videoId || this.extractVideoIdFromUrl();
+    const effectiveVideoId = videoId || await this.extractVideoIdFromUrl();
     if (!effectiveVideoId) {
       window.logger?.warn("動画IDが指定されていません");
       return false;
@@ -3794,8 +3794,8 @@ class CommentManager {
       return;
     }
     this.isWatchingUrl = true;
-    const checkUrl = () => {
-      const currentVideoId = this.extractVideoIdFromUrl();
+    const checkUrl = async () => {
+      const currentVideoId = await this.extractVideoIdFromUrl();
       if (currentVideoId && currentVideoId !== this.currentVideoId) {
         window.logger?.info("URL変更を検出、コメントを再取得:", currentVideoId);
         this.fetchComments(currentVideoId).then((success) => {
@@ -9672,7 +9672,7 @@ class MlinkVideoController extends BasePanel {
       const template = document.createElement("template");
       let panelHtml = templates.panel;
       let linksHtml = templates.links;
-      linksHtml = linksHtml.replace("<!-- カスタムリンクがここに挿入されます -->", this.renderLinkGroup("custom")).replace("<!-- 関連サービスのリンクがここに挿入されます -->", this.renderLinkGroup("services")).replace("<!-- データ管理のリンクがここに挿入されます -->", this.renderLinkGroup("dataManagement"));
+      linksHtml = linksHtml.replace("<!-- カスタムリンクがここに挿入されます -->", await this.renderLinkGroup("custom")).replace("<!-- 関連サービスのリンクがここに挿入されます -->", await this.renderLinkGroup("services")).replace("<!-- データ管理のリンクがここに挿入されます -->", await this.renderLinkGroup("dataManagement"));
       panelHtml = panelHtml.replace("<!-- links.htmlの内容がここに挿入されます -->", linksHtml).replace("<!-- comments.htmlの内容がここに挿入されます -->", templates.comments).replace("<!-- playback.htmlの内容がここに挿入されます -->", templates.playback).replace("<!-- speed.htmlの内容がここに挿入されます -->", templates.speed).replace("<!-- volume.htmlの内容がここに挿入されます -->", templates.volume).replace("<!-- settings.htmlの内容がここに挿入されます -->", templates.settings);
       template.innerHTML = panelHtml;
       this.shadow.appendChild(style);
@@ -10164,8 +10164,8 @@ class MlinkVideoController extends BasePanel {
       tooltip.remove();
     }, 2e3);
   }
-  renderLinkGroup(group) {
-    const links = this.linkManager?.getLinks(group) || [];
+  async renderLinkGroup(group) {
+    const links = await this.linkManager?.getLinks(group) || [];
     return links.map((link) => `
       <div class="action-card" data-action="${link.action}">
         <img src="${link.icon}" alt="${link.title}" />

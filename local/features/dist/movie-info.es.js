@@ -193,8 +193,24 @@ window.commonHelper = {
     }
   },
   // NicoCache_nl.watch.getVideoIDをチェックして、取得できない場合にURLから動画IDを抽出するフォールバック機能
-  getVideoIdWithFallback: (input) => {
+  getVideoIdWithFallback: async (input) => {
     try {
+      await new Promise((resolve) => {
+        let attempts = 0;
+        const maxAttempts = 50;
+        const checkReady = () => {
+          attempts++;
+          const windowWithNico2 = window;
+          const nicoCache2 = windowWithNico2.NicoCache_nl;
+          const isReady = nicoCache2?.watch?.getVideoID || nicoCache2?.watch?.apiData?.video?.id;
+          if (isReady || attempts >= maxAttempts) {
+            resolve();
+          } else {
+            setTimeout(checkReady, 100);
+          }
+        };
+        checkReady();
+      });
       const windowWithNico = window;
       const nicoCache = windowWithNico.NicoCache_nl;
       if (nicoCache?.watch?.getVideoID && typeof nicoCache.watch.getVideoID === "function") {
@@ -217,7 +233,22 @@ window.commonHelper = {
           return fromApiData;
         }
       }
-      return window.commonHelper.extractVideoIdFromUrl(input);
+      const urlVideoId = window.commonHelper.extractVideoIdFromUrl(input);
+      if (urlVideoId) {
+        return urlVideoId;
+      }
+      try {
+        const watchPageResult = await window.commonHelper.fetchWatchPage();
+        if (watchPageResult?.apiData?.video?.id && typeof watchPageResult.apiData.video.id === "string") {
+          const fromFetch = normalizeVideoId(watchPageResult.apiData.video.id);
+          if (fromFetch) {
+            return fromFetch;
+          }
+        }
+      } catch (error) {
+        console.warn("[commonHelper] fetchWatchPage fallback failed:", error);
+      }
+      return null;
     } catch (error) {
       console.error("[commonHelper] getVideoIdWithFallback failed:", error);
       return null;
@@ -2254,7 +2285,7 @@ const setStatusText = (element, text) => {
     element.textContent = text;
   }
 };
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => void (async () => {
   applyMovieInfoDashboardStyles();
   headerAdjustments();
   const headerContainer = document.getElementById("common-header-container");
@@ -2399,7 +2430,7 @@ document.addEventListener("DOMContentLoaded", () => {
       void handleCommentFetch();
     });
   }
-  const initialVideoId = window.commonHelper?.getVideoIdWithFallback?.() || normalizeVideoIdFromInput(window.location.search) || null;
+  const initialVideoId = await window.commonHelper?.getVideoIdWithFallback?.() || normalizeVideoIdFromInput(window.location.search) || null;
   if (initialVideoId) {
     if (videoInput) {
       videoInput.value = initialVideoId;
@@ -2409,5 +2440,5 @@ document.addEventListener("DOMContentLoaded", () => {
     setStatusText(globalStatus, "動画IDを入力してデータを取得してください");
     setCommentButtonIdle();
   }
-});
+})());
 //# sourceMappingURL=movie-info.es.js.map

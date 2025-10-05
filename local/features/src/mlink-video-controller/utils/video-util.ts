@@ -5,8 +5,8 @@ import { VideoOperation, SimpleVideoInfo, ExtendedApiData, CacheInfoResponse } f
 import { NicoCache_nlInterface } from '@/types/global-types';
 
 // 統一された動画ID抽出処理 (common.tsのgetVideoIdWithFallbackを使用)
-export const getActiveVideoId = (): string => {
-  const videoId = window.commonHelper?.getVideoIdWithFallback() ?? null;
+export const getActiveVideoId = async (): Promise<string> => {
+  const videoId = (await window.commonHelper?.getVideoIdWithFallback()) ?? null;
   return videoId ?? '';
 };
 
@@ -19,12 +19,12 @@ export const handleVideoOperation = (operation: VideoOperation, videoId: string)
   }
 };
 
-export const getVideoInfo = (): SimpleVideoInfo => {
+export const getVideoInfo = async (): Promise<SimpleVideoInfo> => {
   const nicoCache = (window as Window & { NicoCache_nl: NicoCache_nlInterface }).NicoCache_nl;
-  const videoTitle = nicoCache?.watch?.apiData?.video ? 
+  const videoTitle = nicoCache?.watch?.apiData?.video ?
     nicoCache.watch.apiData.video.title || '' : '';
-  const videoId = getActiveVideoId();
-  
+  const videoId = await getActiveVideoId();
+
   return {
     videoId,
     threadId: nicoCache?.watch ? (nicoCache?.watch?.apiData as ExtendedApiData)?.comment?.threads?.find(

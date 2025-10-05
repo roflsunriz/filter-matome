@@ -26,13 +26,13 @@ export class CommentManager {
     return CommentManager.instance;
   }
 
-  private extractVideoIdFromUrl(): string | null {
+  private async extractVideoIdFromUrl(): Promise<string | null> {
     // 統一された動画ID抽出処理を使用
-    return window.commonHelper?.getVideoIdWithFallback() ?? null;
+    return (await window.commonHelper?.getVideoIdWithFallback()) ?? null;
   }
 
   public async fetchComments(videoId?: string): Promise<boolean> {
-    const effectiveVideoId = videoId || this.extractVideoIdFromUrl();
+    const effectiveVideoId = videoId || (await this.extractVideoIdFromUrl());
     if (!effectiveVideoId) {
       window.logger?.warn('動画IDが指定されていません');
       return false;
@@ -135,8 +135,8 @@ export class CommentManager {
     this.isWatchingUrl = true;
 
     // URLの変更を監視してコメントデータを自動更新
-    const checkUrl = () => {
-      const currentVideoId = this.extractVideoIdFromUrl();
+    const checkUrl = async () => {
+      const currentVideoId = await this.extractVideoIdFromUrl();
       if (currentVideoId && currentVideoId !== this.currentVideoId) {
         window.logger?.info('URL変更を検出、コメントを再取得:', currentVideoId);
         this.fetchComments(currentVideoId)

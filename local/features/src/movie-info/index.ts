@@ -325,7 +325,7 @@ type PanelMap = {
   comments: PanelController;
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => void (async () => {
   applyMovieInfoDashboardStyles();
   headerAdjustments();
 
@@ -490,7 +490,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const initialVideoId = window.commonHelper?.getVideoIdWithFallback?.() || normalizeVideoIdFromInput(window.location.search) || null;
+  const initialVideoId = (await window.commonHelper?.getVideoIdWithFallback?.()) || normalizeVideoIdFromInput(window.location.search) || null;
   if (initialVideoId) {
     if (videoInput) {
       videoInput.value = initialVideoId;
@@ -500,4 +500,4 @@ document.addEventListener("DOMContentLoaded", () => {
     setStatusText(globalStatus, "動画IDを入力してデータを取得してください");
     setCommentButtonIdle();
   }
-});
+})());

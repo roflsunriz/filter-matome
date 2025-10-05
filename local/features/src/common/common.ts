@@ -217,8 +217,28 @@ window.commonHelper = {
   },
 
   // NicoCache_nl.watch.getVideoIDをチェックして、取得できない場合にURLから動画IDを抽出するフォールバック機能
-  getVideoIdWithFallback: (input?: VideoIdSource | null): string | null => {
+  getVideoIdWithFallback: async (input?: VideoIdSource | null): Promise<string | null> => {
     try {
+      // SPAのレンダリング完了を待つ（NicoCache_nlが利用可能になるまで、最大5秒）
+      await new Promise<void>((resolve) => {
+        let attempts = 0;
+        const maxAttempts = 50; // 100ms * 50 = 5秒
+        const checkReady = () => {
+          attempts++;
+          const windowWithNico = window as Window & { NicoCache_nl?: { watch?: { getVideoID?: () => string; apiData?: { video?: { id?: string } } } } };
+          const nicoCache = windowWithNico.NicoCache_nl;
+          // SPAレンダリング完了をチェック（NicoCache_nlが利用可能か、タイムアウト）
+          const isReady = nicoCache?.watch?.getVideoID || nicoCache?.watch?.apiData?.video?.id;
+          // @ts-expect-error - タイムアウト条件として使用
+          if (isReady || attempts >= maxAttempts) {
+            resolve();
+          } else {
+            setTimeout(checkReady, 100); // 100msごとにチェック
+          }
+        };
+        checkReady();
+      });
+
       // 1. 最優先: NicoCache_nl.watch.getVideoIDから取得を試行
       const windowWithNico = window as Window & { NicoCache_nl?: { watch?: { getVideoID?: () => string; apiData?: { video?: { id?: string } } } } };
       const nicoCache = windowWithNico.NicoCache_nl;
@@ -246,7 +266,25 @@ window.commonHelper = {
       }
 
       // 3. フォールバック: URLから抽出
-      return window.commonHelper.extractVideoIdFromUrl(input);
+      const urlVideoId = window.commonHelper.extractVideoIdFromUrl(input);
+      if (urlVideoId) {
+        return urlVideoId;
+      }
+
+      // 4. フォールバック: fetchWatchPageで取得
+      try {
+        const watchPageResult = await window.commonHelper.fetchWatchPage();
+        if (watchPageResult?.apiData?.video?.id && typeof watchPageResult.apiData.video.id === 'string') {
+          const fromFetch = normalizeVideoId(watchPageResult.apiData.video.id);
+          if (fromFetch) {
+            return fromFetch;
+          }
+        }
+      } catch (error) {
+        console.warn('[commonHelper] fetchWatchPage fallback failed:', error);
+      }
+
+      return null;
     } catch (error) {
       console.error('[commonHelper] getVideoIdWithFallback failed:', error);
       return null;

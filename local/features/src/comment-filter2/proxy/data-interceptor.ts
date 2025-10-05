@@ -38,7 +38,7 @@ export class DataInterceptor {
     }
     
     // 初期SMID設定
-    this.updateCurrentSmid();
+    void this.updateCurrentSmid();
   }
 
   /**
@@ -49,18 +49,18 @@ export class DataInterceptor {
     history.pushState = (...args: Parameters<typeof history.pushState>) => {
       this.originalPushState(...args);
       // pushState 後に SMID を更新
-      setTimeout(() => this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 0);
     };
 
     history.replaceState = (...args: Parameters<typeof history.replaceState>) => {
       this.originalReplaceState(...args);
       // replaceState 後に SMID を更新
-      setTimeout(() => this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 0);
     };
 
     // popstate イベント（ブラウザの戻る/進む）
     window.addEventListener('popstate', () => {
-      setTimeout(() => this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 0);
     });
 
     window.logger?.debug('[CommentFilter2] SPA navigation hooks initialized');
@@ -69,8 +69,8 @@ export class DataInterceptor {
   /**
    * 現在のSMIDを更新
    */
-  private updateCurrentSmid(): void {
-    const newSmid = this.extractSmidFromCurrentUrl();
+  private async updateCurrentSmid(): Promise<void> {
+    const newSmid = await this.extractSmidFromCurrentUrl();
     if (newSmid !== this.currentSmid) {
       this.currentSmid = newSmid;
       
@@ -93,10 +93,10 @@ export class DataInterceptor {
    * 現在のURLからSMIDを抽出（SPA対応版）
    * 共通ヘルパーのgetVideoIdWithFallbackを利用
    */
-  private extractSmidFromCurrentUrl(): string | null {
+  private async extractSmidFromCurrentUrl(): Promise<string | null> {
     try {
       // window.commonHelper.getVideoIdWithFallbackはURL等から動画IDを抽出する
-      const smid = window.commonHelper?.getVideoIdWithFallback?.(window.location);
+      const smid = await window.commonHelper?.getVideoIdWithFallback?.(window.location);
       if (smid && typeof smid === 'string') {
         return smid;
       }
@@ -156,7 +156,7 @@ export class DataInterceptor {
   private async processCommentData(data: CF2CommentApiResponse, url: string): Promise<CF2CommentApiResponse> {
     try {
       // SMIDを抽出（URLパラメータから）
-      const smid = this.extractSmidFromUrl(url);
+      const smid = await this.extractSmidFromUrl(url);
       
       // 公式動画の場合、commentCountが最多のmainスレッドを選択
       const processedData = this.selectMainThread(data);
@@ -206,7 +206,7 @@ export class DataInterceptor {
   /**
    * URLやwindowからSMID（動画ID）を抽出（共通ヘルパー利用・SPA対応）
    */
-  private extractSmidFromUrl(url: string): string | null {
+  private async extractSmidFromUrl(url: string): Promise<string | null> {
     try {
       // 1. キャッシュされたSMIDを優先使用（SPA遷移対応）
       if (this.currentSmid) {
@@ -217,7 +217,7 @@ export class DataInterceptor {
       // 2. 共通ヘルパーで動画ID抽出（window.commonHelper.getVideoIdWithFallbackを利用）
       //    urlはフォールバック用引数として渡す
       if (typeof window.commonHelper?.getVideoIdWithFallback === 'function') {
-        const smid = window.commonHelper.getVideoIdWithFallback(url);
+        const smid = await window.commonHelper.getVideoIdWithFallback(url);
         if (smid) {
           this.currentSmid = smid;
           window.logger?.debug(`[CommentFilter2] SMID extracted by commonHelper: ${smid}`);

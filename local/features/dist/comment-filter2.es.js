@@ -64,7 +64,7 @@ class DataInterceptor {
     if (!window.commentFilter2GlobalData) {
       window.commentFilter2GlobalData = toCompatibleGlobalData(globalData);
     }
-    this.updateCurrentSmid();
+    void this.updateCurrentSmid();
   }
   /**
    * SPA ナビゲーション対応セットアップ
@@ -72,22 +72,22 @@ class DataInterceptor {
   setupSPANavigation() {
     history.pushState = (...args) => {
       this.originalPushState(...args);
-      setTimeout(() => this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 0);
     };
     history.replaceState = (...args) => {
       this.originalReplaceState(...args);
-      setTimeout(() => this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 0);
     };
     window.addEventListener("popstate", () => {
-      setTimeout(() => this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 0);
     });
     window.logger?.debug("[CommentFilter2] SPA navigation hooks initialized");
   }
   /**
    * 現在のSMIDを更新
    */
-  updateCurrentSmid() {
-    const newSmid = this.extractSmidFromCurrentUrl();
+  async updateCurrentSmid() {
+    const newSmid = await this.extractSmidFromCurrentUrl();
     if (newSmid !== this.currentSmid) {
       this.currentSmid = newSmid;
       const global = window[CONSTANTS.GLOBAL_DATA_KEY];
@@ -104,9 +104,9 @@ class DataInterceptor {
    * 現在のURLからSMIDを抽出（SPA対応版）
    * 共通ヘルパーのgetVideoIdWithFallbackを利用
    */
-  extractSmidFromCurrentUrl() {
+  async extractSmidFromCurrentUrl() {
     try {
-      const smid = window.commonHelper?.getVideoIdWithFallback?.(window.location);
+      const smid = await window.commonHelper?.getVideoIdWithFallback?.(window.location);
       if (smid && typeof smid === "string") {
         return smid;
       }
@@ -155,7 +155,7 @@ class DataInterceptor {
    */
   async processCommentData(data, url) {
     try {
-      const smid = this.extractSmidFromUrl(url);
+      const smid = await this.extractSmidFromUrl(url);
       const processedData = this.selectMainThread(data);
       const global = window[CONSTANTS.GLOBAL_DATA_KEY];
       global.originalData = processedData;
@@ -182,14 +182,14 @@ class DataInterceptor {
   /**
    * URLやwindowからSMID（動画ID）を抽出（共通ヘルパー利用・SPA対応）
    */
-  extractSmidFromUrl(url) {
+  async extractSmidFromUrl(url) {
     try {
       if (this.currentSmid) {
         window.logger?.debug(`[CommentFilter2] Using cached SMID: ${this.currentSmid}`);
         return this.currentSmid;
       }
       if (typeof window.commonHelper?.getVideoIdWithFallback === "function") {
-        const smid = window.commonHelper.getVideoIdWithFallback(url);
+        const smid = await window.commonHelper.getVideoIdWithFallback(url);
         if (smid) {
           this.currentSmid = smid;
           window.logger?.debug(`[CommentFilter2] SMID extracted by commonHelper: ${smid}`);
@@ -6189,10 +6189,10 @@ class CommentFilter2 {
   /**
    * 共通ヘルパー経由でSMID（動画ID）を抽出
    */
-  extractSmidFromLocation() {
+  async extractSmidFromLocation() {
     try {
       if (typeof window.commonHelper?.getVideoIdWithFallback === "function") {
-        return window.commonHelper.getVideoIdWithFallback(window.location.href);
+        return await window.commonHelper.getVideoIdWithFallback(window.location.href);
       }
       window.logger?.warn("[CommentFilter2] commonHelper.getVideoIdWithFallbackが未定義です");
       return null;
@@ -6205,7 +6205,7 @@ class CommentFilter2 {
     await Promise.resolve();
     try {
       const globalData = DataInterceptor.getGlobalData();
-      const fallbackSmid = this.extractSmidFromLocation();
+      const fallbackSmid = await this.extractSmidFromLocation();
       const smid = globalData?.currentSmid ?? fallbackSmid;
       if (globalData?.originalData && smid) {
         await this.uiManager.applyFilter(smid);

@@ -183,12 +183,12 @@ export class LinkManager {
   /**
    * 視聴ページのコンテキスト（videoIdなど）が存在するかどうか
    */
-  private hasWatchContext(): boolean {
+  private async hasWatchContext(): Promise<boolean> {
     try {
       if (isWatchLikePage()) {
         return true;
       }
-      const videoId = getActiveVideoId();
+      const videoId = await getActiveVideoId();
       return videoId.length > 0;
     } catch {
       return false;
@@ -227,9 +227,9 @@ export class LinkManager {
   /**
    * 表示用リンク一覧を返す。非視聴ページでは無効なアクションを除外する。
    */
-  public getLinks(group: keyof typeof this.LINK_GROUPS): LinkData[] {
+  public async getLinks(group: keyof typeof this.LINK_GROUPS): Promise<LinkData[]> {
     const links = this.LINK_GROUPS[group];
-    if (!this.hasWatchContext()) {
+    if (!(await this.hasWatchContext())) {
       // 視聴ページ以外では、フォールバック不可のアクションは非表示
       return links.filter((link) => this.canShowWithoutWatch(link.action));
     }
@@ -248,7 +248,7 @@ export class LinkManager {
   }
 
   public async handleAction(action: string): Promise<void> {
-    const videoId = getActiveVideoId();
+    const videoId = await getActiveVideoId();
     const threadId = this.getThreadId();
     // const commentFilterUI = new CommentFilterUI();
 
