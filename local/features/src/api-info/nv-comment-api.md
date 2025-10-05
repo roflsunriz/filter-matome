@@ -1,10 +1,19 @@
 # nv-comment API（コメントサーバ）仕様
 
+## APIエンドポイント
+- https://public.nvcomment.nicovideo.jp/v1/threads
+- または 実際のホスト（ベースURL）は再生ページのAPIデータ `apiData.comment.nvComment.server` により提供される。
+- よって、ベースURL+パス = apiData.comment.nvComment.server + "/v1/threads"
+
+## server, params, threadKey
+- server: 実際のホスト（ベースURL）は再生ページのAPIデータ `apiData.comment.nvComment.server` により提供される。
+- params: 再生ページから取得される `apiData.comment.nvComment.params` をそのまま使用する。
+- threadKey: 再生ページから取得される `apiData.comment.nvComment.threadKey` をそのまま使用する。
+
 ## 目的
 - `common.ts` のコメント取得ロジックに従い、コメントサーバ（nv-comment）のリクエスト/レスポンス仕様を明文化する。
 
 ## 前提
-- 実際のホスト（ベースURL）は再生ページのAPIデータ `apiData.comment.nvComment.server` により提供される。
 - クライアントは再生ページから取得した `params` と `threadKey` をそのまま POST ボディとして送信する。
 - `common.ts` の現行実装を忠実に反映する（ヘッダ、HTTP メソッド、エンドポイント、レスポンス処理）。
 
@@ -18,7 +27,7 @@
 
 ## エンドポイント
 - メソッド: `POST`
-- パス: `/v1/threads`（ベースは `apiData.comment.nvComment.server`）
+- パス: `/v1/threads`
 
 ## リクエスト
 - Headers（`common.ts` 実装に合わせて送信）:

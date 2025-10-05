@@ -1,3 +1,9 @@
+サーバーAPIエンドポイント（視聴ページ）：https://www.nicovideo.jp/watch/${SMID}
+ここにアクセスし、metaタグのserver-responseのcontentにJSONがあり、それを取得する。そのJSONの中のdata.responseがapiData。
+ただし、生のJSONではなくHTMLエンコードとUNICODEエンコードされているので、それをデコードする。
+
+metaタグのserver-contextとserver-responseは公式スクリプトが視聴ページレンダリング後自動消去してしまうのでfetchやxmlHttpRequestで視聴ページにアクセスして取得する必要がある。DOMから取得する方法では取れない。
+
 # 1) 最小構造(TypeScript型)
 
 ```ts
