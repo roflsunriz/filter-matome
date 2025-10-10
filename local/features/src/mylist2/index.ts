@@ -5,6 +5,7 @@ import { Mylist2Manager as managerRefactored } from './components/manager-refact
 import { Mylist2ManagerUI as uiRefactored } from './ui/ui-refactored.js';
 // 型定義のみのインポート（ランタイム影響なし）
 import type { HeaderConfig } from '../types/common-types.js';
+import { hydrateMaterialIconImages } from '../common/material-icons.js';
 
 // スタイルを適用
 headerAdjustments();
@@ -16,6 +17,7 @@ window.Mylist2Manager = managerRefactored;
 window.Mylist2ManagerUI = uiRefactored;
 
 window.addEventListener('load', () => {
+  hydrateMaterialIconImages();
   // 共通モジュールが読み込まれているかチェック
   if (typeof window.NicoCommon === 'undefined') {
     window.logger.error('NicoCommon is not loaded. Please ensure common module is loaded before mylist2.');

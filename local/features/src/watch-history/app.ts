@@ -5,7 +5,7 @@
  * @author roflsunriz
  */
 import { applyWatchHistoryStyles } from './styles';
-import { createMaterialIcon } from '../common/material-icons';
+import { createMaterialIcon, hydrateMaterialIconImages, getIconPath } from '../common/material-icons';
 import { CommonHeader } from '../common/header';
 import { logger } from '../common/logger';
 import type { 
@@ -63,6 +63,7 @@ class WatchHistoryApp {
 
   constructor() {
     this.initializeElements();
+    hydrateMaterialIconImages();
     this.setupEventListeners();
     this.loadConfig();
     this.initializeCommonHeader();
@@ -1164,7 +1165,7 @@ class WatchHistoryApp {
       btn.classList.remove('active');
       const icon = btn.querySelector('.sort-order-icon') as HTMLImageElement;
       if (icon) {
-        icon.src = '/local/images/material-design-icons/outlined/arrow_downward.svg';
+        icon.src = getIconPath('arrow_downward');
       }
     });
 
@@ -1173,9 +1174,9 @@ class WatchHistoryApp {
       activeBtn.classList.add('active');
       const icon = activeBtn.querySelector('.sort-order-icon') as HTMLImageElement;
       if (icon) {
-        icon.src = this.config.sortOrder === 'asc' 
-          ? '/local/images/material-design-icons/outlined/arrow_upward.svg' 
-          : '/local/images/material-design-icons/outlined/arrow_downward.svg';
+        icon.src = this.config.sortOrder === 'asc'
+          ? getIconPath('arrow_upward')
+          : getIconPath('arrow_downward');
       }
     }
   }
@@ -2610,7 +2611,7 @@ class WatchHistoryApp {
       if (Notification.permission === 'granted') {
         new Notification(`🎬 ${alert.seriesTitle}`, {
           body: `新しい動画「${alert.lastVideoTitle}」のネクストエピソードが投稿されました！`,
-          icon: '/local/images/material-design-icons/outlined/notifications.svg',
+          icon: getIconPath('notifications'),
           tag: `series-${alert.seriesId}`,
           requireInteraction: true
         });
@@ -2619,7 +2620,7 @@ class WatchHistoryApp {
           if (permission === 'granted') {
             new Notification(`🎬 ${alert.seriesTitle}`, {
               body: `新しい動画「${alert.lastVideoTitle}」のネクストエピソードが投稿されました！`,
-              icon: '/local/images/material-design-icons/outlined/notifications.svg',
+              icon: getIconPath('notifications'),
               tag: `series-${alert.seriesId}`,
               requireInteraction: true
             });
@@ -2703,7 +2704,7 @@ class WatchHistoryApp {
         // テスト通知を送信
         new Notification('🎬 シリーズアラート', {
           body: '通知権限が正常に動作しています！',
-          icon: '/local/images/material-design-icons/outlined/notifications.svg',
+          icon: getIconPath('notifications'),
           tag: 'permission-test'
         });
       } else if (permission === 'denied') {
@@ -2719,7 +2720,7 @@ class WatchHistoryApp {
           // テスト通知を送信
           new Notification('🎬 シリーズアラート', {
             body: '通知権限が正常に設定されました！',
-            icon: '/local/images/material-design-icons/outlined/notifications.svg',
+            icon: getIconPath('notifications'),
             tag: 'permission-granted'
           });
         } else {
@@ -2766,7 +2767,7 @@ class WatchHistoryApp {
         // テスト通知を送信
         new Notification('🎬 シリーズアラート', {
           body: '通知設定が正常に動作しています！設定完了です。',
-          icon: '/local/images/material-design-icons/outlined/notifications.svg',
+          icon: getIconPath('notifications'),
           tag: 'setup-test'
         });
         this.showToast('通知テストが送信されました！', 'success');
@@ -2785,7 +2786,7 @@ class WatchHistoryApp {
         if (result === 'granted') {
           new Notification('🎬 シリーズアラート', {
             body: '通知設定が正常に完了しました！',
-            icon: '/local/images/material-design-icons/outlined/notifications.svg',
+            icon: getIconPath('notifications'),
             tag: 'setup-complete'
           });
           this.showToast('通知設定が完了しました！', 'success');

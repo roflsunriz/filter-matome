@@ -1,6 +1,7 @@
 // マテリアルアイコン統合ヘルパー
 
 import type { IconStyle, IconSize, IconColor, IconOptions, IconName } from '@/types/icon-types';
+import { outlinedIconMap, filledIconMap } from './icon-assets';
 
 // 型定義の再エクスポート（既存コードとの互換性のため）
 export type { IconStyle, IconSize, IconColor, IconOptions, IconName };
@@ -75,11 +76,30 @@ export const ICONS = {
   upload: 'upload',
   } as const;
 
+const iconSourceMap: Record<IconStyle, Record<string, string>> = {
+  filled: filledIconMap,
+  outlined: outlinedIconMap,
+  round: {},
+  sharp: {},
+  'two-tone': {},
+};
+
 /**
  * アイコンのパスを生成
  */
 export function getIconPath(iconName: string, style: IconStyle = 'outlined'): string {
-  return `/local/images/material-design-icons/${style}/${iconName}.svg`;
+  const normalizedStyle = iconSourceMap[style] ? style : 'outlined';
+  const primaryMap = iconSourceMap[normalizedStyle] ?? iconSourceMap.outlined;
+  const iconUrl = primaryMap[iconName] ?? iconSourceMap.outlined[iconName];
+
+  if (!iconUrl) {
+    if (typeof console !== 'undefined') {
+      console.warn(`[material-icons] アイコンが見つかりません: ${style}/${iconName}`);
+    }
+    return '';
+  }
+
+  return iconUrl;
 }
 
 /**
@@ -157,7 +177,36 @@ export function createMaterialIcon(iconName: string, options: IconOptions = {}):
     ? ` style="width: ${size}px; height: ${size}px;"` 
     : '';
 
+  if (!iconPath) {
+    return `<span class="${allClasses} material-icon-missing" role="presentation"${styleAttr}></span>`;
+  }
+
   return `<img class="${allClasses}" src="${iconPath}" alt="${alt}" loading="${loading}"${styleAttr} />`;
+}
+
+/**
+ * data-icon属性を持つimg要素にアイコンパスを適用
+ */
+export function hydrateMaterialIconImages(root?: ParentNode): void {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  const scope = root ?? document;
+  scope.querySelectorAll<HTMLImageElement>('img[data-icon]').forEach((img) => {
+    const iconName = img.dataset.icon;
+    if (!iconName) {
+      return;
+    }
+    const requestedStyle = (img.dataset.style as IconStyle) ?? 'outlined';
+    const iconUrl = getIconPath(iconName, requestedStyle);
+    if (!iconUrl) {
+      return;
+    }
+    if (img.getAttribute('src') !== iconUrl) {
+      img.src = iconUrl;
+    }
+  });
 }
 
 /**
@@ -259,6 +308,10 @@ export const materialIconsStyles = `
 
   .cf2-icon-white {
     filter: brightness(0) saturate(100%) invert(100%);
+  }
+
+  .material-icon-missing {
+    opacity: 0;
   }
 `;
 

@@ -33,7 +33,7 @@
         </div>
 
         <div class="rule-section">
-          <h3>JSON Lines形式（メイン形式）<img class="material-icon icon-white" src="/local/images/material-design-icons/outlined/new_releases.svg" alt="new_releases" loading="lazy" /></h3>
+          <h3>JSON Lines形式（メイン形式）<img class="material-icon icon-white" data-style="outlined" data-icon="new_releases" alt="new_releases" loading="lazy" /></h3>
           <p>CommentFilter2で実際に使用される形式です。1行に1つのJSONオブジェクトを記述します。</p>
           
           <h4>基本構造</h4>
@@ -69,7 +69,7 @@
           </ul>
 
           <div class="example-box" style="background-color: #fff3cd; border-color: #ffeaa7;">
-            <h4><img class="material-icon icon-dark" src="/local/images/material-design-icons/outlined/edit.svg" alt="edit" loading="lazy" /> 重要な制限事項</h4>
+            <h4><img class="material-icon icon-dark" data-style="outlined" data-icon="edit" alt="edit" loading="lazy" /> 重要な制限事項</h4>
             <ul>
               <li><strong>ユーザーIDルール</strong>は「hide（非表示）」と「unspecified（除外のみ）」のみ対応しています</li>
               <li><strong>replace（置換）</strong>は正規表現ルールでのみ利用可能です</li>
@@ -131,7 +131,7 @@
           </div>
           
           <div class="example-box" style="background-color: #fff3cd; border-color: #ffeaa7;">
-            <h4><img class="material-icon icon-dark" src="/local/images/material-design-icons/outlined/edit.svg" alt="edit" loading="lazy" /> 複雑な正規表現の入力方法（NEW!）</h4>
+            <h4><img class="material-icon icon-dark" data-style="outlined" data-icon="edit" alt="edit" loading="lazy" /> 複雑な正規表現の入力方法（NEW!）</h4>
             <p><strong>量指定子（{1,10}など）を含む正規表現</strong>は、ダブルクォートで囲んで入力してください：</p>
             <ul>
               <li><code>"/(([^\\]{1,10}?))(?:\\2){3,}(?=[^\\]*)/",/草/,ALL,EMPTY</code></li>
@@ -143,7 +143,7 @@
             </ul>
             <p>これにより「unterminated parenthetical」エラーが解消されます。</p>
             
-            <h5><img class="material-icon icon-dark" src="/local/images/material-design-icons/outlined/rocket_launch.svg" alt="rocket_launch" loading="lazy" /> 正規表現フラグ（オプション）の指定方法</h5>
+            <h5><img class="material-icon icon-dark" data-style="outlined" data-icon="rocket_launch" alt="rocket_launch" loading="lazy" /> 正規表現フラグ（オプション）の指定方法</h5>
             <p>正規表現には以下のフラグを指定できます（完全なES6+対応）：</p>
             <ul>
               <li><strong>g</strong>: グローバル検索（複数回マッチ）</li>
@@ -162,7 +162,7 @@
               <li><code>/😀+/gu,/笑/,ALL,EMPTY</code> （絵文字 + Unicode + グローバル）</li>
             </ul>
             <div style="background-color: #e8f4fd; padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0;">
-              <strong><img class="material-icon icon-dark" src="/local/images/material-design-icons/outlined/lightbulb.svg" alt="lightbulb" loading="lazy" /> フラグの組み合わせのコツ：</strong>
+              <strong><img class="material-icon icon-dark" data-style="outlined" data-icon="lightbulb" alt="lightbulb" loading="lazy" /> フラグの組み合わせのコツ：</strong>
               <ul>
                 <li><code>gi</code>: 最も一般的（大文字小文字無視 + 全体検索）</li>
                 <li><code>gim</code>: 複数行テキストに対応</li>
@@ -191,7 +191,7 @@
           </div>
           
           <div class="example-box" style="background-color: #fff3cd; border-color: #ffeaa7;">
-            <h4><img class="material-icon icon-dark" src="/local/images/material-design-icons/outlined/edit.svg" alt="edit" loading="lazy" /> ユーザーIDルールの制限</h4>
+            <h4><img class="material-icon icon-dark" data-style="outlined" data-icon="edit" alt="edit" loading="lazy" /> ユーザーIDルールの制限</h4>
             <p><strong>ユーザーIDルール</strong>（CSV形式の@ユーザーID、JSON形式のuserIdルール）は<strong>非表示（hide）のみ</strong>対応しています。置換（replace）機能は利用できません。</p>
           </div>
         </div>
