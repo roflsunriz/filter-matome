@@ -16,7 +16,7 @@ export const CSS_CONSTANTS = `
   --header-mylist2-top: -8px;
   --header-mylist2-left: -8px;
   --header-mylist2-docs-top: -21px;
-  --header-mylist2-docs-left: -43px;
+  --header-mylist2-docs-left: -335px;
   --header-comment-filter2-docs-top: -22px;
   --header-comment-filter2-docs-left: -22px;
   --header-video-player-width: 102vw;

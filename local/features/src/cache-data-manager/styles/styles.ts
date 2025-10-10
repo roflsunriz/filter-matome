@@ -1,4 +1,6 @@
-export const cacheListStyles = `
+import { materialIconsStyles } from '../../common/material-icons.js';
+
+export const cacheListStyles = materialIconsStyles + `
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -278,6 +280,9 @@ body {
     transition: all 0.3s ease;
     position: relative;
     font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
   }
   
   .nav-link:hover {
@@ -286,17 +291,25 @@ body {
     box-shadow: 0 4px 15px rgba(255, 159, 243, 0.3);
   }
   
-  .nav-link::after {
-    content: "✨";
-    position: absolute;
-    right: -10px;
-    top: -5px;
+  .nav-link-icon {
+    display: inline-flex;
     opacity: 0;
     transition: opacity 0.3s ease;
+    pointer-events: none;
   }
   
-  .nav-link:hover::after {
+  .search-btn-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .nav-link:hover .nav-link-icon {
     opacity: 1;
+  }
+  
+  .nav-link-icon-img {
+    width: 18px;
+    height: 18px;
   }
   
   /* 動画タイトル */
@@ -328,17 +341,6 @@ body {
     font-size: 1.1rem;
   }
   
-  .button::before {
-    content: "✨";
-    font-size: 1.2em;
-    position: static;
-    transition: transform 0.3s ease;
-  }
-  
-  .button:hover::before {
-    transform: rotate(360deg);
-  }
-  
   /* 再生ボタン */
   #play-button,
   .play-btn {
@@ -353,21 +355,15 @@ body {
     padding: 10px 25px;
   }
   
-  #save-button::before,
-  .save-btn::before {
-    content: "💾";
-  }
-  
   /* 検索ボタン */
   #searchBtn,
   #clearSearch {
     border-radius: 15px;
     background: linear-gradient(145deg, #b19cd9, #8f7bb3);
     padding: 8px 15px;
-  }
-  
-  #searchBtn::before {
-    content: "🔍";
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
   }
   
   /* 動画カード内アクションボタン */
@@ -391,12 +387,23 @@ body {
     border-radius: 25px;
     padding: 8px 20px;
     color: var(--dark);
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 0.5rem;
   }
-  
+
+  .search-section {
+    display: flex;
+    gap: 8px;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+
   #searchBtn,
   #clearSearch {
     background: linear-gradient(145deg, var(--purple), #8f7bb3);
-    margin-left: 8px;
+    margin-left: 0;
   }
   
   /* 動画カード内ボタン */
@@ -417,8 +424,7 @@ body {
   }
   
   /* ボタンアイコン */
-  button svg {
-    fill: currentColor;
+  .card-action-icon {
     width: 20px;
     height: 20px;
   }

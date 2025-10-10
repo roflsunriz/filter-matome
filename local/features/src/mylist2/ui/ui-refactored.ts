@@ -3,7 +3,7 @@ import "../../types/global.d.ts"
 import { Mylist2Manager } from "../components/manager-refactored.js";
 import { MylistInfo, KeywordInfo, ExportData } from "../../types/mylist-types.js";
 import { DBVideo as VideoInfo } from "../../types/video-types.js";
-import { createMaterialIcon, ICONS } from "../../common/material-icons.js";
+import { createMaterialIcon, ICONS, hydrateMaterialIconImages } from "../../common/material-icons.js";
 
 import { ModalService } from "./modal-service.js";
 import { ValidationService } from "./validation-service.js";
@@ -434,6 +434,8 @@ export class Mylist2ManagerUI {
     // 統計情報の設定
     this.setVideoStats(item, video);
 
+    hydrateMaterialIconImages(item);
+
     return item;
   }
 
@@ -526,6 +528,8 @@ export class Mylist2ManagerUI {
     if (dateElement) {
       dateElement.textContent = `追加日時: ${new Date(keyword.addedAt).toLocaleString()}`;
     }
+
+    hydrateMaterialIconImages(item);
 
     return item;
   }

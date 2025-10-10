@@ -1,25 +1,47 @@
+import { createMaterialIcon, ICONS } from '../../common/material-icons.js';
+
+type NavLink = {
+  href: string;
+  label: string;
+  icon: string;
+};
+
+const NAV_LINKS: NavLink[] = [
+  { href: '/', label: 'トップ', icon: ICONS.home },
+  { href: '/video_top', label: '動画', icon: ICONS.play },
+  { href: '/my/history/', label: 'マイページ', icon: 'person' },
+  { href: '/ranking', label: 'ランキング', icon: 'trending_up' },
+  { href: '/newarrival', label: '新着動画', icon: 'new_releases' },
+  { href: '/recent', label: '新着コメント動画', icon: ICONS.comment },
+  { href: '/local/features/dist/src/mylist2/index.html', label: 'Mylist2', icon: 'playlist_add' }
+];
+
 /**
  * ヘッダーテンプレートを生成する関数
  */
 export function createHeaderTemplate(): string {
+  const navItems = NAV_LINKS.map(({ href, label, icon }) => {
+    const hoverIcon = createMaterialIcon(icon, { color: 'white', size: 'small', classes: 'nav-link-icon-img' });
+    return `<a href="${href}" target="_blank" class="nav-link">${label}<span class="nav-link-icon">${hoverIcon}</span></a>`;
+  }).join('');
+
+  const searchIcon = createMaterialIcon(ICONS.search, { color: 'white', size: 'small', classes: 'search-btn-icon' });
+  const clearIcon = createMaterialIcon('clear', { color: 'white', size: 'small', classes: 'search-btn-icon' });
+
   return `
     <div class="header-content">
       <span>CacheDataManager</span>
       <span>${window.ncversion}</span>
       <nav class="main-nav">
-        <a href="/" target="_blank" class="nav-link">トップ</a>
-        <a href="/video_top" target="_blank" class="nav-link">動画</a>
-        <a href="/my/history/" target="_blank" class="nav-link">マイページ</a>
-        <a href="/ranking" target="_blank" class="nav-link">ランキング</a>
-        <a href="/newarrival" target="_blank" class="nav-link">新着動画</a>
-        <a href="/recent" target="_blank" class="nav-link">新着コメント動画</a>
-        <a href="/local/features/dist/src/mylist2/index.html" target="_blank" class="nav-link">Mylist2</a>
+        ${navItems}
       </nav>
       <div class="search-box">
         <input type="text" id="searchInput" placeholder="動画を検索...">
-        <button id="searchBtn">検索</button>
-        <button id="clearSearch">クリア</button>
+        <span class="search-section">
+        <button id="searchBtn">${searchIcon}<span class="search-label">検索</span></button>
+        <button id="clearSearch">${clearIcon}<span class="search-label">クリア</span></button>
+        </span>
       </div>
     </div>
   `;
-} 
+}
