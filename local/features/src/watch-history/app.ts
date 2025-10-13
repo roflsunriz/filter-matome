@@ -1584,11 +1584,18 @@ class WatchHistoryApp {
       ctx.fillStyle = '#4CAF50';
       ctx.fillRect(x, y, barWidth * 0.8, barHeight);
 
-      // 日付ラベル
+      // 日付ラベル（45度回転表示）
+      const labelX = x + barWidth * 0.4;
+      const labelY = height - padding / 2;
+      ctx.save();
+      ctx.translate(labelX, labelY);
+      ctx.rotate(-Math.PI / 4);
       ctx.fillStyle = '#333';
       ctx.font = '12px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(stat.date.split('-')[2], x + barWidth * 0.4, height - padding / 2);
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(stat.date.split('-')[2], 0, 0);
+      ctx.restore();
     });
   }
 

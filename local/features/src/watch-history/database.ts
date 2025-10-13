@@ -48,6 +48,14 @@ export class WatchHistoryDatabase {
     return error instanceof Error ? error.message : String(error);
   }
 
+  private static normalizeWatchSeconds(value: unknown): number {
+    const numeric = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(numeric) || numeric < 0) {
+      return 0;
+    }
+    return numeric;
+  }
+
   /**
    * データベースを初期化する
    */
@@ -315,7 +323,10 @@ export class WatchHistoryDatabase {
     try {
       // 基本統計
       const totalVideos = entries.length;
-      const totalWatchTime = entries.reduce((sum, entry) => sum + entry.lastPosition, 0);
+      const totalWatchTime = entries.reduce(
+        (sum, entry) => sum + WatchHistoryDatabase.normalizeWatchSeconds(entry.lastPosition),
+        0
+      );
       const completedCount = entries.filter(entry => entry.completed).length;
       const completionRate = totalVideos > 0 ? completedCount / totalVideos : 0;
 
@@ -608,7 +619,7 @@ export class WatchHistoryDatabase {
 
       const stats = dailyMap.get(date)!;
       stats.watchCount += entry.watchCount;
-      stats.totalWatchTime += entry.lastPosition;
+      stats.totalWatchTime += WatchHistoryDatabase.normalizeWatchSeconds(entry.lastPosition);
       if (entry.completed) {
         stats.completedCount++;
       }
@@ -659,7 +670,7 @@ export class WatchHistoryDatabase {
 
       const stats = creatorMap.get(entry.ownerId)!;
       stats.videoCount++;
-      stats.totalWatchTime += entry.lastPosition;
+      stats.totalWatchTime += WatchHistoryDatabase.normalizeWatchSeconds(entry.lastPosition);
     }
 
     return Array.from(creatorMap.values()).sort((a, b) => b.videoCount - a.videoCount);
@@ -961,8 +972,9 @@ export class WatchHistoryDatabase {
             const entry = cursor.value as WatchHistoryEntry;
             
             // 進捗率を計算（UI上の計算式に合わせる）
+            const lastPosition = WatchHistoryDatabase.normalizeWatchSeconds(entry.lastPosition);
             const progressRate = entry.lengthSec > 0 
-              ? Math.round((entry.lastPosition / entry.lengthSec) * 100)
+              ? Math.round((lastPosition / entry.lengthSec) * 100)
               : 0;
             
             // 条件をチェック：視聴回数がmaxWatchCount以下 AND 進捗率がmaxProgressRate以下
