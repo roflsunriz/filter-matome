@@ -154,6 +154,91 @@ export const MYLIST_MANAGER_STYLES_PART1 = `
   gap: 10px;
 }
 
+/* 動画リスト用の豪華なチェックボックススタイル */
+.video-item .video-select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.02));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  position: relative;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.video-item .video-select::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 4px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 65%);
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.video-item .video-select::after {
+  content: "";
+  width: 10px;
+  height: 6px;
+  border: 2px solid transparent;
+  border-left-color: #ffffff;
+  border-bottom-color: #ffffff;
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.video-item .video-select:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.video-item .video-select:focus-visible {
+  outline: none;
+  border-color: var(--cml2-accent);
+  box-shadow: 0 0 0 3px var(--cml2-focus-ring), 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.video-item .video-select:checked {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, var(--cml2-accent) 0%, var(--cml2-accent-hover) 100%);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.video-item .video-select:checked::before {
+  opacity: 0.4;
+}
+
+.video-item .video-select:checked::after {
+  opacity: 1;
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+
+.video-item .video-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-item .video-select {
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .video-item .video-select::after {
+    transition: opacity 0.2s ease;
+  }
+}
+
 .video-thumbnail {
   width: 96px;
   height: 72px;
