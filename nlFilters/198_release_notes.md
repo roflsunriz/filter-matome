@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #199 (2025/10/13) リリースノート](#filter-matome-199-20251013-リリースノート)
 - [filter-matome #198 (2025/10/02) リリースノート](#filter-matome-198-20251002-リリースノート)
 - [filter-matome #197 (2025/09/29) リリースノート](#filter-matome-197-20250929-リリースノート)
 - [filter-matome #196 (2025/09/29) リリースノート](#filter-matome-196-20250929-リリースノート)
@@ -108,6 +109,20 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #199 (2025/10/13) リリースノート
+
+- ✨新機能(New)：     
+- なし
+- ✅️修正(Fixed)：   
+- なし
+- 🔴変更(Changed)：           
+- Material Design Iconsをローカルファイル管理からnpm管理に変更した。これにより、一部のアーカイバで解凍に時間がかかっていた問題を解消した。
+- mylist2の動画要素選択チェックボックスを豪華にした。
+- ❌️未修正(Unfixed)：     
+- なし
+- ℹ️その他(Others)：     
+- なし
 
 ### filter-matome #198 (2025/10/02) リリースノート
 
