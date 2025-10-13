@@ -90,6 +90,16 @@ class WatchHistoryApp {
   }
 
   /**
+   * 指定IDの要素テキストを更新する
+   */
+  private setElementText(id: string, value: string): void {
+    const element = this.elements[id];
+    if (element) {
+      element.textContent = value;
+    }
+  }
+
+  /**
    * DOM要素を初期化する
    */
   private initializeElements(): void {
@@ -101,6 +111,8 @@ class WatchHistoryApp {
       'delete-all-btn', 'delete-by-condition-btn', 'delete-watch-count', 'delete-progress-rate',
       'stats-total-videos', 'stats-total-time', 'stats-completion-rate',
       'stats-detail-total-videos', 'stats-detail-total-time', 'stats-detail-completion-rate',
+      'stats-recent-total-videos', 'stats-recent-total-time', 'stats-recent-completed',
+      'stats-highlight-top-day', 'stats-highlight-peak-hour', 'stats-highlight-top-creator',
       'daily-chart', 'hourly-chart', 'creator-stats', 'tag-cloud',
       'video-detail-modal', 'modal-title', 'modal-video-info', 'modal-close',
       'modal-open-video', 'modal-edit-memo',
@@ -814,11 +826,93 @@ class WatchHistoryApp {
       this.elements['stats-detail-completion-rate'].textContent = completionRate;
     }
 
+    this.updateRecentActivityStats();
+    this.updateHighlightStats();
+
     // グラフを更新
     this.updateCharts();
     this.updateCreatorStats();
     this.updateTagCloud();
     this.updateFavoriteVideos();
+  }
+
+  /**
+   * 直近7日の統計を更新する
+   */
+  private updateRecentActivityStats(): void {
+    if (!this.stats) return;
+
+    if (this.stats.dailyStats.length === 0) {
+      this.setElementText('stats-recent-total-videos', '-');
+      this.setElementText('stats-recent-total-time', '-');
+      this.setElementText('stats-recent-completed', '-');
+      return;
+    }
+
+    const today = new Date();
+    const endKey = this.getDateKey(today);
+    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
+    const startKey = this.getDateKey(startDate);
+
+    let totalWatchCount = 0;
+    let totalWatchTime = 0;
+    let totalCompleted = 0;
+
+    for (const stat of this.stats.dailyStats) {
+      if (stat.date < startKey || stat.date > endKey) continue;
+
+      totalWatchCount += stat.watchCount;
+      totalWatchTime += stat.totalWatchTime;
+      totalCompleted += stat.completedCount;
+    }
+
+    this.setElementText('stats-recent-total-videos', totalWatchCount.toLocaleString());
+    this.setElementText('stats-recent-total-time', this.formatDuration(totalWatchTime));
+    this.setElementText('stats-recent-completed', totalCompleted.toLocaleString());
+  }
+
+  /**
+   * ハイライト統計を更新する
+   */
+  private updateHighlightStats(): void {
+    if (!this.stats) return;
+
+    const topDay = this.stats.dailyStats.reduce<DailyStats | null>((best, current) => {
+      if (!best) return current;
+      if (current.watchCount > best.watchCount) return current;
+      if (current.watchCount === best.watchCount && current.totalWatchTime > best.totalWatchTime) return current;
+      if (current.watchCount === best.watchCount && current.totalWatchTime === best.totalWatchTime && current.date > best.date) {
+        return current;
+      }
+      return best;
+    }, null);
+
+    if (topDay) {
+      const topDayText = `${this.formatDateLabel(topDay.date)} (${topDay.watchCount.toLocaleString()}回 / ${this.formatDuration(topDay.totalWatchTime)})`;
+      this.setElementText('stats-highlight-top-day', topDayText);
+    } else {
+      this.setElementText('stats-highlight-top-day', '-');
+    }
+
+    const peakHour = this.stats.hourlyStats.reduce<HourlyStats | null>((best, current) => {
+      if (!best) return current;
+      if (current.watchCount > best.watchCount) return current;
+      if (current.watchCount === best.watchCount && current.hour > best.hour) return current;
+      return best;
+    }, null);
+
+    const peakHourText = peakHour && peakHour.watchCount > 0
+      ? `${peakHour.hour.toString().padStart(2, '0')}時台 (${peakHour.watchCount.toLocaleString()}回)`
+      : '-';
+    this.setElementText('stats-highlight-peak-hour', peakHourText);
+
+    const topCreator = this.stats.creatorStats[0];
+    if (topCreator) {
+      const topCreatorText = `${topCreator.ownerName} (${topCreator.videoCount.toLocaleString()}本 / ${this.formatDuration(topCreator.totalWatchTime)})`;
+      this.setElementText('stats-highlight-top-creator', topCreatorText);
+    } else {
+      this.setElementText('stats-highlight-top-creator', '-');
+    }
   }
 
   /**
@@ -1671,6 +1765,30 @@ class WatchHistoryApp {
       return `${Math.floor(num / 1000)}k`;
     }
     return num.toLocaleString();
+  }
+
+  /**
+   * 日付文字列 (YYYY-MM-DD) を表示用に整形する
+   */
+  private formatDateLabel(dateStr: string): string {
+    const parts = dateStr.split('-').map(part => Number(part));
+    if (parts.length !== 3 || parts.some(part => Number.isNaN(part))) {
+      return dateStr;
+    }
+    const [year, month, day] = parts;
+    const monthStr = month.toString().padStart(2, '0');
+    const dayStr = day.toString().padStart(2, '0');
+    return `${year}/${monthStr}/${dayStr}`;
+  }
+
+  /**
+   * Dateオブジェクトを比較用キー（YYYY-MM-DD）に変換する
+   */
+  private getDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**
