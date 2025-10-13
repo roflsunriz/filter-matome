@@ -89,7 +89,7 @@ ${materialIconsStyles}
 
 .main-content {
   flex: 1;
-  max-width: 1200px;
+  max-width: 95vw;
   margin: 0 auto;
   padding: 2rem;
   width: 100%;
