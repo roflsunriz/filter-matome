@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #200 (2025/10/15) リリースノート](#filter-matome-200-20251015-リリースノート)
 - [filter-matome #199 (2025/10/13) リリースノート](#filter-matome-199-20251013-リリースノート)
 - [filter-matome #198 (2025/10/02) リリースノート](#filter-matome-198-20251002-リリースノート)
 - [filter-matome #197 (2025/09/29) リリースノート](#filter-matome-197-20250929-リリースノート)
@@ -109,6 +110,22 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #200 (2025/10/15) リリースノート
+
+- ✨新機能(New)：     
+- watch-hisotryに直近7日間の活動と視聴ハイライトを統計ページに追加。
+- ✅️修正(Fixed)：   
+- watch-historyの視聴時間の計算ロジックを改善。
+- watch-historyの視聴履歴の表示幅を改善。
+- auto-updater.pywをfilter-matomeの最新リリースをダウンロードする機能に更新・簡略化。自動展開は無くなった。
+- 🔴変更(Changed)：           
+- watch-historyの日別視聴グラフのラベルを見やすくする変更。
+- ❌️未修正(Unfixed)：     
+- なし
+- ℹ️その他(Others)：     
+- なし
+
 
 ### filter-matome #199 (2025/10/13) リリースノート
 
