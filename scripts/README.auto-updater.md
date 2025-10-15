@@ -1,83 +1,48 @@
-# NicoCache Auto Updater
+# Filter Matome Auto Updater
 
 ## 概要
-NicoCacheの自動更新ツールです。本体とフィルタの更新を自動的にチェックして、新しいバージョンがあれば更新してくれます！
+GitHub の最新安定版リリースを定期的に確認し、アセットを自動ダウンロードするシンプルなアップデーターです。旧来のスクレイピング機能やカスタム更新設定は削除され、保存先と更新間隔だけを指定する構成になりました。
 
 ## 主な機能
-- NicoCache本体の自動更新
-- フィルタまとめの自動更新
-- フィルタまとめのGitHubリリースページをブラウザですぐに開けるショートカット
-- カスタム更新設定（最大5つまで）
-- 更新間隔の柔軟な設定
-- 自動再起動機能
+- `GET /repos/roflsunriz/filter-matome/releases/latest` を利用した最新安定版の取得
+- ETag を用いた条件付き GET によるレート制限対策
+- 取得したアセット (`assets[*].browser_download_url`) の一括ダウンロード
+- 更新間隔の指定、開始・停止、ログ確認、設定保存といった基本操作のみを備えた簡潔な GUI
 
-## 必要な環境
-- Python 3.7以上
-- Java（NicoCacheの実行に必要）
-
-## 必要なパッケージ
-以下のパッケージは自動でインストールされます：
-- requests
-- beautifulsoup4
-- schedule
-- py7zr
-- psutil
+## 必要環境
+- Python 3.8 以上
+- `requests` パッケージ  
+  インストール例: `python -m pip install requests`
 
 ## 使い方
-1. プログラムを起動する
-カレントディレクトリをconfig_editor.pyがあるディレクトリに移動してください。
-例 cd C:/NicoCache_nl
-カレントディレクトリを移動した後は、プログラムを起動してください。
-python auto-updater.py
-pythonw auto-updater.py (ウィンドウモードで起動)
-もしくは設定→既定のアプリ→.pyファイルにPythonを関連付ける
-その後 .pyをダブルクリック
+1. `scripts/auto-updater.pyw` を実行します。コンソールを表示したい場合は `python scripts/auto-updater.pyw` を使用してください。
+2. 保存先ディレクトリを指定し、必要に応じて更新間隔（分）を調整します。
+3. `開始` を押すと監視が始まり、`停止` で終了します。`設定保存` で現在の保存先と更新間隔が `scripts/config.json` に保存されます。
+4. アセットが更新されると、指定した保存先に `.part` 拡張子の一時ファイル経由でダウンロードされ、完了後に正式なファイル名へリネームされます。
 
-2. 更新対象を選択する
-   - 本体更新：NicoCache本体を更新
-   - フィルタまとめ：フィルタファイルを更新
-   - カスタム1-5：独自の更新設定
+## 認証について
+公開リポジトリの最新リリースを取得するためにアクセストークンは必須ではありませんが、プライベートリポジトリやレート制限緩和が必要な場合は GitHub Personal Access Token を利用してください。
 
-3. 保存先を設定する
-   - デフォルト：C:/NicoCache_nl
-   - 「参照」ボタンで変更可能
+- 環境変数 `GITHUB_TOKEN` に設定すると自動で使用されます。
+- もしくは `config.json` 内の `github_token` に手動で記述できます（GUI からの編集はできません）。
 
-4. 更新間隔を設定する
-   - プリセット：12時間、1日、2日、3日、1週間
-   - カスタム：任意の分単位で設定
+## 設定ファイル
+`scripts/config.json` に以下の情報を保存します。
 
-5. 「開始」ボタンで監視開始
-6. フィルタまとめの最新情報を確認したくなったら、ウィンドウ下部の「フィルタまとめ」ボタンを押すとブラウザでGitHubのリリースページが開きます
-
-## 注意事項
-- 本体更新時は自動的にNicoCacheを再起動します
-- 更新中はJavaプロセスが一時的に停止されます
-- 設定は自動的にconfig.jsonに保存されます
+| キー              | 説明                                              |
+|-------------------|---------------------------------------------------|
+| `target_dir`       | ダウンロード先ディレクトリ                        |
+| `interval_minutes` | 更新間隔（分）                                    |
+| `etag`             | 条件付き GET 用 ETag                              |
+| `last_release_id`  | 最終ダウンロード済みリリース ID                   |
+| `last_checked`     | 最終確認日時（UTC ISO 8601）                       |
+| `github_token`     | オプションのアクセストークン（GUI では編集不可） |
 
 ## トラブルシューティング
-1. 更新に失敗する場合
-   - インターネット接続を確認してください
-   - 保存先のフォルダに書き込み権限があるか確認してください
+- HTTP 304 が連続する場合は ETag により変更なしと判定されています。`config.json` の `etag` を削除すると強制再取得できます。
+- HTTP 401/403 エラーが発生した場合はトークンの設定や権限を確認してください。
+- ネットワークエラーが頻発する場合は更新間隔を伸ばし、GitHub のレート制限に注意してください。
 
-2. 再起動に失敗する場合
-   - Javaがインストールされているか確認してください
-   - パスが正しく設定されているか確認してください
-
-## ライセンス
-This software is released under the MIT License.
-For more information, please refer to <https://opensource.org/licenses/MIT>
-
-## 不具合報告
-filter-matomeのGitHubのIssueにて報告をお願いします。
+## サポート
+不具合や改善要望は GitHub Issue までお願いします。  
 [filter-matome](https://github.com/roflsunriz/filter-matome/issues)
-
-Issueに含めるべき情報について
-*OS環境 (例：Windows 10/11, macOS 10.15, Linux Ubuntu 20.04)
-*NicoCache_nlのバージョン (例：2025-08-26)
-*Pythonのバージョン (例：3.7.0)
-*Javaのバージョン (例：17.0.11)
-*PowerShellのバージョン (例：7.3.5)
-*filter-matomeのバージョン (例：#193.2)
-*コンソールログ
-*エラーログ
-*実行コマンド
