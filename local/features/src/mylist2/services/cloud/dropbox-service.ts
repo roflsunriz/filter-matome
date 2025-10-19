@@ -1,16 +1,19 @@
 import "../../../types/global.d.ts";
 
+type FflateHelpers = Pick<typeof import("fflate"), "zipSync" | "unzipSync" | "strToU8" | "strFromU8">;
+
 /**
- * Dropbox 連携（ブラウザのみ、バックエンド無し）
- * - 認可: 手動入力のアクセストークン（短期/長期どちらでも可）
+ * Dropbox アカウントのみ、バックエンドなし
+ * - 想定: 個別対応のアクセストークン（設定/環境による）
  * - 権限: files.content.write / files.content.read を含むトークン
- * - 圧縮: fflate を動的インポート（CDN ESM フォールバック）
+ * - 実装: fflate を動的インポート（npm管理）
  *
- * 注意: 本実装は SDK を使わず fetch で Dropbox API を直接叩きます。
+ * 注意: 本実装は SDK を使わず fetch で Dropbox API を直接呼び出します。
  */
 export class DropboxService {
   private accessToken: string | null = null;
-  private readonly backupFolderPath = "/Mylist2 Backups"; // Dropbox はルート起点のパス
+  private readonly backupFolderPath = "/Mylist2 Backups"; // Dropbox はルート階層のパス
+  private fflateModulePromise: Promise<FflateHelpers> | null = null;
 
   constructor(tokenFromConfig?: string | null) {
     this.accessToken = tokenFromConfig || localStorage.getItem("mylist2_dropbox_token");
@@ -24,7 +27,7 @@ export class DropboxService {
   private ensureAccessToken(): Promise<string> {
     if (this.accessToken) return Promise.resolve(this.accessToken);
     const input = window.prompt(
-      "Dropbox のアクセストークンを入力してください (files.content.read/write 権限)",
+      "Dropbox のアクセストークンを入力してください (files.content.read/write 必須)",
       ""
     );
     if (!input) throw new Error("Dropbox アクセストークンが設定されていません");
@@ -32,33 +35,17 @@ export class DropboxService {
     return Promise.resolve(input);
   }
 
-  // fflate ローダ（npm優先 → CDNフォールバック）
-  private async loadFflate(): Promise<{
-    zipSync: (files: Record<string, Uint8Array>, opts?: { level?: number }) => Uint8Array;
-    unzipSync: (data: Uint8Array) => Record<string, Uint8Array>;
-    strToU8: (s: string) => Uint8Array;
-    strFromU8: (u8: Uint8Array) => string;
-  }> {
-    try {
-      const m = await import("fflate");
-      return m as unknown as {
-        zipSync: (files: Record<string, Uint8Array>, opts?: { level?: number }) => Uint8Array;
-        unzipSync: (data: Uint8Array) => Record<string, Uint8Array>;
-        strToU8: (s: string) => Uint8Array;
-        strFromU8: (u8: Uint8Array) => string;
-      };
-    } catch {
-      const cdnUrl = "https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/index.js";
-      const mod = (await import(
-        /* @vite-ignore */ cdnUrl
-      )) as unknown as {
-        zipSync: (files: Record<string, Uint8Array>, opts?: { level?: number }) => Uint8Array;
-        unzipSync: (data: Uint8Array) => Record<string, Uint8Array>;
-        strToU8: (s: string) => Uint8Array;
-        strFromU8: (u8: Uint8Array) => string;
-      };
-      return mod;
+  // fflate モジュールを一度だけ動的ロード
+  private async loadFflate(): Promise<FflateHelpers> {
+    if (!this.fflateModulePromise) {
+      this.fflateModulePromise = import("fflate").then(({ zipSync, unzipSync, strToU8, strFromU8 }) => ({
+        zipSync,
+        unzipSync,
+        strToU8,
+        strFromU8,
+      }));
     }
+    return this.fflateModulePromise;
   }
 
   private async createZipBlob(fileName: string, jsonText: string): Promise<Blob> {
@@ -104,7 +91,7 @@ export class DropboxService {
       const zipName = `${baseFileName}.zip`;
       const zipBlob = await this.createZipBlob(`${baseFileName}.json`, backupJson);
 
-      // Dropbox は /2/files/upload でバイナリを送る
+      // Dropbox の /2/files/upload でバイナリを送信
       const path = `${this.backupFolderPath}/${zipName}`;
       const upload = await fetch("https://content.dropboxapi.com/2/files/upload", {
         method: "POST",

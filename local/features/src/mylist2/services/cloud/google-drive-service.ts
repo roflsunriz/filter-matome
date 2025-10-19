@@ -1,5 +1,7 @@
 import "../../../types/global.d.ts";
 
+type FflateHelpers = Pick<typeof import("fflate"), "zipSync" | "unzipSync" | "strToU8" | "strFromU8">;
+
 // Google Identity Services が提供するグローバル
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const _google: any;
@@ -8,7 +10,7 @@ declare const _google: any;
  * Google Drive 連携（ブラウザのみ、バックエンド無し）
  * - 認可: Google Identity Services (Token Client)
  * - 権限: drive.file（本アプリが作成したファイル/フォルダに限定）
- * - 圧縮: fflate を動的インポート（CDN ESM）
+ * - 圧縮: fflate を動的インポート（npm管理）
  */
 export class GoogleDriveService {
   private accessToken: string | null = null;
@@ -17,38 +19,23 @@ export class GoogleDriveService {
   private readonly scope = "https://www.googleapis.com/auth/drive.file";
   private readonly backupFolderName = "Mylist2 Backups";
   private readonly defaultClientId = "757779940916-u31ia8oafa998j6qqavdpqjjn988it8b.apps.googleusercontent.com";
+  private fflateModulePromise: Promise<FflateHelpers> | null = null;
 
   constructor(clientIdFromConfig?: string | null) {
     this.clientId = clientIdFromConfig || localStorage.getItem("mylist2_google_client_id") || this.defaultClientId;
   }
 
-  // fflate ローダ（npm優先 → CDNフォールバック）
-  private async loadFflate(): Promise<{
-    zipSync: (files: Record<string, Uint8Array>, opts?: { level?: number }) => Uint8Array;
-    unzipSync: (data: Uint8Array) => Record<string, Uint8Array>;
-    strToU8: (s: string) => Uint8Array;
-    strFromU8: (u8: Uint8Array) => string;
-  }> {
-    try {
-      const m = await import("fflate");
-      return m as unknown as {
-        zipSync: (files: Record<string, Uint8Array>, opts?: { level?: number }) => Uint8Array;
-        unzipSync: (data: Uint8Array) => Record<string, Uint8Array>;
-        strToU8: (s: string) => Uint8Array;
-        strFromU8: (u8: Uint8Array) => string;
-      };
-    } catch {
-      const cdnUrl = "https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/index.js";
-      const mod = (await import(
-        /* @vite-ignore */ cdnUrl
-      )) as unknown as {
-        zipSync: (files: Record<string, Uint8Array>, opts?: { level?: number }) => Uint8Array;
-        unzipSync: (data: Uint8Array) => Record<string, Uint8Array>;
-        strToU8: (s: string) => Uint8Array;
-        strFromU8: (u8: Uint8Array) => string;
-      };
-      return mod;
+  // fflateモジュールを一度だけ動的ロード
+  private async loadFflate(): Promise<FflateHelpers> {
+    if (!this.fflateModulePromise) {
+      this.fflateModulePromise = import("fflate").then(({ zipSync, unzipSync, strToU8, strFromU8 }) => ({
+        zipSync,
+        unzipSync,
+        strToU8,
+        strFromU8,
+      }));
     }
+    return this.fflateModulePromise;
   }
 
   setClientId(clientId: string): void {
@@ -114,16 +101,15 @@ export class GoogleDriveService {
     const resp = await fetch(url, {
       ...init,
       headers: {
-        ...(init.headers || {}),
         Authorization: `Bearer ${token}`,
+        ...(init.headers || {}),
       },
     });
     if (!resp.ok) {
       const text = await resp.text().catch(() => "");
-      throw new Error(`Drive API Error: ${resp.status} ${resp.statusText} ${text}`);
+      throw new Error(`Drive API failed: ${resp.status} ${resp.statusText} ${text}`);
     }
-    const contentType = resp.headers.get("content-type") || "";
-    if (contentType.includes("application/json")) {
+    if (resp.headers.get("Content-Type")?.includes("application/json")) {
       return (await resp.json()) as T;
     }
     return (await resp.text()) as unknown as T;
@@ -235,5 +221,3 @@ export class GoogleDriveService {
     return strFromU8(files[jsonEntryName]);
   }
 }
-
-

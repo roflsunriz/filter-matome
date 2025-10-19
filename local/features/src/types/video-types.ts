@@ -259,34 +259,10 @@ export type PlayerIconKey =
   | 'settings'; 
 
 /**
- * HLS.jsライブラリの型定義
+ * HLS.js関連の型定義
  */
-declare global {
-  const Hls: {
-    isSupported(): boolean;
-    Events: {
-      ERROR: string;
-      MANIFEST_PARSED: string;
-      MEDIA_ATTACHED: string;
-    };
-    new(): {
-      on(event: string, callback: (...args: unknown[]) => void): void;
-      loadSource(url: string): void;
-      attachMedia(element: HTMLVideoElement): void;
-      destroy(): void;
-    };
-  };
-}
-
-/**
- * HLS.jsインスタンスの型定義
- */
-export interface HlsInstance {
-  on(event: string, callback: (...args: unknown[]) => void): void;
-  loadSource(url: string): void;
-  attachMedia(element: HTMLVideoElement): void;
-  destroy(): void;
-}
+export type HlsConstructor = typeof import("hls.js")["default"];
+export type HlsInstance = InstanceType<HlsConstructor>;
 
 /**
  * キャッシュ情報APIレスポンスの型定義

@@ -6,7 +6,7 @@ import { CommentList } from '../ui/comment-list.js';
 import { CommentSystem } from '../core/comment-system.js';
 import { CUSTOM_PLAYER_SHADOW_HTML, CUSTOM_PLAYER_SHADOW_STYLES } from '../ui/templates.js';
 import type { ApiData } from '@/types/index.js';
-import type { HlsInstance } from '@/types/video-types.js';
+import type { HlsConstructor, HlsInstance } from '@/types/video-types.js';
 
 const ensureCustomElements = (): void => {
   if (!customElements.get('player-controls-shadow')) {
@@ -40,13 +40,15 @@ export class StandalonePlayer {
   private videoElement: HTMLVideoElement | null = null;
   private videoContainer: HTMLElement | null = null;
   private customPlayerContainer: HTMLElement | null = null;
+  private hlsConstructor: HlsConstructor | null = null;
+  private hlsConstructorPromise: Promise<HlsConstructor | null> | null = null;
   private hls: HlsInstance | null = null;
   private enableComments = true;
 
   constructor(options: StandalonePlayerOptions) {
     this.mount = options.mount;
     ensureCustomElements();
-    this.loadHLSLibrary();
+    void this.ensureHlsLibrary();
     this.setupGlobalInterface();
   }
 
@@ -136,9 +138,10 @@ export class StandalonePlayer {
 
     const isHls = this.isHLSUrl(url);
     if (isHls) {
-      this.loadHLSVideo(url);
+      await this.loadHLSVideo(url);
     } else {
       this.videoElement.src = url;
+      this.toastManager.showInfo('ネイティブ再生を試みます');
     }
 
     try {
@@ -244,24 +247,28 @@ export class StandalonePlayer {
     return lower.includes('hls') || lower.includes('.m3u8') || url.includes('master.m3u8') || url.includes('playlist.m3u8');
   }
 
-  private loadHLSVideo(url: string): void {
+  private async loadHLSVideo(url: string): Promise<void> {
     if (!this.videoElement) {
       return;
     }
 
-    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-      this.hls = new Hls();
-      this.hls.on(Hls.Events.ERROR, (_event: unknown, data: unknown) => {
+    const HlsConstructor = await this.ensureHlsLibrary();
+    if (HlsConstructor && HlsConstructor.isSupported()) {
+      this.hls?.destroy();
+      this.hls = new HlsConstructor();
+      this.hls.on(HlsConstructor.Events.ERROR, (_event: unknown, data: unknown) => {
         window.logger.error('HLS Error', data);
         this.toastManager.showError('HLS再生でエラーが発生しました');
       });
       this.hls.loadSource(url);
       this.hls.attachMedia(this.videoElement);
-    } else {
-      this.videoElement.src = url;
-      this.toastManager.showInfo('ネイティブHLS再生を試行します');
+      return;
     }
+
+    this.videoElement.src = url;
+    this.toastManager.showInfo('HLS.jsが利用できないためネイティブ再生を試みます');
   }
+
 
   private async loadComments(videoId: string): Promise<void> {
     if (!this.enableComments) {
@@ -275,24 +282,25 @@ export class StandalonePlayer {
     }
   }
 
-  private loadHLSLibrary(): void {
-    if (typeof Hls !== 'undefined') {
-      return;
+  private async ensureHlsLibrary(): Promise<HlsConstructor | null> {
+    if (this.hlsConstructor) {
+      return this.hlsConstructor;
     }
-    if (document.querySelector('script[src*="hls.js"]')) {
-      return;
+    if (!this.hlsConstructorPromise) {
+      this.hlsConstructorPromise = import('hls.js')
+        .then((module) => module.default)
+        .catch((error) => {
+          window.logger.warn('HLS.jsの読み込みに失敗しました', error);
+          return null;
+        });
     }
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
-    script.async = true;
-    script.onload = () => {
-      window.logger.info('HLS.jsライブラリの読み込みが完了しました');
-    };
-    script.onerror = () => {
-      window.logger.warn('HLS.jsライブラリの読み込みに失敗しました');
-    };
-    document.head.appendChild(script);
+    const ctor = await this.hlsConstructorPromise;
+    if (ctor) {
+      this.hlsConstructor = ctor;
+    }
+    return this.hlsConstructor;
   }
+
 
   private cleanupPlayback(): void {
     if (this.hls) {

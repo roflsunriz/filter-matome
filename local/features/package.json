@@ -287,6 +287,7 @@
     "graphemer": "^1.4.0",
     "has-flag": "^5.0.1",
     "he": "^1.2.0",
+    "hls.js": "^1.5.16",
     "html-minifier-terser": "^7.2.0",
     "ignore": "^7.0.5",
     "import-fresh": "^3.3.1",

@@ -1,15 +1,18 @@
 import "../../../types/global.d.ts";
 
+type FflateHelpers = Pick<typeof import("fflate"), "zipSync" | "unzipSync" | "strToU8" | "strFromU8">;
+
 /**
  * OneDrive 連携（ブラウザのみ、バックエンド無し）
  * - 認可: 手動入力の Microsoft Graph アクセストークン (scope: Files.ReadWrite)
- * - 圧縮: fflate を動的インポート（CDN ESM フォールバック）
+ * - 圧縮: fflate を動的インポート（npm管理）
  *
  * 備考: アクセストークンは有効期限が短い場合があります。必要に応じて再入力してください。
  */
 export class OneDriveService {
   private accessToken: string | null = null;
   private readonly backupFolderName = "Mylist2 Backups";
+  private fflateModulePromise: Promise<FflateHelpers> | null = null;
 
   constructor(tokenFromConfig?: string | null) {
     this.accessToken = tokenFromConfig || localStorage.getItem("mylist2_onedrive_token");
@@ -31,33 +34,17 @@ export class OneDriveService {
     return Promise.resolve(input);
   }
 
-  // fflate ローダ（npm優先 → CDNフォールバック）
-  private async loadFflate(): Promise<{
-    zipSync: (files: Record<string, Uint8Array>, opts?: { level?: number }) => Uint8Array;
-    unzipSync: (data: Uint8Array) => Record<string, Uint8Array>;
-    strToU8: (s: string) => Uint8Array;
-    strFromU8: (u8: Uint8Array) => string;
-  }> {
-    try {
-      const m = await import("fflate");
-      return m as unknown as {
-        zipSync: (files: Record<string, Uint8Array>, opts?: { level?: number }) => Uint8Array;
-        unzipSync: (data: Uint8Array) => Record<string, Uint8Array>;
-        strToU8: (s: string) => Uint8Array;
-        strFromU8: (u8: Uint8Array) => string;
-      };
-    } catch {
-      const cdnUrl = "https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/index.js";
-      const mod = (await import(
-        /* @vite-ignore */ cdnUrl
-      )) as unknown as {
-        zipSync: (files: Record<string, Uint8Array>, opts?: { level?: number }) => Uint8Array;
-        unzipSync: (data: Uint8Array) => Record<string, Uint8Array>;
-        strToU8: (s: string) => Uint8Array;
-        strFromU8: (u8: Uint8Array) => string;
-      };
-      return mod;
+  // fflateモジュールを一度だけ動的ロード
+  private async loadFflate(): Promise<FflateHelpers> {
+    if (!this.fflateModulePromise) {
+      this.fflateModulePromise = import("fflate").then(({ zipSync, unzipSync, strToU8, strFromU8 }) => ({
+        zipSync,
+        unzipSync,
+        strToU8,
+        strFromU8,
+      }));
     }
+    return this.fflateModulePromise;
   }
 
   private async createZipBlob(fileName: string, jsonText: string): Promise<Blob> {
