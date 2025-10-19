@@ -32,6 +32,7 @@
     "@eslint/js": "^9.33.0",
     "@playwright/mcp": "^0.0.33",
     "@playwright/test": "^1.54.2",
+    "@types/flexsearch": "^0.7.6",
     "@types/node": "^24.2.1",
     "@typescript-eslint/eslint-plugin": "^8.39.1",
     "@typescript-eslint/parser": "^8.39.1",
@@ -204,7 +205,7 @@
     "wrappy": "^1.0.2",
     "yocto-queue": "^1.2.1"
   },
-  "version": "198",
+  "version": "201",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -276,6 +277,7 @@
     "find-up": "^7.0.0",
     "flat-cache": "^6.1.12",
     "flatted": "^3.3.3",
+    "flexsearch": "^0.7.31",
     "foreground-child": "^3.3.1",
     "fs.realpath": "^1.0.0",
     "glob-parent": "^6.0.2",

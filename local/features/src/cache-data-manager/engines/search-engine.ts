@@ -1,30 +1,20 @@
+import FlexSearchDocument from 'flexsearch/dist/module/document.js';
+import type { Document as FlexSearchDocumentType, DocumentSearchOptions, SimpleDocumentSearchResultSetUnit } from 'flexsearch';
 import type { LoadDataFromMemory } from '../loaders/load-data-from-memory.js';
 // avoid importing project path aliases here to keep linting safe
 
+type SearchDocument = { id: string; title: string };
+
 export class SearchEngine {
-  private index: unknown;
+  private index: FlexSearchDocumentType<SearchDocument> | null = null;
   private indexReady: Promise<void>;
 
   constructor(private dataLoader: LoadDataFromMemory) {
-    this.indexReady = this.loadFlexSearch(); // 初期化完了フラグ追加
+    this.indexReady = this.initializeFlexSearch();
   }
 
-  private async loadFlexSearch(): Promise<void> {
-    if (typeof (window as unknown as { FlexSearch?: unknown }).FlexSearch === "undefined") {
-      await new Promise<void>((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = "https://cdn.jsdelivr.net/npm/flexsearch@0.7.31/dist/flexsearch.bundle.js";
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error("Failed to load FlexSearch"));
-        document.head.appendChild(script);
-      });
-    }
-    this.initializeIndex();
-  }
-
-  private initializeIndex(): void {
-    const Flex = (window as unknown as { FlexSearch: { Document: new (...args: unknown[]) => unknown } }).FlexSearch;
-    this.index = new Flex.Document({
+  private initializeFlexSearch(): Promise<void> {
+    this.index = new FlexSearchDocument<SearchDocument>({
       preset: "memory",
       tokenize: "full",
       document: {
@@ -43,24 +33,32 @@ export class SearchEngine {
       },
     });
     this.rebuildIndex();
+    return Promise.resolve();
   }
 
   public async search(query: string): Promise<string[]> {
     const cleanQuery = query.toLowerCase().trim();
     await this.indexReady;
-    if (!cleanQuery || !this.index) return [];
+    const index = this.index;
+    if (!cleanQuery || !index) return [];
 
-    const results = (this.index as unknown as { search: (q: string, opts: Record<string, unknown>) => Array<{ result: unknown[] }> }).search(cleanQuery, {
-      limit: 1000,
-      suggest: true,
-      enrich: true,
-      bool: "or",
-    });
+    const results: SimpleDocumentSearchResultSetUnit[] = index.search(
+      cleanQuery,
+      {
+        limit: 1000,
+        suggest: true,
+        enrich: true,
+        bool: "or",
+      } satisfies Partial<DocumentSearchOptions<true>>
+    );
 
     return [...new Set(results.flatMap((r) => r.result))].filter((id): id is string => typeof id === 'string');
   }
 
   private rebuildIndex(): void {
+    const index = this.index;
+    if (!index) return;
+
     const entries = this.dataLoader.getAllEntries() as unknown[];
 
     for (const rawEntry of entries) {
@@ -72,10 +70,7 @@ export class SearchEngine {
 
       const safeTitle = titleRaw.toLowerCase();
 
-      const indexWithAdd = this.index as { add?: (doc: { id: string; title: string }) => void } | undefined;
-      if (indexWithAdd && typeof indexWithAdd.add === 'function') {
-        indexWithAdd.add({ id, title: safeTitle });
-      }
+      index.add({ id, title: safeTitle });
     }
   }
-} 
+}

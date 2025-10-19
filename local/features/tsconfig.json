@@ -21,7 +21,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/types/vite-env.d.ts"
+    "src/types/vite-env.d.ts",
+    "playwright.config.ts"
   ],
-  "exclude": ["node_modules", "dist", "config"]
+  "exclude": ["node_modules", "dist", "config", "scripts", "tests", "tests-examples"]
 } 
