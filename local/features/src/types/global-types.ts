@@ -2,14 +2,14 @@
  * グローバル型定義
  */
 
-import { ApiData, ExtendedApiData } from './video-types';
-import { Mylist2DB } from '../mylist2/components/database.js';
-import { Mylist2Manager } from '../mylist2/components/manager-refactored.js';
-import { Mylist2ManagerUI } from '../mylist2/ui/ui-refactored.js';
-import { ToastrInstance } from './toastr-types';
-import { CommentApiResponse } from './comment-types';
-import { IVideoPlayerBridge } from './video-player-bridge-types';
-import { CommentFilter2GlobalData, CompatibleCommentFilter2GlobalData } from './filter-types';
+import { ApiData, ExtendedApiData } from '@/types/video-types';
+import { Mylist2DB } from '@/mylist2/components/database';
+import { Mylist2Manager } from '@/mylist2/components/manager-refactored';
+import { Mylist2ManagerUI } from '@/mylist2/ui/ui-refactored';
+import { ToastrInstance } from '@/types/toastr-types';
+import { CommentApiResponse } from '@/types/comment-types';
+import { IVideoPlayerBridge } from '@/types/video-player-bridge-types';
+import { CommentFilter2GlobalData, CompatibleCommentFilter2GlobalData } from '@/types/filter-types';
 
 // Logger関連の型定義
 export enum LogLevel {

@@ -1,5 +1,5 @@
 import { ModuleInstance, ModuleConfig, PageType, ModuleCategory, ModuleStatus, WatchPageSubModule } from '@/types/module-types';
-import { createMaterialIcon } from '../../common/material-icons';
+import { createMaterialIcon } from '@/common/material-icons';
 
 /**
  * Watch Page統合モジュール

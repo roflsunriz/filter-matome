@@ -1,8 +1,8 @@
 // CommentFilter2 メインエントリーポイント
-import { DataInterceptor } from './proxy/data-interceptor';
-import { UIManager } from './components/ui-manager';
-import { VideoPlayerBridge } from './integrations/video-player-bridge';
-import { CONSTANTS } from './utils/constants';
+import { DataInterceptor } from '@/comment-filter2/proxy/data-interceptor';
+import { UIManager } from '@/comment-filter2/components/ui-manager';
+import { VideoPlayerBridge } from '@/comment-filter2/integrations/video-player-bridge';
+import { CONSTANTS } from '@/comment-filter2/utils/constants';
 import { VideoPlayerBridgeStatus } from '@/types/video-player-bridge-types';
 
 export class CommentFilter2 {

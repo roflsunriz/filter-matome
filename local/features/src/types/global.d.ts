@@ -1,8 +1,8 @@
 // グローバルオブジェクトの型定義
-import { ToastrInstance } from "./toastr-types";
-import { NicoCache_nlInterface } from "./global-types";
-import { CommentFilterInterface } from "./comment-types";
-import { VideoPlayerInstance } from "./video-player-bridge-types";
+import { ToastrInstance } from "@/types/toastr-types";
+import { NicoCache_nlInterface } from "@/types/global-types";
+import { CommentFilterInterface } from "@/types/comment-types";
+import { VideoPlayerInstance } from "@/types/video-player-bridge-types";
 import { 
   NicoApiData, 
   CommentData, 
@@ -10,7 +10,7 @@ import {
   ExtendedFetchWatchPageResult,
   FetchOptions,
   CommentThread
-} from "./common-types";
+} from "@/types/common-types";
 
 type CommonHelperVideoIdSource = string | URL | Location | {
   href?: string | null;

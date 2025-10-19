@@ -1,5 +1,5 @@
 import { VideoUrlInfo } from '@/types/index';
-import { URLS } from '../config/constants';
+import { URLS } from '@/video-player/config/constants';
 import type { CacheInfoResponse } from '@/types/video-types';
 
 /**

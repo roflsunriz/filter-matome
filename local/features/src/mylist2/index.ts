@@ -1,11 +1,11 @@
-import { applyMylistManagerStyles } from './ui/styles.js';
-import { headerAdjustments } from './header-adjustments.js';
-import { Mylist2DB as db } from './components/database.js';
-import { Mylist2Manager as managerRefactored } from './components/manager-refactored.js';
-import { Mylist2ManagerUI as uiRefactored } from './ui/ui-refactored.js';
+import { applyMylistManagerStyles } from '@/mylist2/ui/styles';
+import { headerAdjustments } from '@/mylist2/header-adjustments';
+import { Mylist2DB as db } from '@/mylist2/components/database';
+import { Mylist2Manager as managerRefactored } from '@/mylist2/components/manager-refactored';
+import { Mylist2ManagerUI as uiRefactored } from '@/mylist2/ui/ui-refactored';
 // 型定義のみのインポート（ランタイム影響なし）
-import type { HeaderConfig } from '../types/common-types.js';
-import { hydrateMaterialIconImages } from '../common/material-icons.js';
+import type { HeaderConfig } from '@/types/common-types';
+import { hydrateMaterialIconImages } from '@/common/material-icons';
 
 // スタイルを適用
 headerAdjustments();

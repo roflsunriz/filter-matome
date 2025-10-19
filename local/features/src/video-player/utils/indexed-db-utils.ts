@@ -3,8 +3,8 @@
  * 永続化昇格機能対応版です
  */
 
-import { ModeValue } from '../../types';
-import { DatabaseManager } from '../core/database-manager';
+import { ModeValue } from '@/types/index';
+import { DatabaseManager } from '@/video-player/core/database-manager';
 
 // レガシー互換性のための定数
 const DB_NAME = 'NicoCachePlayerDB';
@@ -187,12 +187,12 @@ export const getAllSettings = async (): Promise<Record<string, ModeValue>> => {
 };
 
 // 新しい昇格機能へのエクスポート
-export { DatabaseManager } from '../core/database-manager';
-export { MigrationManager } from '../core/migration-manager';
+export { DatabaseManager } from '@/video-player/core/database-manager';
+export { MigrationManager } from '@/video-player/core/migration-manager';
 export type { 
   VideoCache, 
   ViewHistory, 
   UserStats, 
   CommentHistory, 
   SystemInfo 
-} from '../config/database-config'; 
+} from '@/video-player/config/database-config'; 

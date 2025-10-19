@@ -1,7 +1,7 @@
-import { applyCommentFilter2DocsStyles } from './styles.js';
-import { applyCommentFilter2MainStyles } from './main-styles.js';
+import { applyCommentFilter2DocsStyles } from '@/docs/comment-filter2/styles.js';
+import { applyCommentFilter2MainStyles } from '@/docs/comment-filter2/main-styles.js';
 import type { HeaderConfig } from '@/types/common-types';
-import { hydrateMaterialIconImages } from '../../common/material-icons.js';
+import { hydrateMaterialIconImages } from '@/common/material-icons.js';
 
 // スタイルを適用
 applyCommentFilter2DocsStyles();

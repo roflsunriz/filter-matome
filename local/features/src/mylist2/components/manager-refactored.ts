@@ -1,20 +1,20 @@
-import "../../types/global.d.ts";
+import "@/types/global.d.ts";
 
-import { Mylist2DB } from "./database.js";
-import { MylistInfo, KeywordInfo, ManagerSettings, ExportData } from "../../types/mylist-types.js";
-import { DBVideo as VideoInfo, VideoInfo as BaseVideoInfo } from "../../types/video-types.js";
+import { Mylist2DB } from "@/mylist2/components/database";
+import { MylistInfo, KeywordInfo, ManagerSettings, ExportData } from "@/types/mylist-types";
+import { DBVideo as VideoInfo, VideoInfo as BaseVideoInfo } from "@/types/video-types";
 
-import { ApiService } from "../services/api-service.js";
-import { MylistService } from "../services/mylist-service.js";
-import { VideoService } from "../services/video-service.js";
-import { KeywordService } from "../services/keyword-service.js";
-import { ImportExportService } from "../services/import-export-service.js";
-import { SettingsService } from "../services/settings-service.js";
-import { DatabaseManagementService } from "../services/database-management-service.js";
-import { GoogleDriveService } from "../services/cloud/google-drive-service.js";
-import { DropboxService } from "../services/cloud/dropbox-service.js";
-import { OneDriveService } from "../services/cloud/onedrive-service.js";
-import { MegaService } from "../services/cloud/mega-service.js";
+import { ApiService } from "@/mylist2/services/api-service";
+import { MylistService } from "@/mylist2/services/mylist-service";
+import { VideoService } from "@/mylist2/services/video-service";
+import { KeywordService } from "@/mylist2/services/keyword-service";
+import { ImportExportService } from "@/mylist2/services/import-export-service";
+import { SettingsService } from "@/mylist2/services/settings-service";
+import { DatabaseManagementService } from "@/mylist2/services/database-management-service";
+import { GoogleDriveService } from "@/mylist2/services/cloud/google-drive-service";
+import { DropboxService } from "@/mylist2/services/cloud/dropbox-service";
+import { OneDriveService } from "@/mylist2/services/cloud/onedrive-service";
+import { MegaService } from "@/mylist2/services/cloud/mega-service";
 
 export class Mylist2Manager {
   private db: Mylist2DB;

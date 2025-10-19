@@ -7,8 +7,8 @@
 
 import { WatchHistoryEntry, WatchLogEntry, WatchEvent, WatchEventType, VideoStats, SeriesInfo, SeriesVideoInfo } from '@/types/watch-history-types';
 import { NicoApiData } from '@/types/common-types';
-import { watchHistoryDB } from './database';
-import { logger } from '../common/logger';
+import { watchHistoryDB } from '@/watch-history/database';
+import { logger } from '@/common/logger';
 
 const WATCH_PAGE_PATH_REGEX = /^\/watch\/[a-z]{2}\d+$/;
 const VIDEO_ID_IN_PATH_REGEX = /[a-z]{2}\d+/;

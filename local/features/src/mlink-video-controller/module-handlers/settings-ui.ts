@@ -1,11 +1,11 @@
-import { ModuleManager } from './module-manager';
-import { ModuleRegistry } from './module-registry';
-import { SettingsManager } from './settings-manager';
+import { ModuleManager } from '@/mlink-video-controller/module-handlers/module-manager';
+import { ModuleRegistry } from '@/mlink-video-controller/module-handlers/module-registry';
+import { SettingsManager } from '@/mlink-video-controller/module-handlers/settings-manager';
 import { ModuleConfig, ModuleCategory, ModuleStatus } from '@/types/module-types';
-import { WatchPageModule } from '../modules/watch-page-module';
-import { BackgroundImageSettings } from '../modules/background-image-settings';
+import { WatchPageModule } from '@/mlink-video-controller/modules/watch-page-module';
+import { BackgroundImageSettings } from '@/mlink-video-controller/modules/background-image-settings';
 // import { ToastrInstance } from '@/types/toastr-types';
-import { createMaterialIcon } from '../../common/material-icons';
+import { createMaterialIcon } from '@/common/material-icons';
 import { BackgroundImageItem } from '@/types/background-image-types';
 
 /**

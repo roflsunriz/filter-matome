@@ -1,9 +1,9 @@
-import { ProgressManager } from './managers/progress-manager.js';
-import { EventManager } from './managers/event-manager.js';
-import { LoadDataFromMemory } from './loaders/load-data-from-memory.js';
-import { UIBuilder } from './builders/ui-builder.js';
-import { EventCoordinator } from './coordinators/event-coordinator.js';
-import { cacheListStyles } from './styles/styles.js';
+import { ProgressManager } from '@/cache-data-manager/managers/progress-manager.js';
+import { EventManager } from '@/cache-data-manager/managers/event-manager.js';
+import { LoadDataFromMemory } from '@/cache-data-manager/loaders/load-data-from-memory.js';
+import { UIBuilder } from '@/cache-data-manager/builders/ui-builder.js';
+import { EventCoordinator } from '@/cache-data-manager/coordinators/event-coordinator.js';
+import { cacheListStyles } from '@/cache-data-manager/styles/styles.js';
 
 // 初期化関数の簡素化
 async function initializeList(): Promise<void> {

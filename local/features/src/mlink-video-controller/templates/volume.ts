@@ -1,4 +1,4 @@
-import { createMaterialIcon } from '../../common/material-icons';
+import { createMaterialIcon } from '@/common/material-icons';
 
 export const volumeTemplate = `
 <div class="range-control">

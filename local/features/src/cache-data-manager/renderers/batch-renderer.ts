@@ -1,5 +1,5 @@
 import type { VideoData } from '@/types';
-import type { LoadDataFromMemory } from '../loaders/load-data-from-memory.js';
+import type { LoadDataFromMemory } from '@/cache-data-manager/loaders/load-data-from-memory.js';
 
 export class BatchRenderer {
   private container: HTMLElement;

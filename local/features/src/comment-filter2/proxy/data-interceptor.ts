@@ -1,5 +1,5 @@
 // データ取得部（Proxy）
-import { CONSTANTS } from '../utils/constants';
+import { CONSTANTS } from '@/comment-filter2/utils/constants';
 import { CF2CommentApiResponse, CommentFilter2GlobalData, CF2Thread, toCompatibleGlobalData } from '@/types/filter-types';
 
 // グローバル型定義は types/global.d.ts で管理されています

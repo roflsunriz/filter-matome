@@ -1,5 +1,5 @@
-import { Mylist2Manager } from "./manager-refactored.js";
-import { MylistInfo } from "../../types/mylist-types.js";
+import { Mylist2Manager } from "@/mylist2/components/manager-refactored";
+import { MylistInfo } from "@/types/mylist-types";
 
 /**
  * マイリスト選択モーダルを表示する関数

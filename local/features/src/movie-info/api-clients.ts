@@ -1,5 +1,5 @@
-import "../types/global-types";
-import type { IntegratedNicoData, NicoApiData } from "../types/common-types";
+import "@/types/global-types";
+import type { IntegratedNicoData, NicoApiData } from "@/types/common-types";
 import type {
   CacheEntry,
   CacheInfoResponse,
@@ -8,7 +8,7 @@ import type {
   ThumbInfo,
   ThumbOwnerInfo,
   ThumbTagInfo,
-} from "../types/movie-info-types";
+} from "@/types/movie-info-types";
 
 const CACHE_INFO_ENDPOINT = "https://www.nicovideo.jp/cache/info/v2?";
 const THUMB_INFO_ENDPOINT = "https://ext.nicovideo.jp/api/getthumbinfo/";

@@ -1,11 +1,11 @@
 import type { VideoData } from '@/types';
-import type { LoadDataFromMemory } from '../loaders/load-data-from-memory.js';
-import type { EventManager } from '../managers/event-manager.js';
-import type { ProgressManager } from '../managers/progress-manager.js';
-import { BatchRenderer } from '../renderers/batch-renderer.js';
-import { SearchEngine } from '../engines/search-engine.js';
-import { createHeaderTemplate } from '../templates/header-template.js';
-import { createCardTemplate } from '../templates/card-template.js';
+import type { LoadDataFromMemory } from '@/cache-data-manager/loaders/load-data-from-memory.js';
+import type { EventManager } from '@/cache-data-manager/managers/event-manager.js';
+import type { ProgressManager } from '@/cache-data-manager/managers/progress-manager.js';
+import { BatchRenderer } from '@/cache-data-manager/renderers/batch-renderer.js';
+import { SearchEngine } from '@/cache-data-manager/engines/search-engine.js';
+import { createHeaderTemplate } from '@/cache-data-manager/templates/header-template.js';
+import { createCardTemplate } from '@/cache-data-manager/templates/card-template.js';
 
 export class UIBuilder {
   public dataLoader: LoadDataFromMemory;

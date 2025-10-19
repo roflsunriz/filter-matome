@@ -1,4 +1,4 @@
-import type { DownloadDescriptor, PanelStatus } from "../types/movie-info-types";
+import type { DownloadDescriptor, PanelStatus } from "@/types/movie-info-types";
 
 const STATUS_MESSAGES: Record<PanelStatus, string> = {
   idle: "idle",

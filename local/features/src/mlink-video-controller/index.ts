@@ -1,5 +1,5 @@
-import './panels/link-video';
-import { NicoVideoPlayer } from './services/nico-video-player';
+import '@/mlink-video-controller/panels/link-video';
+import { NicoVideoPlayer } from '@/mlink-video-controller/services/nico-video-player';
 
 class PanelManager {
   private panel: HTMLElement | null = null;

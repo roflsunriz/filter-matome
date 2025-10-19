@@ -3,40 +3,40 @@
  */
 
 // コメント関連の型
-export * from './comment-types';
+export * from '@/types/comment-types';
 
 // フィルター関連の型
-export * from './filter-types';
+export * from '@/types/filter-types';
 
 // サムネイルフィルター関連の型
-export * from './thumbnails-filter-types';
+export * from '@/types/thumbnails-filter-types';
 
 // 動画関連の型
-export * from './video-types';
+export * from '@/types/video-types';
 
 // UI関連の型
-export * from './ui-types';
+export * from '@/types/ui-types';
 
 // 視聴履歴関連の型
-export * from './watch-history-types';
+export * from '@/types/watch-history-types';
 
 // アイコン関連の型
-export * from './icon-types';
+export * from '@/types/icon-types';
 
 // マイリスト関連の型
-export * from './mylist-types';
+export * from '@/types/mylist-types';
 
 // グローバル関連の型
-export * from './global-types';
+export * from '@/types/global-types';
 
 // ユーティリティ関連の型
-export * from './util-types';
+export * from '@/types/util-types';
 
 // Links Video Controller関連の型
-export * from './mlink-video-controller-types';
+export * from '@/types/mlink-video-controller-types';
 
 // Cache Data Manager 関連の型
-export * from './cache-data-manager-types';
+export * from '@/types/cache-data-manager-types';
 
 // Movie Info 関連の型
 export type {
@@ -54,7 +54,7 @@ export type {
   DashboardState as MovieInfoDashboardState,
   DownloadDescriptor as MovieInfoDownloadDescriptor,
   PanelSummaryBuilder as MovieInfoPanelSummaryBuilder,
-} from './movie-info-types';
+} from '@/types/movie-info-types';
 
 
 // データベース関連の型（重複エクスポートを避けるため必要なもののみ明示的に再エクスポート）
@@ -72,7 +72,7 @@ export type {
   DatabaseConfig,
   CleanupConfig,
   BackupData,
-} from './database-types';
+} from '@/types/database-types';
 
 // Toastr関連の型（ExtendedHTMLElementの重複を避けるため明示的にエクスポート）
 export type { 
@@ -81,13 +81,13 @@ export type {
   ToastrNotifyParams, 
   ToastData,
   ExtendedHTMLElement as ToastrExtendedHTMLElement 
-} from './toastr-types';
+} from '@/types/toastr-types';
 
 // 背景画像関連の型
-export * from './background-image-types';
+export * from '@/types/background-image-types';
 
 // Video Player Bridge関連の型
-export * from './video-player-bridge-types';
+export * from '@/types/video-player-bridge-types';
 
 // 共通モジュール関連の型（CommentApiResponseの重複を避けるため明示的にエクスポート）
 export type {
@@ -103,7 +103,7 @@ export type {
   IntegratedNicoData,
   FetchOptions,
   ExtendedFetchWatchPageResult
-} from './common-types';
+} from '@/types/common-types';
 
 // Vite環境の型定義
-import './vite-env.d.ts';
+import '@/types/vite-env.d.ts';

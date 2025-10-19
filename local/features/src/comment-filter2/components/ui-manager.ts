@@ -1,13 +1,13 @@
 // UIマネジメント部 - UIの制御とイベント処理
 import { Settings, CommandSettings, NgRuleJson, NicoruCond } from '@/types/filter-types';
-import { FilterStorage } from '../storage/indexed-db';
-import { CommentFilter } from '../filter/comment-filter';
-import { JsonCommentFilter } from '../filter/json-comment-filter';
-import { sanitizeCommentCommands } from '../utils/sanitizer';
-import { parseJsonl, stringifyJsonl } from '../utils/jsonl-parser';
-import { mainUITemplate, UI_ELEMENTS, CSS_CLASSES } from '../templates/main-ui';
-import { CommentFilter2MainStyles } from '../styles/main';
-import { FilterLogger } from '../utils/filter-logger';
+import { FilterStorage } from '@/comment-filter2/storage/indexed-db';
+import { CommentFilter } from '@/comment-filter2/filter/comment-filter';
+import { JsonCommentFilter } from '@/comment-filter2/filter/json-comment-filter';
+import { sanitizeCommentCommands } from '@/comment-filter2/utils/sanitizer';
+import { parseJsonl, stringifyJsonl } from '@/comment-filter2/utils/jsonl-parser';
+import { mainUITemplate, UI_ELEMENTS, CSS_CLASSES } from '@/comment-filter2/templates/main-ui';
+import { CommentFilter2MainStyles } from '@/comment-filter2/styles/main';
+import { FilterLogger } from '@/comment-filter2/utils/filter-logger';
 // CSSスタイルを直接インポート
 
 // グローバル型定義は既に globalTypes.ts で定義済み

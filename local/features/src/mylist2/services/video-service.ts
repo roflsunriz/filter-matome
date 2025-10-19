@@ -1,7 +1,7 @@
-import "../../types/global.d.ts";
+import "@/types/global.d.ts";
 
-import { Mylist2DB } from "../components/database.js";
-import { VideoInfo, DBVideo } from "../../types/video-types.js";
+import { Mylist2DB } from "@/mylist2/components/database";
+import { VideoInfo, DBVideo } from "@/types/video-types";
 
 export class VideoService {
   private db: Mylist2DB;

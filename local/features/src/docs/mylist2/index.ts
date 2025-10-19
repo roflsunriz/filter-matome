@@ -1,6 +1,6 @@
-import { applyMylist2DocsStyles } from './styles.js';
+import { applyMylist2DocsStyles } from '@/docs/mylist2/styles.js';
 import type { HeaderConfig } from '@/types/common-types';
-import { hydrateMaterialIconImages } from '../../common/material-icons.js';
+import { hydrateMaterialIconImages } from '@/common/material-icons.js';
 
 // スタイルを適用
 applyMylist2DocsStyles();

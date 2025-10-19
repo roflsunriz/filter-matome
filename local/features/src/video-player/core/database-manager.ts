@@ -3,7 +3,7 @@
  * 永続化昇格機能の中核システム、複数ストアの統合管理を行います！
  */
 
-import { MigrationManager } from './migration-manager';
+import { MigrationManager } from '@/video-player/core/migration-manager';
 import { 
   DB_CONFIG, 
   VideoCache, 
@@ -13,8 +13,8 @@ import {
   SystemInfo,
   CLEANUP_CONFIG,
   SETTING_CATEGORIES
-} from '../config/database-config';
-import { ModeValue } from '../../types';
+} from '@/video-player/config/database-config';
+import { ModeValue } from '@/types';
 
 export class DatabaseManager {
   private static instance: DatabaseManager;

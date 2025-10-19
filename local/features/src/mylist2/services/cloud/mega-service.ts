@@ -1,4 +1,4 @@
-import "../../../types/global.d.ts";
+import "@/types/global.d.ts";
 
 /**
  * MEGA 連携（ブラウザ）

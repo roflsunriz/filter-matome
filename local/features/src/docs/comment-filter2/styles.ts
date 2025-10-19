@@ -1,4 +1,4 @@
-import {materialIconsStyles} from '../../common/material-icons';
+import {materialIconsStyles} from '@/common/material-icons';
 
 /**
  * Comment Filter2 ドキュメント用のCSSスタイル

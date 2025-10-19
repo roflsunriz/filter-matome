@@ -1,4 +1,4 @@
-import { Mylist2DB, DatabaseHealth, MigrationProgress } from '../components/database';
+import { Mylist2DB, DatabaseHealth, MigrationProgress } from "@/mylist2/components/database";
 
 export class DatabaseManagementService {
     private db: Mylist2DB;

@@ -1,6 +1,6 @@
 // データベース永続化昇格機能・自動マイグレーション機能付きMylist2DB
-import { MylistInfo, KeywordInfo } from "../../types/mylist-types.js";
-import { DBVideo } from "../../types/video-types.js";
+import { MylistInfo, KeywordInfo } from "@/types/mylist-types";
+import { DBVideo } from "@/types/video-types";
 
 export interface MigrationStep {
     version: number;

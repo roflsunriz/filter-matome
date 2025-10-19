@@ -1,5 +1,5 @@
 // CommentFilter2 メインUIテンプレート
-import { getIconSVG, ICONS } from '../../common/material-icons';
+import { getIconSVG, ICONS } from '@/common/material-icons';
 
 /**
  * CommentFilter2のメインUIテンプレート

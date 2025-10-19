@@ -1,4 +1,4 @@
-import "../../../types/global.d.ts";
+import "@/types/global.d.ts";
 
 type FflateHelpers = Pick<typeof import("fflate"), "zipSync" | "unzipSync" | "strToU8" | "strFromU8">;
 

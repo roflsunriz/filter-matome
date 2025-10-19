@@ -3,8 +3,8 @@
  * ニコニコ動画風のヘッダーを提供します
  */
 
-import type { HeaderConfig, CommonHeaderInstance } from "../types/common-types.js";
-import { createMaterialIcon, materialIconsStyles, ICONS } from "./material-icons.js";
+import type { HeaderConfig, CommonHeaderInstance } from "@/types/common-types.js";
+import { createMaterialIcon, materialIconsStyles, ICONS } from "@/common/material-icons.js";
 
 // 型を再エクスポート
 export type { HeaderConfig, CommonHeaderInstance };

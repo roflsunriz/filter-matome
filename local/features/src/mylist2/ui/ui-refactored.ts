@@ -1,17 +1,17 @@
-import "../../types/global.d.ts"
+import "@/types/global.d.ts"
 
-import { Mylist2Manager } from "../components/manager-refactored.js";
-import { MylistInfo, KeywordInfo, ExportData } from "../../types/mylist-types.js";
-import { DBVideo as VideoInfo } from "../../types/video-types.js";
-import { createMaterialIcon, ICONS, hydrateMaterialIconImages } from "../../common/material-icons.js";
+import { Mylist2Manager } from "@/mylist2/components/manager-refactored";
+import { MylistInfo, KeywordInfo, ExportData } from "@/types/mylist-types";
+import { DBVideo as VideoInfo } from "@/types/video-types";
+import { createMaterialIcon, ICONS, hydrateMaterialIconImages } from "@/common/material-icons";
 
-import { ModalService } from "./modal-service.js";
-import { ValidationService } from "./validation-service.js";
-import { ProgressService } from "./progress-service.js";
-import { FileHelperService } from "./file-helper-service.js";
-import { EventHandlers } from "./event-handlers.js";
-import { BatchOperations } from "./batch-operations.js";
-import { linkify } from "../utils/linkify.js";
+import { ModalService } from "@/mylist2/ui/modal-service";
+import { ValidationService } from "@/mylist2/ui/validation-service";
+import { ProgressService } from "@/mylist2/ui/progress-service";
+import { FileHelperService } from "@/mylist2/ui/file-helper-service";
+import { EventHandlers } from "@/mylist2/ui/event-handlers";
+import { BatchOperations } from "@/mylist2/ui/batch-operations";
+import { linkify } from "@/mylist2/utils/linkify";
 
 export class Mylist2ManagerUI {
   private manager: Mylist2Manager;

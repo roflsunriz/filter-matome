@@ -1,5 +1,5 @@
-import { initWatchPageRouter, buildStandaloneUrl } from './router/watch-page-router.js';
-import type { ApiData } from '@/types/index.js';
+import { initWatchPageRouter, buildStandaloneUrl } from '@/video-player/router/watch-page-router';
+import type { ApiData } from '@/types/index';
 
 const DELETED_PLAYER_WINDOW_FEATURES = 'noopener,noreferrer';
 

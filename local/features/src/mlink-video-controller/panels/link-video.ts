@@ -1,41 +1,41 @@
-import { BasePanel } from '../panels/base';
-import { basePanelStyles } from '../panels/base';
-import { NicoVideoPlayer } from '../services/nico-video-player';
-import { LinkManager } from '../services/link-manager';
-import { CommentManager } from '../managers/comment';
-import { HeatmapManager } from '../managers/heatmap';
-import { PlaybackHandler } from '../handlers/playback';
-import { VolumeHandler } from '../handlers/volume';
-import { SpeedHandler } from '../handlers/speed';
+import { BasePanel } from '@/mlink-video-controller/panels/base';
+import { basePanelStyles } from '@/mlink-video-controller/panels/base';
+import { NicoVideoPlayer } from '@/mlink-video-controller/services/nico-video-player';
+import { LinkManager } from '@/mlink-video-controller/services/link-manager';
+import { CommentManager } from '@/mlink-video-controller/managers/comment';
+import { HeatmapManager } from '@/mlink-video-controller/managers/heatmap';
+import { PlaybackHandler } from '@/mlink-video-controller/handlers/playback';
+import { VolumeHandler } from '@/mlink-video-controller/handlers/volume';
+import { SpeedHandler } from '@/mlink-video-controller/handlers/speed';
 // import removed: Mylist2Handler no longer needed after unification
 
 // 🆕 新規追加: モジュール管理システム
-import { ModuleManager } from '../module-handlers/module-manager';
-import { ModuleRegistry } from '../module-handlers/module-registry';
-import { SettingsManager } from '../module-handlers/settings-manager';
-import { SettingsUI } from '../module-handlers/settings-ui';
+import { ModuleManager } from '@/mlink-video-controller/module-handlers/module-manager';
+import { ModuleRegistry } from '@/mlink-video-controller/module-handlers/module-registry';
+import { SettingsManager } from '@/mlink-video-controller/module-handlers/settings-manager';
+import { SettingsUI } from '@/mlink-video-controller/module-handlers/settings-ui';
 
 // 型定義のインポート
 import { LinkGroup, LinkData, MlinkVideoComment } from '@/types/mlink-video-controller-types';
 import { TimerHandle } from '@/types/util-types';
 
 // テンプレートの静的インポート
-import { panelTemplate } from '../templates/panel';
-import { linksTemplate } from '../templates/links';
-import { commentsTemplate } from '../templates/comments';
-import { playbackTemplate } from '../templates/playback';
-import { speedTemplate } from '../templates/speed';
-import { volumeTemplate } from '../templates/volume';
-import { settingsTemplate } from '../templates/settings';
+import { panelTemplate } from '@/mlink-video-controller/templates/panel';
+import { linksTemplate } from '@/mlink-video-controller/templates/links';
+import { commentsTemplate } from '@/mlink-video-controller/templates/comments';
+import { playbackTemplate } from '@/mlink-video-controller/templates/playback';
+import { speedTemplate } from '@/mlink-video-controller/templates/speed';
+import { volumeTemplate } from '@/mlink-video-controller/templates/volume';
+import { settingsTemplate } from '@/mlink-video-controller/templates/settings';
 
 // スタイルの静的インポート
-import { panelStyles } from '../styles/panel';
-import { controlsStyles } from '../styles/controls';
-import { commentsStyles } from '../styles/comments';
-import { heatmapStyles } from '../styles/heatmap';
-import { settingsStyles } from '../styles/settings';
-import { materialIconsStyles, createMaterialIcon } from '../../common/material-icons';
-import { isWatchLikePage } from '../utils/page-detect';
+import { panelStyles } from '@/mlink-video-controller/styles/panel';
+import { controlsStyles } from '@/mlink-video-controller/styles/controls';
+import { commentsStyles } from '@/mlink-video-controller/styles/comments';
+import { heatmapStyles } from '@/mlink-video-controller/styles/heatmap';
+import { settingsStyles } from '@/mlink-video-controller/styles/settings';
+import { materialIconsStyles, createMaterialIcon } from '@/common/material-icons';
+import { isWatchLikePage } from '@/mlink-video-controller/utils/page-detect';
 
 export class MlinkVideoController extends BasePanel {
   private player: NicoVideoPlayer | null = null;

@@ -1,4 +1,4 @@
-import { materialIconsStyles } from '../../common/material-icons.js';
+import { materialIconsStyles } from '@/common/material-icons.js';
 
 export const cacheListStyles = materialIconsStyles + `
 body {

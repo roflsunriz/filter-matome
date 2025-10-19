@@ -26,8 +26,8 @@ import type {
   MigrationProgress,
   DatabaseManagementConfig
 } from '@/types/watch-history-types';
-import { logger } from '../common/logger';
-import { migrationManager } from './migration-manager';
+import { logger } from '@/common/logger';
+import { migrationManager } from '@/watch-history/migration-manager';
 
 /**
  * 視聴履歴データベース操作クラス

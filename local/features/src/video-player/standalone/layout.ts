@@ -1,6 +1,6 @@
-import { STANDALONE_PAGE_STYLES } from './styles.js';
-import { applyStyles } from '../utils/dom-utils.js';
-import { headerAdjustments } from './header-adjustments.js';
+import { STANDALONE_PAGE_STYLES } from '@/video-player/standalone/styles';
+import { applyStyles } from '@/video-player/utils/dom-utils';
+import { headerAdjustments } from '@/video-player/standalone/header-adjustments';
 
 export interface StandaloneLayout {
   root: HTMLElement;

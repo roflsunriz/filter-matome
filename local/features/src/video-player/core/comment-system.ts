@@ -1,12 +1,12 @@
-import { CommentRenderer } from './comment-renderer.js';
-import { CommentFetcher } from './comment-fetcher.js';
-import { CommentList } from '../ui/comment-list.js';
-import { CONSTANTS } from '../../comment-filter2/utils/constants.js';
+import { CommentRenderer } from '@/video-player/core/comment-renderer';
+import { CommentFetcher } from '@/video-player/core/comment-fetcher';
+import { CommentList } from '@/video-player/ui/comment-list';
+import { CONSTANTS } from '@/comment-filter2/utils/constants';
 import { 
   Comment, 
   CommentApiResponse, 
   SafeCommentFilter2GlobalData 
-} from '@/types/comment-types.js';
+} from '@/types/comment-types';
 
 /**
  * コメントシステム - レンダリングとリスト表示を統合管理

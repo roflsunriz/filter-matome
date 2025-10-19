@@ -1,5 +1,5 @@
 import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
-import { isWatchLikePage } from '../utils/page-detect';
+import { isWatchLikePage } from '@/mlink-video-controller/utils/page-detect';
 
 /**
  * マトリックス背景モジュール

@@ -1,7 +1,7 @@
-import "../../types/global.d.ts";
+import "@/types/global.d.ts";
 
-import { createMaterialIcon, ICONS } from "../../common/material-icons.js";
-import { MylistInfo } from "../../types/mylist-types.js";
+import { createMaterialIcon, ICONS } from "@/common/material-icons";
+import { MylistInfo } from "@/types/mylist-types";
 
 export class ModalService {
   

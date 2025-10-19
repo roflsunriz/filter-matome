@@ -4,10 +4,10 @@
  * @description 視聴履歴ビューSPAのメインコントローラー
  * @author roflsunriz
  */
-import { applyWatchHistoryStyles } from './styles';
-import { createMaterialIcon, hydrateMaterialIconImages, getIconPath } from '../common/material-icons';
-import { CommonHeader } from '../common/header';
-import { logger } from '../common/logger';
+import { applyWatchHistoryStyles } from '@/watch-history/styles';
+import { createMaterialIcon, hydrateMaterialIconImages, getIconPath } from '@/common/material-icons';
+import { CommonHeader } from '@/common/header';
+import { logger } from '@/common/logger';
 import type { 
   WatchHistoryEntry, 
   SortBy, 
@@ -26,7 +26,7 @@ import type {
   MigrationProgress,
   DatabaseManagementConfig
 } from '@/types/watch-history-types';
-import { watchHistoryDB } from './database';
+import { watchHistoryDB } from '@/watch-history/database';
 
 
 /**

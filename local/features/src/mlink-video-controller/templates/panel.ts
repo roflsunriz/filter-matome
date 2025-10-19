@@ -1,4 +1,4 @@
-import { createMaterialIcon } from '../../common/material-icons';
+import { createMaterialIcon } from '@/common/material-icons';
 
 export function panelTemplate(): string {
   return `

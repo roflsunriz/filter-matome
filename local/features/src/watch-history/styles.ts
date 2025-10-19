@@ -5,7 +5,7 @@
  * @author roflsunriz
  */
 
-import { materialIconsStyles } from '../common/material-icons';
+import { materialIconsStyles } from '@/common/material-icons';
 
 /**
  * 視聴履歴のスタイルを動的に適用する

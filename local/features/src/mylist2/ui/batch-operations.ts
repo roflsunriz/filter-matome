@@ -1,9 +1,9 @@
-import "../../types/global.d.ts";
+import "@/types/global.d.ts";
 
-import { Mylist2Manager } from "../components/manager-refactored.js";
-import { ModalService } from "./modal-service.js";
-import { ProgressService } from "./progress-service.js";
-import { EventHandlers } from "./event-handlers.js";
+import { Mylist2Manager } from "@/mylist2/components/manager-refactored";
+import { ModalService } from "@/mylist2/ui/modal-service";
+import { ProgressService } from "@/mylist2/ui/progress-service";
+import { EventHandlers } from "@/mylist2/ui/event-handlers";
 
 export class BatchOperations {
   private manager: Mylist2Manager;

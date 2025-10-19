@@ -1,7 +1,7 @@
 // マテリアルアイコン統合ヘルパー
 
 import type { IconStyle, IconSize, IconColor, IconOptions, IconName } from '@/types/icon-types';
-import { outlinedIconMap, filledIconMap } from './icon-assets';
+import { outlinedIconMap, filledIconMap } from '@/common/icon-assets';
 
 // 型定義の再エクスポート（既存コードとの互換性のため）
 export type { IconStyle, IconSize, IconColor, IconOptions, IconName };

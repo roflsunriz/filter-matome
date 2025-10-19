@@ -1,9 +1,9 @@
-import { PLAYER_SETTINGS } from '../config/constants.js';
-import { PLAYER_ICONS } from '../config/icons.js';
-import { materialIconsStyles } from '../../common/material-icons.js';
-import { CommentSystem } from '../core/comment-system.js';
-import * as IndexedDBUtils from '../utils/indexed-db-utils.js';
-import { ExtendedDocument, ExtendedHTMLElement } from '@/types/index.js';
+import { PLAYER_SETTINGS } from '@/video-player/config/constants';
+import { PLAYER_ICONS } from '@/video-player/config/icons';
+import { materialIconsStyles } from '@/common/material-icons';
+import { CommentSystem } from '@/video-player/core/comment-system';
+import * as IndexedDBUtils from '@/video-player/utils/indexed-db-utils';
+import { ExtendedDocument, ExtendedHTMLElement } from '@/types/index';
 
 const PLAYER_VOLUME_STORAGE_KEY = 'playerVolume';
 

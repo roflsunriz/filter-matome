@@ -1,5 +1,5 @@
 import { ModuleConfig, ModuleCategory, PageType } from '@/types/module-types';
-import { createMaterialIcon } from '../../common/material-icons';
+import { createMaterialIcon } from '@/common/material-icons';
 
 /**
  * 利用可能なモジュールの登録・管理を行うクラス

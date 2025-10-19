@@ -1,10 +1,10 @@
-import type { UIBuilder } from '../builders/ui-builder.js';
-import type { EventManager } from '../managers/event-manager.js';
-import type { ProgressManager } from '../managers/progress-manager.js';
+import type { UIBuilder } from '@/cache-data-manager/builders/ui-builder.js';
+import type { EventManager } from '@/cache-data-manager/managers/event-manager.js';
+import type { ProgressManager } from '@/cache-data-manager/managers/progress-manager.js';
 // APIResponse 型は normalize して扱うためここでは直接使わない
 // APIResponse 型は normalize して扱うためここでは直接使わない
 import type { APIResponse as _APIResponse } from '@/types';
-import { LazyAPIClient } from '../clients/lazy-api-client.js';
+import { LazyAPIClient } from '@/cache-data-manager/clients/lazy-api-client.js';
 
 export class EventCoordinator {
   constructor(

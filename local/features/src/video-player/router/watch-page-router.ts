@@ -1,6 +1,5 @@
-
-import type { CacheInfoResponse } from '@/types/video-types.js';
-import { URLS } from '../config/constants.js';
+import type { CacheInfoResponse } from '@/types/video-types';
+import { URLS } from '@/video-player/config/constants';
 
 type CacheInfoEntry = {
   preferred?: unknown;

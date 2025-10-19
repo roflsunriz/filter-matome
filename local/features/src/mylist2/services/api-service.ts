@@ -1,7 +1,7 @@
-import "../../types/global.d.ts";
+import "@/types/global.d.ts";
 
-import { VideoInfo } from "../../types/video-types.js";
-import { QueueItem } from "../../types/mylist-types.js";
+import { VideoInfo } from "@/types/video-types";
+import { QueueItem } from "@/types/mylist-types";
 
 export class ApiService {
   private apiCache: Map<string, VideoInfo>;

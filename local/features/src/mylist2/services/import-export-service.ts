@@ -1,9 +1,9 @@
-import "../../types/global.d.ts";
+import "@/types/global.d.ts";
 
-import { Mylist2DB } from "../components/database.js";
-import { MylistInfo, KeywordInfo, ExportData } from "../../types/mylist-types.js";
-import { VideoInfo, DBVideo, LegacyVideo } from "../../types/video-types.js";
-import { ApiService } from "./api-service.js";
+import { Mylist2DB } from "@/mylist2/components/database";
+import { MylistInfo, KeywordInfo, ExportData } from "@/types/mylist-types";
+import { VideoInfo, DBVideo, LegacyVideo } from "@/types/video-types";
+import { ApiService } from "@/mylist2/services/api-service";
 
 export class ImportExportService {
   private db: Mylist2DB;

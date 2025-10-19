@@ -1,7 +1,7 @@
-import "../../types/global.d.ts";
+import "@/types/global.d.ts";
 
-import { Mylist2DB } from "../components/database.js";
-import { ManagerSettings } from "../../types/mylist-types.js";
+import { Mylist2DB } from "@/mylist2/components/database";
+import { ManagerSettings } from "@/types/mylist-types";
 
 export class SettingsService {
   private db: Mylist2DB;

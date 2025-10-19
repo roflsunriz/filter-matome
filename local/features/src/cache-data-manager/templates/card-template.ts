@@ -1,4 +1,4 @@
-import { createMaterialIcon, ICONS } from '../../common/material-icons.js';
+import { createMaterialIcon, ICONS } from '@/common/material-icons.js';
 
 /**
  * ビデオカードテンプレートを生成する関数

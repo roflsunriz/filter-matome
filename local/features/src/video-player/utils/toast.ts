@@ -1,7 +1,7 @@
-import "../../types/global.d.ts";
+import "@/types/global.d.ts";
 
-import { ToastMode, ToastConfig } from '@/types/index.js';
-import { TOAST_CONFIG } from '../config/constants.js';
+import { ToastMode, ToastConfig } from '@/types/index';
+import { TOAST_CONFIG } from '@/video-player/config/constants';
 
 /**
  * トースト通知を管理するクラス

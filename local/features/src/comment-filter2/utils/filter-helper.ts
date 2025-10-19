@@ -1,5 +1,5 @@
 // フィルターヘルパー - 循環依存を避けるための独立したフィルター処理
-import { CONSTANTS } from './constants';
+import { CONSTANTS } from '@/comment-filter2/utils/constants';
 import { CF2CommentApiResponse, NGWordRule, Settings, CommentFilter2GlobalData } from '@/types/filter-types';
 
 /**
@@ -14,7 +14,7 @@ export function getGlobalData(): CommentFilter2GlobalData | null {
  */
 export async function getFilterSettings(): Promise<Settings> {
   try {
-    const { FilterStorage } = await import('../storage/indexed-db');
+    const { FilterStorage } = await import('@/comment-filter2/storage/indexed-db');
     const storage = new FilterStorage();
     await storage.initialize();
     const settings = await storage.getSettings();
@@ -40,7 +40,7 @@ export async function getFilterSettings(): Promise<Settings> {
  */
 export async function getFilterRules(): Promise<NGWordRule[]> {
   try {
-    const { FilterStorage } = await import('../storage/indexed-db');
+    const { FilterStorage } = await import('@/comment-filter2/storage/indexed-db');
     const storage = new FilterStorage();
     await storage.initialize();
     return await storage.getRules();
@@ -56,7 +56,7 @@ export async function getFilterRules(): Promise<NGWordRule[]> {
 export async function applyFiltersToData(data: CF2CommentApiResponse, smid: string | null): Promise<CF2CommentApiResponse> {
   try {
     // 設定とJSON形式ルールを取得（旧形式は無視）
-    const storage = new (await import('../storage/indexed-db')).FilterStorage();
+    const storage = new (await import('@/comment-filter2/storage/indexed-db')).FilterStorage();
     await storage.initialize();
     
     const [settings, jsonRules] = await Promise.all([
@@ -70,7 +70,7 @@ export async function applyFiltersToData(data: CF2CommentApiResponse, smid: stri
     }
 
     // JSON形式フィルター処理を実行
-    const { JsonCommentFilter } = await import('../filter/json-comment-filter');
+    const { JsonCommentFilter } = await import('@/comment-filter2/filter/json-comment-filter');
     const jsonFilter = new JsonCommentFilter(settings.debugMode);
     jsonFilter.updateSettings(settings);
     

@@ -1,10 +1,10 @@
 import { ExtendedNicoCache_nl } from "@/types/global-types";
 import { LinkData, ActionMap } from "@/types/mlink-video-controller-types";
 import { ThumbnailsFilterGlobal } from "@/types/thumbnails-filter-types";
-import { Mylist2Handler } from "../handlers/mylist2";
-import { handleVideoOperation, getActiveVideoId } from "../utils/video-util";
-import { isWatchLikePage } from "../utils/page-detect";
-import { getIconPath } from "../../common/material-icons";
+import { Mylist2Handler } from "@/mlink-video-controller/handlers/mylist2";
+import { handleVideoOperation, getActiveVideoId } from "@/mlink-video-controller/utils/video-util";
+import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
+import { getIconPath } from "@/common/material-icons";
 
 export class LinkManager {
   private static instance: LinkManager;

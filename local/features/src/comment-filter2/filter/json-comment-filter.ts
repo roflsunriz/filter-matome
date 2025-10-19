@@ -1,9 +1,9 @@
 // JSON形式ルール対応フィルター部 - 新世代コメントフィルタリング処理
-import { CONSTANTS } from '../utils/constants';
+import { CONSTANTS } from '@/comment-filter2/utils/constants';
 import { CF2CommentApiResponse, CommentFilter2GlobalData, CF2Comment, Settings, CF2FilterLogEntry } from '@/types/filter-types';
 import { NgRuleJson, NicoruCond, Action } from '@/types/filter-types';
-import { sanitizeCommentBody, sanitizeCommentCommands } from '../utils/sanitizer';
-import { FilterLogger } from '../utils/filter-logger';
+import { sanitizeCommentBody, sanitizeCommentCommands } from '@/comment-filter2/utils/sanitizer';
+import { FilterLogger } from '@/comment-filter2/utils/filter-logger';
 
 // フォークタイプの定義
 type ForkType = 'main' | 'easy' | 'owner';

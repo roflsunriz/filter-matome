@@ -2,7 +2,7 @@
  * NicoCommon グローバル型宣言
  */
 
-import type { HeaderConfig, CommonHeaderInstance } from './common-types';
+import type { HeaderConfig, CommonHeaderInstance } from "@/types/common-types";
 
 declare global {
   interface Window {

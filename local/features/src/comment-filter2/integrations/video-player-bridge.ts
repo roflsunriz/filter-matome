@@ -1,5 +1,5 @@
 // video_player連携部 - video_playerライブラリとの橋渡し
-import { CONSTANTS } from '../utils/constants';
+import { CONSTANTS } from '@/comment-filter2/utils/constants';
 import { CF2CommentApiResponse, CommentFilter2GlobalData } from '@/types/filter-types';
 import { 
   VideoPlayerGetCommentsArgs, 
@@ -9,7 +9,7 @@ import {
   IVideoPlayerBridge 
 } from '@/types/video-player-bridge-types';
 // グローバル型定義はglobalTypes.tsで管理
-import '../../types/global-types.js';
+import '@/types/global-types';
 
 export class VideoPlayerBridge implements IVideoPlayerBridge {
   private isVideoPlayerDetected: boolean = false;

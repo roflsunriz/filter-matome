@@ -1,6 +1,6 @@
 import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
 import { DeletedVideoDetectorStatus } from '@/types/video-types';
-import { DeletedVideoDetector } from '../services/deleted-video-detector';
+import { DeletedVideoDetector } from '@/mlink-video-controller/services/deleted-video-detector';
 
 /**
  * 削除動画検出モジュールのラッパークラス

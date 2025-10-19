@@ -1,7 +1,7 @@
-import { createStandaloneLayout, type StandaloneLayout } from './layout.js';
-import { StandalonePlayer } from './player.js';
-import { formatNumber, formatDateTime, formatDuration, createStatItem } from './utils.js';
-import type { ApiData, NicoApiData } from '@/types/index.js';
+import { createStandaloneLayout, type StandaloneLayout } from '@/video-player/standalone/layout';
+import { StandalonePlayer } from '@/video-player/standalone/player';
+import { formatNumber, formatDateTime, formatDuration, createStatItem } from '@/video-player/standalone/utils';
+import type { ApiData, NicoApiData } from '@/types/index';
 
 type RecordLike = Record<string, unknown>;
 

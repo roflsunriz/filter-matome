@@ -9,9 +9,9 @@ import {
   DependencyChecker,
   ModuleCategory
 } from '@/types/module-types';
-import { isWatchLikePage } from '../utils/page-detect';
-import { SettingsManager } from './settings-manager';
-import { ModuleRegistry } from './module-registry';
+import { isWatchLikePage } from '@/mlink-video-controller/utils/page-detect';
+import { SettingsManager } from '@/mlink-video-controller/module-handlers/settings-manager';
+import { ModuleRegistry } from '@/mlink-video-controller/module-handlers/module-registry';
 
 /**
  * ページタイプ検出クラス

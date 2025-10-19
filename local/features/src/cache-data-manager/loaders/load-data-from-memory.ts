@@ -1,5 +1,5 @@
 import type { VideoData } from '@/types';
-import { ProgressManager } from '../managers/progress-manager.js';
+import { ProgressManager } from '@/cache-data-manager/managers/progress-manager.js';
 
 export class LoadDataFromMemory {
   constructor(private progressManager: ProgressManager) {}

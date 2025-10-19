@@ -1,4 +1,4 @@
-import { WATCH_CONFIG } from '../config/constants.js';
+import { WATCH_CONFIG } from '@/video-player/config/constants';
 
 /**
  * 指定したセレクタの要素が現れるまで待機

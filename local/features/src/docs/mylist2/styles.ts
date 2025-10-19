@@ -1,4 +1,4 @@
-import {materialIconsStyles} from '../../common/material-icons';
+import {materialIconsStyles} from '@/common/material-icons';
 
 /**
  * Mylist2 ドキュメント用のCSSスタイル

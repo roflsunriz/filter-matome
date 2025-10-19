@@ -14,7 +14,7 @@ import type {
   SeriesAlert,
   DBResult 
 } from '@/types/watch-history-types';
-import { logger } from '../common/logger';
+import { logger } from '@/common/logger';
 
 /**
  * マイグレーション・永続化管理クラス

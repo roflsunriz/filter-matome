@@ -1,4 +1,4 @@
-import { NicoApiFetcher } from './nico-api-fetcher';
+import { NicoApiFetcher } from '@/mlink-video-controller/managers/nico-api-fetcher';
 import { MlinkVideoComment, CommentSearchResult, CommentSearchOptions } from '@/types/mlink-video-controller-types';
 
 export class CommentManager {

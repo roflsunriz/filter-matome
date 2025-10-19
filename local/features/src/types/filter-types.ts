@@ -3,7 +3,7 @@
  */
 
 // CommentDataをインポートするため
-import type { CommentData } from './comment-types';
+import type { CommentData } from '@/types/comment-types';
 
 /**
  * 設定値の型定義

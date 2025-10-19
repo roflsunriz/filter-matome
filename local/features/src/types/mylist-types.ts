@@ -2,7 +2,7 @@
  * マイリスト関連の型定義
  */
 
-import { VideoInfo, DBVideo } from './video-types';
+import { VideoInfo, DBVideo } from "@/types/video-types";
 
 /**
  * マイリスト情報の型定義

@@ -1,7 +1,7 @@
 "use strict";
 
 // グローバル型定義はglobal.d.tsで管理されています
-import "../types/global.d.ts";
+import "@/types/global.d.ts";
 import { 
   NicoApiData, 
   CommentData, 
@@ -11,7 +11,7 @@ import {
   CommentApiResponse,
   NicoApiServerResponse,
   CommentThread,
-} from "../types/common-types";
+} from "@/types/common-types";
 
 type VideoIdSource = string | URL | Location | {
   href?: string | null;

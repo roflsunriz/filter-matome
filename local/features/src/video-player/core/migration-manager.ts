@@ -8,7 +8,7 @@ import {
   DB_VERSION_HISTORY, 
   MIGRATION_CONFIGS,
   SystemInfo 
-} from '../config/database-config';
+} from '@/video-player/config/database-config';
 
 export class MigrationManager {
   private db: IDBDatabase | null = null;

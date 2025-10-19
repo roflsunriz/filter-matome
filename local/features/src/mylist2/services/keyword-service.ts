@@ -1,7 +1,7 @@
-import "../../types/global.d.ts";
+import "@/types/global.d.ts";
 
-import { Mylist2DB } from "../components/database.js";
-import { KeywordInfo } from "../../types/mylist-types.js";
+import { Mylist2DB } from "@/mylist2/components/database";
+import { KeywordInfo } from "@/types/mylist-types";
 
 export class KeywordService {
   private db: Mylist2DB;

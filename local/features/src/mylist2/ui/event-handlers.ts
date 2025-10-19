@@ -1,6 +1,6 @@
-import "../../types/global.d.ts";
-import { DBVideo } from "../../types/video-types.js";
-import { MylistInfo, MylistManager } from "../../types/mylist-types.js";
+import "@/types/global.d.ts";
+import { DBVideo } from "@/types/video-types";
+import { MylistInfo, MylistManager } from "@/types/mylist-types";
 
 // 最低限のサービスインターフェース定義
 interface ModalService {

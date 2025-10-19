@@ -1,6 +1,6 @@
 import FlexSearchDocument from 'flexsearch/dist/module/document.js';
 import type { Document as FlexSearchDocumentType, DocumentSearchOptions, SimpleDocumentSearchResultSetUnit } from 'flexsearch';
-import type { LoadDataFromMemory } from '../loaders/load-data-from-memory.js';
+import type { LoadDataFromMemory } from '@/cache-data-manager/loaders/load-data-from-memory.js';
 // avoid importing project path aliases here to keep linting safe
 
 type SearchDocument = { id: string; title: string };

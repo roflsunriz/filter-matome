@@ -1,9 +1,9 @@
-import "../types/global-types";
-import type { IntegratedNicoData, NicoApiData } from "../types/common-types";
-import { fetchCacheInfo, fetchCommentsWithApi, fetchMediaInfo, fetchThumbInfo, fetchWatchApiData } from "./api-clients";
-import { headerAdjustments } from "./header-adjustments";
-import { applyMovieInfoDashboardStyles } from "./styles";
-import { PanelController } from "./ui";
+import "@/types/global-types";
+import type { IntegratedNicoData, NicoApiData } from "@/types/common-types";
+import { fetchCacheInfo, fetchCommentsWithApi, fetchMediaInfo, fetchThumbInfo, fetchWatchApiData } from "@/movie-info/api-clients";
+import { headerAdjustments } from "@/movie-info/header-adjustments";
+import { applyMovieInfoDashboardStyles } from "@/movie-info/styles";
+import { PanelController } from "@/movie-info/ui";
 import type {
   CacheEntry,
   CommentPreview,
@@ -11,7 +11,7 @@ import type {
   ThumbInfo,
   ThumbTagInfo,
   DownloadDescriptor,
-} from "../types/movie-info-types";
+} from "@/types/movie-info-types";
 
 const COMMENT_PREVIEW_LIMIT = 200;
 

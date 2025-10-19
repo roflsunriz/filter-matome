@@ -1,12 +1,12 @@
-import { UrlManager } from '../core/url-manager.js';
-import { ToastManager } from '../utils/toast.js';
-import { applyStyles } from '../utils/dom-utils.js';
-import { PlayerControlsShadow } from '../ui/player-controls.js';
-import { CommentList } from '../ui/comment-list.js';
-import { CommentSystem } from '../core/comment-system.js';
-import { CUSTOM_PLAYER_SHADOW_HTML, CUSTOM_PLAYER_SHADOW_STYLES } from '../ui/templates.js';
-import type { ApiData } from '@/types/index.js';
-import type { HlsConstructor, HlsInstance } from '@/types/video-types.js';
+import { UrlManager } from '@/video-player/core/url-manager';
+import { ToastManager } from '@/video-player/utils/toast';
+import { applyStyles } from '@/video-player/utils/dom-utils';
+import { PlayerControlsShadow } from '@/video-player/ui/player-controls';
+import { CommentList } from '@/video-player/ui/comment-list';
+import { CommentSystem } from '@/video-player/core/comment-system';
+import { CUSTOM_PLAYER_SHADOW_HTML, CUSTOM_PLAYER_SHADOW_STYLES } from '@/video-player/ui/templates';
+import type { ApiData } from '@/types/index';
+import type { HlsConstructor, HlsInstance } from '@/types/video-types';
 
 const ensureCustomElements = (): void => {
   if (!customElements.get('player-controls-shadow')) {

@@ -1,5 +1,5 @@
 import { PlayerIconKey } from '@/types/video-types.js';
-import { createMaterialIcon, ICONS } from '../../common/material-icons.js';
+import { createMaterialIcon, ICONS } from '@/common/material-icons';
 
 // マテリアルアイコンを使用したアイコン定義
 export const PLAYER_ICONS: Record<PlayerIconKey, string> = {
