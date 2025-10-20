@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #201 (2025/10/20) リリースノート](#filter-matome-201-20251020-リリースノート)
 - [filter-matome #200 (2025/10/15) リリースノート](#filter-matome-200-20251015-リリースノート)
 - [filter-matome #199 (2025/10/13) リリースノート](#filter-matome-199-20251013-リリースノート)
 - [filter-matome #198 (2025/10/02) リリースノート](#filter-matome-198-20251002-リリースノート)
@@ -110,6 +111,19 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #201 (2025/10/20) リリースノート
+
+- ✨新機能(New)：     
+- なし
+- ✅️修正(Fixed)：   
+- なし
+- 🔴変更(Changed)：           
+- background-image-settings.tsでimage-validatorを使用して背景画像の有効性をチェックするようにした。
+- ❌️未修正(Unfixed)：     
+- なし
+- ℹ️その他(Others)：     
+- なし
 
 ### filter-matome #200 (2025/10/15) リリースノート
 
