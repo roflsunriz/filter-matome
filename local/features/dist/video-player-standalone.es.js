@@ -19586,6 +19586,47 @@ class ModuleManager {
   }
 }
 
+var imageValidator = {};
+
+var hasRequiredImageValidator;
+
+function requireImageValidator () {
+	if (hasRequiredImageValidator) return imageValidator;
+	hasRequiredImageValidator = 1;
+	Object.defineProperty(imageValidator, "__esModule", { value: true });
+	imageValidator.validateImage = void 0;
+	/**
+	 * This method validates a File (input) or an image URL
+	 * @param src - The image to validate, an input File or a local or remote image url
+	 * @param config - an optional config object that defines the method behaviour
+	 * @returns - Returns true for valid images, throws or returns false for invalid images
+	 */
+	const validateImage = (src, config) => {
+	    if (typeof window === "undefined") {
+	        throw new Error("Cannot use this utility method in a non browser environment");
+	    }
+	    let url = "";
+	    if (typeof src === "string") {
+	        url = src;
+	    }
+	    else {
+	        url = URL.createObjectURL(src);
+	    }
+	    const image = new Image();
+	    image.src = url;
+	    return new Promise((resolve, reject) => {
+	        image.addEventListener("error", () => (config === null || config === void 0 ? void 0 : config.throw)
+	            ? reject("The media resource is either invalid, corrupt or unsuitable")
+	            : resolve(false));
+	        image.addEventListener("load", () => resolve(true), false);
+	    });
+	};
+	imageValidator.validateImage = validateImage;
+	return imageValidator;
+}
+
+var imageValidatorExports = requireImageValidator();
+
 const DB_NAME = "BackgroundImageSettingsDB";
 const STORE_NAME = "backgroundImages";
 const DB_VERSION = 2;
@@ -19595,54 +19636,8 @@ class BackgroundImageSettings {
     this.db = null;
     this.persistenceEnabled = false;
     this.migrationStatus = "none";
-    // デフォルト背景画像（既存のbgImages配列）
-    this.DEFAULT_IMAGES = [
-      {
-        name: "Atelier Ryza 3",
-        type: "url",
-        data: 'url("/local/background-images/favorites/atelier-ryza-3.avif")'
-      },
-      {
-        name: "Blue Archive - Sunaookami Shiroko",
-        type: "url",
-        data: 'url("/local/background-images/favorites/blue-archive-sunaookami-shiroko.avif")'
-      },
-      {
-        name: "Final Fantasy VII - Tifa Lockhart",
-        type: "url",
-        data: 'url("/local/background-images/favorites/final-fantasy-vii-tifa-lockhart.avif")'
-      },
-      {
-        name: "Genshin Impact",
-        type: "url",
-        data: 'url("/local/background-images/favorites/genshin-impact.avif")'
-      },
-      {
-        name: "Huge Tits",
-        type: "url",
-        data: 'url("/local/background-images/favorites/huge-tits.avif")'
-      },
-      {
-        name: "Nier Automata - 2B Cosplay",
-        type: "url",
-        data: 'url("/local/background-images/favorites/nier-automata-2b-cosplay.avif")'
-      },
-      {
-        name: "Nude Big Tits",
-        type: "url",
-        data: 'url("/local/background-images/favorites/nude-big-tits.avif")'
-      },
-      {
-        name: "Suzueda Komachi",
-        type: "url",
-        data: 'url("/local/background-images/favorites/suzueda-komachi.avif")'
-      },
-      {
-        name: "Zenless Zone Zero - Ellen Joe",
-        type: "url",
-        data: 'url("/local/background-images/favorites/zenless-zone-zero-ellen-joe.avif")'
-      }
-    ];
+    // デフォルト背景画像（初期状態では空）
+    this.DEFAULT_IMAGES = [];
     this.eventTarget = new EventTarget();
   }
   static getInstance() {
@@ -20115,13 +20110,25 @@ class BackgroundImageSettings {
    * URLの有効性をチェック
    */
   async validateImageUrl(url) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
-      setTimeout(() => resolve(false), 5e3);
-      img.src = url;
-    });
+    try {
+      const result = await imageValidatorExports.validateImage(url);
+      return result ?? false;
+    } catch (error) {
+      window.logger.warn("[BackgroundImageSettings] image-validatorでURL検証中にエラー", error);
+      return false;
+    }
+  }
+  /**
+   * ファイルの有効性をチェック
+   */
+  async validateImageFile(file) {
+    try {
+      const result = await imageValidatorExports.validateImage(file);
+      return result ?? false;
+    } catch (error) {
+      window.logger.warn("[BackgroundImageSettings] image-validatorでファイル検証中にエラー", error);
+      return false;
+    }
   }
   /**
    * ユニークIDを生成
@@ -21095,6 +21102,11 @@ class SettingsUI {
       return;
     }
     try {
+      const isValidFile = await this.backgroundSettings.validateImageFile(file);
+      if (!isValidFile) {
+        window.toastr?.error("画像ファイルの検証に失敗しました", "検証エラー");
+        return;
+      }
       const base64Data = await this.backgroundSettings.fileToBase64(file);
       await this.backgroundSettings.addImage(name, "file", base64Data);
       fileInput.value = "";

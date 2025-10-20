@@ -3,6 +3,7 @@
  * IndexedDBを使用して背景画像の設定を保存・管理する
  */
 
+import { validateImage } from 'image-validator';
 import { BackgroundImageItem } from '@/types/background-image-types';
 
 // データベース設定
@@ -21,54 +22,8 @@ export class BackgroundImageSettings {
   private persistenceEnabled: boolean = false;
   private migrationStatus: 'none' | 'inProgress' | 'completed' | 'failed' = 'none';
 
-  // デフォルト背景画像（既存のbgImages配列）
-  private readonly DEFAULT_IMAGES: Omit<BackgroundImageItem, 'id' | 'createdAt' | 'updatedAt'>[] = [
-    {
-      name: 'Atelier Ryza 3',
-      type: 'url',
-      data: 'url("/local/background-images/favorites/atelier-ryza-3.avif")'
-    },
-    {
-      name: 'Blue Archive - Sunaookami Shiroko',
-      type: 'url',
-      data: 'url("/local/background-images/favorites/blue-archive-sunaookami-shiroko.avif")'
-    },
-    {
-      name: 'Final Fantasy VII - Tifa Lockhart',
-      type: 'url',
-      data: 'url("/local/background-images/favorites/final-fantasy-vii-tifa-lockhart.avif")'
-    },
-    {
-      name: 'Genshin Impact',
-      type: 'url',
-      data: 'url("/local/background-images/favorites/genshin-impact.avif")'
-    },
-    {
-      name: 'Huge Tits',
-      type: 'url',
-      data: 'url("/local/background-images/favorites/huge-tits.avif")'
-    },
-    {
-      name: 'Nier Automata - 2B Cosplay',
-      type: 'url',
-      data: 'url("/local/background-images/favorites/nier-automata-2b-cosplay.avif")'
-    },
-    {
-      name: 'Nude Big Tits',
-      type: 'url',
-      data: 'url("/local/background-images/favorites/nude-big-tits.avif")'
-    },
-    {
-      name: 'Suzueda Komachi',
-      type: 'url',
-      data: 'url("/local/background-images/favorites/suzueda-komachi.avif")'
-    },
-    {
-      name: 'Zenless Zone Zero - Ellen Joe',
-      type: 'url',
-      data: 'url("/local/background-images/favorites/zenless-zone-zero-ellen-joe.avif")'
-    }
-  ];
+  // デフォルト背景画像（初期状態では空）
+  private readonly DEFAULT_IMAGES: Omit<BackgroundImageItem, 'id' | 'createdAt' | 'updatedAt'>[] = [];
 
   private constructor() {
     this.eventTarget = new EventTarget();
@@ -659,17 +614,26 @@ export class BackgroundImageSettings {
    * URLの有効性をチェック
    */
   public async validateImageUrl(url: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      const img = new Image();
-      
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
-      
-      // タイムアウト設定（5秒）
-      setTimeout(() => resolve(false), 5000);
-      
-      img.src = url;
-    });
+    try {
+      const result = await validateImage(url);
+      return result ?? false;
+    } catch (error) {
+      window.logger.warn('[BackgroundImageSettings] image-validatorでURL検証中にエラー', error);
+      return false;
+    }
+  }
+
+  /**
+   * ファイルの有効性をチェック
+   */
+  public async validateImageFile(file: File): Promise<boolean> {
+    try {
+      const result = await validateImage(file);
+      return result ?? false;
+    } catch (error) {
+      window.logger.warn('[BackgroundImageSettings] image-validatorでファイル検証中にエラー', error);
+      return false;
+    }
   }
 
   /**

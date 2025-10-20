@@ -887,6 +887,13 @@ export class SettingsUI {
     }
 
     try {
+      // image-validatorでファイルの正当性を確認
+      const isValidFile = await this.backgroundSettings.validateImageFile(file);
+      if (!isValidFile) {
+        (window.toastr)?.error('画像ファイルの検証に失敗しました', '検証エラー');
+        return;
+      }
+
       // ファイルをbase64に変換
       const base64Data = await this.backgroundSettings.fileToBase64(file);
       
