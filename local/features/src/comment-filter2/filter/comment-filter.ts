@@ -9,6 +9,7 @@ import { sanitizeCommentBody, sanitizeCommentCommands } from '@/comment-filter2/
 import { FilterLogger } from '@/comment-filter2/utils/filter-logger';
 
 import { SubstringMatcher, isPlainLiteralPattern } from './rule-indexer';
+import { computeThreadNicoruStats, ThreadNicoruStats } from './thread-nicoru-stats';
 
 
 
@@ -88,6 +89,8 @@ interface PreparedRule {
 
   hasLiteralPrefilter: boolean;
 
+  minRequiredNicoru?: number;
+
 }
 
 
@@ -101,6 +104,16 @@ interface PreparedRuleSet {
   substringMatcher: SubstringMatcher | null;
 
   needsLowercase: boolean;
+
+}
+
+
+
+interface ThreadProcessingContext {
+
+  nicoruStats: ThreadNicoruStats;
+
+  nicoruIneligibleRuleIndexes: Set<number>;
 
 }
 
@@ -311,7 +324,8 @@ export class CommentFilter {
         index,
         compiledRegex: undefined,
         isUserIdRule: isValidUserRule,
-        hasLiteralPrefilter: false
+        hasLiteralPrefilter: false,
+        minRequiredNicoru: typeof rule.nicoru === 'number' ? rule.nicoru : undefined
       };
 
       if (isValidUserRule && rule.userId) {
@@ -349,6 +363,49 @@ export class CommentFilter {
 
 
 
+  private buildThreadProcessingContext(
+
+    comments: CF2Comment[],
+
+    preparedRules: PreparedRuleSet
+
+  ): ThreadProcessingContext {
+
+    const nicoruStats = computeThreadNicoruStats(comments);
+
+    const nicoruIneligibleRuleIndexes = new Set<number>();
+
+    for (const preparedRule of preparedRules.rules) {
+
+      if (
+
+        typeof preparedRule.minRequiredNicoru === 'number' &&
+
+        nicoruStats.maxNicoru < preparedRule.minRequiredNicoru
+
+      ) {
+
+        nicoruIneligibleRuleIndexes.add(preparedRule.index);
+
+      }
+
+    }
+
+
+
+
+    return {
+
+      nicoruStats,
+
+      nicoruIneligibleRuleIndexes
+
+    };
+
+  }
+
+
+
   /**
 
    * スレッド内のコメントをフィルタリング（コメント種別対応）
@@ -377,9 +434,13 @@ export class CommentFilter {
 
 
 
+    const threadContext = this.buildThreadProcessingContext(comments, preparedRules);
+
+
+
     return comments
 
-      .map(comment => this.applyRulesToComment(comment, preparedRules, currentSmid, threadFork))
+      .map(comment => this.applyRulesToComment(comment, preparedRules, threadContext, currentSmid, threadFork))
 
       .filter(comment => comment !== null);
 
@@ -396,6 +457,7 @@ export class CommentFilter {
   private applyRulesToComment(
     comment: CF2Comment, 
     preparedRules: PreparedRuleSet, 
+    threadContext: ThreadProcessingContext,
     currentSmid: string | null,
     threadFork: ForkType
   ): CF2Comment | null {
@@ -435,6 +497,10 @@ export class CommentFilter {
 
     for (const preparedRule of preparedRules.rules) {
       const rule = preparedRule.rule;
+
+      if (threadContext.nicoruIneligibleRuleIndexes.has(preparedRule.index)) {
+        continue;
+      }
 
       if (preparedRule.isUserIdRule) {
         if (!activeUserRuleIndexes.has(preparedRule.index)) {

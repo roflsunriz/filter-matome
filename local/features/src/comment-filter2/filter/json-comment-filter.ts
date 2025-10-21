@@ -5,6 +5,7 @@ import { NgRuleJson, NicoruCond, Action } from '@/types/filter-types';
 import { sanitizeCommentBody, sanitizeCommentCommands } from '@/comment-filter2/utils/sanitizer';
 import { FilterLogger } from '@/comment-filter2/utils/filter-logger';
 import { SubstringMatcher, isPlainLiteralPattern } from './rule-indexer';
+import { computeThreadNicoruStats, ThreadNicoruStats } from './thread-nicoru-stats';
 
 // フォークタイプの定義
 type ForkType = 'main' | 'easy' | 'owner';
@@ -16,6 +17,7 @@ interface PreparedJsonRule {
   compiledRegex?: RegExp;
   isUserRule: boolean;
   hasLiteralPrefilter: boolean;
+  normalizedNicoruCond?: NormalizedNicoruCond;
 }
 
 interface PreparedJsonRuleSet {
@@ -23,6 +25,21 @@ interface PreparedJsonRuleSet {
   userIdRuleIndexes: Map<string, number[]>;
   substringMatcher: SubstringMatcher | null;
   needsLowercase: boolean;
+}
+
+type NormalizedNicoruMode = 'include' | 'exclude';
+
+interface NormalizedNicoruCond {
+  op: NicoruCond['op'];
+  mode: NormalizedNicoruMode;
+  value: number;
+  rangeEnd?: number;
+  isValid: boolean;
+}
+
+interface JsonThreadProcessingContext {
+  nicoruStats: ThreadNicoruStats;
+  nicoruIneligibleRuleIndexes: Set<number>;
 }
 
 export class JsonCommentFilter {
@@ -142,7 +159,8 @@ export class JsonCommentFilter {
         index,
         compiledRegex: undefined,
         isUserRule,
-        hasLiteralPrefilter: false
+        hasLiteralPrefilter: false,
+        normalizedNicoruCond: undefined
       };
 
       if (isUserRule && rule.userId) {
@@ -163,6 +181,11 @@ export class JsonCommentFilter {
         }
       }
 
+      const normalizedNicoruCond = this.normalizeNicoruCondition(rule.nicoru_cond);
+      if (normalizedNicoruCond) {
+        preparedRule.normalizedNicoruCond = normalizedNicoruCond;
+      }
+
       preparedRules.push(preparedRule);
     }
 
@@ -180,6 +203,263 @@ export class JsonCommentFilter {
 
 
 
+  private normalizeNicoruCondition(cond?: NicoruCond): NormalizedNicoruCond | null {
+
+    if (!cond) {
+
+      return null;
+
+    }
+
+
+
+    const modeValue = (cond.mode ?? 'exclude').toString().trim().toLowerCase();
+
+    const mode: NormalizedNicoruMode = modeValue === 'include' ? 'include' : 'exclude';
+
+    if (cond.op === 'range') {
+
+      if (!Array.isArray(cond.value) || cond.value.length !== 2) {
+
+        return null;
+
+      }
+
+
+
+      const start = this.toNumber(cond.value[0]);
+
+      const end = this.toNumber(cond.value[1]);
+
+      if (start === null || end === null) {
+
+        return null;
+
+      }
+
+
+
+      const normalizedStart = Math.min(start, end);
+
+      const normalizedEnd = Math.max(start, end);
+
+      return {
+
+        op: 'range',
+
+        mode,
+
+        value: normalizedStart,
+
+        rangeEnd: normalizedEnd,
+
+        isValid: true
+
+      };
+
+    }
+
+
+
+    const numericValue = this.toNumber(cond.value);
+
+    if (numericValue === null) {
+
+      return null;
+
+    }
+
+
+
+    return {
+
+      op: cond.op,
+
+      mode,
+
+      value: numericValue,
+
+      isValid: true
+
+    };
+
+  }
+
+
+
+  private buildThreadProcessingContext(
+
+    comments: CF2Comment[],
+
+    preparedRules: PreparedJsonRuleSet
+
+  ): JsonThreadProcessingContext {
+
+    const nicoruStats = computeThreadNicoruStats(comments);
+
+    const nicoruIneligibleRuleIndexes = new Set<number>();
+
+    for (const preparedRule of preparedRules.rules) {
+
+      if (!this.isRuleEligibleForThread(preparedRule, nicoruStats)) {
+
+        nicoruIneligibleRuleIndexes.add(preparedRule.index);
+
+      }
+
+    }
+
+
+
+    return {
+
+      nicoruStats,
+
+      nicoruIneligibleRuleIndexes
+
+    };
+
+  }
+
+
+
+  private isRuleEligibleForThread(preparedRule: PreparedJsonRule, stats: ThreadNicoruStats): boolean {
+
+    const normalized = preparedRule.normalizedNicoruCond;
+
+    if (!normalized || !normalized.isValid) {
+
+      return true;
+
+    }
+
+
+
+    const { canBeMet, canBeUnmet } = this.evaluateNicoruConditionPossibility(normalized, stats);
+
+    return normalized.mode === 'include' ? canBeMet : canBeUnmet;
+
+  }
+
+
+
+  private evaluateNicoruConditionPossibility(
+
+    cond: NormalizedNicoruCond,
+
+    stats: ThreadNicoruStats
+
+  ): { canBeMet: boolean; canBeUnmet: boolean } {
+
+    const total = stats.totalComments;
+
+    if (total === 0) {
+
+      return { canBeMet: false, canBeUnmet: false };
+
+    }
+
+
+
+    switch (cond.op) {
+
+      case '=': {
+
+        const metCount = stats.countsByValue.get(cond.value) ?? 0;
+
+        return {
+
+          canBeMet: metCount > 0,
+
+          canBeUnmet: metCount < total
+
+        };
+
+      }
+
+      case '>': {
+
+        const canBeMet = stats.maxNicoru > cond.value;
+
+        const canBeUnmet = stats.minNicoru <= cond.value;
+
+        return { canBeMet, canBeUnmet };
+
+      }
+
+      case '<': {
+
+        const canBeMet = stats.minNicoru < cond.value;
+
+        const canBeUnmet = stats.maxNicoru >= cond.value;
+
+        return { canBeMet, canBeUnmet };
+
+      }
+
+      case '>=': {
+
+        const canBeMet = stats.maxNicoru >= cond.value;
+
+        const canBeUnmet = stats.minNicoru < cond.value;
+
+        return { canBeMet, canBeUnmet };
+
+      }
+
+      case '<=': {
+
+        const canBeMet = stats.minNicoru <= cond.value;
+
+        const canBeUnmet = stats.maxNicoru > cond.value;
+
+        return { canBeMet, canBeUnmet };
+
+      }
+
+      case 'range': {
+
+        const start = cond.value;
+
+        const end = cond.rangeEnd ?? cond.value;
+
+        let metCount = 0;
+
+        for (const value of stats.sortedValues) {
+
+          if (value < start) {
+
+            continue;
+
+          }
+
+          if (value > end) {
+
+            break;
+
+          }
+
+          metCount += stats.countsByValue.get(value) ?? 0;
+
+        }
+
+        return {
+
+          canBeMet: metCount > 0,
+
+          canBeUnmet: metCount < total
+
+        };
+
+      }
+
+      default:
+
+        return { canBeMet: true, canBeUnmet: true };
+
+    }
+
+  }
   /**
    * スレッド内のコメントをフィルタリング（JSON形式ルール対応）
    */
@@ -193,8 +473,10 @@ export class JsonCommentFilter {
       window.logger?.debug(`[CommentFilter2] Processing ${threadFork} thread with ${comments.length} comments using ${preparedRules.rules.length} JSON rules`);
     }
 
+    const threadContext = this.buildThreadProcessingContext(comments, preparedRules);
+
     return comments
-      .map(comment => this.applyRulesToComment(comment, preparedRules, currentSmid, threadFork))
+      .map(comment => this.applyRulesToComment(comment, preparedRules, threadContext, currentSmid, threadFork))
       .filter(comment => comment !== null);
   }
 
@@ -204,6 +486,7 @@ export class JsonCommentFilter {
   private applyRulesToComment(
     comment: CF2Comment, 
     preparedRules: PreparedJsonRuleSet, 
+    threadContext: JsonThreadProcessingContext,
     currentSmid: string | null,
     threadFork: ForkType
   ): CF2Comment | null {
@@ -242,6 +525,10 @@ export class JsonCommentFilter {
 
     for (const preparedRule of preparedRules.rules) {
       const rule = preparedRule.rule;
+
+      if (threadContext.nicoruIneligibleRuleIndexes.has(preparedRule.index)) {
+        continue;
+      }
 
       let patternMatched = false;
       let reusableRegex: RegExp | undefined;
