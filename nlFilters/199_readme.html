@@ -308,7 +308,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
             >を参照
           </div>
           <p>
-            背景画像を変更したい場合は、画像を<a href="https://squoosh.app/">Squoosh</a>等で好きな画像形式に変換し(ブラウザが解釈できる形式であれば変換する必要はない)、Nicocache_nlのlocal/background_images/favorites等任意のフォルダに画像をコピペする。(NicoCache_nlからファイルを参照するにはlocalフォルダ以下でなければならない。)mlink-video-controllerの設定タブ、背景画像設定から背景画像を設定できる。URL指定とファイル選択ができ、ファイル選択したときはIndexedDBにデータが保存される。URL指定は`local/background_images/favorites/image.png`のように指定する。円環が大きくなり過ぎない範囲で任意の数指定可能。もちろんフォルダーパスも自由。
+            背景画像を変更したい場合は、画像を<a href="https://squoosh.app/">Squoosh</a>等で好きな画像形式に変換し(ブラウザが解釈できる形式であれば変換する必要はない)、Nicocache_nlの`local/background-images/favorites`等任意のフォルダに画像をコピペする。(NicoCache_nlからファイルを参照するには`local`フォルダ以下でなければならない。)mlink-video-controllerの設定タブ、背景画像設定から背景画像を設定できる。URL指定とファイル選択ができ、ファイル選択したときはIndexedDBにbase64エンコードデータとして保存される。URL指定は`https://www.nicovideo.jp/local/background-images/microsoft/background1.avif`のように指定する。`local`フォルダの`hoge`フォルダにimage.jpgがあれば`https://www.nicovideo.jp/local/hoge/image.jpg`と指定する。外部Webサイトのパス(https://www.nicovideo.jp/local/ 以外のパス)も指定可能だが、読み込み時サーバーに負荷がかかる恐れがあるので非推奨。円環が大きくなり過ぎない範囲で任意の数指定可能。もちろんフォルダーパスも自由。
           </p>
         </div>
 
