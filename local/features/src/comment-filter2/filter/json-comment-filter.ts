@@ -4,9 +4,26 @@ import { CF2CommentApiResponse, CommentFilter2GlobalData, CF2Comment, Settings, 
 import { NgRuleJson, NicoruCond, Action } from '@/types/filter-types';
 import { sanitizeCommentBody, sanitizeCommentCommands } from '@/comment-filter2/utils/sanitizer';
 import { FilterLogger } from '@/comment-filter2/utils/filter-logger';
+import { SubstringMatcher, isPlainLiteralPattern } from './rule-indexer';
 
 // フォークタイプの定義
 type ForkType = 'main' | 'easy' | 'owner';
+
+
+interface PreparedJsonRule {
+  rule: NgRuleJson;
+  index: number;
+  compiledRegex?: RegExp;
+  isUserRule: boolean;
+  hasLiteralPrefilter: boolean;
+}
+
+interface PreparedJsonRuleSet {
+  rules: PreparedJsonRule[];
+  userIdRuleIndexes: Map<string, number[]>;
+  substringMatcher: SubstringMatcher | null;
+  needsLowercase: boolean;
+}
 
 export class JsonCommentFilter {
   private regexCache: Map<string, RegExp> = new Map();
@@ -56,7 +73,8 @@ export class JsonCommentFilter {
         });
       }
 
-      const filteredData = this.processCommentData(globalData.originalData, rules, currentSmid);
+      const preparedRules = this.prepareRules(rules, currentSmid);
+      const filteredData = this.processCommentData(globalData.originalData, preparedRules, currentSmid);
       
       // フィルタリング済みデータをグローバルオブジェクトに保存
       globalData.filteredData = filteredData;
@@ -82,12 +100,12 @@ export class JsonCommentFilter {
    */
   private processCommentData(
     data: CF2CommentApiResponse, 
-    rules: NgRuleJson[], 
+    preparedRules: PreparedJsonRuleSet, 
     currentSmid: string | null
   ): CF2CommentApiResponse {
     const processedThreads = data.data.threads.map(thread => ({
       ...thread,
-      comments: this.filterCommentsInThread(thread.comments, rules, currentSmid, thread.fork)
+      comments: this.filterCommentsInThread(thread.comments, preparedRules, currentSmid, thread.fork)
     }));
 
     return {
@@ -100,20 +118,83 @@ export class JsonCommentFilter {
   }
 
   /**
+   * JSONルールの事前準備
+   */
+  private prepareRules(rules: NgRuleJson[], currentSmid: string | null): PreparedJsonRuleSet {
+    const preparedRules: PreparedJsonRule[] = [];
+    const userIdRuleIndexes = new Map<string, number[]>();
+    const substringMatcher = new SubstringMatcher();
+    let hasLiteralPatterns = false;
+
+    for (const rule of rules) {
+      if (rule.enabled === false) {
+        continue;
+      }
+
+      if (!this.checkSmidCondition(rule.smid, currentSmid)) {
+        continue;
+      }
+
+      const index = preparedRules.length;
+      const isUserRule = !rule.pattern && Boolean(rule.userId);
+      const preparedRule: PreparedJsonRule = {
+        rule,
+        index,
+        compiledRegex: undefined,
+        isUserRule,
+        hasLiteralPrefilter: false
+      };
+
+      if (isUserRule && rule.userId) {
+        const bucket = userIdRuleIndexes.get(rule.userId) ?? [];
+        bucket.push(index);
+        userIdRuleIndexes.set(rule.userId, bucket);
+      }
+
+      if (rule.pattern) {
+        const flags = rule.flags || 'gi';
+        preparedRule.compiledRegex = this.getRegex(rule.pattern, flags);
+
+        if (isPlainLiteralPattern(rule.pattern)) {
+          const isCaseSensitive = !flags.includes('i');
+          substringMatcher.add(rule.pattern, index, isCaseSensitive);
+          preparedRule.hasLiteralPrefilter = true;
+          hasLiteralPatterns = true;
+        }
+      }
+
+      preparedRules.push(preparedRule);
+    }
+
+    if (hasLiteralPatterns) {
+      substringMatcher.build();
+    }
+
+    return {
+      rules: preparedRules,
+      userIdRuleIndexes,
+      substringMatcher: hasLiteralPatterns ? substringMatcher : null,
+      needsLowercase: hasLiteralPatterns ? substringMatcher.needsLowercaseText() : false
+    };
+  }
+
+
+
+  /**
    * スレッド内のコメントをフィルタリング（JSON形式ルール対応）
    */
   private filterCommentsInThread(
     comments: CF2Comment[], 
-    rules: NgRuleJson[], 
+    preparedRules: PreparedJsonRuleSet, 
     currentSmid: string | null,
     threadFork: ForkType
   ): CF2Comment[] {
     if (this.debugMode) {
-      window.logger?.debug(`[CommentFilter2] Processing ${threadFork} thread with ${comments.length} comments using ${rules.length} JSON rules`);
+      window.logger?.debug(`[CommentFilter2] Processing ${threadFork} thread with ${comments.length} comments using ${preparedRules.rules.length} JSON rules`);
     }
 
     return comments
-      .map(comment => this.applyRulesToComment(comment, rules, currentSmid, threadFork))
+      .map(comment => this.applyRulesToComment(comment, preparedRules, currentSmid, threadFork))
       .filter(comment => comment !== null);
   }
 
@@ -122,98 +203,107 @@ export class JsonCommentFilter {
    */
   private applyRulesToComment(
     comment: CF2Comment, 
-    rules: NgRuleJson[], 
+    preparedRules: PreparedJsonRuleSet, 
     currentSmid: string | null,
     threadFork: ForkType
   ): CF2Comment | null {
     const processedComment = { ...comment };
     
-    // コマンド形式の正規化処理
+    // コマンド文字列の整形
     processedComment.commands = this.normalizeCommands(processedComment.commands);
     
-    // 計画書の要件：コメント種別対応
+    // プレミアム属性の補正
     if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
       processedComment.isPremium = true;
     }
 
     let ruleApplied = false;
     let shouldHideComment = false;
-    let shouldApplyCommands = true; // コマンド設定を適用するかどうか
-    let appliedRule: NgRuleJson | null = null; // 適用されたルール
-    let excludedByNicoru = false; // nicoru除外条件に一致してルール適用がスキップされたか
+    let shouldApplyCommands = true;
+    let appliedRule: NgRuleJson | null = null;
+    let excludedByNicoru = false;
 
-    // 有効なルールのみを処理
-    const activeRules = rules.filter(rule => rule.enabled !== false);
-
-    // ルールが存在しない場合は常にコマンド設定を適用
-    if (activeRules.length === 0) {
+    if (preparedRules.rules.length === 0) {
       if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
         processedComment.commands = this.applyForkCommandSettings(processedComment.commands, threadFork);
       }
       return processedComment;
     }
 
-    for (const rule of activeRules) {
-      // ---- ルール適用条件チェック ----
-      const smidOk = this.checkSmidCondition(rule.smid, currentSmid);
-      if (!smidOk) {
-        continue;
-      }
+    const userRuleIndexes = preparedRules.userIdRuleIndexes.get(comment.userId) ?? [];
+    const activeUserRuleIndexes = new Set<number>(userRuleIndexes);
 
-      const patternOk = rule.pattern
-        ? this.getRegex(rule.pattern, rule.flags || 'gi').test(comment.body)
-        : rule.userId
-          ? rule.userId === comment.userId
-          : false;
-      if (!patternOk) {
+    const matcher = preparedRules.substringMatcher;
+    const originalBody = comment.body ?? '';
+    const lowercaseBody = preparedRules.needsLowercase ? originalBody.toLocaleLowerCase() : undefined;
+    const literalCandidateIndexes = matcher
+      ? new Set<number>(matcher.match(originalBody, lowercaseBody))
+      : new Set<number>();
+
+    for (const preparedRule of preparedRules.rules) {
+      const rule = preparedRule.rule;
+
+      let patternMatched = false;
+      let reusableRegex: RegExp | undefined;
+
+      if (preparedRule.isUserRule) {
+        if (!activeUserRuleIndexes.has(preparedRule.index)) {
+          continue;
+        }
+        patternMatched = true;
+      } else if (rule.pattern) {
+        if (preparedRule.hasLiteralPrefilter && !literalCandidateIndexes.has(preparedRule.index)) {
+          continue;
+        }
+
+        reusableRegex = preparedRule.compiledRegex ?? this.getRegex(rule.pattern, rule.flags || 'gi');
+        if (reusableRegex.global) {
+          reusableRegex.lastIndex = 0;
+        }
+        patternMatched = reusableRegex.test(originalBody);
+        if (!patternMatched) {
+          continue;
+        }
+        if (reusableRegex.global) {
+          reusableRegex.lastIndex = 0;
+        }
+      } else {
         continue;
       }
 
       let nicoruOk = true;
       if (rule.nicoru_cond) {
         nicoruOk = this.checkNicoruCondition(rule.nicoru_cond, comment.nicoruCount);
-        // nicoruモードがexcludeで、条件に合致したためにnicoruOk=false となった場合、
-        // これは「ルール自体を無視するがコマンドも除外したい」ケース
         const modeValue = (rule.nicoru_cond.mode ?? 'exclude').toString().trim().toLowerCase();
         if (!nicoruOk && modeValue === 'exclude') {
           excludedByNicoru = true;
         }
       }
 
-      // nicoru条件等でNGの場合は次へ
       if (!nicoruOk) {
         continue;
       }
 
-      // ---- ここまででルール適用確定 ----
-
-      // ルールが適用された
       ruleApplied = true;
       appliedRule = rule;
 
-      // アクションを実行
-      const actionResult = this.executeAction(rule.action, processedComment.body, rule);
+      const actionResult = this.executeAction(rule.action, processedComment.body, rule, reusableRegex);
       
       if (actionResult.type === 'hide') {
         shouldHideComment = true;
         processedComment.body = '';
         processedComment.commands.push('invisible');
         
-        // フィルターログを追加
         this.addFilterLog(comment, rule, true, currentSmid);
-        break; // 非表示の場合は他のルールを適用しない
+        break;
       } else if (actionResult.type === 'replace') {
         processedComment.body = actionResult.newText || processedComment.body;
-        
-        // フィルターログを追加
         this.addFilterLog(comment, rule, false, currentSmid);
       } else if (actionResult.type === 'none') {
-        // 本文やコマンドは変更せず、フィルターログのみ追加
         this.addFilterLog(comment, rule, false, currentSmid);
       }
     }
 
-    // 非表示処理
     if (shouldHideComment) {
       processedComment.body = '';
       if (!processedComment.commands.includes('invisible')) {
@@ -221,41 +311,28 @@ export class JsonCommentFilter {
       }
     }
 
-    // コマンド適用判定（お主の要求に基づく新ロジック）
     if (ruleApplied && appliedRule) {
-      // ルールが適用された場合でも、nicoru_cond.exclude が「条件に合致したか」で挙動を分岐
       if (
         appliedRule.nicoru_cond &&
         appliedRule.nicoru_cond.mode === 'exclude' &&
-        excludedByNicoru // ← 条件に合致して除外扱いになった場合のみ
+        excludedByNicoru
       ) {
-        shouldApplyCommands = false; // コマンド除外
-      } else {
-        shouldApplyCommands = true; // それ以外は適用
-      }
-    } else {
-      // ルールが適用されていない
-      if (excludedByNicoru) {
-        // nicoru除外条件に一致してスキップされた場合はコマンド非適用
         shouldApplyCommands = false;
       } else {
-        // それ以外は適用
         shouldApplyCommands = true;
       }
+    } else {
+      shouldApplyCommands = !excludedByNicoru;
     }
 
-    // UIコマンド設定の適用
     if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
       if (shouldApplyCommands) {
         processedComment.commands = this.applyForkCommandSettings(processedComment.commands, threadFork);
       } else {
-        // nicoru除外モードなどでコマンド適用を抑制する場合でも
-        // 不正コマンドの混入を防ぐためにサニタイズ処理だけは行う
         processedComment.commands = sanitizeCommentCommands(processedComment.commands);
       }
     }
 
-    // NGルールが適用されたコメントのみサニタイズ
     if (ruleApplied) {
       processedComment.body = sanitizeCommentBody(processedComment.body);
     }
@@ -268,36 +345,7 @@ export class JsonCommentFilter {
     return processedComment;
   }
 
-  /**
-   * ルール適用条件をチェック（JSON形式対応）
-   */
-  private shouldApplyRule(rule: NgRuleJson, comment: CF2Comment, currentSmid: string | null): boolean {
-    // SMID条件チェック
-    if (!this.checkSmidCondition(rule.smid, currentSmid)) {
-      return false;
-    }
 
-    // パターンマッチング（正規表現またはユーザーID）
-    if (rule.pattern) {
-      const regex = this.getRegex(rule.pattern, rule.flags || 'gi');
-      if (!regex.test(comment.body)) {
-        return false;
-      }
-    } else if (rule.userId) {
-      if (rule.userId !== comment.userId) {
-        return false;
-      }
-    } else {
-      return false; // パターンもユーザーIDも指定されていない
-    }
-
-    // ニコる数条件チェック
-    if (rule.nicoru_cond && !this.checkNicoruCondition(rule.nicoru_cond, comment.nicoruCount)) {
-      return false;
-    }
-
-    return true;
-  }
 
   /**
    * SMID条件をチェック
@@ -377,22 +425,30 @@ export class JsonCommentFilter {
   }
 
   /**
-   * アクションを実行
+   * アクション実行
    */
-  private executeAction(action: Action, text: string, rule: NgRuleJson): { type: 'hide' | 'replace' | 'none'; newText?: string } {
+  private executeAction(action: Action, text: string, rule: NgRuleJson, compiledRegex?: RegExp): { type: 'hide' | 'replace' | 'none'; newText?: string } {
     if (action.type === 'hide') {
       return { type: 'hide' };
     }
 
     if (action.type === 'replace' && rule.pattern) {
-      const regex = this.getRegex(rule.pattern, rule.flags || 'gi');
+      const regex = compiledRegex ?? this.getRegex(rule.pattern, rule.flags || 'gi');
+      if (regex.global) {
+        regex.lastIndex = 0;
+      }
       const newText = text.replace(regex, action.replacement);
+      if (regex.global) {
+        regex.lastIndex = 0;
+      }
       return { type: 'replace', newText };
     }
 
-    // "unspecified" またはその他想定外のtypeの場合は何もしない（排他判定などは別途行う）
+    // "unspecified" もしくはそれ以外の未定義typeの場合は実質無し（裏定義などは考慮外）
     return { type: 'none' };
   }
+
+
 
   /**
    * 正規表現オブジェクトを取得（キャッシュ付き・フラグ対応・lastIndex対応）

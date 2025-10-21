@@ -10195,6 +10195,176 @@ class FilterLogger {
   }
 }
 
+class AhoCorasickMachine {
+  constructor() {
+    this.nodes = [];
+    this.built = false;
+    this.nodes.push(this.createNode());
+  }
+  createNode() {
+    return {
+      transitions: /* @__PURE__ */ new Map(),
+      failure: 0,
+      outputs: []
+    };
+  }
+  add(pattern, outputId) {
+    if (this.built) {
+      throw new Error("AhoCorasickMachine cannot add pattern after build().");
+    }
+    let nodeIndex = 0;
+    for (const char of pattern) {
+      const node = this.nodes[nodeIndex];
+      const nextIndex = node.transitions.get(char);
+      if (nextIndex !== void 0) {
+        nodeIndex = nextIndex;
+      } else {
+        const newIndex = this.nodes.length;
+        node.transitions.set(char, newIndex);
+        this.nodes.push(this.createNode());
+        nodeIndex = newIndex;
+      }
+    }
+    this.nodes[nodeIndex].outputs.push(outputId);
+  }
+  build() {
+    if (this.built) {
+      return;
+    }
+    const queue = [];
+    for (const [, nextIndex] of this.nodes[0].transitions.entries()) {
+      this.nodes[nextIndex].failure = 0;
+      queue.push(nextIndex);
+    }
+    while (queue.length > 0) {
+      const current = queue.shift();
+      const currentNode = this.nodes[current];
+      for (const [char, nextIndex] of currentNode.transitions.entries()) {
+        queue.push(nextIndex);
+        let failure = currentNode.failure;
+        while (failure !== 0 && !this.nodes[failure].transitions.has(char)) {
+          failure = this.nodes[failure].failure;
+        }
+        const fallback = this.nodes[failure].transitions.get(char);
+        this.nodes[nextIndex].failure = fallback !== void 0 ? fallback : 0;
+        const failureOutputs = this.nodes[this.nodes[nextIndex].failure].outputs;
+        if (failureOutputs.length > 0) {
+          this.nodes[nextIndex].outputs.push(...failureOutputs);
+        }
+      }
+    }
+    this.built = true;
+  }
+  search(text) {
+    if (!this.built) {
+      throw new Error("AhoCorasickMachine must call build() before search().");
+    }
+    const results = [];
+    let nodeIndex = 0;
+    for (const char of text) {
+      while (nodeIndex !== 0 && !this.nodes[nodeIndex].transitions.has(char)) {
+        nodeIndex = this.nodes[nodeIndex].failure;
+      }
+      const nextIndex = this.nodes[nodeIndex].transitions.get(char);
+      if (nextIndex !== void 0) {
+        nodeIndex = nextIndex;
+      }
+      if (this.nodes[nodeIndex].outputs.length > 0) {
+        results.push(...this.nodes[nodeIndex].outputs);
+      }
+    }
+    return results;
+  }
+  hasPatterns() {
+    return this.nodes.length > 1;
+  }
+}
+class SubstringMatcher {
+  constructor() {
+    this.caseSensitivePatterns = [];
+    this.caseSensitiveOutputs = [];
+    this.caseSensitiveIds = /* @__PURE__ */ new Map();
+    this.caseSensitiveMachine = null;
+    this.caseInsensitivePatterns = [];
+    this.caseInsensitiveOutputs = [];
+    this.caseInsensitiveIds = /* @__PURE__ */ new Map();
+    this.caseInsensitiveMachine = null;
+  }
+  add(pattern, ruleIndex, caseSensitive) {
+    if (caseSensitive) {
+      const existing = this.caseSensitiveIds.get(pattern);
+      if (existing !== void 0) {
+        this.caseSensitiveOutputs[existing].push(ruleIndex);
+        return;
+      }
+      const outputId = this.caseSensitiveOutputs.length;
+      this.caseSensitiveIds.set(pattern, outputId);
+      this.caseSensitivePatterns.push({ pattern, outputId });
+      this.caseSensitiveOutputs.push([ruleIndex]);
+    } else {
+      const normalized = pattern.toLocaleLowerCase();
+      const existing = this.caseInsensitiveIds.get(normalized);
+      if (existing !== void 0) {
+        this.caseInsensitiveOutputs[existing].push(ruleIndex);
+        return;
+      }
+      const outputId = this.caseInsensitiveOutputs.length;
+      this.caseInsensitiveIds.set(normalized, outputId);
+      this.caseInsensitivePatterns.push({ pattern: normalized, outputId });
+      this.caseInsensitiveOutputs.push([ruleIndex]);
+    }
+  }
+  build() {
+    if (this.caseSensitivePatterns.length > 0) {
+      this.caseSensitiveMachine = new AhoCorasickMachine();
+      for (const { pattern, outputId } of this.caseSensitivePatterns) {
+        this.caseSensitiveMachine.add(pattern, outputId);
+      }
+      this.caseSensitiveMachine.build();
+    }
+    if (this.caseInsensitivePatterns.length > 0) {
+      this.caseInsensitiveMachine = new AhoCorasickMachine();
+      for (const { pattern, outputId } of this.caseInsensitivePatterns) {
+        this.caseInsensitiveMachine.add(pattern, outputId);
+      }
+      this.caseInsensitiveMachine.build();
+    }
+  }
+  match(text, lowercaseText) {
+    const resultSet = /* @__PURE__ */ new Set();
+    if (this.caseSensitiveMachine) {
+      const matches = this.caseSensitiveMachine.search(text);
+      for (const outputId of matches) {
+        for (const ruleIndex of this.caseSensitiveOutputs[outputId]) {
+          resultSet.add(ruleIndex);
+        }
+      }
+    }
+    if (this.caseInsensitiveMachine) {
+      const haystack = lowercaseText ?? text.toLocaleLowerCase();
+      const matches = this.caseInsensitiveMachine.search(haystack);
+      for (const outputId of matches) {
+        for (const ruleIndex of this.caseInsensitiveOutputs[outputId]) {
+          resultSet.add(ruleIndex);
+        }
+      }
+    }
+    return Array.from(resultSet);
+  }
+  hasPatterns() {
+    return Boolean(
+      this.caseSensitiveMachine && this.caseSensitiveMachine.hasPatterns() || this.caseInsensitiveMachine && this.caseInsensitiveMachine.hasPatterns()
+    );
+  }
+  needsLowercaseText() {
+    return this.caseInsensitiveMachine !== null;
+  }
+}
+const REGEX_META_CHARS = /[.*+?^${}()|[\]\\]/;
+function isPlainLiteralPattern(pattern) {
+  return !REGEX_META_CHARS.test(pattern);
+}
+
 const COMMAND_TYPES = {
   COLOR: "color",
   POSITION: "position",
@@ -10260,16 +10430,20 @@ class CommentFilter {
     this.debugMode = debugMode;
   }
   /**
-   * 設定を更新
-   */
+  
+     * 設定を更新
+  
+     */
   updateSettings(settings) {
     this.settings = settings;
     this.debugMode = settings.debugMode;
     FilterLogger.setLogSendingEnabled(settings?.logToCommentFilterLogger || false);
   }
   /**
-   * メインのフィルタリング処理
-   */
+  
+     * メインのフィルタリング処理
+  
+     */
   async applyFilters(rules, currentSmid) {
     await Promise.resolve();
     const globalData = this.getGlobalData();
@@ -10289,7 +10463,8 @@ class CommentFilter {
           currentSmid
         });
       }
-      const filteredData = this.processCommentData(globalData.originalData, rules, currentSmid);
+      const preparedRules = this.prepareRules(rules, currentSmid);
+      const filteredData = this.processCommentData(globalData.originalData, preparedRules, currentSmid);
       globalData.filteredData = filteredData;
       if (this.debugMode) {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
@@ -10304,12 +10479,14 @@ class CommentFilter {
     }
   }
   /**
-   * コメントデータ全体を処理
-   */
-  processCommentData(data, rules, currentSmid) {
+  
+     * コメントデータ全体を処理
+  
+     */
+  processCommentData(data, preparedRules, currentSmid) {
     const processedThreads = data.data.threads.map((thread) => ({
       ...thread,
-      comments: this.filterCommentsInThread(thread.comments, rules, currentSmid, thread.fork)
+      comments: this.filterCommentsInThread(thread.comments, preparedRules, currentSmid, thread.fork)
     }));
     return {
       ...data,
@@ -10320,18 +10497,70 @@ class CommentFilter {
     };
   }
   /**
-   * スレッド内のコメントをフィルタリング（コメント種別対応）
+   * ルールを事前に整形して高速参照向けにまとめる
    */
-  filterCommentsInThread(comments, rules, currentSmid, threadFork) {
+  prepareRules(rules, currentSmid) {
+    const preparedRules = [];
+    const userIdRuleIndexes = /* @__PURE__ */ new Map();
+    const substringMatcher = new SubstringMatcher();
+    let hasLiteralPatterns = false;
+    for (const rule of rules) {
+      if (!this.shouldApplyRule(rule, currentSmid)) {
+        continue;
+      }
+      const index = preparedRules.length;
+      const isValidUserRule = Boolean(rule.isUserIdRule && rule.userId);
+      const preparedRule = {
+        rule,
+        index,
+        compiledRegex: void 0,
+        isUserIdRule: isValidUserRule,
+        hasLiteralPrefilter: false
+      };
+      if (isValidUserRule && rule.userId) {
+        const bucket = userIdRuleIndexes.get(rule.userId) ?? [];
+        bucket.push(index);
+        userIdRuleIndexes.set(rule.userId, bucket);
+      }
+      if (rule.regex) {
+        const flags = rule.regexFlags || "gi";
+        preparedRule.compiledRegex = this.getRegex(rule.regex, flags);
+        if (isPlainLiteralPattern(rule.regex)) {
+          const isCaseSensitive = !flags.includes("i");
+          substringMatcher.add(rule.regex, index, isCaseSensitive);
+          preparedRule.hasLiteralPrefilter = true;
+          hasLiteralPatterns = true;
+        }
+      }
+      preparedRules.push(preparedRule);
+    }
+    if (hasLiteralPatterns) {
+      substringMatcher.build();
+    }
+    return {
+      rules: preparedRules,
+      userIdRuleIndexes,
+      substringMatcher: hasLiteralPatterns ? substringMatcher : null,
+      needsLowercase: hasLiteralPatterns ? substringMatcher.needsLowercaseText() : false
+    };
+  }
+  /**
+  
+     * スレッド内のコメントをフィルタリング（コメント種別対応）
+  
+     */
+  filterCommentsInThread(comments, preparedRules, currentSmid, threadFork) {
     if (this.debugMode) {
       window.logger?.debug(`[CommentFilter2] Processing ${threadFork} thread with ${comments.length} comments`);
     }
-    return comments.map((comment) => this.applyRulesToComment(comment, rules, currentSmid, threadFork)).filter((comment) => comment !== null);
+    return comments.map((comment) => this.applyRulesToComment(comment, preparedRules, currentSmid, threadFork)).filter((comment) => comment !== null);
   }
   /**
-   * 単一コメントにルールを適用（コメント種別対応）
-   */
-  applyRulesToComment(comment, rules, currentSmid, threadFork) {
+  
+     * 単一コメントにルールを適用（コメント種別対応）
+  
+     */
+  applyRulesToComment(comment, preparedRules, currentSmid, threadFork) {
     const processedComment = { ...comment };
     processedComment.commands = this.normalizeCommands(processedComment.commands);
     if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
@@ -10341,52 +10570,76 @@ class CommentFilter {
     let shouldHideComment = false;
     let ruleApplied = false;
     let hasEmptyNicoruRule = false;
-    for (const rule of rules) {
-      if (!this.shouldApplyRule(rule, currentSmid)) {
+    const userRuleIndexes = preparedRules.userIdRuleIndexes.get(comment.userId) ?? [];
+    const activeUserRuleIndexes = new Set(userRuleIndexes);
+    const matcher = preparedRules.substringMatcher;
+    const getBodyText = () => processedComment.body ?? "";
+    let lowercaseBody = preparedRules.needsLowercase ? getBodyText().toLocaleLowerCase() : void 0;
+    let literalCandidateIndexes = matcher ? new Set(matcher.match(getBodyText(), lowercaseBody)) : /* @__PURE__ */ new Set();
+    const refreshLiteralCandidates = () => {
+      lowercaseBody = preparedRules.needsLowercase ? getBodyText().toLocaleLowerCase() : void 0;
+      literalCandidateIndexes = matcher ? new Set(matcher.match(getBodyText(), lowercaseBody)) : /* @__PURE__ */ new Set();
+    };
+    for (const preparedRule of preparedRules.rules) {
+      const rule = preparedRule.rule;
+      if (preparedRule.isUserIdRule) {
+        if (!activeUserRuleIndexes.has(preparedRule.index)) {
+          continue;
+        }
+        if (!this.checkNicoruRule(rule, comment.nicoruCount)) {
+          continue;
+        }
+        if (!rule.userId || !this.checkUserIdRule(rule, comment.userId)) {
+          continue;
+        }
+        ruleApplied = true;
+        const isHidden = rule.nicoru === "EMPTY";
+        this.addFilterLog(comment, rule, "userId", true, isHidden, currentSmid);
+        if (rule.nicoru === "EMPTY") {
+          hasEmptyNicoruRule = true;
+          shouldHideComment = true;
+          commandsToAdd.push("invisible");
+        }
+        if (this.debugMode) {
+          window.logger?.info(`[CommentFilter2] UserID rule matched: ${rule.userId} -> ${rule.nicoru === "EMPTY" ? "hiding comment with invisible" : "clearing body only"}`, {
+            commentUserId: comment.userId,
+            ruleUserId: rule.userId,
+            ruleNicoru: rule.nicoru,
+            commentBody: comment.body?.substring(0, 50) + (comment.body?.length > 50 ? "..." : "")
+          });
+        }
+        continue;
+      }
+      if (preparedRule.hasLiteralPrefilter && !literalCandidateIndexes.has(preparedRule.index)) {
         continue;
       }
       if (!this.checkNicoruRule(rule, comment.nicoruCount)) {
         continue;
       }
-      if (rule.isUserIdRule && rule.userId) {
-        if (this.checkUserIdRule(rule, comment.userId)) {
-          ruleApplied = true;
-          const isHidden = rule.nicoru === "EMPTY";
-          this.addFilterLog(comment, rule, "userId", true, isHidden, currentSmid);
-          if (rule.nicoru === "EMPTY") {
-            hasEmptyNicoruRule = true;
-            shouldHideComment = true;
-            commandsToAdd.push("invisible");
-          }
-          if (this.debugMode) {
-            window.logger?.info(`[CommentFilter2] UserID rule matched: ${rule.userId} -> ${rule.nicoru === "EMPTY" ? "hiding comment with invisible" : "clearing body only"}`, {
-              commentUserId: comment.userId,
-              ruleUserId: rule.userId,
-              ruleNicoru: rule.nicoru,
-              commentBody: comment.body?.substring(0, 50) + (comment.body?.length > 50 ? "..." : "")
-              // 本文は省略
-            });
-          }
-        }
+      if (!rule.regex) {
         continue;
       }
-      if (rule.regex) {
-        const result = this.applyRegexRule(processedComment.body, rule);
-        if (result.matched) {
-          ruleApplied = true;
-          this.addFilterLog(comment, rule, "regex", true, result.shouldHide, currentSmid);
-          if (result.shouldHide) {
-            if (rule.nicoru === "EMPTY") {
-              hasEmptyNicoruRule = true;
-              shouldHideComment = true;
-              commandsToAdd.push("invisible");
-            }
-          } else {
-            processedComment.body = result.replacedText;
-            if (rule.nicoru === "EMPTY") {
-              hasEmptyNicoruRule = true;
-            }
-          }
+      const result = this.applyRegexRule(processedComment.body, rule, preparedRule.compiledRegex);
+      if (!result.matched) {
+        continue;
+      }
+      ruleApplied = true;
+      this.addFilterLog(comment, rule, "regex", true, result.shouldHide, currentSmid);
+      if (result.shouldHide) {
+        if (rule.nicoru === "EMPTY") {
+          hasEmptyNicoruRule = true;
+          shouldHideComment = true;
+          commandsToAdd.push("invisible");
+        }
+      } else {
+        processedComment.body = result.replacedText;
+        if (rule.nicoru === "EMPTY") {
+          hasEmptyNicoruRule = true;
+        }
+        if (matcher) {
+          refreshLiteralCandidates();
+        } else if (preparedRules.needsLowercase) {
+          lowercaseBody = getBodyText().toLocaleLowerCase();
         }
       }
     }
@@ -10417,8 +10670,10 @@ class CommentFilter {
     return processedComment;
   }
   /**
-   * フォーク別のコマンド設定を適用
-   */
+  
+     * フォーク別のコマンド設定を適用
+  
+     */
   applyForkCommandSettings(commands, threadFork) {
     if (!this.settings?.commandSettings) {
       return sanitizeCommentCommands(commands);
@@ -10434,8 +10689,10 @@ class CommentFilter {
     return filteredCommands;
   }
   /**
-   * フォークタイプに対して許可されたコマンドを取得
-   */
+  
+     * フォークタイプに対して許可されたコマンドを取得
+  
+     */
   getAllowedCommandsForFork(threadFork) {
     if (!this.settings?.commandSettings) {
       return [];
@@ -10452,8 +10709,10 @@ class CommentFilter {
     }
   }
   /**
-   * ルールを適用すべきかチェック（SMID条件）
-   */
+  
+     * ルールを適用すべきかチェック（SMID条件）
+  
+     */
   shouldApplyRule(rule, currentSmid) {
     if (rule.smid === CONSTANTS.RULE_DEFAULTS.ALL_SMID) {
       return true;
@@ -10461,8 +10720,10 @@ class CommentFilter {
     return rule.smid === currentSmid;
   }
   /**
-   * ニコる数ルールをチェック
-   */
+  
+     * ニコる数ルールをチェック
+  
+     */
   checkNicoruRule(rule, commentNicoruCount) {
     if (rule.nicoru === "EMPTY") {
       return true;
@@ -10473,8 +10734,10 @@ class CommentFilter {
     return false;
   }
   /**
-   * ユーザーIDルールをチェック
-   */
+  
+     * ユーザーIDルールをチェック
+  
+     */
   checkUserIdRule(rule, commentUserId) {
     if (!rule.userId) {
       if (this.debugMode) {
@@ -10486,9 +10749,11 @@ class CommentFilter {
     return isMatch;
   }
   /**
-   * 正規表現ルールを適用（フラグ対応）
-   */
-  applyRegexRule(text, rule) {
+  
+     * 正規表現ルールを適用（フラグ対応）
+  
+     */
+  applyRegexRule(text, rule, compiledRegex) {
     try {
       if (!rule.regex) {
         return {
@@ -10497,7 +10762,7 @@ class CommentFilter {
           replacedText: text
         };
       }
-      const regex = this.getRegex(rule.regex, rule.regexFlags || "gi");
+      const regex = compiledRegex ?? this.getRegex(rule.regex, rule.regexFlags || "gi");
       const matched = regex.test(text);
       if (!matched) {
         return {
@@ -10523,8 +10788,10 @@ class CommentFilter {
     }
   }
   /**
-   * 正規表現オブジェクトを取得（キャッシュ付き・フラグ対応）
-   */
+  
+     * 正規表現オブジェクトを取得（キャッシュ付き・フラグ対応）
+  
+     */
   getRegex(pattern, flags = "gi") {
     const cacheKey = `${pattern}:::${flags}`;
     if (this.regexCache.has(cacheKey)) {
@@ -10535,8 +10802,10 @@ class CommentFilter {
     return regex;
   }
   /**
-   * フィルタリング結果をログ出力（デバッグ用）
-   */
+  
+     * フィルタリング結果をログ出力（デバッグ用）
+  
+     */
   logFilteringResults(original, filtered, rules) {
     const originalCount = this.countComments(original);
     const filteredCount = this.countComments(filtered);
@@ -10549,14 +10818,18 @@ class CommentFilter {
     });
   }
   /**
-   * コメント総数をカウント
-   */
+  
+     * コメント総数をカウント
+  
+     */
   countComments(data) {
     return data.data.threads.reduce((sum, thread) => sum + thread.comments.length, 0);
   }
   /**
-   * グローバルデータを取得
-   */
+  
+     * グローバルデータを取得
+  
+     */
   getGlobalData() {
     const data = window[CONSTANTS.GLOBAL_DATA_KEY];
     if (data && typeof data === "object" && "originalData" in data && "filteredData" in data && "currentSmid" in data && "lastUpdated" in data) {
@@ -10565,20 +10838,26 @@ class CommentFilter {
     return null;
   }
   /**
-   * 正規表現キャッシュをクリア
-   */
+  
+     * 正規表現キャッシュをクリア
+  
+     */
   clearRegexCache() {
     this.regexCache.clear();
   }
   /**
-   * デバッグモードを設定
-   */
+  
+     * デバッグモードを設定
+  
+     */
   setDebugMode(enabled) {
     this.debugMode = enabled;
   }
   /**
-   * コマンドを追加または置き換え
-   */
+  
+     * コマンドを追加または置き換え
+  
+     */
   addOrReplaceCommand(commands, newCommand) {
     if (!Array.isArray(commands)) {
       commands = [];
@@ -10601,8 +10880,10 @@ class CommentFilter {
     }
   }
   /**
-   * 複数のコマンドを一括で追加または置き換え
-   */
+  
+     * 複数のコマンドを一括で追加または置き換え
+  
+     */
   addOrReplaceCommands(commands, newCommands) {
     let result = commands;
     for (const newCommand of newCommands) {
@@ -10611,8 +10892,10 @@ class CommentFilter {
     return result;
   }
   /**
-   * コマンドの種類を取得
-   */
+  
+     * コマンドの種類を取得
+  
+     */
   getCommandType(command) {
     if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
       return COMMAND_TYPES.COLOR;
@@ -10626,8 +10909,10 @@ class CommentFilter {
     return null;
   }
   /**
-   * 指定されたコマンドが特定の種類かチェック
-   */
+  
+     * 指定されたコマンドが特定の種類かチェック
+  
+     */
   isCommandOfType(command, commandType) {
     if (commandType === COMMAND_TYPES.COLOR && /^#[0-9A-Fa-f]{6}$/.test(command)) {
       return true;
@@ -10640,20 +10925,26 @@ class CommentFilter {
     return categoryCommands.includes(lowerCommand);
   }
   /**
-   * 特定の種類のコマンドを取得
-   */
+  
+     * 特定の種類のコマンドを取得
+  
+     */
   getCommandsOfType(commands, commandType) {
     return commands.filter((cmd) => this.isCommandOfType(cmd, commandType));
   }
   /**
-   * 特定の種類のコマンドを削除
-   */
+  
+     * 特定の種類のコマンドを削除
+  
+     */
   removeCommandsOfType(commands, commandType) {
     return commands.filter((cmd) => !this.isCommandOfType(cmd, commandType));
   }
   /**
-   * 外部からコマンドを追加するためのパブリックメソッド
-   */
+  
+     * 外部からコマンドを追加するためのパブリックメソッド
+  
+     */
   addCommandsToComment(comment, commandsToAdd) {
     const processedComment = { ...comment };
     if (!Array.isArray(processedComment.commands)) {
@@ -10663,8 +10954,10 @@ class CommentFilter {
     return processedComment;
   }
   /**
-   * 外部から単一コマンドを追加するためのパブリックメソッド
-   */
+  
+     * 外部から単一コマンドを追加するためのパブリックメソッド
+  
+     */
   addCommandToComment(comment, commandToAdd) {
     const processedComment = { ...comment };
     if (!Array.isArray(processedComment.commands)) {
@@ -10674,8 +10967,10 @@ class CommentFilter {
     return processedComment;
   }
   /**
-   * フィルターログエントリーを追加
-   */
+  
+     * フィルターログエントリーを追加
+  
+     */
   addFilterLog(comment, rule, ruleType, matched, hidden, currentSmid) {
     try {
       const videoTitle = FilterLogger.getVideoTitle();
@@ -10700,8 +10995,10 @@ class CommentFilter {
     }
   }
   /**
-   * コマンドの形式を正規化（文字列→配列変換、クリーンアップ）
-   */
+  
+     * コマンドの形式を正規化（文字列→配列変換、クリーンアップ）
+  
+     */
   normalizeCommands(commands) {
     if (!commands) {
       return [];
@@ -10758,7 +11055,8 @@ class JsonCommentFilter {
           currentSmid
         });
       }
-      const filteredData = this.processCommentData(globalData.originalData, rules, currentSmid);
+      const preparedRules = this.prepareRules(rules, currentSmid);
+      const filteredData = this.processCommentData(globalData.originalData, preparedRules, currentSmid);
       globalData.filteredData = filteredData;
       if (this.debugMode) {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
@@ -10775,10 +11073,10 @@ class JsonCommentFilter {
   /**
    * コメントデータ全体を処理
    */
-  processCommentData(data, rules, currentSmid) {
+  processCommentData(data, preparedRules, currentSmid) {
     const processedThreads = data.data.threads.map((thread) => ({
       ...thread,
-      comments: this.filterCommentsInThread(thread.comments, rules, currentSmid, thread.fork)
+      comments: this.filterCommentsInThread(thread.comments, preparedRules, currentSmid, thread.fork)
     }));
     return {
       ...data,
@@ -10789,18 +11087,69 @@ class JsonCommentFilter {
     };
   }
   /**
+   * JSONルールの事前準備
+   */
+  prepareRules(rules, currentSmid) {
+    const preparedRules = [];
+    const userIdRuleIndexes = /* @__PURE__ */ new Map();
+    const substringMatcher = new SubstringMatcher();
+    let hasLiteralPatterns = false;
+    for (const rule of rules) {
+      if (rule.enabled === false) {
+        continue;
+      }
+      if (!this.checkSmidCondition(rule.smid, currentSmid)) {
+        continue;
+      }
+      const index = preparedRules.length;
+      const isUserRule = !rule.pattern && Boolean(rule.userId);
+      const preparedRule = {
+        rule,
+        index,
+        compiledRegex: void 0,
+        isUserRule,
+        hasLiteralPrefilter: false
+      };
+      if (isUserRule && rule.userId) {
+        const bucket = userIdRuleIndexes.get(rule.userId) ?? [];
+        bucket.push(index);
+        userIdRuleIndexes.set(rule.userId, bucket);
+      }
+      if (rule.pattern) {
+        const flags = rule.flags || "gi";
+        preparedRule.compiledRegex = this.getRegex(rule.pattern, flags);
+        if (isPlainLiteralPattern(rule.pattern)) {
+          const isCaseSensitive = !flags.includes("i");
+          substringMatcher.add(rule.pattern, index, isCaseSensitive);
+          preparedRule.hasLiteralPrefilter = true;
+          hasLiteralPatterns = true;
+        }
+      }
+      preparedRules.push(preparedRule);
+    }
+    if (hasLiteralPatterns) {
+      substringMatcher.build();
+    }
+    return {
+      rules: preparedRules,
+      userIdRuleIndexes,
+      substringMatcher: hasLiteralPatterns ? substringMatcher : null,
+      needsLowercase: hasLiteralPatterns ? substringMatcher.needsLowercaseText() : false
+    };
+  }
+  /**
    * スレッド内のコメントをフィルタリング（JSON形式ルール対応）
    */
-  filterCommentsInThread(comments, rules, currentSmid, threadFork) {
+  filterCommentsInThread(comments, preparedRules, currentSmid, threadFork) {
     if (this.debugMode) {
-      window.logger?.debug(`[CommentFilter2] Processing ${threadFork} thread with ${comments.length} comments using ${rules.length} JSON rules`);
+      window.logger?.debug(`[CommentFilter2] Processing ${threadFork} thread with ${comments.length} comments using ${preparedRules.rules.length} JSON rules`);
     }
-    return comments.map((comment) => this.applyRulesToComment(comment, rules, currentSmid, threadFork)).filter((comment) => comment !== null);
+    return comments.map((comment) => this.applyRulesToComment(comment, preparedRules, currentSmid, threadFork)).filter((comment) => comment !== null);
   }
   /**
    * 単一コメントにJSON形式ルールを適用
    */
-  applyRulesToComment(comment, rules, currentSmid, threadFork) {
+  applyRulesToComment(comment, preparedRules, currentSmid, threadFork) {
     const processedComment = { ...comment };
     processedComment.commands = this.normalizeCommands(processedComment.commands);
     if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
@@ -10811,20 +11160,43 @@ class JsonCommentFilter {
     let shouldApplyCommands = true;
     let appliedRule = null;
     let excludedByNicoru = false;
-    const activeRules = rules.filter((rule) => rule.enabled !== false);
-    if (activeRules.length === 0) {
+    if (preparedRules.rules.length === 0) {
       if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
         processedComment.commands = this.applyForkCommandSettings(processedComment.commands, threadFork);
       }
       return processedComment;
     }
-    for (const rule of activeRules) {
-      const smidOk = this.checkSmidCondition(rule.smid, currentSmid);
-      if (!smidOk) {
-        continue;
-      }
-      const patternOk = rule.pattern ? this.getRegex(rule.pattern, rule.flags || "gi").test(comment.body) : rule.userId ? rule.userId === comment.userId : false;
-      if (!patternOk) {
+    const userRuleIndexes = preparedRules.userIdRuleIndexes.get(comment.userId) ?? [];
+    const activeUserRuleIndexes = new Set(userRuleIndexes);
+    const matcher = preparedRules.substringMatcher;
+    const originalBody = comment.body ?? "";
+    const lowercaseBody = preparedRules.needsLowercase ? originalBody.toLocaleLowerCase() : void 0;
+    const literalCandidateIndexes = matcher ? new Set(matcher.match(originalBody, lowercaseBody)) : /* @__PURE__ */ new Set();
+    for (const preparedRule of preparedRules.rules) {
+      const rule = preparedRule.rule;
+      let patternMatched = false;
+      let reusableRegex;
+      if (preparedRule.isUserRule) {
+        if (!activeUserRuleIndexes.has(preparedRule.index)) {
+          continue;
+        }
+        patternMatched = true;
+      } else if (rule.pattern) {
+        if (preparedRule.hasLiteralPrefilter && !literalCandidateIndexes.has(preparedRule.index)) {
+          continue;
+        }
+        reusableRegex = preparedRule.compiledRegex ?? this.getRegex(rule.pattern, rule.flags || "gi");
+        if (reusableRegex.global) {
+          reusableRegex.lastIndex = 0;
+        }
+        patternMatched = reusableRegex.test(originalBody);
+        if (!patternMatched) {
+          continue;
+        }
+        if (reusableRegex.global) {
+          reusableRegex.lastIndex = 0;
+        }
+      } else {
         continue;
       }
       let nicoruOk = true;
@@ -10840,7 +11212,7 @@ class JsonCommentFilter {
       }
       ruleApplied = true;
       appliedRule = rule;
-      const actionResult = this.executeAction(rule.action, processedComment.body, rule);
+      const actionResult = this.executeAction(rule.action, processedComment.body, rule, reusableRegex);
       if (actionResult.type === "hide") {
         shouldHideComment = true;
         processedComment.body = "";
@@ -10867,11 +11239,7 @@ class JsonCommentFilter {
         shouldApplyCommands = true;
       }
     } else {
-      if (excludedByNicoru) {
-        shouldApplyCommands = false;
-      } else {
-        shouldApplyCommands = true;
-      }
+      shouldApplyCommands = !excludedByNicoru;
     }
     if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
       if (shouldApplyCommands) {
@@ -10895,30 +11263,6 @@ class JsonCommentFilter {
       );
     }
     return processedComment;
-  }
-  /**
-   * ルール適用条件をチェック（JSON形式対応）
-   */
-  shouldApplyRule(rule, comment, currentSmid) {
-    if (!this.checkSmidCondition(rule.smid, currentSmid)) {
-      return false;
-    }
-    if (rule.pattern) {
-      const regex = this.getRegex(rule.pattern, rule.flags || "gi");
-      if (!regex.test(comment.body)) {
-        return false;
-      }
-    } else if (rule.userId) {
-      if (rule.userId !== comment.userId) {
-        return false;
-      }
-    } else {
-      return false;
-    }
-    if (rule.nicoru_cond && !this.checkNicoruCondition(rule.nicoru_cond, comment.nicoruCount)) {
-      return false;
-    }
-    return true;
   }
   /**
    * SMID条件をチェック
@@ -10988,15 +11332,21 @@ class JsonCommentFilter {
     return mode === "include" ? conditionMet : !conditionMet;
   }
   /**
-   * アクションを実行
+   * アクション実行
    */
-  executeAction(action, text, rule) {
+  executeAction(action, text, rule, compiledRegex) {
     if (action.type === "hide") {
       return { type: "hide" };
     }
     if (action.type === "replace" && rule.pattern) {
-      const regex = this.getRegex(rule.pattern, rule.flags || "gi");
+      const regex = compiledRegex ?? this.getRegex(rule.pattern, rule.flags || "gi");
+      if (regex.global) {
+        regex.lastIndex = 0;
+      }
       const newText = text.replace(regex, action.replacement);
+      if (regex.global) {
+        regex.lastIndex = 0;
+      }
       return { type: "replace", newText };
     }
     return { type: "none" };
