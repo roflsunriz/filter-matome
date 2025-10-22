@@ -15,6 +15,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
   private shadowRoot: ShadowRoot | null = null;
   private radialContainer: HTMLElement | null = null;
   private settingsContainer: HTMLElement | null = null;
+  private backgroundOverlay: HTMLElement | null = null;
   private backgroundSettings: BackgroundImageSettings;
   private _isActive: boolean = false;
   private eventListeners: { type: string; listener: EventListener }[] = [];
@@ -44,6 +45,9 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
 
       // 【最優先】グローバル背景スタイルを即座に注入
       this.injectGlobalBackgroundCSS();
+
+      // 背景描画用のShadow DOMホストを確実に用意
+      this.ensureShadowInfrastructure();
 
       // 【最優先】背景画像設定を初期化（軽量化版）
       await this.backgroundSettings.initializeSettings();
@@ -88,6 +92,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       this.shadowRoot = null;
       this.radialContainer = null;
       this.settingsContainer = null;
+      this.backgroundOverlay = null;
     }
 
     // グローバル背景スタイルを削除
@@ -141,10 +146,14 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
    * Shadow DOM作成
    */
   private createShadowDOM(): void {
+    if (this.shadowHost && this.shadowRoot) {
+      return;
+    }
+
     // Shadow Hostコンテナを作成
     this.shadowHost = document.createElement('div');
     this.shadowHost.id = 'watch-background-selector-shadow-host';
-    this.shadowHost.style.cssText = 'position: fixed; pointer-events: none; z-index: 1000;';
+    this.shadowHost.style.cssText = 'position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1000;';
     
     // Shadow Rootをアタッチ
     this.shadowRoot = this.shadowHost.attachShadow({ mode: 'closed' });
@@ -159,7 +168,13 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
   private injectCSS(): void {
     if (!this.shadowRoot) return;
 
-    const style = document.createElement('style');
+    let style = this.shadowRoot.getElementById('watch-background-selector-style') as HTMLStyleElement | null;
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'watch-background-selector-style';
+      this.shadowRoot.appendChild(style);
+    }
+
     style.textContent = `
       @charset "utf-8";
 
@@ -167,36 +182,35 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
        * Shadow DOM内の背景セレクタースタイル
        *-------------------------*/
       
-      /* ホスト要素（外部から見えるCSS変数を設定） */
+      /* ホスト要素 */
       :host {
-        /*scroll, fixed, local*/
-        /*background-attachment*/
-        --bg-att: fixed;
-        /*normal, multiply, screen, overlay, darken, lighten, color-dodge, color-burn, hard-light,*/
-        /*soft-light, difference, exclusion, hue, saturation, color, luminosity*/
-        /*background-blend-mode*/
-        --bg-bl-m: normal;
-        /*border-box, padding-box, content-box, text*/
-        /*background-clip*/
-        --bg-cl: initial;
-        /*color keywords, rgb, hex, hsl, currentcolor, transparent*/
-        /*background-color*/
-        --bg-col: black;
-        /*url, gradient, element, image, cross-fade, image-set*/
-        /*background-image*/
-        --bg-img: initial;
-        /*border-box, padding-box, content-box*/
-        /*background-origin*/
-        --bg-org: initial;
-        /*top, bottom, left, right, center, percentage, length, multiple images, offsets*/
-        /*background-position*/
-        --bg-pos: center;
-        /*repeat-x, repeat-y, repeat, space, round, no-repeat*/
-        /*background-repeat*/
-        --bg-rep: no-repeat;
-        /*cover, contain, width, width height, multiple images*/
-        /*background-size*/
-        --bg-siz: cover;
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1000;
+        display: block;
+      }
+
+      /* 背景描画レイヤー */
+      #bg-overlay {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        background-attachment: var(--bg-att, fixed);
+        background-blend-mode: var(--bg-bl-m, normal);
+        background-clip: var(--bg-cl, initial);
+        background-color: var(--bg-col, black);
+        background-image: var(--bg-img, initial);
+        background-origin: var(--bg-org, initial);
+        background-position: var(--bg-pos, center);
+        background-repeat: var(--bg-rep, no-repeat);
+        background-size: var(--bg-siz, cover);
+        transition: background-image 0.3s ease-in-out;
+        z-index: 0;
       }
 
       /*-------------------------
@@ -317,14 +331,42 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
         background: rgba(255, 255, 255, 0.5);
       }
     `;
-    
-    this.shadowRoot.appendChild(style);
+  }
+
+  /**
+   * 背景描画用レイヤーを作成
+   */
+  private ensureBackgroundOverlay(): void {
+    if (!this.shadowRoot) return;
+
+    if (this.backgroundOverlay && this.shadowRoot.contains(this.backgroundOverlay)) {
+      return;
+    }
+
+    let overlay: HTMLElement | null = this.shadowRoot.getElementById('bg-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'bg-overlay';
+      this.shadowRoot.prepend(overlay);
+    }
+
+    this.backgroundOverlay = overlay;
+  }
+
+  /**
+   * Shadow DOM関連の初期化をまとめて実行
+   */
+  private ensureShadowInfrastructure(): void {
+    this.createShadowDOM();
+    this.injectCSS();
+    this.ensureBackgroundOverlay();
   }
 
   /**
    * ラジアルセレクター作成（Shadow Root内）
    */
   private async createRadialSelector(): Promise<void> {
+    this.ensureShadowInfrastructure();
     if (!this.shadowRoot) return;
 
     // 既存のセレクターを削除
@@ -452,6 +494,17 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
   }
 
   /**
+   * 背景画像の実際の反映を統一管理
+   */
+  private updateBackgroundImage(backgroundValue: string): void {
+    this.ensureShadowInfrastructure();
+    document.documentElement.style.setProperty("--bg-img", backgroundValue);
+    if (this.backgroundOverlay) {
+      this.backgroundOverlay.style.removeProperty('background-image');
+    }
+  }
+
+  /**
    * ホイールコントロール設定
    */
   private setupWheelControls(wheel: HTMLDivElement): void {
@@ -521,8 +574,8 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       return;
     }
     
-    // 【最優先】CSS変数を即座に設定（視覚的変更を最速で適用）
-    document.documentElement.style.setProperty("--bg-img", backgroundValue);
+    // 【最優先】Shadow DOM背景へ即座に反映
+    this.updateBackgroundImage(backgroundValue);
     
     // データベース更新は非同期で後から実行（視覚的変更を妨げない）
     this.backgroundSettings.setSelectedImage(imageItem.id, false).catch(error => {
@@ -574,29 +627,12 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
         /*background-position*/
         --bg-pos: center;
         /*repeat-x, repeat-y, repeat, space, round, no-repeat*/
-        /*background-repeat*/
         --bg-rep: no-repeat;
         /*cover, contain, width, width height, multiple images*/
-        /*background-size*/
         --bg-siz: cover;
       }
-
-      /*-------------------------
-       * 背景画像適用（bodyに対して）
-       *-------------------------*/
-      body {
-        background-attachment: var(--bg-att) !important;
-        background-blend-mode: var(--bg-bl-m) !important;
-        background-clip: var(--bg-cl) !important;
-        background-color: var(--bg-col) !important;
-        background-image: var(--bg-img) !important;
-        background-origin: var(--bg-org) !important;
-        background-position: var(--bg-pos) !important;
-        background-repeat: var(--bg-rep) !important;
-        background-size: var(--bg-siz) !important;
-      }
     `;
-    
+
     document.head.appendChild(style);
   }
 
@@ -615,8 +651,8 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       return;
     }
     
-    // CSS変数を即座に設定（非同期処理なし）
-    document.documentElement.style.setProperty("--bg-img", backgroundValue);
+    // Shadow DOM背景へ即座に反映（非同期処理なし）
+    this.updateBackgroundImage(backgroundValue);
     
     
   }
@@ -633,11 +669,8 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
    * Shadow DOMとUI要素の初期化（分離）
    */
   private async initializeShadowDOMAndUI(): Promise<void> {
-    // Shadow DOM作成
-    this.createShadowDOM();
-
-    // CSS統合注入（Shadow Root内）
-    this.injectCSS();
+    // Shadow DOMと背景レイヤーを確実に用意
+    this.ensureShadowInfrastructure();
 
     // ラジアルセレクター作成（Shadow Root内）
     await this.createRadialSelector();
@@ -799,7 +832,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
           } else {
             return;
           }
-          document.documentElement.style.setProperty("--bg-img", backgroundValue);
+          this.updateBackgroundImage(backgroundValue);
         }
       })();
       

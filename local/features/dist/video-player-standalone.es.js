@@ -56401,6 +56401,7 @@ class WatchBackgroundSelectorModule {
     this.shadowRoot = null;
     this.radialContainer = null;
     this.settingsContainer = null;
+    this.backgroundOverlay = null;
     this._isActive = false;
     this.eventListeners = [];
     this.config = config;
@@ -56419,6 +56420,7 @@ class WatchBackgroundSelectorModule {
         return;
       }
       this.injectGlobalBackgroundCSS();
+      this.ensureShadowInfrastructure();
       await this.backgroundSettings.initializeSettings();
       const selectedImage = await this.backgroundSettings.getSelectedImage();
       if (selectedImage) {
@@ -56446,6 +56448,7 @@ class WatchBackgroundSelectorModule {
       this.shadowRoot = null;
       this.radialContainer = null;
       this.settingsContainer = null;
+      this.backgroundOverlay = null;
     }
     const globalStyleElement = document.getElementById("watch-background-global-styles");
     if (globalStyleElement) {
@@ -56484,9 +56487,12 @@ class WatchBackgroundSelectorModule {
    * Shadow DOM作成
    */
   createShadowDOM() {
+    if (this.shadowHost && this.shadowRoot) {
+      return;
+    }
     this.shadowHost = document.createElement("div");
     this.shadowHost.id = "watch-background-selector-shadow-host";
-    this.shadowHost.style.cssText = "position: fixed; pointer-events: none; z-index: 1000;";
+    this.shadowHost.style.cssText = "position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1000;";
     this.shadowRoot = this.shadowHost.attachShadow({ mode: "closed" });
     document.body.appendChild(this.shadowHost);
   }
@@ -56495,7 +56501,12 @@ class WatchBackgroundSelectorModule {
    */
   injectCSS() {
     if (!this.shadowRoot) return;
-    const style = document.createElement("style");
+    let style = this.shadowRoot.getElementById("watch-background-selector-style");
+    if (!style) {
+      style = document.createElement("style");
+      style.id = "watch-background-selector-style";
+      this.shadowRoot.appendChild(style);
+    }
     style.textContent = `
       @charset "utf-8";
 
@@ -56503,36 +56514,35 @@ class WatchBackgroundSelectorModule {
        * Shadow DOM内の背景セレクタースタイル
        *-------------------------*/
       
-      /* ホスト要素（外部から見えるCSS変数を設定） */
+      /* ホスト要素 */
       :host {
-        /*scroll, fixed, local*/
-        /*background-attachment*/
-        --bg-att: fixed;
-        /*normal, multiply, screen, overlay, darken, lighten, color-dodge, color-burn, hard-light,*/
-        /*soft-light, difference, exclusion, hue, saturation, color, luminosity*/
-        /*background-blend-mode*/
-        --bg-bl-m: normal;
-        /*border-box, padding-box, content-box, text*/
-        /*background-clip*/
-        --bg-cl: initial;
-        /*color keywords, rgb, hex, hsl, currentcolor, transparent*/
-        /*background-color*/
-        --bg-col: black;
-        /*url, gradient, element, image, cross-fade, image-set*/
-        /*background-image*/
-        --bg-img: initial;
-        /*border-box, padding-box, content-box*/
-        /*background-origin*/
-        --bg-org: initial;
-        /*top, bottom, left, right, center, percentage, length, multiple images, offsets*/
-        /*background-position*/
-        --bg-pos: center;
-        /*repeat-x, repeat-y, repeat, space, round, no-repeat*/
-        /*background-repeat*/
-        --bg-rep: no-repeat;
-        /*cover, contain, width, width height, multiple images*/
-        /*background-size*/
-        --bg-siz: cover;
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1000;
+        display: block;
+      }
+
+      /* 背景描画レイヤー */
+      #bg-overlay {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        background-attachment: var(--bg-att, fixed);
+        background-blend-mode: var(--bg-bl-m, normal);
+        background-clip: var(--bg-cl, initial);
+        background-color: var(--bg-col, black);
+        background-image: var(--bg-img, initial);
+        background-origin: var(--bg-org, initial);
+        background-position: var(--bg-pos, center);
+        background-repeat: var(--bg-rep, no-repeat);
+        background-size: var(--bg-siz, cover);
+        transition: background-image 0.3s ease-in-out;
+        z-index: 0;
       }
 
       /*-------------------------
@@ -56653,12 +56663,36 @@ class WatchBackgroundSelectorModule {
         background: rgba(255, 255, 255, 0.5);
       }
     `;
-    this.shadowRoot.appendChild(style);
+  }
+  /**
+   * 背景描画用レイヤーを作成
+   */
+  ensureBackgroundOverlay() {
+    if (!this.shadowRoot) return;
+    if (this.backgroundOverlay && this.shadowRoot.contains(this.backgroundOverlay)) {
+      return;
+    }
+    let overlay = this.shadowRoot.getElementById("bg-overlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "bg-overlay";
+      this.shadowRoot.prepend(overlay);
+    }
+    this.backgroundOverlay = overlay;
+  }
+  /**
+   * Shadow DOM関連の初期化をまとめて実行
+   */
+  ensureShadowInfrastructure() {
+    this.createShadowDOM();
+    this.injectCSS();
+    this.ensureBackgroundOverlay();
   }
   /**
    * ラジアルセレクター作成（Shadow Root内）
    */
   async createRadialSelector() {
+    this.ensureShadowInfrastructure();
     if (!this.shadowRoot) return;
     const existing = this.shadowRoot.getElementById("bg-radial-container");
     if (existing) {
@@ -56748,6 +56782,16 @@ class WatchBackgroundSelectorModule {
     });
   }
   /**
+   * 背景画像の実際の反映を統一管理
+   */
+  updateBackgroundImage(backgroundValue) {
+    this.ensureShadowInfrastructure();
+    document.documentElement.style.setProperty("--bg-img", backgroundValue);
+    if (this.backgroundOverlay) {
+      this.backgroundOverlay.style.removeProperty("background-image");
+    }
+  }
+  /**
    * ホイールコントロール設定
    */
   setupWheelControls(wheel) {
@@ -56806,7 +56850,7 @@ class WatchBackgroundSelectorModule {
       window.logger.error("[WatchBackgroundSelectorModule] 不明な画像タイプ:", imageItem.type);
       return;
     }
-    document.documentElement.style.setProperty("--bg-img", backgroundValue);
+    this.updateBackgroundImage(backgroundValue);
     this.backgroundSettings.setSelectedImage(imageItem.id, false).catch((error) => {
       window.logger.error("[WatchBackgroundSelectorModule] 背景選択の保存に失敗:", error);
     });
@@ -56851,26 +56895,9 @@ class WatchBackgroundSelectorModule {
         /*background-position*/
         --bg-pos: center;
         /*repeat-x, repeat-y, repeat, space, round, no-repeat*/
-        /*background-repeat*/
         --bg-rep: no-repeat;
         /*cover, contain, width, width height, multiple images*/
-        /*background-size*/
         --bg-siz: cover;
-      }
-
-      /*-------------------------
-       * 背景画像適用（bodyに対して）
-       *-------------------------*/
-      body {
-        background-attachment: var(--bg-att) !important;
-        background-blend-mode: var(--bg-bl-m) !important;
-        background-clip: var(--bg-cl) !important;
-        background-color: var(--bg-col) !important;
-        background-image: var(--bg-img) !important;
-        background-origin: var(--bg-org) !important;
-        background-position: var(--bg-pos) !important;
-        background-repeat: var(--bg-rep) !important;
-        background-size: var(--bg-siz) !important;
       }
     `;
     document.head.appendChild(style);
@@ -56888,7 +56915,7 @@ class WatchBackgroundSelectorModule {
       window.logger.error("[WatchBackgroundSelectorModule] 不明な画像タイプ:", imageItem.type);
       return;
     }
-    document.documentElement.style.setProperty("--bg-img", backgroundValue);
+    this.updateBackgroundImage(backgroundValue);
   }
   /**
    * 背景設定イベントリスナーの初期化（分離）
@@ -56901,8 +56928,7 @@ class WatchBackgroundSelectorModule {
    * Shadow DOMとUI要素の初期化（分離）
    */
   async initializeShadowDOMAndUI() {
-    this.createShadowDOM();
-    this.injectCSS();
+    this.ensureShadowInfrastructure();
     await this.createRadialSelector();
   }
   /**
@@ -57034,7 +57060,7 @@ class WatchBackgroundSelectorModule {
           } else {
             return;
           }
-          document.documentElement.style.setProperty("--bg-img", backgroundValue);
+          this.updateBackgroundImage(backgroundValue);
         }
       })();
     };
