@@ -8,4 +8,5 @@ export default createConfigTemplate({
   name: 'comment-filter2',
   formats: ['es'],
   exclude: [],
+  base: './',
 });

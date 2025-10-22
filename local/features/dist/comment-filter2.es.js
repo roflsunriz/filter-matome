@@ -2457,7 +2457,7 @@ function prepareRules(rules, currentSmid, regexCache) {
     }
     if (rule.regex) {
       const flags = rule.regexFlags || "gi";
-      preparedRule.compiledRegex = getRegex(regexCache, rule.regex, flags);
+      preparedRule.compiledRegex = getRegex$1(regexCache, rule.regex, flags);
       if (isPlainLiteralPattern(rule.regex)) {
         const isCaseSensitive = !flags.includes("i");
         substringMatcher.add(rule.regex, index, isCaseSensitive);
@@ -2487,7 +2487,7 @@ function filterThread({
   const logs = [];
   const threadContext = buildThreadProcessingContext(thread.comments, preparedRules);
   const comments = thread.comments.map(
-    (comment) => applyRulesToComment({
+    (comment) => applyRulesToComment$1({
       originalComment: comment,
       preparedRules,
       threadContext,
@@ -2541,7 +2541,7 @@ function isCommandOfType(command, commandType) {
   const lowerCommand = command.toLowerCase();
   return categoryCommands.includes(lowerCommand);
 }
-function normalizeCommands(commands) {
+function normalizeCommands$1(commands) {
   if (!commands) {
     return [];
   }
@@ -2566,7 +2566,7 @@ function buildThreadProcessingContext(comments, preparedRules) {
     nicoruIneligibleRuleIndexes
   };
 }
-function applyRulesToComment({
+function applyRulesToComment$1({
   originalComment,
   preparedRules,
   threadContext,
@@ -2577,7 +2577,7 @@ function applyRulesToComment({
   logCollector
 }) {
   const processedComment = { ...originalComment };
-  processedComment.commands = normalizeCommands(processedComment.commands);
+  processedComment.commands = normalizeCommands$1(processedComment.commands);
   if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
     processedComment.isPremium = true;
   }
@@ -2671,7 +2671,7 @@ function applyRulesToComment({
   }
   if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
     if (!ruleApplied || hasEmptyNicoruRule) {
-      processedComment.commands = applyForkCommandSettings(processedComment.commands, threadFork, settings);
+      processedComment.commands = applyForkCommandSettings$1(processedComment.commands, threadFork, settings);
     }
   }
   if (commandsToAdd.length > 0) {
@@ -2711,7 +2711,7 @@ function applyRegexRule(text, rule, cache, compiledRegex) {
       replacedText: text
     };
   }
-  const regex = compiledRegex ?? getRegex(cache, rule.regex, rule.regexFlags || "gi");
+  const regex = compiledRegex ?? getRegex$1(cache, rule.regex, rule.regexFlags || "gi");
   const matched = regex.test(text);
   if (!matched) {
     if (regex.global) {
@@ -2737,7 +2737,7 @@ function applyRegexRule(text, rule, cache, compiledRegex) {
     replacedText
   };
 }
-function getRegex(cache, pattern, flags = "gi") {
+function getRegex$1(cache, pattern, flags = "gi") {
   const cacheKey = `${pattern}:::${flags}`;
   if (cache.has(cacheKey)) {
     return cache.get(cacheKey);
@@ -2758,11 +2758,11 @@ function getCommandType(command) {
   }
   return null;
 }
-function applyForkCommandSettings(commands, threadFork, settings) {
+function applyForkCommandSettings$1(commands, threadFork, settings) {
   if (!settings?.commandSettings) {
     return sanitizeCommentCommands(commands);
   }
-  const allowedCommands = getAllowedCommandsForFork(threadFork, settings);
+  const allowedCommands = getAllowedCommandsForFork$1(threadFork, settings);
   const sanitizedCommands = sanitizeCommentCommands(commands);
   const filteredCommands = sanitizedCommands.filter((command) => {
     if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
@@ -2772,7 +2772,7 @@ function applyForkCommandSettings(commands, threadFork, settings) {
   });
   return filteredCommands;
 }
-function getAllowedCommandsForFork(threadFork, settings) {
+function getAllowedCommandsForFork$1(threadFork, settings) {
   switch (threadFork) {
     case CONSTANTS.FORK_TYPES.OWNER:
       return settings.commandSettings.owner;
@@ -2794,6 +2794,8 @@ function chunkThreads(threads, chunkSize) {
   }
   return result;
 }
+
+const commentWorkerUrl = ""+new URL('assets/comment-filter-worker-DCXOyoFW.js', import.meta.url).href+"";
 
 class CommentFilter {
   constructor(debugMode = false) {
@@ -2911,14 +2913,35 @@ class CommentFilter {
   }
   runWorker(payload) {
     return new Promise((resolve, reject) => {
-      const worker = new Worker(new URL(/* @vite-ignore */ "/assets/comment-filter-worker-DCXOyoFW.js", import.meta.url), { type: "module" });
+      console.info("[CommentFilter2] Comment worker URL:", commentWorkerUrl);
+      const worker = new Worker(commentWorkerUrl, { type: "module" });
       worker.onmessage = (event) => {
         resolve(event.data.payload);
         worker.terminate();
       };
       worker.onerror = (event) => {
         worker.terminate();
-        const reason = event instanceof ErrorEvent ? event.error instanceof Error ? event.error : new Error(event.message) : new Error(String(event));
+        let reason = new Error("Worker error (unknown)");
+        if (event instanceof ErrorEvent) {
+          const errorValue = event.error;
+          console.error("[CommentFilter2] Comment worker error", {
+            message: event.message,
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+            error: errorValue
+          });
+          if (errorValue instanceof Error) {
+            reason = errorValue;
+          } else if (event.message) {
+            reason = new Error(event.message);
+          } else {
+            reason = new Error(`Worker error at ${event.filename ?? "unknown source"}:${event.lineno ?? 0}`);
+          }
+        } else {
+          console.error("[CommentFilter2] Comment worker error (non ErrorEvent)", event);
+          reason = new Error("Worker error (non ErrorEvent)");
+        }
         reject(reason);
       };
       const message = {
@@ -3029,12 +3052,393 @@ class CommentFilter {
     return removeCommandsOfType(commands, commandType);
   }
   normalizeCommands(commands) {
-    return normalizeCommands(commands);
+    return normalizeCommands$1(commands);
   }
 }
 
+function prepareJsonRules(rules, currentSmid, regexCache) {
+  const preparedRules = [];
+  const userIdRuleIndexes = /* @__PURE__ */ new Map();
+  const substringMatcher = new SubstringMatcher();
+  let hasLiteralPatterns = false;
+  for (const rule of rules) {
+    if (rule.enabled === false) {
+      continue;
+    }
+    if (!checkSmidCondition(rule.smid, currentSmid)) {
+      continue;
+    }
+    const index = preparedRules.length;
+    const isUserRule = Boolean(rule.userId && rule.userId.length > 0);
+    const preparedRule = {
+      rule,
+      index,
+      compiledRegex: void 0,
+      isUserRule,
+      hasLiteralPrefilter: false,
+      normalizedNicoruCond: normalizeNicoruCondition(rule.nicoru_cond)
+    };
+    if (isUserRule && rule.userId) {
+      const bucket = userIdRuleIndexes.get(rule.userId) ?? [];
+      bucket.push(index);
+      userIdRuleIndexes.set(rule.userId, bucket);
+    }
+    if (rule.pattern) {
+      const flags = rule.flags || "gi";
+      preparedRule.compiledRegex = getRegex(regexCache, rule.pattern, flags);
+      if (isPlainLiteralPattern(rule.pattern)) {
+        const isCaseSensitive = !flags.includes("i");
+        substringMatcher.add(rule.pattern, index, isCaseSensitive);
+        preparedRule.hasLiteralPrefilter = true;
+        hasLiteralPatterns = true;
+      }
+    }
+    preparedRules.push(preparedRule);
+  }
+  if (hasLiteralPatterns) {
+    substringMatcher.build();
+  }
+  return {
+    rules: preparedRules,
+    userIdRuleIndexes,
+    substringMatcher: hasLiteralPatterns ? substringMatcher : null,
+    needsLowercase: hasLiteralPatterns ? substringMatcher.needsLowercaseText() : false
+  };
+}
+function filterJsonThread({
+  thread,
+  preparedRules,
+  settings,
+  regexCache
+}) {
+  const logs = [];
+  const threadContext = buildJsonThreadContext(thread.comments, preparedRules);
+  const comments = thread.comments.map(
+    (comment) => applyRulesToComment({
+      originalComment: comment,
+      preparedRules,
+      threadContext,
+      threadFork: thread.fork,
+      commandSettings: settings?.commandSettings ?? null,
+      regexCache,
+      logCollector: logs
+    })
+  ).filter((comment) => comment !== null);
+  return {
+    comments,
+    logs
+  };
+}
+function applyRulesToComment({
+  originalComment,
+  preparedRules,
+  threadContext,
+  threadFork,
+  commandSettings,
+  regexCache,
+  logCollector
+}) {
+  const processedComment = { ...originalComment };
+  processedComment.commands = normalizeCommands(processedComment.commands);
+  if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
+    processedComment.isPremium = true;
+  }
+  let ruleApplied = false;
+  let shouldHideComment = false;
+  let shouldApplyCommands = true;
+  let appliedRule = null;
+  const userRuleIndexes = preparedRules.userIdRuleIndexes.get(originalComment.userId) ?? [];
+  const activeUserRuleIndexes = new Set(userRuleIndexes);
+  const matcher = preparedRules.substringMatcher;
+  const originalBody = originalComment.body ?? "";
+  const lowercaseBody = preparedRules.needsLowercase ? originalBody.toLocaleLowerCase() : void 0;
+  const literalCandidateIndexes = matcher ? new Set(matcher.match(originalBody, lowercaseBody)) : /* @__PURE__ */ new Set();
+  for (const preparedRule of preparedRules.rules) {
+    const rule = preparedRule.rule;
+    if (threadContext.nicoruIneligibleRuleIndexes.has(preparedRule.index)) {
+      continue;
+    }
+    if (preparedRule.isUserRule) {
+      if (!activeUserRuleIndexes.has(preparedRule.index)) {
+        continue;
+      }
+    } else if (rule.pattern) {
+      if (preparedRule.hasLiteralPrefilter && !literalCandidateIndexes.has(preparedRule.index)) {
+        continue;
+      }
+      const reusableRegex = preparedRule.compiledRegex ?? getRegex(regexCache, rule.pattern, rule.flags || "gi");
+      if (reusableRegex.global) {
+        reusableRegex.lastIndex = 0;
+      }
+      if (!reusableRegex.test(originalBody)) {
+        continue;
+      }
+      if (reusableRegex.global) {
+        reusableRegex.lastIndex = 0;
+      }
+    } else {
+      continue;
+    }
+    const nicoruOk = evaluateNicoruCondition(preparedRule.normalizedNicoruCond, originalComment.nicoruCount);
+    if (!nicoruOk) {
+      continue;
+    }
+    appliedRule = rule;
+    ruleApplied = true;
+    const actionResult = executeAction(rule.action, processedComment.body, rule, preparedRule.compiledRegex ?? getRegex(regexCache, rule.pattern ?? "", rule.flags || "gi"));
+    logCollector.push({
+      comment: originalComment,
+      rule,
+      hidden: actionResult.type === "hide"
+    });
+    if (actionResult.type === "hide") {
+      shouldHideComment = true;
+      processedComment.body = "";
+      processedComment.commands.push("invisible");
+      break;
+    }
+    if (actionResult.type === "replace" && actionResult.newText !== void 0) {
+      processedComment.body = actionResult.newText;
+    }
+  }
+  if (shouldHideComment) {
+    processedComment.body = "";
+    if (!processedComment.commands.includes("invisible")) {
+      processedComment.commands.push("invisible");
+    }
+  }
+  if (ruleApplied && appliedRule?.nicoru_cond?.mode === "exclude") {
+    shouldApplyCommands = false;
+  }
+  if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
+    processedComment.commands = applyForkCommandSettings(processedComment.commands, threadFork, shouldApplyCommands, commandSettings);
+  } else if (shouldApplyCommands) {
+    processedComment.commands = sanitizeCommentCommands(processedComment.commands);
+  }
+  if (ruleApplied) {
+    processedComment.body = sanitizeCommentBody(processedComment.body);
+  }
+  return processedComment;
+}
+function normalizeNicoruCondition(cond) {
+  if (!cond) {
+    return void 0;
+  }
+  const modeValue = (cond.mode ?? "exclude").toString().trim().toLowerCase();
+  const mode = modeValue === "include" ? "include" : "exclude";
+  if (cond.op === "range") {
+    if (!Array.isArray(cond.value) || cond.value.length !== 2) {
+      return void 0;
+    }
+    const start = toNumber(cond.value[0]);
+    const end = toNumber(cond.value[1]);
+    if (start === null || end === null) {
+      return void 0;
+    }
+    const normalizedStart = Math.min(start, end);
+    const normalizedEnd = Math.max(start, end);
+    return {
+      op: "range",
+      mode,
+      value: normalizedStart,
+      rangeEnd: normalizedEnd,
+      isValid: true
+    };
+  }
+  const numericValue = toNumber(cond.value);
+  if (numericValue === null) {
+    return void 0;
+  }
+  return {
+    op: cond.op,
+    mode,
+    value: numericValue,
+    isValid: true
+  };
+}
+function buildJsonThreadContext(comments, preparedRules) {
+  const nicoruStats = computeThreadNicoruStats(comments);
+  const nicoruIneligibleRuleIndexes = /* @__PURE__ */ new Set();
+  for (const preparedRule of preparedRules.rules) {
+    const normalized = preparedRule.normalizedNicoruCond;
+    if (!normalized) {
+      continue;
+    }
+    const { canBeMet, canBeUnmet } = evaluateNicoruPossibility(normalized, nicoruStats);
+    const shouldInclude = normalized.mode === "include" ? canBeMet : canBeUnmet;
+    if (!shouldInclude) {
+      nicoruIneligibleRuleIndexes.add(preparedRule.index);
+    }
+  }
+  return {
+    nicoruStats,
+    nicoruIneligibleRuleIndexes
+  };
+}
+function checkSmidCondition(smids, currentSmid) {
+  if (smids.includes("ALL")) {
+    return true;
+  }
+  return currentSmid ? smids.includes(currentSmid) : false;
+}
+function evaluateNicoruPossibility(cond, stats) {
+  const total = stats.totalComments;
+  if (total === 0) {
+    return { canBeMet: false, canBeUnmet: false };
+  }
+  switch (cond.op) {
+    case "=": {
+      const metCount = stats.countsByValue.get(cond.value) ?? 0;
+      return {
+        canBeMet: metCount > 0,
+        canBeUnmet: metCount < total
+      };
+    }
+    case ">": {
+      const canBeMet = stats.maxNicoru > cond.value;
+      const canBeUnmet = stats.minNicoru <= cond.value;
+      return { canBeMet, canBeUnmet };
+    }
+    case "<": {
+      const canBeMet = stats.minNicoru < cond.value;
+      const canBeUnmet = stats.maxNicoru >= cond.value;
+      return { canBeMet, canBeUnmet };
+    }
+    case ">=": {
+      const canBeMet = stats.maxNicoru >= cond.value;
+      const canBeUnmet = stats.minNicoru < cond.value;
+      return { canBeMet, canBeUnmet };
+    }
+    case "<=": {
+      const canBeMet = stats.minNicoru <= cond.value;
+      const canBeUnmet = stats.maxNicoru > cond.value;
+      return { canBeMet, canBeUnmet };
+    }
+    case "range": {
+      const start = cond.value;
+      const end = cond.rangeEnd ?? cond.value;
+      let metCount = 0;
+      for (const value of stats.sortedValues) {
+        if (value < start) {
+          continue;
+        }
+        if (value > end) {
+          break;
+        }
+        metCount += stats.countsByValue.get(value) ?? 0;
+      }
+      return {
+        canBeMet: metCount > 0,
+        canBeUnmet: metCount < total
+      };
+    }
+    default:
+      return { canBeMet: true, canBeUnmet: true };
+  }
+}
+function evaluateNicoruCondition(cond, commentNicoruCount) {
+  if (!cond || !cond.isValid) {
+    return true;
+  }
+  const numericValue = toNumber(commentNicoruCount) ?? 0;
+  switch (cond.op) {
+    case "=":
+      return numericValue === cond.value;
+    case ">":
+      return numericValue > cond.value;
+    case "<":
+      return numericValue < cond.value;
+    case ">=":
+      return numericValue >= cond.value;
+    case "<=":
+      return numericValue <= cond.value;
+    case "range":
+      return cond.rangeEnd !== void 0 && numericValue >= cond.value && numericValue <= cond.rangeEnd;
+    default:
+      return true;
+  }
+}
+function executeAction(action, text, rule, compiledRegex) {
+  if (action.type === "hide") {
+    return { type: "hide" };
+  }
+  if (action.type === "replace" && rule.pattern) {
+    const regex = compiledRegex;
+    if (regex.global) {
+      regex.lastIndex = 0;
+    }
+    const newText = text.replace(regex, action.replacement);
+    if (regex.global) {
+      regex.lastIndex = 0;
+    }
+    return { type: "replace", newText };
+  }
+  return { type: "none" };
+}
+function applyForkCommandSettings(commands, threadFork, shouldApplyCommands, commandSettings) {
+  if (!shouldApplyCommands) {
+    return sanitizeCommentCommands(commands);
+  }
+  if (!commandSettings) {
+    return sanitizeCommentCommands(commands);
+  }
+  const allowedCommands = getAllowedCommandsForFork(threadFork, commandSettings);
+  const sanitizedCommands = sanitizeCommentCommands(commands);
+  return sanitizedCommands.filter((command) => {
+    if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
+      return true;
+    }
+    return allowedCommands.includes(command.toLowerCase());
+  });
+}
+function getAllowedCommandsForFork(threadFork, commandSettings) {
+  switch (threadFork) {
+    case CONSTANTS.FORK_TYPES.OWNER:
+      return commandSettings.owner;
+    case CONSTANTS.FORK_TYPES.MAIN:
+      return commandSettings.main;
+    case CONSTANTS.FORK_TYPES.EASY:
+      return commandSettings.easy;
+    default:
+      return [];
+  }
+}
+function normalizeCommands(commands) {
+  if (!commands) {
+    return [];
+  }
+  if (Array.isArray(commands)) {
+    return commands.filter((cmd) => cmd !== null && cmd !== void 0 && cmd !== "").map((cmd) => String(cmd).trim()).filter((cmd) => cmd.length > 0);
+  }
+  if (typeof commands === "string") {
+    return commands.trim().split(/\s+/).filter((cmd) => cmd.length > 0);
+  }
+  return [];
+}
+function getRegex(cache, pattern, flags) {
+  const cacheKey = `${pattern}:::${flags}`;
+  if (cache.has(cacheKey)) {
+    return cache.get(cacheKey);
+  }
+  const regex = new RegExp(pattern, flags);
+  cache.set(cacheKey, regex);
+  return regex;
+}
+function toNumber(value) {
+  if (typeof value === "number") {
+    return value;
+  }
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+  return null;
+}
+
+const jsonWorkerUrl = ""+new URL('assets/json-comment-filter-worker-BmGkxRux.js', import.meta.url).href+"";
+
+const jsonCommentWorkerUrl = new URL(jsonWorkerUrl, import.meta.url);
 class JsonCommentFilter {
-  // フィルターログの蓄積用
   constructor(debugMode = false) {
     this.regexCache = /* @__PURE__ */ new Map();
     this.debugMode = false;
@@ -3042,17 +3446,11 @@ class JsonCommentFilter {
     this.filterLogs = [];
     this.debugMode = debugMode;
   }
-  /**
-   * 設定を更新
-   */
   updateSettings(settings) {
     this.settings = settings;
     this.debugMode = settings.debugMode;
     FilterLogger.setLogSendingEnabled(settings?.logToCommentFilterLogger || false);
   }
-  /**
-   * メインのフィルタリング処理（JSON形式ルール対応）
-   */
   async applyFilters(rules, currentSmid) {
     await Promise.resolve();
     const globalData = this.getGlobalData();
@@ -3067,13 +3465,31 @@ class JsonCommentFilter {
       if (this.debugMode) {
         window.logger?.debug("[CommentFilter2] Starting JSON filtering with rules:", {
           totalRules: rules.length,
-          userIdRules: rules.filter((r) => r.userId),
-          regexRules: rules.filter((r) => r.pattern),
+          userIdRules: rules.filter((rule) => Boolean(rule.userId)),
+          regexRules: rules.filter((rule) => Boolean(rule.pattern)),
           currentSmid
         });
       }
-      const preparedRules = this.prepareRules(rules, currentSmid);
-      const filteredData = this.processCommentData(globalData.originalData, preparedRules, currentSmid);
+      let filteredData;
+      if (this.shouldUseWorker(globalData.originalData.data.threads)) {
+        try {
+          filteredData = await this.processCommentDataWithWorkers(globalData.originalData, rules, currentSmid);
+        } catch (workerError) {
+          const reason = workerError instanceof Error ? workerError : new Error(String(workerError));
+          if (reason instanceof Error) {
+            window.logger?.warn("[CommentFilter2] JSON worker failed, falling back to main thread:", reason, reason.stack);
+          } else if (typeof reason === "object" && reason !== null) {
+            window.logger?.warn("[CommentFilter2] JSON worker failed, falling back to main thread:", JSON.stringify(reason, Object.getOwnPropertyNames(reason)));
+          } else {
+            window.logger?.warn("[CommentFilter2] JSON worker failed, falling back to main thread:", String(reason));
+          }
+          const preparedRules = this.prepareRules(rules, currentSmid);
+          filteredData = this.processCommentData(globalData.originalData, preparedRules, currentSmid);
+        }
+      } else {
+        const preparedRules = this.prepareRules(rules, currentSmid);
+        filteredData = this.processCommentData(globalData.originalData, preparedRules, currentSmid);
+      }
       globalData.filteredData = filteredData;
       if (this.debugMode) {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
@@ -3087,14 +3503,20 @@ class JsonCommentFilter {
       return globalData.originalData;
     }
   }
-  /**
-   * コメントデータ全体を処理
-   */
   processCommentData(data, preparedRules, currentSmid) {
-    const processedThreads = data.data.threads.map((thread) => ({
-      ...thread,
-      comments: this.filterCommentsInThread(thread.comments, preparedRules, currentSmid, thread.fork)
-    }));
+    const processedThreads = data.data.threads.map((thread) => {
+      const { comments, logs } = filterJsonThread({
+        thread,
+        preparedRules,
+        settings: this.settings,
+        regexCache: this.regexCache
+      });
+      this.captureLogEvents(logs, currentSmid);
+      return {
+        ...thread,
+        comments
+      };
+    });
     return {
       ...data,
       data: {
@@ -3103,494 +3525,101 @@ class JsonCommentFilter {
       }
     };
   }
-  /**
-   * JSONルールの事前準備
-   */
-  prepareRules(rules, currentSmid) {
-    const preparedRules = [];
-    const userIdRuleIndexes = /* @__PURE__ */ new Map();
-    const substringMatcher = new SubstringMatcher();
-    let hasLiteralPatterns = false;
-    for (const rule of rules) {
-      if (rule.enabled === false) {
-        continue;
-      }
-      if (!this.checkSmidCondition(rule.smid, currentSmid)) {
-        continue;
-      }
-      const index = preparedRules.length;
-      const isUserRule = !rule.pattern && Boolean(rule.userId);
-      const preparedRule = {
-        rule,
-        index,
-        compiledRegex: void 0,
-        isUserRule,
-        hasLiteralPrefilter: false,
-        normalizedNicoruCond: void 0
-      };
-      if (isUserRule && rule.userId) {
-        const bucket = userIdRuleIndexes.get(rule.userId) ?? [];
-        bucket.push(index);
-        userIdRuleIndexes.set(rule.userId, bucket);
-      }
-      if (rule.pattern) {
-        const flags = rule.flags || "gi";
-        preparedRule.compiledRegex = this.getRegex(rule.pattern, flags);
-        if (isPlainLiteralPattern(rule.pattern)) {
-          const isCaseSensitive = !flags.includes("i");
-          substringMatcher.add(rule.pattern, index, isCaseSensitive);
-          preparedRule.hasLiteralPrefilter = true;
-          hasLiteralPatterns = true;
-        }
-      }
-      const normalizedNicoruCond = this.normalizeNicoruCondition(rule.nicoru_cond);
-      if (normalizedNicoruCond) {
-        preparedRule.normalizedNicoruCond = normalizedNicoruCond;
-      }
-      preparedRules.push(preparedRule);
-    }
-    if (hasLiteralPatterns) {
-      substringMatcher.build();
-    }
-    return {
-      rules: preparedRules,
-      userIdRuleIndexes,
-      substringMatcher: hasLiteralPatterns ? substringMatcher : null,
-      needsLowercase: hasLiteralPatterns ? substringMatcher.needsLowercaseText() : false
-    };
-  }
-  normalizeNicoruCondition(cond) {
-    if (!cond) {
-      return null;
-    }
-    const modeValue = (cond.mode ?? "exclude").toString().trim().toLowerCase();
-    const mode = modeValue === "include" ? "include" : "exclude";
-    if (cond.op === "range") {
-      if (!Array.isArray(cond.value) || cond.value.length !== 2) {
-        return null;
-      }
-      const start = this.toNumber(cond.value[0]);
-      const end = this.toNumber(cond.value[1]);
-      if (start === null || end === null) {
-        return null;
-      }
-      const normalizedStart = Math.min(start, end);
-      const normalizedEnd = Math.max(start, end);
-      return {
-        op: "range",
-        mode,
-        value: normalizedStart,
-        rangeEnd: normalizedEnd,
-        isValid: true
-      };
-    }
-    const numericValue = this.toNumber(cond.value);
-    if (numericValue === null) {
-      return null;
-    }
-    return {
-      op: cond.op,
-      mode,
-      value: numericValue,
-      isValid: true
-    };
-  }
-  buildThreadProcessingContext(comments, preparedRules) {
-    const nicoruStats = computeThreadNicoruStats(comments);
-    const nicoruIneligibleRuleIndexes = /* @__PURE__ */ new Set();
-    for (const preparedRule of preparedRules.rules) {
-      if (!this.isRuleEligibleForThread(preparedRule, nicoruStats)) {
-        nicoruIneligibleRuleIndexes.add(preparedRule.index);
-      }
-    }
-    return {
-      nicoruStats,
-      nicoruIneligibleRuleIndexes
-    };
-  }
-  isRuleEligibleForThread(preparedRule, stats) {
-    const normalized = preparedRule.normalizedNicoruCond;
-    if (!normalized || !normalized.isValid) {
-      return true;
-    }
-    const { canBeMet, canBeUnmet } = this.evaluateNicoruConditionPossibility(normalized, stats);
-    return normalized.mode === "include" ? canBeMet : canBeUnmet;
-  }
-  evaluateNicoruConditionPossibility(cond, stats) {
-    const total = stats.totalComments;
-    if (total === 0) {
-      return { canBeMet: false, canBeUnmet: false };
-    }
-    switch (cond.op) {
-      case "=": {
-        const metCount = stats.countsByValue.get(cond.value) ?? 0;
-        return {
-          canBeMet: metCount > 0,
-          canBeUnmet: metCount < total
-        };
-      }
-      case ">": {
-        const canBeMet = stats.maxNicoru > cond.value;
-        const canBeUnmet = stats.minNicoru <= cond.value;
-        return { canBeMet, canBeUnmet };
-      }
-      case "<": {
-        const canBeMet = stats.minNicoru < cond.value;
-        const canBeUnmet = stats.maxNicoru >= cond.value;
-        return { canBeMet, canBeUnmet };
-      }
-      case ">=": {
-        const canBeMet = stats.maxNicoru >= cond.value;
-        const canBeUnmet = stats.minNicoru < cond.value;
-        return { canBeMet, canBeUnmet };
-      }
-      case "<=": {
-        const canBeMet = stats.minNicoru <= cond.value;
-        const canBeUnmet = stats.maxNicoru > cond.value;
-        return { canBeMet, canBeUnmet };
-      }
-      case "range": {
-        const start = cond.value;
-        const end = cond.rangeEnd ?? cond.value;
-        let metCount = 0;
-        for (const value of stats.sortedValues) {
-          if (value < start) {
-            continue;
-          }
-          if (value > end) {
-            break;
-          }
-          metCount += stats.countsByValue.get(value) ?? 0;
-        }
-        return {
-          canBeMet: metCount > 0,
-          canBeUnmet: metCount < total
-        };
-      }
-      default:
-        return { canBeMet: true, canBeUnmet: true };
-    }
-  }
-  /**
-   * スレッド内のコメントをフィルタリング（JSON形式ルール対応）
-   */
-  filterCommentsInThread(comments, preparedRules, currentSmid, threadFork) {
-    if (this.debugMode) {
-      window.logger?.debug(`[CommentFilter2] Processing ${threadFork} thread with ${comments.length} comments using ${preparedRules.rules.length} JSON rules`);
-    }
-    const threadContext = this.buildThreadProcessingContext(comments, preparedRules);
-    return comments.map((comment) => this.applyRulesToComment(comment, preparedRules, threadContext, currentSmid, threadFork)).filter((comment) => comment !== null);
-  }
-  /**
-   * 単一コメントにJSON形式ルールを適用
-   */
-  applyRulesToComment(comment, preparedRules, threadContext, currentSmid, threadFork) {
-    const processedComment = { ...comment };
-    processedComment.commands = this.normalizeCommands(processedComment.commands);
-    if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-      processedComment.isPremium = true;
-    }
-    let ruleApplied = false;
-    let shouldHideComment = false;
-    let shouldApplyCommands = true;
-    let appliedRule = null;
-    let excludedByNicoru = false;
-    if (preparedRules.rules.length === 0) {
-      if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-        processedComment.commands = this.applyForkCommandSettings(processedComment.commands, threadFork);
-      }
-      return processedComment;
-    }
-    const userRuleIndexes = preparedRules.userIdRuleIndexes.get(comment.userId) ?? [];
-    const activeUserRuleIndexes = new Set(userRuleIndexes);
-    const matcher = preparedRules.substringMatcher;
-    const originalBody = comment.body ?? "";
-    const lowercaseBody = preparedRules.needsLowercase ? originalBody.toLocaleLowerCase() : void 0;
-    const literalCandidateIndexes = matcher ? new Set(matcher.match(originalBody, lowercaseBody)) : /* @__PURE__ */ new Set();
-    for (const preparedRule of preparedRules.rules) {
-      const rule = preparedRule.rule;
-      if (threadContext.nicoruIneligibleRuleIndexes.has(preparedRule.index)) {
-        continue;
-      }
-      let patternMatched = false;
-      let reusableRegex;
-      if (preparedRule.isUserRule) {
-        if (!activeUserRuleIndexes.has(preparedRule.index)) {
-          continue;
-        }
-        patternMatched = true;
-      } else if (rule.pattern) {
-        if (preparedRule.hasLiteralPrefilter && !literalCandidateIndexes.has(preparedRule.index)) {
-          continue;
-        }
-        reusableRegex = preparedRule.compiledRegex ?? this.getRegex(rule.pattern, rule.flags || "gi");
-        if (reusableRegex.global) {
-          reusableRegex.lastIndex = 0;
-        }
-        patternMatched = reusableRegex.test(originalBody);
-        if (!patternMatched) {
-          continue;
-        }
-        if (reusableRegex.global) {
-          reusableRegex.lastIndex = 0;
-        }
-      } else {
-        continue;
-      }
-      let nicoruOk = true;
-      if (rule.nicoru_cond) {
-        nicoruOk = this.checkNicoruCondition(rule.nicoru_cond, comment.nicoruCount);
-        const modeValue = (rule.nicoru_cond.mode ?? "exclude").toString().trim().toLowerCase();
-        if (!nicoruOk && modeValue === "exclude") {
-          excludedByNicoru = true;
-        }
-      }
-      if (!nicoruOk) {
-        continue;
-      }
-      ruleApplied = true;
-      appliedRule = rule;
-      const actionResult = this.executeAction(rule.action, processedComment.body, rule, reusableRegex);
-      if (actionResult.type === "hide") {
-        shouldHideComment = true;
-        processedComment.body = "";
-        processedComment.commands.push("invisible");
-        this.addFilterLog(comment, rule, true, currentSmid);
-        break;
-      } else if (actionResult.type === "replace") {
-        processedComment.body = actionResult.newText || processedComment.body;
-        this.addFilterLog(comment, rule, false, currentSmid);
-      } else if (actionResult.type === "none") {
-        this.addFilterLog(comment, rule, false, currentSmid);
-      }
-    }
-    if (shouldHideComment) {
-      processedComment.body = "";
-      if (!processedComment.commands.includes("invisible")) {
-        processedComment.commands.push("invisible");
-      }
-    }
-    if (ruleApplied && appliedRule) {
-      if (appliedRule.nicoru_cond && appliedRule.nicoru_cond.mode === "exclude" && excludedByNicoru) {
-        shouldApplyCommands = false;
-      } else {
-        shouldApplyCommands = true;
-      }
-    } else {
-      shouldApplyCommands = !excludedByNicoru;
-    }
-    if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-      if (shouldApplyCommands) {
-        processedComment.commands = this.applyForkCommandSettings(processedComment.commands, threadFork);
-      } else {
-        processedComment.commands = sanitizeCommentCommands(processedComment.commands);
-      }
-    }
-    if (ruleApplied) {
-      processedComment.body = sanitizeCommentBody(processedComment.body);
-    }
-    if (this.debugMode) {
-      window.logger?.debug(
-        "[CF2] fork=%s  nicoru=%d  ruleApplied=%o  excludedByNicoru=%o  shouldApplyCmd=%o  finalCmd=%o",
-        threadFork,
-        comment.nicoruCount,
-        ruleApplied,
-        excludedByNicoru,
-        shouldApplyCommands,
-        processedComment.commands
-      );
-    }
-    return processedComment;
-  }
-  /**
-   * SMID条件をチェック
-   */
-  checkSmidCondition(smids, currentSmid) {
-    if (smids.includes("ALL")) {
-      return true;
-    }
-    return currentSmid ? smids.includes(currentSmid) : false;
-  }
-  /**
-   * 文字列・数値を安全に number へ変換
-   * 数値でなければ null を返す
-   */
-  toNumber(val) {
-    if (typeof val === "number") return val;
-    if (typeof val === "string" && val.trim() !== "") {
-      const n = Number(val);
-      return Number.isNaN(n) ? null : n;
-    }
-    return null;
-  }
-  /**
-   * ニコる数条件をチェック（新形式対応・型安全版）
-   */
-  checkNicoruCondition(cond, rawCount) {
-    const { op, value, mode = "exclude" } = cond;
-    const commentNicoruCount = this.toNumber(rawCount) ?? 0;
-    let conditionMet = false;
-    switch (op) {
-      case "=": {
-        const numericValue = this.toNumber(value);
-        conditionMet = numericValue !== null && commentNicoruCount === numericValue;
-        break;
-      }
-      case ">": {
-        const numericValue = this.toNumber(value);
-        conditionMet = numericValue !== null && commentNicoruCount > numericValue;
-        break;
-      }
-      case "<": {
-        const numericValue = this.toNumber(value);
-        conditionMet = numericValue !== null && commentNicoruCount < numericValue;
-        break;
-      }
-      case ">=": {
-        const numericValue = this.toNumber(value);
-        conditionMet = numericValue !== null && commentNicoruCount >= numericValue;
-        break;
-      }
-      case "<=": {
-        const numericValue = this.toNumber(value);
-        conditionMet = numericValue !== null && commentNicoruCount <= numericValue;
-        break;
-      }
-      case "range": {
-        if (Array.isArray(value) && value.length === 2) {
-          const numStart = this.toNumber(value[0]);
-          const numEnd = this.toNumber(value[1]);
-          if (numStart !== null && numEnd !== null) {
-            conditionMet = commentNicoruCount >= numStart && commentNicoruCount <= numEnd;
-          }
-        }
-        break;
-      }
-    }
-    return mode === "include" ? conditionMet : !conditionMet;
-  }
-  /**
-   * アクション実行
-   */
-  executeAction(action, text, rule, compiledRegex) {
-    if (action.type === "hide") {
-      return { type: "hide" };
-    }
-    if (action.type === "replace" && rule.pattern) {
-      const regex = compiledRegex ?? this.getRegex(rule.pattern, rule.flags || "gi");
-      if (regex.global) {
-        regex.lastIndex = 0;
-      }
-      const newText = text.replace(regex, action.replacement);
-      if (regex.global) {
-        regex.lastIndex = 0;
-      }
-      return { type: "replace", newText };
-    }
-    return { type: "none" };
-  }
-  /**
-   * 正規表現オブジェクトを取得（キャッシュ付き・フラグ対応・lastIndex対応）
-   */
-  getRegex(pattern, flags = "gi") {
-    const cacheKey = `${pattern}:::${flags}`;
-    if (this.regexCache.has(cacheKey)) {
-      const cachedRegex = this.regexCache.get(cacheKey);
-      if (cachedRegex.global) {
-        cachedRegex.lastIndex = 0;
-      }
-      return cachedRegex;
-    }
-    const regex = new RegExp(pattern, flags);
-    this.regexCache.set(cacheKey, regex);
-    return regex;
-  }
-  /**
-   * フォーク別のコマンド設定を適用（従来通り）
-   */
-  applyForkCommandSettings(commands, threadFork) {
-    if (!this.settings?.commandSettings) {
-      return sanitizeCommentCommands(commands);
-    }
-    const allowedCommands = this.getAllowedCommandsForFork(threadFork);
-    const combinedCommands = [...allowedCommands, ...commands];
-    const sanitizedCommands = sanitizeCommentCommands(combinedCommands);
-    const filteredCommands = sanitizedCommands.filter((command) => {
-      if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
-        return true;
-      }
-      return allowedCommands.includes(command.toLowerCase());
-    });
-    return filteredCommands;
-  }
-  /**
-   * フォークタイプに対して許可されたコマンドを取得
-   */
-  getAllowedCommandsForFork(threadFork) {
-    if (!this.settings?.commandSettings) {
-      return [];
-    }
-    switch (threadFork) {
-      case CONSTANTS.FORK_TYPES.OWNER:
-        return this.settings.commandSettings.owner;
-      case CONSTANTS.FORK_TYPES.MAIN:
-        return this.settings.commandSettings.main;
-      case CONSTANTS.FORK_TYPES.EASY:
-        return this.settings.commandSettings.easy;
-      default:
-        return [];
-    }
-  }
-  /**
-   * フィルタリング結果をログ出力（デバッグ用）
-   */
-  logFilteringResults(original, filtered, rules) {
-    const originalCount = this.countComments(original);
-    const filteredCount = this.countComments(filtered);
-    const hiddenCount = originalCount - filteredCount;
-    window.logger.debug("[CommentFilter2] JSON Filtering Results:", {
-      originalComments: originalCount,
-      filteredComments: filteredCount,
-      hiddenComments: hiddenCount,
-      appliedRules: rules.length,
-      ruleTypes: {
-        regex: rules.filter((r) => r.pattern).length,
-        userId: rules.filter((r) => r.userId).length,
-        withNicoruCond: rules.filter((r) => r.nicoru_cond).length
-      }
-    });
-  }
-  /**
-   * コメント総数をカウント
-   */
-  countComments(data) {
-    return data.data.threads.reduce((sum, thread) => sum + thread.comments.length, 0);
-  }
-  /**
-   * グローバルデータを取得
-   */
-  getGlobalData() {
-    const data = window[CONSTANTS.GLOBAL_DATA_KEY];
-    if (data && typeof data === "object" && "originalData" in data && "filteredData" in data && "currentSmid" in data && "lastUpdated" in data) {
+  async processCommentDataWithWorkers(data, rules, currentSmid) {
+    const threads = data.data.threads;
+    if (threads.length === 0) {
       return data;
     }
-    return null;
+    const workerCount = this.resolveWorkerCount(threads.length);
+    const chunkSize = Math.ceil(threads.length / workerCount);
+    const threadChunks = chunkThreads(threads, chunkSize);
+    const results = await Promise.all(
+      threadChunks.map(
+        (chunk) => this.runWorker({
+          threads: chunk,
+          rules,
+          currentSmid,
+          settings: this.settings
+        })
+      )
+    );
+    const updatedThreads = [];
+    for (const result of results) {
+      this.captureLogEvents(result.logs, currentSmid);
+      updatedThreads.push(...result.threads);
+    }
+    return {
+      ...data,
+      data: {
+        ...data.data,
+        threads: updatedThreads
+      }
+    };
   }
-  /**
-   * 正規表現キャッシュをクリア
-   */
-  clearRegexCache() {
-    this.regexCache.clear();
+  runWorker(payload) {
+    return new Promise((resolve, reject) => {
+      const workerUrl = jsonCommentWorkerUrl;
+      console.info("[CommentFilter2] JSON worker URL:", workerUrl.toString());
+      const worker = new Worker(workerUrl, { type: "module" });
+      worker.onmessage = (event) => {
+        resolve(event.data.payload);
+        worker.terminate();
+      };
+      worker.onerror = (event) => {
+        worker.terminate();
+        let reason = new Error("Worker error (unknown)");
+        if (event instanceof ErrorEvent) {
+          const errorValue = event.error;
+          console.error("[CommentFilter2] JSON worker error", {
+            message: event.message,
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+            error: errorValue
+          });
+          if (errorValue instanceof Error) {
+            reason = errorValue;
+          } else if (event.message) {
+            reason = new Error(event.message);
+          } else {
+            reason = new Error(`Worker error at ${event.filename ?? "unknown source"}:${event.lineno ?? 0}`);
+          }
+        } else {
+          console.error("[CommentFilter2] JSON worker error (non ErrorEvent)", event);
+          reason = new Error("Worker error (non ErrorEvent)");
+        }
+        reject(reason);
+      };
+      const message = {
+        type: "process",
+        payload
+      };
+      worker.postMessage(message);
+    });
   }
-  /**
-   * デバッグモードを設定
-   */
-  setDebugMode(enabled) {
-    this.debugMode = enabled;
+  shouldUseWorker(threads) {
+    if (typeof Worker === "undefined") {
+      return false;
+    }
+    if (!threads || threads.length <= 1) {
+      return false;
+    }
+    const hardware = typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 0 : 0;
+    return hardware > 1;
   }
-  /**
-   * フィルターログエントリーを追加
-   */
+  resolveWorkerCount(threadCount) {
+    const hardware = typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 1 : 1;
+    const maxWorkers = Math.max(1, hardware - 1);
+    return Math.min(maxWorkers, Math.max(1, threadCount));
+  }
+  captureLogEvents(events, currentSmid) {
+    for (const event of events) {
+      this.addFilterLog(event.comment, event.rule, event.hidden, currentSmid);
+    }
+  }
+  prepareRules(rules, currentSmid) {
+    return prepareJsonRules(rules, currentSmid, this.regexCache);
+  }
   addFilterLog(comment, rule, hidden, currentSmid) {
     try {
       const videoTitle = FilterLogger.getVideoTitle();
@@ -3615,23 +3644,37 @@ class JsonCommentFilter {
       window.logger?.warn("[CommentFilter2] Failed to add filter log:", error);
     }
   }
-  /**
-   * コマンドの形式を正規化（文字列→配列変換、クリーンアップ）
-   */
-  normalizeCommands(commands) {
-    if (!commands) {
-      return [];
+  logFilteringResults(original, filtered, rules) {
+    const originalCount = this.countComments(original);
+    const filteredCount = this.countComments(filtered);
+    const hiddenCount = originalCount - filteredCount;
+    window.logger?.debug("[CommentFilter2] JSON Filtering Results:", {
+      originalComments: originalCount,
+      filteredComments: filteredCount,
+      hiddenComments: hiddenCount,
+      appliedRules: rules.length,
+      ruleTypes: {
+        regex: rules.filter((r) => r.pattern).length,
+        userId: rules.filter((r) => r.userId).length,
+        withNicoruCond: rules.filter((r) => r.nicoru_cond).length
+      }
+    });
+  }
+  countComments(data) {
+    return data.data.threads.reduce((sum, thread) => sum + thread.comments.length, 0);
+  }
+  getGlobalData() {
+    const data = window[CONSTANTS.GLOBAL_DATA_KEY];
+    if (data && typeof data === "object" && "originalData" in data && "filteredData" in data && "currentSmid" in data && "lastUpdated" in data) {
+      return data;
     }
-    if (Array.isArray(commands)) {
-      return commands.filter((cmd) => cmd !== null && cmd !== void 0 && cmd !== "").map((cmd) => String(cmd).trim()).filter((cmd) => cmd.length > 0);
-    }
-    if (typeof commands === "string") {
-      return commands.trim().split(/\s+/).filter((cmd) => cmd.length > 0);
-    }
-    if (this.debugMode) {
-      window.logger.warn("[CommentFilter2] Unexpected commands type:", typeof commands, commands);
-    }
-    return [];
+    return null;
+  }
+  clearRegexCache() {
+    this.regexCache.clear();
+  }
+  setDebugMode(enabled) {
+    this.debugMode = enabled;
   }
 }
 

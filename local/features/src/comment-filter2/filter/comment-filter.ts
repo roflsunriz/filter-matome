@@ -13,7 +13,8 @@ import {
   isCommandOfType as engineIsCommandOfType,
   normalizeCommands as engineNormalizeCommands,
   chunkThreads
-} from './comment-filter-engine';
+} from '@/comment-filter2/filter/comment-filter-engine';
+import commentWorkerUrl from '@/comment-filter2/filter/comment-filter-worker.ts?worker&url';
 
 interface ProcessRequestPayload {
   threads: CF2Thread[];
@@ -187,18 +188,42 @@ export class CommentFilter {
 
   private runWorker(payload: ProcessRequestPayload): Promise<ProcessResponsePayload> {
     return new Promise((resolve, reject) => {
-      const worker = new Worker(new URL('./comment-filter-worker.ts', import.meta.url), { type: 'module' });
+      console.info('[CommentFilter2] Comment worker URL:', commentWorkerUrl);
+      const worker = new Worker(commentWorkerUrl, { type: 'module' });
 
       worker.onmessage = (event: MessageEvent<ProcessResponse>) => {
         resolve(event.data.payload);
         worker.terminate();
       };
 
-      worker.onerror = event => {
+      worker.onerror = (event: ErrorEvent | Event) => {
         worker.terminate();
-        const reason = event instanceof ErrorEvent
-          ? (event.error instanceof Error ? event.error : new Error(event.message))
-          : new Error(String(event));
+
+        let reason: Error = new Error('Worker error (unknown)');
+
+        if (event instanceof ErrorEvent) {
+          const errorValue: unknown = event.error;
+
+          console.error('[CommentFilter2] Comment worker error', {
+            message: event.message,
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+            error: errorValue
+          });
+
+          if (errorValue instanceof Error) {
+            reason = errorValue;
+          } else if (event.message) {
+            reason = new Error(event.message);
+          } else {
+            reason = new Error(`Worker error at ${event.filename ?? 'unknown source'}:${event.lineno ?? 0}`);
+          }
+        } else {
+          console.error('[CommentFilter2] Comment worker error (non ErrorEvent)', event);
+          reason = new Error('Worker error (non ErrorEvent)');
+        }
+
         reject(reason);
       };
 
