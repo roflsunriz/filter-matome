@@ -1,16 +1,16 @@
-import { createMaterialIcon } from '@/common/material-icons';
+import { createMaterialIcon } from "@/common/material-icons";
 
 export function panelTemplate(): string {
   return `
 <button id="fab"></button>
 <div class="panel">
   <nav>
-    <button data-tab="playback" data-active>${createMaterialIcon('play_arrow', { style: 'outlined', classes: 'tab-icon', color: 'white' })}</button>
-    <button data-tab="volume">${createMaterialIcon('volume_up', { style: 'outlined', classes: 'tab-icon', color: 'white' })}</button>
-    <button data-tab="speed">${createMaterialIcon('speed', { style: 'outlined', classes: 'tab-icon', color: 'white' })}</button>
-    <button data-tab="comments">${createMaterialIcon('comment', { style: 'outlined', classes: 'tab-icon', color: 'white' })}</button>
-    <button data-tab="links">${createMaterialIcon('link', { style: 'outlined', classes: 'tab-icon', color: 'white' })}</button>
-    <button data-tab="settings">${createMaterialIcon('settings', { style: 'outlined', classes: 'tab-icon', color: 'white' })}</button>
+    <button data-tab="playback" data-active>${createMaterialIcon("play_arrow", { style: "outlined", classes: "tab-icon", color: "white" })}</button>
+    <button data-tab="volume">${createMaterialIcon("volume_up", { style: "outlined", classes: "tab-icon", color: "white" })}</button>
+    <button data-tab="speed">${createMaterialIcon("speed", { style: "outlined", classes: "tab-icon", color: "white" })}</button>
+    <button data-tab="comments">${createMaterialIcon("comment", { style: "outlined", classes: "tab-icon", color: "white" })}</button>
+    <button data-tab="links">${createMaterialIcon("link", { style: "outlined", classes: "tab-icon", color: "white" })}</button>
+    <button data-tab="settings">${createMaterialIcon("settings", { style: "outlined", classes: "tab-icon", color: "white" })}</button>
   </nav>
 
   <div id="playback" class="tab active">
@@ -38,4 +38,4 @@ export function panelTemplate(): string {
   </div>
 </div>
 `;
-} 
+}

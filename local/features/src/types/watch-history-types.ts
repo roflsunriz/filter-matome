@@ -1,13 +1,11 @@
 /**
  * ニコニコ動画視聴履歴拡張 - 型定義
- * 
+ *
  * @description ニコニコ動画の50件制限を打破する無制限履歴機能の型定義
  * @author roflsunriz
  */
 
 // ===== 基本データ型 =====
-
-
 
 /**
  * 視聴ログエントリ - 各視聴セッションの記録
@@ -86,7 +84,11 @@ export interface SeriesVideoInfo {
   /** センシティブマスク必要フラグ */
   requireSensitiveMasking: boolean;
   /** ライブ動画情報 */
-  videoLive: { prev: SeriesVideoInfo | null; next: SeriesVideoInfo | null; first: SeriesVideoInfo | null; } | null;
+  videoLive: {
+    prev: SeriesVideoInfo | null;
+    next: SeriesVideoInfo | null;
+    first: SeriesVideoInfo | null;
+  } | null;
   /** ミュート状態 */
   isMuted: boolean;
 }
@@ -185,23 +187,23 @@ export interface WatchHistoryEntry {
 /**
  * ソート基準
  */
-export type SortBy = 
-  | 'watchedAt'     // 視聴日時
-  | 'firstWatchedAt' // 初回視聴日時
-  | 'title'         // タイトル
-  | 'ownerName'     // 投稿者名
-  | 'lengthSec'     // 再生時間
-  | 'watchCount'    // 視聴回数
-  | 'viewCount'     // 再生数
-  | 'commentCount'  // コメント数
-  | 'mylistCount'   // マイリスト数
-  | 'likeCount'     // いいね数
-  | 'uploadedAt';   // 投稿日時
+export type SortBy =
+  | "watchedAt" // 視聴日時
+  | "firstWatchedAt" // 初回視聴日時
+  | "title" // タイトル
+  | "ownerName" // 投稿者名
+  | "lengthSec" // 再生時間
+  | "watchCount" // 視聴回数
+  | "viewCount" // 再生数
+  | "commentCount" // コメント数
+  | "mylistCount" // マイリスト数
+  | "likeCount" // いいね数
+  | "uploadedAt"; // 投稿日時
 
 /**
  * ソート順序
  */
-export type SortOrder = 'asc' | 'desc';
+export type SortOrder = "asc" | "desc";
 
 /**
  * フィルタ条件
@@ -322,12 +324,12 @@ export interface DatabaseConfig {
 /**
  * 視聴イベント型
  */
-export type WatchEventType = 
-  | 'start'      // 視聴開始
-  | 'progress'   // 進捗更新
-  | 'complete'   // 完走
-  | 'pause'      // 一時停止
-  | 'resume';    // 再開
+export type WatchEventType =
+  | "start" // 視聴開始
+  | "progress" // 進捗更新
+  | "complete" // 完走
+  | "pause" // 一時停止
+  | "resume"; // 再開
 
 /**
  * 視聴イベント
@@ -366,7 +368,7 @@ export interface WatchHistoryExportData {
  */
 export interface ImportConfig {
   /** 重複時の処理 */
-  duplicateHandling: 'skip' | 'overwrite' | 'merge';
+  duplicateHandling: "skip" | "overwrite" | "merge";
   /** 最大インポート件数 */
   maxEntries?: number;
 }
@@ -402,7 +404,7 @@ export interface SeriesFilterCondition {
   /** テキスト検索 */
   searchText?: string;
   /** 進捗状況フィルタ */
-  progressFilter?: 'all' | 'watching' | 'completed' | 'not_started';
+  progressFilter?: "all" | "watching" | "completed" | "not_started";
   /** 最終視聴日範囲 */
   dateRange?: {
     start: number;
@@ -508,4 +510,4 @@ export interface DatabaseManagementConfig {
   autoBackup: boolean;
   /** マイグレーション実行前にバックアップを作成するかどうか */
   backupBeforeMigration: boolean;
-} 
+}

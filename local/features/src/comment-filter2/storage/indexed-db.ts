@@ -1,10 +1,30 @@
 // IndexedDB部 - NGワードルールと設定の永続化（JSON形式対応）
-import { CONSTANTS } from '@/comment-filter2/utils/constants';
-import { NGWordRule, Settings, FilterDatabase, CommandSettings } from '@/types/filter-types';
-import { NgRuleJson, NgRuleJsonCollection, MigrationResult, MigrationEventDetails, MigrationHistoryRecord, SettingStorageItem, SettingsStorage } from '@/types/filter-types';
-import { IndexedDBRuleItem } from '@/types/database-types';
-import { parseJsonl, convertCsvToJsonl, detectFileFormat } from '@/comment-filter2/utils/jsonl-parser';
-import { LegacyConverter, LegacyCommentFilterSettings } from '@/comment-filter2/utils/legacy-converter';
+import { CONSTANTS } from "@/comment-filter2/utils/constants";
+import {
+  NGWordRule,
+  Settings,
+  FilterDatabase,
+  CommandSettings,
+} from "@/types/filter-types";
+import {
+  NgRuleJson,
+  NgRuleJsonCollection,
+  MigrationResult,
+  MigrationEventDetails,
+  MigrationHistoryRecord,
+  SettingStorageItem,
+  SettingsStorage,
+} from "@/types/filter-types";
+import { IndexedDBRuleItem } from "@/types/database-types";
+import {
+  parseJsonl,
+  convertCsvToJsonl,
+  detectFileFormat,
+} from "@/comment-filter2/utils/jsonl-parser";
+import {
+  LegacyConverter,
+  LegacyCommentFilterSettings,
+} from "@/comment-filter2/utils/legacy-converter";
 
 export class FilterStorage {
   private db: IDBDatabase | null = null;
@@ -17,10 +37,10 @@ export class FilterStorage {
    */
   private getDefaultCommandSettings(): CommandSettings {
     return {
-      owner: ['medium','defont','naka'],
-      main: ['medium','defont','naka'],
-      easy: ['medium','defont','naka'],
-      normal: ['medium','defont','naka']
+      owner: ["medium", "defont", "naka"],
+      main: ["medium", "defont", "naka"],
+      easy: ["medium", "defont", "naka"],
+      normal: ["medium", "defont", "naka"],
     };
   }
 
@@ -32,7 +52,7 @@ export class FilterStorage {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
       request.onerror = () => {
-        reject(new Error('IndexedDB initialization failed'));
+        reject(new Error("IndexedDB initialization failed"));
       };
 
       request.onsuccess = () => {
@@ -43,39 +63,52 @@ export class FilterStorage {
       request.onupgradeneeded = async (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
         const oldVersion = event.oldVersion;
-        
-        window.logger?.info(`[CommentFilter2] Upgrading database from version ${oldVersion} to ${this.dbVersion}`);
-        
+
+        window.logger?.info(
+          `[CommentFilter2] Upgrading database from version ${oldVersion} to ${this.dbVersion}`,
+        );
+
         // Rulesストアの作成/更新
         if (!db.objectStoreNames.contains(CONSTANTS.DB_CONFIG.STORES.RULES)) {
-          const rulesStore = db.createObjectStore(CONSTANTS.DB_CONFIG.STORES.RULES, {
-            keyPath: 'id',
-            autoIncrement: true
-          });
-          rulesStore.createIndex('smid', 'smid', { unique: false });
-          rulesStore.createIndex('enabled', 'enabled', { unique: false });
+          const rulesStore = db.createObjectStore(
+            CONSTANTS.DB_CONFIG.STORES.RULES,
+            {
+              keyPath: "id",
+              autoIncrement: true,
+            },
+          );
+          rulesStore.createIndex("smid", "smid", { unique: false });
+          rulesStore.createIndex("enabled", "enabled", { unique: false });
         }
 
         // Settingsストアの作成
-        if (!db.objectStoreNames.contains(CONSTANTS.DB_CONFIG.STORES.SETTINGS)) {
+        if (
+          !db.objectStoreNames.contains(CONSTANTS.DB_CONFIG.STORES.SETTINGS)
+        ) {
           db.createObjectStore(CONSTANTS.DB_CONFIG.STORES.SETTINGS, {
-            keyPath: 'key'
+            keyPath: "key",
           });
         }
 
         // JSON Rulesストアの作成（新形式用）
-        if (!db.objectStoreNames.contains('json_rules')) {
-          const jsonRulesStore = db.createObjectStore('json_rules', {
-            keyPath: 'id',
-            autoIncrement: true
+        if (!db.objectStoreNames.contains("json_rules")) {
+          const jsonRulesStore = db.createObjectStore("json_rules", {
+            keyPath: "id",
+            autoIncrement: true,
           });
-          jsonRulesStore.createIndex('enabled', 'enabled', { unique: false });
-          jsonRulesStore.createIndex('smid', 'smid', { unique: false, multiEntry: true });
+          jsonRulesStore.createIndex("enabled", "enabled", { unique: false });
+          jsonRulesStore.createIndex("smid", "smid", {
+            unique: false,
+            multiEntry: true,
+          });
         }
 
         // バージョン2→3のマイグレーション
         if (oldVersion < 3) {
-          await this.migrateToVersion3(db, (event.target as IDBOpenDBRequest).transaction!);
+          await this.migrateToVersion3(
+            db,
+            (event.target as IDBOpenDBRequest).transaction!,
+          );
         }
       };
     });
@@ -84,20 +117,29 @@ export class FilterStorage {
   /**
    * バージョン3へのマイグレーション（旧形式→JSON形式）
    */
-  private async migrateToVersion3(db: IDBDatabase, transaction: IDBTransaction): Promise<void> {
+  private async migrateToVersion3(
+    db: IDBDatabase,
+    transaction: IDBTransaction,
+  ): Promise<void> {
     try {
-      window.logger?.info('[CommentFilter2] Starting migration to version 3 (JSON format)');
-      
+      window.logger?.info(
+        "[CommentFilter2] Starting migration to version 3 (JSON format)",
+      );
+
       // 旧形式のルールを取得
-      const oldRulesStore = transaction.objectStore(CONSTANTS.DB_CONFIG.STORES.RULES);
+      const oldRulesStore = transaction.objectStore(
+        CONSTANTS.DB_CONFIG.STORES.RULES,
+      );
       const oldRules = await this.getAllFromStore(oldRulesStore);
-      
+
       if (oldRules.length > 0) {
-        window.logger?.info(`[CommentFilter2] Found ${oldRules.length} legacy rules to migrate`);
-        
+        window.logger?.info(
+          `[CommentFilter2] Found ${oldRules.length} legacy rules to migrate`,
+        );
+
         // 旧形式→JSON形式に変換
         const jsonRules: NgRuleJson[] = [];
-        
+
         for (const oldRule of oldRules) {
           try {
             const jsonRule = this.convertLegacyRuleToJson(oldRule);
@@ -105,30 +147,40 @@ export class FilterStorage {
               jsonRules.push(jsonRule);
             }
           } catch (error) {
-            window.logger?.warn('[CommentFilter2] Failed to convert legacy rule:', oldRule, error);
+            window.logger?.warn(
+              "[CommentFilter2] Failed to convert legacy rule:",
+              oldRule,
+              error,
+            );
           }
         }
-        
+
         // JSON形式で保存
-        const jsonRulesStore = transaction.objectStore('json_rules');
+        const jsonRulesStore = transaction.objectStore("json_rules");
         for (const jsonRule of jsonRules) {
           await this.addToStore(jsonRulesStore, jsonRule);
         }
-        
-        window.logger?.info(`[CommentFilter2] Successfully migrated ${jsonRules.length} rules to JSON format`);
-        
+
+        window.logger?.info(
+          `[CommentFilter2] Successfully migrated ${jsonRules.length} rules to JSON format`,
+        );
+
         // 設定にマイグレーション完了フラグを追加
-        const settingsStore = transaction.objectStore(CONSTANTS.DB_CONFIG.STORES.SETTINGS);
+        const settingsStore = transaction.objectStore(
+          CONSTANTS.DB_CONFIG.STORES.SETTINGS,
+        );
         await this.putToStore(settingsStore, {
-          key: 'migration_v3_completed',
+          key: "migration_v3_completed",
           completed: true,
           migratedAt: new Date().toISOString(),
-          migratedRulesCount: jsonRules.length
+          migratedRulesCount: jsonRules.length,
         });
       }
-      
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Migration to version 3 failed:', error);
+      window.logger?.error(
+        "[CommentFilter2] Migration to version 3 failed:",
+        error,
+      );
       throw error;
     }
   }
@@ -136,46 +188,65 @@ export class FilterStorage {
   /**
    * 旧形式ルールをJSON形式に変換
    */
-  private convertLegacyRuleToJson(legacyRule: IndexedDBRuleItem): NgRuleJson | null {
+  private convertLegacyRuleToJson(
+    legacyRule: IndexedDBRuleItem,
+  ): NgRuleJson | null {
     try {
       // ユーザーIDルールの場合
       if (legacyRule.isUserIdRule && legacyRule.userId) {
         return {
           userId: legacyRule.userId,
-          action: { type: 'hide' },
-          smid: legacyRule.smid === 'ALL' ? ['ALL'] : [legacyRule.smid],
-          nicoru_cond: legacyRule.nicoru === 'EMPTY' ? undefined : {
-            op: '>=',
-            value: typeof legacyRule.nicoru === 'number' ? legacyRule.nicoru : 0,
-            mode: 'exclude'
-          },
-          enabled: true
+          action: { type: "hide" },
+          smid: legacyRule.smid === "ALL" ? ["ALL"] : [legacyRule.smid],
+          nicoru_cond:
+            legacyRule.nicoru === "EMPTY"
+              ? undefined
+              : {
+                  op: ">=",
+                  value:
+                    typeof legacyRule.nicoru === "number"
+                      ? legacyRule.nicoru
+                      : 0,
+                  mode: "exclude",
+                },
+          enabled: true,
         };
       }
-      
+
       // 正規表現ルールの場合
       if (legacyRule.regex) {
-        const action = legacyRule.replace === 'EMPTY' || !legacyRule.replace
-          ? { type: 'hide' as const }
-          : { type: 'replace' as const, replacement: legacyRule.replace };
-          
+        const action =
+          legacyRule.replace === "EMPTY" || !legacyRule.replace
+            ? { type: "hide" as const }
+            : { type: "replace" as const, replacement: legacyRule.replace };
+
         return {
           pattern: legacyRule.regex,
-          flags: legacyRule.regexFlags || 'gi',
+          flags: legacyRule.regexFlags || "gi",
           action,
-          smid: legacyRule.smid === 'ALL' ? ['ALL'] : [legacyRule.smid],
-          nicoru_cond: legacyRule.nicoru === 'EMPTY' ? undefined : {
-            op: '>=',
-            value: typeof legacyRule.nicoru === 'number' ? legacyRule.nicoru : 0,
-            mode: 'exclude'
-          },
-          enabled: true
+          smid: legacyRule.smid === "ALL" ? ["ALL"] : [legacyRule.smid],
+          nicoru_cond:
+            legacyRule.nicoru === "EMPTY"
+              ? undefined
+              : {
+                  op: ">=",
+                  value:
+                    typeof legacyRule.nicoru === "number"
+                      ? legacyRule.nicoru
+                      : 0,
+                  mode: "exclude",
+                },
+          enabled: true,
         };
       }
-      
+
       return null;
     } catch (error) {
-      window.logger?.warn('[CommentFilter2] Failed to convert legacy rule:', legacyRule, error);
+      window.logger?.warn(
+        "[CommentFilter2] Failed to convert legacy rule:",
+        legacyRule,
+        error,
+      );
       return null;
     }
   }
@@ -185,16 +256,16 @@ export class FilterStorage {
    */
   public async saveJsonRules(rules: NgRuleJson[]): Promise<void> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['json_rules'], 'readwrite');
-      const store = transaction.objectStore('json_rules');
+      const transaction = this.db!.transaction(["json_rules"], "readwrite");
+      const store = transaction.objectStore("json_rules");
 
       // 既存のルールを全削除
       const clearRequest = store.clear();
-      
+
       clearRequest.onsuccess = () => {
         // 新しいルールを追加
         let completedCount = 0;
@@ -208,7 +279,7 @@ export class FilterStorage {
         rules.forEach((rule, index) => {
           const ruleWithId = { ...rule, id: index };
           const addRequest = store.add(ruleWithId);
-          
+
           addRequest.onsuccess = () => {
             completedCount++;
             if (completedCount === totalCount) {
@@ -223,7 +294,7 @@ export class FilterStorage {
       };
 
       clearRequest.onerror = () => {
-        reject(new Error('Failed to clear existing JSON rules'));
+        reject(new Error("Failed to clear existing JSON rules"));
       };
     });
   }
@@ -233,26 +304,28 @@ export class FilterStorage {
    */
   public async getJsonRules(): Promise<NgRuleJson[]> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(['json_rules'], 'readonly');
-      const store = transaction.objectStore('json_rules');
+      const transaction = this.db!.transaction(["json_rules"], "readonly");
+      const store = transaction.objectStore("json_rules");
       const request = store.getAll();
 
       request.onsuccess = () => {
-        const rules = request.result.map((item: NgRuleJson & { id?: number }) => {
-          // idフィールドを除去してクリーンなルールオブジェクトを返す
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { id, ...rule } = item;
-          return rule as NgRuleJson;
-        });
+        const rules = request.result.map(
+          (item: NgRuleJson & { id?: number }) => {
+            // idフィールドを除去してクリーンなルールオブジェクトを返す
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { id, ...rule } = item;
+            return rule as NgRuleJson;
+          },
+        );
         resolve(rules);
       };
 
       request.onerror = () => {
-        reject(new Error('Failed to retrieve JSON rules'));
+        reject(new Error("Failed to retrieve JSON rules"));
       };
     });
   }
@@ -262,16 +335,19 @@ export class FilterStorage {
    */
   public async saveRules(rules: NGWordRule[]): Promise<void> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([CONSTANTS.DB_CONFIG.STORES.RULES], 'readwrite');
+      const transaction = this.db!.transaction(
+        [CONSTANTS.DB_CONFIG.STORES.RULES],
+        "readwrite",
+      );
       const store = transaction.objectStore(CONSTANTS.DB_CONFIG.STORES.RULES);
 
       // 既存のルールを全削除
       const clearRequest = store.clear();
-      
+
       clearRequest.onsuccess = () => {
         // 新しいルールを追加
         let completedCount = 0;
@@ -284,7 +360,7 @@ export class FilterStorage {
 
         rules.forEach((rule, index) => {
           const addRequest = store.add({ ...rule, id: index });
-          
+
           addRequest.onsuccess = () => {
             completedCount++;
             if (completedCount === totalCount) {
@@ -299,7 +375,7 @@ export class FilterStorage {
       };
 
       clearRequest.onerror = () => {
-        reject(new Error('Failed to clear existing rules'));
+        reject(new Error("Failed to clear existing rules"));
       };
     });
   }
@@ -309,11 +385,14 @@ export class FilterStorage {
    */
   public async getRules(): Promise<NGWordRule[]> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([CONSTANTS.DB_CONFIG.STORES.RULES], 'readonly');
+      const transaction = this.db!.transaction(
+        [CONSTANTS.DB_CONFIG.STORES.RULES],
+        "readonly",
+      );
       const store = transaction.objectStore(CONSTANTS.DB_CONFIG.STORES.RULES);
       const request = store.getAll();
 
@@ -325,13 +404,13 @@ export class FilterStorage {
           smid: item.smid,
           nicoru: item.nicoru,
           userId: item.userId,
-          isUserIdRule: item.isUserIdRule
+          isUserIdRule: item.isUserIdRule,
         }));
         resolve(rules);
       };
 
       request.onerror = () => {
-        reject(new Error('Failed to retrieve rules'));
+        reject(new Error("Failed to retrieve rules"));
       };
     });
   }
@@ -339,19 +418,29 @@ export class FilterStorage {
   /**
    * 設定を保存（JSON形式フラグ追加）
    */
-  public async saveSettings(settings: Settings & { useJsonFormat?: boolean }): Promise<void> {
+  public async saveSettings(
+    settings: Settings & { useJsonFormat?: boolean },
+  ): Promise<void> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([CONSTANTS.DB_CONFIG.STORES.SETTINGS], 'readwrite');
-      const store = transaction.objectStore(CONSTANTS.DB_CONFIG.STORES.SETTINGS);
-      
+      const transaction = this.db!.transaction(
+        [CONSTANTS.DB_CONFIG.STORES.SETTINGS],
+        "readwrite",
+      );
+      const store = transaction.objectStore(
+        CONSTANTS.DB_CONFIG.STORES.SETTINGS,
+      );
+
       const request = store.put({
-        key: 'main',
+        key: "main",
         ...settings,
-        useJsonFormat: settings.useJsonFormat !== undefined ? settings.useJsonFormat : this.useJsonFormat
+        useJsonFormat:
+          settings.useJsonFormat !== undefined
+            ? settings.useJsonFormat
+            : this.useJsonFormat,
       });
 
       request.onsuccess = () => {
@@ -359,7 +448,7 @@ export class FilterStorage {
       };
 
       request.onerror = () => {
-        reject(new Error('Failed to save settings'));
+        reject(new Error("Failed to save settings"));
       };
     });
   }
@@ -369,28 +458,40 @@ export class FilterStorage {
    */
   public async getSettings(): Promise<Settings & { useJsonFormat?: boolean }> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([CONSTANTS.DB_CONFIG.STORES.SETTINGS], 'readonly');
-      const store = transaction.objectStore(CONSTANTS.DB_CONFIG.STORES.SETTINGS);
-      const request = store.get('main');
+      const transaction = this.db!.transaction(
+        [CONSTANTS.DB_CONFIG.STORES.SETTINGS],
+        "readonly",
+      );
+      const store = transaction.objectStore(
+        CONSTANTS.DB_CONFIG.STORES.SETTINGS,
+      );
+      const request = store.get("main");
 
       request.onsuccess = () => {
         if (request.result) {
           const raw = request.result as unknown;
-          const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {};
+          const obj =
+            raw && typeof raw === "object"
+              ? (raw as Record<string, unknown>)
+              : {};
           const settings = {
             debugMode: Boolean(obj.debugMode),
             isEnabled: Boolean(obj.isEnabled),
-            commandSettings: (obj.commandSettings as CommandSettings) || this.getDefaultCommandSettings(),
-            logToCommentFilterLogger: obj.logToCommentFilterLogger !== undefined 
-              ? Boolean(obj.logToCommentFilterLogger)
-              : true,
-            useJsonFormat: obj.useJsonFormat !== undefined 
-              ? Boolean(obj.useJsonFormat)
-              : true // デフォルトで新形式を使用
+            commandSettings:
+              (obj.commandSettings as CommandSettings) ||
+              this.getDefaultCommandSettings(),
+            logToCommentFilterLogger:
+              obj.logToCommentFilterLogger !== undefined
+                ? Boolean(obj.logToCommentFilterLogger)
+                : true,
+            useJsonFormat:
+              obj.useJsonFormat !== undefined
+                ? Boolean(obj.useJsonFormat)
+                : true, // デフォルトで新形式を使用
           };
           resolve(settings);
         } else {
@@ -400,13 +501,13 @@ export class FilterStorage {
             isEnabled: true,
             commandSettings: this.getDefaultCommandSettings(),
             logToCommentFilterLogger: true,
-            useJsonFormat: true // デフォルトで新形式を使用
+            useJsonFormat: true, // デフォルトで新形式を使用
           });
         }
       };
 
       request.onerror = () => {
-        reject(new Error('Failed to retrieve settings'));
+        reject(new Error("Failed to retrieve settings"));
       };
     });
   }
@@ -418,18 +519,18 @@ export class FilterStorage {
     try {
       const [rules, settings] = await Promise.all([
         this.getJsonRules(),
-        this.getSettings()
+        this.getSettings(),
       ]);
 
       const exportData: NgRuleJsonCollection = {
         version: "3.0",
         rules,
-        settings,  // 設定を追加（コメントコマンド設定を含む）
+        settings, // 設定を追加（コメントコマンド設定を含む）
         metadata: {
           exportedAt: new Date().toISOString(),
           exportedBy: "CommentFilter2",
-          totalRules: rules.length
-        }
+          totalRules: rules.length,
+        },
       };
 
       return JSON.stringify(exportData, null, 2);
@@ -445,12 +546,12 @@ export class FilterStorage {
     try {
       const [rules, settings] = await Promise.all([
         this.getRules(),
-        this.getSettings()
+        this.getSettings(),
       ]);
 
       const exportData: FilterDatabase = {
         rules,
-        settings
+        settings,
       };
 
       return JSON.stringify(exportData, null, 2);
@@ -465,18 +566,20 @@ export class FilterStorage {
   public async importData(data: string): Promise<MigrationResult> {
     try {
       const format = detectFileFormat(data);
-      
-      window.logger?.info(`[CommentFilter2] Detected import format: ${String(format)}`);
-      
+
+      window.logger?.info(
+        `[CommentFilter2] Detected import format: ${String(format)}`,
+      );
+
       switch (format) {
-        case 'jsonl':
+        case "jsonl":
           return await this.importJsonlData(data);
-        case 'json':
+        case "json":
           return await this.importJsonData(data);
-        case 'csv':
+        case "csv":
           return await this.importCsvData(data);
         default:
-          throw new Error('Unknown file format');
+          throw new Error("Unknown file format");
       }
     } catch (error) {
       throw new Error(`Import failed: ${String(error)}`);
@@ -490,14 +593,14 @@ export class FilterStorage {
     try {
       const rules = parseJsonl(data);
       await this.saveJsonRules(rules);
-      
+
       return {
         success: true,
         migratedRules: rules,
         errors: [],
         warnings: [],
-        originalCount: data.split('\n').filter(line => line.trim()).length,
-        migratedCount: rules.length
+        originalCount: data.split("\n").filter((line) => line.trim()).length,
+        migratedCount: rules.length,
       };
     } catch (error) {
       throw new Error(`JSONL import failed: ${String(error)}`);
@@ -510,85 +613,107 @@ export class FilterStorage {
   private async importJsonData(data: string): Promise<MigrationResult> {
     try {
       const parsedData: unknown = JSON.parse(data);
-      
+
       // 新形式のJSONコレクション
-      if (typeof parsedData === 'object' && parsedData !== null && 'version' in parsedData && 'rules' in parsedData) {
+      if (
+        typeof parsedData === "object" &&
+        parsedData !== null &&
+        "version" in parsedData &&
+        "rules" in parsedData
+      ) {
         const collection = parsedData as NgRuleJsonCollection;
-        
+
         // ルールを保存
         await this.saveJsonRules(collection.rules);
-        
+
         // 設定があれば保存（コメントコマンド設定を含む）
         if (collection.settings) {
           await this.saveSettings(collection.settings);
         }
-        
+
         return {
           success: true,
           migratedRules: collection.rules,
           errors: [],
           warnings: [],
           originalCount: collection.rules.length,
-          migratedCount: collection.rules.length
+          migratedCount: collection.rules.length,
         };
       }
-      
+
       // 旧形式のFilterDatabase
-      if (typeof parsedData === 'object' && parsedData !== null && 'rules' in parsedData && 'settings' in parsedData) {
+      if (
+        typeof parsedData === "object" &&
+        parsedData !== null &&
+        "rules" in parsedData &&
+        "settings" in parsedData
+      ) {
         const legacyData = parsedData as FilterDatabase;
-        
+
         // 旧形式→JSON形式に変換
         const convertedRules: NgRuleJson[] = [];
-        
+
         for (const rule of legacyData.rules) {
-          const jsonRule = this.convertLegacyRuleToJson(rule as IndexedDBRuleItem);
+          const jsonRule = this.convertLegacyRuleToJson(
+            rule as IndexedDBRuleItem,
+          );
           if (jsonRule) {
             convertedRules.push(jsonRule);
           }
         }
-        
+
         await Promise.all([
           this.saveJsonRules(convertedRules),
-          this.saveSettings(legacyData.settings)
+          this.saveSettings(legacyData.settings),
         ]);
-        
+
         return {
           success: true,
           migratedRules: convertedRules,
           errors: [],
-          warnings: [`Converted ${legacyData.rules.length} legacy rules to JSON format`],
+          warnings: [
+            `Converted ${legacyData.rules.length} legacy rules to JSON format`,
+          ],
           originalCount: legacyData.rules.length,
-          migratedCount: convertedRules.length
+          migratedCount: convertedRules.length,
         };
       }
-      
+
       // CommentFilter（旧機能）のレガシー設定形式
-      if (typeof parsedData === 'object' && parsedData !== null && LegacyConverter.isLegacyData(parsedData as Record<string, unknown>)) {
+      if (
+        typeof parsedData === "object" &&
+        parsedData !== null &&
+        LegacyConverter.isLegacyData(parsedData as Record<string, unknown>)
+      ) {
         const legacySettings = parsedData as LegacyCommentFilterSettings;
-        
-        window.logger?.info('[CommentFilter2] Detected legacy CommentFilter settings format');
-        
+
+        window.logger?.info(
+          "[CommentFilter2] Detected legacy CommentFilter settings format",
+        );
+
         // レガシー設定をJSON Lines形式に変換
         const conversionResult = LegacyConverter.convert(legacySettings);
-        
+
         await Promise.all([
           this.saveJsonRules(conversionResult.rules),
-          this.saveSettings(conversionResult.settings)
+          this.saveSettings(conversionResult.settings),
         ]);
-        
-        window.logger?.info(`[CommentFilter2] Legacy conversion completed: ${conversionResult.rules.length} rules converted`);
-        
+
+        window.logger?.info(
+          `[CommentFilter2] Legacy conversion completed: ${conversionResult.rules.length} rules converted`,
+        );
+
         return {
           success: true,
           migratedRules: conversionResult.rules,
           errors: [],
           warnings: conversionResult.conversionLog,
           originalCount: this.countLegacyRules(legacySettings),
-          migratedCount: conversionResult.rules.length
+          migratedCount: conversionResult.rules.length,
         };
       }
-      
-      throw new Error('Invalid JSON format');
+
+      throw new Error("Invalid JSON format");
     } catch (error) {
       throw new Error(`JSON import failed: ${String(error)}`);
     }
@@ -600,11 +725,11 @@ export class FilterStorage {
   private async importCsvData(data: string): Promise<MigrationResult> {
     try {
       const migrationResult = convertCsvToJsonl(data);
-      
+
       if (migrationResult.success) {
         await this.saveJsonRules(migrationResult.migratedRules);
       }
-      
+
       return migrationResult;
     } catch (error) {
       throw new Error(`CSV import failed: ${String(error)}`);
@@ -616,19 +741,26 @@ export class FilterStorage {
    */
   public async clearAllData(): Promise<void> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([
-        CONSTANTS.DB_CONFIG.STORES.RULES,
-        CONSTANTS.DB_CONFIG.STORES.SETTINGS,
-        'json_rules'
-      ], 'readwrite');
+      const transaction = this.db!.transaction(
+        [
+          CONSTANTS.DB_CONFIG.STORES.RULES,
+          CONSTANTS.DB_CONFIG.STORES.SETTINGS,
+          "json_rules",
+        ],
+        "readwrite",
+      );
 
-      const rulesStore = transaction.objectStore(CONSTANTS.DB_CONFIG.STORES.RULES);
-      const settingsStore = transaction.objectStore(CONSTANTS.DB_CONFIG.STORES.SETTINGS);
-      const jsonRulesStore = transaction.objectStore('json_rules');
+      const rulesStore = transaction.objectStore(
+        CONSTANTS.DB_CONFIG.STORES.RULES,
+      );
+      const settingsStore = transaction.objectStore(
+        CONSTANTS.DB_CONFIG.STORES.SETTINGS,
+      );
+      const jsonRulesStore = transaction.objectStore("json_rules");
 
       const clearRules = rulesStore.clear();
       const clearSettings = settingsStore.clear();
@@ -647,9 +779,11 @@ export class FilterStorage {
       clearSettings.onsuccess = checkCompletion;
       clearJsonRules.onsuccess = checkCompletion;
 
-      clearRules.onerror = () => reject(new Error('Failed to clear rules'));
-      clearSettings.onerror = () => reject(new Error('Failed to clear settings'));
-      clearJsonRules.onerror = () => reject(new Error('Failed to clear JSON rules'));
+      clearRules.onerror = () => reject(new Error("Failed to clear rules"));
+      clearSettings.onerror = () =>
+        reject(new Error("Failed to clear settings"));
+      clearJsonRules.onerror = () =>
+        reject(new Error("Failed to clear JSON rules"));
     });
   }
 
@@ -664,10 +798,13 @@ export class FilterStorage {
         const err = request.error;
         if (err instanceof Error) {
           reject(err);
-        } else if (err && typeof (err as { message?: unknown }).message === 'string') {
+        } else if (
+          err &&
+          typeof (err as { message?: unknown }).message === "string"
+        ) {
           reject(new Error((err as { message: string }).message));
         } else {
-          reject(new Error('IndexedDB getAll error'));
+          reject(new Error("IndexedDB getAll error"));
         }
       };
     });
@@ -676,81 +813,111 @@ export class FilterStorage {
   /**
    * ヘルパーメソッド: ストアにデータを追加
    */
-  private addToStore(store: IDBObjectStore, data: NgRuleJson | IndexedDBRuleItem | Record<string, unknown>): Promise<void> {
-      return new Promise((resolve, reject) => {
+  private addToStore(
+    store: IDBObjectStore,
+    data: NgRuleJson | IndexedDBRuleItem | Record<string, unknown>,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
       const request = store.add(data);
-        request.onsuccess = () => resolve();
-        request.onerror = () => {
-          const err = request.error;
-          if (err instanceof Error) {
-            reject(err);
-          } else if (err && typeof (err as { message?: unknown }).message === 'string') {
-            reject(new Error((err as { message: string }).message));
-          } else {
-            reject(new Error('IndexedDB add error'));
-          }
-        };
+      request.onsuccess = () => resolve();
+      request.onerror = () => {
+        const err = request.error;
+        if (err instanceof Error) {
+          reject(err);
+        } else if (
+          err &&
+          typeof (err as { message?: unknown }).message === "string"
+        ) {
+          reject(new Error((err as { message: string }).message));
+        } else {
+          reject(new Error("IndexedDB add error"));
+        }
+      };
     });
   }
 
   /**
    * ヘルパーメソッド: ストアにデータを保存
    */
-  private putToStore(store: IDBObjectStore, data: Record<string, unknown>): Promise<void> {
-      return new Promise((resolve, reject) => {
+  private putToStore(
+    store: IDBObjectStore,
+    data: Record<string, unknown>,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
       const request = store.put(data);
-        request.onsuccess = () => resolve();
-        request.onerror = () => {
-          const err = request.error;
-          if (err instanceof Error) {
-            reject(err);
-          } else if (err && typeof (err as { message?: unknown }).message === 'string') {
-            reject(new Error((err as { message: string }).message));
-          } else {
-            reject(new Error('IndexedDB put error'));
-          }
-        };
+      request.onsuccess = () => resolve();
+      request.onerror = () => {
+        const err = request.error;
+        if (err instanceof Error) {
+          reject(err);
+        } else if (
+          err &&
+          typeof (err as { message?: unknown }).message === "string"
+        ) {
+          reject(new Error((err as { message: string }).message));
+        } else {
+          reject(new Error("IndexedDB put error"));
+        }
+      };
     });
   }
 
   /**
    * レガシー設定のルール数をカウント
    */
-  private countLegacyRules(legacySettings: LegacyCommentFilterSettings): number {
+  private countLegacyRules(
+    legacySettings: LegacyCommentFilterSettings,
+  ): number {
     let count = 0;
-    
+
     if (legacySettings.NGWord) {
-      count += legacySettings.NGWord.split('\n').filter(word => word.trim() !== '').length;
+      count += legacySettings.NGWord.split("\n").filter(
+        (word) => word.trim() !== "",
+      ).length;
     }
-    
+
     if (legacySettings.NGRegex) {
-      count += legacySettings.NGRegex.split('\n').filter(regex => regex.trim() !== '').length;
+      count += legacySettings.NGRegex.split("\n").filter(
+        (regex) => regex.trim() !== "",
+      ).length;
     }
-    
+
     if (legacySettings.superNgWords) {
-      count += legacySettings.superNgWords.split('\n').filter(word => word.trim() !== '').length;
+      count += legacySettings.superNgWords
+        .split("\n")
+        .filter((word) => word.trim() !== "").length;
     }
-    
+
     if (legacySettings.superNgRegex) {
-      count += legacySettings.superNgRegex.split('\n').filter(regex => regex.trim() !== '').length;
+      count += legacySettings.superNgRegex
+        .split("\n")
+        .filter((regex) => regex.trim() !== "").length;
     }
-    
+
     if (legacySettings.replaceRules) {
-      count += legacySettings.replaceRules.split('\n').filter(rule => rule.trim() !== '').length;
+      count += legacySettings.replaceRules
+        .split("\n")
+        .filter((rule) => rule.trim() !== "").length;
     }
-    
+
     if (legacySettings.superNgReplaceRules) {
-      count += legacySettings.superNgReplaceRules.split('\n').filter(rule => rule.trim() !== '').length;
+      count += legacySettings.superNgReplaceRules
+        .split("\n")
+        .filter((rule) => rule.trim() !== "").length;
     }
-    
+
     if (legacySettings.userIdFilters) {
-      count += legacySettings.userIdFilters.split('\n').filter(userId => userId.trim() !== '').length;
+      count += legacySettings.userIdFilters
+        .split("\n")
+        .filter((userId) => userId.trim() !== "").length;
     }
-    
+
     if (legacySettings.superUserIdFilters) {
-      count += legacySettings.superUserIdFilters.split('\n').filter(userId => userId.trim() !== '').length;
+      count += legacySettings.superUserIdFilters
+        .split("\n")
+        .filter((userId) => userId.trim() !== "").length;
     }
-    
+
     return count;
   }
 
@@ -769,9 +936,12 @@ export class FilterStorage {
   /**
    * データベースの完全性チェック
    */
-  public async checkDatabaseIntegrity(): Promise<{ isValid: boolean; issues: string[] }> {
+  public async checkDatabaseIntegrity(): Promise<{
+    isValid: boolean;
+    issues: string[];
+  }> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     const issues: string[] = [];
@@ -781,7 +951,7 @@ export class FilterStorage {
       const requiredStores = [
         CONSTANTS.DB_CONFIG.STORES.RULES,
         CONSTANTS.DB_CONFIG.STORES.SETTINGS,
-        'json_rules'
+        "json_rules",
       ];
 
       for (const storeName of requiredStores) {
@@ -792,8 +962,10 @@ export class FilterStorage {
 
       // データの整合性チェック
       const jsonRules = await this.getJsonRules();
-      const invalidRules = jsonRules.filter(rule => !this.validateRuleStructure(rule));
-      
+      const invalidRules = jsonRules.filter(
+        (rule) => !this.validateRuleStructure(rule),
+      );
+
       if (invalidRules.length > 0) {
         issues.push(`Found ${invalidRules.length} invalid rule structures`);
       }
@@ -801,22 +973,28 @@ export class FilterStorage {
       // 設定の整合性チェック
       const settings = await this.getSettings();
       if (!settings.commandSettings) {
-        issues.push('Missing essential settings structure');
+        issues.push("Missing essential settings structure");
       }
 
-      window.logger?.info(`[CommentFilter2] Database integrity check completed. Issues found: ${issues.length}`);
-      
+      window.logger?.info(
+        `[CommentFilter2] Database integrity check completed. Issues found: ${issues.length}`,
+      );
+
       return {
         isValid: issues.length === 0,
-        issues
+        issues,
       };
-
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Database integrity check failed:', error);
-      issues.push(`Integrity check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      window.logger?.error(
+        "[CommentFilter2] Database integrity check failed:",
+        error,
+      );
+      issues.push(
+        `Integrity check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
       return {
         isValid: false,
-        issues
+        issues,
       };
     }
   }
@@ -824,20 +1002,23 @@ export class FilterStorage {
   /**
    * データベースの自動修復
    */
-  public async repairDatabase(): Promise<{ success: boolean; repairs: string[] }> {
+  public async repairDatabase(): Promise<{
+    success: boolean;
+    repairs: string[];
+  }> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     const repairs: string[] = [];
 
     try {
-      window.logger?.info('[CommentFilter2] Starting database repair...');
+      window.logger?.info("[CommentFilter2] Starting database repair...");
 
       // 破損したルールの修復
       const jsonRules = await this.getJsonRules();
       const repairedRules: NgRuleJson[] = [];
-      
+
       for (const rule of jsonRules) {
         const repairedRule = this.repairRuleStructure(rule);
         if (repairedRule) {
@@ -849,7 +1030,9 @@ export class FilterStorage {
 
       if (repairedRules.length !== jsonRules.length) {
         await this.saveJsonRules(repairedRules);
-        repairs.push(`Repaired ${jsonRules.length - repairedRules.length} broken rules`);
+        repairs.push(
+          `Repaired ${jsonRules.length - repairedRules.length} broken rules`,
+        );
       }
 
       // 設定の修復
@@ -863,21 +1046,25 @@ export class FilterStorage {
 
       if (settingsRepaired) {
         await this.saveSettings(settings);
-        repairs.push('Repaired missing settings structure');
+        repairs.push("Repaired missing settings structure");
       }
 
-      window.logger?.info(`[CommentFilter2] Database repair completed. Repairs made: ${repairs.length}`);
-      
+      window.logger?.info(
+        `[CommentFilter2] Database repair completed. Repairs made: ${repairs.length}`,
+      );
+
       return {
         success: true,
-        repairs
+        repairs,
       };
-
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Database repair failed:', error);
+      window.logger?.error("[CommentFilter2] Database repair failed:", error);
       return {
         success: false,
-        repairs: [...repairs, `Repair failed: ${error instanceof Error ? error.message : 'Unknown error'}`]
+        repairs: [
+          ...repairs,
+          `Repair failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        ],
       };
     }
   }
@@ -885,13 +1072,17 @@ export class FilterStorage {
   /**
    * データベースの完全バックアップ
    */
-  public async createFullBackup(): Promise<{ success: boolean; backup?: string; error?: string }> {
+  public async createFullBackup(): Promise<{
+    success: boolean;
+    backup?: string;
+    error?: string;
+  }> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     try {
-      window.logger?.info('[CommentFilter2] Creating full database backup...');
+      window.logger?.info("[CommentFilter2] Creating full database backup...");
 
       const backup = {
         version: this.dbVersion,
@@ -900,23 +1091,24 @@ export class FilterStorage {
           jsonRules: await this.getJsonRules(),
           settings: await this.getSettings(),
           legacyRules: await this.getRules(),
-          migrationHistory: await this.getMigrationHistory()
-        }
+          migrationHistory: await this.getMigrationHistory(),
+        },
       };
 
       const backupJson = JSON.stringify(backup, null, 2);
-      window.logger?.info(`[CommentFilter2] Backup created successfully (${String(backupJson.length)} characters)`);
-      
+      window.logger?.info(
+        `[CommentFilter2] Backup created successfully (${String(backupJson.length)} characters)`,
+      );
+
       return {
         success: true,
-        backup: backupJson
+        backup: backupJson,
       };
-
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Database backup failed:', error);
+      window.logger?.error("[CommentFilter2] Database backup failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -924,26 +1116,35 @@ export class FilterStorage {
   /**
    * バックアップからデータベースを復元
    */
-  public async restoreFromBackup(backupJson: string): Promise<{ success: boolean; error?: string }> {
+  public async restoreFromBackup(
+    backupJson: string,
+  ): Promise<{ success: boolean; error?: string }> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     try {
-      window.logger?.info('[CommentFilter2] Restoring database from backup...');
+      window.logger?.info("[CommentFilter2] Restoring database from backup...");
 
       const backupRaw: unknown = JSON.parse(backupJson);
-      if (!backupRaw || typeof backupRaw !== 'object') {
-        throw new Error('Invalid backup format');
+      if (!backupRaw || typeof backupRaw !== "object") {
+        throw new Error("Invalid backup format");
       }
-      const backup = backupRaw as { version?: unknown; data?: { jsonRules?: NgRuleJson[]; settings?: Settings } ; timestamp?: unknown };
-      
+      const backup = backupRaw as {
+        version?: unknown;
+        data?: { jsonRules?: NgRuleJson[]; settings?: Settings };
+        timestamp?: unknown;
+      };
+
       // バックアップの妥当性チェック
-      if (typeof backup.version !== 'number' && typeof backup.version !== 'string') {
-        throw new Error('Invalid backup version');
+      if (
+        typeof backup.version !== "number" &&
+        typeof backup.version !== "string"
+      ) {
+        throw new Error("Invalid backup version");
       }
-      if (!backup.data || typeof backup.data !== 'object') {
-        throw new Error('Invalid backup format');
+      if (!backup.data || typeof backup.data !== "object") {
+        throw new Error("Invalid backup format");
       }
 
       // データの復元
@@ -956,21 +1157,26 @@ export class FilterStorage {
       }
 
       // 復元記録を保存
-      await this.recordMigrationEvent('restore', {
+      await this.recordMigrationEvent("restore", {
         fromBackup: true,
-        backupTimestamp: typeof backup.timestamp === 'string' ? backup.timestamp : new Date().toISOString(),
-        backupVersion: typeof backup.version === 'number' ? backup.version : Number(backup.version)
+        backupTimestamp:
+          typeof backup.timestamp === "string"
+            ? backup.timestamp
+            : new Date().toISOString(),
+        backupVersion:
+          typeof backup.version === "number"
+            ? backup.version
+            : Number(backup.version),
       });
 
-      window.logger?.info('[CommentFilter2] Database restored successfully');
-      
-      return { success: true };
+      window.logger?.info("[CommentFilter2] Database restored successfully");
 
+      return { success: true };
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Database restore failed:', error);
+      window.logger?.error("[CommentFilter2] Database restore failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -978,51 +1184,67 @@ export class FilterStorage {
   /**
    * データベースのパフォーマンス最適化
    */
-  public async optimizeDatabase(): Promise<{ success: boolean; optimizations: string[] }> {
+  public async optimizeDatabase(): Promise<{
+    success: boolean;
+    optimizations: string[];
+  }> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     const optimizations: string[] = [];
 
     try {
-      window.logger?.info('[CommentFilter2] Starting database optimization...');
+      window.logger?.info("[CommentFilter2] Starting database optimization...");
 
       // 重複ルールの削除
       const jsonRules = await this.getJsonRules();
       const uniqueRules = this.removeDuplicateRules(jsonRules);
-      
+
       if (uniqueRules.length < jsonRules.length) {
         await this.saveJsonRules(uniqueRules);
-        optimizations.push(`Removed ${jsonRules.length - uniqueRules.length} duplicate rules`);
+        optimizations.push(
+          `Removed ${jsonRules.length - uniqueRules.length} duplicate rules`,
+        );
       }
 
       // 無効なルールの削除
-      const validRules = uniqueRules.filter(rule => this.validateRuleStructure(rule));
+      const validRules = uniqueRules.filter((rule) =>
+        this.validateRuleStructure(rule),
+      );
       if (validRules.length < uniqueRules.length) {
         await this.saveJsonRules(validRules);
-        optimizations.push(`Removed ${uniqueRules.length - validRules.length} invalid rules`);
+        optimizations.push(
+          `Removed ${uniqueRules.length - validRules.length} invalid rules`,
+        );
       }
 
       // 最適化記録を保存
-      await this.recordMigrationEvent('optimize', {
+      await this.recordMigrationEvent("optimize", {
         rulesOptimized: optimizations.length > 0,
         originalCount: jsonRules.length,
-        optimizedCount: validRules.length
+        optimizedCount: validRules.length,
       });
 
-      window.logger?.info(`[CommentFilter2] Database optimization completed. Optimizations: ${optimizations.length}`);
-      
+      window.logger?.info(
+        `[CommentFilter2] Database optimization completed. Optimizations: ${optimizations.length}`,
+      );
+
       return {
         success: true,
-        optimizations
+        optimizations,
       };
-
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Database optimization failed:', error);
+      window.logger?.error(
+        "[CommentFilter2] Database optimization failed:",
+        error,
+      );
       return {
         success: false,
-        optimizations: [...optimizations, `Optimization failed: ${error instanceof Error ? error.message : 'Unknown error'}`]
+        optimizations: [
+          ...optimizations,
+          `Optimization failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        ],
       };
     }
   }
@@ -1032,9 +1254,12 @@ export class FilterStorage {
   /**
    * マイグレーション履歴の記録
    */
-  public async recordMigrationEvent(eventType: string, details: MigrationEventDetails): Promise<void> {
+  public async recordMigrationEvent(
+    eventType: string,
+    details: MigrationEventDetails,
+  ): Promise<void> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     try {
@@ -1043,16 +1268,25 @@ export class FilterStorage {
         eventType,
         timestamp: new Date().toISOString(),
         details,
-        version: this.dbVersion
+        version: this.dbVersion,
       };
 
-      const transaction = this.db.transaction([CONSTANTS.DB_CONFIG.STORES.SETTINGS], 'readwrite');
-      const store = transaction.objectStore(CONSTANTS.DB_CONFIG.STORES.SETTINGS);
+      const transaction = this.db.transaction(
+        [CONSTANTS.DB_CONFIG.STORES.SETTINGS],
+        "readwrite",
+      );
+      const store = transaction.objectStore(
+        CONSTANTS.DB_CONFIG.STORES.SETTINGS,
+      );
       await this.putToStore(store, migrationRecord);
-      window.logger?.info(`[CommentFilter2] Migration event recorded: ${eventType}`);
-
+      window.logger?.info(
+        `[CommentFilter2] Migration event recorded: ${eventType}`,
+      );
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Failed to record migration event:', error);
+      window.logger?.error(
+        "[CommentFilter2] Failed to record migration event:",
+        error,
+      );
     }
   }
 
@@ -1061,28 +1295,34 @@ export class FilterStorage {
    */
   public async getMigrationHistory(): Promise<MigrationHistoryRecord[]> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     try {
       const allSettings = await this.getAllSettings();
       const migrationEvents = Object.entries(allSettings)
-        .filter(([key]) => key.startsWith('migration_'))
+        .filter(([key]) => key.startsWith("migration_"))
         .map(([, value]) => value as unknown as MigrationHistoryRecord)
-        .filter((record): record is MigrationHistoryRecord => 
-          typeof record === 'object' && 
-          record !== null && 
-          'eventType' in record && 
-          'timestamp' in record && 
-          'details' in record && 
-          'version' in record
+        .filter(
+          (record): record is MigrationHistoryRecord =>
+            typeof record === "object" &&
+            record !== null &&
+            "eventType" in record &&
+            "timestamp" in record &&
+            "details" in record &&
+            "version" in record,
         )
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        .sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+        );
 
       return migrationEvents;
-
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Failed to get migration history:', error);
+      window.logger?.error(
+        "[CommentFilter2] Failed to get migration history:",
+        error,
+      );
       return [];
     }
   }
@@ -1090,45 +1330,58 @@ export class FilterStorage {
   /**
    * 段階的マイグレーション機能
    */
-  public async performIncrementalMigration(targetVersion: number): Promise<{ success: boolean; steps: string[] }> {
+  public async performIncrementalMigration(
+    targetVersion: number,
+  ): Promise<{ success: boolean; steps: string[] }> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     const steps: string[] = [];
 
     try {
-      window.logger?.info(`[CommentFilter2] Starting incremental migration to version ${targetVersion}`);
+      window.logger?.info(
+        `[CommentFilter2] Starting incremental migration to version ${targetVersion}`,
+      );
 
       const currentVersion = this.dbVersion;
-      
+
       for (let version = currentVersion; version <= targetVersion; version++) {
         const migrationResult = await this.performVersionMigration(version);
         steps.push(migrationResult.description);
-        
+
         if (!migrationResult.success) {
-          throw new Error(`Migration to version ${version} failed: ${migrationResult.error}`);
+          throw new Error(
+            `Migration to version ${version} failed: ${migrationResult.error}`,
+          );
         }
       }
 
-      await this.recordMigrationEvent('incremental', {
+      await this.recordMigrationEvent("incremental", {
         fromVersion: currentVersion,
         toVersion: targetVersion,
-        steps
+        steps,
       });
 
-      window.logger?.info(`[CommentFilter2] Incremental migration completed successfully`);
-      
+      window.logger?.info(
+        `[CommentFilter2] Incremental migration completed successfully`,
+      );
+
       return {
         success: true,
-        steps
+        steps,
       };
-
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Incremental migration failed:', error);
+      window.logger?.error(
+        "[CommentFilter2] Incremental migration failed:",
+        error,
+      );
       return {
         success: false,
-        steps: [...steps, `Migration failed: ${error instanceof Error ? error.message : 'Unknown error'}`]
+        steps: [
+          ...steps,
+          `Migration failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        ],
       };
     }
   }
@@ -1136,7 +1389,9 @@ export class FilterStorage {
   /**
    * 特定バージョンへのマイグレーション実行
    */
-  private async performVersionMigration(version: number): Promise<{ success: boolean; description: string; error?: string }> {
+  private async performVersionMigration(
+    version: number,
+  ): Promise<{ success: boolean; description: string; error?: string }> {
     await Promise.resolve();
     try {
       switch (version) {
@@ -1144,25 +1399,25 @@ export class FilterStorage {
           // 将来のバージョン4用のマイグレーション
           return {
             success: true,
-            description: `Version ${version} migration: Enhanced indexing and performance improvements`
+            description: `Version ${version} migration: Enhanced indexing and performance improvements`,
           };
         case 5:
           // 将来のバージョン5用のマイグレーション
           return {
             success: true,
-            description: `Version ${version} migration: Advanced filtering features`
+            description: `Version ${version} migration: Advanced filtering features`,
           };
         default:
           return {
             success: true,
-            description: `Version ${version} migration: No changes required`
+            description: `Version ${version} migration: No changes required`,
           };
       }
     } catch (error) {
       return {
         success: false,
         description: `Version ${version} migration failed`,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -1180,7 +1435,10 @@ export class FilterStorage {
       }
 
       // アクションの検証
-      if (!rule.action.type || !['hide', 'replace'].includes(rule.action.type)) {
+      if (
+        !rule.action.type ||
+        !["hide", "replace"].includes(rule.action.type)
+      ) {
         return false;
       }
 
@@ -1192,14 +1450,13 @@ export class FilterStorage {
       // 正規表現がある場合の検証
       if (rule.pattern) {
         try {
-          new RegExp(rule.pattern, rule.flags || 'gi');
+          new RegExp(rule.pattern, rule.flags || "gi");
         } catch {
           return false;
         }
       }
 
       return true;
-
     } catch {
       return false;
     }
@@ -1213,9 +1470,9 @@ export class FilterStorage {
       // 基本的な修復
       const repaired: NgRuleJson = {
         ...rule,
-        action: rule.action || { type: 'hide' },
-        smid: Array.isArray(rule.smid) ? rule.smid : ['ALL'],
-        enabled: rule.enabled !== undefined ? rule.enabled : true
+        action: rule.action || { type: "hide" },
+        smid: Array.isArray(rule.smid) ? rule.smid : ["ALL"],
+        enabled: rule.enabled !== undefined ? rule.enabled : true,
       };
 
       // 修復後の検証
@@ -1224,7 +1481,6 @@ export class FilterStorage {
       }
 
       return null;
-
     } catch {
       return null;
     }
@@ -1242,7 +1498,7 @@ export class FilterStorage {
         pattern: rule.pattern,
         userId: rule.userId,
         action: rule.action,
-        smid: rule.smid?.sort()
+        smid: rule.smid?.sort(),
       });
 
       if (!seen.has(key)) {
@@ -1259,12 +1515,17 @@ export class FilterStorage {
    */
   private async getAllSettings(): Promise<SettingsStorage> {
     if (!this.db) {
-      throw new Error('Database not initialized');
+      throw new Error("Database not initialized");
     }
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction([CONSTANTS.DB_CONFIG.STORES.SETTINGS], 'readonly');
-      const store = transaction.objectStore(CONSTANTS.DB_CONFIG.STORES.SETTINGS);
+      const transaction = this.db!.transaction(
+        [CONSTANTS.DB_CONFIG.STORES.SETTINGS],
+        "readonly",
+      );
+      const store = transaction.objectStore(
+        CONSTANTS.DB_CONFIG.STORES.SETTINGS,
+      );
       const request = store.getAll();
 
       request.onsuccess = () => {
@@ -1276,8 +1537,8 @@ export class FilterStorage {
       };
 
       request.onerror = () => {
-        reject(new Error('Failed to get all settings'));
+        reject(new Error("Failed to get all settings"));
       };
     });
   }
-} 
+}

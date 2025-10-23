@@ -1,6 +1,12 @@
 import "@/types/global-types";
 import type { IntegratedNicoData, NicoApiData } from "@/types/common-types";
-import { fetchCacheInfo, fetchCommentsWithApi, fetchMediaInfo, fetchThumbInfo, fetchWatchApiData } from "@/movie-info/api-clients";
+import {
+  fetchCacheInfo,
+  fetchCommentsWithApi,
+  fetchMediaInfo,
+  fetchThumbInfo,
+  fetchWatchApiData,
+} from "@/movie-info/api-clients";
 import { headerAdjustments } from "@/movie-info/header-adjustments";
 import { applyMovieInfoDashboardStyles } from "@/movie-info/styles";
 import { PanelController } from "@/movie-info/ui";
@@ -63,7 +69,10 @@ const updateUrlWithVideoId = (videoId: string): void => {
   }
 };
 
-const sanitizeFileSegment = (value: string | null | undefined, fallback: string): string => {
+const sanitizeFileSegment = (
+  value: string | null | undefined,
+  fallback: string,
+): string => {
   if (typeof value !== "string") {
     return fallback;
   }
@@ -89,7 +98,9 @@ const createJsonDownloadDescriptor = (
   };
 };
 
-const createSummaryGrid = (rows: Array<{ label: string; value: string }>): HTMLElement => {
+const createSummaryGrid = (
+  rows: Array<{ label: string; value: string }>,
+): HTMLElement => {
   const dl = document.createElement("dl");
   dl.className = "summary-grid";
   rows.forEach((row) => {
@@ -119,8 +130,12 @@ const buildCacheSummary = (entry: CacheEntry): HTMLElement => {
   const container = document.createElement("div");
   container.className = "summary-container";
   const caches = Object.values(entry.caches ?? {});
-  const completeCount = Array.isArray(entry.completes) ? entry.completes.length : 0;
-  const cachingCount = Array.isArray(entry.cachings) ? entry.cachings.length : 0;
+  const completeCount = Array.isArray(entry.completes)
+    ? entry.completes.length
+    : 0;
+  const cachingCount = Array.isArray(entry.cachings)
+    ? entry.cachings.length
+    : 0;
   const totalSize = caches.reduce((acc, item) => {
     const size = typeof item.size === "number" ? item.size : 0;
     return acc + size;
@@ -129,7 +144,10 @@ const buildCacheSummary = (entry: CacheEntry): HTMLElement => {
     { label: "preferred", value: entry.preferred || "-" },
     { label: "完了キャッシュ", value: String(completeCount) },
     { label: "取得中", value: String(cachingCount) },
-    { label: "登録キャッシュ", value: String(Array.isArray(entry.cacheIds) ? entry.cacheIds.length : 0) },
+    {
+      label: "登録キャッシュ",
+      value: String(Array.isArray(entry.cacheIds) ? entry.cacheIds.length : 0),
+    },
     { label: "合計サイズ", value: formatBytes(totalSize) },
   ]);
   container.appendChild(primary);
@@ -140,10 +158,13 @@ const buildCacheSummary = (entry: CacheEntry): HTMLElement => {
     meta.appendChild(document.createTextNode("キャッシュ詳細"));
     caches.slice(0, 3).forEach((item) => {
       const line = document.createElement("div");
-      const quality = item?.dmcMovieType && typeof item.dmcMovieType === "object"
-        ? String(item.dmcMovieType.videoMode || "")
-        : "";
-      const summary = [item.cacheId || "", quality, formatBytes(item.size)].filter((value) => value && value !== "-").join(" / ");
+      const quality =
+        item?.dmcMovieType && typeof item.dmcMovieType === "object"
+          ? String(item.dmcMovieType.videoMode || "")
+          : "";
+      const summary = [item.cacheId || "", quality, formatBytes(item.size)]
+        .filter((value) => value && value !== "-")
+        .join(" / ");
       line.textContent = summary;
       meta.appendChild(line);
     });
@@ -179,12 +200,14 @@ const buildThumbSummary = (thumb: ThumbInfo): HTMLElement => {
   meta.className = "video-meta";
   if (thumb.owner) {
     const ownerLine = document.createElement("div");
-    ownerLine.textContent = "投稿者: " + (thumb.owner.nickname || thumb.owner.id);
+    ownerLine.textContent =
+      "投稿者: " + (thumb.owner.nickname || thumb.owner.id);
     meta.appendChild(ownerLine);
   }
   if (thumb.channel) {
     const channelLine = document.createElement("div");
-    channelLine.textContent = "チャンネル: " + (thumb.channel.nickname || thumb.channel.id);
+    channelLine.textContent =
+      "チャンネル: " + (thumb.channel.nickname || thumb.channel.id);
     meta.appendChild(channelLine);
   }
   if (thumb.watchUrl) {
@@ -201,17 +224,46 @@ const buildThumbSummary = (thumb: ThumbInfo): HTMLElement => {
 const buildApiSummary = (apiData: NicoApiData): HTMLElement => {
   const container = document.createElement("div");
   container.className = "summary-container";
-  const video = (apiData as Record<string, unknown>).video as Record<string, unknown> | undefined;
-  const owner = (apiData as Record<string, unknown>).owner as Record<string, unknown> | undefined;
-  const channel = (apiData as Record<string, unknown>).channel as Record<string, unknown> | undefined;
+  const video = (apiData as Record<string, unknown>).video as
+    | Record<string, unknown>
+    | undefined;
+  const owner = (apiData as Record<string, unknown>).owner as
+    | Record<string, unknown>
+    | undefined;
+  const channel = (apiData as Record<string, unknown>).channel as
+    | Record<string, unknown>
+    | undefined;
   const count = video?.count as Record<string, unknown> | undefined;
 
   const primary = createSummaryGrid([
-    { label: "タイトル", value: typeof video?.title === "string" ? video.title : "-" },
-    { label: "再生数", value: formatNumber(typeof count?.view === "number" ? count.view : undefined) },
-    { label: "コメント", value: formatNumber(typeof count?.comment === "number" ? count.comment : undefined) },
-    { label: "マイリスト", value: formatNumber(typeof count?.mylist === "number" ? count.mylist : undefined) },
-    { label: "長さ(秒)", value: formatNumber(typeof video?.duration === "number" ? video.duration : undefined) },
+    {
+      label: "タイトル",
+      value: typeof video?.title === "string" ? video.title : "-",
+    },
+    {
+      label: "再生数",
+      value: formatNumber(
+        typeof count?.view === "number" ? count.view : undefined,
+      ),
+    },
+    {
+      label: "コメント",
+      value: formatNumber(
+        typeof count?.comment === "number" ? count.comment : undefined,
+      ),
+    },
+    {
+      label: "マイリスト",
+      value: formatNumber(
+        typeof count?.mylist === "number" ? count.mylist : undefined,
+      ),
+    },
+    {
+      label: "長さ(秒)",
+      value: formatNumber(
+        typeof video?.duration === "number" ? video.duration : undefined,
+      ),
+    },
   ]);
   container.appendChild(primary);
 
@@ -246,12 +298,17 @@ const buildMediaSummary = (mediaInfo: MediaInfoResponse): HTMLElement => {
     const media = item?.media;
     const trackEntries = media?.track;
     const tracks = Array.isArray(trackEntries) ? trackEntries : [];
-    const videoTracks = tracks.filter((track) => track && track["@type"] === "Video");
-    const audioTracks = tracks.filter((track) => track && track["@type"] === "Audio");
+    const videoTracks = tracks.filter(
+      (track) => track && track["@type"] === "Video",
+    );
+    const audioTracks = tracks.filter(
+      (track) => track && track["@type"] === "Audio",
+    );
     const refCandidate = media ? media["@ref"] : undefined;
     const refValue = typeof refCandidate === "string" ? refCandidate : "-";
     const formatCandidate = tracks.length > 0 ? tracks[0]?.Format : undefined;
-    const formatValue = typeof formatCandidate === "string" ? formatCandidate : "-";
+    const formatValue =
+      typeof formatCandidate === "string" ? formatCandidate : "-";
     const grid = createSummaryGrid([
       { label: "参照" + String(index + 1), value: refValue },
       { label: "Video", value: String(videoTracks.length) + "本" },
@@ -275,7 +332,10 @@ const buildCommentSummary = (preview: CommentPreview): HTMLElement => {
   container.className = "summary-container";
   const primary = createSummaryGrid([
     { label: "コメント総数", value: String(preview.totalCount) },
-    { label: "メインスレッド", value: preview.mainThread ? preview.mainThread.id : "-" },
+    {
+      label: "メインスレッド",
+      value: preview.mainThread ? preview.mainThread.id : "-",
+    },
     { label: "表示件数", value: String(preview.sampleComments.length) },
   ]);
   container.appendChild(primary);
@@ -296,7 +356,10 @@ const buildCommentSummary = (preview: CommentPreview): HTMLElement => {
 const createCommentPreview = (data: IntegratedNicoData): CommentPreview => {
   const sample = data.comments.slice(0, COMMENT_PREVIEW_LIMIT);
   return {
-    note: "表示は先頭" + String(sample.length) + "件です。完全なデータはJSONダウンロードを使用してください。",
+    note:
+      "表示は先頭" +
+      String(sample.length) +
+      "件です。完全なデータはJSONダウンロードを使用してください。",
     totalCount: data.comments.length,
     mainThread: data.mainThread,
     sampleComments: sample,
@@ -325,179 +388,252 @@ type PanelMap = {
   comments: PanelController;
 };
 
-document.addEventListener("DOMContentLoaded", () => void (async () => {
-  applyMovieInfoDashboardStyles();
-  headerAdjustments();
+document.addEventListener(
+  "DOMContentLoaded",
+  () =>
+    void (async () => {
+      applyMovieInfoDashboardStyles();
+      headerAdjustments();
 
-  const headerContainer = document.getElementById("common-header-container");
-  if (headerContainer && (window as unknown as { NicoCommon?: { createHeader?: (id: string, config: Record<string, unknown>) => void } }).NicoCommon?.createHeader) {
-    (window as unknown as { NicoCommon: { createHeader: (id: string, config: Record<string, unknown>) => void } }).NicoCommon.createHeader("common-header-container", {
-      title: "Movie Info Dashboard",
-      showSearch: true,
-      showMoreLinks: true,
-    });
-  }
-
-  const videoInput = document.getElementById("video-id-input") as HTMLInputElement | null;
-  const loadButton = document.getElementById("load-data-btn") as HTMLButtonElement | null;
-  const globalStatus = document.getElementById("global-status");
-  const commentButton = document.getElementById("fetch-comments-btn") as HTMLButtonElement | null;
-
-  const panels: PanelMap = {
-    watch: new PanelController(document.getElementById("panel-watch-api") as HTMLElement),
-    cache: new PanelController(document.getElementById("panel-cache-info") as HTMLElement),
-    thumb: new PanelController(document.getElementById("panel-thumb-info") as HTMLElement),
-    media: new PanelController(document.getElementById("panel-media-info") as HTMLElement),
-    comments: new PanelController(document.getElementById("panel-comments") as HTMLElement),
-  };
-
-  let currentVideoId: string | null = null;
-
-  const setCommentButtonIdle = (): void => {
-    if (commentButton) {
-      commentButton.disabled = currentVideoId === null;
-      commentButton.textContent = "コメントを取得";
-    }
-  };
-
-  const handleLoad = async (videoId: string): Promise<void> => {
-    currentVideoId = videoId;
-    updateUrlWithVideoId(videoId);
-    panels.comments.reset("コメントは未取得です" + "。ボタンから取得できます。");
-    setCommentButtonIdle();
-    setStatusText(globalStatus, "データ取得中...");
-
-    panels.watch.setStatus("loading", "apiDataを取得中です...");
-    panels.watch.setSummaryContent(null);
-    panels.cache.setStatus("loading", "キャッシュ情報を取得中です...");
-    panels.cache.setSummaryContent(null);
-    panels.thumb.setStatus("loading", "サムネイル情報を取得中です...");
-    panels.thumb.setSummaryContent(null);
-    panels.media.setStatus("loading", "MediaInfoを取得中です...");
-    panels.media.setSummaryContent(null);
-    panels.watch.setDownloadDescriptor(null);
-    panels.cache.setDownloadDescriptor(null);
-    panels.thumb.setDownloadDescriptor(null);
-    panels.media.setDownloadDescriptor(null);
-
-    try {
-      const [apiData, cacheInfo, thumbInfo, mediaInfo] = await Promise.all([
-        fetchWatchApiData(videoId),
-        fetchCacheInfo(videoId),
-        fetchThumbInfo(videoId),
-        fetchMediaInfo(videoId),
-      ]);
-
-      panels.watch.setStatus("success", "apiDataを取得しました");
-      panels.watch.setSummaryContent(buildApiSummary(apiData));
-      panels.watch.setJsonData(apiData);
-      panels.watch.setDownloadDescriptor(
-        createJsonDownloadDescriptor(currentVideoId, "api-data", () => apiData),
+      const headerContainer = document.getElementById(
+        "common-header-container",
       );
-
-      panels.cache.setStatus("success", "キャッシュ情報を取得しました");
-      panels.cache.setSummaryContent(buildCacheSummary(cacheInfo));
-      panels.cache.setJsonData(cacheInfo);
-      panels.cache.setDownloadDescriptor(
-        createJsonDownloadDescriptor(currentVideoId, "cache-info", () => cacheInfo),
-      );
-
-      panels.thumb.setStatus("success", "サムネイル情報を取得しました");
-      panels.thumb.setSummaryContent(buildThumbSummary(thumbInfo));
-      panels.thumb.setJsonData(thumbInfo);
-      panels.thumb.setDownloadDescriptor(
-        createJsonDownloadDescriptor(currentVideoId, "thumb-info", () => thumbInfo),
-      );
-
-      panels.media.setStatus("success", "MediaInfoを取得しました");
-      panels.media.setSummaryContent(buildMediaSummary(mediaInfo));
-      panels.media.setJsonData(mediaInfo);
-      panels.media.setDownloadDescriptor(
-        createJsonDownloadDescriptor(currentVideoId, "media-info", () => mediaInfo),
-      );
-
-      setStatusText(globalStatus, "データ取得が完了しました");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      window.logger?.error?.("[movie-info] data load failed", message);
-      setStatusText(globalStatus, "データ取得に失敗しました: " + message);
-
-      if (!panels.watch) {
-        return;
+      if (
+        headerContainer &&
+        (
+          window as unknown as {
+            NicoCommon?: {
+              createHeader?: (
+                id: string,
+                config: Record<string, unknown>,
+              ) => void;
+            };
+          }
+        ).NicoCommon?.createHeader
+      ) {
+        (
+          window as unknown as {
+            NicoCommon: {
+              createHeader: (
+                id: string,
+                config: Record<string, unknown>,
+              ) => void;
+            };
+          }
+        ).NicoCommon.createHeader("common-header-container", {
+          title: "Movie Info Dashboard",
+          showSearch: true,
+          showMoreLinks: true,
+        });
       }
-      panels.watch.setStatus("error", message);
-      panels.cache.setStatus("error", message);
-      panels.thumb.setStatus("error", message);
-      panels.media.setStatus("error", message);
-    }
-  };
 
-  const handleCommentFetch = async (): Promise<void> => {
-    if (!currentVideoId || !commentButton) {
-      return;
-    }
-    commentButton.disabled = true;
-    commentButton.textContent = "取得中...";
-    panels.comments.setStatus("loading", "コメントを取得中です...");
-    panels.comments.setDownloadDescriptor(null);
+      const videoInput = document.getElementById(
+        "video-id-input",
+      ) as HTMLInputElement | null;
+      const loadButton = document.getElementById(
+        "load-data-btn",
+      ) as HTMLButtonElement | null;
+      const globalStatus = document.getElementById("global-status");
+      const commentButton = document.getElementById(
+        "fetch-comments-btn",
+      ) as HTMLButtonElement | null;
 
-    try {
-      const data = await fetchCommentsWithApi(currentVideoId);
-      const preview = createCommentPreview(data);
-      panels.comments.setStatus("success", "コメントを取得しました");
-      panels.comments.setSummaryContent(buildCommentSummary(preview));
-      panels.comments.setJsonData(preview);
-      panels.comments.setDownloadDescriptor(
-        createJsonDownloadDescriptor(currentVideoId, "comments", () => data),
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      panels.comments.setStatus("error", "コメント取得に失敗しました: " + message);
-      panels.comments.setDownloadDescriptor(null);
-    }
-    setCommentButtonIdle();
-  };
+      const panels: PanelMap = {
+        watch: new PanelController(
+          document.getElementById("panel-watch-api") as HTMLElement,
+        ),
+        cache: new PanelController(
+          document.getElementById("panel-cache-info") as HTMLElement,
+        ),
+        thumb: new PanelController(
+          document.getElementById("panel-thumb-info") as HTMLElement,
+        ),
+        media: new PanelController(
+          document.getElementById("panel-media-info") as HTMLElement,
+        ),
+        comments: new PanelController(
+          document.getElementById("panel-comments") as HTMLElement,
+        ),
+      };
 
-  if (loadButton) {
-    loadButton.addEventListener("click", () => {
-      const inputValue = videoInput ? videoInput.value : "";
-      const normalized = normalizeVideoIdFromInput(inputValue);
-      if (!normalized) {
-        setStatusText(globalStatus, "動画IDを正しく入力してください");
-        return;
-      }
-      if (videoInput) {
-        videoInput.value = normalized;
-      }
-      void handleLoad(normalized);
-    });
-  }
+      let currentVideoId: string | null = null;
 
-  if (videoInput) {
-    videoInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        if (loadButton) {
-          loadButton.click();
+      const setCommentButtonIdle = (): void => {
+        if (commentButton) {
+          commentButton.disabled = currentVideoId === null;
+          commentButton.textContent = "コメントを取得";
         }
+      };
+
+      const handleLoad = async (videoId: string): Promise<void> => {
+        currentVideoId = videoId;
+        updateUrlWithVideoId(videoId);
+        panels.comments.reset(
+          "コメントは未取得です" + "。ボタンから取得できます。",
+        );
+        setCommentButtonIdle();
+        setStatusText(globalStatus, "データ取得中...");
+
+        panels.watch.setStatus("loading", "apiDataを取得中です...");
+        panels.watch.setSummaryContent(null);
+        panels.cache.setStatus("loading", "キャッシュ情報を取得中です...");
+        panels.cache.setSummaryContent(null);
+        panels.thumb.setStatus("loading", "サムネイル情報を取得中です...");
+        panels.thumb.setSummaryContent(null);
+        panels.media.setStatus("loading", "MediaInfoを取得中です...");
+        panels.media.setSummaryContent(null);
+        panels.watch.setDownloadDescriptor(null);
+        panels.cache.setDownloadDescriptor(null);
+        panels.thumb.setDownloadDescriptor(null);
+        panels.media.setDownloadDescriptor(null);
+
+        try {
+          const [apiData, cacheInfo, thumbInfo, mediaInfo] = await Promise.all([
+            fetchWatchApiData(videoId),
+            fetchCacheInfo(videoId),
+            fetchThumbInfo(videoId),
+            fetchMediaInfo(videoId),
+          ]);
+
+          panels.watch.setStatus("success", "apiDataを取得しました");
+          panels.watch.setSummaryContent(buildApiSummary(apiData));
+          panels.watch.setJsonData(apiData);
+          panels.watch.setDownloadDescriptor(
+            createJsonDownloadDescriptor(
+              currentVideoId,
+              "api-data",
+              () => apiData,
+            ),
+          );
+
+          panels.cache.setStatus("success", "キャッシュ情報を取得しました");
+          panels.cache.setSummaryContent(buildCacheSummary(cacheInfo));
+          panels.cache.setJsonData(cacheInfo);
+          panels.cache.setDownloadDescriptor(
+            createJsonDownloadDescriptor(
+              currentVideoId,
+              "cache-info",
+              () => cacheInfo,
+            ),
+          );
+
+          panels.thumb.setStatus("success", "サムネイル情報を取得しました");
+          panels.thumb.setSummaryContent(buildThumbSummary(thumbInfo));
+          panels.thumb.setJsonData(thumbInfo);
+          panels.thumb.setDownloadDescriptor(
+            createJsonDownloadDescriptor(
+              currentVideoId,
+              "thumb-info",
+              () => thumbInfo,
+            ),
+          );
+
+          panels.media.setStatus("success", "MediaInfoを取得しました");
+          panels.media.setSummaryContent(buildMediaSummary(mediaInfo));
+          panels.media.setJsonData(mediaInfo);
+          panels.media.setDownloadDescriptor(
+            createJsonDownloadDescriptor(
+              currentVideoId,
+              "media-info",
+              () => mediaInfo,
+            ),
+          );
+
+          setStatusText(globalStatus, "データ取得が完了しました");
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          window.logger?.error?.("[movie-info] data load failed", message);
+          setStatusText(globalStatus, "データ取得に失敗しました: " + message);
+
+          if (!panels.watch) {
+            return;
+          }
+          panels.watch.setStatus("error", message);
+          panels.cache.setStatus("error", message);
+          panels.thumb.setStatus("error", message);
+          panels.media.setStatus("error", message);
+        }
+      };
+
+      const handleCommentFetch = async (): Promise<void> => {
+        if (!currentVideoId || !commentButton) {
+          return;
+        }
+        commentButton.disabled = true;
+        commentButton.textContent = "取得中...";
+        panels.comments.setStatus("loading", "コメントを取得中です...");
+        panels.comments.setDownloadDescriptor(null);
+
+        try {
+          const data = await fetchCommentsWithApi(currentVideoId);
+          const preview = createCommentPreview(data);
+          panels.comments.setStatus("success", "コメントを取得しました");
+          panels.comments.setSummaryContent(buildCommentSummary(preview));
+          panels.comments.setJsonData(preview);
+          panels.comments.setDownloadDescriptor(
+            createJsonDownloadDescriptor(
+              currentVideoId,
+              "comments",
+              () => data,
+            ),
+          );
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          panels.comments.setStatus(
+            "error",
+            "コメント取得に失敗しました: " + message,
+          );
+          panels.comments.setDownloadDescriptor(null);
+        }
+        setCommentButtonIdle();
+      };
+
+      if (loadButton) {
+        loadButton.addEventListener("click", () => {
+          const inputValue = videoInput ? videoInput.value : "";
+          const normalized = normalizeVideoIdFromInput(inputValue);
+          if (!normalized) {
+            setStatusText(globalStatus, "動画IDを正しく入力してください");
+            return;
+          }
+          if (videoInput) {
+            videoInput.value = normalized;
+          }
+          void handleLoad(normalized);
+        });
       }
-    });
-  }
 
-  if (commentButton) {
-    commentButton.addEventListener("click", () => {
-      void handleCommentFetch();
-    });
-  }
+      if (videoInput) {
+        videoInput.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            if (loadButton) {
+              loadButton.click();
+            }
+          }
+        });
+      }
 
-  const initialVideoId = (await window.commonHelper?.getVideoIdWithFallback?.()) || normalizeVideoIdFromInput(window.location.search) || null;
-  if (initialVideoId) {
-    if (videoInput) {
-      videoInput.value = initialVideoId;
-    }
-    void handleLoad(initialVideoId);
-  } else {
-    setStatusText(globalStatus, "動画IDを入力してデータを取得してください");
-    setCommentButtonIdle();
-  }
-})());
+      if (commentButton) {
+        commentButton.addEventListener("click", () => {
+          void handleCommentFetch();
+        });
+      }
+
+      const initialVideoId =
+        (await window.commonHelper?.getVideoIdWithFallback?.()) ||
+        normalizeVideoIdFromInput(window.location.search) ||
+        null;
+      if (initialVideoId) {
+        if (videoInput) {
+          videoInput.value = initialVideoId;
+        }
+        void handleLoad(initialVideoId);
+      } else {
+        setStatusText(globalStatus, "動画IDを入力してデータを取得してください");
+        setCommentButtonIdle();
+      }
+    })(),
+);

@@ -19,7 +19,7 @@ export class ImportExportService {
 
   async exportData(): Promise<ExportData> {
     const database = await this.db.initDB();
-    
+
     // マイリスト一覧を取得
     const mylistsTransaction = database.transaction(["mylists"], "readonly");
     const mylistsStore = mylistsTransaction.objectStore("mylists");
@@ -56,7 +56,10 @@ export class ImportExportService {
 
   async importData(data: ExportData): Promise<void> {
     const database = await this.db.initDB();
-    const transaction = database.transaction(["mylists", "videos", "keywords"], "readwrite");
+    const transaction = database.transaction(
+      ["mylists", "videos", "keywords"],
+      "readwrite",
+    );
     const mylistStore = transaction.objectStore("mylists");
     const videoStore = transaction.objectStore("videos");
     const keywordStore = transaction.objectStore("keywords");
@@ -106,10 +109,10 @@ export class ImportExportService {
 
   // レガシーデータのインポート処理
   async importLegacyData(
-    jsonText: string, 
+    jsonText: string,
     progressCallback?: (processed: number, total: number) => void,
     createMylistFunc?: (name: string) => Promise<number>,
-    addVideoFunc?: (mylistId: number, videoInfo: VideoInfo) => Promise<string>
+    addVideoFunc?: (mylistId: number, videoInfo: VideoInfo) => Promise<string>,
   ): Promise<number> {
     try {
       const legacyData = JSON.parse(jsonText) as LegacyVideo[];
@@ -120,7 +123,9 @@ export class ImportExportService {
 
       // mylist作成関数がない場合はエラー
       if (!createMylistFunc || !addVideoFunc) {
-        throw new Error("マイリスト作成関数または動画追加関数が提供されていません");
+        throw new Error(
+          "マイリスト作成関数または動画追加関数が提供されていません",
+        );
       }
 
       const mylistId = await createMylistFunc("インポートされたマイリスト");
@@ -136,25 +141,49 @@ export class ImportExportService {
             try {
               const existingData: Partial<VideoInfo> = {
                 title: video.title,
-                viewCount: typeof video.view_counter === "string" ? parseInt(video.view_counter) : video.view_counter,
-                commentCount: typeof video.comment_num === "string" ? parseInt(video.comment_num) : video.comment_num,
-                mylistCount: typeof video.mylist_counter === "string" ? parseInt(video.mylist_counter) : video.mylist_counter,
+                viewCount:
+                  typeof video.view_counter === "string"
+                    ? parseInt(video.view_counter)
+                    : video.view_counter,
+                commentCount:
+                  typeof video.comment_num === "string"
+                    ? parseInt(video.comment_num)
+                    : video.comment_num,
+                mylistCount:
+                  typeof video.mylist_counter === "string"
+                    ? parseInt(video.mylist_counter)
+                    : video.mylist_counter,
                 thumbnailUrl: video.thumbUrl,
                 uploadedAt: video.first_retrieve,
                 authorName: video.author,
               };
 
-              const videoInfo = await this.apiService.getVideoInfoFromSources(video.vid, existingData);
+              const videoInfo = await this.apiService.getVideoInfoFromSources(
+                video.vid,
+                existingData,
+              );
               await addVideoFunc(mylistId, videoInfo);
             } catch (error) {
-              window.logger.warn(`動画「${video.title}」の処理に失敗しました:`, error);
+              window.logger.warn(
+                `動画「${video.title}」の処理に失敗しました:`,
+                error,
+              );
               // 最低限のデータで登録
               await addVideoFunc(mylistId, {
                 id: video.vid,
                 title: video.title || "取得失敗",
-                viewCount: typeof video.view_counter === "string" ? parseInt(video.view_counter) : (video.view_counter || 0),
-                commentCount: typeof video.comment_num === "string" ? parseInt(video.comment_num) : (video.comment_num || 0),
-                mylistCount: typeof video.mylist_counter === "string" ? parseInt(video.mylist_counter) : (video.mylist_counter || 0),
+                viewCount:
+                  typeof video.view_counter === "string"
+                    ? parseInt(video.view_counter)
+                    : video.view_counter || 0,
+                commentCount:
+                  typeof video.comment_num === "string"
+                    ? parseInt(video.comment_num)
+                    : video.comment_num || 0,
+                mylistCount:
+                  typeof video.mylist_counter === "string"
+                    ? parseInt(video.mylist_counter)
+                    : video.mylist_counter || 0,
                 thumbnailUrl: video.thumbUrl || "",
                 uploadedAt: video.first_retrieve || Date.now(),
                 authorName: video.author || "不明",
@@ -165,14 +194,16 @@ export class ImportExportService {
             if (progressCallback) {
               progressCallback(processed, total);
             }
-          })
+          }),
         );
       }
 
       return mylistId;
     } catch (error) {
       window.logger.error("レガシーデータのインポートに失敗しました:", error);
-      throw new Error(`レガシーデータのインポートに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+      throw new Error(
+        `レガシーデータのインポートに失敗しました: ${error instanceof Error ? error.message : "不明なエラー"}`,
+      );
     }
   }
-} 
+}

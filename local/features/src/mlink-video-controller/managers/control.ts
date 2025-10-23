@@ -1,5 +1,10 @@
-import { NicoVideoPlayer } from '@/mlink-video-controller/services/nico-video-player';
-import { PlaybackState, SeekOptions, VolumeOptions, PlaybackRateOptions } from '@/types/mlink-video-controller-types';
+import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
+import {
+  PlaybackState,
+  SeekOptions,
+  VolumeOptions,
+  PlaybackRateOptions,
+} from "@/types/mlink-video-controller-types";
 
 export class ControlManager {
   private static instance: ControlManager;
@@ -23,7 +28,7 @@ export class ControlManager {
       currentTime: this.player.getCurrentTime(),
       duration: this.player.getDuration(),
       volume: this.player.getVolume() / 100,
-      playbackRate: this.player.getPlaybackRate()
+      playbackRate: this.player.getPlaybackRate(),
     };
   }
 
@@ -40,7 +45,7 @@ export class ControlManager {
     const duration = this.player.getDuration();
     let newTime: number;
 
-    if (options.direction === 'forward') {
+    if (options.direction === "forward") {
       newTime = Math.min(duration, currentTime + options.seconds);
     } else {
       newTime = Math.max(0, currentTime - options.seconds);
@@ -88,7 +93,7 @@ export class ControlManager {
   public formatTime(seconds: number): string {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
   }
 
   private linearToLogVolume(value: number): number {
@@ -115,4 +120,4 @@ export class ControlManager {
       this.updateInterval = null;
     }
   }
-} 
+}

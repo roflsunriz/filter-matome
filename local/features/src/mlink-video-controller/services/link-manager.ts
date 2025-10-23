@@ -2,7 +2,10 @@ import { ExtendedNicoCache_nl } from "@/types/global-types";
 import { LinkData, ActionMap } from "@/types/mlink-video-controller-types";
 import { ThumbnailsFilterGlobal } from "@/types/thumbnails-filter-types";
 import { Mylist2Handler } from "@/mlink-video-controller/handlers/mylist2";
-import { handleVideoOperation, getActiveVideoId } from "@/mlink-video-controller/utils/video-util";
+import {
+  handleVideoOperation,
+  getActiveVideoId,
+} from "@/mlink-video-controller/utils/video-util";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
 import { getIconPath } from "@/common/material-icons";
 
@@ -162,7 +165,8 @@ export class LinkManager {
   }
 
   private resolveNicoCache(): ExtendedNicoCache_nl | null {
-    const global = (window as Window & { NicoCache_nl?: ExtendedNicoCache_nl }).NicoCache_nl;
+    const global = (window as Window & { NicoCache_nl?: ExtendedNicoCache_nl })
+      .NicoCache_nl;
     return global ?? null;
   }
 
@@ -227,7 +231,9 @@ export class LinkManager {
   /**
    * 表示用リンク一覧を返す。非視聴ページでは無効なアクションを除外する。
    */
-  public async getLinks(group: keyof typeof this.LINK_GROUPS): Promise<LinkData[]> {
+  public async getLinks(
+    group: keyof typeof this.LINK_GROUPS,
+  ): Promise<LinkData[]> {
     const links = this.LINK_GROUPS[group];
     if (!(await this.hasWatchContext())) {
       // 視聴ページ以外では、フォールバック不可のアクションは非表示
@@ -240,7 +246,8 @@ export class LinkManager {
     const nicoCache = this.getNicoCache();
     if (nicoCache?.watch && nicoCache.watch.apiData) {
       const defaultThread = nicoCache.watch.apiData.comment?.threads?.find(
-        (v: { isDefaultPostTarget?: boolean | undefined }) => v.isDefaultPostTarget === true
+        (v: { isDefaultPostTarget?: boolean | undefined }) =>
+          v.isDefaultPostTarget === true,
       );
       return defaultThread?.id || "";
     }
@@ -253,7 +260,8 @@ export class LinkManager {
     // const commentFilterUI = new CommentFilterUI();
 
     const actionMap: ActionMap = {
-      customMylist: "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
+      customMylist:
+        "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
       AddVideoToCustomMylist: async () => {
         const mylist2Handler = new Mylist2Handler();
         // 動画IDが取得できる場合は動画を追加、そうでなければキーワードを追加
@@ -268,16 +276,19 @@ export class LinkManager {
           // CommentFilter2のインスタンスを取得
           const commentFilter2Instance = window.CommentFilter2Instance;
 
-          if (commentFilter2Instance && typeof commentFilter2Instance.showUI === "function") {
+          if (
+            commentFilter2Instance &&
+            typeof commentFilter2Instance.showUI === "function"
+          ) {
             await commentFilter2Instance.showUI();
           } else {
             if (!this.commentFilterReady) {
               window.logger.warn(
-                "CommentFilter2はまだ初期化中です。しばらく待ってから再試行してください。"
+                "CommentFilter2はまだ初期化中です。しばらく待ってから再試行してください。",
               );
             } else {
               window.logger.warn(
-                "CommentFilter2が利用できません。先にCommentFilter2を読み込んでください。"
+                "CommentFilter2が利用できません。先にCommentFilter2を読み込んでください。",
               );
             }
           }
@@ -287,34 +298,43 @@ export class LinkManager {
       },
       cachelist: "https://www.nicovideo.jp/cache/",
       movieinfo: () => {
-        const baseUrl = "https://www.nicovideo.jp/local/features/dist/src/movie-info/index.html";
+        const baseUrl =
+          "https://www.nicovideo.jp/local/features/dist/src/movie-info/index.html";
         const targetUrl = videoId ? baseUrl + "?videoId=" + videoId : baseUrl;
         window.open(targetUrl);
       },
       savemovie: () => {
         if (!videoId) {
-          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
+          window.logger?.warn(
+            "動画情報がありません。視聴ページで実行してください。",
+          );
           return;
         }
         window.open("https://www.nicovideo.jp/cache/ffmpeg?video=" + videoId);
       },
       saveaudio: () => {
         if (!videoId) {
-          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
+          window.logger?.warn(
+            "動画情報がありません。視聴ページで実行してください。",
+          );
           return;
         }
         window.open(`https://www.nicovideo.jp/cache/ffmpeg?audio=${videoId}`);
       },
       savecomment: () => {
         if (!threadId) {
-          window.logger?.warn("コメントスレッド情報がありません。視聴ページで実行してください。");
+          window.logger?.warn(
+            "コメントスレッド情報がありません。視聴ページで実行してください。",
+          );
           return;
         }
         window.open(`https://www.nicovideo.jp/cache/${threadId}.xml`);
       },
       cache_remove: () => {
         if (!videoId) {
-          window.logger?.warn("動画情報がありません。視聴ページで実行してください。");
+          window.logger?.warn(
+            "動画情報がありません。視聴ページで実行してください。",
+          );
           return;
         }
         handleVideoOperation("cache_remove", videoId);
@@ -358,19 +378,27 @@ export class LinkManager {
           const globalThumbnailsFilter = (
             window as Window & { ThumbnailsFilter?: ThumbnailsFilterGlobal }
           ).ThumbnailsFilter;
-          if (globalThumbnailsFilter && globalThumbnailsFilter.openSettingsPanel) {
+          if (
+            globalThumbnailsFilter &&
+            globalThumbnailsFilter.openSettingsPanel
+          ) {
             globalThumbnailsFilter.openSettingsPanel();
           } else {
             window.logger.warn(
-              "ThumbnailsFilterが利用できません。先にThumbnailsFilterを読み込んでください。"
+              "ThumbnailsFilterが利用できません。先にThumbnailsFilterを読み込んでください。",
             );
           }
         } catch (error) {
-          window.logger.error("ThumbnailsFilterの呼び出しに失敗しました:", error);
+          window.logger.error(
+            "ThumbnailsFilterの呼び出しに失敗しました:",
+            error,
+          );
         }
       },
       "watch-history": () => {
-        window.open(`https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html`);
+        window.open(
+          `https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html`,
+        );
       },
     };
 

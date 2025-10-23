@@ -1,4 +1,4 @@
-import { createMaterialIcon } from '@/common/material-icons';
+import { createMaterialIcon } from "@/common/material-icons";
 
 export const linksTemplate = `
 <div id="custom" class="subtab active">
@@ -19,9 +19,9 @@ export const linksTemplate = `
   </div>
 </div>
 <nav>
-      <button data-subtab="custom" data-active>${createMaterialIcon('edit', { style: 'outlined', classes: 'subtab-icon', color: 'white' })}</button>
-    <button data-subtab="services">${createMaterialIcon('language', { style: 'outlined', classes: 'subtab-icon', color: 'white' })}</button>
-    <button data-subtab="dataManagement">${createMaterialIcon('storage', { style: 'outlined', classes: 'subtab-icon', color: 'white' })}</button>
+      <button data-subtab="custom" data-active>${createMaterialIcon("edit", { style: "outlined", classes: "subtab-icon", color: "white" })}</button>
+    <button data-subtab="services">${createMaterialIcon("language", { style: "outlined", classes: "subtab-icon", color: "white" })}</button>
+    <button data-subtab="dataManagement">${createMaterialIcon("storage", { style: "outlined", classes: "subtab-icon", color: "white" })}</button>
 </nav>
 
-`; 
+`;

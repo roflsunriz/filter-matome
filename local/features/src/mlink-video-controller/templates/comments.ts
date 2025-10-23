@@ -21,4 +21,4 @@ export const commentsTemplate = `
   <!-- 検索結果がここに表示されます -->
   <div class="no-results">コメントを検索してください</div>
 </div>
-`; 
+`;

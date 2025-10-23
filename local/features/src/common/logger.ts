@@ -1,4 +1,4 @@
-import { LogLevel } from '@/types/global-types';
+import { LogLevel } from "@/types/global-types";
 
 class Logger {
   private static instance: Logger;
@@ -34,17 +34,19 @@ class Logger {
 
   private getCallerInfo(): string {
     const error = new Error();
-    const stack = error.stack?.split('\n')[3] || '';
-    const urlMatch = stack.match(/(?:@|at\s+)https:\/\/www\.nicovideo\.jp\/local\/(.*?\.js:\d+:\d+)/);
+    const stack = error.stack?.split("\n")[3] || "";
+    const urlMatch = stack.match(
+      /(?:@|at\s+)https:\/\/www\.nicovideo\.jp\/local\/(.*?\.js:\d+:\d+)/,
+    );
     if (urlMatch) {
       return urlMatch[1];
     }
     const localMatch = stack.match(/\((.+?)\)/);
     if (localMatch) {
-      const fullPath = localMatch[1].split('/');
-      return fullPath[fullPath.length - 1].replace(/:\d+:\d+$/, '');
+      const fullPath = localMatch[1].split("/");
+      return fullPath[fullPath.length - 1].replace(/:\d+:\d+$/, "");
     }
-    return 'unknown';
+    return "unknown";
   }
 
   public enableLogging(filePattern: string): void {
@@ -56,12 +58,14 @@ class Logger {
   }
 
   private shouldLog(filename: string): boolean {
-    const isDisabled = [...this.disabledFiles].some(pattern => {
+    const isDisabled = [...this.disabledFiles].some((pattern) => {
       if (pattern === "All") return true;
       return filename.includes(pattern);
     });
     if (isDisabled) {
-      return [...this.enabledFiles].some(pattern => filename.includes(pattern));
+      return [...this.enabledFiles].some((pattern) =>
+        filename.includes(pattern),
+      );
     }
     return true;
   }
@@ -115,7 +119,11 @@ class Logger {
     this.debug(component, method, "エラー発生", error);
   }
 
-  public measurePerformance(component: string, method: string, callback: () => void): void {
+  public measurePerformance(
+    component: string,
+    method: string,
+    callback: () => void,
+  ): void {
     const start = performance.now();
     try {
       callback();

@@ -1,6 +1,10 @@
-import FlexSearchDocument from 'flexsearch/dist/module/document.js';
-import type { Document as FlexSearchDocumentType, DocumentSearchOptions, SimpleDocumentSearchResultSetUnit } from 'flexsearch';
-import type { LoadDataFromMemory } from '@/cache-data-manager/loaders/load-data-from-memory.js';
+import FlexSearchDocument from "flexsearch/dist/module/document.js";
+import type {
+  Document as FlexSearchDocumentType,
+  DocumentSearchOptions,
+  SimpleDocumentSearchResultSetUnit,
+} from "flexsearch";
+import type { LoadDataFromMemory } from "@/cache-data-manager/loaders/load-data-from-memory.js";
 // avoid importing project path aliases here to keep linting safe
 
 type SearchDocument = { id: string; title: string };
@@ -49,10 +53,12 @@ export class SearchEngine {
         suggest: true,
         enrich: true,
         bool: "or",
-      } satisfies Partial<DocumentSearchOptions<true>>
+      } satisfies Partial<DocumentSearchOptions<true>>,
     );
 
-    return [...new Set(results.flatMap((r) => r.result))].filter((id): id is string => typeof id === 'string');
+    return [...new Set(results.flatMap((r) => r.result))].filter(
+      (id): id is string => typeof id === "string",
+    );
   }
 
   private rebuildIndex(): void {
@@ -62,10 +68,10 @@ export class SearchEngine {
     const entries = this.dataLoader.getAllEntries() as unknown[];
 
     for (const rawEntry of entries) {
-      if (typeof rawEntry !== 'object' || rawEntry === null) continue;
+      if (typeof rawEntry !== "object" || rawEntry === null) continue;
       const rec = rawEntry as Record<string, unknown>;
-      const id = typeof rec.id === 'string' ? rec.id : undefined;
-      const titleRaw = typeof rec.title === 'string' ? rec.title : undefined;
+      const id = typeof rec.id === "string" ? rec.id : undefined;
+      const titleRaw = typeof rec.title === "string" ? rec.title : undefined;
       if (!id || !titleRaw) continue;
 
       const safeTitle = titleRaw.toLowerCase();

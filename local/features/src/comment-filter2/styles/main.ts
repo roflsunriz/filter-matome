@@ -975,4 +975,4 @@ export const CommentFilter2MainStyles = `
     flex-direction: column;
   }
 }
-`
+`;

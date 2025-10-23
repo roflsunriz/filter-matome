@@ -1,5 +1,12 @@
-import { ModuleInstance, ModuleConfig, PageType, ModuleCategory, ModuleStatus, WatchPageSubModule } from '@/types/module-types';
-import { createMaterialIcon } from '@/common/material-icons';
+import {
+  ModuleInstance,
+  ModuleConfig,
+  PageType,
+  ModuleCategory,
+  ModuleStatus,
+  WatchPageSubModule,
+} from "@/types/module-types";
+import { createMaterialIcon } from "@/common/material-icons";
 
 /**
  * Watch Page統合モジュール
@@ -7,25 +14,25 @@ import { createMaterialIcon } from '@/common/material-icons';
  */
 export class WatchPageModule implements ModuleInstance {
   public readonly config: ModuleConfig = {
-    id: 'watch_page',
-    name: 'Watch Page統合',
-    description: 'Watch Pageの各種機能を統合管理（タグカウンター）',
-    version: '2.0.0',
+    id: "watch_page",
+    name: "Watch Page統合",
+    description: "Watch Pageの各種機能を統合管理（タグカウンター）",
+    version: "2.0.0",
     enabled: true,
     targetPages: [PageType.WATCH],
     dependencies: [],
     category: ModuleCategory.FUNCTIONALITY,
-    icon: createMaterialIcon('movie', { style: 'outlined', color: 'white' })
+    icon: createMaterialIcon("movie", { style: "outlined", color: "white" }),
   };
 
   private subModules: Map<string, WatchPageSubModule> = new Map();
   private isInitialized: boolean = false;
-  private readonly SETTINGS_KEY = 'watch_page_module_settings';
-  
+  private readonly SETTINGS_KEY = "watch_page_module_settings";
+
   // タグカウンター用のMutationObserver
   private tagObserver: MutationObserver | null = null;
   private updateTagCounterDebounced: (() => void) | null = null;
-  
+
   // ページ遷移監視用
   private pageObserver: MutationObserver | null = null;
   private currentVideoId: string | null = null;
@@ -33,14 +40,24 @@ export class WatchPageModule implements ModuleInstance {
 
   // デフォルト設定
   private readonly defaultSettings = {
-    tag_counter: true
+    tag_counter: true,
   };
 
   constructor() {
     this.initializeSubModules();
     // グローバルからアクセス可能にする（デバッグ用）
-    (window as Window & { watchPageModule?: WatchPageModule; watchPageControls?: ReturnType<WatchPageModule['getHelperFunctions']> }).watchPageModule = this;
-    (window as Window & { watchPageModule?: WatchPageModule; watchPageControls?: ReturnType<WatchPageModule['getHelperFunctions']> }).watchPageControls = this.getHelperFunctions();
+    (
+      window as Window & {
+        watchPageModule?: WatchPageModule;
+        watchPageControls?: ReturnType<WatchPageModule["getHelperFunctions"]>;
+      }
+    ).watchPageModule = this;
+    (
+      window as Window & {
+        watchPageModule?: WatchPageModule;
+        watchPageControls?: ReturnType<WatchPageModule["getHelperFunctions"]>;
+      }
+    ).watchPageControls = this.getHelperFunctions();
   }
 
   /**
@@ -51,14 +68,14 @@ export class WatchPageModule implements ModuleInstance {
     const savedSettings = this.loadSettings();
 
     // タグカウンターサブモジュール
-    this.subModules.set('tag_counter', {
-      id: 'tag_counter',
-      name: 'タグカウンター',
-      description: 'タグ個数表示と共有機能',
+    this.subModules.set("tag_counter", {
+      id: "tag_counter",
+      name: "タグカウンター",
+      description: "タグ個数表示と共有機能",
       enabled: savedSettings.tag_counter,
       initialize: this.initializeTagCounter.bind(this),
       destroy: this.destroyTagCounter.bind(this),
-      isActive: () => !!document.getElementById('TagItemsCounter')
+      isActive: () => !!document.getElementById("TagItemsCounter"),
     });
   }
 
@@ -69,11 +86,8 @@ export class WatchPageModule implements ModuleInstance {
     if (this.isInitialized) return;
 
     try {
-      
-
       // ページ判定
       if (!this.isWatchPage()) {
-        
         return;
       }
 
@@ -85,18 +99,18 @@ export class WatchPageModule implements ModuleInstance {
         if (subModule.enabled) {
           try {
             await subModule.initialize();
-            
           } catch (error) {
-            window.logger.error(`[WatchPageModule] ${subModule.name} 初期化失敗:`, error);
+            window.logger.error(
+              `[WatchPageModule] ${subModule.name} 初期化失敗:`,
+              error,
+            );
           }
         }
       }
 
       this.isInitialized = true;
-      
-
     } catch (error) {
-      window.logger.error('[WatchPageModule] 初期化エラー:', error);
+      window.logger.error("[WatchPageModule] 初期化エラー:", error);
       throw error;
     }
   }
@@ -107,14 +121,12 @@ export class WatchPageModule implements ModuleInstance {
   destroy(): void {
     if (!this.isInitialized) return;
 
-    
-
     // ページObserverを停止・破棄
     if (this.pageObserver) {
       this.pageObserver.disconnect();
       this.pageObserver = null;
     }
-    
+
     // デバウンス関数をクリア
     this.pageTransitionDebounced = null;
 
@@ -123,15 +135,16 @@ export class WatchPageModule implements ModuleInstance {
       try {
         if (subModule.isActive()) {
           subModule.destroy();
-          
         }
       } catch (error) {
-        window.logger.error(`[WatchPageModule] ${subModule.name} 破棄失敗:`, error);
+        window.logger.error(
+          `[WatchPageModule] ${subModule.name} 破棄失敗:`,
+          error,
+        );
       }
     }
 
     this.isInitialized = false;
-    
   }
 
   /**
@@ -148,14 +161,15 @@ export class WatchPageModule implements ModuleInstance {
     if (!this.isInitialized) {
       return ModuleStatus.INACTIVE;
     }
-    
+
     if (!this.isWatchPage()) {
       return ModuleStatus.INACTIVE;
     }
-    
-    const hasActiveSubModules = Array.from(this.subModules.values())
-      .some(sub => sub.enabled && sub.isActive());
-    
+
+    const hasActiveSubModules = Array.from(this.subModules.values()).some(
+      (sub) => sub.enabled && sub.isActive(),
+    );
+
     return hasActiveSubModules ? ModuleStatus.ACTIVE : ModuleStatus.INACTIVE;
   }
 
@@ -176,10 +190,8 @@ export class WatchPageModule implements ModuleInstance {
     if (this.isInitialized && this.isWatchPage()) {
       if (enabled && !subModule.isActive()) {
         await subModule.initialize();
-        
       } else if (!enabled && subModule.isActive()) {
         subModule.destroy();
-        
       }
     }
   }
@@ -207,12 +219,14 @@ export class WatchPageModule implements ModuleInstance {
     try {
       const savedSettings = localStorage.getItem(this.SETTINGS_KEY);
       if (savedSettings) {
-      const parsed = JSON.parse(savedSettings) as Partial<typeof this.defaultSettings>;
+        const parsed = JSON.parse(savedSettings) as Partial<
+          typeof this.defaultSettings
+        >;
         // デフォルト設定とマージして、新しい設定項目に対応
         return { ...this.defaultSettings, ...parsed };
       }
     } catch (error) {
-      window.logger.error('[WatchPageModule] 設定読み込みエラー:', error);
+      window.logger.error("[WatchPageModule] 設定読み込みエラー:", error);
     }
     return { ...this.defaultSettings };
   }
@@ -227,9 +241,8 @@ export class WatchPageModule implements ModuleInstance {
         settings[id] = subModule.enabled;
       }
       localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(settings));
-      
     } catch (error) {
-      window.logger.error('[WatchPageModule] 設定保存エラー:', error);
+      window.logger.error("[WatchPageModule] 設定保存エラー:", error);
     }
   }
 
@@ -238,11 +251,11 @@ export class WatchPageModule implements ModuleInstance {
    */
   public resetSettings(): void {
     localStorage.removeItem(this.SETTINGS_KEY);
-    
-    
+
     // サブモジュールの設定をデフォルトに戻す
     for (const [id, subModule] of this.subModules) {
-      const defaultEnabled = this.defaultSettings[id as keyof typeof this.defaultSettings] ?? true;
+      const defaultEnabled =
+        this.defaultSettings[id as keyof typeof this.defaultSettings] ?? true;
       subModule.enabled = defaultEnabled;
     }
   }
@@ -255,25 +268,22 @@ export class WatchPageModule implements ModuleInstance {
       // サブモジュールを無効化
       disable: async (subModuleId: string) => {
         await this.toggleSubModule(subModuleId, false);
-        
       },
-      
+
       // サブモジュールを有効化
       enable: async (subModuleId: string) => {
         await this.toggleSubModule(subModuleId, true);
-        
       },
-      
+
       // 設定をリセット
       reset: () => this.resetSettings(),
-      
+
       // 利用可能なサブモジュール一覧
       list: () => {
-        
-        this.getSubModules().forEach(sub => {
-          window.logger.info(`${sub.id}: ${sub.enabled ? '有効' : '無効'}`);
+        this.getSubModules().forEach((sub) => {
+          window.logger.info(`${sub.id}: ${sub.enabled ? "有効" : "無効"}`);
         });
-      }
+      },
     };
   }
 
@@ -290,14 +300,14 @@ export class WatchPageModule implements ModuleInstance {
     // 動画IDを取得
     const videoIDMatch = /s[mo]\d+/.exec(window.location.pathname);
     if (!videoIDMatch) {
-      throw new Error('動画IDが取得できません');
+      throw new Error("動画IDが取得できません");
     }
 
     const videoID = videoIDMatch[0];
 
     // 再試行機能付きでタグカウンター設置（タグ数は動的に取得）
     await this.retryTagCounter({ videoID });
-    
+
     // タグの変更を監視するObserverを設定
     this.setupTagObserver();
   }
@@ -311,19 +321,19 @@ export class WatchPageModule implements ModuleInstance {
     if (tagCounter) {
       tagCounter.remove();
     }
-    
+
     // 共有ボタンも削除
     const shareButton = document.getElementById("TagItemsShareButton");
     if (shareButton) {
       shareButton.remove();
     }
-    
+
     // タグObserverを停止・破棄
     if (this.tagObserver) {
       this.tagObserver.disconnect();
       this.tagObserver = null;
     }
-    
+
     // デバウンス関数をクリア
     this.updateTagCounterDebounced = null;
   }
@@ -341,22 +351,25 @@ export class WatchPageModule implements ModuleInstance {
       const retryInterval = 700;
 
       const attempt = (): void => {
-        const element = document.getElementsByClassName("pos_relative d_flex flex-wrap_wrap gap_base")[0];
-        
+        const element = document.getElementsByClassName(
+          "pos_relative d_flex flex-wrap_wrap gap_base",
+        )[0];
+
         // タグ数を動的に取得（より具体的なセレクターを使用）
         const tagLength = this.getTagCount();
-        
-        if (this.insertTagCounter({ element, videoID: option.videoID, tagLength })) {
+
+        if (
+          this.insertTagCounter({ element, videoID: option.videoID, tagLength })
+        ) {
           resolve();
           return;
         }
 
         retryCount++;
         if (retryCount < maxRetryCount) {
-          
           setTimeout(attempt, retryInterval);
         } else {
-          reject(new Error('タグカウンター設置の最大再試行回数に達しました'));
+          reject(new Error("タグカウンター設置の最大再試行回数に達しました"));
         }
       };
 
@@ -369,47 +382,56 @@ export class WatchPageModule implements ModuleInstance {
    */
   private getTagCount(): number {
     // タグコンテナ内のd_inline-flex要素を取得
-    const tagContainer = document.querySelector('.pos_relative.d_flex.flex-wrap_wrap.gap_base');
+    const tagContainer = document.querySelector(
+      ".pos_relative.d_flex.flex-wrap_wrap.gap_base",
+    );
     if (!tagContainer) {
       return 0;
     }
-    
+
     const tagElements = tagContainer.querySelectorAll("div.d_inline-flex");
-    
+
     // タグカウンター関連の要素を除外
-    const filteredTags = Array.from(tagElements).filter(element => {
+    const filteredTags = Array.from(tagElements).filter((element) => {
       // IDがTagItemsCounterまたはTagItemsShareButtonの要素を除外
-      if (element.id === 'TagItemsCounter' || element.id === 'TagItemsShareButton') {
+      if (
+        element.id === "TagItemsCounter" ||
+        element.id === "TagItemsShareButton"
+      ) {
         return false;
       }
-      
+
       // title属性が「タグ個数」または「共有ボタン」の要素を除外
-      const title = element.getAttribute('title');
-      if (title === 'タグ個数' || title === '共有ボタン') {
+      const title = element.getAttribute("title");
+      if (title === "タグ個数" || title === "共有ボタン") {
         return false;
       }
-      
+
       // TagItemクラスを持つ要素（わらわが追加した要素）を除外
-      if (element.classList.contains('TagItem')) {
+      if (element.classList.contains("TagItem")) {
         return false;
       }
-      
+
       return true;
     });
-    
+
     return filteredTags.length;
   }
 
   /**
    * タグカウンター挿入
    */
-  private insertTagCounter(option: { element?: Element; videoID: string; tagLength: number }): boolean {
+  private insertTagCounter(option: {
+    element?: Element;
+    videoID: string;
+    tagLength: number;
+  }): boolean {
     // 既存の要素を確実に削除（重複防止）
     const existingTagCounter = document.getElementById("TagItemsCounter");
     if (existingTagCounter) {
       existingTagCounter.remove();
     }
-    
+
     const existingShareButton = document.getElementById("TagItemsShareButton");
     if (existingShareButton) {
       existingShareButton.remove();
@@ -424,7 +446,7 @@ export class WatchPageModule implements ModuleInstance {
       // 最新の動画情報を取得
       const currentVideoInfo = this.getCurrentVideoInfo();
       const href = `href="https://commons.nicovideo.jp/works/${currentVideoInfo.videoId}" target="_blank"`;
-      
+
       const tagCounterHTML = `
         <div title="タグ個数" id="TagItemsCounter" class="TagItem d_inline-flex pr_x0_5 h_x4 ai_center bdr_full bg-c_action.base flex-wrap_wrap fw_bold ov_hidden [&amp;:has(>_a:nth-child(1):hover)]:bg-c_action.baseHover">
           <a title="コンテンツツリー" data-anchor-page="watch" data-anchor-area="tags" class="pl_x2 pr_base h_100% d_flex ai_center" ${href}>
@@ -445,17 +467,19 @@ export class WatchPageModule implements ModuleInstance {
           </button>
         </div>
       `;
-      
-      option.element.insertAdjacentHTML('beforeend', tagCounterHTML);
-      
+
+      option.element.insertAdjacentHTML("beforeend", tagCounterHTML);
+
       // 共有ボタンのイベントハンドラーを設定
       this.setupShareButton();
-      
+
       // 挿入後に実際に要素が存在するかチェック
-      return !!document.getElementById("TagItemsCounter") && !!document.getElementById("TagItemsShareButton");
-      
+      return (
+        !!document.getElementById("TagItemsCounter") &&
+        !!document.getElementById("TagItemsShareButton")
+      );
     } catch (error) {
-      window.logger.error('[WatchPageModule] タグカウンター挿入エラー:', error);
+      window.logger.error("[WatchPageModule] タグカウンター挿入エラー:", error);
       return false;
     }
   }
@@ -464,28 +488,27 @@ export class WatchPageModule implements ModuleInstance {
    * 共有ボタンのイベントハンドラー設定
    */
   private setupShareButton(): void {
-    const shareButton = document.querySelector('#TagItemsShareButton button');
+    const shareButton = document.querySelector("#TagItemsShareButton button");
     if (shareButton) {
-      shareButton.addEventListener('click', () => {
+      shareButton.addEventListener("click", () => {
         // クリック時に動的に最新の動画情報を取得
         const currentVideoInfo = this.getCurrentVideoInfo();
         const textToCopy = `${currentVideoInfo.title}\nhttps://nico.ms/${currentVideoInfo.videoId}`;
-        
-        navigator.clipboard.writeText(textToCopy)
+
+        navigator.clipboard
+          .writeText(textToCopy)
           .then(() => {
             window.toastr?.success(
               textToCopy + "\nクリップボードにコピーしました！",
               "成功",
-              { timeOut: 5000 }
+              { timeOut: 5000 },
             );
           })
           .catch((error: Error) => {
-            window.logger.error('コピーに失敗しました:', error);
-            window.toastr?.warning(
-              "コピーに失敗しました",
-              "エラー",
-              { timeOut: 5000 }
-            );
+            window.logger.error("コピーに失敗しました:", error);
+            window.toastr?.warning("コピーに失敗しました", "エラー", {
+              timeOut: 5000,
+            });
           });
       });
     }
@@ -496,33 +519,32 @@ export class WatchPageModule implements ModuleInstance {
    */
   private getCurrentVideoInfo(): { title: string; videoId: string } {
     // 最新の動画IDを取得
-    const videoId = this.getCurrentVideoId() || 'unknown';
-    
+    const videoId = this.getCurrentVideoId() || "unknown";
+
     // 最新のタイトルを取得（複数のソースから試行）
-    let title = '無題';
-    
+    let title = "無題";
+
     // 1. NicoCache_nlのAPIデータから取得
     if (window.NicoCache_nl?.watch?.apiData?.video?.title) {
       title = window.NicoCache_nl.watch.apiData.video.title;
     }
     // 2. ページタイトルから取得（フォールバック）
-    else if (document.title && document.title !== 'ニコニコ動画') {
+    else if (document.title && document.title !== "ニコニコ動画") {
       // ページタイトルから動画タイトル部分を抽出
-      title = document.title.replace(/\s*-\s*ニコニコ動画$/, '').trim();
+      title = document.title.replace(/\s*-\s*ニコニコ動画$/, "").trim();
     }
     // 3. h1要素から取得（さらなるフォールバック）
     else {
-      const h1Element = document.querySelector('h1');
+      const h1Element = document.querySelector("h1");
       if (h1Element?.textContent?.trim()) {
         title = h1Element.textContent.trim();
       }
     }
-    
+
     return { title, videoId };
   }
 
   // ラジアルセレクター機能は独立モジュール（WatchBackgroundSelectorModule）に移行済み
-
 
   /**
    * タグ監視Observer設定
@@ -544,19 +566,23 @@ export class WatchPageModule implements ModuleInstance {
 
       mutations.forEach((mutation) => {
         // タグ要素の追加・削除をチェック
-        if (mutation.type === 'childList') {
+        if (mutation.type === "childList") {
           const addedNodes = Array.from(mutation.addedNodes);
           const removedNodes = Array.from(mutation.removedNodes);
-          
+
           // タグ要素（d_inline-flexクラス）の変更をチェック
-          const hasTagChanges = [...addedNodes, ...removedNodes].some(node => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const element = node as Element;
-              return element.classList?.contains('d_inline-flex') || 
-                     element.querySelector?.('.d_inline-flex');
-            }
-            return false;
-          });
+          const hasTagChanges = [...addedNodes, ...removedNodes].some(
+            (node) => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                const element = node as Element;
+                return (
+                  element.classList?.contains("d_inline-flex") ||
+                  element.querySelector?.(".d_inline-flex")
+                );
+              }
+              return false;
+            },
+          );
 
           if (hasTagChanges) {
             shouldUpdate = true;
@@ -570,18 +596,20 @@ export class WatchPageModule implements ModuleInstance {
     });
 
     // タグコンテナを監視対象に設定
-    const tagContainer = document.querySelector('.pos_relative.d_flex.flex-wrap_wrap.gap_base');
+    const tagContainer = document.querySelector(
+      ".pos_relative.d_flex.flex-wrap_wrap.gap_base",
+    );
     if (tagContainer) {
       this.tagObserver.observe(tagContainer, {
         childList: true,
-        subtree: true
+        subtree: true,
       });
     }
 
     // ページ全体も監視（タグコンテナ自体が再作成される場合に備えて）
     this.tagObserver.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
   }
 
@@ -593,12 +621,14 @@ export class WatchPageModule implements ModuleInstance {
     if (!tagCounter) return;
 
     const currentTagCount = this.getTagCount();
-    const tagCounterLink = tagCounter.querySelector('a[title="コンテンツツリー"]');
-    
+    const tagCounterLink = tagCounter.querySelector(
+      'a[title="コンテンツツリー"]',
+    );
+
     if (tagCounterLink) {
       tagCounterLink.textContent = `タグ個数${currentTagCount}個/最大11個`;
     }
-    
+
     // 共有ボタンの情報も更新（動画情報が変わった場合に備えて）
     this.updateShareButtonInfo();
   }
@@ -611,19 +641,21 @@ export class WatchPageModule implements ModuleInstance {
     if (!shareButton) return;
 
     const currentVideoInfo = this.getCurrentVideoInfo();
-    
+
     // 共有ボタンのhref属性を更新
-    const shareLinks = Array.from(shareButton.querySelectorAll('a'));
+    const shareLinks = Array.from(shareButton.querySelectorAll("a"));
     shareLinks.forEach((link) => {
-      if (!(link instanceof HTMLAnchorElement)) { return; }
+      if (!(link instanceof HTMLAnchorElement)) {
+        return;
+      }
       const href = `https://commons.nicovideo.jp/works/${currentVideoInfo.videoId}`;
-      link.setAttribute('href', href);
+      link.setAttribute("href", href);
     });
-    
+
     // ボタンのtitle属性を更新（ホバー時の表示）
-    const button = shareButton.querySelector('button');
+    const button = shareButton.querySelector("button");
     if (button) {
-      button.setAttribute('title', `${currentVideoInfo.title}を共有`);
+      button.setAttribute("title", `${currentVideoInfo.title}を共有`);
     }
   }
 
@@ -632,12 +664,12 @@ export class WatchPageModule implements ModuleInstance {
    */
   private debounce(func: () => void, wait: number): () => void {
     let timeout: number | null = null;
-    
+
     return () => {
       if (timeout) {
         clearTimeout(timeout);
       }
-      
+
       timeout = setTimeout(() => {
         func();
         timeout = null;
@@ -660,11 +692,11 @@ export class WatchPageModule implements ModuleInstance {
     // ページ遷移を監視（DOM変更のみ検知、処理はデバウンス）
     this.pageObserver = new MutationObserver(() => {
       const newVideoId = this.getCurrentVideoId();
-      
+
       // 動画IDが変更された場合（ページ遷移）
       if (newVideoId && newVideoId !== this.currentVideoId) {
         this.currentVideoId = newVideoId;
-        
+
         // デバウンスで処理を遅延実行
         if (this.pageTransitionDebounced) {
           this.pageTransitionDebounced();
@@ -675,7 +707,7 @@ export class WatchPageModule implements ModuleInstance {
     // URLの変更を監視
     this.pageObserver.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
   }
 
@@ -683,14 +715,14 @@ export class WatchPageModule implements ModuleInstance {
    * ページ遷移時の処理
    */
   private handlePageTransition(): void {
-    window.logger.info('[WatchPageModule] ページ遷移を検知しました');
-    
+    window.logger.info("[WatchPageModule] ページ遷移を検知しました");
+
     // タグカウンターサブモジュールが有効な場合は再初期化
-    const tagCounterModule = this.subModules.get('tag_counter');
+    const tagCounterModule = this.subModules.get("tag_counter");
     if (tagCounterModule?.enabled) {
       // 即座に古い要素を削除
       this.destroyTagCounter();
-      
+
       setTimeout(async () => {
         try {
           // 念のため再度削除を実行
@@ -698,7 +730,10 @@ export class WatchPageModule implements ModuleInstance {
           // 新しいページで再初期化
           await this.initializeTagCounter();
         } catch (error) {
-          window.logger.error('[WatchPageModule] ページ遷移時のタグカウンター再初期化失敗:', error);
+          window.logger.error(
+            "[WatchPageModule] ページ遷移時のタグカウンター再初期化失敗:",
+            error,
+          );
         }
       }, 500); // 少し遅延させてDOMの更新を待つ
     }
@@ -711,4 +746,4 @@ export class WatchPageModule implements ModuleInstance {
     const videoIDMatch = /s[mo]\d+/.exec(window.location.pathname);
     return videoIDMatch ? videoIDMatch[0] : null;
   }
-} 
+}

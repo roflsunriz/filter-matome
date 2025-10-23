@@ -425,4 +425,4 @@ input[type="range"]::-moz-range-thumb {
 .speed-adjust:hover::before {
   opacity: 1;
 }
-`; 
+`;

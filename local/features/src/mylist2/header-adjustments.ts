@@ -19,8 +19,8 @@ export const MYLIST2_HEADER_ADJUSTMENT_STYLES = `
  * スタイルをDOMに適用する関数
  */
 export const headerAdjustments = (): HTMLStyleElement => {
-  const styleElement = document.createElement('style');
+  const styleElement = document.createElement("style");
   styleElement.textContent = MYLIST2_HEADER_ADJUSTMENT_STYLES;
   document.head.appendChild(styleElement);
   return styleElement;
-}; 
+};

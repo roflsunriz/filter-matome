@@ -48,7 +48,7 @@ export const applyMovieInfoDashboardStyles = (): void => {
     "details[data-role='raw'] summary { cursor: pointer; font-weight: 600; color: #2563eb; }",
     ".json-viewer { background: #0f172a; color: #f8fafc; font-family: 'SFMono-Regular', Consolas, Monaco, 'Courier New', monospace; font-size: 0.78rem; line-height: 1.6; border-radius: 10px; padding: 14px; margin-top: 12px; max-height: 320px; overflow: auto; white-space: pre-wrap; word-break: break-word; }",
     ".video-meta { display: flex; flex-direction: column; gap: 6px; font-size: 0.92rem; color: #334155; }",
-    ".video-meta strong { color: #1e293b; }"
+    ".video-meta strong { color: #1e293b; }",
   ].join("\n");
   document.head.appendChild(style);
 };

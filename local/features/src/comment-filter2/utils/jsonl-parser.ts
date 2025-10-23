@@ -1,25 +1,30 @@
 // JSON Lines パーサ/シリアライザ - 新形式ルール処理
-import { NgRuleJson, NgRuleJsonCollection, MigrationResult, Action } from '@/types/filter-types';
+import {
+  NgRuleJson,
+  NgRuleJsonCollection,
+  MigrationResult,
+  Action,
+} from "@/types/filter-types";
 
 /**
  * JSON Lines形式の文字列をパースしてルール配列に変換
  */
 export function parseJsonl(text: string): NgRuleJson[] {
-  const lines = text.split('\n').filter(line => line.trim() !== '');
+  const lines = text.split("\n").filter((line) => line.trim() !== "");
   const rules: NgRuleJson[] = [];
   const errors: string[] = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
+
     // コメント行をスキップ
-    if (line.startsWith('//') || line.startsWith('#')) {
+    if (line.startsWith("//") || line.startsWith("#")) {
       continue;
     }
 
     try {
       const rule = JSON.parse(line) as NgRuleJson;
-      
+
       // 基本バリデーション
       if (validateRule(rule)) {
         // デフォルト値を設定
@@ -33,7 +38,7 @@ export function parseJsonl(text: string): NgRuleJson[] {
   }
 
   if (errors.length > 0) {
-    window.logger?.warn('[CommentFilter2] JSONL parse errors:', errors);
+    window.logger?.warn("[CommentFilter2] JSONL parse errors:", errors);
   }
 
   return rules;
@@ -43,9 +48,7 @@ export function parseJsonl(text: string): NgRuleJson[] {
  * ルール配列をJSON Lines形式の文字列に変換
  */
 export function stringifyJsonl(rules: NgRuleJson[]): string {
-  return rules
-    .map(rule => JSON.stringify(rule))
-    .join('\n');
+  return rules.map((rule) => JSON.stringify(rule)).join("\n");
 }
 
 /**
@@ -54,17 +57,17 @@ export function stringifyJsonl(rules: NgRuleJson[]): string {
 export function parseJsonCollection(text: string): NgRuleJson[] {
   try {
     const data = JSON.parse(text) as NgRuleJsonCollection;
-    
+
     if (data.version && data.rules) {
       return data.rules.map(normalizeRule);
     }
-    
+
     // 配列形式の場合
     if (Array.isArray(data)) {
       return (data as NgRuleJson[]).map(normalizeRule);
     }
-    
-    throw new Error('Invalid JSON collection format');
+
+    throw new Error("Invalid JSON collection format");
   } catch (error) {
     throw new Error(`JSON collection parse error: ${String(error)}`);
   }
@@ -80,10 +83,10 @@ export function stringifyJsonCollection(rules: NgRuleJson[]): string {
     metadata: {
       exportedAt: new Date().toISOString(),
       exportedBy: "CommentFilter2",
-      totalRules: rules.length
-    }
+      totalRules: rules.length,
+    },
   };
-  
+
   return JSON.stringify(collection, null, 2);
 }
 
@@ -91,7 +94,7 @@ export function stringifyJsonCollection(rules: NgRuleJson[]): string {
  * ルールの基本バリデーション
  */
 export function validateRule(rule: unknown): rule is NgRuleJson {
-  if (!rule || typeof rule !== 'object' || rule === null) {
+  if (!rule || typeof rule !== "object" || rule === null) {
     return false;
   }
 
@@ -108,7 +111,11 @@ export function validateRule(rule: unknown): rule is NgRuleJson {
   }
 
   // アクションが必要
-  if (!ruleObj.action || typeof ruleObj.action !== 'object' || ruleObj.action === null) {
+  if (
+    !ruleObj.action ||
+    typeof ruleObj.action !== "object" ||
+    ruleObj.action === null
+  ) {
     return false;
   }
 
@@ -118,27 +125,37 @@ export function validateRule(rule: unknown): rule is NgRuleJson {
   }
 
   // アクションタイプの検証
-  if (action.type === 'replace' && !action.replacement) {
+  if (action.type === "replace" && !action.replacement) {
     return false;
   }
 
   // SMIDが必要
-  if (!ruleObj.smid || !Array.isArray(ruleObj.smid) || ruleObj.smid.length === 0) {
+  if (
+    !ruleObj.smid ||
+    !Array.isArray(ruleObj.smid) ||
+    ruleObj.smid.length === 0
+  ) {
     return false;
   }
 
   // nicoru_condの検証
   if (ruleObj.nicoru_cond) {
-    if (typeof ruleObj.nicoru_cond !== 'object' || ruleObj.nicoru_cond === null) {
+    if (
+      typeof ruleObj.nicoru_cond !== "object" ||
+      ruleObj.nicoru_cond === null
+    ) {
       return false;
     }
-    
+
     const cond = ruleObj.nicoru_cond as Record<string, unknown>;
-    if (!cond.op || typeof cond.value === 'undefined') {
+    if (!cond.op || typeof cond.value === "undefined") {
       return false;
     }
-    
-    if (cond.op === 'range' && (!Array.isArray(cond.value) || cond.value.length !== 2)) {
+
+    if (
+      cond.op === "range" &&
+      (!Array.isArray(cond.value) || cond.value.length !== 2)
+    ) {
       return false;
     }
   }
@@ -153,12 +170,12 @@ export function normalizeRule(rule: NgRuleJson): NgRuleJson {
   const normalized: NgRuleJson = {
     ...rule,
     enabled: rule.enabled !== false, // デフォルトtrue
-    flags: rule.flags || 'gi', // デフォルトフラグ
+    flags: rule.flags || "gi", // デフォルトフラグ
   };
 
   // nicoru_condのデフォルト値
   if (normalized.nicoru_cond && !normalized.nicoru_cond.mode) {
-    normalized.nicoru_cond.mode = 'exclude';
+    normalized.nicoru_cond.mode = "exclude";
   }
 
   return normalized;
@@ -167,34 +184,37 @@ export function normalizeRule(rule: NgRuleJson): NgRuleJson {
 /**
  * ファイル形式を自動判定
  */
-export function detectFileFormat(content: string): 'jsonl' | 'json' | 'csv' | 'unknown' {
+export function detectFileFormat(
+  content: string,
+): "jsonl" | "json" | "csv" | "unknown" {
   const trimmed = content.trim();
-  
+
   // 空ファイル
   if (!trimmed) {
-    return 'unknown';
+    return "unknown";
   }
 
   // JSON形式（オブジェクトまたは配列で開始）
-  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
     try {
       JSON.parse(trimmed);
-      return 'json';
+      return "json";
     } catch {
       // JSON parseに失敗した場合はJSONLの可能性
     }
   }
 
   // JSONL形式（各行がJSONオブジェクト）
-  const lines = trimmed.split('\n').filter(line => line.trim() !== '');
+  const lines = trimmed.split("\n").filter((line) => line.trim() !== "");
   let jsonlCount = 0;
-  
-  for (const line of lines.slice(0, 5)) { // 最初の5行をチェック
+
+  for (const line of lines.slice(0, 5)) {
+    // 最初の5行をチェック
     const trimmedLine = line.trim();
-    if (trimmedLine.startsWith('//') || trimmedLine.startsWith('#')) {
+    if (trimmedLine.startsWith("//") || trimmedLine.startsWith("#")) {
       continue; // コメント行
     }
-    
+
     try {
       JSON.parse(trimmedLine);
       jsonlCount++;
@@ -202,32 +222,32 @@ export function detectFileFormat(content: string): 'jsonl' | 'json' | 'csv' | 'u
       break;
     }
   }
-  
+
   if (jsonlCount > 0) {
-    return 'jsonl';
+    return "jsonl";
   }
 
   // CSV形式（カンマ区切り、スラッシュで囲まれた正規表現）
-  if (lines.some(line => line.includes('/') && line.includes(','))) {
-    return 'csv';
+  if (lines.some((line) => line.includes("/") && line.includes(","))) {
+    return "csv";
   }
 
-  return 'unknown';
+  return "unknown";
 }
 
 /**
  * 旧CSV形式からJSON Lines形式への変換
  */
 export function convertCsvToJsonl(csvText: string): MigrationResult {
-  const lines = csvText.split('\n').filter(line => line.trim() !== '');
+  const lines = csvText.split("\n").filter((line) => line.trim() !== "");
   const migratedRules: NgRuleJson[] = [];
   const errors: string[] = [];
   const warnings: string[] = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
-    if (!line || line.startsWith('#') || line.startsWith('//')) {
+
+    if (!line || line.startsWith("#") || line.startsWith("//")) {
       continue;
     }
 
@@ -249,7 +269,7 @@ export function convertCsvToJsonl(csvText: string): MigrationResult {
     errors,
     warnings,
     originalCount: lines.length,
-    migratedCount: migratedRules.length
+    migratedCount: migratedRules.length,
   };
 }
 
@@ -259,56 +279,63 @@ export function convertCsvToJsonl(csvText: string): MigrationResult {
 function convertCsvLineToJsonRule(line: string): NgRuleJson | null {
   // 既存のCSVパーサーを使用（import循環を避けるため、ここで簡易実装）
   const fields = parseCsvLineSimple(line);
-  
+
   if (fields.length < 4) {
-    throw new Error('Insufficient fields in CSV line');
+    throw new Error("Insufficient fields in CSV line");
   }
 
   // ユーザーIDルールの場合
-  if (fields[0].startsWith('@')) {
+  if (fields[0].startsWith("@")) {
     const userId = fields[0].substring(1);
-    const smid = fields[1] === 'ALL' ? ['ALL'] : [fields[1]];
+    const smid = fields[1] === "ALL" ? ["ALL"] : [fields[1]];
     const nicoru = fields[2];
 
     return {
       userId,
-      action: { type: 'hide' },
+      action: { type: "hide" },
       smid,
-      nicoru_cond: nicoru === 'EMPTY' ? undefined : {
-        op: '>=',
-        value: parseInt(nicoru, 10),
-        mode: 'exclude'
-      }
+      nicoru_cond:
+        nicoru === "EMPTY"
+          ? undefined
+          : {
+              op: ">=",
+              value: parseInt(nicoru, 10),
+              mode: "exclude",
+            },
     };
   }
 
   // 正規表現ルールの場合
   const regexMatch = fields[0].match(/^\/(.+)\/([gimuy]*)$/);
   if (!regexMatch) {
-    throw new Error('Invalid regex format');
+    throw new Error("Invalid regex format");
   }
 
   const pattern = regexMatch[1];
-  const flags = regexMatch[2] || 'gi';
+  const flags = regexMatch[2] || "gi";
   const replaceMatch = fields[1].match(/^\/(.*)\/$/);
   const replacement = replaceMatch ? replaceMatch[1] : fields[1];
-  const smid = fields[2] === 'ALL' ? ['ALL'] : [fields[2]];
+  const smid = fields[2] === "ALL" ? ["ALL"] : [fields[2]];
   const nicoru = fields[3];
 
-  const action: Action = replacement === 'EMPTY' || replacement === '' 
-    ? { type: 'hide' }
-    : { type: 'replace', replacement };
+  const action: Action =
+    replacement === "EMPTY" || replacement === ""
+      ? { type: "hide" }
+      : { type: "replace", replacement };
 
   return {
     pattern,
     flags,
     action,
     smid,
-    nicoru_cond: nicoru === 'EMPTY' ? undefined : {
-      op: '>=',
-      value: parseInt(nicoru, 10),
-      mode: 'exclude'
-    }
+    nicoru_cond:
+      nicoru === "EMPTY"
+        ? undefined
+        : {
+            op: ">=",
+            value: parseInt(nicoru, 10),
+            mode: "exclude",
+          },
   };
 }
 
@@ -317,22 +344,22 @@ function convertCsvLineToJsonRule(line: string): NgRuleJson | null {
  */
 function parseCsvLineSimple(line: string): string[] {
   const fields: string[] = [];
-  let current = '';
+  let current = "";
   let inQuotes = false;
-  
+
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
-    
+
     if (char === '"') {
       inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
+    } else if (char === "," && !inQuotes) {
       fields.push(current.trim());
-      current = '';
+      current = "";
     } else {
       current += char;
     }
   }
-  
+
   fields.push(current.trim());
   return fields;
-} 
+}

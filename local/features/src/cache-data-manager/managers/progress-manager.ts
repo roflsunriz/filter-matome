@@ -21,7 +21,7 @@ export class ProgressManager {
     if (textElement) {
       textElement.textContent = message;
     }
-    
+
     if (error === true) {
       this.currentProgress = 100;
       this.updateFillWidth(true);
@@ -50,4 +50,4 @@ export class ProgressManager {
     this.currentProgress = 0;
     this.updateFillWidth();
   }
-} 
+}

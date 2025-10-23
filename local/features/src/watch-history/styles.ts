@@ -1,23 +1,23 @@
 /**
  * ニコニコ動画視聴履歴拡張 - 動的スタイル適用
- * 
+ *
  * @description 視聴履歴ビューSPAの美しいUIを動的に適用する
  * @author roflsunriz
  */
 
-import { materialIconsStyles } from '@/common/material-icons';
+import { materialIconsStyles } from "@/common/material-icons";
 
 /**
  * 視聴履歴のスタイルを動的に適用する
  */
 export function applyWatchHistoryStyles(): void {
   // 既存のスタイルがあるかチェック
-  if (document.getElementById('watch-history-styles')) {
+  if (document.getElementById("watch-history-styles")) {
     return;
   }
 
-  const style = document.createElement('style');
-  style.id = 'watch-history-styles';
+  const style = document.createElement("style");
+  style.id = "watch-history-styles";
   style.textContent = `
 /* ===== ニコニコ動画視聴履歴拡張 - スタイルシート ===== */
 
@@ -1381,7 +1381,7 @@ ${seriesStyles}
  * 視聴履歴のスタイルを削除する
  */
 export function removeWatchHistoryStyles(): void {
-  const styleElement = document.getElementById('watch-history-styles');
+  const styleElement = document.getElementById("watch-history-styles");
   if (styleElement) {
     styleElement.remove();
   }

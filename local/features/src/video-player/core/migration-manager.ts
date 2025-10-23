@@ -3,12 +3,12 @@
  * 自動昇格・バージョン管理を司る重要なシステム
  */
 
-import { 
-  DB_CONFIG, 
-  DB_VERSION_HISTORY, 
+import {
+  DB_CONFIG,
+  DB_VERSION_HISTORY,
   MIGRATION_CONFIGS,
-  SystemInfo 
-} from '@/video-player/config/database-config';
+  SystemInfo,
+} from "@/video-player/config/database-config";
 
 export class MigrationManager {
   private db: IDBDatabase | null = null;
@@ -33,18 +33,19 @@ export class MigrationManager {
   async executeMigration(
     db: IDBDatabase,
     oldVersion: number,
-    newVersion: number
+    newVersion: number,
   ): Promise<{ success: boolean; error?: string }> {
-    
     if (this.migrationInProgress) {
-      return { success: false, error: '既にマイグレーションが実行中です' };
+      return { success: false, error: "既にマイグレーションが実行中です" };
     }
 
     this.migrationInProgress = true;
     this.db = db;
 
     try {
-      window.logger?.info(`マイグレーション開始: v${oldVersion} → v${newVersion}`);
+      window.logger?.info(
+        `マイグレーション開始: v${oldVersion} → v${newVersion}`,
+      );
 
       // バックアップ作成
       await this.createBackup(db, oldVersion);
@@ -59,16 +60,18 @@ export class MigrationManager {
 
       window.logger?.info(`マイグレーション完了: v${newVersion}`);
       return { success: true };
-
     } catch (error) {
-      window.logger?.error('マイグレーション失敗:', error);
-      
+      window.logger?.error("マイグレーション失敗:", error);
+
       // ロールバック実行
       await this.rollback(db, oldVersion);
-      
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'マイグレーションに失敗しました' 
+
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "マイグレーションに失敗しました",
       };
     } finally {
       this.migrationInProgress = false;
@@ -81,39 +84,51 @@ export class MigrationManager {
    * @param db データベース
    * @param version 対象バージョン
    */
-  private async migrateToVersion(db: IDBDatabase, version: number): Promise<void> {
+  private async migrateToVersion(
+    db: IDBDatabase,
+    version: number,
+  ): Promise<void> {
     const migration = MIGRATION_CONFIGS[version];
-    
+
     if (!migration) {
-      throw new Error(`バージョン ${version} のマイグレーション設定が見つかりません`);
+      throw new Error(
+        `バージョン ${version} のマイグレーション設定が見つかりません`,
+      );
     }
 
-    window.logger?.info(`マイグレーション実行中: v${version} - ${migration.description}`);
+    window.logger?.info(
+      `マイグレーション実行中: v${version} - ${migration.description}`,
+    );
 
     // マイグレーション実行
     const transaction = db.transaction(
-      Array.from(db.objectStoreNames), 
-      'readwrite'
+      Array.from(db.objectStoreNames),
+      "readwrite",
     );
 
     try {
       await migration.execute(db, transaction);
-      
+
       // トランザクション完了を待機
       await new Promise<void>((resolve, reject) => {
         transaction.oncomplete = () => resolve();
         transaction.onerror = () => {
           const err = transaction.error as unknown;
-          const msg = err && typeof (err as { message?: string }).message === 'string'
-            ? (err as { message: string }).message
-            : (typeof err === 'string' ? err : JSON.stringify(err));
+          const msg =
+            err && typeof (err as { message?: string }).message === "string"
+              ? (err as { message: string }).message
+              : typeof err === "string"
+                ? err
+                : JSON.stringify(err);
           reject(new Error(msg));
         };
       });
 
       window.logger?.info(`マイグレーション完了: v${version}`);
     } catch (error) {
-      throw new Error(`バージョン ${version} のマイグレーションに失敗: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `バージョン ${version} のマイグレーションに失敗: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -126,16 +141,16 @@ export class MigrationManager {
     this.backupData = {
       version,
       timestamp: new Date().toISOString(),
-      stores: {}
+      stores: {},
     };
 
     const storeNames = Array.from(db.objectStoreNames);
-    const transaction = db.transaction(storeNames, 'readonly');
+    const transaction = db.transaction(storeNames, "readonly");
 
     for (const storeName of storeNames) {
       const store = transaction.objectStore(storeName);
       const request = store.getAll();
-      
+
       await new Promise<void>((resolve, reject) => {
         request.onsuccess = () => {
           if (!this.backupData.stores) {
@@ -144,13 +159,16 @@ export class MigrationManager {
           this.backupData.stores[storeName] = request.result;
           resolve();
         };
-         request.onerror = () => {
-           const e = request.error as unknown;
-           const msg = e && typeof (e as { message?: string }).message === 'string'
-             ? (e as { message: string }).message
-             : (typeof e === 'string' ? e : JSON.stringify(e));
-           reject(new Error(msg));
-         };
+        request.onerror = () => {
+          const e = request.error as unknown;
+          const msg =
+            e && typeof (e as { message?: string }).message === "string"
+              ? (e as { message: string }).message
+              : typeof e === "string"
+                ? e
+                : JSON.stringify(e);
+          reject(new Error(msg));
+        };
       });
     }
 
@@ -158,11 +176,11 @@ export class MigrationManager {
     try {
       localStorage.setItem(
         `nicoCacheDB_backup_v${version}`,
-        JSON.stringify(this.backupData)
+        JSON.stringify(this.backupData),
       );
       window.logger?.info(`バックアップ作成完了: v${version}`);
     } catch (error) {
-      window.logger?.warn('バックアップ保存失敗:', error);
+      window.logger?.warn("バックアップ保存失敗:", error);
     }
   }
 
@@ -171,9 +189,12 @@ export class MigrationManager {
    * @param db データベース
    * @param targetVersion 復旧対象バージョン
    */
-  private async rollback(db: IDBDatabase, targetVersion: number): Promise<void> {
+  private async rollback(
+    db: IDBDatabase,
+    targetVersion: number,
+  ): Promise<void> {
     if (!this.backupData.stores) {
-      window.logger?.error('バックアップデータが見つかりません');
+      window.logger?.error("バックアップデータが見つかりません");
       return;
     }
 
@@ -181,22 +202,25 @@ export class MigrationManager {
       window.logger?.info(`ロールバック開始: v${targetVersion}`);
 
       const storeNames = Object.keys(this.backupData.stores);
-      const transaction = db.transaction(storeNames, 'readwrite');
+      const transaction = db.transaction(storeNames, "readwrite");
 
       // 各ストアのデータを復旧
       for (const storeName of storeNames) {
         if (db.objectStoreNames.contains(storeName)) {
           const store = transaction.objectStore(storeName);
-          
+
           // 既存データをクリア
           await new Promise<void>((resolve, reject) => {
             const clearRequest = store.clear();
             clearRequest.onsuccess = () => resolve();
             clearRequest.onerror = () => {
               const e = clearRequest.error as unknown;
-              const msg = e && typeof (e as { message?: string }).message === 'string'
-                ? (e as { message: string }).message
-                : (typeof e === 'string' ? e : JSON.stringify(e));
+              const msg =
+                e && typeof (e as { message?: string }).message === "string"
+                  ? (e as { message: string }).message
+                  : typeof e === "string"
+                    ? e
+                    : JSON.stringify(e);
               reject(new Error(msg));
             };
           });
@@ -209,9 +233,12 @@ export class MigrationManager {
               putRequest.onsuccess = () => resolve();
               putRequest.onerror = () => {
                 const e = putRequest.error as unknown;
-                const msg = e && typeof (e as { message?: string }).message === 'string'
-                  ? (e as { message: string }).message
-                  : (typeof e === 'string' ? e : JSON.stringify(e));
+                const msg =
+                  e && typeof (e as { message?: string }).message === "string"
+                    ? (e as { message: string }).message
+                    : typeof e === "string"
+                      ? e
+                      : JSON.stringify(e);
                 reject(new Error(msg));
               };
             });
@@ -221,7 +248,7 @@ export class MigrationManager {
 
       window.logger?.info(`ロールバック完了: v${targetVersion}`);
     } catch (error) {
-      window.logger?.error('ロールバック失敗:', error);
+      window.logger?.error("ロールバック失敗:", error);
       throw error;
     }
   }
@@ -231,13 +258,16 @@ export class MigrationManager {
    * @param db データベース
    * @param version 新バージョン
    */
-  private async recordMigrationSuccess(db: IDBDatabase, version: number): Promise<void> {
-    if (!db.objectStoreNames.contains('systemInfo')) {
+  private async recordMigrationSuccess(
+    db: IDBDatabase,
+    version: number,
+  ): Promise<void> {
+    if (!db.objectStoreNames.contains("systemInfo")) {
       return;
     }
 
-    const transaction = db.transaction(['systemInfo'], 'readwrite');
-    const store = transaction.objectStore('systemInfo');
+    const transaction = db.transaction(["systemInfo"], "readwrite");
+    const store = transaction.objectStore("systemInfo");
 
     const migrationRecord: SystemInfo = {
       key: `migration_v${version}`,
@@ -246,22 +276,27 @@ export class MigrationManager {
       createdAt: new Date(),
       updatedAt: new Date(),
       metadata: {
-        description: DB_VERSION_HISTORY[version as keyof typeof DB_VERSION_HISTORY]?.description || 'マイグレーション',
+        description:
+          DB_VERSION_HISTORY[version as keyof typeof DB_VERSION_HISTORY]
+            ?.description || "マイグレーション",
         executedAt: new Date().toISOString(),
-        backupCreated: !!this.backupData.timestamp
-      }
+        backupCreated: !!this.backupData.timestamp,
+      },
     };
 
     await new Promise<void>((resolve, reject) => {
       const request = store.put(migrationRecord);
       request.onsuccess = () => resolve();
-         request.onerror = () => {
-           const e = request.error as unknown;
-           const msg = e && typeof (e as { message?: string }).message === 'string'
-             ? (e as { message: string }).message
-             : (typeof e === 'string' ? e : JSON.stringify(e));
-           reject(new Error(msg));
-         };
+      request.onerror = () => {
+        const e = request.error as unknown;
+        const msg =
+          e && typeof (e as { message?: string }).message === "string"
+            ? (e as { message: string }).message
+            : typeof e === "string"
+              ? e
+              : JSON.stringify(e);
+        reject(new Error(msg));
+      };
     });
   }
 
@@ -270,20 +305,26 @@ export class MigrationManager {
    */
   private cleanupBackup(): void {
     this.backupData = {};
-    
+
     // 古いバックアップを削除
     try {
       const keys = Object.keys(localStorage);
-      const backupKeys = keys.filter(key => key.startsWith('nicoCacheDB_backup_'));
-      
+      const backupKeys = keys.filter((key) =>
+        key.startsWith("nicoCacheDB_backup_"),
+      );
+
       // 最新5件のバックアップを保持
-      backupKeys.sort().reverse().slice(5).forEach(key => {
-        localStorage.removeItem(key);
-      });
-      
-      window.logger?.debug('古いバックアップを削除しました');
+      backupKeys
+        .sort()
+        .reverse()
+        .slice(5)
+        .forEach((key) => {
+          localStorage.removeItem(key);
+        });
+
+      window.logger?.debug("古いバックアップを削除しました");
     } catch (error) {
-      window.logger?.warn('バックアップクリーンアップ失敗:', error);
+      window.logger?.warn("バックアップクリーンアップ失敗:", error);
     }
   }
 
@@ -293,27 +334,29 @@ export class MigrationManager {
    * @returns 現在のバージョン
    */
   async getCurrentVersion(db: IDBDatabase): Promise<number> {
-    if (!db.objectStoreNames.contains('systemInfo')) {
+    if (!db.objectStoreNames.contains("systemInfo")) {
       return 1; // 初期バージョン
     }
 
     try {
-      const transaction = db.transaction(['systemInfo'], 'readonly');
-      const store = transaction.objectStore('systemInfo');
-      const request = store.get('db_version');
+      const transaction = db.transaction(["systemInfo"], "readonly");
+      const store = transaction.objectStore("systemInfo");
+      const request = store.get("db_version");
 
       return new Promise<number>((resolve) => {
         request.onsuccess = () => {
           const result = request.result as { version?: number } | undefined;
-          resolve(result && typeof result.version === 'number' ? result.version : 1);
+          resolve(
+            result && typeof result.version === "number" ? result.version : 1,
+          );
         };
         request.onerror = () => {
-          window.logger?.warn('バージョン取得失敗');
+          window.logger?.warn("バージョン取得失敗");
           resolve(1);
         };
       });
     } catch (error) {
-      window.logger?.warn('バージョン取得エラー:', error);
+      window.logger?.warn("バージョン取得エラー:", error);
       return 1;
     }
   }
@@ -324,33 +367,38 @@ export class MigrationManager {
    * @returns マイグレーション履歴
    */
   async getMigrationHistory(db: IDBDatabase): Promise<SystemInfo[]> {
-    if (!db.objectStoreNames.contains('systemInfo')) {
+    if (!db.objectStoreNames.contains("systemInfo")) {
       return [];
     }
 
     try {
-      const transaction = db.transaction(['systemInfo'], 'readonly');
-      const store = transaction.objectStore('systemInfo');
+      const transaction = db.transaction(["systemInfo"], "readonly");
+      const store = transaction.objectStore("systemInfo");
       const request = store.getAll();
 
       return new Promise<SystemInfo[]>((resolve, reject) => {
         request.onsuccess = () => {
           const results = request.result as SystemInfo[];
-          const migrationRecords = results.filter(item => 
-            typeof item.key === 'string' && item.key.startsWith('migration_v')
+          const migrationRecords = results.filter(
+            (item) =>
+              typeof item.key === "string" &&
+              item.key.startsWith("migration_v"),
           );
           resolve(migrationRecords);
         };
-         request.onerror = () => {
-           const e = request.error as unknown;
-           const msg = e && typeof (e as { message?: string }).message === 'string'
-             ? (e as { message: string }).message
-             : (typeof e === 'string' ? e : JSON.stringify(e));
-           reject(new Error(msg));
-         };
+        request.onerror = () => {
+          const e = request.error as unknown;
+          const msg =
+            e && typeof (e as { message?: string }).message === "string"
+              ? (e as { message: string }).message
+              : typeof e === "string"
+                ? e
+                : JSON.stringify(e);
+          reject(new Error(msg));
+        };
       });
     } catch (error) {
-      window.logger?.error('マイグレーション履歴取得エラー:', error);
+      window.logger?.error("マイグレーション履歴取得エラー:", error);
       return [];
     }
   }
@@ -360,13 +408,16 @@ export class MigrationManager {
    * @param db データベース
    * @returns 整合性チェック結果
    */
-  async validateDatabase(db: IDBDatabase): Promise<{ valid: boolean; errors: string[] }> {
+  async validateDatabase(
+    db: IDBDatabase,
+  ): Promise<{ valid: boolean; errors: string[] }> {
     await Promise.resolve();
     const errors: string[] = [];
 
     try {
       // ストア存在チェック
-      const expectedStores = DB_VERSION_HISTORY[DB_CONFIG.CURRENT_VERSION].stores;
+      const expectedStores =
+        DB_VERSION_HISTORY[DB_CONFIG.CURRENT_VERSION].stores;
       for (const storeName of expectedStores) {
         if (!db.objectStoreNames.contains(storeName)) {
           errors.push(`必要なストア "${storeName}" が存在しません`);
@@ -378,7 +429,9 @@ export class MigrationManager {
 
       return { valid: errors.length === 0, errors };
     } catch (error) {
-      errors.push(`整合性チェックエラー: ${error instanceof Error ? error.message : String(error)}`);
+      errors.push(
+        `整合性チェックエラー: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return { valid: false, errors };
     }
   }
@@ -388,24 +441,32 @@ export class MigrationManager {
    */
   private setupErrorHandling(): void {
     // グローバルエラーハンドラー
-    window.addEventListener('error', (event: ErrorEvent) => {
+    window.addEventListener("error", (event: ErrorEvent) => {
       const err = event.error as unknown;
-      const message = err && typeof (err as { message?: string }).message === 'string' ? (err as { message: string }).message : String(err);
-      if (message.includes('Migration')) {
-        window.logger?.error('マイグレーション関連エラー:', message);
+      const message =
+        err && typeof (err as { message?: string }).message === "string"
+          ? (err as { message: string }).message
+          : String(err);
+      if (message.includes("Migration")) {
+        window.logger?.error("マイグレーション関連エラー:", message);
       }
     });
 
     // Promise拒否ハンドラー
-    window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-      const reasonUnknown = event.reason as unknown;
-      const message = reasonUnknown && typeof (reasonUnknown as { message?: string }).message === 'string'
-        ? (reasonUnknown as { message: string }).message
-        : String(reasonUnknown);
-      if (message.includes('Migration')) {
-        window.logger?.error('マイグレーション関連Promise拒否:', message);
-      }
-    });
+    window.addEventListener(
+      "unhandledrejection",
+      (event: PromiseRejectionEvent) => {
+        const reasonUnknown = event.reason as unknown;
+        const message =
+          reasonUnknown &&
+          typeof (reasonUnknown as { message?: string }).message === "string"
+            ? (reasonUnknown as { message: string }).message
+            : String(reasonUnknown);
+        if (message.includes("Migration")) {
+          window.logger?.error("マイグレーション関連Promise拒否:", message);
+        }
+      },
+    );
   }
 
   /**
@@ -424,7 +485,11 @@ export class MigrationManager {
    */
   getMigrationPath(fromVersion: number): number[] {
     const path: number[] = [];
-    for (let version = fromVersion + 1; version <= DB_CONFIG.CURRENT_VERSION; version++) {
+    for (
+      let version = fromVersion + 1;
+      version <= DB_CONFIG.CURRENT_VERSION;
+      version++
+    ) {
       if (MIGRATION_CONFIGS[version]) {
         path.push(version);
       }
@@ -448,7 +513,7 @@ export class MigrationManager {
       hasBackup: Object.keys(this.backupData).length > 0,
       currentDbVersion: DB_CONFIG.CURRENT_VERSION,
       availableMigrations: Object.keys(MIGRATION_CONFIGS),
-      backupTimestamp: this.backupData.timestamp
+      backupTimestamp: this.backupData.timestamp,
     };
   }
-} 
+}

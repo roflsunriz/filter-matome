@@ -1,5 +1,5 @@
-import type { VideoData } from '@/types';
-import { ProgressManager } from '@/cache-data-manager/managers/progress-manager.js';
+import type { VideoData } from "@/types";
+import { ProgressManager } from "@/cache-data-manager/managers/progress-manager.js";
 
 export class LoadDataFromMemory {
   constructor(private progressManager: ProgressManager) {}
@@ -62,22 +62,28 @@ export class LoadDataFromMemory {
 
   // 従来のソートロジックを維持
   private isVideoData(value: unknown): value is VideoData {
-    return typeof value === 'object' && value !== null && typeof ((value as unknown as Record<string, unknown>).id) === 'string' && ((value as unknown as Record<string, unknown>).id as string).length > 0;
+    return (
+      typeof value === "object" &&
+      value !== null &&
+      typeof (value as unknown as Record<string, unknown>).id === "string" &&
+      ((value as unknown as Record<string, unknown>).id as string).length > 0
+    );
   }
 
   private sortEntries(entries: VideoData[]): VideoData[] {
     const filtered = entries.filter((e) => this.isVideoData(e));
 
     const getIdSafe = (entry: unknown): string => {
-      if (typeof entry === 'object' && entry !== null) {
+      if (typeof entry === "object" && entry !== null) {
         const rec = entry as Record<string, unknown>;
-        if (typeof rec.id === 'string') return rec.id;
+        if (typeof rec.id === "string") return rec.id;
       }
-      return '';
+      return "";
     };
 
     const getTypeFromId = (id: string) => id.slice(0, 2);
-    const getNumberFromId = (id: string) => parseInt(id.match(/\d+/)?.[0] || "0", 10);
+    const getNumberFromId = (id: string) =>
+      parseInt(id.match(/\d+/)?.[0] || "0", 10);
 
     return filtered.sort((a, b) => {
       const aId = getIdSafe(a);
@@ -100,9 +106,9 @@ export class LoadDataFromMemory {
   public getEntriesByIds(ids: string[]): VideoData[] {
     const allEntries = this.getAllEntries();
     const getId = (e: unknown): string | undefined => {
-      if (typeof e === 'object' && e !== null) {
+      if (typeof e === "object" && e !== null) {
         const rec = e as Record<string, unknown>;
-        if (typeof rec.id === 'string') return rec.id;
+        if (typeof rec.id === "string") return rec.id;
       }
       return undefined;
     };
@@ -110,9 +116,9 @@ export class LoadDataFromMemory {
     const allUnknown = allEntries as unknown[];
     const filtered = allUnknown.filter((entry) => {
       const id = getId(entry);
-      return typeof id === 'string' && ids.includes(id);
+      return typeof id === "string" && ids.includes(id);
     }) as VideoData[];
 
     return filtered;
   }
-} 
+}

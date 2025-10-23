@@ -1,4 +1,4 @@
-import { WATCH_CONFIG } from '@/video-player/config/constants';
+import { WATCH_CONFIG } from "@/video-player/config/constants";
 
 /**
  * 指定したセレクタの要素が現れるまで待機
@@ -6,7 +6,10 @@ import { WATCH_CONFIG } from '@/video-player/config/constants';
  * @param timeout タイムアウト（ミリ秒）
  * @returns 見つかった要素
  */
-export const waitForElement = (selector: string, timeout = 10000): Promise<Element> => {
+export const waitForElement = (
+  selector: string,
+  timeout = 10000,
+): Promise<Element> => {
   return new Promise((resolve, reject) => {
     // 要素がすでに存在するか確認
     const element = document.querySelector(selector);
@@ -22,7 +25,7 @@ export const waitForElement = (selector: string, timeout = 10000): Promise<Eleme
     }, timeout);
 
     // DOM変更を監視
-     
+
     const observer = new MutationObserver((_) => {
       const element = document.querySelector(selector);
       if (element) {
@@ -35,7 +38,7 @@ export const waitForElement = (selector: string, timeout = 10000): Promise<Eleme
     // 監視を開始
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
   });
 };
@@ -52,10 +55,14 @@ export const waitForPlayer = (timeout = 5000): Promise<HTMLElement> => {
 
     const checkPlayer = () => {
       attempts++;
-      const player = document.querySelector(WATCH_CONFIG.SELECTORS.PARENT_PLAYER) as HTMLElement;
+      const player = document.querySelector(
+        WATCH_CONFIG.SELECTORS.PARENT_PLAYER,
+      ) as HTMLElement;
 
       if (player) {
-        const isInitialized = player.querySelector(WATCH_CONFIG.SELECTORS.VIDEO);
+        const isInitialized = player.querySelector(
+          WATCH_CONFIG.SELECTORS.VIDEO,
+        );
         if (isInitialized) {
           resolve(player);
           return;
@@ -69,7 +76,7 @@ export const waitForPlayer = (timeout = 5000): Promise<HTMLElement> => {
 
       setTimeout(checkPlayer, 100);
     };
-    
+
     checkPlayer();
   });
 };
@@ -79,10 +86,11 @@ export const waitForPlayer = (timeout = 5000): Promise<HTMLElement> => {
  * @param callback ビデオ要素の準備ができたときに呼び出すコールバック
  * @returns MutationObserverオブジェクト（後で切断するため）
  */
-export const observeVideoReady = (callback: (video: HTMLVideoElement) => void): MutationObserver => {
-   
+export const observeVideoReady = (
+  callback: (video: HTMLVideoElement) => void,
+): MutationObserver => {
   const observer = new MutationObserver((_) => {
-    const video = document.querySelector('video') as HTMLVideoElement;
+    const video = document.querySelector("video") as HTMLVideoElement;
     if (video && video.readyState >= 2) {
       callback(video);
     }
@@ -92,7 +100,7 @@ export const observeVideoReady = (callback: (video: HTMLVideoElement) => void): 
     childList: true,
     subtree: true,
     attributes: true,
-    attributeFilter: ['readyState']
+    attributeFilter: ["readyState"],
   });
 
   return observer;
@@ -105,8 +113,8 @@ export const observeVideoReady = (callback: (video: HTMLVideoElement) => void): 
  * @returns 見つかった要素
  */
 export const getElement = <T extends Element>(
-  selector: string, 
-  parent: Document | Element = document
+  selector: string,
+  parent: Document | Element = document,
 ): T => {
   const element = parent.querySelector(selector) as T;
   if (!element) {
@@ -121,8 +129,8 @@ export const getElement = <T extends Element>(
  * @returns 作成されたスタイル要素
  */
 export const applyStyles = (styles: string): HTMLStyleElement => {
-  const styleElement = document.createElement('style');
+  const styleElement = document.createElement("style");
   styleElement.textContent = styles;
   document.head.appendChild(styleElement);
   return styleElement;
-}; 
+};

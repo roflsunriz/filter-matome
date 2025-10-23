@@ -108,7 +108,7 @@ export interface LegacyVideo {
 /**
  * 動画操作の種類
  */
-export type VideoOperation = 'cache_remove';
+export type VideoOperation = "cache_remove";
 
 /**
  * NicoCache_nl.watch.apiDataの型定義
@@ -141,10 +141,12 @@ export interface ApiData {
     /** 有料判定用の視聴権限 */
     watchableUserTypeForPayment?: string;
     /** ジャンル情報 */
-    genre?: {
-      id?: string;
-      label?: string;
-    } | string;
+    genre?:
+      | {
+          id?: string;
+          label?: string;
+        }
+      | string;
   };
   owner?: {
     id?: number | string;
@@ -227,7 +229,7 @@ export interface ApiData {
 /**
  * ApiData型を拡張してisDefaultPostTargetプロパティを含む型
  */
-export interface ExtendedApiData extends Omit<ApiData, 'comment'> {
+export interface ExtendedApiData extends Omit<ApiData, "comment"> {
   comment?: {
     threads?: Array<{
       id: string;
@@ -245,23 +247,23 @@ export interface ExtendedApiData extends Omit<ApiData, 'comment'> {
 /**
  * プレイヤーアイコンの種類
  */
-export type PlayerIconKey = 
-  | 'play' 
-  | 'pause' 
-  | 'volume' 
-  | 'muted' 
-  | 'rewind10' 
-  | 'forward10' 
-  | 'comment' 
-  | 'commentOff' 
-  | 'fullscreen' 
-  | 'exitFullscreen' 
-  | 'settings'; 
+export type PlayerIconKey =
+  | "play"
+  | "pause"
+  | "volume"
+  | "muted"
+  | "rewind10"
+  | "forward10"
+  | "comment"
+  | "commentOff"
+  | "fullscreen"
+  | "exitFullscreen"
+  | "settings";
 
 /**
  * HLS.js関連の型定義
  */
-export type HlsConstructor = typeof import("hls.js")["default"];
+export type HlsConstructor = (typeof import("hls.js"))["default"];
 export type HlsInstance = InstanceType<HlsConstructor>;
 
 /**
@@ -295,4 +297,4 @@ export interface CacheUrlResult {
 export interface DeletedVideoDetectorStatus {
   enabled: boolean;
   initialized: boolean;
-} 
+}

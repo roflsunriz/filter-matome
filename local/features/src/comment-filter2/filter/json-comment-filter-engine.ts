@@ -1,10 +1,30 @@
-import { CONSTANTS, DEFAULT_FORK_COMMANDS } from '@/comment-filter2/utils/constants';
-import { sanitizeCommentBody, sanitizeCommentCommands } from '@/comment-filter2/utils/sanitizer';
-import { CF2Comment, CF2Thread, Settings, CommandSettings } from '@/types/filter-types';
-import { NgRuleJson, NicoruCond, Action } from '@/types/filter-types';
-import { SubstringMatcher, isPlainLiteralPattern } from './rule-indexer';
-import { computeThreadNicoruStats, ThreadNicoruStats } from './thread-nicoru-stats';
-import { chunkThreads, enforceCommandSettings } from './comment-filter-engine';
+import {
+  CONSTANTS,
+  DEFAULT_FORK_COMMANDS,
+} from "@/comment-filter2/utils/constants";
+import {
+  sanitizeCommentBody,
+  sanitizeCommentCommands,
+} from "@/comment-filter2/utils/sanitizer";
+import {
+  CF2Comment,
+  CF2Thread,
+  Settings,
+  CommandSettings,
+} from "@/types/filter-types";
+import { NgRuleJson, NicoruCond, Action } from "@/types/filter-types";
+import {
+  SubstringMatcher,
+  isPlainLiteralPattern,
+} from "@/comment-filter2/filter/rule-indexer";
+import {
+  computeThreadNicoruStats,
+  ThreadNicoruStats,
+} from "@/comment-filter2/filter/thread-nicoru-stats";
+import {
+  chunkThreads,
+  enforceCommandSettings,
+} from "@/comment-filter2/filter/comment-filter-engine";
 
 export interface PreparedJsonRule {
   rule: NgRuleJson;
@@ -45,12 +65,12 @@ export interface FilterJsonThreadResult {
   logs: JsonRuleMatchEvent[];
 }
 
-type ForkType = 'main' | 'easy' | 'owner';
+type ForkType = "main" | "easy" | "owner";
 
-type NormalizedNicoruMode = 'include' | 'exclude';
+type NormalizedNicoruMode = "include" | "exclude";
 
 export interface NormalizedNicoruCond {
-  op: NicoruCond['op'];
+  op: NicoruCond["op"];
   mode: NormalizedNicoruMode;
   value: number;
   rangeEnd?: number;
@@ -60,7 +80,7 @@ export interface NormalizedNicoruCond {
 export function prepareJsonRules(
   rules: NgRuleJson[],
   currentSmid: string | null,
-  regexCache: Map<string, RegExp>
+  regexCache: Map<string, RegExp>,
 ): PreparedJsonRuleSet {
   const preparedRules: PreparedJsonRule[] = [];
   const userIdRuleIndexes = new Map<string, number[]>();
@@ -85,7 +105,7 @@ export function prepareJsonRules(
       compiledRegex: undefined,
       isUserRule,
       hasLiteralPrefilter: false,
-      normalizedNicoruCond: normalizeNicoruCondition(rule.nicoru_cond)
+      normalizedNicoruCond: normalizeNicoruCondition(rule.nicoru_cond),
     };
 
     if (isUserRule && rule.userId) {
@@ -95,11 +115,11 @@ export function prepareJsonRules(
     }
 
     if (rule.pattern) {
-      const flags = rule.flags || 'gi';
+      const flags = rule.flags || "gi";
       preparedRule.compiledRegex = getRegex(regexCache, rule.pattern, flags);
 
       if (isPlainLiteralPattern(rule.pattern)) {
-        const isCaseSensitive = !flags.includes('i');
+        const isCaseSensitive = !flags.includes("i");
         substringMatcher.add(rule.pattern, index, isCaseSensitive);
         preparedRule.hasLiteralPrefilter = true;
         hasLiteralPatterns = true;
@@ -117,7 +137,9 @@ export function prepareJsonRules(
     rules: preparedRules,
     userIdRuleIndexes,
     substringMatcher: hasLiteralPatterns ? substringMatcher : null,
-    needsLowercase: hasLiteralPatterns ? substringMatcher.needsLowercaseText() : false
+    needsLowercase: hasLiteralPatterns
+      ? substringMatcher.needsLowercaseText()
+      : false,
   };
 }
 
@@ -125,13 +147,13 @@ export function filterJsonThread({
   thread,
   preparedRules,
   settings,
-  regexCache
+  regexCache,
 }: FilterJsonThreadArgs): FilterJsonThreadResult {
   const logs: JsonRuleMatchEvent[] = [];
   const threadContext = buildJsonThreadContext(thread.comments, preparedRules);
 
   const comments = thread.comments
-    .map(comment =>
+    .map((comment) =>
       applyRulesToComment({
         originalComment: comment,
         preparedRules,
@@ -139,14 +161,14 @@ export function filterJsonThread({
         threadFork: thread.fork as ForkType,
         commandSettings: settings?.commandSettings ?? null,
         regexCache,
-        logCollector: logs
-      })
+        logCollector: logs,
+      }),
     )
     .filter((comment): comment is CF2Comment => comment !== null);
 
   return {
     comments,
-    logs
+    logs,
   };
 }
 
@@ -167,7 +189,7 @@ function applyRulesToComment({
   threadFork,
   commandSettings,
   regexCache,
-  logCollector
+  logCollector,
 }: ApplyJsonRuleOptions): CF2Comment | null {
   const processedComment: CF2Comment = { ...originalComment };
   processedComment.isPremium = true;
@@ -180,12 +202,15 @@ function applyRulesToComment({
   let includeNicoruRuleMatched = false;
   let excludeNicoruRuleMatched = false;
 
-  const userRuleIndexes = preparedRules.userIdRuleIndexes.get(originalComment.userId) ?? [];
+  const userRuleIndexes =
+    preparedRules.userIdRuleIndexes.get(originalComment.userId) ?? [];
   const activeUserRuleIndexes = new Set<number>(userRuleIndexes);
 
   const matcher = preparedRules.substringMatcher;
-  const originalBody = originalComment.body ?? '';
-  const lowercaseBody = preparedRules.needsLowercase ? originalBody.toLocaleLowerCase() : undefined;
+  const originalBody = originalComment.body ?? "";
+  const lowercaseBody = preparedRules.needsLowercase
+    ? originalBody.toLocaleLowerCase()
+    : undefined;
   const literalCandidateIndexes = matcher
     ? new Set<number>(matcher.match(originalBody, lowercaseBody))
     : new Set<number>();
@@ -202,11 +227,16 @@ function applyRulesToComment({
         continue;
       }
     } else if (rule.pattern) {
-      if (preparedRule.hasLiteralPrefilter && !literalCandidateIndexes.has(preparedRule.index)) {
+      if (
+        preparedRule.hasLiteralPrefilter &&
+        !literalCandidateIndexes.has(preparedRule.index)
+      ) {
         continue;
       }
 
-      const reusableRegex = preparedRule.compiledRegex ?? getRegex(regexCache, rule.pattern, rule.flags || 'gi');
+      const reusableRegex =
+        preparedRule.compiledRegex ??
+        getRegex(regexCache, rule.pattern, rule.flags || "gi");
       if (reusableRegex.global) {
         reusableRegex.lastIndex = 0;
       }
@@ -223,18 +253,20 @@ function applyRulesToComment({
     }
 
     const normalizedCond = preparedRule.normalizedNicoruCond;
-    const nicoruMatches = normalizedCond ? doesNicoruConditionMatch(normalizedCond, numericNicoruCount) : true;
+    const nicoruMatches = normalizedCond
+      ? doesNicoruConditionMatch(normalizedCond, numericNicoruCount)
+      : true;
 
-    if (rule.action.type === 'unspecified') {
+    if (rule.action.type === "unspecified") {
       if (normalizedCond) {
-        if (normalizedCond.mode === 'include') {
+        if (normalizedCond.mode === "include") {
           hasIncludeNicoruRule = true;
           if (nicoruMatches) {
             includeNicoruRuleMatched = true;
             logCollector.push({
               comment: originalComment,
               rule,
-              hidden: false
+              hidden: false,
             });
           }
         } else if (nicoruMatches) {
@@ -242,44 +274,53 @@ function applyRulesToComment({
           logCollector.push({
             comment: originalComment,
             rule,
-            hidden: false
+            hidden: false,
           });
         }
       }
       continue;
     }
 
-    const nicoruOk = evaluateNicoruCondition(normalizedCond, originalComment.nicoruCount);
+    const nicoruOk = evaluateNicoruCondition(
+      normalizedCond,
+      originalComment.nicoruCount,
+    );
     if (!nicoruOk) {
       continue;
     }
 
     ruleApplied = true;
 
-    const actionResult = executeAction(rule.action, processedComment.body, rule, preparedRule.compiledRegex ?? getRegex(regexCache, rule.pattern ?? '', rule.flags || 'gi'));
+    const actionResult = executeAction(
+      rule.action,
+      processedComment.body,
+      rule,
+      preparedRule.compiledRegex ??
+        getRegex(regexCache, rule.pattern ?? "", rule.flags || "gi"),
+    );
 
     logCollector.push({
       comment: originalComment,
       rule,
-      hidden: actionResult.type === 'hide'
+      hidden: actionResult.type === "hide",
     });
 
-    if (actionResult.type === 'hide') {
+    if (actionResult.type === "hide") {
       shouldHideComment = true;
-      processedComment.body = '';
-      processedComment.commands.push('invisible');
+      processedComment.body = "";
+      processedComment.commands.push("invisible");
       break;
     }
 
-    if (actionResult.type === 'replace' && actionResult.newText !== undefined) {
+    if (actionResult.type === "replace" && actionResult.newText !== undefined) {
       processedComment.body = actionResult.newText;
     }
   }
 
   if (shouldHideComment) {
-    processedComment.body = '';
-    if (!processedComment.commands.includes('invisible')) {
-      processedComment.commands.push('invisible');
+    processedComment.body = "";
+    if (!processedComment.commands.includes("invisible")) {
+      processedComment.commands.push("invisible");
     }
   }
 
@@ -290,7 +331,11 @@ function applyRulesToComment({
       : true;
 
   if (shouldApplyCommandSettings) {
-    processedComment.commands = applyForkCommandSettings(processedComment.commands, threadFork, commandSettings);
+    processedComment.commands = applyForkCommandSettings(
+      processedComment.commands,
+      threadFork,
+      commandSettings,
+    );
   }
 
   if (ruleApplied) {
@@ -300,15 +345,18 @@ function applyRulesToComment({
   return processedComment;
 }
 
-function normalizeNicoruCondition(cond?: NicoruCond): NormalizedNicoruCond | undefined {
+function normalizeNicoruCondition(
+  cond?: NicoruCond,
+): NormalizedNicoruCond | undefined {
   if (!cond) {
     return undefined;
   }
 
-  const modeValue = (cond.mode ?? 'exclude').toString().trim().toLowerCase();
-  const mode: NormalizedNicoruMode = modeValue === 'include' ? 'include' : 'exclude';
+  const modeValue = (cond.mode ?? "exclude").toString().trim().toLowerCase();
+  const mode: NormalizedNicoruMode =
+    modeValue === "include" ? "include" : "exclude";
 
-  if (cond.op === 'range') {
+  if (cond.op === "range") {
     if (!Array.isArray(cond.value) || cond.value.length !== 2) {
       return undefined;
     }
@@ -323,11 +371,11 @@ function normalizeNicoruCondition(cond?: NicoruCond): NormalizedNicoruCond | und
     const normalizedEnd = Math.max(start, end);
 
     return {
-      op: 'range',
+      op: "range",
       mode,
       value: normalizedStart,
       rangeEnd: normalizedEnd,
-      isValid: true
+      isValid: true,
     };
   }
 
@@ -340,13 +388,13 @@ function normalizeNicoruCondition(cond?: NicoruCond): NormalizedNicoruCond | und
     op: cond.op,
     mode,
     value: numericValue,
-    isValid: true
+    isValid: true,
   };
 }
 
 function buildJsonThreadContext(
   comments: CF2Comment[],
-  preparedRules: PreparedJsonRuleSet
+  preparedRules: PreparedJsonRuleSet,
 ): JsonThreadProcessingContext {
   const nicoruStats = computeThreadNicoruStats(comments);
   const nicoruIneligibleRuleIndexes = new Set<number>();
@@ -357,8 +405,11 @@ function buildJsonThreadContext(
       continue;
     }
 
-    const { canBeMet, canBeUnmet } = evaluateNicoruPossibility(normalized, nicoruStats);
-    const shouldInclude = normalized.mode === 'include' ? canBeMet : canBeUnmet;
+    const { canBeMet, canBeUnmet } = evaluateNicoruPossibility(
+      normalized,
+      nicoruStats,
+    );
+    const shouldInclude = normalized.mode === "include" ? canBeMet : canBeUnmet;
     if (!shouldInclude) {
       nicoruIneligibleRuleIndexes.add(preparedRule.index);
     }
@@ -366,12 +417,15 @@ function buildJsonThreadContext(
 
   return {
     nicoruStats,
-    nicoruIneligibleRuleIndexes
+    nicoruIneligibleRuleIndexes,
   };
 }
 
-function checkSmidCondition(smids: string[], currentSmid: string | null): boolean {
-  if (smids.includes('ALL')) {
+function checkSmidCondition(
+  smids: string[],
+  currentSmid: string | null,
+): boolean {
+  if (smids.includes("ALL")) {
     return true;
   }
 
@@ -380,7 +434,7 @@ function checkSmidCondition(smids: string[], currentSmid: string | null): boolea
 
 function evaluateNicoruPossibility(
   cond: NormalizedNicoruCond,
-  stats: ThreadNicoruStats
+  stats: ThreadNicoruStats,
 ): { canBeMet: boolean; canBeUnmet: boolean } {
   const total = stats.totalComments;
 
@@ -389,34 +443,34 @@ function evaluateNicoruPossibility(
   }
 
   switch (cond.op) {
-    case '=': {
+    case "=": {
       const metCount = stats.countsByValue.get(cond.value) ?? 0;
       return {
         canBeMet: metCount > 0,
-        canBeUnmet: metCount < total
+        canBeUnmet: metCount < total,
       };
     }
-    case '>': {
+    case ">": {
       const canBeMet = stats.maxNicoru > cond.value;
       const canBeUnmet = stats.minNicoru <= cond.value;
       return { canBeMet, canBeUnmet };
     }
-    case '<': {
+    case "<": {
       const canBeMet = stats.minNicoru < cond.value;
       const canBeUnmet = stats.maxNicoru >= cond.value;
       return { canBeMet, canBeUnmet };
     }
-    case '>=': {
+    case ">=": {
       const canBeMet = stats.maxNicoru >= cond.value;
       const canBeUnmet = stats.minNicoru < cond.value;
       return { canBeMet, canBeUnmet };
     }
-    case '<=': {
+    case "<=": {
       const canBeMet = stats.minNicoru <= cond.value;
       const canBeUnmet = stats.maxNicoru > cond.value;
       return { canBeMet, canBeUnmet };
     }
-    case 'range': {
+    case "range": {
       const start = cond.value;
       const end = cond.rangeEnd ?? cond.value;
       let metCount = 0;
@@ -433,7 +487,7 @@ function evaluateNicoruPossibility(
 
       return {
         canBeMet: metCount > 0,
-        canBeUnmet: metCount < total
+        canBeUnmet: metCount < total,
       };
     }
     default:
@@ -443,7 +497,7 @@ function evaluateNicoruPossibility(
 
 function evaluateNicoruCondition(
   cond: NormalizedNicoruCond | undefined,
-  commentNicoruCount: number | string
+  commentNicoruCount: number | string,
 ): boolean {
   if (!cond || !cond.isValid) {
     return true;
@@ -452,23 +506,30 @@ function evaluateNicoruCondition(
   const numericValue = toNumber(commentNicoruCount) ?? 0;
   const matches = doesNicoruConditionMatch(cond, numericValue);
 
-  return cond.mode === 'include' ? matches : !matches;
+  return cond.mode === "include" ? matches : !matches;
 }
 
-function doesNicoruConditionMatch(cond: NormalizedNicoruCond, numericValue: number): boolean {
+function doesNicoruConditionMatch(
+  cond: NormalizedNicoruCond,
+  numericValue: number,
+): boolean {
   switch (cond.op) {
-    case '=':
+    case "=":
       return numericValue === cond.value;
-    case '>':
+    case ">":
       return numericValue > cond.value;
-    case '<':
+    case "<":
       return numericValue < cond.value;
-    case '>=':
+    case ">=":
       return numericValue >= cond.value;
-    case '<=':
+    case "<=":
       return numericValue <= cond.value;
-    case 'range':
-      return cond.rangeEnd !== undefined && numericValue >= cond.value && numericValue <= cond.rangeEnd;
+    case "range":
+      return (
+        cond.rangeEnd !== undefined &&
+        numericValue >= cond.value &&
+        numericValue <= cond.rangeEnd
+      );
     default:
       return true;
   }
@@ -478,13 +539,13 @@ function executeAction(
   action: Action,
   text: string,
   rule: NgRuleJson,
-  compiledRegex: RegExp
-): { type: 'hide' | 'replace' | 'none'; newText?: string } {
-  if (action.type === 'hide') {
-    return { type: 'hide' };
+  compiledRegex: RegExp,
+): { type: "hide" | "replace" | "none"; newText?: string } {
+  if (action.type === "hide") {
+    return { type: "hide" };
   }
 
-  if (action.type === 'replace' && rule.pattern) {
+  if (action.type === "replace" && rule.pattern) {
     const regex = compiledRegex;
     if (regex.global) {
       regex.lastIndex = 0;
@@ -493,24 +554,27 @@ function executeAction(
     if (regex.global) {
       regex.lastIndex = 0;
     }
-    return { type: 'replace', newText };
+    return { type: "replace", newText };
   }
 
-  return { type: 'none' };
+  return { type: "none" };
 }
 
 function applyForkCommandSettings(
   commands: string[],
   threadFork: ForkType,
-  commandSettings: CommandSettings | null
+  commandSettings: CommandSettings | null,
 ): string[] {
   const forcedCommands = getForcedCommandsForFork(threadFork, commandSettings);
 
   const sanitizedCommands = sanitizeCommentCommands(commands);
-  const allowedCommands = getAllowedCommandsForFork(threadFork, commandSettings);
+  const allowedCommands = getAllowedCommandsForFork(
+    threadFork,
+    commandSettings,
+  );
 
   const filteredCommands = allowedCommands
-    ? sanitizedCommands.filter(command => {
+    ? sanitizedCommands.filter((command) => {
         if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
           return true;
         }
@@ -518,7 +582,7 @@ function applyForkCommandSettings(
       })
     : sanitizedCommands;
 
-  const filteredForcedCommands = forcedCommands.filter(command => {
+  const filteredForcedCommands = forcedCommands.filter((command) => {
     if (!allowedCommands) {
       return true;
     }
@@ -535,12 +599,19 @@ function applyForkCommandSettings(
 
 function getAllowedCommandsForFork(
   threadFork: ForkType,
-  commandSettings: CommandSettings | null
+  commandSettings: CommandSettings | null,
 ): Set<string> | null {
-  const defaultCommands = DEFAULT_FORK_COMMANDS[threadFork]?.map(command => command.toLowerCase()) ?? [];
+  const defaultCommands =
+    DEFAULT_FORK_COMMANDS[threadFork]?.map((command) =>
+      command.toLowerCase(),
+    ) ?? [];
 
-  const normalizeCommands = (commands: readonly string[] | undefined): Set<string> =>
-    new Set((commands ?? defaultCommands).map(command => command.toLowerCase()));
+  const normalizeCommands = (
+    commands: readonly string[] | undefined,
+  ): Set<string> =>
+    new Set(
+      (commands ?? defaultCommands).map((command) => command.toLowerCase()),
+    );
 
   if (!commandSettings) {
     return new Set(defaultCommands);
@@ -560,7 +631,7 @@ function getAllowedCommandsForFork(
 
 function getForcedCommandsForFork(
   threadFork: ForkType,
-  commandSettings: CommandSettings | null
+  commandSettings: CommandSettings | null,
 ): string[] {
   if (!commandSettings) {
     return [];
@@ -586,29 +657,35 @@ function getForcedCommandsForFork(
   return sanitizeCommentCommands([...configuredCommands]);
 }
 
-function normalizeCommands(commands: string | string[] | null | undefined): string[] {
+function normalizeCommands(
+  commands: string | string[] | null | undefined,
+): string[] {
   if (!commands) {
     return [];
   }
 
   if (Array.isArray(commands)) {
     return commands
-      .filter(cmd => cmd !== null && cmd !== undefined && cmd !== '')
-      .map(cmd => String(cmd).trim())
-      .filter(cmd => cmd.length > 0);
+      .filter((cmd) => cmd !== null && cmd !== undefined && cmd !== "")
+      .map((cmd) => String(cmd).trim())
+      .filter((cmd) => cmd.length > 0);
   }
 
-  if (typeof commands === 'string') {
+  if (typeof commands === "string") {
     return commands
       .trim()
       .split(/\s+/)
-      .filter(cmd => cmd.length > 0);
+      .filter((cmd) => cmd.length > 0);
   }
 
   return [];
 }
 
-function getRegex(cache: Map<string, RegExp>, pattern: string, flags: string): RegExp {
+function getRegex(
+  cache: Map<string, RegExp>,
+  pattern: string,
+  flags: string,
+): RegExp {
   const cacheKey = `${pattern}:::${flags}`;
 
   if (cache.has(cacheKey)) {
@@ -621,10 +698,10 @@ function getRegex(cache: Map<string, RegExp>, pattern: string, flags: string): R
 }
 
 function toNumber(value: unknown): number | null {
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     return value;
   }
-  if (typeof value === 'string' && value.trim() !== '') {
+  if (typeof value === "string" && value.trim() !== "") {
     const parsed = Number(value);
     return Number.isNaN(parsed) ? null : parsed;
   }

@@ -1,5 +1,5 @@
-import type { VideoData } from '@/types';
-import type { LoadDataFromMemory } from '@/cache-data-manager/loaders/load-data-from-memory.js';
+import type { VideoData } from "@/types";
+import type { LoadDataFromMemory } from "@/cache-data-manager/loaders/load-data-from-memory.js";
 
 export class BatchRenderer {
   private container: HTMLElement;
@@ -8,7 +8,10 @@ export class BatchRenderer {
   private createVideoCard: (data: VideoData) => HTMLElement;
   private dataLoader: LoadDataFromMemory;
 
-  constructor(createVideoCard: (data: VideoData) => HTMLElement, dataLoader: LoadDataFromMemory) {
+  constructor(
+    createVideoCard: (data: VideoData) => HTMLElement,
+    dataLoader: LoadDataFromMemory,
+  ) {
     this.container = document.querySelector(".cache-container") as HTMLElement;
     this.createVideoCard = createVideoCard;
     this.dataLoader = dataLoader;
@@ -30,7 +33,9 @@ export class BatchRenderer {
       });
 
       this.container.appendChild(fragment);
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve()),
+      );
     }
   }
 
@@ -60,10 +65,13 @@ export class BatchRenderer {
 
   public findEntryById(id: string): unknown {
     const all = this.dataLoader.getAllEntries() as unknown[];
-    const hasId = (v: unknown): v is { id: string } => typeof v === 'object' && v !== null && typeof (v as Record<string, unknown>).id === 'string';
+    const hasId = (v: unknown): v is { id: string } =>
+      typeof v === "object" &&
+      v !== null &&
+      typeof (v as Record<string, unknown>).id === "string";
     for (const e of all) {
       if (hasId(e) && e.id === id) return e;
     }
     return undefined;
   }
-} 
+}

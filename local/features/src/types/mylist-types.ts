@@ -40,7 +40,10 @@ export interface ManagerSettings {
 export interface MylistManager {
   deleteVideo(compositeId: string): Promise<string>;
   fetchVideoInfo(videoId: string): Promise<VideoInfo>;
-  updateVideoInfo(compositeId: string, videoInfo: Partial<VideoInfo>): Promise<void>;
+  updateVideoInfo(
+    compositeId: string,
+    videoInfo: Partial<VideoInfo>,
+  ): Promise<void>;
   updateVideoMemo(compositeId: string, memo: string): Promise<void>;
   getAllMylists(): Promise<MylistInfo[]>;
   moveKeyword(keywordId: number, targetMylistId: number): Promise<void>;
@@ -66,4 +69,4 @@ export interface ExportData {
   mylists: MylistInfo[];
   videos: DBVideo[];
   keywords: KeywordInfo[];
-} 
+}

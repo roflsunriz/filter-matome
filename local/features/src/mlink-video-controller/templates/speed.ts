@@ -24,4 +24,4 @@ export const speedTemplate = `
   <button class="speed-adjust" data-adjust="+0.01">+0.01</button>
   <button class="speed-adjust" data-adjust="+0.1">+0.1</button>
 </div>
-`; 
+`;

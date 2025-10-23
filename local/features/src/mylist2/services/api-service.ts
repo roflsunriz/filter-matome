@@ -52,7 +52,9 @@ export class ApiService {
       }
     } catch (error) {
       if (request) {
-        request.reject(error instanceof Error ? error : new Error(String(error)));
+        request.reject(
+          error instanceof Error ? error : new Error(String(error)),
+        );
       }
     }
 
@@ -69,7 +71,9 @@ export class ApiService {
         return cachedData;
       }
 
-      const response = await fetch(`https://ext.nicovideo.jp/api/getthumbinfo/${videoId}`);
+      const response = await fetch(
+        `https://ext.nicovideo.jp/api/getthumbinfo/${videoId}`,
+      );
       const text = await response.text();
 
       const parser = new DOMParser();
@@ -78,7 +82,9 @@ export class ApiService {
       const errorElement = xml.querySelector("error");
       if (errorElement) {
         const description = xml.querySelector("description");
-        throw new Error(description?.textContent || "動画情報の取得に失敗しました");
+        throw new Error(
+          description?.textContent || "動画情報の取得に失敗しました",
+        );
       }
 
       const thumb = xml.querySelector("thumb");
@@ -105,14 +111,22 @@ export class ApiService {
       const userNicknameElement = thumb.querySelector("user_nickname");
       const chNameElement = thumb.querySelector("ch_name");
 
-      if (!titleElement || !viewCountElement || !commentNumElement || 
-          !mylistCounterElement || !thumbnailUrlElement || !firstRetrieveElement) {
+      if (
+        !titleElement ||
+        !viewCountElement ||
+        !commentNumElement ||
+        !mylistCounterElement ||
+        !thumbnailUrlElement ||
+        !firstRetrieveElement
+      ) {
         throw new Error("必要な動画情報が取得できませんでした");
       }
 
       // タグ抽出（ext.getthumbinfo は <tags> 配下に <tag> が並ぶ想定）
-      const tagElements = Array.from(thumb.querySelectorAll('tags tag'));
-      const tags = tagElements.map(t => (t.textContent || '').trim()).filter(Boolean);
+      const tagElements = Array.from(thumb.querySelectorAll("tags tag"));
+      const tags = tagElements
+        .map((t) => (t.textContent || "").trim())
+        .filter(Boolean);
 
       const videoInfo: VideoInfo = {
         id: videoId,
@@ -127,14 +141,16 @@ export class ApiService {
           chNameElement?.textContent ||
           "不明",
         length: lengthInSeconds,
-        description: descriptionElement?.textContent || '',
+        description: descriptionElement?.textContent || "",
         tags: tags.length > 0 ? tags : undefined,
       };
 
       this.apiCache.set(videoId, videoInfo);
       return videoInfo;
     } catch (error) {
-      throw new Error(`動画情報の取得に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+      throw new Error(
+        `動画情報の取得に失敗しました: ${error instanceof Error ? error.message : "不明なエラー"}`,
+      );
     }
   }
 
@@ -148,8 +164,8 @@ export class ApiService {
 
   // 動画情報を取得する関数
   async getVideoInfoFromSources(
-    videoId: string, 
-    existingData: Partial<VideoInfo> | null = null
+    videoId: string,
+    existingData: Partial<VideoInfo> | null = null,
   ): Promise<VideoInfo> {
     // APIリクエスト制限のチェック
     const shouldUseApi = this.apiRequestCount < this.API_REQUEST_LIMIT;
@@ -211,7 +227,10 @@ export class ApiService {
   // 動画IDまたはURLから動画IDを抽出する関数
   extractVideoId(input: string): string {
     // URLからの抽出パターン
-    const urlPatterns = [/nicovideo\.jp\/watch\/((?:so|sm|nm|nx)\d+)/, /nico\.ms\/((?:so|sm|nm|nx)\d+)/];
+    const urlPatterns = [
+      /nicovideo\.jp\/watch\/((?:so|sm|nm|nx)\d+)/,
+      /nico\.ms\/((?:so|sm|nm|nx)\d+)/,
+    ];
 
     // URLからの抽出を試行
     for (const pattern of urlPatterns) {
@@ -243,4 +262,4 @@ export class ApiService {
   setCacheData(videoId: string, videoInfo: VideoInfo): void {
     this.apiCache.set(videoId, videoInfo);
   }
-} 
+}

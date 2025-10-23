@@ -17,7 +17,7 @@ export class BatchOperations {
     modalService: ModalService,
     progressService: ProgressService,
     eventHandlers: EventHandlers,
-    loadVideos: () => Promise<void>
+    loadVideos: () => Promise<void>,
   ) {
     this.manager = manager;
     this.modalService = modalService;
@@ -27,11 +27,14 @@ export class BatchOperations {
   }
 
   // 一括移動の処理
-  async moveSelectedItems(videos: HTMLElement[], keywords: HTMLElement[]): Promise<void> {
+  async moveSelectedItems(
+    videos: HTMLElement[],
+    keywords: HTMLElement[],
+  ): Promise<void> {
     const targetMylistId = await this.modalService.showMylistSelectModal(
-      "移動", 
-      await this.manager.getAllMylists(), 
-      this.eventHandlers.getCurrentMylist()
+      "移動",
+      await this.manager.getAllMylists(),
+      this.eventHandlers.getCurrentMylist(),
     );
     if (!targetMylistId) return;
 
@@ -40,7 +43,7 @@ export class BatchOperations {
       const videoData = await this.eventHandlers.getVideoData(video);
       if (videoData) {
         await this.manager.addVideo(targetMylistId, videoData);
-        
+
         const compositeId = video.dataset.compositeId;
         if (compositeId) {
           await this.manager.deleteVideo(compositeId);
@@ -62,11 +65,14 @@ export class BatchOperations {
   }
 
   // 一括コピーの処理
-  async copySelectedItems(videos: HTMLElement[], keywords: HTMLElement[]): Promise<void> {
+  async copySelectedItems(
+    videos: HTMLElement[],
+    keywords: HTMLElement[],
+  ): Promise<void> {
     const targetMylistId = await this.modalService.showMylistSelectModal(
-      "コピー", 
-      await this.manager.getAllMylists(), 
-      this.eventHandlers.getCurrentMylist()
+      "コピー",
+      await this.manager.getAllMylists(),
+      this.eventHandlers.getCurrentMylist(),
     );
     if (!targetMylistId) return;
 
@@ -82,7 +88,10 @@ export class BatchOperations {
     for (const keyword of keywords) {
       const keywordTextElement = keyword.querySelector(".keyword-text");
       if (keywordTextElement && keywordTextElement.textContent) {
-        await this.manager.addKeyword(targetMylistId, keywordTextElement.textContent);
+        await this.manager.addKeyword(
+          targetMylistId,
+          keywordTextElement.textContent,
+        );
       }
     }
 
@@ -90,17 +99,22 @@ export class BatchOperations {
   }
 
   // 一括削除の処理
-  async deleteSelectedItems(videos: HTMLElement[], keywords: HTMLElement[]): Promise<void> {
+  async deleteSelectedItems(
+    videos: HTMLElement[],
+    keywords: HTMLElement[],
+  ): Promise<void> {
     const titles: string[] = [];
-    
+
     // 動画タイトルの収集
     for (const video of videos) {
-      const titleElement = video.querySelector(".video-title-link") || video.querySelector(".video-title");
+      const titleElement =
+        video.querySelector(".video-title-link") ||
+        video.querySelector(".video-title");
       if (titleElement && titleElement.textContent) {
         titles.push(titleElement.textContent);
       }
     }
-    
+
     // キーワードの収集
     for (const keyword of keywords) {
       const keywordTextElement = keyword.querySelector(".keyword-text");
@@ -113,7 +127,7 @@ export class BatchOperations {
       `以下の${titles.length}件の項目を削除しますか？\n\n` +
       titles.map((title) => `・${title}`).join("\n");
 
-    if (!await this.modalService.showCustomConfirm(confirmMessage)) return;
+    if (!(await this.modalService.showCustomConfirm(confirmMessage))) return;
 
     // 動画の削除
     for (const video of videos) {
@@ -149,7 +163,7 @@ export class BatchOperations {
         const video = selectedVideos[i];
         const videoId = video.dataset.id;
         const compositeId = video.dataset.compositeId;
-        
+
         if (!videoId || !compositeId) continue;
 
         try {
@@ -179,12 +193,15 @@ export class BatchOperations {
 
       // 完了後に一覧を再読み込み
       await this.loadVideos();
-      await this.modalService.showCustomAlert(`${processed}件の動画情報を更新しました`);
+      await this.modalService.showCustomAlert(
+        `${processed}件の動画情報を更新しました`,
+      );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "動画情報の更新に失敗しました";
+      const errorMessage =
+        error instanceof Error ? error.message : "動画情報の更新に失敗しました";
       throw new Error("動画情報の更新に失敗しました: " + errorMessage);
     } finally {
       this.progressService.hideProgress(); // モーダルを非表示
     }
   }
-} 
+}

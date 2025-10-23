@@ -1,7 +1,7 @@
 import "@/types/global.d.ts";
 
-import { ToastMode, ToastConfig } from '@/types/index';
-import { TOAST_CONFIG } from '@/video-player/config/constants';
+import { ToastMode, ToastConfig } from "@/types/index";
+import { TOAST_CONFIG } from "@/video-player/config/constants";
 
 /**
  * トースト通知を管理するクラス
@@ -20,7 +20,13 @@ export class ToastManager {
    * @param low 追加情報（省略可）
    */
   public showInfo(title: string, middle: string = "", low: string = ""): void {
-    this.showToast(ToastMode.INFO, title, middle, low, this.config.TIMEOUTS.START_MS);
+    this.showToast(
+      ToastMode.INFO,
+      title,
+      middle,
+      low,
+      this.config.TIMEOUTS.START_MS,
+    );
   }
 
   /**
@@ -29,8 +35,18 @@ export class ToastManager {
    * @param middle サブメッセージ（省略可）
    * @param low 追加情報（省略可）
    */
-  public showSuccess(title: string, middle: string = "", low: string = ""): void {
-    this.showToast(ToastMode.SUCCESS, title, middle, low, this.config.TIMEOUTS.PLAYABLE_MS);
+  public showSuccess(
+    title: string,
+    middle: string = "",
+    low: string = "",
+  ): void {
+    this.showToast(
+      ToastMode.SUCCESS,
+      title,
+      middle,
+      low,
+      this.config.TIMEOUTS.PLAYABLE_MS,
+    );
   }
 
   /**
@@ -39,8 +55,18 @@ export class ToastManager {
    * @param middle サブメッセージ（省略可）
    * @param low 追加情報（省略可）
    */
-  public showWarning(title: string, middle: string = "", low: string = ""): void {
-    this.showToast(ToastMode.WARNING, title, middle, low, this.config.TIMEOUTS.WARN_MS);
+  public showWarning(
+    title: string,
+    middle: string = "",
+    low: string = "",
+  ): void {
+    this.showToast(
+      ToastMode.WARNING,
+      title,
+      middle,
+      low,
+      this.config.TIMEOUTS.WARN_MS,
+    );
   }
 
   /**
@@ -50,7 +76,13 @@ export class ToastManager {
    * @param low 追加情報（省略可）
    */
   public showError(title: string, middle: string = "", low: string = ""): void {
-    this.showToast(ToastMode.ERROR, title, middle, low, this.config.TIMEOUTS.ERROR_MS);
+    this.showToast(
+      ToastMode.ERROR,
+      title,
+      middle,
+      low,
+      this.config.TIMEOUTS.ERROR_MS,
+    );
   }
 
   /**
@@ -62,14 +94,14 @@ export class ToastManager {
    * @param timeout 表示時間（ミリ秒）
    */
   public showToast(
-    mode: ToastMode, 
-    title: string, 
-    middle: string = "", 
-    low: string = "", 
-    timeout: number = 5000
+    mode: ToastMode,
+    title: string,
+    middle: string = "",
+    low: string = "",
+    timeout: number = 5000,
   ): void {
-    const message = [middle, low].filter(Boolean).join(' ');
-    
+    const message = [middle, low].filter(Boolean).join(" ");
+
     switch (mode) {
       case ToastMode.INFO:
         window.toastr.info(message, title, { timeOut: timeout });
@@ -87,4 +119,4 @@ export class ToastManager {
         window.logger.info(`[Toast-${String(mode)}] ${title} ${message}`);
     }
   }
-} 
+}

@@ -1,6 +1,10 @@
-import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
-import { DeletedVideoDetectorStatus } from '@/types/video-types';
-import { DeletedVideoDetector } from '@/mlink-video-controller/services/deleted-video-detector';
+import {
+  ModuleInstance,
+  ModuleConfig,
+  ModuleStatus,
+} from "@/types/module-types";
+import { DeletedVideoDetectorStatus } from "@/types/video-types";
+import { DeletedVideoDetector } from "@/mlink-video-controller/services/deleted-video-detector";
 
 /**
  * 削除動画検出モジュールのラッパークラス
@@ -21,14 +25,13 @@ export class DeletedVideoDetectorModule implements ModuleInstance {
    */
   public async initialize(): Promise<void> {
     try {
-      
-      
       await this.detector.enable();
       this.isInitialized = true;
-      
-      
     } catch (error) {
-      window.logger.error(`[${this.config.id}] 初期化中にエラーが発生しました:`, error);
+      window.logger.error(
+        `[${this.config.id}] 初期化中にエラーが発生しました:`,
+        error,
+      );
       throw error;
     }
   }
@@ -38,14 +41,13 @@ export class DeletedVideoDetectorModule implements ModuleInstance {
    */
   public destroy(): void {
     try {
-      
-      
       this.detector.disable();
       this.isInitialized = false;
-      
-      
     } catch (error) {
-      window.logger.error(`[${this.config.id}] 破棄中にエラーが発生しました:`, error);
+      window.logger.error(
+        `[${this.config.id}] 破棄中にエラーが発生しました:`,
+        error,
+      );
     }
   }
 
@@ -61,7 +63,10 @@ export class DeletedVideoDetectorModule implements ModuleInstance {
       const status = this.detector.getStatus();
       return status.enabled && status.initialized;
     } catch (error) {
-      window.logger.error(`[${this.config.id}] アクティブ状態の確認中にエラーが発生しました:`, error);
+      window.logger.error(
+        `[${this.config.id}] アクティブ状態の確認中にエラーが発生しました:`,
+        error,
+      );
       return false;
     }
   }
@@ -76,7 +81,7 @@ export class DeletedVideoDetectorModule implements ModuleInstance {
 
     try {
       const detectorStatus = this.detector.getStatus();
-      
+
       if (detectorStatus.enabled && detectorStatus.initialized) {
         return ModuleStatus.ACTIVE;
       } else if (detectorStatus.initialized) {
@@ -85,7 +90,10 @@ export class DeletedVideoDetectorModule implements ModuleInstance {
         return ModuleStatus.LOADING;
       }
     } catch (error) {
-      window.logger.error(`[${this.config.id}] 状態取得中にエラーが発生しました:`, error);
+      window.logger.error(
+        `[${this.config.id}] 状態取得中にエラーが発生しました:`,
+        error,
+      );
       return ModuleStatus.ERROR;
     }
   }
@@ -96,13 +104,16 @@ export class DeletedVideoDetectorModule implements ModuleInstance {
   public getModuleInfo(): { detectorStatus: DeletedVideoDetectorStatus } {
     try {
       return {
-        detectorStatus: this.detector.getStatus()
+        detectorStatus: this.detector.getStatus(),
       };
     } catch (error) {
-      window.logger.error(`[${this.config.id}] モジュール情報の取得中にエラーが発生しました:`, error);
+      window.logger.error(
+        `[${this.config.id}] モジュール情報の取得中にエラーが発生しました:`,
+        error,
+      );
       return {
-        detectorStatus: { enabled: false, initialized: false }
+        detectorStatus: { enabled: false, initialized: false },
       };
     }
   }
-} 
+}

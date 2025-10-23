@@ -1,13 +1,25 @@
-import { createMaterialIcon, ICONS } from '@/common/material-icons.js';
+import { createMaterialIcon, ICONS } from "@/common/material-icons.js";
 
 /**
  * ビデオカードテンプレートを生成する関数
  */
 export function createCardTemplate(): string {
-  const playIcon = createMaterialIcon(ICONS.play, { color: 'white', classes: 'card-action-icon' });
-  const saveVideoIcon = createMaterialIcon(ICONS.download, { color: 'white', classes: 'card-action-icon' });
-  const saveAudioIcon = createMaterialIcon('audiotrack', { color: 'white', classes: 'card-action-icon' });
-  const deleteIcon = createMaterialIcon(ICONS.delete, { color: 'white', classes: 'card-action-icon' });
+  const playIcon = createMaterialIcon(ICONS.play, {
+    color: "white",
+    classes: "card-action-icon",
+  });
+  const saveVideoIcon = createMaterialIcon(ICONS.download, {
+    color: "white",
+    classes: "card-action-icon",
+  });
+  const saveAudioIcon = createMaterialIcon("audiotrack", {
+    color: "white",
+    classes: "card-action-icon",
+  });
+  const deleteIcon = createMaterialIcon(ICONS.delete, {
+    color: "white",
+    classes: "card-action-icon",
+  });
   return `
     <div class="card-header">
       <span class="video-id"></span>
@@ -37,4 +49,4 @@ export function createCardTemplate(): string {
       </button>
     </div>
   `;
-} 
+}

@@ -3,8 +3,15 @@
  * ニコニコ動画風のヘッダーを提供します
  */
 
-import type { HeaderConfig, CommonHeaderInstance } from "@/types/common-types.js";
-import { createMaterialIcon, materialIconsStyles, ICONS } from "@/common/material-icons.js";
+import type {
+  HeaderConfig,
+  CommonHeaderInstance,
+} from "@/types/common-types.js";
+import {
+  createMaterialIcon,
+  materialIconsStyles,
+  ICONS,
+} from "@/common/material-icons.js";
 
 // 型を再エクスポート
 export type { HeaderConfig, CommonHeaderInstance };
@@ -16,20 +23,21 @@ export class CommonHeader implements CommonHeaderInstance {
   private shadowRoot: ShadowRoot;
 
   constructor(container: HTMLElement | string, config: HeaderConfig = {}) {
-    this.container = typeof container === 'string' 
-      ? document.getElementById(container) || document.createElement('div')
-      : container;
-    
+    this.container =
+      typeof container === "string"
+        ? document.getElementById(container) || document.createElement("div")
+        : container;
+
     this.config = {
-      title: 'CustomMylist2 Manager',
+      title: "CustomMylist2 Manager",
       showSearch: true,
       showMoreLinks: true,
       enableFixedMode: false,
-      ...config
+      ...config,
     };
 
     // Shadow DOM を作成
-    this.shadowRoot = this.container.attachShadow({ mode: 'open' });
+    this.shadowRoot = this.container.attachShadow({ mode: "open" });
     this.init();
   }
 
@@ -281,33 +289,33 @@ export class CommonHeader implements CommonHeaderInstance {
               </select>
               <input type="text" id="searchWords" data-header-search-input placeholder="入力して検索…" />
               <button id="searchExec" data-header-search-btn class="icon-btn" title="検索">
-                ${createMaterialIcon(ICONS.search, { style: 'outlined', color: 'white' })}
+                ${createMaterialIcon(ICONS.search, { style: "outlined", color: "white" })}
               </button>
               <button id="searchClear" data-header-clear-btn class="icon-btn clear-btn" title="クリア">
-                ${createMaterialIcon(ICONS.clear, { style: 'outlined', color: 'white' })}
+                ${createMaterialIcon(ICONS.clear, { style: "outlined", color: "white" })}
               </button>
             </div>
           </div>
           <div class="header-right">
             <nav class="header-links">
               <a href="https://www.nicovideo.jp/" target="_blank" title="トップ">
-                ${createMaterialIcon(ICONS.home, { style: 'outlined', color: 'white' })}
+                ${createMaterialIcon(ICONS.home, { style: "outlined", color: "white" })}
                 トップ
               </a>
               <a href="https://www.nicovideo.jp/video_top" target="_blank" title="動画">
-                ${createMaterialIcon(ICONS.play, { style: 'outlined', color: 'white' })}
+                ${createMaterialIcon(ICONS.play, { style: "outlined", color: "white" })}
                 動画
               </a>
               <a href="https://seiga.nicovideo.jp/" target="_blank" title="静画">
-                ${createMaterialIcon(ICONS.image, { style: 'outlined', color: 'white' })}
+                ${createMaterialIcon(ICONS.image, { style: "outlined", color: "white" })}
                 静画
               </a>
               <a href="https://live.nicovideo.jp/" target="_blank" title="生放送">
-                ${createMaterialIcon(ICONS.live_tv, { style: 'outlined', color: 'white' })}
+                ${createMaterialIcon(ICONS.live_tv, { style: "outlined", color: "white" })}
                 生放送
               </a>
               <a href="https://ch.nicovideo.jp/" target="_blank" title="チャンネル">
-                ${createMaterialIcon(ICONS.tv, { style: 'outlined', color: 'white' })}
+                ${createMaterialIcon(ICONS.tv, { style: "outlined", color: "white" })}
                 チャンネル
               </a>
               <span class="more-links">
@@ -324,7 +332,7 @@ export class CommonHeader implements CommonHeaderInstance {
                   </a>
                   <a href="https://www.nicovideo.jp/ranking" target="_blank" title="ランキング">ランキング</a>
                   <a href="https://www.nicovideo.jp/my/history/video" target="_blank" title="マイページ">
-                    ${createMaterialIcon(ICONS.bookmark, { style: 'outlined', color: 'white' })}
+                    ${createMaterialIcon(ICONS.bookmark, { style: "outlined", color: "white" })}
                     マイページ
                   </a>
                   <a href="https://www.nicovideo.jp/newarrival" target="_blank" title="新着動画">
@@ -365,22 +373,28 @@ export class CommonHeader implements CommonHeaderInstance {
    */
   private setupEventListeners(): void {
     // 検索機能
-    const searchBtn = this.shadowRoot.querySelector('#searchExec') as HTMLButtonElement;
-    const clearBtn = this.shadowRoot.querySelector('#searchClear') as HTMLButtonElement;
-    
+    const searchBtn = this.shadowRoot.querySelector(
+      "#searchExec",
+    ) as HTMLButtonElement;
+    const clearBtn = this.shadowRoot.querySelector(
+      "#searchClear",
+    ) as HTMLButtonElement;
+
     if (searchBtn) {
-      searchBtn.addEventListener('click', () => this.handleSearch());
+      searchBtn.addEventListener("click", () => this.handleSearch());
     }
-    
+
     if (clearBtn) {
-      clearBtn.addEventListener('click', () => this.handleClear());
+      clearBtn.addEventListener("click", () => this.handleClear());
     }
 
     // Enterキーでの検索
-    const searchInput = this.shadowRoot.querySelector('#searchWords') as HTMLInputElement;
+    const searchInput = this.shadowRoot.querySelector(
+      "#searchWords",
+    ) as HTMLInputElement;
     if (searchInput) {
-      searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+      searchInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
           this.handleSearch();
         }
       });
@@ -388,7 +402,7 @@ export class CommonHeader implements CommonHeaderInstance {
 
     // 固定モード用のスクロール監視
     if (this.config.enableFixedMode) {
-      window.addEventListener('scroll', () => this.handleScroll());
+      window.addEventListener("scroll", () => this.handleScroll());
     }
   }
 
@@ -396,19 +410,19 @@ export class CommonHeader implements CommonHeaderInstance {
    * 設定を適用
    */
   private applyConfig(): void {
-    const titleElement = this.shadowRoot.querySelector('[data-header-title]');
+    const titleElement = this.shadowRoot.querySelector("[data-header-title]");
     if (titleElement && this.config.title) {
       titleElement.textContent = this.config.title;
     }
 
-    const searchContainer = this.shadowRoot.querySelector('.search-container');
+    const searchContainer = this.shadowRoot.querySelector(".search-container");
     if (searchContainer && !this.config.showSearch) {
-      (searchContainer as HTMLElement).style.display = 'none';
+      (searchContainer as HTMLElement).style.display = "none";
     }
 
-    const moreLinks = this.shadowRoot.querySelector('.more-links');
+    const moreLinks = this.shadowRoot.querySelector(".more-links");
     if (moreLinks && !this.config.showMoreLinks) {
-      (moreLinks as HTMLElement).style.display = 'none';
+      (moreLinks as HTMLElement).style.display = "none";
     }
 
     // カスタムリンクの追加
@@ -421,14 +435,14 @@ export class CommonHeader implements CommonHeaderInstance {
    * カスタムリンクを追加
    */
   private addCustomLinks(): void {
-    const headerLinks = this.shadowRoot.querySelector('.header-links');
+    const headerLinks = this.shadowRoot.querySelector(".header-links");
     if (!headerLinks || !this.config.customLinks) return;
 
-    this.config.customLinks.forEach(link => {
-      const linkElement = document.createElement('a');
+    this.config.customLinks.forEach((link) => {
+      const linkElement = document.createElement("a");
       linkElement.href = link.url;
       linkElement.textContent = link.text;
-      linkElement.target = link.target || '_blank';
+      linkElement.target = link.target || "_blank";
       headerLinks.appendChild(linkElement);
     });
   }
@@ -437,50 +451,56 @@ export class CommonHeader implements CommonHeaderInstance {
    * 検索処理
    */
   private handleSearch(): void {
-    const searchSelect = this.shadowRoot.querySelector('#searchOption') as HTMLSelectElement;
-    const searchInput = this.shadowRoot.querySelector('#searchWords') as HTMLInputElement;
-    
+    const searchSelect = this.shadowRoot.querySelector(
+      "#searchOption",
+    ) as HTMLSelectElement;
+    const searchInput = this.shadowRoot.querySelector(
+      "#searchWords",
+    ) as HTMLInputElement;
+
     if (!searchSelect || !searchInput || !searchInput.value.trim()) return;
 
     const searchType = searchSelect.value;
     const searchWords = encodeURIComponent(searchInput.value.trim());
-    
-    const baseUrl = 'https://www.nicovideo.jp/search';
+
+    const baseUrl = "https://www.nicovideo.jp/search";
     let searchUrl: string;
 
     switch (searchType) {
-      case 'www+tag':
+      case "www+tag":
         searchUrl = `${baseUrl}/${searchWords}?f_range=0&type=tag`;
         break;
-      case 'www+mylist_search':
+      case "www+mylist_search":
         searchUrl = `https://www.nicovideo.jp/mylist_search/${searchWords}`;
         break;
-      case 'seiga+search':
+      case "seiga+search":
         searchUrl = `https://seiga.nicovideo.jp/search/${searchWords}`;
         break;
-      case 'live+search':
+      case "live+search":
         searchUrl = `https://live.nicovideo.jp/search?keyword=${searchWords}`;
         break;
-      case 'ch+search':
+      case "ch+search":
         searchUrl = `https://ch.nicovideo.jp/search?q=${searchWords}`;
         break;
-      case 'dic+s/al/t':
+      case "dic+s/al/t":
         searchUrl = `https://dic.nicovideo.jp/s/al/t/${searchWords}`;
         break;
       default: // 'www+search'
         searchUrl = `${baseUrl}/${searchWords}`;
     }
 
-    window.open(searchUrl, '_blank');
+    window.open(searchUrl, "_blank");
   }
 
   /**
    * 検索クリア処理
    */
   private handleClear(): void {
-    const searchInput = this.shadowRoot.querySelector('#searchWords') as HTMLInputElement;
+    const searchInput = this.shadowRoot.querySelector(
+      "#searchWords",
+    ) as HTMLInputElement;
     if (searchInput) {
-      searchInput.value = '';
+      searchInput.value = "";
       searchInput.focus();
     }
   }
@@ -489,16 +509,18 @@ export class CommonHeader implements CommonHeaderInstance {
    * スクロール処理（固定モード用）
    */
   private handleScroll(): void {
-    const header = this.shadowRoot.querySelector('.custom-header') as HTMLElement;
+    const header = this.shadowRoot.querySelector(
+      ".custom-header",
+    ) as HTMLElement;
     if (!header) return;
 
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    
+
     if (scrollTop > 100 && !this.isFixed) {
-      header.classList.add('fixed');
+      header.classList.add("fixed");
       this.isFixed = true;
     } else if (scrollTop <= 100 && this.isFixed) {
-      header.classList.remove('fixed');
+      header.classList.remove("fixed");
       this.isFixed = false;
     }
   }
@@ -508,7 +530,7 @@ export class CommonHeader implements CommonHeaderInstance {
    */
   public setTitle(title: string): void {
     this.config.title = title;
-    const titleElement = this.shadowRoot.querySelector('[data-header-title]');
+    const titleElement = this.shadowRoot.querySelector("[data-header-title]");
     if (titleElement) {
       titleElement.textContent = title;
     }
@@ -519,14 +541,16 @@ export class CommonHeader implements CommonHeaderInstance {
    */
   public toggleFixedMode(enabled: boolean): void {
     this.config.enableFixedMode = enabled;
-    
+
     if (enabled) {
-      window.addEventListener('scroll', () => this.handleScroll());
+      window.addEventListener("scroll", () => this.handleScroll());
     } else {
-      window.removeEventListener('scroll', () => this.handleScroll());
-      const header = this.shadowRoot.querySelector('.custom-header') as HTMLElement;
+      window.removeEventListener("scroll", () => this.handleScroll());
+      const header = this.shadowRoot.querySelector(
+        ".custom-header",
+      ) as HTMLElement;
       if (header) {
-        header.classList.remove('fixed');
+        header.classList.remove("fixed");
         this.isFixed = false;
       }
     }
@@ -550,20 +574,23 @@ export class CommonHeader implements CommonHeaderInstance {
    * ヘッダーを破棄
    */
   public destroy(): void {
-    window.removeEventListener('scroll', () => this.handleScroll());
-    this.shadowRoot.innerHTML = '';
+    window.removeEventListener("scroll", () => this.handleScroll());
+    this.shadowRoot.innerHTML = "";
   }
 }
 
 /**
  * 簡単な初期化関数
  */
-export function createHeader(containerId: string, config?: HeaderConfig): CommonHeader {
+export function createHeader(
+  containerId: string,
+  config?: HeaderConfig,
+): CommonHeader {
   return new CommonHeader(containerId, config);
 }
 
 // windowオブジェクトに追加してビルド時に除外されないようにする
 window.NicoCommon = {
   CommonHeader,
-  createHeader
-}; 
+  createHeader,
+};

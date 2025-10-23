@@ -1,4 +1,4 @@
-import { Comment } from '@/types/index.js';
+import { Comment } from "@/types/index.js";
 
 /**
  * シャドウDOM版コメントリスト表示クラス
@@ -14,11 +14,11 @@ export class CommentList extends HTMLElement {
 
   constructor() {
     super();
-    
+
     // シャドウDOMを作成
-    this.shadow = this.attachShadow({ mode: 'closed' });
+    this.shadow = this.attachShadow({ mode: "closed" });
     this.shadow.innerHTML = this.getTemplate();
-    
+
     this.setupEventListeners();
   }
 
@@ -170,7 +170,7 @@ export class CommentList extends HTMLElement {
    * コンポーネントがDOMに接続された時
    */
   connectedCallback(): void {
-    this.list = this.shadow.querySelector('.comment-list');
+    this.list = this.shadow.querySelector(".comment-list");
     this.setupResizeObserver();
   }
 
@@ -186,7 +186,7 @@ export class CommentList extends HTMLElement {
    * リサイズ監視の設定
    */
   private setupResizeObserver(): void {
-    if (typeof ResizeObserver === 'undefined') {
+    if (typeof ResizeObserver === "undefined") {
       window.logger.warn("ResizeObserverが利用できません...");
       window.addEventListener("resize", () => this.syncHeight());
       return;
@@ -211,7 +211,8 @@ export class CommentList extends HTMLElement {
 
     this.list.addEventListener("scroll", () => {
       if (this.autoScroll && this.list) {
-        const scrollDiff = this.list.scrollHeight - this.list.clientHeight - this.list.scrollTop;
+        const scrollDiff =
+          this.list.scrollHeight - this.list.clientHeight - this.list.scrollTop;
         if (scrollDiff > 50) {
           this.autoScroll = false;
           // 一定時間後に自動スクロールを再開
@@ -231,10 +232,10 @@ export class CommentList extends HTMLElement {
     // 画面幅に応じて高さを調整
     if (window.innerWidth > 1023) {
       const playerHeight = player.offsetHeight;
-      this.style.setProperty('--player-height', `${playerHeight}px`);
-      this.classList.add('auto-height');
+      this.style.setProperty("--player-height", `${playerHeight}px`);
+      this.classList.add("auto-height");
     } else {
-      this.classList.remove('auto-height');
+      this.classList.remove("auto-height");
     }
   }
 
@@ -266,7 +267,9 @@ export class CommentList extends HTMLElement {
 
       // クリックイベントの追加（動画のシーク）
       item.addEventListener("click", () => {
-        const videoElement = document.getElementById("video-element") as HTMLVideoElement;
+        const videoElement = document.getElementById(
+          "video-element",
+        ) as HTMLVideoElement;
         if (videoElement) {
           videoElement.currentTime = comment.vposMs / 1000;
         }
@@ -282,7 +285,7 @@ export class CommentList extends HTMLElement {
    * HTMLエスケープ
    */
   private escapeHtml(text: string): string {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
   }
@@ -298,12 +301,17 @@ export class CommentList extends HTMLElement {
     const items = this.list.querySelectorAll<HTMLElement>(".comment-item");
     items.forEach((item) => {
       const vpos = parseInt(item.dataset.vpos || "0");
-      item.classList.toggle("active", vpos <= currentTimeMs && vpos > currentTimeMs - 5000);
+      item.classList.toggle(
+        "active",
+        vpos <= currentTimeMs && vpos > currentTimeMs - 5000,
+      );
     });
 
     // 自動スクロール（scrollIntoView を使わずリスト内のみをスクロール）
     if (this.autoScroll) {
-      const activeItems = this.list.querySelectorAll<HTMLElement>(".comment-item.active");
+      const activeItems = this.list.querySelectorAll<HTMLElement>(
+        ".comment-item.active",
+      );
       if (activeItems.length > 0) {
         const lastActive = activeItems[activeItems.length - 1];
         const list = this.list;
@@ -363,6 +371,6 @@ export class CommentList extends HTMLElement {
 }
 
 // カスタムエレメントとして登録
-if (!customElements.get('comment-list-shadow')) {
-  customElements.define('comment-list-shadow', CommentList);
-} 
+if (!customElements.get("comment-list-shadow")) {
+  customElements.define("comment-list-shadow", CommentList);
+}

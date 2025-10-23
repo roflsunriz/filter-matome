@@ -1,8 +1,12 @@
-import { ToastConfig, PlayerSettings, CommentRendererConfig } from '@/types/index.js';
+import {
+  ToastConfig,
+  PlayerSettings,
+  CommentRendererConfig,
+} from "@/types/index.js";
 
 // URLの設定
 export const URLS = {
-  BASE: "https://www.nicovideo.jp"
+  BASE: "https://www.nicovideo.jp",
 };
 
 // トースト通知の設定
@@ -11,45 +15,46 @@ export const TOAST_CONFIG: ToastConfig = {
     INFO: "info",
     SUCCESS: "success",
     WARNING: "warning",
-    ERROR: "error"
+    ERROR: "error",
   },
   TIMEOUTS: {
-    PLAYABLE_MS: 1500,  // 1.5秒
-    WARN_MS: 1500,      // 1.5秒
-    START_MS: 1500,      // 1.5秒
-    ERROR_MS: 1500      // 1.5秒
-  }
+    PLAYABLE_MS: 1500, // 1.5秒
+    WARN_MS: 1500, // 1.5秒
+    START_MS: 1500, // 1.5秒
+    ERROR_MS: 1500, // 1.5秒
+  },
 };
 
 // 動画監視の設定
 export const WATCH_CONFIG = {
   SELECTORS: {
     VIDEO: "video",
-    PLAYER: "cursor_inherit ring_none [&_[data-name=storyboard-content]]:filter_[blur(8px)_brightness(0.9)]",
+    PLAYER:
+      "cursor_inherit ring_none [&_[data-name=storyboard-content]]:filter_[blur(8px)_brightness(0.9)]",
     PARENT_PLAYER: ".grid-area_\\[player\\]",
-    PLAY_BUTTON: "cursor_pointer"
+    PLAY_BUTTON: "cursor_pointer",
   },
   URL_PATTERN: /^https?:\/\/www\.nicovideo\.jp\/watch\//,
-  CHECK_INTERVAL_MS: 1000 // ページ読み込み後の待機時間
+  CHECK_INTERVAL_MS: 1000, // ページ読み込み後の待機時間
 };
 
 // プレイヤー設定
 export const PLAYER_SETTINGS: PlayerSettings = {
   CONTROLS_MODE: {
     ALWAYS: "always",
-    HOVER: "hover"
+    HOVER: "hover",
   },
   VOLUME: {
     DEFAULT: 0.3,
     MIN: 0,
-    MAX: 1
+    MAX: 1,
   },
   COMMENT: {
     OPACITY: {
       DEFAULT: 0.75,
       MIN: 0.1,
       MAX: 1.0,
-      STEP: 0.05
+      STEP: 0.05,
     },
     COLORS: {
       WHITE: "#FFFFFF",
@@ -60,36 +65,36 @@ export const PLAYER_SETTINGS: PlayerSettings = {
       CYAN: "#00FFFF",
       MAGENTA: "#FF00FF",
       ORANGE: "#FFA500",
-      PURPLE: "#800080"
+      PURPLE: "#800080",
     },
     NG: {
       MAX_WORDS: 50,
-      MAX_REGEX: 10
-    }
-  }
+      MAX_REGEX: 10,
+    },
+  },
 };
 
 // コメントレンダラーの設定
 export const COMMENT_RENDERER_CONFIG: CommentRendererConfig = {
-  OPACITY: 0.75,                   // コメントの不透明度
-  COMMENT_DURATION_MS: 6000,       // コメントの表示時間（ミリ秒）
-  DEFAULT_FONT_SIZE: 32,           // デフォルトフォントサイズ
-  MIN_FONT_SIZE: 10,               // 最小フォントサイズ
-  DEFAULT_COLOR: "#FFFFFF",        // デフォルト色
-  MAX_COMMENT_LENGTH: 75,          // コメント最大文字数（切り捨て用）
-  STROKE_WIDTH: 4,                 // 縁取り幅
-  STROKE_COLOR: "#000000",         // 縁取り色
-  VPOS_THRESHOLD_MS: 100,          // 近傍とみなすミリ秒差
-  MAX_LANES_LIMIT: 100,            // レーン数の上限
-  RENDER_FPS: 60,                  // レンダリングフレームレート
-  CLEANUP_INTERVAL_MS: 5000,       // クリーンアップ間隔
-  VIRTUAL_EXTEND_RATIO: 0.5        // 仮想拡張キャンバスの比率（実キャンバス幅の50%）
+  OPACITY: 0.75, // コメントの不透明度
+  COMMENT_DURATION_MS: 6000, // コメントの表示時間（ミリ秒）
+  DEFAULT_FONT_SIZE: 32, // デフォルトフォントサイズ
+  MIN_FONT_SIZE: 10, // 最小フォントサイズ
+  DEFAULT_COLOR: "#FFFFFF", // デフォルト色
+  MAX_COMMENT_LENGTH: 75, // コメント最大文字数（切り捨て用）
+  STROKE_WIDTH: 4, // 縁取り幅
+  STROKE_COLOR: "#000000", // 縁取り色
+  VPOS_THRESHOLD_MS: 100, // 近傍とみなすミリ秒差
+  MAX_LANES_LIMIT: 100, // レーン数の上限
+  RENDER_FPS: 60, // レンダリングフレームレート
+  CLEANUP_INTERVAL_MS: 5000, // クリーンアップ間隔
+  VIRTUAL_EXTEND_RATIO: 0.5, // 仮想拡張キャンバスの比率（実キャンバス幅の50%）
 };
 
 // プレイヤーのUI関連設定
 export const PLAYER_UI_CONFIG = {
-  CONTROLS_HIDE_DELAY_MS: 2000,    // コントロールが自動的に隠れるまでの時間
-  SLIDER_HEIGHT_DEFAULT: 4,        // スライダーのデフォルト高さ
-  SLIDER_HEIGHT_HOVER: 6,          // ホバー時のスライダー高さ
-  BUFFERING_DISPLAY_DELAY_MS: 500  // バッファリング表示までの遅延
-}; 
+  CONTROLS_HIDE_DELAY_MS: 2000, // コントロールが自動的に隠れるまでの時間
+  SLIDER_HEIGHT_DEFAULT: 4, // スライダーのデフォルト高さ
+  SLIDER_HEIGHT_HOVER: 6, // ホバー時のスライダー高さ
+  BUFFERING_DISPLAY_DELAY_MS: 500, // バッファリング表示までの遅延
+};

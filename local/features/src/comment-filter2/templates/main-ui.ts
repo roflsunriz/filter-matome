@@ -1,5 +1,5 @@
 // CommentFilter2 メインUIテンプレート
-import { getIconSVG, ICONS } from '@/common/material-icons';
+import { getIconSVG, ICONS } from "@/common/material-icons";
 
 /**
  * CommentFilter2のメインUIテンプレート
@@ -396,76 +396,74 @@ export const mainUITemplate = `
  * UIエレメントのIDマップ
  */
 export const UI_ELEMENTS = {
-  CONTAINER: 'cf2-container',
-  CLOSE_BTN: 'cf2-close-btn',
-  CONTENT: 'cf2-content',
-  MAIN_TOGGLE: 'cf2-main-toggle',
-  STATUS_INDICATOR: 'cf2-status-indicator',
-  STATUS_TEXT: 'cf2-status-text',
-  
-  // 形式切替
-  FORMAT_FORM: 'cf2-format-form',
-  FORMAT_JSON: 'cf2-format-json',
-  
-  // フォーム入力
-  FORM_SECTION: 'cf2-form-section',
-  PATTERN_INPUT: 'cf2-pattern-input',
-  FLAGS_INPUT: 'cf2-flags-input',
-  USERID_INPUT: 'cf2-userid-input',
-  REPLACE_INPUT: 'cf2-replace-input',
-  SMID_INPUT: 'cf2-smid-input',
-  NICORU_TOGGLE: 'cf2-nicoru-toggle',
-  NICORU_OP: 'cf2-nicoru-op',
-  NICORU_VALUE: 'cf2-nicoru-value',
-  NICORU_MODE: 'cf2-nicoru-mode',
-  ADD_RULE: 'cf2-add-rule',
-  CLEAR_FORM: 'cf2-clear-form',
-  
-  // JSON編集
-  JSON_SECTION: 'cf2-json-section',
-  JSON_TEXTAREA: 'cf2-json-textarea',
-  SAVE_JSON_RULES: 'cf2-save-json-rules',
-  VALIDATE_JSON: 'cf2-validate-json',
-  
+  CONTAINER: "cf2-container",
+  CLOSE_BTN: "cf2-close-btn",
+  CONTENT: "cf2-content",
+  MAIN_TOGGLE: "cf2-main-toggle",
+  STATUS_INDICATOR: "cf2-status-indicator",
+  STATUS_TEXT: "cf2-status-text",
 
-  
+  // 形式切替
+  FORMAT_FORM: "cf2-format-form",
+  FORMAT_JSON: "cf2-format-json",
+
+  // フォーム入力
+  FORM_SECTION: "cf2-form-section",
+  PATTERN_INPUT: "cf2-pattern-input",
+  FLAGS_INPUT: "cf2-flags-input",
+  USERID_INPUT: "cf2-userid-input",
+  REPLACE_INPUT: "cf2-replace-input",
+  SMID_INPUT: "cf2-smid-input",
+  NICORU_TOGGLE: "cf2-nicoru-toggle",
+  NICORU_OP: "cf2-nicoru-op",
+  NICORU_VALUE: "cf2-nicoru-value",
+  NICORU_MODE: "cf2-nicoru-mode",
+  ADD_RULE: "cf2-add-rule",
+  CLEAR_FORM: "cf2-clear-form",
+
+  // JSON編集
+  JSON_SECTION: "cf2-json-section",
+  JSON_TEXTAREA: "cf2-json-textarea",
+  SAVE_JSON_RULES: "cf2-save-json-rules",
+  VALIDATE_JSON: "cf2-validate-json",
+
   // ルール一覧
-  RULES_LIST: 'cf2-rules-list',
-  RULE_COUNT_TEXT: 'cf2-rule-count-text',
-  REFRESH_RULES: 'cf2-refresh-rules',
-  CLEAR_ALL_RULES: 'cf2-clear-all-rules',
-  
+  RULES_LIST: "cf2-rules-list",
+  RULE_COUNT_TEXT: "cf2-rule-count-text",
+  REFRESH_RULES: "cf2-refresh-rules",
+  CLEAR_ALL_RULES: "cf2-clear-all-rules",
+
   // データ管理
-  EXPORT_JSON_BTN: 'cf2-export-json-btn',
-  IMPORT_BTN: 'cf2-import-btn',
-  LEGACY_IMPORT_BTN: 'cf2-legacy-import-btn',
-  FILE_INPUT: 'cf2-file-input',
-  LEGACY_FILE_INPUT: 'cf2-legacy-file-input',
-  
+  EXPORT_JSON_BTN: "cf2-export-json-btn",
+  IMPORT_BTN: "cf2-import-btn",
+  LEGACY_IMPORT_BTN: "cf2-legacy-import-btn",
+  FILE_INPUT: "cf2-file-input",
+  LEGACY_FILE_INPUT: "cf2-legacy-file-input",
+
   // その他
-  DEBUG_TOGGLE: 'cf2-debug-toggle',
-  LOG_TOGGLE: 'cf2-log-toggle',
-  DEBUG_SECTION: 'cf2-debug-section',
-  DEBUG_INFO: 'cf2-debug-info',
-  COMMAND_SETTINGS_SECTION: 'cf2-command-settings-section',
-  OWNER_COMMANDS: 'cf2-owner-commands',
-  MAIN_COMMANDS: 'cf2-main-commands',
-  EASY_COMMANDS: 'cf2-easy-commands',
-  SAVE_COMMANDS_BTN: 'cf2-save-commands',
-  RESET_COMMANDS_BTN: 'cf2-reset-commands',
-  RELOAD_BTN: 'cf2-reload-btn'
+  DEBUG_TOGGLE: "cf2-debug-toggle",
+  LOG_TOGGLE: "cf2-log-toggle",
+  DEBUG_SECTION: "cf2-debug-section",
+  DEBUG_INFO: "cf2-debug-info",
+  COMMAND_SETTINGS_SECTION: "cf2-command-settings-section",
+  OWNER_COMMANDS: "cf2-owner-commands",
+  MAIN_COMMANDS: "cf2-main-commands",
+  EASY_COMMANDS: "cf2-easy-commands",
+  SAVE_COMMANDS_BTN: "cf2-save-commands",
+  RESET_COMMANDS_BTN: "cf2-reset-commands",
+  RELOAD_BTN: "cf2-reload-btn",
 } as const;
 
 /**
  * CSSクラス名のマップ
  */
 export const CSS_CLASSES = {
-  CONTAINER: 'cf2-container',
-  TOGGLE_ACTIVE: 'active',
-  COLLAPSED: 'cf2-collapsed',
-  HIDDEN: 'cf2-hidden',
-  STATUS_ACTIVE: 'cf2-status-indicator active',
-  STATUS_ERROR: 'cf2-status-indicator error',
-  MINIMIZED: 'cf2-minimized',
-  COMMAND_INPUT: 'cf2-command-input'
-} as const; 
+  CONTAINER: "cf2-container",
+  TOGGLE_ACTIVE: "active",
+  COLLAPSED: "cf2-collapsed",
+  HIDDEN: "cf2-hidden",
+  STATUS_ACTIVE: "cf2-status-indicator active",
+  STATUS_ERROR: "cf2-status-indicator error",
+  MINIMIZED: "cf2-minimized",
+  COMMAND_INPUT: "cf2-command-input",
+} as const;

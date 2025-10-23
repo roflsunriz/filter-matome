@@ -68,5 +68,3 @@ export interface VideoCardElement extends HTMLElement {
     id: string;
   };
 }
-
-

@@ -3,7 +3,10 @@
  */
 
 // 他の型定義ファイルからのインポート
-import type { SettingValue, CompatibleCommentFilter2GlobalData } from './filter-types';
+import type {
+  SettingValue,
+  CompatibleCommentFilter2GlobalData,
+} from "./filter-types";
 
 /**
  * コメントレンダラーの設定の型定義
@@ -49,17 +52,17 @@ export interface CommentData {
  * CommentDataに加えて、レンダリング時に必要な追加プロパティを含む
  */
 export interface Comment extends CommentData {
-  vposMs: number;  // optionalをなくして必須に
-  startTime?: number;  // 表示開始時間
-  width?: number;  // コメントの描画幅
-  initialX?: number;  // 初期X座標
-  speed?: number;  // 移動速度
-  fixedY?: number;  // 固定Y座標
-  fixedLane?: number;  // 固定レーン番号
-  color?: string;  // コメント色
-  forceVisible?: boolean;  // 強制表示フラグ
-  group?: number;  // グループID
-  groupIndex?: number;  // グループ内インデックス
+  vposMs: number; // optionalをなくして必須に
+  startTime?: number; // 表示開始時間
+  width?: number; // コメントの描画幅
+  initialX?: number; // 初期X座標
+  speed?: number; // 移動速度
+  fixedY?: number; // 固定Y座標
+  fixedLane?: number; // 固定レーン番号
+  color?: string; // コメント色
+  forceVisible?: boolean; // 強制表示フラグ
+  group?: number; // グループID
+  groupIndex?: number; // グループ内インデックス
 }
 
 /**
@@ -281,7 +284,10 @@ declare global {
     commentFilter2GlobalData?: CompatibleCommentFilter2GlobalData;
     CommentFilter?: {
       filter: {
-        processVideoPlayerComments: (comments: Comment[], videoId: string) => Promise<Comment[]>;
+        processVideoPlayerComments: (
+          comments: Comment[],
+          videoId: string,
+        ) => Promise<Comment[]>;
       };
     };
     CommentFilterState?: {
@@ -289,4 +295,4 @@ declare global {
       fetchProxyEnabled: boolean;
     };
   }
-} 
+}

@@ -1,20 +1,23 @@
-import { UrlManager } from '@/video-player/core/url-manager';
-import { ToastManager } from '@/video-player/utils/toast';
-import { applyStyles } from '@/video-player/utils/dom-utils';
-import { PlayerControlsShadow } from '@/video-player/ui/player-controls';
-import { CommentList } from '@/video-player/ui/comment-list';
-import { CommentSystem } from '@/video-player/core/comment-system';
-import { CUSTOM_PLAYER_SHADOW_HTML, CUSTOM_PLAYER_SHADOW_STYLES } from '@/video-player/ui/templates';
-import type { ApiData } from '@/types/index';
-import type { HlsConstructor, HlsInstance } from '@/types/video-types';
+import { UrlManager } from "@/video-player/core/url-manager";
+import { ToastManager } from "@/video-player/utils/toast";
+import { applyStyles } from "@/video-player/utils/dom-utils";
+import { PlayerControlsShadow } from "@/video-player/ui/player-controls";
+import { CommentList } from "@/video-player/ui/comment-list";
+import { CommentSystem } from "@/video-player/core/comment-system";
+import {
+  CUSTOM_PLAYER_SHADOW_HTML,
+  CUSTOM_PLAYER_SHADOW_STYLES,
+} from "@/video-player/ui/templates";
+import type { ApiData } from "@/types/index";
+import type { HlsConstructor, HlsInstance } from "@/types/video-types";
 
 const ensureCustomElements = (): void => {
-  if (!customElements.get('player-controls-shadow')) {
-    customElements.define('player-controls-shadow', PlayerControlsShadow);
+  if (!customElements.get("player-controls-shadow")) {
+    customElements.define("player-controls-shadow", PlayerControlsShadow);
   }
 
-  if (!customElements.get('comment-list-shadow')) {
-    customElements.define('comment-list-shadow', CommentList);
+  if (!customElements.get("comment-list-shadow")) {
+    customElements.define("comment-list-shadow", CommentList);
   }
 };
 
@@ -52,12 +55,16 @@ export class StandalonePlayer {
     this.setupGlobalInterface();
   }
 
-  public async initialize(videoId: string, options: StandalonePlayerInitOptions = {}): Promise<void> {
+  public async initialize(
+    videoId: string,
+    options: StandalonePlayerInitOptions = {},
+  ): Promise<void> {
     this.enableComments = options.enableComments !== false;
 
     await this.preparePlayerShell();
 
-    const displayTitle = options.displayTitle ?? options.apiData?.video.title ?? videoId;
+    const displayTitle =
+      options.displayTitle ?? options.apiData?.video.title ?? videoId;
     await this.playWithCustomSource(videoId, displayTitle);
 
     if (this.enableComments) {
@@ -66,48 +73,60 @@ export class StandalonePlayer {
   }
 
   private async preparePlayerShell(): Promise<void> {
-    this.mount.innerHTML = '';
+    this.mount.innerHTML = "";
 
     if (!playerStylesInjected) {
       applyStyles(CUSTOM_PLAYER_SHADOW_STYLES);
       playerStylesInjected = true;
     }
 
-    const container = document.createElement('div');
+    const container = document.createElement("div");
     container.innerHTML = CUSTOM_PLAYER_SHADOW_HTML;
     this.customPlayerContainer = container.firstElementChild as HTMLElement;
     this.mount.append(this.customPlayerContainer);
 
-    this.videoContainer = this.customPlayerContainer.querySelector('.video-container') as HTMLElement;
-    this.videoElement = this.customPlayerContainer.querySelector('#video-element') as HTMLVideoElement;
-    this.playerControls = this.customPlayerContainer.querySelector('player-controls-shadow') as PlayerControlsShadow;
+    this.videoContainer = this.customPlayerContainer.querySelector(
+      ".video-container",
+    ) as HTMLElement;
+    this.videoElement = this.customPlayerContainer.querySelector(
+      "#video-element",
+    ) as HTMLVideoElement;
+    this.playerControls = this.customPlayerContainer.querySelector(
+      "player-controls-shadow",
+    ) as PlayerControlsShadow;
 
     if (!this.videoElement) {
-      throw new Error('動画要素が生成できませんでした');
+      throw new Error("動画要素が生成できませんでした");
     }
 
     if (this.enableComments) {
       try {
         await this.commentSystem.initialize(this.videoElement);
       } catch (error) {
-        window.logger.error('コメントシステムの初期化に失敗しました', error);
+        window.logger.error("コメントシステムの初期化に失敗しました", error);
       }
     }
 
     if (this.playerControls) {
       const initControls = (): void => {
-        if (typeof this.playerControls?.setVideoElement === 'function') {
+        if (typeof this.playerControls?.setVideoElement === "function") {
           this.playerControls.setVideoElement(this.videoElement!);
         }
-        if (this.enableComments && typeof this.playerControls?.setCommentSystem === 'function') {
+        if (
+          this.enableComments &&
+          typeof this.playerControls?.setCommentSystem === "function"
+        ) {
           this.playerControls.setCommentSystem(this.commentSystem);
         }
-        if (!this.enableComments && typeof this.playerControls?.disableComments === 'function') {
+        if (
+          !this.enableComments &&
+          typeof this.playerControls?.disableComments === "function"
+        ) {
           this.playerControls.disableComments();
         }
       };
 
-      if (typeof this.playerControls.setVideoElement === 'function') {
+      if (typeof this.playerControls.setVideoElement === "function") {
         initControls();
       } else {
         setTimeout(initControls, 200);
@@ -117,15 +136,25 @@ export class StandalonePlayer {
     this.setupHoverControls();
   }
 
-  private async playWithCustomSource(videoId: string, title: string): Promise<void> {
+  private async playWithCustomSource(
+    videoId: string,
+    title: string,
+  ): Promise<void> {
     this.cleanupPlayback();
 
-    this.toastManager.showInfo('キャッシュから動画ソースを検索中...', title, videoId);
+    this.toastManager.showInfo(
+      "キャッシュから動画ソースを検索中...",
+      title,
+      videoId,
+    );
 
     const url = await this.urlManager.findFirstAvailableUrl(videoId);
     if (!url) {
-      this.toastManager.showError('動画ソースが見つかりません', 'キャッシュまたはローカルソースを確認してください');
-      throw new Error('動画ソースが見つかりません');
+      this.toastManager.showError(
+        "動画ソースが見つかりません",
+        "キャッシュまたはローカルソースを確認してください",
+      );
+      throw new Error("動画ソースが見つかりません");
     }
 
     await this.playVideo(url, title);
@@ -133,7 +162,7 @@ export class StandalonePlayer {
 
   private async playVideo(url: string, title: string): Promise<void> {
     if (!this.videoElement) {
-      throw new Error('動画要素が初期化されていません');
+      throw new Error("動画要素が初期化されていません");
     }
 
     const isHls = this.isHLSUrl(url);
@@ -141,7 +170,7 @@ export class StandalonePlayer {
       await this.loadHLSVideo(url);
     } else {
       this.videoElement.src = url;
-      this.toastManager.showInfo('ネイティブ再生を試みます');
+      this.toastManager.showInfo("ネイティブ再生を試みます");
     }
 
     try {
@@ -152,17 +181,17 @@ export class StandalonePlayer {
         };
         const onError = (): void => {
           cleanup();
-          reject(new Error('動画読み込みエラー'));
+          reject(new Error("動画読み込みエラー"));
         };
         const cleanup = (): void => {
-          this.videoElement?.removeEventListener('canplay', onCanPlay);
-          this.videoElement?.removeEventListener('error', onError);
+          this.videoElement?.removeEventListener("canplay", onCanPlay);
+          this.videoElement?.removeEventListener("error", onError);
         };
-        this.videoElement?.addEventListener('canplay', onCanPlay);
-        this.videoElement?.addEventListener('error', onError);
+        this.videoElement?.addEventListener("canplay", onCanPlay);
+        this.videoElement?.addEventListener("error", onError);
       });
     } catch (error) {
-      window.logger.warn('動画メタデータ取得に失敗しました', error);
+      window.logger.warn("動画メタデータ取得に失敗しました", error);
     }
 
     const wasMuted = this.videoElement.muted;
@@ -178,18 +207,18 @@ export class StandalonePlayer {
         this.videoElement.muted = false;
       }
     } catch (error) {
-      window.logger.warn('自動再生がブロックされた可能性があります', error);
+      window.logger.warn("自動再生がブロックされた可能性があります", error);
       this.playerControls?.show();
     }
 
     // 再生開始時に一度コントロールを表示する
     this.playerControls?.show();
 
-    this.videoElement.addEventListener('error', evt => {
-      window.logger.error('[VIDEO-ERROR]', evt);
+    this.videoElement.addEventListener("error", (evt) => {
+      window.logger.error("[VIDEO-ERROR]", evt);
     });
 
-    this.toastManager.showSuccess(url + ' で再生します', title);
+    this.toastManager.showSuccess(url + " で再生します", title);
   }
 
   private setupHoverControls(): void {
@@ -199,34 +228,37 @@ export class StandalonePlayer {
 
     let hoverTimer: number | null = null;
 
-    this.videoContainer.addEventListener('mouseenter', () => {
+    this.videoContainer.addEventListener("mouseenter", () => {
       this.playerControls?.show();
     });
 
-    this.videoContainer.addEventListener('mousemove', () => {
+    this.videoContainer.addEventListener("mousemove", () => {
       this.playerControls?.show();
       if (hoverTimer !== null) {
         clearTimeout(hoverTimer);
       }
       hoverTimer = window.setTimeout(() => {
-        if (this.playerControls && !this.playerControls.classList.contains('always-visible')) {
+        if (
+          this.playerControls &&
+          !this.playerControls.classList.contains("always-visible")
+        ) {
           this.playerControls.hide();
         }
       }, 2000);
     });
 
-    this.videoContainer.addEventListener('mouseleave', () => {
+    this.videoContainer.addEventListener("mouseleave", () => {
       if (!this.playerControls) {
         return;
       }
-      if (!this.playerControls.classList.contains('always-visible')) {
+      if (!this.playerControls.classList.contains("always-visible")) {
         this.playerControls.hide();
       }
     });
 
-    this.videoContainer.addEventListener('click', event => {
+    this.videoContainer.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
-      if (target.closest('player-controls-shadow')) {
+      if (target.closest("player-controls-shadow")) {
         return;
       }
       event.preventDefault();
@@ -235,7 +267,9 @@ export class StandalonePlayer {
         return;
       }
       if (this.videoElement.paused) {
-        void this.videoElement.play().catch(err => window.logger.error('再生開始に失敗しました', err));
+        void this.videoElement
+          .play()
+          .catch((err) => window.logger.error("再生開始に失敗しました", err));
       } else {
         this.videoElement.pause();
       }
@@ -244,7 +278,12 @@ export class StandalonePlayer {
 
   private isHLSUrl(url: string): boolean {
     const lower = url.toLowerCase();
-    return lower.includes('hls') || lower.includes('.m3u8') || url.includes('master.m3u8') || url.includes('playlist.m3u8');
+    return (
+      lower.includes("hls") ||
+      lower.includes(".m3u8") ||
+      url.includes("master.m3u8") ||
+      url.includes("playlist.m3u8")
+    );
   }
 
   private async loadHLSVideo(url: string): Promise<void> {
@@ -256,19 +295,23 @@ export class StandalonePlayer {
     if (HlsConstructor && HlsConstructor.isSupported()) {
       this.hls?.destroy();
       this.hls = new HlsConstructor();
-      this.hls.on(HlsConstructor.Events.ERROR, (_event: unknown, data: unknown) => {
-        window.logger.error('HLS Error', data);
-        this.toastManager.showError('HLS再生でエラーが発生しました');
-      });
+      this.hls.on(
+        HlsConstructor.Events.ERROR,
+        (_event: unknown, data: unknown) => {
+          window.logger.error("HLS Error", data);
+          this.toastManager.showError("HLS再生でエラーが発生しました");
+        },
+      );
       this.hls.loadSource(url);
       this.hls.attachMedia(this.videoElement);
       return;
     }
 
     this.videoElement.src = url;
-    this.toastManager.showInfo('HLS.jsが利用できないためネイティブ再生を試みます');
+    this.toastManager.showInfo(
+      "HLS.jsが利用できないためネイティブ再生を試みます",
+    );
   }
-
 
   private async loadComments(videoId: string): Promise<void> {
     if (!this.enableComments) {
@@ -277,8 +320,11 @@ export class StandalonePlayer {
     try {
       await this.commentSystem.loadComments(videoId);
     } catch (error) {
-      window.logger.error('コメント読み込みに失敗しました', error);
-      this.toastManager.showWarning('コメント読み込みに失敗しました', '動画の再生は継続します');
+      window.logger.error("コメント読み込みに失敗しました", error);
+      this.toastManager.showWarning(
+        "コメント読み込みに失敗しました",
+        "動画の再生は継続します",
+      );
     }
   }
 
@@ -287,10 +333,10 @@ export class StandalonePlayer {
       return this.hlsConstructor;
     }
     if (!this.hlsConstructorPromise) {
-      this.hlsConstructorPromise = import('hls.js')
+      this.hlsConstructorPromise = import("hls.js")
         .then((module) => module.default)
         .catch((error) => {
-          window.logger.warn('HLS.jsの読み込みに失敗しました', error);
+          window.logger.warn("HLS.jsの読み込みに失敗しました", error);
           return null;
         });
     }
@@ -301,7 +347,6 @@ export class StandalonePlayer {
     return this.hlsConstructor;
   }
 
-
   private cleanupPlayback(): void {
     if (this.hls) {
       this.hls.destroy();
@@ -310,7 +355,7 @@ export class StandalonePlayer {
 
     if (this.videoElement) {
       this.videoElement.pause();
-      this.videoElement.src = '';
+      this.videoElement.src = "";
       this.videoElement.load();
     }
   }
@@ -319,18 +364,18 @@ export class StandalonePlayer {
     if (!window.NicoCache_nl) {
       window.NicoCache_nl = {
         watch: {
-          getVideoID: () => '',
+          getVideoID: () => "",
           apiData: {} as ApiData,
-          addEventListener: () => {}
+          addEventListener: () => {},
         },
         cacheUtil: {
           formatCacheInfo: async () => {
             await Promise.resolve();
             return false;
-          }
+          },
         },
         // ccはwindow.commonHelperに移行し、MainVideoPlayerWidthHeightReturnerも不要になったため削除
-        handleError: () => {}
+        handleError: () => {},
       };
     }
 

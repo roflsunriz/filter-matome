@@ -1,9 +1,9 @@
 // CommentFilter2 メインエントリーポイント
-import { DataInterceptor } from '@/comment-filter2/proxy/data-interceptor';
-import { UIManager } from '@/comment-filter2/components/ui-manager';
-import { VideoPlayerBridge } from '@/comment-filter2/integrations/video-player-bridge';
-import { CONSTANTS } from '@/comment-filter2/utils/constants';
-import { VideoPlayerBridgeStatus } from '@/types/video-player-bridge-types';
+import { DataInterceptor } from "@/comment-filter2/proxy/data-interceptor";
+import { UIManager } from "@/comment-filter2/components/ui-manager";
+import { VideoPlayerBridge } from "@/comment-filter2/integrations/video-player-bridge";
+import { CONSTANTS } from "@/comment-filter2/utils/constants";
+import { VideoPlayerBridgeStatus } from "@/types/video-player-bridge-types";
 
 export class CommentFilter2 {
   private dataInterceptor: DataInterceptor;
@@ -16,7 +16,7 @@ export class CommentFilter2 {
     this.dataInterceptor = new DataInterceptor();
     this.uiManager = new UIManager();
     this.videoPlayerBridge = new VideoPlayerBridge();
-    
+
     void this.initialize();
   }
 
@@ -28,15 +28,16 @@ export class CommentFilter2 {
     try {
       // キーボードショートカットを設定
       this.setupKeyboardShortcuts();
-      
+
       // データの変更を監視
       this.startDataMonitoring();
-      
+
       this.isInitialized = true;
-      window.logger?.info('[CommentFilter2] Initialization completed successfully');
-      
+      window.logger?.info(
+        "[CommentFilter2] Initialization completed successfully",
+      );
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Initialization failed:', error);
+      window.logger?.error("[CommentFilter2] Initialization failed:", error);
     }
   }
 
@@ -46,12 +47,14 @@ export class CommentFilter2 {
   private setupKeyboardShortcuts(): void {
     if (!this.keyboardShortcutEnabled) return;
 
-    document.addEventListener('keydown', (event) => {
+    document.addEventListener("keydown", (event) => {
       // Ctrl+Shift+F でUIを表示/非表示
-      if (event.ctrlKey && event.shiftKey && event.key === 'F') {
+      if (event.ctrlKey && event.shiftKey && event.key === "F") {
         event.preventDefault();
         void this.toggleUI();
-        window.logger?.debug('[CommentFilter2] UI toggled via keyboard shortcut');
+        window.logger?.debug(
+          "[CommentFilter2] UI toggled via keyboard shortcut",
+        );
       }
     });
   }
@@ -62,23 +65,29 @@ export class CommentFilter2 {
   private startDataMonitoring(): void {
     // 初回ページロード時に1回実行
     void this.processCommentData();
-    
+
     // コメントデータ更新時のイベントリスナー
     window.addEventListener(CONSTANTS.EVENTS.DATA_UPDATED, () => {
-      window.logger?.debug('[CommentFilter2] Processing comment data due to DATA_UPDATED event');
+      window.logger?.debug(
+        "[CommentFilter2] Processing comment data due to DATA_UPDATED event",
+      );
       void this.processCommentData();
     });
-    
+
     // SMID変更（動画切替）時のイベントリスナー
     window.addEventListener(CONSTANTS.EVENTS.SMID_CHANGED, (event: Event) => {
       const customEvent = event as CustomEvent;
       const detail = (customEvent.detail ?? {}) as { smid?: unknown };
-      const smid = typeof detail.smid === 'string' ? detail.smid : '';
-      window.logger?.debug(`[CommentFilter2] Processing comment data due to SMID change: ${smid}`);
+      const smid = typeof detail.smid === "string" ? detail.smid : "";
+      window.logger?.debug(
+        `[CommentFilter2] Processing comment data due to SMID change: ${smid}`,
+      );
       void this.processCommentData();
     });
-    
-    window.logger?.info('[CommentFilter2] Event-driven data monitoring initialized');
+
+    window.logger?.info(
+      "[CommentFilter2] Event-driven data monitoring initialized",
+    );
   }
 
   /**
@@ -90,13 +99,20 @@ export class CommentFilter2 {
    */
   private async extractSmidFromLocation(): Promise<string | null> {
     try {
-      if (typeof window.commonHelper?.getVideoIdWithFallback === 'function') {
-        return await window.commonHelper.getVideoIdWithFallback(window.location.href);
+      if (typeof window.commonHelper?.getVideoIdWithFallback === "function") {
+        return await window.commonHelper.getVideoIdWithFallback(
+          window.location.href,
+        );
       }
-      window.logger?.warn('[CommentFilter2] commonHelper.getVideoIdWithFallbackが未定義です');
+      window.logger?.warn(
+        "[CommentFilter2] commonHelper.getVideoIdWithFallbackが未定義です",
+      );
       return null;
     } catch (error) {
-      window.logger?.warn('[CommentFilter2] Failed to extract SMID via commonHelper:', error);
+      window.logger?.warn(
+        "[CommentFilter2] Failed to extract SMID via commonHelper:",
+        error,
+      );
       return null;
     }
   }
@@ -107,16 +123,19 @@ export class CommentFilter2 {
       const globalData = DataInterceptor.getGlobalData();
       const fallbackSmid = await this.extractSmidFromLocation();
       const smid = globalData?.currentSmid ?? fallbackSmid;
-      
+
       if (globalData?.originalData && smid) {
         // フィルターを適用
         await this.uiManager.applyFilter(smid);
-        
+
         // video_playerとの同期を実行
         this.videoPlayerBridge.forceSync();
       }
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Comment data processing failed:', error);
+      window.logger?.error(
+        "[CommentFilter2] Comment data processing failed:",
+        error,
+      );
     }
   }
 
@@ -170,12 +189,11 @@ export class CommentFilter2 {
       this.dataInterceptor.disable();
       this.uiManager.destroy();
       this.videoPlayerBridge.destroy();
-      
+
       this.isInitialized = false;
-      window.logger?.info('[CommentFilter2] Destroyed successfully');
-      
+      window.logger?.info("[CommentFilter2] Destroyed successfully");
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Destruction failed:', error);
+      window.logger?.error("[CommentFilter2] Destruction failed:", error);
     }
   }
 
@@ -196,7 +214,7 @@ export class CommentFilter2 {
   } {
     const globalData = DataInterceptor.getGlobalData();
     const videoPlayerStatus = this.videoPlayerBridge.getStatus();
-    
+
     return {
       isInitialized: this.isInitialized,
       keyboardShortcutEnabled: this.keyboardShortcutEnabled,
@@ -204,10 +222,10 @@ export class CommentFilter2 {
         hasOriginalData: !!globalData?.originalData,
         hasFilteredData: !!globalData?.filteredData,
         currentSmid: globalData?.currentSmid ?? null,
-        lastUpdated: globalData?.lastUpdated ?? null
+        lastUpdated: globalData?.lastUpdated ?? null,
       },
       videoPlayer: videoPlayerStatus,
-      constants: CONSTANTS
+      constants: CONSTANTS,
     };
   }
 }
@@ -223,8 +241,10 @@ declare global {
 let commentFilter2Instance: CommentFilter2 | null = null;
 
 // DOM読み込み完了後に初期化
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { initializeCommentFilter2(); });
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    initializeCommentFilter2();
+  });
 } else {
   initializeCommentFilter2();
 }
@@ -233,18 +253,21 @@ function initializeCommentFilter2() {
   try {
     commentFilter2Instance = new CommentFilter2();
     window.CommentFilter2Instance = commentFilter2Instance;
-    
+
     // 初期化完了イベントを送信
-    window.dispatchEvent(new CustomEvent('CommentFilter2Ready'));
-    
-    window.logger?.info('[CommentFilter2] Auto-initialization completed');
-    window.logger?.info('[CommentFilter2] Use Ctrl+Shift+F to toggle UI or call via mlink-video-controller');
-    window.logger?.info('[CommentFilter2] Access via window.CommentFilter2Instance for debugging');
-    
+    window.dispatchEvent(new CustomEvent("CommentFilter2Ready"));
+
+    window.logger?.info("[CommentFilter2] Auto-initialization completed");
+    window.logger?.info(
+      "[CommentFilter2] Use Ctrl+Shift+F to toggle UI or call via mlink-video-controller",
+    );
+    window.logger?.info(
+      "[CommentFilter2] Access via window.CommentFilter2Instance for debugging",
+    );
   } catch (error) {
-    window.logger?.error('[CommentFilter2] Auto-initialization failed:', error);
+    window.logger?.error("[CommentFilter2] Auto-initialization failed:", error);
   }
 }
 
 // エクスポート
-export default CommentFilter2; 
+export default CommentFilter2;

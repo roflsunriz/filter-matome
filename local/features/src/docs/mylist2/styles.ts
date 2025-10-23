@@ -1,4 +1,4 @@
-import {materialIconsStyles} from '@/common/material-icons';
+import { materialIconsStyles } from "@/common/material-icons";
 
 /**
  * Mylist2 ドキュメント用のCSSスタイル
@@ -243,13 +243,16 @@ export const MYLIST2_DOCS_STYLES = `
         }
       `;
 
-export const MYLIST2_DOCS_STYLES_UNIFIED = materialIconsStyles + MYLIST2_DOCS_HEADER_ADJUSTMENT_STYLES + MYLIST2_DOCS_STYLES;
+export const MYLIST2_DOCS_STYLES_UNIFIED =
+  materialIconsStyles +
+  MYLIST2_DOCS_HEADER_ADJUSTMENT_STYLES +
+  MYLIST2_DOCS_STYLES;
 /**
  * スタイルをDOMに適用する関数
  */
 export const applyMylist2DocsStyles = (): HTMLStyleElement => {
-  const styleElement = document.createElement('style');
+  const styleElement = document.createElement("style");
   styleElement.textContent = MYLIST2_DOCS_STYLES_UNIFIED;
   document.head.appendChild(styleElement);
   return styleElement;
-}; 
+};

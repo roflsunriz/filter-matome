@@ -1,4 +1,4 @@
-import { createMaterialIcon } from '@/common/material-icons';
+import { createMaterialIcon } from "@/common/material-icons";
 
 export const volumeTemplate = `
 <div class="range-control">
@@ -7,9 +7,9 @@ export const volumeTemplate = `
 </div>
 
 <div class="control-grid">
-  <button class="control-btn">${createMaterialIcon('volume_off', { style: 'outlined', color: 'white' })}</button>
-  <button class="control-btn">${createMaterialIcon('volume_down', { style: 'outlined', color: 'white' })}</button>
-  <button class="control-btn">${createMaterialIcon('volume_up', { style: 'outlined', color: 'white' })}</button>
+  <button class="control-btn">${createMaterialIcon("volume_off", { style: "outlined", color: "white" })}</button>
+  <button class="control-btn">${createMaterialIcon("volume_down", { style: "outlined", color: "white" })}</button>
+  <button class="control-btn">${createMaterialIcon("volume_up", { style: "outlined", color: "white" })}</button>
 </div>
 
 <div class="control-grid volume-presets">
@@ -19,4 +19,4 @@ export const volumeTemplate = `
   <button class="volume-preset" data-volume="0.75">75%</button>
   <button class="volume-preset" data-volume="1">100%</button>
 </div>
-`; 
+`;

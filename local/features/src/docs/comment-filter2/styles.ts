@@ -1,4 +1,4 @@
-import {materialIconsStyles} from '@/common/material-icons';
+import { materialIconsStyles } from "@/common/material-icons";
 
 /**
  * Comment Filter2 ドキュメント用のCSSスタイル
@@ -290,8 +290,8 @@ ${COLORS_STYLES}
  * スタイルをDOMに適用する関数
  */
 export const applyCommentFilter2DocsStyles = (): HTMLStyleElement => {
-  const styleElement = document.createElement('style');
+  const styleElement = document.createElement("style");
   styleElement.textContent = COMMENT_FILTER2_DOCS_STYLES;
   document.head.appendChild(styleElement);
   return styleElement;
-}; 
+};

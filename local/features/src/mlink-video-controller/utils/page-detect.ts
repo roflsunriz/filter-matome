@@ -1,6 +1,7 @@
-import type { ExtendedNicoCache_nl } from '@/types/global-types';
+import type { ExtendedNicoCache_nl } from "@/types/global-types";
 
-const STANDALONE_PLAYER_PATH = '/local/features/dist/src/video-player/standalone/index.html';
+const STANDALONE_PLAYER_PATH =
+  "/local/features/dist/src/video-player/standalone/index.html";
 const VIDEO_ID_QUERY = /[?&]videoId=([a-z]{2}\d+)/i;
 
 const getLocationSafe = (loc?: Location): Location => {
@@ -8,7 +9,7 @@ const getLocationSafe = (loc?: Location): Location => {
 };
 
 const hasVideoIdInQuery = (search: string | undefined): boolean => {
-  if (typeof search !== 'string') {
+  if (typeof search !== "string") {
     return false;
   }
   return VIDEO_ID_QUERY.test(search);
@@ -19,14 +20,14 @@ const hasVideoIdInCache = (nicoCache: ExtendedNicoCache_nl | null): boolean => {
     return false;
   }
   const apiId = nicoCache.watch?.apiData?.video?.id;
-  if (typeof apiId === 'string' && apiId.trim().length > 0) {
+  if (typeof apiId === "string" && apiId.trim().length > 0) {
     return true;
   }
   const getter = nicoCache.watch?.getVideoID;
-  if (typeof getter === 'function') {
+  if (typeof getter === "function") {
     try {
       const value = getter();
-      if (typeof value === 'string' && value.trim().length > 0) {
+      if (typeof value === "string" && value.trim().length > 0) {
         return true;
       }
     } catch {
@@ -37,18 +38,19 @@ const hasVideoIdInCache = (nicoCache: ExtendedNicoCache_nl | null): boolean => {
 };
 
 const resolveNicoCache = (): ExtendedNicoCache_nl | null => {
-  const global = (window as Window & { NicoCache_nl?: ExtendedNicoCache_nl }).NicoCache_nl;
+  const global = (window as Window & { NicoCache_nl?: ExtendedNicoCache_nl })
+    .NicoCache_nl;
   return global ?? null;
 };
 
 export const isStandalonePlayerRoute = (loc?: Location): boolean => {
   try {
     const location = getLocationSafe(loc);
-    const pathname = location.pathname ?? '';
+    const pathname = location.pathname ?? "";
     if (!pathname.endsWith(STANDALONE_PLAYER_PATH)) {
       return false;
     }
-    if (hasVideoIdInQuery(location.search ?? '')) {
+    if (hasVideoIdInQuery(location.search ?? "")) {
       return true;
     }
     return hasVideoIdInCache(resolveNicoCache());
@@ -60,8 +62,8 @@ export const isStandalonePlayerRoute = (loc?: Location): boolean => {
 export const isWatchLikePage = (loc?: Location): boolean => {
   try {
     const location = getLocationSafe(loc);
-    const pathname = location.pathname ?? '';
-    if (pathname.includes('/watch/')) {
+    const pathname = location.pathname ?? "";
+    if (pathname.includes("/watch/")) {
       return true;
     }
     return isStandalonePlayerRoute(location);

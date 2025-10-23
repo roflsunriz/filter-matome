@@ -1,4 +1,4 @@
-import type { APIResponse } from '@/types';
+import type { APIResponse } from "@/types";
 
 export class APIClient {
   private baseUrl: string = "https://ext.nicovideo.jp/api/getthumbinfo/";
@@ -32,7 +32,8 @@ export class APIClient {
       return {
         status: "error",
         errorCode: errorCode,
-        description: doc.querySelector("error description")?.textContent || "不明なエラー",
+        description:
+          doc.querySelector("error description")?.textContent || "不明なエラー",
       };
     }
 
@@ -40,19 +41,27 @@ export class APIClient {
     return {
       status: "ok",
       title: thumb?.querySelector("title")?.textContent || "タイトル不明",
-      description: thumb?.querySelector("description")?.textContent || "説明文がありません",
+      description:
+        thumb?.querySelector("description")?.textContent ||
+        "説明文がありません",
       duration: thumb?.querySelector("length")?.textContent || "0:00",
-      views: parseInt(thumb?.querySelector("view_counter")?.textContent || "0") || 0,
-      commentCount: parseInt(thumb?.querySelector("comment_num")?.textContent || "0") || 0,
-      mylistCount: parseInt(thumb?.querySelector("mylist_counter")?.textContent || "0") || 0,
+      views:
+        parseInt(thumb?.querySelector("view_counter")?.textContent || "0") || 0,
+      commentCount:
+        parseInt(thumb?.querySelector("comment_num")?.textContent || "0") || 0,
+      mylistCount:
+        parseInt(thumb?.querySelector("mylist_counter")?.textContent || "0") ||
+        0,
       author:
         thumb?.querySelector("user_nickname")?.textContent ||
         doc.querySelector("ch_name")?.textContent ||
         "投稿者不明",
       uploadDate: thumb?.querySelector("first_retrieve")?.textContent || "不明",
       thumbnailUrl: thumb?.querySelector("thumbnail_url")?.textContent || "",
-      tags: Array.from(thumb?.querySelectorAll("tags tag") || []).map((tag) => tag.textContent?.trim() || ""),
+      tags: Array.from(thumb?.querySelectorAll("tags tag") || []).map(
+        (tag) => tag.textContent?.trim() || "",
+      ),
       fileSize: thumb?.querySelector("size_high")?.textContent || "0",
     };
   }
-} 
+}

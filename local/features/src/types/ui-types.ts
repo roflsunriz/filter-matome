@@ -6,10 +6,10 @@
  * トースト通知のモード
  */
 export enum ToastMode {
-  INFO = 'INFO',
-  SUCCESS = 'SUCCESS',
-  WARNING = 'WARNING',
-  ERROR = 'ERROR'
+  INFO = "INFO",
+  SUCCESS = "SUCCESS",
+  WARNING = "WARNING",
+  ERROR = "ERROR",
 }
 
 /**
@@ -34,7 +34,7 @@ export interface ToastConfig {
  * トースト通知のオプション
  */
 export interface ToastOptions {
-  mode: 'Success' | 'Info' | 'Warning' | 'Error';
+  mode: "Success" | "Info" | "Warning" | "Error";
   middle: string;
   low?: string;
   title: string;
@@ -81,7 +81,7 @@ export interface UIFilterSettings {
 /**
  * フィールドの種類
  */
-export type FieldType = 'checkbox' | 'radio' | 'textarea' | 'text';
+export type FieldType = "checkbox" | "radio" | "textarea" | "text";
 
 /**
  * フィールドオプション
@@ -133,10 +133,10 @@ export type HTMLButtonElementWithProperties = HTMLButtonElement;
 /**
  * HTMLElementの共通型
  */
-export type HTMLAnyInputElement = 
-  | HTMLInputElementWithProperties 
-  | HTMLTextAreaElementWithProperties 
-  | HTMLButtonElementWithProperties; 
+export type HTMLAnyInputElement =
+  | HTMLInputElementWithProperties
+  | HTMLTextAreaElementWithProperties
+  | HTMLButtonElementWithProperties;
 
 /**
  * ドラッグ可能要素のメトリクス情報
@@ -177,4 +177,4 @@ export interface ExtendedHTMLElement extends HTMLElement {
   mozRequestFullScreen?(): void;
   webkitRequestFullscreen?(): void;
   msRequestFullscreen?(): void;
-} 
+}

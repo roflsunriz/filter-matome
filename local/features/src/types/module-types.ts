@@ -3,29 +3,37 @@
  */
 
 export enum PageType {
-  ALL = 'all',
-  WATCH = 'watch',
-  SEARCH = 'search',
-  RANKING = 'ranking',
-  NICO_INFO = 'nico_info'
+  ALL = "all",
+  WATCH = "watch",
+  SEARCH = "search",
+  RANKING = "ranking",
+  NICO_INFO = "nico_info",
 }
 
 export enum ModuleCategory {
-  PRIVACY = 'privacy',
-  UI_ENHANCEMENT = 'ui_enhancement', 
-  FUNCTIONALITY = 'functionality',
-  VISUAL = 'visual'
+  PRIVACY = "privacy",
+  UI_ENHANCEMENT = "ui_enhancement",
+  FUNCTIONALITY = "functionality",
+  VISUAL = "visual",
 }
 
 export enum ModuleStatus {
-  INACTIVE = 'inactive',
-  LOADING = 'loading',
-  ACTIVE = 'active',
-  ERROR = 'error'
+  INACTIVE = "inactive",
+  LOADING = "loading",
+  ACTIVE = "active",
+  ERROR = "error",
 }
 
 // 設定値として使用可能な型を定義
-export type ConfigValue = string | number | boolean | string[] | number[] | boolean[] | null | undefined;
+export type ConfigValue =
+  | string
+  | number
+  | boolean
+  | string[]
+  | number[]
+  | boolean[]
+  | null
+  | undefined;
 
 // 設定オブジェクトの型を定義
 export type ModuleConfigData = Record<string, ConfigValue>;
@@ -74,7 +82,7 @@ export interface ModuleFactory {
 
 // イベント関連の型定義
 export interface ModuleEvent {
-  type: 'loaded' | 'unloaded' | 'enabled' | 'disabled' | 'error';
+  type: "loaded" | "unloaded" | "enabled" | "disabled" | "error";
   moduleId: string;
   data?: ConfigValue | Record<string, unknown>;
 }
@@ -106,4 +114,4 @@ export interface WatchPageSubModule {
   initialize(): Promise<void>;
   destroy(): void;
   isActive(): boolean;
-} 
+}

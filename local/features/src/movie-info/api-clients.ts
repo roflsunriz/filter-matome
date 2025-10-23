@@ -21,7 +21,8 @@ const toErrorMessage = (error: unknown): string => {
   return String(error);
 };
 
-const parseBoolean = (value: string | null | undefined): boolean => value === "1" || value === "true";
+const parseBoolean = (value: string | null | undefined): boolean =>
+  value === "1" || value === "true";
 
 const parseNumber = (value: string | null | undefined): number => {
   if (typeof value !== "string") {
@@ -31,7 +32,8 @@ const parseNumber = (value: string | null | undefined): number => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const normalizeText = (value: string | null | undefined): string => (value ?? "").trim();
+const normalizeText = (value: string | null | undefined): string =>
+  (value ?? "").trim();
 
 const parseThumbOwner = (
   thumbElement: Element,
@@ -42,8 +44,12 @@ const parseThumbOwner = (
   const iconSelector = prefix === "user" ? "user_icon_url" : "ch_icon_url";
 
   const id = normalizeText(thumbElement.querySelector(idSelector)?.textContent);
-  const nickname = normalizeText(thumbElement.querySelector(nameSelector)?.textContent);
-  const iconUrl = normalizeText(thumbElement.querySelector(iconSelector)?.textContent);
+  const nickname = normalizeText(
+    thumbElement.querySelector(nameSelector)?.textContent,
+  );
+  const iconUrl = normalizeText(
+    thumbElement.querySelector(iconSelector)?.textContent,
+  );
 
   if (!id && !nickname && !iconUrl) {
     return undefined;
@@ -72,7 +78,8 @@ const parseThumbInfoXml = (xmlText: string): ThumbInfo => {
 
   const status = root.getAttribute("status") === "ok" ? "ok" : "fail";
   if (status === "fail") {
-    const description = root.querySelector("error > description")?.textContent ?? "不明なエラー";
+    const description =
+      root.querySelector("error > description")?.textContent ?? "不明なエラー";
     throw new Error("サムネイルAPIエラー: " + description);
   }
 
@@ -81,10 +88,13 @@ const parseThumbInfoXml = (xmlText: string): ThumbInfo => {
     throw new Error("サムネイル情報が見つかりませんでした");
   }
 
-  const tags: ThumbTagInfo[] = Array.from(thumb.querySelectorAll("tags > tag"), (tagElement) => ({
-    name: normalizeText(tagElement.textContent),
-    locked: tagElement.getAttribute("lock") === "1",
-  })).filter((tag) => Boolean(tag.name));
+  const tags: ThumbTagInfo[] = Array.from(
+    thumb.querySelectorAll("tags > tag"),
+    (tagElement) => ({
+      name: normalizeText(tagElement.textContent),
+      locked: tagElement.getAttribute("lock") === "1",
+    }),
+  ).filter((tag) => Boolean(tag.name));
 
   const rawEntries: Record<string, string> = {};
   Array.from(thumb.children).forEach((child) => {
@@ -96,14 +106,22 @@ const parseThumbInfoXml = (xmlText: string): ThumbInfo => {
     videoId: normalizeText(thumb.querySelector("video_id")?.textContent),
     title: normalizeText(thumb.querySelector("title")?.textContent),
     description: normalizeText(thumb.querySelector("description")?.textContent),
-    thumbnailUrl: normalizeText(thumb.querySelector("thumbnail_url")?.textContent),
-    firstRetrieve: normalizeText(thumb.querySelector("first_retrieve")?.textContent),
+    thumbnailUrl: normalizeText(
+      thumb.querySelector("thumbnail_url")?.textContent,
+    ),
+    firstRetrieve: normalizeText(
+      thumb.querySelector("first_retrieve")?.textContent,
+    ),
     length: normalizeText(thumb.querySelector("length")?.textContent),
     movieType: normalizeText(thumb.querySelector("movie_type")?.textContent),
     viewCounter: parseNumber(thumb.querySelector("view_counter")?.textContent),
     commentNum: parseNumber(thumb.querySelector("comment_num")?.textContent),
-    mylistCounter: parseNumber(thumb.querySelector("mylist_counter")?.textContent),
-    lastResBody: normalizeText(thumb.querySelector("last_res_body")?.textContent),
+    mylistCounter: parseNumber(
+      thumb.querySelector("mylist_counter")?.textContent,
+    ),
+    lastResBody: normalizeText(
+      thumb.querySelector("last_res_body")?.textContent,
+    ),
     watchUrl: normalizeText(thumb.querySelector("watch_url")?.textContent),
     thumbType: normalizeText(thumb.querySelector("thumb_type")?.textContent),
     embeddable: parseBoolean(thumb.querySelector("embeddable")?.textContent),
@@ -153,7 +171,9 @@ export const fetchThumbInfo = async (videoId: string): Promise<ThumbInfo> => {
   }
 };
 
-export const fetchMediaInfo = async (videoId: string): Promise<MediaInfoResponse> => {
+export const fetchMediaInfo = async (
+  videoId: string,
+): Promise<MediaInfoResponse> => {
   const url = MEDIA_INFO_ENDPOINT + encodeURIComponent(videoId);
   try {
     const response = await window.commonHelper.fetchRequest(url);
@@ -177,7 +197,9 @@ export const fetchMediaInfo = async (videoId: string): Promise<MediaInfoResponse
   }
 };
 
-export const fetchWatchApiData = async (videoId: string): Promise<NicoApiData> => {
+export const fetchWatchApiData = async (
+  videoId: string,
+): Promise<NicoApiData> => {
   try {
     const result = await window.commonHelper.fetchWatchPage(videoId);
     if (!result || !result.apiData) {
@@ -191,7 +213,9 @@ export const fetchWatchApiData = async (videoId: string): Promise<NicoApiData> =
   }
 };
 
-export const fetchCommentsWithApi = async (videoId: string): Promise<IntegratedNicoData> => {
+export const fetchCommentsWithApi = async (
+  videoId: string,
+): Promise<IntegratedNicoData> => {
   try {
     const data = await window.commonHelper.fetchNicoDataWithComments(videoId);
     if (!data) {

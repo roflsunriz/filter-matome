@@ -1,4 +1,4 @@
-import { NicoCache_nlInterface } from '@/types/global-types';
+import { NicoCache_nlInterface } from "@/types/global-types";
 
 /**
  * 削除動画検出・リダイレクト機能
@@ -8,7 +8,7 @@ export class DeletedVideoDetector {
   private static instance: DeletedVideoDetector | null = null;
   private nicoCache!: NicoCache_nlInterface;
   private observer: MutationObserver | null = null;
-  private lastUrl: string = '';
+  private lastUrl: string = "";
   private isEnabled: boolean = false;
   private initialized: boolean = false;
   private retryCounts: Map<string, number> = new Map();
@@ -32,11 +32,10 @@ export class DeletedVideoDetector {
   private async initializeNicoCache(): Promise<void> {
     // NicoCache_nlが利用可能になるまで待機
     while (!window.NicoCache_nl) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
     this.nicoCache = window.NicoCache_nl;
     this.initialized = true;
-    
   }
 
   /**
@@ -48,18 +47,15 @@ export class DeletedVideoDetector {
     }
 
     if (this.isEnabled) {
-      
       return;
     }
 
     this.isEnabled = true;
     this.setupUrlObserver();
     this.setupEventListeners();
-    
+
     // 初回チェック（デバウンス付き）
     this.debouncedHandleUnavailableVideo();
-    
-    
   }
 
   /**
@@ -67,14 +63,11 @@ export class DeletedVideoDetector {
    */
   public disable(): void {
     if (!this.isEnabled) {
-      
       return;
     }
 
     this.isEnabled = false;
     this.cleanup();
-    
-    
   }
 
   /**
@@ -104,10 +97,8 @@ export class DeletedVideoDetector {
 
     this.observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
-
-    
   }
 
   /**
@@ -115,22 +106,29 @@ export class DeletedVideoDetector {
    */
   private setupEventListeners(): void {
     // History API の変更を検知
-    window.addEventListener('popstate', this.handlePopState);
-    
+    window.addEventListener("popstate", this.handlePopState);
+
     // DOMContentLoaded時の処理（すでに読み込まれている場合は即座に実行）
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', this.handleDOMContentLoaded);
+    if (document.readyState === "loading") {
+      document.addEventListener(
+        "DOMContentLoaded",
+        this.handleDOMContentLoaded,
+      );
     } else {
       this.handleDOMContentLoaded();
     }
   }
 
   private handlePopState = (): void => {
-    if (this.isEnabled) { this.debouncedHandleUnavailableVideo(); }
+    if (this.isEnabled) {
+      this.debouncedHandleUnavailableVideo();
+    }
   };
 
   private handleDOMContentLoaded = (): void => {
-    if (this.isEnabled) { this.debouncedHandleUnavailableVideo(); }
+    if (this.isEnabled) {
+      this.debouncedHandleUnavailableVideo();
+    }
   };
 
   /**
@@ -140,7 +138,7 @@ export class DeletedVideoDetector {
     if (this.debounceTimer !== null) {
       clearTimeout(this.debounceTimer);
     }
-    
+
     this.debounceTimer = window.setTimeout(() => {
       this.debounceTimer = null;
       void this.handleUnavailableVideo();
@@ -154,7 +152,8 @@ export class DeletedVideoDetector {
   private detectUnavailableVideo(): boolean {
     const unavailableMessage = "お探しの動画は視聴できません";
     // まず、従来の要素検索でヒットすれば即返す
-    const errorMessage: Element | null = document.querySelector(".fs_xl.fw_bold");
+    const errorMessage: Element | null =
+      document.querySelector(".fs_xl.fw_bold");
     if (errorMessage && errorMessage.textContent === unavailableMessage) {
       return true;
     }
@@ -164,12 +163,15 @@ export class DeletedVideoDetector {
       NodeFilter.SHOW_TEXT,
       {
         acceptNode(node) {
-          if (typeof node.nodeValue === "string" && node.nodeValue.includes(unavailableMessage)) {
+          if (
+            typeof node.nodeValue === "string" &&
+            node.nodeValue.includes(unavailableMessage)
+          ) {
             return NodeFilter.FILTER_ACCEPT;
           }
           return NodeFilter.FILTER_SKIP;
-        }
-      }
+        },
+      },
     );
     let currentNode = walker.nextNode();
     while (currentNode) {
@@ -192,28 +194,38 @@ export class DeletedVideoDetector {
       const text: string = await response.text();
       const parser: DOMParser = new DOMParser();
       const xmlDoc: Document = parser.parseFromString(text, "text/xml");
-      const status: string | null = xmlDoc.querySelector("nicovideo_thumb_response")?.getAttribute("status") || null;
+      const status: string | null =
+        xmlDoc
+          .querySelector("nicovideo_thumb_response")
+          ?.getAttribute("status") || null;
 
       if (status === "fail") {
-        const errorCode: string | undefined = xmlDoc.querySelector("code")?.textContent || undefined;
+        const errorCode: string | undefined =
+          xmlDoc.querySelector("code")?.textContent || undefined;
         return errorCode === "DELETED";
       }
       return false;
     } catch (error) {
-      window.logger.debug('[DeletedVideoDetector] ext.nicovideo API check failed, fallback to watch page status確認:', error);
+      window.logger.debug(
+        "[DeletedVideoDetector] ext.nicovideo API check failed, fallback to watch page status確認:",
+        error,
+      );
     }
 
     // Fallback: watchページをHEADリクエストしてHTTPステータスを確認
     try {
-      const response: Response = await fetch(`https://www.nicovideo.jp/watch/${videoId}`, {
-        method: 'HEAD',
-        credentials: 'include',
-        redirect: 'manual'
-      });
+      const response: Response = await fetch(
+        `https://www.nicovideo.jp/watch/${videoId}`,
+        {
+          method: "HEAD",
+          credentials: "include",
+          redirect: "manual",
+        },
+      );
 
-      window.logger.debug('[DeletedVideoDetector] HEAD status check', {
+      window.logger.debug("[DeletedVideoDetector] HEAD status check", {
         videoId,
-        status: response.status
+        status: response.status,
       });
 
       if ([400, 403, 404, 410].includes(response.status)) {
@@ -222,7 +234,10 @@ export class DeletedVideoDetector {
 
       return false;
     } catch (error) {
-      window.logger.error('[DeletedVideoDetector] watchページのステータス確認に失敗しました:', error);
+      window.logger.error(
+        "[DeletedVideoDetector] watchページのステータス確認に失敗しました:",
+        error,
+      );
       return false;
     }
   }
@@ -235,19 +250,25 @@ export class DeletedVideoDetector {
 
     // 処理中ロックチェック
     if (this.processingLock) {
-      window.logger.debug('[DeletedVideoDetector] 別の処理が実行中のためスキップ');
+      window.logger.debug(
+        "[DeletedVideoDetector] 別の処理が実行中のためスキップ",
+      );
       return;
     }
 
-    const videoId: string | undefined = window.location.pathname.match(/watch\/(sm\d+)/)?.[1];
+    const videoId: string | undefined =
+      window.location.pathname.match(/watch\/(sm\d+)/)?.[1];
     if (!videoId) return;
 
     // 既に処理中または処理済みの動画IDチェック
-    if (this.processingVideoId === videoId || this.currentHandledVideoId === videoId) {
-      window.logger.debug('[DeletedVideoDetector] 既に処理中または処理済み', { 
-        videoId, 
+    if (
+      this.processingVideoId === videoId ||
+      this.currentHandledVideoId === videoId
+    ) {
+      window.logger.debug("[DeletedVideoDetector] 既に処理中または処理済み", {
+        videoId,
         processing: this.processingVideoId === videoId,
-        handled: this.currentHandledVideoId === videoId
+        handled: this.currentHandledVideoId === videoId,
       });
       return;
     }
@@ -267,18 +288,22 @@ export class DeletedVideoDetector {
       }
 
       const isUnavailable: boolean = this.detectUnavailableVideo();
-      const isApiUnavailable: boolean = await this.checkVideoAvailability(videoId);
+      const isApiUnavailable: boolean =
+        await this.checkVideoAvailability(videoId);
 
-      window.logger.debug('[DeletedVideoDetector] 判定結果', {
+      window.logger.debug("[DeletedVideoDetector] 判定結果", {
         videoId,
         domDetected: isUnavailable,
-        apiDetected: isApiUnavailable
+        apiDetected: isApiUnavailable,
       });
 
       if (isUnavailable || isApiUnavailable) {
         // 再度、処理済みチェック（非同期処理中に変更された可能性）
         if (this.currentHandledVideoId === videoId) {
-          window.logger.debug('[DeletedVideoDetector] 非同期処理中に既に起動済みになった', videoId);
+          window.logger.debug(
+            "[DeletedVideoDetector] 非同期処理中に既に起動済みになった",
+            videoId,
+          );
           return;
         }
 
@@ -286,7 +311,9 @@ export class DeletedVideoDetector {
         if (!deletedVideoPlayer) {
           const attempts = this.retryCounts.get(videoId) ?? 0;
           if (attempts === 0) {
-            window.logger.warn("[DeletedVideoDetector] 削除動画プレーヤーが利用できません");
+            window.logger.warn(
+              "[DeletedVideoDetector] 削除動画プレーヤーが利用できません",
+            );
           }
 
           if (attempts < 3) {
@@ -315,15 +342,21 @@ export class DeletedVideoDetector {
         try {
           // プレイヤー起動前に状態を設定（二重起動防止）
           this.currentHandledVideoId = videoId;
-          
-          window.logger.info('[DeletedVideoDetector] 削除動画プレーヤーを起動します', {
-            videoId,
-            videoTitle
-          });
-          
+
+          window.logger.info(
+            "[DeletedVideoDetector] 削除動画プレーヤーを起動します",
+            {
+              videoId,
+              videoTitle,
+            },
+          );
+
           deletedVideoPlayer.play(videoId, videoTitle);
         } catch (error) {
-          window.logger.error("[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました", error);
+          window.logger.error(
+            "[DeletedVideoDetector] 削除動画プレーヤーの起動に失敗しました",
+            error,
+          );
           this.currentHandledVideoId = null;
         }
       }
@@ -344,7 +377,9 @@ export class DeletedVideoDetector {
       return titleFromApi;
     }
 
-    const ogTitle = document.querySelector<HTMLMetaElement>("meta[property='og:title']")?.content;
+    const ogTitle = document.querySelector<HTMLMetaElement>(
+      "meta[property='og:title']",
+    )?.content;
     if (ogTitle && ogTitle.length > 0) {
       return ogTitle;
     }
@@ -368,8 +403,11 @@ export class DeletedVideoDetector {
     }
 
     // イベントリスナーを削除
-    window.removeEventListener('popstate', this.handlePopState);
-    document.removeEventListener('DOMContentLoaded', this.handleDOMContentLoaded);
+    window.removeEventListener("popstate", this.handlePopState);
+    document.removeEventListener(
+      "DOMContentLoaded",
+      this.handleDOMContentLoaded,
+    );
 
     // タイマーをクリア
     if (this.retryTimer !== null) {
@@ -394,7 +432,7 @@ export class DeletedVideoDetector {
   public getStatus(): { enabled: boolean; initialized: boolean } {
     return {
       enabled: this.isEnabled,
-      initialized: this.initialized
+      initialized: this.initialized,
     };
   }
 
@@ -405,4 +443,4 @@ export class DeletedVideoDetector {
     this.disable();
     DeletedVideoDetector.instance = null;
   }
-} 
+}

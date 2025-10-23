@@ -14,7 +14,7 @@ export interface PlaybackState {
 // シーク操作の型定義
 export interface SeekOptions {
   seconds: number;
-  direction: 'forward' | 'backward';
+  direction: "forward" | "backward";
 }
 
 // 音量操作の型定義
@@ -62,7 +62,7 @@ export interface MlinkVideoComment {
 }
 
 // リンクグループの型定義
-export type LinkGroup = 'custom' | 'services' | 'dataManagement';
+export type LinkGroup = "custom" | "services" | "dataManagement";
 
 // リンクデータの型定義
 export interface LinkData {

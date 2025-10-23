@@ -42,8 +42,11 @@ export class VideoService {
           uploadedAt: videoInfo.uploadedAt || Date.now(),
           authorName: videoInfo.authorName || "不明",
           length: videoInfo.length || 0,
-          description: videoInfo.description || '',
-          tags: (videoInfo.tags && videoInfo.tags.length > 0) ? videoInfo.tags : undefined,
+          description: videoInfo.description || "",
+          tags:
+            videoInfo.tags && videoInfo.tags.length > 0
+              ? videoInfo.tags
+              : undefined,
           // 任意: VideoInfoにmemoが渡ってくる場合は保持
           memo: (videoInfo as unknown as { memo?: string }).memo ?? undefined,
           addedAt: Date.now(),
@@ -133,7 +136,10 @@ export class VideoService {
     });
   }
 
-  async updateVideoInfo(compositeId: string, newInfo: Partial<VideoInfo>): Promise<void> {
+  async updateVideoInfo(
+    compositeId: string,
+    newInfo: Partial<VideoInfo>,
+  ): Promise<void> {
     const database = await this.db.initDB();
     const transaction = database.transaction(["videos"], "readwrite");
     const store = transaction.objectStore("videos");
@@ -158,13 +164,22 @@ export class VideoService {
           uploadedAt: newInfo.uploadedAt || existingVideo.uploadedAt,
           authorName: newInfo.authorName || existingVideo.authorName,
           length: newInfo.length || existingVideo.length || 0,
-          description: (newInfo.description !== undefined) ? newInfo.description : existingVideo.description,
-          tags: (newInfo.tags !== undefined) ? (newInfo.tags && newInfo.tags.length > 0 ? newInfo.tags : undefined) : existingVideo.tags,
+          description:
+            newInfo.description !== undefined
+              ? newInfo.description
+              : existingVideo.description,
+          tags:
+            newInfo.tags !== undefined
+              ? newInfo.tags && newInfo.tags.length > 0
+                ? newInfo.tags
+                : undefined
+              : existingVideo.tags,
         };
 
         const updateRequest = store.put(updatedVideo);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(new Error("データベースの更新に失敗しました"));
+        updateRequest.onerror = () =>
+          reject(new Error("データベースの更新に失敗しました"));
       };
 
       request.onerror = () => reject(new Error("動画情報の取得に失敗しました"));
@@ -187,7 +202,8 @@ export class VideoService {
         const updated: DBVideo = { ...existingVideo, memo };
         const updateRequest = store.put(updated);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(new Error("データベースの更新に失敗しました"));
+        updateRequest.onerror = () =>
+          reject(new Error("データベースの更新に失敗しました"));
       };
       request.onerror = () => reject(new Error("動画情報の取得に失敗しました"));
     });

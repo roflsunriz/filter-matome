@@ -1,4 +1,9 @@
-import { ToastrOptions, ToastrNotifyParams, ToastData, ExtendedHTMLElement } from '@/types/toastr-types';
+import {
+  ToastrOptions,
+  ToastrNotifyParams,
+  ToastData,
+  ExtendedHTMLElement,
+} from "@/types/toastr-types";
 
 /**
  * Toastr用のCSSスタイル
@@ -234,164 +239,188 @@ button.toast-close-button {
  * ToastrスタイルをDOMに適用する関数
  */
 export const applyToastrStyles = (): HTMLStyleElement => {
-  const styleElement = document.createElement('style');
+  const styleElement = document.createElement("style");
   styleElement.textContent = TOASTR_STYLES;
   document.head.appendChild(styleElement);
   return styleElement;
 };
 
 class Toastr {
-    public version = '1.0.0';
-    public defaults: Required<ToastrOptions>;
-    private previousToast: ToastrNotifyParams | null = null;
-    private container: HTMLElement | null = null;
-    private listener: ((data: ToastData) => void) | null = null;
+  public version = "1.0.0";
+  public defaults: Required<ToastrOptions>;
+  private previousToast: ToastrNotifyParams | null = null;
+  private container: HTMLElement | null = null;
+  private listener: ((data: ToastData) => void) | null = null;
 
-    constructor() {
-        this.defaults = {
-            tapToDismiss: true,
-            toastClass: 'toast',
-            containerId: 'toast-container',
-            debug: false,
-            showMethod: 'fadeIn',
-            showDuration: 300,
-            showEasing: 'swing',
-            onShown: () => {},
-            hideMethod: 'fadeOut',
-            hideDuration: 1000,
-            hideEasing: 'swing',
-            onHidden: () => {},
-            closeMethod: false,
-            closeDuration: false,
-            closeEasing: false,
-            closeOnHover: true,
-            extendedTimeOut: 1000,
-            iconClasses: {
-                error: 'toast-error',
-                info: 'toast-info',
-                success: 'toast-success',
-                warning: 'toast-warning'
-            },
-            iconClass: 'toast-info',
-            positionClass: 'toast-bottom-right',
-            timeOut: 5000,
-            titleClass: 'toast-title',
-            messageClass: 'toast-message',
-            escapeHtml: false,
-            target: 'body',
-            closeHtml: '<button type="button">&times;</button>',
-            closeClass: 'toast-close-button',
-            newestOnTop: true,
-            preventDuplicates: false,
-            progressBar: true,
-            progressClass: 'toast-progress',
-            rtl: false,
-            closeButton: true,
-            onCloseClick: () => {},
-            onclick: () => {},
-        };
-    }
+  constructor() {
+    this.defaults = {
+      tapToDismiss: true,
+      toastClass: "toast",
+      containerId: "toast-container",
+      debug: false,
+      showMethod: "fadeIn",
+      showDuration: 300,
+      showEasing: "swing",
+      onShown: () => {},
+      hideMethod: "fadeOut",
+      hideDuration: 1000,
+      hideEasing: "swing",
+      onHidden: () => {},
+      closeMethod: false,
+      closeDuration: false,
+      closeEasing: false,
+      closeOnHover: true,
+      extendedTimeOut: 1000,
+      iconClasses: {
+        error: "toast-error",
+        info: "toast-info",
+        success: "toast-success",
+        warning: "toast-warning",
+      },
+      iconClass: "toast-info",
+      positionClass: "toast-bottom-right",
+      timeOut: 5000,
+      titleClass: "toast-title",
+      messageClass: "toast-message",
+      escapeHtml: false,
+      target: "body",
+      closeHtml: '<button type="button">&times;</button>',
+      closeClass: "toast-close-button",
+      newestOnTop: true,
+      preventDuplicates: false,
+      progressBar: true,
+      progressClass: "toast-progress",
+      rtl: false,
+      closeButton: true,
+      onCloseClick: () => {},
+      onclick: () => {},
+    };
+  }
 
-    public subscribe(callback: (data: ToastData) => void): void {
-        this.listener = callback;
-    }
+  public subscribe(callback: (data: ToastData) => void): void {
+    this.listener = callback;
+  }
 
-    public getContainer(options: ToastrOptions = {}, create = false): HTMLElement | null {
-        if (!this.container && create) {
-            const targetElement = document.querySelector(options.target || 'body') || document.body;
-            this.container = document.createElement('div');
-            this.container.id = options.containerId || this.defaults.containerId || "";
-            this.container.className = options.positionClass || this.defaults.positionClass || "";
-            this.container.style.cssText = `
+  public getContainer(
+    options: ToastrOptions = {},
+    create = false,
+  ): HTMLElement | null {
+    if (!this.container && create) {
+      const targetElement =
+        document.querySelector(options.target || "body") || document.body;
+      this.container = document.createElement("div");
+      this.container.id =
+        options.containerId || this.defaults.containerId || "";
+      this.container.className =
+        options.positionClass || this.defaults.positionClass || "";
+      this.container.style.cssText = `
                 position: fixed;
                 z-index: 999999;
                 pointer-events: none;
             `;
 
-            switch (options.positionClass) {
-                case 'toast-bottom-right':
-                    this.container.style.right = '12px';
-                    this.container.style.bottom = '12px';
-                    break;
-                case 'toast-bottom-left':
-                    this.container.style.left = '12px';
-                    this.container.style.bottom = '12px';
-                    break;
-                case 'toast-top-right':
-                    this.container.style.right = '12px';
-                    this.container.style.top = '12px';
-                    break;
-                case 'toast-top-left':
-                    this.container.style.left = '12px';
-                    this.container.style.top = '12px';
-                    break;
-            }
+      switch (options.positionClass) {
+        case "toast-bottom-right":
+          this.container.style.right = "12px";
+          this.container.style.bottom = "12px";
+          break;
+        case "toast-bottom-left":
+          this.container.style.left = "12px";
+          this.container.style.bottom = "12px";
+          break;
+        case "toast-top-right":
+          this.container.style.right = "12px";
+          this.container.style.top = "12px";
+          break;
+        case "toast-top-left":
+          this.container.style.left = "12px";
+          this.container.style.top = "12px";
+          break;
+      }
 
-            targetElement.appendChild(this.container);
-        }
-        return this.container;
+      targetElement.appendChild(this.container);
+    }
+    return this.container;
+  }
+
+  public error(
+    message: string,
+    title?: string,
+    options?: ToastrOptions,
+  ): HTMLElement | undefined {
+    return this.notify({
+      type: "error",
+      iconClass: this.defaults.iconClasses.error || "",
+      message,
+      title,
+      options,
+    });
+  }
+
+  public info(
+    message: string,
+    title?: string,
+    options?: ToastrOptions,
+  ): HTMLElement | undefined {
+    return this.notify({
+      type: "info",
+      iconClass: this.defaults.iconClasses.info || "",
+      message,
+      title,
+      options,
+    });
+  }
+
+  public success(
+    message: string,
+    title?: string,
+    options?: ToastrOptions,
+  ): HTMLElement | undefined {
+    return this.notify({
+      type: "success",
+      iconClass: this.defaults.iconClasses.success || "",
+      message,
+      title,
+      options,
+    });
+  }
+
+  public warning(
+    message: string,
+    title?: string,
+    options?: ToastrOptions,
+  ): HTMLElement | undefined {
+    return this.notify({
+      type: "warning",
+      iconClass: this.defaults.iconClasses.warning || "",
+      message,
+      title,
+      options,
+    });
+  }
+
+  public notify(params: ToastrNotifyParams): HTMLElement | undefined {
+    const options: Required<ToastrOptions> = {
+      ...this.defaults,
+      ...params.options,
+    };
+
+    if (options.preventDuplicates) {
+      if (this.previousToast && this.previousToast.message === params.message) {
+        return;
+      }
     }
 
-    public error(message: string, title?: string, options?: ToastrOptions): HTMLElement | undefined {
-        return this.notify({
-            type: 'error',
-            iconClass: this.defaults.iconClasses.error || '',
-            message,
-            title,
-            options
-        });
-    }
+    const toastElement = document.createElement("div");
+    toastElement.className = options.toastClass ?? "";
+    toastElement.classList.add(params.iconClass ?? "");
 
-    public info(message: string, title?: string, options?: ToastrOptions): HTMLElement | undefined {
-        return this.notify({
-            type: 'info',
-            iconClass: this.defaults.iconClasses.info || '',
-            message,
-            title,
-            options
-        });
-    }
-
-    public success(message: string, title?: string, options?: ToastrOptions): HTMLElement | undefined {
-        return this.notify({
-            type: 'success',
-            iconClass: this.defaults.iconClasses.success || '',
-            message,
-            title,
-            options
-        });
-    }
-
-    public warning(message: string, title?: string, options?: ToastrOptions): HTMLElement | undefined {
-        return this.notify({
-            type: 'warning',
-            iconClass: this.defaults.iconClasses.warning || '',
-            message,
-            title,
-            options
-        });
-    }
-
-    public notify(params: ToastrNotifyParams): HTMLElement | undefined {
-        const options: Required<ToastrOptions> = { ...this.defaults, ...params.options };
-        
-        if (options.preventDuplicates) {
-            if (this.previousToast && 
-                this.previousToast.message === params.message) {
-                return;
-            }
-        }
-
-        const toastElement = document.createElement('div');
-        toastElement.className = (options.toastClass ?? "");
-        toastElement.classList.add((params.iconClass ?? ""));
-
-        if (options.closeButton) {
-            const closeButton = document.createElement('button');
-            closeButton.type = 'button';
-            closeButton.className = options.closeClass;
-            closeButton.innerHTML = '&times;';
-            closeButton.style.cssText = `
+    if (options.closeButton) {
+      const closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.className = options.closeClass;
+      closeButton.innerHTML = "&times;";
+      closeButton.style.cssText = `
                 position: relative;
                 right: -.3em;
                 top: -.3em;
@@ -402,35 +431,37 @@ class Toastr {
                 text-shadow: 0 1px 0 #ffffff;
                 opacity: 0.8;
             `;
-            closeButton.addEventListener('click', (e) => {
-                if (options.onCloseClick) {
-                    options.onCloseClick(e);
-                }
-                this.removeToast(toastElement);
-            });
-            toastElement.appendChild(closeButton);
+      closeButton.addEventListener("click", (e) => {
+        if (options.onCloseClick) {
+          options.onCloseClick(e);
         }
+        this.removeToast(toastElement);
+      });
+      toastElement.appendChild(closeButton);
+    }
 
-        if (params.title) {
-            const titleElement = document.createElement('div');
-            titleElement.className = (options.titleClass ?? "");
-            titleElement.innerHTML = options.escapeHtml ? 
-                this.escapeHtml(params.title) : params.title;
-            toastElement.appendChild(titleElement);
-        }
+    if (params.title) {
+      const titleElement = document.createElement("div");
+      titleElement.className = options.titleClass ?? "";
+      titleElement.innerHTML = options.escapeHtml
+        ? this.escapeHtml(params.title)
+        : params.title;
+      toastElement.appendChild(titleElement);
+    }
 
-        if (params.message) {
-            const messageElement = document.createElement('div');
-            messageElement.className = (options.messageClass ?? "");
-            messageElement.innerHTML = options.escapeHtml ? 
-                this.escapeHtml(params.message) : params.message;
-            toastElement.appendChild(messageElement);
-        }
+    if (params.message) {
+      const messageElement = document.createElement("div");
+      messageElement.className = options.messageClass ?? "";
+      messageElement.innerHTML = options.escapeHtml
+        ? this.escapeHtml(params.message)
+        : params.message;
+      toastElement.appendChild(messageElement);
+    }
 
-        if (options.progressBar) {
-            const progressElement = document.createElement('div');
-            progressElement.className = (options.progressClass ?? "");
-            progressElement.style.cssText = `
+    if (options.progressBar) {
+      const progressElement = document.createElement("div");
+      progressElement.className = options.progressClass ?? "";
+      progressElement.style.cssText = `
                 position: absolute;
                 left: 0;
                 bottom: 0;
@@ -439,138 +470,160 @@ class Toastr {
                 opacity: 0.4;
                 width: 100%;
             `;
-            toastElement.appendChild(progressElement);
+      toastElement.appendChild(progressElement);
 
-            setTimeout(() => {
-                const timeout = typeof options.timeOut === 'number' ? options.timeOut : 0;
-                progressElement.style.transition = `width ${timeout}ms linear`;
-                progressElement.style.width = '0%';
-            }, 10);
-        }
-
-        if (options.rtl) {
-            toastElement.classList.add('rtl');
-        }
-
-        if (options.onclick) {
-            toastElement.addEventListener('click', (e) => {
-                options.onclick(e);
-                if (options.tapToDismiss) this.removeToast(toastElement);
-            });
-        }
-
-        if (options.closeOnHover) {
-            toastElement.addEventListener('mouseenter', () => {
-                clearTimeout((toastElement as ExtendedHTMLElement).timeoutId);
-                const progressElement = toastElement.querySelector(`.${options.progressClass}`);
-                if (progressElement instanceof HTMLElement) {
-                    progressElement.style.transition = 'none';
-                }
-            });
-
-            toastElement.addEventListener('mouseleave', () => {
-                if (options.timeOut > 0) {
-                    (toastElement as ExtendedHTMLElement).timeoutId = setTimeout(() => {
-                        this.removeToast(toastElement);
-                    }, options.extendedTimeOut) as unknown as number;
-                    
-                    const progressElement = toastElement.querySelector(`.${options.progressClass}`);
-                    if (progressElement instanceof HTMLElement) {
-                        const ext = typeof options.extendedTimeOut === 'number' ? options.extendedTimeOut : 0;
-                        progressElement.style.transition = `width ${ext}ms linear`;
-                        progressElement.style.width = '0%';
-                    }
-                }
-            });
-        }
-
-        this.animate(toastElement, {
-            method: options.showMethod,
-            duration: options.showDuration,
-            easing: options.showEasing
-        }, () => {
-            if (options.onShown) options.onShown();
-        });
-
-        const container = this.getContainer(options, true)!;
-        if (options.newestOnTop) {
-            container.insertBefore(toastElement, container.firstChild);
-        } else {
-            container.appendChild(toastElement);
-        }
-
-        if (options.timeOut && options.timeOut > 0) {
-            setTimeout(() => {
-                this.removeToast(toastElement);
-            }, options.timeOut);
-        }
-
-        if (options.tapToDismiss) {
-            toastElement.addEventListener('click', () => this.removeToast(toastElement));
-        }
-
-        this.previousToast = params;
-
-        if (this.listener) {
-            const toastData = {
-                toastId: Date.now(),
-                state: 'visible',
-                startTime: new Date(),
-                options: options,
-                map: params
-            };
-            this.listener(toastData);
-        }
-
-        return toastElement;
+      setTimeout(() => {
+        const timeout =
+          typeof options.timeOut === "number" ? options.timeOut : 0;
+        progressElement.style.transition = `width ${timeout}ms linear`;
+        progressElement.style.width = "0%";
+      }, 10);
     }
 
-    public removeToast(toastElement: HTMLElement): void {
-        if (!toastElement) return;
-
-        toastElement.style.opacity = '0';
-        toastElement.style.transition = 'opacity 0.5s ease-in-out';
-
-        setTimeout(() => {
-            if (toastElement.parentNode) {
-                toastElement.parentNode.removeChild(toastElement);
-            }
-
-            if (this.container && !this.container.hasChildNodes()) {
-                this.container.remove();
-                this.container = null;
-            }
-        }, 500);
+    if (options.rtl) {
+      toastElement.classList.add("rtl");
     }
 
-    public clear(): void {
-        if (this.container) {
-            const toasts = this.container.querySelectorAll('.toast');
-            toasts.forEach(toast => this.removeToast(toast as HTMLElement));
+    if (options.onclick) {
+      toastElement.addEventListener("click", (e) => {
+        options.onclick(e);
+        if (options.tapToDismiss) this.removeToast(toastElement);
+      });
+    }
+
+    if (options.closeOnHover) {
+      toastElement.addEventListener("mouseenter", () => {
+        clearTimeout((toastElement as ExtendedHTMLElement).timeoutId);
+        const progressElement = toastElement.querySelector(
+          `.${options.progressClass}`,
+        );
+        if (progressElement instanceof HTMLElement) {
+          progressElement.style.transition = "none";
         }
+      });
+
+      toastElement.addEventListener("mouseleave", () => {
+        if (options.timeOut > 0) {
+          (toastElement as ExtendedHTMLElement).timeoutId = setTimeout(() => {
+            this.removeToast(toastElement);
+          }, options.extendedTimeOut) as unknown as number;
+
+          const progressElement = toastElement.querySelector(
+            `.${options.progressClass}`,
+          );
+          if (progressElement instanceof HTMLElement) {
+            const ext =
+              typeof options.extendedTimeOut === "number"
+                ? options.extendedTimeOut
+                : 0;
+            progressElement.style.transition = `width ${ext}ms linear`;
+            progressElement.style.width = "0%";
+          }
+        }
+      });
     }
 
-    public escapeHtml(str: string): string {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+    this.animate(
+      toastElement,
+      {
+        method: options.showMethod,
+        duration: options.showDuration,
+        easing: options.showEasing,
+      },
+      () => {
+        if (options.onShown) options.onShown();
+      },
+    );
+
+    const container = this.getContainer(options, true)!;
+    if (options.newestOnTop) {
+      container.insertBefore(toastElement, container.firstChild);
+    } else {
+      container.appendChild(toastElement);
     }
 
-    public animate(element: HTMLElement, animationOptions: { method: string; duration: number; easing: string }, callback?: () => void): void {
-        const { method, duration, easing } = animationOptions;
-        
-        element.style.animation = `${method} ${duration}ms ${easing}`;
-        
-        element.addEventListener('animationend', () => {
-            element.style.animation = '';
-            if (callback) callback();
-        }, { once: true });
+    if (options.timeOut && options.timeOut > 0) {
+      setTimeout(() => {
+        this.removeToast(toastElement);
+      }, options.timeOut);
     }
+
+    if (options.tapToDismiss) {
+      toastElement.addEventListener("click", () =>
+        this.removeToast(toastElement),
+      );
+    }
+
+    this.previousToast = params;
+
+    if (this.listener) {
+      const toastData = {
+        toastId: Date.now(),
+        state: "visible",
+        startTime: new Date(),
+        options: options,
+        map: params,
+      };
+      this.listener(toastData);
+    }
+
+    return toastElement;
+  }
+
+  public removeToast(toastElement: HTMLElement): void {
+    if (!toastElement) return;
+
+    toastElement.style.opacity = "0";
+    toastElement.style.transition = "opacity 0.5s ease-in-out";
+
+    setTimeout(() => {
+      if (toastElement.parentNode) {
+        toastElement.parentNode.removeChild(toastElement);
+      }
+
+      if (this.container && !this.container.hasChildNodes()) {
+        this.container.remove();
+        this.container = null;
+      }
+    }, 500);
+  }
+
+  public clear(): void {
+    if (this.container) {
+      const toasts = this.container.querySelectorAll(".toast");
+      toasts.forEach((toast) => this.removeToast(toast as HTMLElement));
+    }
+  }
+
+  public escapeHtml(str: string): string {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  public animate(
+    element: HTMLElement,
+    animationOptions: { method: string; duration: number; easing: string },
+    callback?: () => void,
+  ): void {
+    const { method, duration, easing } = animationOptions;
+
+    element.style.animation = `${method} ${duration}ms ${easing}`;
+
+    element.addEventListener(
+      "animationend",
+      () => {
+        element.style.animation = "";
+        if (callback) callback();
+      },
+      { once: true },
+    );
+  }
 }
 
 export const toastr = new Toastr();
 
 // グローバルwindowにも生やす場合
-if (typeof window !== 'undefined') {
-    window.toastr = toastr;
+if (typeof window !== "undefined") {
+  window.toastr = toastr;
 }

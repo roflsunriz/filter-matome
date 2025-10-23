@@ -1,5 +1,9 @@
-import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
-import { isWatchLikePage } from '@/mlink-video-controller/utils/page-detect';
+import {
+  ModuleInstance,
+  ModuleConfig,
+  ModuleStatus,
+} from "@/types/module-types";
+import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
 
 /**
  * マトリックス背景モジュール
@@ -7,7 +11,7 @@ import { isWatchLikePage } from '@/mlink-video-controller/utils/page-detect';
  */
 export class WatchMatrixBackgroundModule implements ModuleInstance {
   public readonly config: ModuleConfig;
-  
+
   private canvasContainer: HTMLElement | null = null;
   private canvas: HTMLCanvasElement | null = null;
   private animationId: number | null = null;
@@ -22,16 +26,12 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
    */
   async initialize(): Promise<void> {
     if (this._isActive) {
-      
       return;
     }
 
     try {
-      
-      
       // Watch Pageかどうかチェック
       if (!this.isWatchPage()) {
-        
         return;
       }
 
@@ -39,20 +39,21 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
       try {
         await this.loadCSS();
       } catch (error) {
-        window.logger.warn('[WatchMatrixBackgroundModule] CSS読み込みに失敗しましたが、モジュールは動作します:', error);
+        window.logger.warn(
+          "[WatchMatrixBackgroundModule] CSS読み込みに失敗しましたが、モジュールは動作します:",
+          error,
+        );
       }
-      
+
       // キャンバスコンテナを作成
       this.createCanvasContainer();
-      
+
       // マトリックスアニメーションを開始
       this.startMatrixAnimation();
-      
-      this._isActive = true;
-      
 
+      this._isActive = true;
     } catch (error) {
-      window.logger.error('[WatchMatrixBackgroundModule] 初期化エラー:', error);
+      window.logger.error("[WatchMatrixBackgroundModule] 初期化エラー:", error);
       throw error;
     }
   }
@@ -62,8 +63,6 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
    */
   destroy(): void {
     if (!this._isActive) return;
-
-    
 
     // アニメーションを停止
     if (this.animationId) {
@@ -82,7 +81,6 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
 
     this.canvas = null;
     this._isActive = false;
-    
   }
 
   /**
@@ -99,7 +97,7 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
     if (!this.isWatchPage()) {
       return ModuleStatus.INACTIVE;
     }
-    
+
     return this._isActive ? ModuleStatus.ACTIVE : ModuleStatus.INACTIVE;
   }
 
@@ -114,29 +112,31 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
    * CSSを読み込み
    */
   private async loadCSS(): Promise<void> {
-    const cssHref = '/local/features/dist/src/watch_page/background_matrix/matrix_rain.css';
-    
+    const cssHref =
+      "/local/features/dist/src/watch_page/background_matrix/matrix_rain.css";
+
     // 既に読み込まれているかチェック
     const existingLink = document.querySelector(`link[href="${cssHref}"]`);
     if (existingLink) {
-      
       return Promise.resolve();
     }
 
     return new Promise((resolve, reject) => {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
       link.href = cssHref;
-      
+
       link.onload = () => {
-        
         resolve();
       };
       link.onerror = () => {
-        window.logger.error('[WatchMatrixBackgroundModule] CSS読み込み失敗:', cssHref);
-        reject(new Error('CSS読み込み失敗'));
+        window.logger.error(
+          "[WatchMatrixBackgroundModule] CSS読み込み失敗:",
+          cssHref,
+        );
+        reject(new Error("CSS読み込み失敗"));
       };
-      
+
       document.head.appendChild(link);
     });
   }
@@ -146,14 +146,14 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
    */
   private createCanvasContainer(): void {
     // 既存のコンテナがあれば削除
-    const existing = document.getElementById('canvasContainer');
+    const existing = document.getElementById("canvasContainer");
     if (existing) {
       existing.remove();
     }
 
     // コンテナを作成
-    const container = document.createElement('div');
-    container.id = 'canvasContainer';
+    const container = document.createElement("div");
+    container.id = "canvasContainer";
     container.style.cssText = `
       position: fixed;
       left: 0;
@@ -177,8 +177,8 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
   private createCanvas(): void {
     if (!this.canvasContainer) return;
 
-    const canvas = document.createElement('canvas');
-    canvas.id = 'c';
+    const canvas = document.createElement("canvas");
+    canvas.id = "c";
     canvas.style.cssText = `
       position: absolute;
       width: 100%;
@@ -197,13 +197,17 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
    */
   private startMatrixAnimation(): void {
     if (!this.canvas) {
-      window.logger.error('[WatchMatrixBackgroundModule] キャンバスが見つかりません');
+      window.logger.error(
+        "[WatchMatrixBackgroundModule] キャンバスが見つかりません",
+      );
       return;
     }
 
-    const ctx = this.canvas.getContext('2d');
+    const ctx = this.canvas.getContext("2d");
     if (!ctx) {
-      window.logger.error('[WatchMatrixBackgroundModule] 2Dコンテキストを取得できません');
+      window.logger.error(
+        "[WatchMatrixBackgroundModule] 2Dコンテキストを取得できません",
+      );
       return;
     }
 
@@ -212,7 +216,9 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
     this.canvas.width = window.parent.screen.width;
 
     if (this.canvas.width <= 0) {
-      window.logger.error('[WatchMatrixBackgroundModule] キャンバス幅が無効です');
+      window.logger.error(
+        "[WatchMatrixBackgroundModule] キャンバス幅が無効です",
+      );
       return;
     }
 
@@ -220,7 +226,8 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
     this.setBackgroundStyle();
 
     // 日本語文字
-    const japaneseChars = "ｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ-ﾟ";
+    const japaneseChars =
+      "ｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ-ﾟ";
     const japanese: string[] = japaneseChars.split("");
 
     const fontSize: number = 23;
@@ -241,12 +248,12 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
     drops: number[],
     japanese: string[],
     fontSize: number,
-    canvasHeight: number
+    canvasHeight: number,
   ): void {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    ctx.fillStyle = '#0F0'; // 緑色のテキスト
+    ctx.fillStyle = "#0F0"; // 緑色のテキスト
     ctx.font = `${fontSize}px arial`;
 
     for (let i = 0; i < drops.length; i++) {
@@ -266,9 +273,9 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
    */
   private setBackgroundStyle(): void {
     const bg = document.body;
-    bg.style.backgroundColor = 'black';
-    bg.style.margin = '0';
-    bg.style.padding = '0';
+    bg.style.backgroundColor = "black";
+    bg.style.margin = "0";
+    bg.style.padding = "0";
   }
 
   /**
@@ -276,8 +283,8 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
    */
   private resetBackgroundStyle(): void {
     const bg = document.body;
-    bg.style.backgroundColor = '';
-    bg.style.margin = '';
-    bg.style.padding = '';
+    bg.style.backgroundColor = "";
+    bg.style.margin = "";
+    bg.style.padding = "";
   }
-} 
+}

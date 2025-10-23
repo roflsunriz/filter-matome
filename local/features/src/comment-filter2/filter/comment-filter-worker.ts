@@ -1,8 +1,12 @@
-import { filterThread, prepareRules as enginePrepareRules, RuleMatchLogEvent } from './comment-filter-engine';
-import { CF2Thread, NGWordRule, Settings } from '@/types/filter-types';
+import {
+  filterThread,
+  prepareRules as enginePrepareRules,
+  RuleMatchLogEvent,
+} from "@/comment-filter2/filter/comment-filter-engine";
+import { CF2Thread, NGWordRule, Settings } from "@/types/filter-types";
 
 interface ProcessRequest {
-  type: 'process';
+  type: "process";
   payload: {
     threads: CF2Thread[];
     rules: NGWordRule[];
@@ -13,19 +17,20 @@ interface ProcessRequest {
 }
 
 interface ProcessResponse {
-  type: 'result';
+  type: "result";
   payload: {
     threads: CF2Thread[];
     logs: RuleMatchLogEvent[];
   };
 }
 
-const ctx: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobalScope;
+const ctx: DedicatedWorkerGlobalScope =
+  self as unknown as DedicatedWorkerGlobalScope;
 
 ctx.onmessage = (event: MessageEvent<ProcessRequest>) => {
   const { data } = event;
 
-  if (data.type === 'process') {
+  if (data.type === "process") {
     const { threads, rules, currentSmid, settings, debugMode } = data.payload;
 
     const effectiveSettings: Settings | null = settings ?? null;
@@ -42,23 +47,20 @@ ctx.onmessage = (event: MessageEvent<ProcessRequest>) => {
         preparedRules,
         settings: effectiveSettings,
         regexCache,
-        debugMode
+        debugMode,
       });
       processedThreads.push({ ...thread, comments });
       allLogs.push(...logs);
     }
 
     const response: ProcessResponse = {
-      type: 'result',
+      type: "result",
       payload: {
         threads: processedThreads,
-        logs: allLogs
-      }
+        logs: allLogs,
+      },
     };
 
     ctx.postMessage(response);
   }
 };
-
-
-

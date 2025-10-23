@@ -49,7 +49,9 @@ export interface VideoPlayerResponse {
  * Video Playerインスタンスの型定義
  */
 export interface VideoPlayerInstance {
-  getComments: (...args: VideoPlayerGetCommentsArgs) => VideoPlayerResponse | Promise<VideoPlayerResponse>;
+  getComments: (
+    ...args: VideoPlayerGetCommentsArgs
+  ) => VideoPlayerResponse | Promise<VideoPlayerResponse>;
   [key: string]: unknown;
 }
 
@@ -90,4 +92,4 @@ declare global {
   }
 }
 
-export {}; 
+export {};

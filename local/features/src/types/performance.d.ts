@@ -11,4 +11,4 @@ interface Performance {
    * 標準ではないプロパティだが、ヒープメモリの使用状況を取得するのに便利
    */
   memory?: MemoryInfo;
-} 
+}

@@ -28,5 +28,5 @@ export const STANDALONE_PAGE_STYLES = [
   ".nc-series__item { padding: 10px 14px; border-radius: 12px; background: rgba(32, 38, 60, 0.72); display: flex; flex-direction: column; gap: 4px; }",
   ".nc-section-title { font-size: 16px; font-weight: 600; color: #d9e2ff; }",
   ".nc-empty { color: #7d86a8; font-size: 13px; }",
-  "@media (max-width: 1024px) { .nc-main { gap: 20px; } .video-with-comments { grid-template-columns: 1fr; } }"
-].join('\n');
+  "@media (max-width: 1024px) { .nc-main { gap: 20px; } .video-with-comments { grid-template-columns: 1fr; } }",
+].join("\n");

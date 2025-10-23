@@ -1,4 +1,4 @@
-import { createMaterialIcon } from '@/common/material-icons';
+import { createMaterialIcon } from "@/common/material-icons";
 
 export const playbackTemplate = `
 <div class="playback-content">
@@ -44,10 +44,10 @@ export const playbackTemplate = `
   </div>
 
 <div class="control-grid">
-      <button class="control-btn">${createMaterialIcon('skip_previous', { style: 'outlined', color: 'white' })}</button>
-    <button class="control-btn play-pause-btn" data-playing="false">${createMaterialIcon('play_arrow', { style: 'outlined', color: 'white' })}</button>
-    <button class="control-btn">${createMaterialIcon('skip_next', { style: 'outlined', color: 'white' })}</button>
-    <button class="control-btn">${createMaterialIcon('repeat', { style: 'outlined', color: 'white' })}</button>
+      <button class="control-btn">${createMaterialIcon("skip_previous", { style: "outlined", color: "white" })}</button>
+    <button class="control-btn play-pause-btn" data-playing="false">${createMaterialIcon("play_arrow", { style: "outlined", color: "white" })}</button>
+    <button class="control-btn">${createMaterialIcon("skip_next", { style: "outlined", color: "white" })}</button>
+    <button class="control-btn">${createMaterialIcon("repeat", { style: "outlined", color: "white" })}</button>
 </div>
 
 <div class="seek-controls">
@@ -55,8 +55,8 @@ export const playbackTemplate = `
     <input type="number" min="1" max="60" value="10" class="seek-value">
     <span>秒</span>
   </div>
-      <button class="seek-btn" data-seek="-1">${createMaterialIcon('fast_rewind', { style: 'outlined', color: 'white' })}</button>
-    <button class="seek-btn" data-seek="+1">${createMaterialIcon('fast_forward', { style: 'outlined', color: 'white' })}</button>
+      <button class="seek-btn" data-seek="-1">${createMaterialIcon("fast_rewind", { style: "outlined", color: "white" })}</button>
+    <button class="seek-btn" data-seek="+1">${createMaterialIcon("fast_forward", { style: "outlined", color: "white" })}</button>
 </div>
 
   <div class="x-sec-jump-wrapper">
@@ -74,4 +74,4 @@ export const playbackTemplate = `
     </div>
   </div>
 </div>
-`; 
+`;

@@ -1,4 +1,8 @@
-import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
+import {
+  ModuleInstance,
+  ModuleConfig,
+  ModuleStatus,
+} from "@/types/module-types";
 
 /**
  * ニコニコインフォページモジュール
@@ -7,7 +11,7 @@ import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types
 export class NicoInfoPageModule implements ModuleInstance {
   public config: ModuleConfig;
   private active: boolean = false;
-  private lastHash: string = '';
+  private lastHash: string = "";
   private readonly MAX_ITEMS = 300;
   private readonly debugOutput = false;
 
@@ -18,41 +22,40 @@ export class NicoInfoPageModule implements ModuleInstance {
   async initialize(): Promise<void> {
     try {
       await Promise.resolve();
-      
+
       // 依存関係チェック
       if (!this.checkDependencies()) {
-        throw new Error('必要な依存関係が見つかりません (window.toastr)');
+        throw new Error("必要な依存関係が見つかりません (window.toastr)");
       }
 
       // イベントリスナーを設定
       this.setupEventListeners();
-      
+
       // 初期実行
       this.restyler();
       this.showStartupToast();
-      
+
       this.active = true;
-      
     } catch (error) {
-      window.logger.error('[NicoInfoPageModule] 初期化に失敗しました:', error);
+      window.logger.error("[NicoInfoPageModule] 初期化に失敗しました:", error);
       throw error;
     }
   }
 
   destroy(): void {
     try {
-      
-      
       // イベントリスナーを削除
       this.removeEventListeners();
-      
+
       // スタイルをリセット
       this.resetStyles();
-      
+
       this.active = false;
-      
     } catch (error) {
-      window.logger.error('[NicoInfoPageModule] 停止処理に失敗しました:', error);
+      window.logger.error(
+        "[NicoInfoPageModule] 停止処理に失敗しました:",
+        error,
+      );
     }
   }
 
@@ -71,9 +74,11 @@ export class NicoInfoPageModule implements ModuleInstance {
    * 依存関係をチェック
    */
   private checkDependencies(): boolean {
-    return typeof window !== 'undefined' && 
-           window.toastr && 
-           typeof window.toastr.info === 'function';
+    return (
+      typeof window !== "undefined" &&
+      window.toastr &&
+      typeof window.toastr.info === "function"
+    );
   }
 
   /**
@@ -81,22 +86,22 @@ export class NicoInfoPageModule implements ModuleInstance {
    */
   private setupEventListeners(): void {
     // load イベントは既に発生している可能性があるので、即座に実行
-    if (document.readyState === 'complete') {
+    if (document.readyState === "complete") {
       this.handleLoad();
     } else {
-      window.addEventListener('load', this.handleLoad.bind(this));
+      window.addEventListener("load", this.handleLoad.bind(this));
     }
 
     // hashchange イベント
-    window.addEventListener('hashchange', this.handleHashChange.bind(this));
+    window.addEventListener("hashchange", this.handleHashChange.bind(this));
   }
 
   /**
    * イベントリスナーを削除
    */
   private removeEventListeners(): void {
-    window.removeEventListener('load', this.handleLoad.bind(this));
-    window.removeEventListener('hashchange', this.handleHashChange.bind(this));
+    window.removeEventListener("load", this.handleLoad.bind(this));
+    window.removeEventListener("hashchange", this.handleHashChange.bind(this));
   }
 
   /**
@@ -120,13 +125,11 @@ export class NicoInfoPageModule implements ModuleInstance {
    */
   private showStartupToast(): void {
     try {
-      window.toastr.info(
-        "",
-        "NicoInfoPageModuleの動作を開始しました",
-        { timeOut: 5000 }
-      );
+      window.toastr.info("", "NicoInfoPageModuleの動作を開始しました", {
+        timeOut: 5000,
+      });
     } catch (error) {
-      window.logger.error('[NicoInfoPageModule] トースト表示でエラー:', error);
+      window.logger.error("[NicoInfoPageModule] トースト表示でエラー:", error);
     }
   }
 
@@ -135,15 +138,19 @@ export class NicoInfoPageModule implements ModuleInstance {
    */
   private restyler(): void {
     try {
-
       for (let i = 0; i < this.MAX_ITEMS; i++) {
-        const dateElement = document.getElementsByClassName("l-main l-main-list2-date")[i] as HTMLElement | undefined;
-        const titleElement = document.getElementsByClassName("l-main l-main-list2-title")[i] as HTMLElement | undefined;
-        const itemElement = document.getElementsByClassName("l-main l-main-list2-item")[i] as HTMLElement | undefined;
+        const dateElement = document.getElementsByClassName(
+          "l-main l-main-list2-date",
+        )[i] as HTMLElement | undefined;
+        const titleElement = document.getElementsByClassName(
+          "l-main l-main-list2-title",
+        )[i] as HTMLElement | undefined;
+        const itemElement = document.getElementsByClassName(
+          "l-main l-main-list2-item",
+        )[i] as HTMLElement | undefined;
 
         if (!dateElement) break;
         if (!titleElement || !itemElement) continue;
-
 
         if (!titleElement.innerText.match(/.*?デイリー福引.*?/)) {
           // デイリー福引以外の項目は薄い色にする
@@ -154,9 +161,8 @@ export class NicoInfoPageModule implements ModuleInstance {
           itemElement.style.outline = "solid 3px red";
         }
       }
-
     } catch (error) {
-      window.logger.error('[NicoInfoPageModule] restyler でエラー:', error);
+      window.logger.error("[NicoInfoPageModule] restyler でエラー:", error);
     }
   }
 
@@ -166,9 +172,15 @@ export class NicoInfoPageModule implements ModuleInstance {
   private resetStyles(): void {
     try {
       for (let i = 0; i < this.MAX_ITEMS; i++) {
-        const dateElement = document.getElementsByClassName("l-main l-main-list2-date")[i] as HTMLElement | undefined;
-        const titleElement = document.getElementsByClassName("l-main l-main-list2-title")[i] as HTMLElement | undefined;
-        const itemElement = document.getElementsByClassName("l-main l-main-list2-item")[i] as HTMLElement | undefined;
+        const dateElement = document.getElementsByClassName(
+          "l-main l-main-list2-date",
+        )[i] as HTMLElement | undefined;
+        const titleElement = document.getElementsByClassName(
+          "l-main l-main-list2-title",
+        )[i] as HTMLElement | undefined;
+        const itemElement = document.getElementsByClassName(
+          "l-main l-main-list2-item",
+        )[i] as HTMLElement | undefined;
 
         if (!dateElement) break;
 
@@ -183,9 +195,11 @@ export class NicoInfoPageModule implements ModuleInstance {
           itemElement.style.outline = "";
         }
       }
-      
     } catch (error) {
-      window.logger.error('[NicoInfoPageModule] スタイルリセットでエラー:', error);
+      window.logger.error(
+        "[NicoInfoPageModule] スタイルリセットでエラー:",
+        error,
+      );
     }
   }
 
@@ -195,4 +209,4 @@ export class NicoInfoPageModule implements ModuleInstance {
   private currentHash(): string {
     return location.hash.replace(/^#/, "");
   }
-} 
+}

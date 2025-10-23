@@ -1,15 +1,19 @@
-import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
-import { 
-  Keyword, 
-  PageType, 
-  NicovideoSelectors, 
-  UrlPatterns, 
+import {
+  ModuleInstance,
+  ModuleConfig,
+  ModuleStatus,
+} from "@/types/module-types";
+import {
+  Keyword,
+  PageType,
+  NicovideoSelectors,
+  UrlPatterns,
   UpdateItem,
-  ThumbnailsFilterGlobal 
-} from '@/types/thumbnails-filter-types';
+  ThumbnailsFilterGlobal,
+} from "@/types/thumbnails-filter-types";
 // import { ToastrInstance } from '@/types/toastr-types';
-import { createMaterialIcon } from '../../common/material-icons';
-import { isWatchLikePage } from '../utils/page-detect';
+import { createMaterialIcon } from "../../common/material-icons";
+import { isWatchLikePage } from "../utils/page-detect";
 
 // 設定管理クラス
 class HideVideoSettings {
@@ -26,10 +30,14 @@ class HideVideoSettings {
   loadKeywords(): Keyword[] {
     try {
       const saved = localStorage.getItem(this.storageKey);
-      if (!saved) { return []; }
+      if (!saved) {
+        return [];
+      }
       const parsed = JSON.parse(saved) as unknown;
-      if (!Array.isArray(parsed)) { return []; }
-      return parsed.filter((v): v is Keyword => typeof v === 'string');
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+      return parsed.filter((v): v is Keyword => typeof v === "string");
     } catch (error) {
       window.logger.error("キーワードの読み込みエラー:", error);
       return [];
@@ -143,7 +151,7 @@ class HideVideoUI {
       this.setupSettingsButton();
     }, 100);
 
-    document.addEventListener('updateKeywordList', () => {
+    document.addEventListener("updateKeywordList", () => {
       this.updateKeywordList();
     });
 
@@ -170,14 +178,16 @@ class HideVideoUI {
     this.restoreAllVideos();
 
     // イベントリスナーを削除
-    document.removeEventListener('updateKeywordList', () => {
+    document.removeEventListener("updateKeywordList", () => {
       this.updateKeywordList();
     });
   }
 
   private restoreAllVideos(): void {
-    const hiddenElements = document.querySelectorAll('[data-nvf-hidden="true"]');
-    hiddenElements.forEach(element => {
+    const hiddenElements = document.querySelectorAll(
+      '[data-nvf-hidden="true"]',
+    );
+    hiddenElements.forEach((element) => {
       this.showElement(element);
     });
   }
@@ -364,7 +374,7 @@ class HideVideoUI {
 
   getTitleFromElement(element: Element): string {
     const titleSelectors = NICOVIDEO_SELECTORS.TITLE_ELEMENTS[this.pageType];
-    
+
     if (this.pageType === "watch" && typeof titleSelectors === "object") {
       const href = element.getAttribute("href") || "";
       if (href.includes("playlist")) {
@@ -381,21 +391,24 @@ class HideVideoUI {
       const titleElement = element.querySelector(titleSelectors);
       return titleElement?.textContent?.trim() || "";
     }
-    
+
     return "";
   }
 
   hideElement(element: Element): void {
     const parentSelector = NICOVIDEO_SELECTORS.PARENT_ELEMENTS[this.pageType];
-    const targetElement = parentSelector ? element.closest(parentSelector) || element : element;
-    
+    const targetElement = parentSelector
+      ? element.closest(parentSelector) || element
+      : element;
+
     targetElement.setAttribute("data-nvf-hidden", "true");
-    
+
     if (targetElement instanceof HTMLElement) {
-      targetElement.style.transition = "opacity 0.3s ease-out, transform 0.3s ease-out";
+      targetElement.style.transition =
+        "opacity 0.3s ease-out, transform 0.3s ease-out";
       targetElement.style.opacity = "0";
       targetElement.style.transform = "scale(0.8)";
-      
+
       setTimeout(() => {
         targetElement.style.display = "none";
       }, 300);
@@ -404,15 +417,17 @@ class HideVideoUI {
 
   showElement(element: Element): void {
     const parentSelector = NICOVIDEO_SELECTORS.PARENT_ELEMENTS[this.pageType];
-    const targetElement = parentSelector ? element.closest(parentSelector) || element : element;
-    
+    const targetElement = parentSelector
+      ? element.closest(parentSelector) || element
+      : element;
+
     targetElement.removeAttribute("data-nvf-hidden");
-    
+
     if (targetElement instanceof HTMLElement) {
       targetElement.style.display = "";
       targetElement.style.opacity = "0";
       targetElement.style.transform = "scale(0.8)";
-      
+
       setTimeout(() => {
         targetElement.style.opacity = "1";
         targetElement.style.transform = "scale(1)";
@@ -427,14 +442,18 @@ class HideVideoUI {
 
     this.observer = new MutationObserver((mutations) => {
       let shouldCheck = false;
-      
+
       mutations.forEach((mutation) => {
         if (mutation.type === "childList") {
           mutation.addedNodes.forEach((node) => {
             if (node.nodeType === Node.ELEMENT_NODE) {
               const element = node as Element;
-              const selector = NICOVIDEO_SELECTORS.VIDEO_ELEMENTS[this.pageType];
-              if (selector && (element.matches(selector) || element.querySelector(selector))) {
+              const selector =
+                NICOVIDEO_SELECTORS.VIDEO_ELEMENTS[this.pageType];
+              if (
+                selector &&
+                (element.matches(selector) || element.querySelector(selector))
+              ) {
                 shouldCheck = true;
               }
             }
@@ -454,11 +473,16 @@ class HideVideoUI {
   }
 
   setupToggleButton(): void {
-    const toggleContainer = document.querySelector("#siteHeaderUserContainer, .SiteHeaderContainer");
+    const toggleContainer = document.querySelector(
+      "#siteHeaderUserContainer, .SiteHeaderContainer",
+    );
     if (toggleContainer && !document.getElementById("nvfToggleButton")) {
       const button = document.createElement("button");
       button.id = "nvfToggleButton";
-              button.innerHTML = createMaterialIcon('block', { style: 'outlined', color: 'white' });
+      button.innerHTML = createMaterialIcon("block", {
+        style: "outlined",
+        color: "white",
+      });
       button.title = "動画フィルター切り替え";
       button.style.cssText = `
         background: rgba(0,0,0,0.7);
@@ -470,13 +494,13 @@ class HideVideoUI {
         cursor: pointer;
         font-size: 14px;
       `;
-      
+
       button.addEventListener("click", () => {
         this.settings.tempDisabled = !this.settings.tempDisabled;
         button.style.opacity = this.settings.tempDisabled ? "0.5" : "1";
         this.checkVideos();
       });
-      
+
       toggleContainer.appendChild(button);
     }
   }
@@ -490,9 +514,11 @@ class HideVideoUI {
 
   checkVideos(isInitial = false): void {
     if (this.settings.tempDisabled) {
-      document.querySelectorAll('[data-nvf-hidden="true"]').forEach(element => {
-        this.showElement(element);
-      });
+      document
+        .querySelectorAll('[data-nvf-hidden="true"]')
+        .forEach((element) => {
+          this.showElement(element);
+        });
       this.hiddenCount = 0;
       this.updateHiddenCount();
       return;
@@ -540,35 +566,37 @@ class HideVideoUI {
       if (!isInitial && this.hiddenCount !== previousCount) {
         const matchedKeywords = keywords.filter((keyword) =>
           Array.from(videos).some((video) =>
-            this.settings.matchKeyword(this.getTitleFromElement(video), keyword)
-          )
+            this.settings.matchKeyword(
+              this.getTitleFromElement(video),
+              keyword,
+            ),
+          ),
         );
 
         const message = `${this.hiddenCount}件の動画を非表示にしました！`;
-        
-        const subtitle = matchedKeywords.length > 0
-          ? `マッチしたキーワード: ${matchedKeywords.slice(0, 3).join(", ")}${
-              matchedKeywords.length > 3 ? " など" : ""
-            }`
-          : "";
 
-        if (typeof window !== 'undefined' && 'toastr' in window) {
+        const subtitle =
+          matchedKeywords.length > 0
+            ? `マッチしたキーワード: ${matchedKeywords.slice(0, 3).join(", ")}${
+                matchedKeywords.length > 3 ? " など" : ""
+              }`
+            : "";
+
+        if (typeof window !== "undefined" && "toastr" in window) {
           const toastr = window.toastr;
-          toastr.info(
-            message,
-            "動画フィルター",
-            { 
-              timeOut: 3000,
-              extendedTimeOut: subtitle ? 1000 : 0
-            }
-          );
+          toastr.info(message, "動画フィルター", {
+            timeOut: 3000,
+            extendedTimeOut: subtitle ? 1000 : 0,
+          });
         }
       }
     });
   }
 
   shouldHideVideo(title: string): boolean {
-    return this.settings.keywords.some((keyword) => this.settings.matchKeyword(title, keyword));
+    return this.settings.keywords.some((keyword) =>
+      this.settings.matchKeyword(title, keyword),
+    );
   }
 
   setupEventListeners(): void {
@@ -586,7 +614,10 @@ class HideVideoUI {
     const modal = document.getElementById("nvfHideVideoModal");
     if (modal) {
       modal.addEventListener("click", (e) => {
-        if (e.target instanceof HTMLElement && e.target.id === "nvfHideVideoModal") {
+        if (
+          e.target instanceof HTMLElement &&
+          e.target.id === "nvfHideVideoModal"
+        ) {
           e.target.style.display = "none";
           this.checkVideos();
         }
@@ -596,7 +627,9 @@ class HideVideoUI {
     const addKeywordButton = document.getElementById("nvfAddKeyword");
     if (addKeywordButton) {
       addKeywordButton.addEventListener("click", () => {
-        const input = document.getElementById("nvfNewKeyword") as HTMLInputElement | null;
+        const input = document.getElementById(
+          "nvfNewKeyword",
+        ) as HTMLInputElement | null;
         if (input) {
           const keyword = input.value.trim();
           if (keyword) {
@@ -619,17 +652,22 @@ class HideVideoUI {
       });
     }
 
-    const keywordSearch = document.getElementById("nvfKeywordSearch") as HTMLInputElement | null;
+    const keywordSearch = document.getElementById(
+      "nvfKeywordSearch",
+    ) as HTMLInputElement | null;
     if (keywordSearch) {
       keywordSearch.addEventListener("input", (e) => {
         if (e.target instanceof HTMLInputElement) {
           const searchText = e.target.value.toLowerCase();
-          const items = document.querySelectorAll<HTMLElement>(".nvf-keyword-item");
+          const items =
+            document.querySelectorAll<HTMLElement>(".nvf-keyword-item");
           items.forEach((item) => {
             const keywordElement = item.querySelector(".nvf-keyword-text");
             if (keywordElement && keywordElement.textContent) {
               const keyword = keywordElement.textContent.toLowerCase();
-              item.style.display = keyword.includes(searchText) ? "flex" : "none";
+              item.style.display = keyword.includes(searchText)
+                ? "flex"
+                : "none";
             }
           });
         }
@@ -665,7 +703,9 @@ class HideVideoUI {
     this.settings.keywords.forEach((keyword) => {
       const item = document.createElement("div");
       item.className = "nvf-keyword-item";
-      const keywordClass = this.settings.isRegExp(keyword) ? "regex-keyword" : "";
+      const keywordClass = this.settings.isRegExp(keyword)
+        ? "regex-keyword"
+        : "";
       item.innerHTML = `
         <span class="nvf-keyword-text ${keywordClass}">${keyword}</span>
         <button class="delete-keyword" data-keyword="${keyword}">削除</button>
@@ -700,7 +740,7 @@ class HideVideoUI {
 
 export class ThumbnailsFilterModule implements ModuleInstance {
   public readonly config: ModuleConfig;
-  
+
   private settings: HideVideoSettings | null = null;
   private ui: HideVideoUI | null = null;
   private _isActive: boolean = false;
@@ -712,29 +752,31 @@ export class ThumbnailsFilterModule implements ModuleInstance {
   async initialize(): Promise<void> {
     try {
       await Promise.resolve();
-      
+
       this.settings = new HideVideoSettings();
       this.ui = new HideVideoUI(this.settings);
       this.ui.initialize();
 
       // グローバルオブジェクトとしてThumbnailsFilterを設定
       const thumbnailsFilter: ThumbnailsFilterGlobal = {
-        openSettingsPanel: () => this.ui?.openSettingsPanel()
+        openSettingsPanel: () => this.ui?.openSettingsPanel(),
       };
-      (window as Window & { ThumbnailsFilter: ThumbnailsFilterGlobal }).ThumbnailsFilter = thumbnailsFilter;
+      (
+        window as Window & { ThumbnailsFilter: ThumbnailsFilterGlobal }
+      ).ThumbnailsFilter = thumbnailsFilter;
 
       this._isActive = true;
-      
     } catch (error) {
-      window.logger.error('[ThumbnailsFilterModule] 初期化に失敗しました:', error);
+      window.logger.error(
+        "[ThumbnailsFilterModule] 初期化に失敗しました:",
+        error,
+      );
       this._isActive = false;
       throw error;
     }
   }
 
   destroy(): void {
-    
-    
     if (this.ui) {
       this.ui.destroy();
       this.ui = null;
@@ -743,13 +785,14 @@ export class ThumbnailsFilterModule implements ModuleInstance {
     this.settings = null;
 
     // グローバルオブジェクトを削除
-    if (typeof window !== 'undefined') {
-      const windowWithThumbnailsFilter = window as Window & { ThumbnailsFilter?: ThumbnailsFilterGlobal };
+    if (typeof window !== "undefined") {
+      const windowWithThumbnailsFilter = window as Window & {
+        ThumbnailsFilter?: ThumbnailsFilterGlobal;
+      };
       delete windowWithThumbnailsFilter.ThumbnailsFilter;
     }
 
     this._isActive = false;
-    
   }
 
   isActive(): boolean {
@@ -763,4 +806,4 @@ export class ThumbnailsFilterModule implements ModuleInstance {
 
     return ModuleStatus.ACTIVE;
   }
-} 
+}

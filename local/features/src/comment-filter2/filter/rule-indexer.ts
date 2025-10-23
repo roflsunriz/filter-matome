@@ -22,13 +22,13 @@ class AhoCorasickMachine {
     return {
       transitions: new Map(),
       failure: 0,
-      outputs: []
+      outputs: [],
     };
   }
 
   public add(pattern: string, outputId: number): void {
     if (this.built) {
-      throw new Error('AhoCorasickMachine cannot add pattern after build().');
+      throw new Error("AhoCorasickMachine cannot add pattern after build().");
     }
 
     let nodeIndex = 0;
@@ -76,7 +76,8 @@ class AhoCorasickMachine {
 
         const fallback = this.nodes[failure].transitions.get(char);
         this.nodes[nextIndex].failure = fallback !== undefined ? fallback : 0;
-        const failureOutputs = this.nodes[this.nodes[nextIndex].failure].outputs;
+        const failureOutputs =
+          this.nodes[this.nodes[nextIndex].failure].outputs;
         if (failureOutputs.length > 0) {
           this.nodes[nextIndex].outputs.push(...failureOutputs);
         }
@@ -88,7 +89,7 @@ class AhoCorasickMachine {
 
   public search(text: string): number[] {
     if (!this.built) {
-      throw new Error('AhoCorasickMachine must call build() before search().');
+      throw new Error("AhoCorasickMachine must call build() before search().");
     }
 
     const results: number[] = [];
@@ -210,7 +211,8 @@ export class SubstringMatcher {
   hasPatterns(): boolean {
     return Boolean(
       (this.caseSensitiveMachine && this.caseSensitiveMachine.hasPatterns()) ||
-      (this.caseInsensitiveMachine && this.caseInsensitiveMachine.hasPatterns())
+        (this.caseInsensitiveMachine &&
+          this.caseInsensitiveMachine.hasPatterns()),
     );
   }
 

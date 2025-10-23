@@ -49,8 +49,8 @@ export const CSS_CONSTANTS = `
  * CSS定数をDOMに適用する関数
  */
 export const applyCssConstants = (): HTMLStyleElement => {
-  const styleElement = document.createElement('style');
+  const styleElement = document.createElement("style");
   styleElement.textContent = CSS_CONSTANTS;
   document.head.appendChild(styleElement);
   return styleElement;
-}; 
+};

@@ -23,20 +23,28 @@ export class MegaService {
 
   private unsupported(): never {
     throw new Error(
-      "MEGA 連携はブラウザのみ・バックエンド無し環境では追加実装が必要です。設定画面で 'Dropbox' または 'OneDrive' をご利用ください。"
+      "MEGA 連携はブラウザのみ・バックエンド無し環境では追加実装が必要です。設定画面で 'Dropbox' または 'OneDrive' をご利用ください。",
     );
   }
 
   // API 互換: GoogleDrive/Dropbox/OneDrive と同じメソッド群
-  uploadBackupZip(_baseFileName: string, _backupJson: string): Promise<{ success: boolean; fileId?: string; error?: string }> {
+  uploadBackupZip(
+    _baseFileName: string,
+    _backupJson: string,
+  ): Promise<{ success: boolean; fileId?: string; error?: string }> {
     try {
       this.unsupported();
     } catch (e) {
-      return Promise.resolve({ success: false, error: e instanceof Error ? e.message : String(e) });
+      return Promise.resolve({
+        success: false,
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
   }
 
-  listBackups(): Promise<Array<{ id: string; name: string; modifiedTime?: string; size?: string }>> {
+  listBackups(): Promise<
+    Array<{ id: string; name: string; modifiedTime?: string; size?: string }>
+  > {
     return Promise.reject(this.createUnsupportedError());
   }
 
@@ -46,7 +54,7 @@ export class MegaService {
 
   private createUnsupportedError(): Error {
     return new Error(
-      "MEGA 連携は未実装です。Dropbox / OneDrive / Google Drive をご利用ください。"
+      "MEGA 連携は未実装です。Dropbox / OneDrive / Google Drive をご利用ください。",
     );
   }
 }

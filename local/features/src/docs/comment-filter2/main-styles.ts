@@ -301,8 +301,8 @@ ${MAIN_STYLES_PART2}
  * メインスタイルをDOMに適用する関数
  */
 export const applyCommentFilter2MainStyles = (): HTMLStyleElement => {
-  const styleElement = document.createElement('style');
+  const styleElement = document.createElement("style");
   styleElement.textContent = COMMENT_FILTER2_MAIN_STYLES;
   document.head.appendChild(styleElement);
   return styleElement;
-}; 
+};

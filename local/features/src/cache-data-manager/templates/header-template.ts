@@ -1,4 +1,4 @@
-import { createMaterialIcon, ICONS } from '@/common/material-icons.js';
+import { createMaterialIcon, ICONS } from "@/common/material-icons.js";
 
 type NavLink = {
   href: string;
@@ -7,13 +7,17 @@ type NavLink = {
 };
 
 const NAV_LINKS: NavLink[] = [
-  { href: '/', label: 'トップ', icon: ICONS.home },
-  { href: '/video_top', label: '動画', icon: ICONS.play },
-  { href: '/my/history/', label: 'マイページ', icon: 'person' },
-  { href: '/ranking', label: 'ランキング', icon: 'trending_up' },
-  { href: '/newarrival', label: '新着動画', icon: 'new_releases' },
-  { href: '/recent', label: '新着コメント動画', icon: ICONS.comment },
-  { href: '/local/features/dist/src/mylist2/index.html', label: 'Mylist2', icon: 'playlist_add' }
+  { href: "/", label: "トップ", icon: ICONS.home },
+  { href: "/video_top", label: "動画", icon: ICONS.play },
+  { href: "/my/history/", label: "マイページ", icon: "person" },
+  { href: "/ranking", label: "ランキング", icon: "trending_up" },
+  { href: "/newarrival", label: "新着動画", icon: "new_releases" },
+  { href: "/recent", label: "新着コメント動画", icon: ICONS.comment },
+  {
+    href: "/local/features/dist/src/mylist2/index.html",
+    label: "Mylist2",
+    icon: "playlist_add",
+  },
 ];
 
 /**
@@ -21,12 +25,24 @@ const NAV_LINKS: NavLink[] = [
  */
 export function createHeaderTemplate(): string {
   const navItems = NAV_LINKS.map(({ href, label, icon }) => {
-    const hoverIcon = createMaterialIcon(icon, { color: 'white', size: 'small', classes: 'nav-link-icon-img' });
+    const hoverIcon = createMaterialIcon(icon, {
+      color: "white",
+      size: "small",
+      classes: "nav-link-icon-img",
+    });
     return `<a href="${href}" target="_blank" class="nav-link">${label}<span class="nav-link-icon">${hoverIcon}</span></a>`;
-  }).join('');
+  }).join("");
 
-  const searchIcon = createMaterialIcon(ICONS.search, { color: 'white', size: 'small', classes: 'search-btn-icon' });
-  const clearIcon = createMaterialIcon('clear', { color: 'white', size: 'small', classes: 'search-btn-icon' });
+  const searchIcon = createMaterialIcon(ICONS.search, {
+    color: "white",
+    size: "small",
+    classes: "search-btn-icon",
+  });
+  const clearIcon = createMaterialIcon("clear", {
+    color: "white",
+    size: "small",
+    classes: "search-btn-icon",
+  });
 
   return `
     <div class="header-content">

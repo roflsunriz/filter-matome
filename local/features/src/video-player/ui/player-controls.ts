@@ -1,11 +1,11 @@
-import { PLAYER_SETTINGS } from '@/video-player/config/constants';
-import { PLAYER_ICONS } from '@/video-player/config/icons';
-import { materialIconsStyles } from '@/common/material-icons';
-import { CommentSystem } from '@/video-player/core/comment-system';
-import * as IndexedDBUtils from '@/video-player/utils/indexed-db-utils';
-import { ExtendedDocument, ExtendedHTMLElement } from '@/types/index';
+import { PLAYER_SETTINGS } from "@/video-player/config/constants";
+import { PLAYER_ICONS } from "@/video-player/config/icons";
+import { materialIconsStyles } from "@/common/material-icons";
+import { CommentSystem } from "@/video-player/core/comment-system";
+import * as IndexedDBUtils from "@/video-player/utils/indexed-db-utils";
+import { ExtendedDocument, ExtendedHTMLElement } from "@/types/index";
 
-const PLAYER_VOLUME_STORAGE_KEY = 'playerVolume';
+const PLAYER_VOLUME_STORAGE_KEY = "playerVolume";
 
 /**
  * シャドウDOM版のプレイヤーコントロール
@@ -18,13 +18,13 @@ export class PlayerControlsShadow extends HTMLElement {
   private commentSystem: CommentSystem | null = null;
   private userPaused: boolean = false;
   private isSettingsOpen: boolean = false;
-  
+
   // コメント設定関連
   private commentOpacity: number = PLAYER_SETTINGS.COMMENT.OPACITY.DEFAULT;
   private commentColor: string = PLAYER_SETTINGS.COMMENT.COLORS.WHITE;
   private ngWords: string[] = [];
   private ngRegex: string[] = [];
-  
+
   // 一時的な設定保存用
   private tempOpacity: number = PLAYER_SETTINGS.COMMENT.OPACITY.DEFAULT;
   private tempColor: string = PLAYER_SETTINGS.COMMENT.COLORS.WHITE;
@@ -35,11 +35,11 @@ export class PlayerControlsShadow extends HTMLElement {
 
   constructor() {
     super();
-    
+
     // シャドウDOMを作成
-    this.shadow = this.attachShadow({ mode: 'closed' });
+    this.shadow = this.attachShadow({ mode: "closed" });
     this.shadow.innerHTML = this.getTemplate();
-    
+
     // 非同期で初期化（DOMReadyを待つ）
     void this.initializeComponent();
   }
@@ -49,38 +49,40 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private async initializeComponent(): Promise<void> {
     // DOMの構築完了を確実に待つ
-    await new Promise(resolve => {
+    await new Promise((resolve) => {
       // MutationObserverでDOMの準備完了を監視
       if (this.shadow && this.shadow.firstElementChild) {
         resolve(undefined);
         return;
       }
-      
+
       const observer = new MutationObserver(() => {
         if (this.shadow && this.shadow.firstElementChild) {
           observer.disconnect();
           resolve(undefined);
         }
       });
-      
+
       observer.observe(this.shadow, { childList: true });
-      
+
       // タイムアウト保険（最大100ms）
       setTimeout(() => {
         observer.disconnect();
         resolve(undefined);
       }, 100);
     });
-    
+
     this.setupEventListeners();
     this.setupInitialIcons();
     this.initialized = true;
-    
+
     // 初期のコントロール表示状態を設定
-    const savedControlsMode = localStorage.getItem('controlsMode') || PLAYER_SETTINGS.CONTROLS_MODE.HOVER;
+    const savedControlsMode =
+      localStorage.getItem("controlsMode") ||
+      PLAYER_SETTINGS.CONTROLS_MODE.HOVER;
     this.applyControlsMode(savedControlsMode);
-    
-    window.logger.info('PlayerControlsShadowの初期化が完了しました！');
+
+    window.logger.info("PlayerControlsShadowの初期化が完了しました！");
   }
 
   /**
@@ -88,23 +90,23 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   setVideoElement(video: HTMLVideoElement): void {
     if (!video) {
-      window.logger.error('無効なビデオ要素が渡されました');
+      window.logger.error("無効なビデオ要素が渡されました");
       return;
     }
-    
+
     // 確実に内部初期化
     this.ensureInitialized();
-    
+
     this.video = video;
     this.initializeVolumeState();
-    
+
     // ビデオイベントのセットアップ
     this.setupVideoEvents();
-    
+
     // 設定の初期化
     void this.initializeSettings();
-    
-    window.logger.info('ビデオ要素が設定されました！');
+
+    window.logger.info("ビデオ要素が設定されました！");
   }
 
   /**
@@ -112,13 +114,16 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   setCommentSystem(commentSystem: CommentSystem): void {
     this.commentSystem = commentSystem;
-    
+
     // コメントボタンの状態を更新
-    const commentToggle = this.shadow.querySelector('#comment-toggle');
+    const commentToggle = this.shadow.querySelector("#comment-toggle");
     if (commentToggle && this.commentSystem) {
-      commentToggle.classList.toggle('active', !this.commentSystem.getVisibility());
+      commentToggle.classList.toggle(
+        "active",
+        !this.commentSystem.getVisibility(),
+      );
     }
-    
+
     // 現在の設定をコメントシステムに適用
     if (this.commentSystem) {
       this.commentSystem.setOpacity(this.commentOpacity);
@@ -131,14 +136,16 @@ export class PlayerControlsShadow extends HTMLElement {
   disableComments(): void {
     this.ensureInitialized();
 
-    const commentToggle = this.shadow.querySelector('#comment-toggle');
+    const commentToggle = this.shadow.querySelector("#comment-toggle");
     if (commentToggle instanceof HTMLElement) {
-      commentToggle.style.display = 'none';
+      commentToggle.style.display = "none";
     }
 
-    const commentSettingsSection = this.shadow.querySelector('[data-settings-section="comment"]');
+    const commentSettingsSection = this.shadow.querySelector(
+      '[data-settings-section="comment"]',
+    );
     if (commentSettingsSection instanceof HTMLElement) {
-      commentSettingsSection.style.display = 'none';
+      commentSettingsSection.style.display = "none";
     }
   }
 
@@ -146,7 +153,9 @@ export class PlayerControlsShadow extends HTMLElement {
    * HTMLテンプレートを取得
    */
   private getTemplate(): string {
-    const initialVolumePercent = Math.round(PLAYER_SETTINGS.VOLUME.DEFAULT * 100);
+    const initialVolumePercent = Math.round(
+      PLAYER_SETTINGS.VOLUME.DEFAULT * 100,
+    );
     return `
       <style>
         ${this.getStyles()}
@@ -764,18 +773,18 @@ export class PlayerControlsShadow extends HTMLElement {
     if (this.initialized) return; // 二重登録防止
     // 設定関連
     this.setupSettingsEvents();
-    
+
     // コントロール関連
     this.setupControlEvents();
-    
+
     // コメント関連
     this.setupCommentEvents();
-    
+
     // マウスホバー関連
     this.setupHoverEvents();
-    
+
     // キーボードショートカット
-    document.addEventListener('keydown', this.handleKeyboardShortcuts);
+    document.addEventListener("keydown", this.handleKeyboardShortcuts);
     this.initialized = true;
   }
 
@@ -783,26 +792,31 @@ export class PlayerControlsShadow extends HTMLElement {
    * 設定関連のイベント設定
    */
   private setupSettingsEvents(): void {
-    const settingsBtn = this.shadow.querySelector('#settings');
-    
+    const settingsBtn = this.shadow.querySelector("#settings");
+
     if (settingsBtn) {
-      settingsBtn.addEventListener('click', (e) => {
+      settingsBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         this.toggleSettingsMenu();
       });
     }
 
     // 設定メニュー外クリックで閉じる
-    document.addEventListener('click', (e) => {
+    document.addEventListener("click", (e) => {
       if (!this.contains(e.target as Node)) {
         this.closeSettingsMenu();
       }
     });
 
     // コントロールモード変更
-    const controlsModeSelect = this.shadow.querySelector('#controls-mode') as HTMLSelectElement;
+    const controlsModeSelect = this.shadow.querySelector(
+      "#controls-mode",
+    ) as HTMLSelectElement;
     if (controlsModeSelect) {
-      controlsModeSelect.addEventListener('change', this.handleControlsModeChange);
+      controlsModeSelect.addEventListener(
+        "change",
+        this.handleControlsModeChange,
+      );
     }
   }
 
@@ -811,14 +825,16 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private setupControlEvents(): void {
     // 再生/一時停止ボタン
-    const playPauseBtn = this.shadow.querySelector('#play-pause');
+    const playPauseBtn = this.shadow.querySelector("#play-pause");
     if (playPauseBtn) {
-      playPauseBtn.addEventListener('click', () => {
+      playPauseBtn.addEventListener("click", () => {
         const video = this.getVideo();
         if (!video) return;
-        
+
         if (video.paused) {
-          video.play().catch(e => window.logger.error('再生開始に失敗しました:', e));
+          video
+            .play()
+            .catch((e) => window.logger.error("再生開始に失敗しました:", e));
         } else {
           video.pause();
           this.userPaused = true;
@@ -827,11 +843,11 @@ export class PlayerControlsShadow extends HTMLElement {
     }
 
     // 10秒戻し/進むボタン
-    const rewindBtn = this.shadow.querySelector('#rewind-10');
-    const forwardBtn = this.shadow.querySelector('#forward-10');
-    
+    const rewindBtn = this.shadow.querySelector("#rewind-10");
+    const forwardBtn = this.shadow.querySelector("#forward-10");
+
     if (rewindBtn) {
-      rewindBtn.addEventListener('click', () => {
+      rewindBtn.addEventListener("click", () => {
         const video = this.getVideo();
         if (video) {
           video.currentTime = Math.max(video.currentTime - 10, 0);
@@ -840,20 +856,23 @@ export class PlayerControlsShadow extends HTMLElement {
     }
 
     if (forwardBtn) {
-      forwardBtn.addEventListener('click', () => {
+      forwardBtn.addEventListener("click", () => {
         const video = this.getVideo();
         if (video) {
-          video.currentTime = Math.min(video.currentTime + 10, video.duration || 0);
+          video.currentTime = Math.min(
+            video.currentTime + 10,
+            video.duration || 0,
+          );
         }
       });
     }
 
     // シークバーとプログレスバー
     this.setupProgressControls();
-    
+
     // 音量コントロール
     this.setupVolumeControls();
-    
+
     // 全画面ボタン
     this.setupFullscreenControl();
   }
@@ -862,14 +881,18 @@ export class PlayerControlsShadow extends HTMLElement {
    * プログレス関連のコントロール設定
    */
   private setupProgressControls(): void {
-    const seekBar = this.shadow.querySelector('#seek-bar') as HTMLInputElement;
-    const progressBar = this.shadow.querySelector('.progress-bar-custom') as HTMLElement;
-    const progressContainer = this.shadow.querySelector('.progress-container-custom') as HTMLElement;
-    
+    const seekBar = this.shadow.querySelector("#seek-bar") as HTMLInputElement;
+    const progressBar = this.shadow.querySelector(
+      ".progress-bar-custom",
+    ) as HTMLElement;
+    const progressContainer = this.shadow.querySelector(
+      ".progress-container-custom",
+    ) as HTMLElement;
+
     if (!seekBar || !progressBar || !progressContainer) return;
 
     // シークバーの値変更時
-    seekBar.addEventListener('change', () => {
+    seekBar.addEventListener("change", () => {
       const video = this.getVideo();
       if (video) {
         const progress = Number(seekBar.value);
@@ -878,16 +901,16 @@ export class PlayerControlsShadow extends HTMLElement {
     });
 
     // シークバーのドラッグ処理
-    seekBar.addEventListener('input', () => {
+    seekBar.addEventListener("input", () => {
       const progress = Number(seekBar.value);
-      seekBar.style.setProperty('--progress', `${progress}%`);
+      seekBar.style.setProperty("--progress", `${progress}%`);
     });
 
     // プログレスバーのクリック処理
-    progressContainer.addEventListener('click', (e) => {
+    progressContainer.addEventListener("click", (e) => {
       const video = this.getVideo();
       if (!video) return;
-      
+
       const rect = progressContainer.getBoundingClientRect();
       const pos = (e.clientX - rect.left) / rect.width;
       video.currentTime = pos * video.duration;
@@ -898,19 +921,19 @@ export class PlayerControlsShadow extends HTMLElement {
    * 音量コントロールの設定
    */
   private setupVolumeControls(): void {
-    const volumeBar = this.shadow.querySelector<HTMLInputElement>('#volume');
-    const muteBtn = this.shadow.querySelector<HTMLButtonElement>('#mute');
-    
+    const volumeBar = this.shadow.querySelector<HTMLInputElement>("#volume");
+    const muteBtn = this.shadow.querySelector<HTMLButtonElement>("#mute");
+
     if (!volumeBar || !muteBtn) return;
 
     const initialPercent = Math.round(PLAYER_SETTINGS.VOLUME.DEFAULT * 100);
-    volumeBar.style.setProperty('--volume', `${initialPercent}%`);
+    volumeBar.style.setProperty("--volume", `${initialPercent}%`);
 
     // 音量スライダーの更新
-    volumeBar.addEventListener('input', () => {
+    volumeBar.addEventListener("input", () => {
       const video = this.getVideo();
       if (!video) return;
-      
+
       const volumeValue = this.clampVolume(Number(volumeBar.value) / 100);
       video.volume = volumeValue;
 
@@ -924,10 +947,10 @@ export class PlayerControlsShadow extends HTMLElement {
     });
 
     // ミュートボタンのクリック
-    muteBtn.addEventListener('click', () => {
+    muteBtn.addEventListener("click", () => {
       const video = this.getVideo();
       if (!video) return;
-      
+
       video.muted = !video.muted;
       this.updateVolumeIcon();
     });
@@ -948,13 +971,13 @@ export class PlayerControlsShadow extends HTMLElement {
    * 音量スライダーのUI更新
    */
   private updateVolumeSlider(volume: number): void {
-    const volumeBar = this.shadow.querySelector<HTMLInputElement>('#volume');
+    const volumeBar = this.shadow.querySelector<HTMLInputElement>("#volume");
     if (!volumeBar) return;
 
     const clamped = this.clampVolume(volume);
     const percent = Math.round(clamped * 100);
     volumeBar.value = percent.toString();
-    volumeBar.style.setProperty('--volume', `${percent}%`);
+    volumeBar.style.setProperty("--volume", `${percent}%`);
   }
 
   /**
@@ -1005,17 +1028,17 @@ export class PlayerControlsShadow extends HTMLElement {
    * 全画面コントロールの設定
    */
   private setupFullscreenControl(): void {
-    const fullscreenBtn = this.shadow.querySelector('#fullscreen');
+    const fullscreenBtn = this.shadow.querySelector("#fullscreen");
     if (!fullscreenBtn) return;
 
-    fullscreenBtn.addEventListener('click', (e) => {
+    fullscreenBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
       this.toggleFullscreen();
     });
 
     // 全画面状態の変更を監視
-    document.addEventListener('fullscreenchange', () => {
+    document.addEventListener("fullscreenchange", () => {
       this.handleFullscreenChange();
     });
   }
@@ -1024,23 +1047,25 @@ export class PlayerControlsShadow extends HTMLElement {
    * コメント関連のイベント設定
    */
   private setupCommentEvents(): void {
-    const commentToggle = this.shadow.querySelector('#comment-toggle');
+    const commentToggle = this.shadow.querySelector("#comment-toggle");
     if (!commentToggle) return;
 
-    commentToggle.addEventListener('click', (e) => {
+    commentToggle.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
 
       if (!this.commentSystem) return;
 
       const isVisible = this.commentSystem.toggleVisibility();
-      commentToggle.classList.toggle('active', !isVisible);
-      
+      commentToggle.classList.toggle("active", !isVisible);
+
       // アイコンを切り替え
-      commentToggle.innerHTML = isVisible ? PLAYER_ICONS.comment : PLAYER_ICONS.commentOff;
-      
+      commentToggle.innerHTML = isVisible
+        ? PLAYER_ICONS.comment
+        : PLAYER_ICONS.commentOff;
+
       // ローカルストレージに設定を保存
-      localStorage.setItem('commentVisible', isVisible.toString());
+      localStorage.setItem("commentVisible", isVisible.toString());
     });
 
     // コメント設定の各種イベント
@@ -1052,11 +1077,15 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private setupCommentSettingsEvents(): void {
     // 透明度スライダー
-    const opacitySlider = this.shadow.querySelector('#comment-opacity') as HTMLInputElement;
-    const opacityValue = this.shadow.querySelector('#opacity-value') as HTMLElement;
-    
+    const opacitySlider = this.shadow.querySelector(
+      "#comment-opacity",
+    ) as HTMLInputElement;
+    const opacityValue = this.shadow.querySelector(
+      "#opacity-value",
+    ) as HTMLElement;
+
     if (opacitySlider && opacityValue) {
-      opacitySlider.addEventListener('input', () => {
+      opacitySlider.addEventListener("input", () => {
         const opacity = Number(opacitySlider.value);
         opacityValue.textContent = opacitySlider.value;
         this.tempOpacity = opacity;
@@ -1064,58 +1093,78 @@ export class PlayerControlsShadow extends HTMLElement {
     }
 
     // コメント色選択
-    const colorSelect = this.shadow.querySelector('#comment-color') as HTMLSelectElement;
+    const colorSelect = this.shadow.querySelector(
+      "#comment-color",
+    ) as HTMLSelectElement;
     if (colorSelect) {
-      colorSelect.addEventListener('change', () => {
+      colorSelect.addEventListener("change", () => {
         this.tempColor = colorSelect.value;
       });
     }
 
     // NGワード追加
-    const ngWordInput = this.shadow.querySelector('#ng-word-input') as HTMLInputElement;
-    const addNgWordBtn = this.shadow.querySelector('#add-ng-word') as HTMLButtonElement;
-    
+    const ngWordInput = this.shadow.querySelector(
+      "#ng-word-input",
+    ) as HTMLInputElement;
+    const addNgWordBtn = this.shadow.querySelector(
+      "#add-ng-word",
+    ) as HTMLButtonElement;
+
     if (ngWordInput && addNgWordBtn) {
-      addNgWordBtn.addEventListener('click', () => {
+      addNgWordBtn.addEventListener("click", () => {
         const word = ngWordInput.value.trim();
-        if (word && !this.tempNgWords.includes(word) && this.tempNgWords.length < PLAYER_SETTINGS.COMMENT.NG.MAX_WORDS) {
+        if (
+          word &&
+          !this.tempNgWords.includes(word) &&
+          this.tempNgWords.length < PLAYER_SETTINGS.COMMENT.NG.MAX_WORDS
+        ) {
           this.tempNgWords.push(word);
-          ngWordInput.value = '';
+          ngWordInput.value = "";
           this.updateNGWordList(true);
         }
       });
     }
 
     // NG正規表現追加
-    const ngRegexInput = this.shadow.querySelector('#ng-regex-input') as HTMLInputElement;
-    const addNgRegexBtn = this.shadow.querySelector('#add-ng-regex') as HTMLButtonElement;
-    
+    const ngRegexInput = this.shadow.querySelector(
+      "#ng-regex-input",
+    ) as HTMLInputElement;
+    const addNgRegexBtn = this.shadow.querySelector(
+      "#add-ng-regex",
+    ) as HTMLButtonElement;
+
     if (ngRegexInput && addNgRegexBtn) {
-      addNgRegexBtn.addEventListener('click', () => {
+      addNgRegexBtn.addEventListener("click", () => {
         const regex = ngRegexInput.value.trim();
-        
+
         try {
           new RegExp(regex);
-          
-          if (regex && !this.tempNgRegex.includes(regex) && this.tempNgRegex.length < PLAYER_SETTINGS.COMMENT.NG.MAX_REGEX) {
+
+          if (
+            regex &&
+            !this.tempNgRegex.includes(regex) &&
+            this.tempNgRegex.length < PLAYER_SETTINGS.COMMENT.NG.MAX_REGEX
+          ) {
             this.tempNgRegex.push(regex);
-            ngRegexInput.value = '';
+            ngRegexInput.value = "";
             this.updateNGRegexList(true);
           }
         } catch (e) {
-          window.logger.error('無効な正規表現です:', e);
-          ngRegexInput.classList.add('error');
+          window.logger.error("無効な正規表現です:", e);
+          ngRegexInput.classList.add("error");
           setTimeout(() => {
-            ngRegexInput.classList.remove('error');
+            ngRegexInput.classList.remove("error");
           }, 2000);
         }
       });
     }
 
     // 適用ボタン
-    const applyBtn = this.shadow.querySelector('#apply-comment-settings') as HTMLButtonElement;
+    const applyBtn = this.shadow.querySelector(
+      "#apply-comment-settings",
+    ) as HTMLButtonElement;
     if (applyBtn) {
-      applyBtn.addEventListener('click', () => {
+      applyBtn.addEventListener("click", () => {
         void this.applyCommentSettings();
       });
     }
@@ -1127,10 +1176,10 @@ export class PlayerControlsShadow extends HTMLElement {
   private setupInitialIcons(): void {
     // 各ボタンにアイコンを設定
     const buttons = [
-      { id: '#rewind-10', icon: PLAYER_ICONS.rewind10 },
-      { id: '#forward-10', icon: PLAYER_ICONS.forward10 },
-      { id: '#fullscreen', icon: PLAYER_ICONS.fullscreen },
-      { id: '#settings', icon: PLAYER_ICONS.settings }
+      { id: "#rewind-10", icon: PLAYER_ICONS.rewind10 },
+      { id: "#forward-10", icon: PLAYER_ICONS.forward10 },
+      { id: "#fullscreen", icon: PLAYER_ICONS.fullscreen },
+      { id: "#settings", icon: PLAYER_ICONS.settings },
     ];
 
     buttons.forEach(({ id, icon }) => {
@@ -1154,10 +1203,14 @@ export class PlayerControlsShadow extends HTMLElement {
     await this.loadCommentSettings();
 
     // コントロールモード設定
-    const controlsMode = localStorage.getItem('controlsMode') || PLAYER_SETTINGS.CONTROLS_MODE.HOVER;
+    const controlsMode =
+      localStorage.getItem("controlsMode") ||
+      PLAYER_SETTINGS.CONTROLS_MODE.HOVER;
     this.applyControlsMode(controlsMode);
-    
-    const controlsModeSelect = this.shadow.querySelector('#controls-mode') as HTMLSelectElement;
+
+    const controlsModeSelect = this.shadow.querySelector(
+      "#controls-mode",
+    ) as HTMLSelectElement;
     if (controlsModeSelect) {
       controlsModeSelect.value = controlsMode;
     }
@@ -1171,37 +1224,37 @@ export class PlayerControlsShadow extends HTMLElement {
     if (!video) return;
 
     // 再生状態変更時のボタン更新
-    video.addEventListener('play', () => {
+    video.addEventListener("play", () => {
       this.userPaused = false;
       this.updatePlayPauseButton();
     });
 
-    video.addEventListener('pause', () => {
+    video.addEventListener("pause", () => {
       this.updatePlayPauseButton();
     });
 
-    video.addEventListener('loadeddata', () => {
+    video.addEventListener("loadeddata", () => {
       this.updatePlayPauseButton();
     });
 
     // 時間更新
-    video.addEventListener('timeupdate', () => {
+    video.addEventListener("timeupdate", () => {
       this.updateProgress();
       this.updateTimeDisplay();
     });
 
     // メタデータ読み込み完了
-    video.addEventListener('loadedmetadata', () => {
+    video.addEventListener("loadedmetadata", () => {
       this.updateDurationDisplay();
     });
 
     // 動画長取得失敗への対処（duration変更時にも再試行）
-    video.addEventListener('durationchange', () => {
+    video.addEventListener("durationchange", () => {
       this.updateDurationDisplay();
     });
 
     // 外部から音量が変更された場合にもUIを同期
-    video.addEventListener('volumechange', () => {
+    video.addEventListener("volumechange", () => {
       this.syncVolumeFromVideo();
     });
 
@@ -1218,15 +1271,17 @@ export class PlayerControlsShadow extends HTMLElement {
     const video = this.getVideo();
     if (!video) return;
 
-    const seekBar = this.shadow.querySelector('#seek-bar') as HTMLInputElement;
-    const progressBar = this.shadow.querySelector('.progress-bar-custom') as HTMLElement;
-    
+    const seekBar = this.shadow.querySelector("#seek-bar") as HTMLInputElement;
+    const progressBar = this.shadow.querySelector(
+      ".progress-bar-custom",
+    ) as HTMLElement;
+
     if (!seekBar || !progressBar || isNaN(video.duration)) return;
 
     const progress = (video.currentTime / video.duration) * 100;
     progressBar.style.width = `${progress}%`;
     seekBar.value = String(progress);
-    seekBar.style.setProperty('--progress', `${progress}%`);
+    seekBar.style.setProperty("--progress", `${progress}%`);
   }
 
   /**
@@ -1236,7 +1291,7 @@ export class PlayerControlsShadow extends HTMLElement {
     const video = this.getVideo();
     if (!video) return;
 
-    const currentTimeSpan = this.shadow.querySelector('#current-time');
+    const currentTimeSpan = this.shadow.querySelector("#current-time");
     if (currentTimeSpan) {
       currentTimeSpan.textContent = this.formatTime(video.currentTime);
     }
@@ -1249,15 +1304,15 @@ export class PlayerControlsShadow extends HTMLElement {
     const video = this.getVideo();
     if (!video) return;
 
-    const durationSpan = this.shadow.querySelector('#duration');
+    const durationSpan = this.shadow.querySelector("#duration");
     if (durationSpan) {
       durationSpan.textContent = this.formatTime(video.duration);
     }
 
     // シークバーの最大値を設定
-    const seekBar = this.shadow.querySelector('#seek-bar') as HTMLInputElement;
+    const seekBar = this.shadow.querySelector("#seek-bar") as HTMLInputElement;
     if (seekBar) {
-      seekBar.max = '100';
+      seekBar.max = "100";
     }
   }
 
@@ -1265,17 +1320,17 @@ export class PlayerControlsShadow extends HTMLElement {
    * 再生/一時停止ボタンの更新
    */
   private updatePlayPauseButton(): void {
-    const button = this.shadow.querySelector('#play-pause');
+    const button = this.shadow.querySelector("#play-pause");
     const video = this.getVideo();
     if (!button || !video) return;
 
     if (video.paused) {
-      button.classList.remove('playing');
-      button.classList.add('paused');
+      button.classList.remove("playing");
+      button.classList.add("paused");
       button.innerHTML = PLAYER_ICONS.play;
     } else {
-      button.classList.add('playing');
-      button.classList.remove('paused');
+      button.classList.add("playing");
+      button.classList.remove("paused");
       button.innerHTML = PLAYER_ICONS.pause;
     }
   }
@@ -1284,15 +1339,15 @@ export class PlayerControlsShadow extends HTMLElement {
    * 音量アイコンの更新
    */
   private updateVolumeIcon(): void {
-    const button = this.shadow.querySelector('#mute');
+    const button = this.shadow.querySelector("#mute");
     const video = this.getVideo();
     if (!button || !video) return;
 
     if (video.muted || video.volume === 0) {
-      button.classList.add('muted');
+      button.classList.add("muted");
       button.innerHTML = PLAYER_ICONS.muted;
     } else {
-      button.classList.remove('muted');
+      button.classList.remove("muted");
       button.innerHTML = PLAYER_ICONS.volume;
     }
   }
@@ -1311,20 +1366,23 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private toggleSettingsMenu(): void {
     this.isSettingsOpen = !this.isSettingsOpen;
-    const settingsMenu = this.shadow.querySelector('#player-settings-menu') as HTMLElement;
-    
+    const settingsMenu = this.shadow.querySelector(
+      "#player-settings-menu",
+    ) as HTMLElement;
+
     if (settingsMenu) {
-      settingsMenu.classList.toggle('visible', this.isSettingsOpen);
-      
+      settingsMenu.classList.toggle("visible", this.isSettingsOpen);
+
       if (this.isSettingsOpen) {
         // 現在の全画面状態を確認して表示モードを設定
         const doc = document as ExtendedDocument;
-        const isFullScreen = !!doc.fullscreenElement || 
-                             !!doc.mozFullScreenElement || 
-                             !!doc.webkitFullscreenElement || 
-                             !!doc.msFullscreenElement;
+        const isFullScreen =
+          !!doc.fullscreenElement ||
+          !!doc.mozFullScreenElement ||
+          !!doc.webkitFullscreenElement ||
+          !!doc.msFullscreenElement;
         this.updateSettingsMenuMode(isFullScreen);
-        
+
         // 位置調整を次のフレームで実行（表示後にサイズが確定してから）
         requestAnimationFrame(() => {
           this.adjustSettingsMenuPosition(settingsMenu);
@@ -1338,46 +1396,48 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private adjustSettingsMenuPosition(settingsMenu: HTMLElement): void {
     // 設定ボタンの位置を取得
-    const settingsBtn = this.shadow.querySelector('#settings') as HTMLElement;
+    const settingsBtn = this.shadow.querySelector("#settings") as HTMLElement;
     if (!settingsBtn) return;
-    
+
     const btnRect = settingsBtn.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
-    
+
     // プレイヤーコントロール内での相対位置を計算
-    const controlsRect = this.shadow.querySelector('.player-controls')?.getBoundingClientRect();
+    const controlsRect = this.shadow
+      .querySelector(".player-controls")
+      ?.getBoundingClientRect();
     if (!controlsRect) return;
-    
+
     // 設定ボタンの右端を基準に配置
     const rightOffset = controlsRect.right - btnRect.right;
-    
+
     // 初期位置をリセット
-    settingsMenu.classList.remove('adjust-position');
-    settingsMenu.style.left = '';
+    settingsMenu.classList.remove("adjust-position");
+    settingsMenu.style.left = "";
     settingsMenu.style.right = `${rightOffset}px`;
-    
+
     // 再度位置を取得して調整
     const updatedRect = settingsMenu.getBoundingClientRect();
-    
+
     // 右端からはみ出る場合
     if (updatedRect.right > viewportWidth - 10) {
       const overflowAmount = updatedRect.right - (viewportWidth - 10);
       settingsMenu.style.right = `${rightOffset + overflowAmount}px`;
     }
-    
+
     // 左端からはみ出る場合
     const finalRect = settingsMenu.getBoundingClientRect();
     if (finalRect.left < 10) {
-      settingsMenu.style.left = '10px';
-      settingsMenu.style.right = 'auto';
+      settingsMenu.style.left = "10px";
+      settingsMenu.style.right = "auto";
     }
-    
+
     // 上端からはみ出る場合（設定メニューが画面上部を超える場合）
     if (updatedRect.top < 10) {
-      settingsMenu.style.bottom = 'auto';
-      settingsMenu.style.top = '100%';
-      settingsMenu.style.marginTop = '10px';
-      settingsMenu.style.marginBottom = '0';
+      settingsMenu.style.bottom = "auto";
+      settingsMenu.style.top = "100%";
+      settingsMenu.style.marginTop = "10px";
+      settingsMenu.style.marginBottom = "0";
     }
   }
 
@@ -1387,18 +1447,20 @@ export class PlayerControlsShadow extends HTMLElement {
   private closeSettingsMenu(): void {
     if (this.isSettingsOpen) {
       this.isSettingsOpen = false;
-      const settingsMenu = this.shadow.querySelector('#player-settings-menu') as HTMLElement;
-      
+      const settingsMenu = this.shadow.querySelector(
+        "#player-settings-menu",
+      ) as HTMLElement;
+
       if (settingsMenu) {
-        settingsMenu.classList.remove('visible');
+        settingsMenu.classList.remove("visible");
         // 位置調整をリセット
-        settingsMenu.classList.remove('adjust-position');
-        settingsMenu.style.left = '';
-        settingsMenu.style.right = '';
-        settingsMenu.style.top = '';
-        settingsMenu.style.bottom = '';
-        settingsMenu.style.marginTop = '';
-        settingsMenu.style.marginBottom = '';
+        settingsMenu.classList.remove("adjust-position");
+        settingsMenu.style.left = "";
+        settingsMenu.style.right = "";
+        settingsMenu.style.top = "";
+        settingsMenu.style.bottom = "";
+        settingsMenu.style.marginTop = "";
+        settingsMenu.style.marginBottom = "";
       }
     }
   }
@@ -1409,7 +1471,7 @@ export class PlayerControlsShadow extends HTMLElement {
   private handleControlsModeChange = (e: Event): void => {
     const select = e.target as HTMLSelectElement;
     const mode = select.value;
-    localStorage.setItem('controlsMode', mode);
+    localStorage.setItem("controlsMode", mode);
     this.applyControlsMode(mode);
   };
 
@@ -1418,12 +1480,12 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private applyControlsMode(mode: string): void {
     if (mode === PLAYER_SETTINGS.CONTROLS_MODE.ALWAYS) {
-      this.classList.add('always-visible');
-      this.classList.add('controls-visible'); // 常に表示の場合は即座に表示
+      this.classList.add("always-visible");
+      this.classList.add("controls-visible"); // 常に表示の場合は即座に表示
     } else {
-      this.classList.remove('always-visible');
+      this.classList.remove("always-visible");
       // ホバーモードの場合は初期状態では非表示
-      this.classList.remove('controls-visible');
+      this.classList.remove("controls-visible");
     }
   }
 
@@ -1434,10 +1496,16 @@ export class PlayerControlsShadow extends HTMLElement {
     try {
       // 設定を並行して読み込み
       const [opacity, color, words, regexList] = await Promise.all([
-        IndexedDBUtils.getSettings('commentOpacity', PLAYER_SETTINGS.COMMENT.OPACITY.DEFAULT),
-        IndexedDBUtils.getSettings('commentColor', PLAYER_SETTINGS.COMMENT.COLORS.WHITE),
-        IndexedDBUtils.getSettings('ngWords', []),
-        IndexedDBUtils.getSettings('ngRegex', [])
+        IndexedDBUtils.getSettings(
+          "commentOpacity",
+          PLAYER_SETTINGS.COMMENT.OPACITY.DEFAULT,
+        ),
+        IndexedDBUtils.getSettings(
+          "commentColor",
+          PLAYER_SETTINGS.COMMENT.COLORS.WHITE,
+        ),
+        IndexedDBUtils.getSettings("ngWords", []),
+        IndexedDBUtils.getSettings("ngRegex", []),
       ]);
 
       // 設定を適用
@@ -1460,9 +1528,8 @@ export class PlayerControlsShadow extends HTMLElement {
         this.commentSystem.setNGWords(this.ngWords);
         this.commentSystem.setNGRegex(this.ngRegex);
       }
-
     } catch (error) {
-      window.logger.error('コメント設定の読み込みに失敗しました:', error);
+      window.logger.error("コメント設定の読み込みに失敗しました:", error);
     }
   }
 
@@ -1471,16 +1538,22 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private updateSettingsUI(): void {
     // 透明度スライダー
-    const opacitySlider = this.shadow.querySelector('#comment-opacity') as HTMLInputElement;
-    const opacityValue = this.shadow.querySelector('#opacity-value') as HTMLElement;
-    
+    const opacitySlider = this.shadow.querySelector(
+      "#comment-opacity",
+    ) as HTMLInputElement;
+    const opacityValue = this.shadow.querySelector(
+      "#opacity-value",
+    ) as HTMLElement;
+
     if (opacitySlider && opacityValue) {
       opacitySlider.value = String(this.commentOpacity);
       opacityValue.textContent = String(this.commentOpacity);
     }
 
     // 色選択
-    const colorSelect = this.shadow.querySelector('#comment-color') as HTMLSelectElement;
+    const colorSelect = this.shadow.querySelector(
+      "#comment-color",
+    ) as HTMLSelectElement;
     if (colorSelect) {
       colorSelect.value = this.commentColor;
     }
@@ -1494,19 +1567,21 @@ export class PlayerControlsShadow extends HTMLElement {
    * NGワードリストの更新
    */
   private updateNGWordList(isTemp: boolean = false): void {
-    const ngList = this.shadow.querySelector('#ng-word-list') as HTMLUListElement;
+    const ngList = this.shadow.querySelector(
+      "#ng-word-list",
+    ) as HTMLUListElement;
     if (!ngList) return;
 
-    ngList.innerHTML = '';
+    ngList.innerHTML = "";
     const words = isTemp ? this.tempNgWords : this.ngWords;
 
     words.forEach((word, index) => {
-      const li = document.createElement('li');
+      const li = document.createElement("li");
       li.textContent = word;
 
-      const removeBtn = document.createElement('button');
-      removeBtn.textContent = '削除';
-      removeBtn.addEventListener('click', () => {
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "削除";
+      removeBtn.addEventListener("click", () => {
         if (isTemp) {
           this.tempNgWords.splice(index, 1);
           this.updateNGWordList(true);
@@ -1524,19 +1599,21 @@ export class PlayerControlsShadow extends HTMLElement {
    * NG正規表現リストの更新
    */
   private updateNGRegexList(isTemp: boolean = false): void {
-    const ngList = this.shadow.querySelector('#ng-regex-list') as HTMLUListElement;
+    const ngList = this.shadow.querySelector(
+      "#ng-regex-list",
+    ) as HTMLUListElement;
     if (!ngList) return;
 
-    ngList.innerHTML = '';
+    ngList.innerHTML = "";
     const regexList = isTemp ? this.tempNgRegex : this.ngRegex;
 
     regexList.forEach((regex, index) => {
-      const li = document.createElement('li');
+      const li = document.createElement("li");
       li.textContent = regex;
 
-      const removeBtn = document.createElement('button');
-      removeBtn.textContent = '削除';
-      removeBtn.addEventListener('click', () => {
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "削除";
+      removeBtn.addEventListener("click", () => {
         if (isTemp) {
           this.tempNgRegex.splice(index, 1);
           this.updateNGRegexList(true);
@@ -1555,10 +1632,10 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private async removeNGWord(index: number): Promise<void> {
     this.ngWords.splice(index, 1);
-    
-    await IndexedDBUtils.saveSettings('ngWords', this.ngWords);
+
+    await IndexedDBUtils.saveSettings("ngWords", this.ngWords);
     this.updateNGWordList();
-    
+
     if (this.commentSystem) {
       this.commentSystem.setNGWords(this.ngWords);
     }
@@ -1569,10 +1646,10 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private async removeNGRegex(index: number): Promise<void> {
     this.ngRegex.splice(index, 1);
-    
-    await IndexedDBUtils.saveSettings('ngRegex', this.ngRegex);
+
+    await IndexedDBUtils.saveSettings("ngRegex", this.ngRegex);
     this.updateNGRegexList();
-    
+
     if (this.commentSystem) {
       this.commentSystem.setNGRegex(this.ngRegex);
     }
@@ -1591,10 +1668,10 @@ export class PlayerControlsShadow extends HTMLElement {
 
       // IndexedDBに保存
       await Promise.all([
-        IndexedDBUtils.saveSettings('commentOpacity', this.commentOpacity),
-        IndexedDBUtils.saveSettings('commentColor', this.commentColor),
-        IndexedDBUtils.saveSettings('ngWords', this.ngWords),
-        IndexedDBUtils.saveSettings('ngRegex', this.ngRegex)
+        IndexedDBUtils.saveSettings("commentOpacity", this.commentOpacity),
+        IndexedDBUtils.saveSettings("commentColor", this.commentColor),
+        IndexedDBUtils.saveSettings("ngWords", this.ngWords),
+        IndexedDBUtils.saveSettings("ngRegex", this.ngRegex),
       ]);
 
       // コメントシステムに適用
@@ -1608,10 +1685,11 @@ export class PlayerControlsShadow extends HTMLElement {
       // 適用成功のフィードバック
       this.showApplyFeedback();
 
-      window.logger.info(`コメント設定を適用しました！ 透明度: ${this.commentOpacity}, 色: ${this.commentColor}, NGワード: ${this.ngWords.length}件, NG正規表現: ${this.ngRegex.length}件`);
-
+      window.logger.info(
+        `コメント設定を適用しました！ 透明度: ${this.commentOpacity}, 色: ${this.commentColor}, NGワード: ${this.ngWords.length}件, NG正規表現: ${this.ngRegex.length}件`,
+      );
     } catch (error) {
-      window.logger.error('コメント設定の適用に失敗しました:', error);
+      window.logger.error("コメント設定の適用に失敗しました:", error);
     }
   }
 
@@ -1619,16 +1697,18 @@ export class PlayerControlsShadow extends HTMLElement {
    * 設定適用のフィードバック表示
    */
   private showApplyFeedback(): void {
-    const applyBtn = this.shadow.querySelector('#apply-comment-settings') as HTMLButtonElement;
+    const applyBtn = this.shadow.querySelector(
+      "#apply-comment-settings",
+    ) as HTMLButtonElement;
     if (!applyBtn) return;
 
     const originalText = applyBtn.textContent;
-    applyBtn.textContent = '✓ 適用しました';
-    applyBtn.classList.add('applied');
+    applyBtn.textContent = "✓ 適用しました";
+    applyBtn.classList.add("applied");
 
     setTimeout(() => {
       applyBtn.textContent = originalText;
-      applyBtn.classList.remove('applied');
+      applyBtn.classList.remove("applied");
     }, 2000);
   }
 
@@ -1638,69 +1718,77 @@ export class PlayerControlsShadow extends HTMLElement {
   private toggleFullscreen(): void {
     try {
       const doc = document as ExtendedDocument;
-      
-      if (!doc.fullscreenElement && 
-          !doc.mozFullScreenElement && 
-          !doc.webkitFullscreenElement && 
-          !doc.msFullscreenElement) {
-        
+
+      if (
+        !doc.fullscreenElement &&
+        !doc.mozFullScreenElement &&
+        !doc.webkitFullscreenElement &&
+        !doc.msFullscreenElement
+      ) {
         // プレイヤーコンテナを全画面表示
-        const playerContainer = this.closest('.custom-player') as ExtendedHTMLElement;
-        
+        const playerContainer = this.closest(
+          ".custom-player",
+        ) as ExtendedHTMLElement;
+
         if (playerContainer) {
           // デバッグ情報
-          window.logger.info('全画面化を試行します:', {
+          window.logger.info("全画面化を試行します:", {
             hasRequestFullscreen: !!playerContainer.requestFullscreen,
             hasMozRequestFullScreen: !!playerContainer.mozRequestFullScreen,
-            hasWebkitRequestFullscreen: !!playerContainer.webkitRequestFullscreen,
-            hasMsRequestFullscreen: !!playerContainer.msRequestFullscreen
+            hasWebkitRequestFullscreen:
+              !!playerContainer.webkitRequestFullscreen,
+            hasMsRequestFullscreen: !!playerContainer.msRequestFullscreen,
           });
-          
+
           if (playerContainer.requestFullscreen) {
-            playerContainer.requestFullscreen()
+            playerContainer
+              .requestFullscreen()
               .then(() => {
-                window.logger.info('標準全画面API成功しました');
+                window.logger.info("標準全画面API成功しました");
                 // 成功時にクラスも追加（念のため）
-                document.documentElement.classList.add('fullscreen-active');
-                document.body.classList.add('nc-fullscreen-active');
-                playerContainer.classList.add('nc-fullscreen-player');
+                document.documentElement.classList.add("fullscreen-active");
+                document.body.classList.add("nc-fullscreen-active");
+                playerContainer.classList.add("nc-fullscreen-player");
               })
               .catch((err: Error) => {
-                window.logger.error('標準全画面APIが失敗しました:', err);
+                window.logger.error("標準全画面APIが失敗しました:", err);
                 // フォールバック処理
                 this.fallbackFullscreen(playerContainer);
               });
           } else if (playerContainer.mozRequestFullScreen) {
             playerContainer.mozRequestFullScreen();
-            window.logger.info('Firefox全画面API使用しました');
+            window.logger.info("Firefox全画面API使用しました");
           } else if (playerContainer.webkitRequestFullscreen) {
             playerContainer.webkitRequestFullscreen();
-            window.logger.info('WebKit全画面API使用しました');
+            window.logger.info("WebKit全画面API使用しました");
           } else if (playerContainer.msRequestFullscreen) {
             playerContainer.msRequestFullscreen();
-            window.logger.info('IE全画面API使用しました');
+            window.logger.info("IE全画面API使用しました");
           } else {
             // 全APIが使用不可の場合のフォールバック
-            window.logger.warn('全画面APIが利用できないため、フォールバックを使用します');
+            window.logger.warn(
+              "全画面APIが利用できないため、フォールバックを使用します",
+            );
             this.fallbackFullscreen(playerContainer);
           }
         }
       } else {
         // 全画面解除
         if (doc.exitFullscreen) {
-          doc.exitFullscreen()
+          doc
+            .exitFullscreen()
             .then(() => {
-              window.logger.info('全画面解除成功しました');
+              window.logger.info("全画面解除成功しました");
               // クラスも削除
-              document.documentElement.classList.remove('fullscreen-active');
-              document.body.classList.remove('nc-fullscreen-active');
-              const playerContainer = this.closest('.custom-player');
+              document.documentElement.classList.remove("fullscreen-active");
+              document.body.classList.remove("nc-fullscreen-active");
+              const playerContainer = this.closest(".custom-player");
               if (playerContainer) {
-                playerContainer.classList.remove('nc-fullscreen-player');
+                playerContainer.classList.remove("nc-fullscreen-player");
               }
             })
             .catch((err: Error) => {
-              window.logger.error('全画面解除が失敗しました:', err);
+              window.logger.error("全画面解除が失敗しました:", err);
             });
         } else if (doc.mozCancelFullScreen) {
           doc.mozCancelFullScreen();
@@ -1713,7 +1801,9 @@ export class PlayerControlsShadow extends HTMLElement {
     } catch (error) {
       window.logger.error("全画面切り替えでエラーが発生しました:", error);
       // エラー時もフォールバックを試行
-      const playerContainer = this.closest('.custom-player') as ExtendedHTMLElement;
+      const playerContainer = this.closest(
+        ".custom-player",
+      ) as ExtendedHTMLElement;
       if (playerContainer) {
         this.fallbackFullscreen(playerContainer);
       }
@@ -1724,25 +1814,25 @@ export class PlayerControlsShadow extends HTMLElement {
    * フォールバック全画面処理
    */
   private fallbackFullscreen(playerContainer: HTMLElement): void {
-    window.logger.info('フォールバック全画面モードを使用します');
-    
+    window.logger.info("フォールバック全画面モードを使用します");
+
     // クラスベースの全画面モード
-    document.documentElement.classList.add('fullscreen-active');
-    document.body.classList.add('nc-fullscreen-active');
-    playerContainer.classList.add('nc-fullscreen-player');
-    
+    document.documentElement.classList.add("fullscreen-active");
+    document.body.classList.add("nc-fullscreen-active");
+    playerContainer.classList.add("nc-fullscreen-player");
+
     // ESCキーでの終了をサポート
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        document.documentElement.classList.remove('fullscreen-active');
-        document.body.classList.remove('nc-fullscreen-active');
-        playerContainer.classList.remove('nc-fullscreen-player');
-        document.removeEventListener('keydown', handleEscape);
-        window.logger.info('フォールバック全画面モードを終了しました');
+      if (e.key === "Escape") {
+        document.documentElement.classList.remove("fullscreen-active");
+        document.body.classList.remove("nc-fullscreen-active");
+        playerContainer.classList.remove("nc-fullscreen-player");
+        document.removeEventListener("keydown", handleEscape);
+        window.logger.info("フォールバック全画面モードを終了しました");
       }
     };
-    
-    document.addEventListener('keydown', handleEscape);
+
+    document.addEventListener("keydown", handleEscape);
   }
 
   /**
@@ -1750,23 +1840,26 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private handleFullscreenChange(): void {
     const doc = document as ExtendedDocument;
-    const isFullScreen = !!doc.fullscreenElement || 
-                         !!doc.mozFullScreenElement || 
-                         !!doc.webkitFullscreenElement || 
-                         !!doc.msFullscreenElement;
+    const isFullScreen =
+      !!doc.fullscreenElement ||
+      !!doc.mozFullScreenElement ||
+      !!doc.webkitFullscreenElement ||
+      !!doc.msFullscreenElement;
 
     // フルスクリーンボタンのアイコンを更新
-    const fullscreenBtn = this.shadow.querySelector('#fullscreen');
+    const fullscreenBtn = this.shadow.querySelector("#fullscreen");
     if (fullscreenBtn) {
-      fullscreenBtn.innerHTML = isFullScreen ? PLAYER_ICONS.exitFullscreen : PLAYER_ICONS.fullscreen;
+      fullscreenBtn.innerHTML = isFullScreen
+        ? PLAYER_ICONS.exitFullscreen
+        : PLAYER_ICONS.fullscreen;
     }
 
     // 全画面状態をホスト要素に反映
-    this.classList.toggle('fullscreen-active', isFullScreen);
-    
+    this.classList.toggle("fullscreen-active", isFullScreen);
+
     // 設定メニューの表示モードを更新
     this.updateSettingsMenuMode(isFullScreen);
-    
+
     // 全画面時のビデオ要素強制調整
     if (isFullScreen) {
       setTimeout(() => this.forceVideoCentering(), 100);
@@ -1782,59 +1875,66 @@ export class PlayerControlsShadow extends HTMLElement {
   private forceVideoCentering(): void {
     const video = this.getVideo();
     if (!video) return;
-    
+
     try {
-      window.logger.info('ビデオ要素の強制中央配置を実行します');
-      
+      window.logger.info("ビデオ要素の強制中央配置を実行します");
+
       // 画面サイズを取得
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
       const screenRatio = screenWidth / screenHeight;
-      
+
       // ビデオの本来のアスペクト比を取得
       const videoWidth = video.videoWidth || video.clientWidth;
       const videoHeight = video.videoHeight || video.clientHeight;
       const videoRatio = videoWidth / videoHeight;
-      
-      window.logger.info('サイズ情報:', {
-        screen: { width: screenWidth, height: screenHeight, ratio: screenRatio },
-        video: { width: videoWidth, height: videoHeight, ratio: videoRatio }
+
+      window.logger.info("サイズ情報:", {
+        screen: {
+          width: screenWidth,
+          height: screenHeight,
+          ratio: screenRatio,
+        },
+        video: { width: videoWidth, height: videoHeight, ratio: videoRatio },
       });
-      
+
       // 強制スタイル適用（型安全に）
-      video.style.position = 'fixed';
-      video.style.top = '50%';
-      video.style.left = '50%';
-      video.style.transform = 'translate(-50%, -50%)';
-      video.style.zIndex = '1000';
-      video.style.backgroundColor = '#000';
-      
+      video.style.position = "fixed";
+      video.style.top = "50%";
+      video.style.left = "50%";
+      video.style.transform = "translate(-50%, -50%)";
+      video.style.zIndex = "1000";
+      video.style.backgroundColor = "#000";
+
       if (videoRatio > screenRatio) {
         // ビデオが横長 → 横幅を画面に合わせる
-        video.style.width = '100vw';
-        video.style.height = 'auto';
+        video.style.width = "100vw";
+        video.style.height = "auto";
       } else {
         // ビデオが縦長 → 縦幅を画面に合わせる
-        video.style.width = 'auto';
-        video.style.height = '100vh';
+        video.style.width = "auto";
+        video.style.height = "100vh";
       }
-      
+
       // キャンバスのリサイズを強制実行（少し遅延させてビデオ位置が確定してから）
       setTimeout(() => {
         if (this.commentSystem) {
           // プライベートプロパティにアクセスするため、any型でキャスト
-          const renderer = (this.commentSystem as unknown as { renderer?: { resizeCanvas?: () => void } }).renderer;
+          const renderer = (
+            this.commentSystem as unknown as {
+              renderer?: { resizeCanvas?: () => void };
+            }
+          ).renderer;
           if (renderer && renderer.resizeCanvas) {
             renderer.resizeCanvas();
-            window.logger.info('コメントキャンバスのリサイズを実行しました');
+            window.logger.info("コメントキャンバスのリサイズを実行しました");
           }
         }
       }, 50);
-      
-      window.logger.info('強制中央配置完了しました');
-      
+
+      window.logger.info("強制中央配置完了しました");
     } catch (error) {
-      window.logger.error('ビデオ強制中央配置でエラーが発生しました:', error);
+      window.logger.error("ビデオ強制中央配置でエラーが発生しました:", error);
     }
   }
 
@@ -1842,10 +1942,12 @@ export class PlayerControlsShadow extends HTMLElement {
    * 設定メニューの表示モードを更新
    */
   private updateSettingsMenuMode(isFullScreen: boolean): void {
-    const settingsMenu = this.shadow.querySelector('#player-settings-menu') as HTMLElement;
+    const settingsMenu = this.shadow.querySelector(
+      "#player-settings-menu",
+    ) as HTMLElement;
     if (settingsMenu) {
-      settingsMenu.classList.toggle('fullscreen-mode', isFullScreen);
-      settingsMenu.classList.toggle('windowed-mode', !isFullScreen);
+      settingsMenu.classList.toggle("fullscreen-mode", isFullScreen);
+      settingsMenu.classList.toggle("windowed-mode", !isFullScreen);
     }
   }
 
@@ -1854,7 +1956,10 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private handleKeyboardShortcuts = (e: KeyboardEvent): void => {
     // 入力欄での操作は無視
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+    if (
+      e.target instanceof HTMLInputElement ||
+      e.target instanceof HTMLTextAreaElement
+    ) {
       return;
     }
 
@@ -1865,7 +1970,11 @@ export class PlayerControlsShadow extends HTMLElement {
       case "k":
         e.preventDefault();
         if (this.video.paused) {
-          this.video.play().catch(err => window.logger.error("再生開始に失敗しました:", err));
+          this.video
+            .play()
+            .catch((err) =>
+              window.logger.error("再生開始に失敗しました:", err),
+            );
         } else {
           this.video.pause();
           this.userPaused = true;
@@ -1886,7 +1995,10 @@ export class PlayerControlsShadow extends HTMLElement {
         break;
       case "arrowright":
         e.preventDefault();
-        this.video.currentTime = Math.min(this.video.currentTime + 5, this.video.duration || 0);
+        this.video.currentTime = Math.min(
+          this.video.currentTime + 5,
+          this.video.duration || 0,
+        );
         break;
       case "j":
         e.preventDefault();
@@ -1894,7 +2006,10 @@ export class PlayerControlsShadow extends HTMLElement {
         break;
       case "l":
         e.preventDefault();
-        this.video.currentTime = Math.min(this.video.currentTime + 10, this.video.duration || 0);
+        this.video.currentTime = Math.min(
+          this.video.currentTime + 10,
+          this.video.duration || 0,
+        );
         break;
     }
   };
@@ -1903,11 +2018,11 @@ export class PlayerControlsShadow extends HTMLElement {
    * 表示状態の制御
    */
   show(): void {
-    this.classList.add('visible');
+    this.classList.add("visible");
   }
 
   hide(): void {
-    this.classList.remove('visible');
+    this.classList.remove("visible");
   }
 
   /**
@@ -1917,8 +2032,10 @@ export class PlayerControlsShadow extends HTMLElement {
     if (this.userPaused || !this.video) {
       return;
     }
-    
-    this.video.play().catch(err => window.logger.error('自動再生に失敗しました:', err));
+
+    this.video
+      .play()
+      .catch((err) => window.logger.error("自動再生に失敗しました:", err));
   }
 
   /**
@@ -1926,11 +2043,11 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   disconnectedCallback(): void {
     // キーボードイベントの削除
-    document.removeEventListener('keydown', this.handleKeyboardShortcuts);
-    
+    document.removeEventListener("keydown", this.handleKeyboardShortcuts);
+
     // マウスタイマーのクリア
     this.clearHideTimer();
-    
+
     // 参照のクリア
     this.video = null;
     this.commentSystem = null;
@@ -1938,18 +2055,18 @@ export class PlayerControlsShadow extends HTMLElement {
 
   private ensureInitialized(): void {
     if (this.initialized) return;
-    
+
     // DOMの準備を確実に待つ
     if (!this.shadow || !this.shadow.firstElementChild) {
-      window.logger.warn('シャドウDOMがまだ準備されていません');
+      window.logger.warn("シャドウDOMがまだ準備されていません");
       return;
     }
-    
+
     this.setupEventListeners();
     this.setupInitialIcons();
     this.initialized = true;
-    
-    window.logger.info('PlayerControlsShadowの初期化が完了しました');
+
+    window.logger.info("PlayerControlsShadowの初期化が完了しました");
   }
 
   /**
@@ -1957,7 +2074,9 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private getVideo(): HTMLVideoElement | null {
     if (this.video) return this.video;
-    const v = document.getElementById('video-element') as HTMLVideoElement | null;
+    const v = document.getElementById(
+      "video-element",
+    ) as HTMLVideoElement | null;
     if (v) {
       this.video = v;
     }
@@ -1969,33 +2088,34 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private setupHoverEvents(): void {
     // プレイヤーコンテナ全体でのマウスイベント
-    const playerContainer = this.closest('.custom-player') || this.parentElement;
-    
+    const playerContainer =
+      this.closest(".custom-player") || this.parentElement;
+
     if (playerContainer) {
       // マウスが入った時
-      playerContainer.addEventListener('mouseenter', () => {
+      playerContainer.addEventListener("mouseenter", () => {
         this.showControls();
       });
-      
+
       // マウスが出た時
-      playerContainer.addEventListener('mouseleave', () => {
+      playerContainer.addEventListener("mouseleave", () => {
         this.hideControlsWithDelay();
       });
-      
+
       // マウスが動いた時（コントロール上でも）
-      playerContainer.addEventListener('mousemove', () => {
+      playerContainer.addEventListener("mousemove", () => {
         this.showControls();
         this.hideControlsWithDelay();
       });
     }
-    
+
     // コントロール自体でのマウスイベント
-    this.addEventListener('mouseenter', () => {
+    this.addEventListener("mouseenter", () => {
       this.showControls();
       this.clearHideTimer();
     });
-    
-    this.addEventListener('mouseleave', () => {
+
+    this.addEventListener("mouseleave", () => {
       this.hideControlsWithDelay();
     });
   }
@@ -2004,7 +2124,7 @@ export class PlayerControlsShadow extends HTMLElement {
    * コントロールを表示
    */
   private showControls(): void {
-    this.classList.add('controls-visible');
+    this.classList.add("controls-visible");
     this.clearHideTimer();
   }
 
@@ -2013,13 +2133,13 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private hideControlsWithDelay(): void {
     // 常に表示モードの場合は非表示にしない
-    if (this.classList.contains('always-visible')) {
+    if (this.classList.contains("always-visible")) {
       return;
     }
-    
+
     this.clearHideTimer();
     this.mouseTimer = window.setTimeout(() => {
-      this.classList.remove('controls-visible');
+      this.classList.remove("controls-visible");
     }, 3000); // 3秒後に非表示
   }
 
@@ -2039,32 +2159,38 @@ export class PlayerControlsShadow extends HTMLElement {
   private resetVideoStyles(): void {
     const video = this.getVideo();
     if (!video) return;
-    
+
     try {
-      window.logger.info('ビデオ要素のスタイルをリセットします');
-      
+      window.logger.info("ビデオ要素のスタイルをリセットします");
+
       // 強制スタイルをクリア
-      video.style.position = '';
-      video.style.top = '';
-      video.style.left = '';
-      video.style.transform = '';
-      video.style.zIndex = '';
-      video.style.backgroundColor = '';
-      video.style.width = '';
-      video.style.height = '';
-      
-      window.logger.info('ビデオスタイルリセット完了しました');
-      
+      video.style.position = "";
+      video.style.top = "";
+      video.style.left = "";
+      video.style.transform = "";
+      video.style.zIndex = "";
+      video.style.backgroundColor = "";
+      video.style.width = "";
+      video.style.height = "";
+
+      window.logger.info("ビデオスタイルリセット完了しました");
     } catch (error) {
-      window.logger.error('ビデオスタイルリセットでエラーが発生しました:', error);
+      window.logger.error(
+        "ビデオスタイルリセットでエラーが発生しました:",
+        error,
+      );
     }
   }
 }
 
 // カスタムエレメントとして登録
-if (!customElements.get('player-controls-shadow')) {
-  customElements.define('player-controls-shadow', PlayerControlsShadow);
-  window.logger.info('player-controls-shadowカスタムエレメントを登録しました！');
+if (!customElements.get("player-controls-shadow")) {
+  customElements.define("player-controls-shadow", PlayerControlsShadow);
+  window.logger.info(
+    "player-controls-shadowカスタムエレメントを登録しました！",
+  );
 } else {
-  window.logger.info('player-controls-shadowカスタムエレメントは既に登録済みです');
+  window.logger.info(
+    "player-controls-shadowカスタムエレメントは既に登録済みです",
+  );
 }

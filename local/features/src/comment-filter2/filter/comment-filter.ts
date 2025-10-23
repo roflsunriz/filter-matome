@@ -1,6 +1,14 @@
-import { CONSTANTS } from '@/comment-filter2/utils/constants';
-import { CF2CommentApiResponse, CommentFilter2GlobalData, CF2Comment, CF2Thread, NGWordRule, Settings, CF2FilterLogEntry } from '@/types/filter-types';
-import { FilterLogger } from '@/comment-filter2/utils/filter-logger';
+import { CONSTANTS } from "@/comment-filter2/utils/constants";
+import {
+  CF2CommentApiResponse,
+  CommentFilter2GlobalData,
+  CF2Comment,
+  CF2Thread,
+  NGWordRule,
+  Settings,
+  CF2FilterLogEntry,
+} from "@/types/filter-types";
+import { FilterLogger } from "@/comment-filter2/utils/filter-logger";
 import {
   PreparedRuleSet,
   RuleMatchLogEvent,
@@ -12,9 +20,9 @@ import {
   removeCommandsOfType as engineRemoveCommandsOfType,
   isCommandOfType as engineIsCommandOfType,
   normalizeCommands as engineNormalizeCommands,
-  chunkThreads
-} from '@/comment-filter2/filter/comment-filter-engine';
-import commentWorkerUrl from '@/comment-filter2/filter/comment-filter-worker.ts?worker&url';
+  chunkThreads,
+} from "@/comment-filter2/filter/comment-filter-engine";
+import commentWorkerUrl from "@/comment-filter2/filter/comment-filter-worker.ts?worker&url";
 
 interface ProcessRequestPayload {
   threads: CF2Thread[];
@@ -30,12 +38,12 @@ interface ProcessResponsePayload {
 }
 
 interface ProcessRequest {
-  type: 'process';
+  type: "process";
   payload: ProcessRequestPayload;
 }
 
 interface ProcessResponse {
-  type: 'result';
+  type: "result";
   payload: ProcessResponsePayload;
 }
 
@@ -52,16 +60,23 @@ export class CommentFilter {
   public updateSettings(settings: Settings): void {
     this.settings = settings;
     this.debugMode = settings.debugMode;
-    FilterLogger.setLogSendingEnabled(settings?.logToCommentFilterLogger || false);
+    FilterLogger.setLogSendingEnabled(
+      settings?.logToCommentFilterLogger || false,
+    );
   }
 
-  public async applyFilters(rules: NGWordRule[], currentSmid: string | null): Promise<CF2CommentApiResponse | null> {
+  public async applyFilters(
+    rules: NGWordRule[],
+    currentSmid: string | null,
+  ): Promise<CF2CommentApiResponse | null> {
     await Promise.resolve();
     const globalData = this.getGlobalData();
 
     if (!globalData?.originalData) {
       if (this.debugMode) {
-        window.logger?.debug('[CommentFilter2] No global data available for filtering');
+        window.logger?.debug(
+          "[CommentFilter2] No global data available for filtering",
+        );
       }
       return null;
     }
@@ -70,29 +85,50 @@ export class CommentFilter {
       this.filterLogs = [];
 
       if (this.debugMode) {
-        window.logger?.debug('[CommentFilter2] Starting filtering with rules:', {
-          totalRules: rules.length,
-          userIdRules: rules.filter(rule => rule.isUserIdRule),
-          regexRules: rules.filter(rule => !rule.isUserIdRule),
-          currentSmid
-        });
+        window.logger?.debug(
+          "[CommentFilter2] Starting filtering with rules:",
+          {
+            totalRules: rules.length,
+            userIdRules: rules.filter((rule) => rule.isUserIdRule),
+            regexRules: rules.filter((rule) => !rule.isUserIdRule),
+            currentSmid,
+          },
+        );
       }
 
       let filteredData: CF2CommentApiResponse;
 
       if (this.shouldUseWorker(globalData.originalData.data.threads)) {
         try {
-          filteredData = await this.processCommentDataWithWorkers(globalData.originalData, rules, currentSmid);
+          filteredData = await this.processCommentDataWithWorkers(
+            globalData.originalData,
+            rules,
+            currentSmid,
+          );
         } catch (workerError) {
-          const reason = workerError instanceof Error ? workerError : new Error(String(workerError));
-          window.logger?.warn('[CommentFilter2] Worker processing failed, falling back to main thread:', reason);
+          const reason =
+            workerError instanceof Error
+              ? workerError
+              : new Error(String(workerError));
+          window.logger?.warn(
+            "[CommentFilter2] Worker processing failed, falling back to main thread:",
+            reason,
+          );
 
           const preparedRules = this.prepareRules(rules, currentSmid);
-          filteredData = this.processCommentData(globalData.originalData, preparedRules, currentSmid);
+          filteredData = this.processCommentData(
+            globalData.originalData,
+            preparedRules,
+            currentSmid,
+          );
         }
       } else {
         const preparedRules = this.prepareRules(rules, currentSmid);
-        filteredData = this.processCommentData(globalData.originalData, preparedRules, currentSmid);
+        filteredData = this.processCommentData(
+          globalData.originalData,
+          preparedRules,
+          currentSmid,
+        );
       }
 
       globalData.filteredData = filteredData;
@@ -101,13 +137,16 @@ export class CommentFilter {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
       }
 
-      if (this.settings?.logToCommentFilterLogger && this.filterLogs.length > 0) {
+      if (
+        this.settings?.logToCommentFilterLogger &&
+        this.filterLogs.length > 0
+      ) {
         FilterLogger.addLogsToBuffer(this.filterLogs);
       }
 
       return filteredData;
     } catch (error) {
-      window.logger?.error('[CommentFilter2] Filtering failed:', error);
+      window.logger?.error("[CommentFilter2] Filtering failed:", error);
       return globalData.originalData;
     }
   }
@@ -115,22 +154,22 @@ export class CommentFilter {
   private processCommentData(
     data: CF2CommentApiResponse,
     preparedRules: PreparedRuleSet,
-    currentSmid: string | null
+    currentSmid: string | null,
   ): CF2CommentApiResponse {
-    const processedThreads = data.data.threads.map(thread => {
+    const processedThreads = data.data.threads.map((thread) => {
       const { comments, logs } = filterThread({
         thread,
         preparedRules,
         settings: this.settings,
         regexCache: this.regexCache,
-        debugMode: this.debugMode
+        debugMode: this.debugMode,
       });
 
       this.captureLogEvents(logs, currentSmid);
 
       return {
         ...thread,
-        comments
+        comments,
       };
     });
 
@@ -138,15 +177,15 @@ export class CommentFilter {
       ...data,
       data: {
         ...data.data,
-        threads: processedThreads
-      }
+        threads: processedThreads,
+      },
     };
   }
 
   private async processCommentDataWithWorkers(
     data: CF2CommentApiResponse,
     rules: NGWordRule[],
-    currentSmid: string | null
+    currentSmid: string | null,
   ): Promise<CF2CommentApiResponse> {
     const threads = data.data.threads;
 
@@ -159,15 +198,15 @@ export class CommentFilter {
     const threadChunks = chunkThreads(threads, chunkSize);
 
     const results = await Promise.all(
-      threadChunks.map(chunk =>
+      threadChunks.map((chunk) =>
         this.runWorker({
           threads: chunk,
           rules,
           currentSmid,
           settings: this.settings,
-          debugMode: this.debugMode
-        })
-      )
+          debugMode: this.debugMode,
+        }),
+      ),
     );
 
     const updatedThreads: CF2Thread[] = [];
@@ -181,15 +220,20 @@ export class CommentFilter {
       ...data,
       data: {
         ...data.data,
-        threads: updatedThreads
-      }
+        threads: updatedThreads,
+      },
     };
   }
 
-  private runWorker(payload: ProcessRequestPayload): Promise<ProcessResponsePayload> {
+  private runWorker(
+    payload: ProcessRequestPayload,
+  ): Promise<ProcessResponsePayload> {
     return new Promise((resolve, reject) => {
-      console.info('[CommentFilter2] Comment worker URL:', commentWorkerUrl);
-      const worker = new Worker(commentWorkerUrl, { type: 'module' });
+      window?.logger.info(
+        "[CommentFilter2] Comment worker URL:",
+        commentWorkerUrl,
+      );
+      const worker = new Worker(commentWorkerUrl, { type: "module" });
 
       worker.onmessage = (event: MessageEvent<ProcessResponse>) => {
         resolve(event.data.payload);
@@ -199,17 +243,17 @@ export class CommentFilter {
       worker.onerror = (event: ErrorEvent | Event) => {
         worker.terminate();
 
-        let reason: Error = new Error('Worker error (unknown)');
+        let reason: Error = new Error("Worker error (unknown)");
 
         if (event instanceof ErrorEvent) {
           const errorValue: unknown = event.error;
 
-          console.error('[CommentFilter2] Comment worker error', {
+          console.error("[CommentFilter2] Comment worker error", {
             message: event.message,
             filename: event.filename,
             lineno: event.lineno,
             colno: event.colno,
-            error: errorValue
+            error: errorValue,
           });
 
           if (errorValue instanceof Error) {
@@ -217,19 +261,24 @@ export class CommentFilter {
           } else if (event.message) {
             reason = new Error(event.message);
           } else {
-            reason = new Error(`Worker error at ${event.filename ?? 'unknown source'}:${event.lineno ?? 0}`);
+            reason = new Error(
+              `Worker error at ${event.filename ?? "unknown source"}:${event.lineno ?? 0}`,
+            );
           }
         } else {
-          console.error('[CommentFilter2] Comment worker error (non ErrorEvent)', event);
-          reason = new Error('Worker error (non ErrorEvent)');
+          window?.logger.error(
+            "[CommentFilter2] Comment worker error (non ErrorEvent)",
+            event,
+          );
+          reason = new Error("Worker error (non ErrorEvent)");
         }
 
         reject(reason);
       };
 
       const message: ProcessRequest = {
-        type: 'process',
-        payload
+        type: "process",
+        payload,
       };
 
       worker.postMessage(message);
@@ -237,7 +286,7 @@ export class CommentFilter {
   }
 
   private shouldUseWorker(threads: CF2Thread[]): boolean {
-    if (typeof Worker === 'undefined') {
+    if (typeof Worker === "undefined") {
       return false;
     }
 
@@ -245,90 +294,114 @@ export class CommentFilter {
       return false;
     }
 
-    const hardware = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 0 : 0;
+    const hardware =
+      typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 0 : 0;
     return hardware > 1;
   }
 
   private resolveWorkerCount(threadCount: number): number {
-    const hardware = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 1 : 1;
+    const hardware =
+      typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 1 : 1;
     const maxWorkers = Math.max(1, hardware - 1);
     return Math.min(maxWorkers, Math.max(1, threadCount));
   }
 
-  private captureLogEvents(events: RuleMatchLogEvent[], currentSmid: string | null): void {
+  private captureLogEvents(
+    events: RuleMatchLogEvent[],
+    currentSmid: string | null,
+  ): void {
     for (const event of events) {
-      this.addFilterLog(event.comment, event.rule, event.ruleType, true, event.hidden, currentSmid);
+      this.addFilterLog(
+        event.comment,
+        event.rule,
+        event.ruleType,
+        true,
+        event.hidden,
+        currentSmid,
+      );
     }
   }
 
-  private prepareRules(rules: NGWordRule[], currentSmid: string | null): PreparedRuleSet {
+  private prepareRules(
+    rules: NGWordRule[],
+    currentSmid: string | null,
+  ): PreparedRuleSet {
     return enginePrepareRules(rules, currentSmid, this.regexCache);
   }
 
   private addFilterLog(
     comment: CF2Comment,
     rule: NGWordRule,
-    ruleType: 'regex' | 'userId',
+    ruleType: "regex" | "userId",
     matched: boolean,
     hidden: boolean,
-    currentSmid: string | null
+    currentSmid: string | null,
   ): void {
     try {
       const videoTitle = FilterLogger.getVideoTitle();
-      const reasons = FilterLogger.generateFilterReasons(ruleType, matched, hidden);
+      const reasons = FilterLogger.generateFilterReasons(
+        ruleType,
+        matched,
+        hidden,
+      );
       const filterDetails = FilterLogger.generateFilterDetails(
         ruleType,
         rule.regex,
         rule.userId,
-        rule.replace
+        rule.replace,
       );
 
       const logEntry: CF2FilterLogEntry = {
         title: videoTitle,
         userId: comment.userId,
         comment: comment.body,
-        videoId: currentSmid || '不明',
+        videoId: currentSmid || "不明",
         reasons,
-        filterDetails
+        filterDetails,
       };
 
       this.filterLogs.push(logEntry);
     } catch (error) {
-      window.logger?.warn('[CommentFilter2] Failed to add filter log:', error);
+      window.logger?.warn("[CommentFilter2] Failed to add filter log:", error);
     }
   }
 
   private logFilteringResults(
     original: CF2CommentApiResponse,
     filtered: CF2CommentApiResponse,
-    rules: NGWordRule[]
+    rules: NGWordRule[],
   ): void {
     const originalCount = this.countComments(original);
     const filteredCount = this.countComments(filtered);
     const hiddenCount = originalCount - filteredCount;
 
-    window.logger?.debug('[CommentFilter2] Filtering Results:', {
+    window.logger?.debug("[CommentFilter2] Filtering Results:", {
       originalComments: originalCount,
       filteredComments: filteredCount,
       hiddenComments: hiddenCount,
-      appliedRules: rules.length
+      appliedRules: rules.length,
     });
   }
 
   private countComments(data: CF2CommentApiResponse): number {
-    return data.data.threads.reduce((sum, thread) => sum + thread.comments.length, 0);
+    return data.data.threads.reduce(
+      (sum, thread) => sum + thread.comments.length,
+      0,
+    );
   }
 
   private getGlobalData(): CommentFilter2GlobalData | null {
-    const data = (window as unknown as Record<string, unknown>)[CONSTANTS.GLOBAL_DATA_KEY];
+    const data = (window as unknown as Record<string, unknown>)[
+      CONSTANTS.GLOBAL_DATA_KEY
+    ];
 
     if (
       data &&
-      typeof data === 'object' &&
-      'originalData' in data &&
-      'filteredData' in data &&
-      'currentSmid' in data &&
-      'lastUpdated' in data
+      typeof data === "object" &&
+      "originalData" in data &&
+      "filteredData" in data &&
+      "currentSmid" in data &&
+      "lastUpdated" in data
     ) {
       return data as CommentFilter2GlobalData;
     }
@@ -344,25 +417,47 @@ export class CommentFilter {
     this.debugMode = enabled;
   }
 
-  public addCommandsToComment(comment: CF2Comment, commandsToAdd: string[]): CF2Comment {
+  public addCommandsToComment(
+    comment: CF2Comment,
+    commandsToAdd: string[],
+  ): CF2Comment {
     const processedComment: CF2Comment = { ...comment };
-    processedComment.commands = Array.isArray(processedComment.commands) ? [...processedComment.commands] : [];
-    processedComment.commands = engineAddOrReplaceCommands(processedComment.commands, commandsToAdd);
+    processedComment.commands = Array.isArray(processedComment.commands)
+      ? [...processedComment.commands]
+      : [];
+    processedComment.commands = engineAddOrReplaceCommands(
+      processedComment.commands,
+      commandsToAdd,
+    );
     return processedComment;
   }
 
-  public addCommandToComment(comment: CF2Comment, commandToAdd: string): CF2Comment {
+  public addCommandToComment(
+    comment: CF2Comment,
+    commandToAdd: string,
+  ): CF2Comment {
     const processedComment: CF2Comment = { ...comment };
-    processedComment.commands = Array.isArray(processedComment.commands) ? [...processedComment.commands] : [];
-    processedComment.commands = engineAddOrReplaceCommand(processedComment.commands, commandToAdd);
+    processedComment.commands = Array.isArray(processedComment.commands)
+      ? [...processedComment.commands]
+      : [];
+    processedComment.commands = engineAddOrReplaceCommand(
+      processedComment.commands,
+      commandToAdd,
+    );
     return processedComment;
   }
 
-  private addOrReplaceCommand(commands: string[], newCommand: string): string[] {
+  private addOrReplaceCommand(
+    commands: string[],
+    newCommand: string,
+  ): string[] {
     return engineAddOrReplaceCommand(commands, newCommand);
   }
 
-  private addOrReplaceCommands(commands: string[], newCommands: string[]): string[] {
+  private addOrReplaceCommands(
+    commands: string[],
+    newCommands: string[],
+  ): string[] {
     return engineAddOrReplaceCommands(commands, newCommands);
   }
 
@@ -374,11 +469,16 @@ export class CommentFilter {
     return engineGetCommandsOfType(commands, commandType);
   }
 
-  private removeCommandsOfType(commands: string[], commandType: string): string[] {
+  private removeCommandsOfType(
+    commands: string[],
+    commandType: string,
+  ): string[] {
     return engineRemoveCommandsOfType(commands, commandType);
   }
 
-  private normalizeCommands(commands: string | string[] | null | undefined): string[] {
+  private normalizeCommands(
+    commands: string | string[] | null | undefined,
+  ): string[] {
     return engineNormalizeCommands(commands);
   }
 }

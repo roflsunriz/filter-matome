@@ -43,7 +43,10 @@ export class MylistService {
     });
   }
 
-  async sortMylists(sortType: string, getVideosFunc: (mylistId: number) => Promise<DBVideo[]>): Promise<MylistInfo[]> {
+  async sortMylists(
+    sortType: string,
+    getVideosFunc: (mylistId: number) => Promise<DBVideo[]>,
+  ): Promise<MylistInfo[]> {
     const mylists = await this.getAllMylists();
     const mylistsWithCount = await Promise.all(
       mylists.map(async (mylist: MylistInfo) => {
@@ -52,7 +55,7 @@ export class MylistService {
           ...mylist,
           videoCount: videos.length,
         };
-      })
+      }),
     );
 
     const [type, order] = sortType.split("_");
@@ -98,7 +101,8 @@ export class MylistService {
         mylist.name = newName;
         const updateRequest = store.put(mylist);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
+        updateRequest.onerror = () =>
+          reject(new Error(this.toMessage(request.error)));
       };
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
@@ -106,7 +110,10 @@ export class MylistService {
 
   async deleteMylist(mylistId: number): Promise<void> {
     const database = await this.db.initDB();
-    const transaction = database.transaction(["mylists", "videos"], "readwrite");
+    const transaction = database.transaction(
+      ["mylists", "videos"],
+      "readwrite",
+    );
     const mylistStore = transaction.objectStore("mylists");
     const videoStore = transaction.objectStore("videos");
     const videoIndex = videoStore.index("mylistId");
@@ -120,19 +127,24 @@ export class MylistService {
             return new Promise<void>((res, rej) => {
               const request = videoStore.delete(key);
               request.onsuccess = () => res();
-              request.onerror = () => rej(new Error(this.toMessage(request.error)));
+              request.onerror = () =>
+                rej(new Error(this.toMessage(request.error)));
             });
           }),
           new Promise<void>((res, rej) => {
             const request = mylistStore.delete(mylistId);
             request.onsuccess = () => res();
-            request.onerror = () => rej(new Error(this.toMessage(request.error)));
+            request.onerror = () =>
+              rej(new Error(this.toMessage(request.error)));
           }),
         ])
           .then(() => resolve())
-          .catch((e) => reject(e instanceof Error ? e : new Error(this.toMessage(e))));
+          .catch((e) =>
+            reject(e instanceof Error ? e : new Error(this.toMessage(e))),
+          );
       };
-      deleteVideos.onerror = () => reject(new Error(this.toMessage(deleteVideos.error)));
+      deleteVideos.onerror = () =>
+        reject(new Error(this.toMessage(deleteVideos.error)));
     });
   }
-} 
+}

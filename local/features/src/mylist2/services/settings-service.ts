@@ -41,15 +41,23 @@ export class SettingsService {
 
       request.onsuccess = () => {
         const result = request.result as ManagerSettings | null;
-        if (result && typeof result.mylistSortType === 'string' && typeof result.videoSortType === 'string') {
+        if (
+          result &&
+          typeof result.mylistSortType === "string" &&
+          typeof result.videoSortType === "string"
+        ) {
           const theme = (result as { theme?: unknown }).theme;
-          const safeTheme = typeof theme === 'string' ? theme : 'dark-blue';
+          const safeTheme = typeof theme === "string" ? theme : "dark-blue";
           resolve({ ...result, theme: safeTheme });
           return;
         }
-        resolve({ mylistSortType: "name_asc", videoSortType: "uploadedAt_desc", theme: "dark-blue" });
+        resolve({
+          mylistSortType: "name_asc",
+          videoSortType: "uploadedAt_desc",
+          theme: "dark-blue",
+        });
       };
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
-} 
+}

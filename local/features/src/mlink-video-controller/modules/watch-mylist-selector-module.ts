@@ -1,4 +1,8 @@
-import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
+import {
+  ModuleInstance,
+  ModuleConfig,
+  ModuleStatus,
+} from "@/types/module-types";
 
 /**
  * マイリストセレクターモジュール
@@ -6,7 +10,7 @@ import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types
  */
 export class WatchMylistSelectorModule implements ModuleInstance {
   public readonly config: ModuleConfig;
-  
+
   private _isActive: boolean = false;
   private addToMylistButton: HTMLElement | null = null;
   private styleElement: HTMLStyleElement | null = null;
@@ -196,21 +200,18 @@ export class WatchMylistSelectorModule implements ModuleInstance {
 
     try {
       await Promise.resolve();
-      
+
       // Watch PageまたはSearch Pageかどうかチェック
       if (!this.isTargetPage()) {
-        
         return;
       }
-      
+
       // スタイルを注入
       this.injectStyles();
-      
-      this._isActive = true;
-      
 
+      this._isActive = true;
     } catch (error) {
-      window.logger.error('[WatchMylistSelectorModule] 初期化エラー:', error);
+      window.logger.error("[WatchMylistSelectorModule] 初期化エラー:", error);
       throw error;
     }
   }
@@ -220,8 +221,6 @@ export class WatchMylistSelectorModule implements ModuleInstance {
    */
   destroy(): void {
     if (!this._isActive) return;
-
-    
 
     // ボタンを削除
     if (this.addToMylistButton) {
@@ -233,7 +232,6 @@ export class WatchMylistSelectorModule implements ModuleInstance {
     this.removeStyles();
 
     this._isActive = false;
-    
   }
 
   /**
@@ -244,14 +242,13 @@ export class WatchMylistSelectorModule implements ModuleInstance {
     this.removeStyles();
 
     // 新しいスタイルエレメントを作成
-    this.styleElement = document.createElement('style');
-    this.styleElement.type = 'text/css';
+    this.styleElement = document.createElement("style");
+    this.styleElement.type = "text/css";
     this.styleElement.textContent = this.styles;
-    this.styleElement.setAttribute('data-module', 'WatchMylistSelectorModule');
+    this.styleElement.setAttribute("data-module", "WatchMylistSelectorModule");
 
     // headに追加
     document.head.appendChild(this.styleElement);
-    
   }
 
   /**
@@ -261,7 +258,6 @@ export class WatchMylistSelectorModule implements ModuleInstance {
     if (this.styleElement) {
       this.styleElement.remove();
       this.styleElement = null;
-      
     }
   }
 
@@ -279,7 +275,7 @@ export class WatchMylistSelectorModule implements ModuleInstance {
     if (!this.isTargetPage()) {
       return ModuleStatus.INACTIVE;
     }
-    
+
     return this._isActive ? ModuleStatus.ACTIVE : ModuleStatus.INACTIVE;
   }
 
@@ -290,4 +286,4 @@ export class WatchMylistSelectorModule implements ModuleInstance {
     const pathname = window.location.pathname;
     return /\/watch\//.test(pathname) || /\/search\//.test(pathname);
   }
-} 
+}

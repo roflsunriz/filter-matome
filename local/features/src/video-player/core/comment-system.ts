@@ -1,12 +1,12 @@
-import { CommentRenderer } from '@/video-player/core/comment-renderer';
-import { CommentFetcher } from '@/video-player/core/comment-fetcher';
-import { CommentList } from '@/video-player/ui/comment-list';
-import { CONSTANTS } from '@/comment-filter2/utils/constants';
-import { 
-  Comment, 
-  CommentApiResponse, 
-  SafeCommentFilter2GlobalData 
-} from '@/types/comment-types';
+import { CommentRenderer } from "@/video-player/core/comment-renderer";
+import { CommentFetcher } from "@/video-player/core/comment-fetcher";
+import { CommentList } from "@/video-player/ui/comment-list";
+import { CONSTANTS } from "@/comment-filter2/utils/constants";
+import {
+  Comment,
+  CommentApiResponse,
+  SafeCommentFilter2GlobalData,
+} from "@/types/comment-types";
 
 /**
  * コメントシステム - レンダリングとリスト表示を統合管理
@@ -39,20 +39,23 @@ export class CommentSystem {
     await Promise.resolve();
     try {
       window.logger.info("コメントシステムの初期化を開始します！");
-      
+
       // ★追加: 前回の状態を完全リセット
       if (this.isInitialized) {
         window.logger.info("既存のコメントシステムをリセットします！");
-        this.renderer.destroy();               // アニメーション停止 & canvas削除
-        this.commentList.clearComments();      // リストを空に
-        this.hasReceivedFilteredData = false;  // 重複フラグを戻す
+        this.renderer.destroy(); // アニメーション停止 & canvas削除
+        this.commentList.clearComments(); // リストを空に
+        this.hasReceivedFilteredData = false; // 重複フラグを戻す
       }
-      
+
       this.videoElement = videoElement;
 
       // ★追加: 旧リスナーが残っていれば解除
       if (this._timeUpdateHandler && this.videoElement) {
-        this.videoElement.removeEventListener("timeupdate", this._timeUpdateHandler);
+        this.videoElement.removeEventListener(
+          "timeupdate",
+          this._timeUpdateHandler,
+        );
       }
 
       // レンダラーの初期化（★変更: 再作成するように）
@@ -69,19 +72,20 @@ export class CommentSystem {
       this.restoreVisibilityState();
 
       // コメントリストをDOMに追加（Web Componentとして）
-      this.commentContainer = document.createElement('div');
-      this.commentContainer.className = 'comment-container';
+      this.commentContainer = document.createElement("div");
+      this.commentContainer.className = "comment-container";
       this.commentContainer.appendChild(this.commentList);
 
       // ───────── レイアウト調整 ─────────
-      const customPlayer = document.getElementById('custom-player');
+      const customPlayer = document.getElementById("custom-player");
       if (customPlayer) {
-        let wrapper: HTMLElement | null = customPlayer.parentElement as HTMLElement;
+        let wrapper: HTMLElement | null =
+          customPlayer.parentElement as HTMLElement;
 
         // すでにラッパーが存在するか確認
-        if (!wrapper || !wrapper.classList.contains('video-with-comments')) {
-          wrapper = document.createElement('div');
-          wrapper.className = 'video-with-comments';
+        if (!wrapper || !wrapper.classList.contains("video-with-comments")) {
+          wrapper = document.createElement("div");
+          wrapper.className = "video-with-comments";
 
           // customPlayer の直前に wrapper を挿入し、その中に customPlayer を移動
           customPlayer.parentNode?.insertBefore(wrapper, customPlayer);
@@ -97,7 +101,7 @@ export class CommentSystem {
 
       // 公式コメントリストを非表示
       this.hideOfficialCommentPanel();
-      
+
       // ★追加: 公式コメントオーバーレイも非表示
       this.hideOfficialCommentOverlay();
 
@@ -121,7 +125,7 @@ export class CommentSystem {
       const currentTimeMs = this.videoElement!.currentTime * 1000;
       this.commentList.updateTime(currentTimeMs);
     };
-    
+
     this.videoElement.addEventListener("timeupdate", this._timeUpdateHandler);
   }
 
@@ -132,20 +136,34 @@ export class CommentSystem {
     if (!this.videoElement) return;
 
     // 既存のリスナーが残っている可能性があるので一度削除
-    this.videoElement.removeEventListener('commentFilter2Update', this._handleCommentFilter2Update);
+    this.videoElement.removeEventListener(
+      "commentFilter2Update",
+      this._handleCommentFilter2Update,
+    );
 
     // CommentFilter2からのフィルタリング済みデータを受け取る
-    this.videoElement.addEventListener('commentFilter2Update', this._handleCommentFilter2Update);
+    this.videoElement.addEventListener(
+      "commentFilter2Update",
+      this._handleCommentFilter2Update,
+    );
   }
 
   // イベントハンドラーをプロパティとして保持
   private _handleCommentFilter2Update = (event: Event): void => {
     const customEvent = event as CustomEvent;
     const detail: unknown = customEvent.detail;
-    
-    if (detail && typeof detail === 'object' && 'filteredData' in (detail as Record<string, unknown>)) {
-      window.logger.debug('CommentFilter2からフィルタリング済みデータを受け取りました！');
-      this.applyFilteredComments((detail as { filteredData: CommentApiResponse }).filteredData);
+
+    if (
+      detail &&
+      typeof detail === "object" &&
+      "filteredData" in (detail as Record<string, unknown>)
+    ) {
+      window.logger.debug(
+        "CommentFilter2からフィルタリング済みデータを受け取りました！",
+      );
+      this.applyFilteredComments(
+        (detail as { filteredData: CommentApiResponse }).filteredData,
+      );
     }
   };
 
@@ -164,13 +182,16 @@ export class CommentSystem {
    * CommentFilter2からのフィルタリング済みコメントを適用
    */
   private applyFilteredComments(apiResponse: CommentApiResponse): void {
-    window.logger.info('CommentFilter2からフィルタ済みコメントを受け取りました！', apiResponse);
+    window.logger.info(
+      "CommentFilter2からフィルタ済みコメントを受け取りました！",
+      apiResponse,
+    );
     this.hasReceivedFilteredData = true;
 
     // 既存のAPIフェッチがあればキャンセル
     if (this.abortController) {
       this.abortController.abort();
-      window.logger.info('既存のAPIフェッチをキャンセルしました！');
+      window.logger.info("既存のAPIフェッチをキャンセルしました！");
     }
 
     // 既存のコメントをクリア
@@ -178,19 +199,25 @@ export class CommentSystem {
     this.commentList.clearComments();
 
     // フィルタ済みコメントを適用
-    let comments = apiResponse.data.threads.flatMap(thread => thread.comments);
-    comments = comments.map(comment => {
+    let comments = apiResponse.data.threads.flatMap(
+      (thread) => thread.comments,
+    );
+    comments = comments.map((comment) => {
       comment.vposMs = comment.vpos * 10;
       return comment;
     });
 
     // 追加のNGフィルタを適用
-    const filteredComments = this.filterNGComments(comments as unknown as Comment[]);
-    window.logger.info(`CommentFilter2適用後のコメント数です: ${filteredComments.length}`);
+    const filteredComments = this.filterNGComments(
+      comments as unknown as Comment[],
+    );
+    window.logger.info(
+      `CommentFilter2適用後のコメント数です: ${filteredComments.length}`,
+    );
 
     // コメントを追加
     this.commentList.addComments(filteredComments);
-    filteredComments.forEach(c => this.renderer.addComment(c));
+    filteredComments.forEach((c) => this.renderer.addComment(c));
   }
 
   /**
@@ -198,7 +225,7 @@ export class CommentSystem {
    */
   async loadComments(videoId: string): Promise<void> {
     if (!this.isInitialized) {
-      throw new Error('コメントシステムが初期化されていません');
+      throw new Error("コメントシステムが初期化されていません");
     }
 
     // 既存のフェッチがあればキャンセル
@@ -211,43 +238,58 @@ export class CommentSystem {
 
     // 既にCommentFilter2データを適用済みなら最初に抜ける
     if (this.hasReceivedFilteredData) {
-      window.logger.info('CommentFilter2のコメントを既に描画しているのでフェッチをスキップします！');
+      window.logger.info(
+        "CommentFilter2のコメントを既に描画しているのでフェッチをスキップします！",
+      );
       return;
     }
 
     try {
       window.logger.info(`コメント読み込み開始します: ${videoId}`);
       const apiResponse = await this.fetcher.fetchAllComments(videoId);
-      window.logger.info(`コメント読み込み完了しました: ${videoId}`, apiResponse);
+      window.logger.info(
+        `コメント読み込み完了しました: ${videoId}`,
+        apiResponse,
+      );
 
       // コメントをフィルタ
-      let comments = apiResponse.data.threads.flatMap(thread => thread.comments);
+      let comments = apiResponse.data.threads.flatMap(
+        (thread) => thread.comments,
+      );
       window.logger.info(`取得したコメント数です: ${comments.length}`);
 
       // vposをミリ秒に変換
-      comments = comments.map(comment => {
+      comments = comments.map((comment) => {
         comment.vposMs = comment.vpos * 10;
         return comment;
       });
 
       // NGコメントをフィルタ
-      const filteredComments = this.filterNGComments(comments as unknown as Comment[]);
-      window.logger.info(`フィルタ後のコメント数です: ${filteredComments.length}`);
+      const filteredComments = this.filterNGComments(
+        comments as unknown as Comment[],
+      );
+      window.logger.info(
+        `フィルタ後のコメント数です: ${filteredComments.length}`,
+      );
 
       // API取得が完了した瞬間に再度チェック
       if (this.hasReceivedFilteredData) {
-        window.logger.info('APIフェッチ中にCommentFilter2データが到着したため、API側の描画をキャンセルします！');
+        window.logger.info(
+          "APIフェッチ中にCommentFilter2データが到着したため、API側の描画をキャンセルします！",
+        );
         return;
       }
 
       this.commentList.addComments(filteredComments);
-      filteredComments.forEach(c => this.renderer.addComment(c));
+      filteredComments.forEach((c) => this.renderer.addComment(c));
     } catch (error: unknown) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        window.logger.info('CommentFilter2データが先に到着したため、APIフェッチを中断しました！');
+      if (error instanceof DOMException && error.name === "AbortError") {
+        window.logger.info(
+          "CommentFilter2データが先に到着したため、APIフェッチを中断しました！",
+        );
         return;
       }
-      window.logger.error('コメント読み込みエラーが発生しました！', error);
+      window.logger.error("コメント読み込みエラーが発生しました！", error);
       throw error;
     } finally {
       // 処理が完了したらabortControllerをリセット
@@ -263,21 +305,19 @@ export class CommentSystem {
       return comments;
     }
 
-    return comments.filter(comment => {
+    return comments.filter((comment) => {
       const text = comment.body.toLowerCase();
-      
+
       // NGワードでのフィルタリング
-      const containsNgWord = this.ngWords.some(word => 
-        text.includes(word.toLowerCase())
+      const containsNgWord = this.ngWords.some((word) =>
+        text.includes(word.toLowerCase()),
       );
-      
+
       if (containsNgWord) return false;
-      
+
       // NG正規表現でのフィルタリング
-      const matchesNgRegex = this.ngRegex.some(regex => 
-        regex.test(text)
-      );
-      
+      const matchesNgRegex = this.ngRegex.some((regex) => regex.test(text));
+
       return !matchesNgRegex;
     });
   }
@@ -307,19 +347,17 @@ export class CommentSystem {
    */
   private isCommentAllowed(comment: Comment): boolean {
     const text = comment.body.toLowerCase();
-    
+
     // NGワードでのフィルタリング
-    const containsNgWord = this.ngWords.some(word => 
-      text.includes(word.toLowerCase())
+    const containsNgWord = this.ngWords.some((word) =>
+      text.includes(word.toLowerCase()),
     );
-    
+
     if (containsNgWord) return false;
-    
+
     // NG正規表現でのフィルタリング
-    const matchesNgRegex = this.ngRegex.some(regex => 
-      regex.test(text)
-    );
-    
+    const matchesNgRegex = this.ngRegex.some((regex) => regex.test(text));
+
     return !matchesNgRegex;
   }
 
@@ -334,19 +372,19 @@ export class CommentSystem {
    * リソースのクリーンアップ
    */
   cleanup(): void {
-    window.logger.info('コメントシステムのクリーンアップを開始します！');
+    window.logger.info("コメントシステムのクリーンアップを開始します！");
     // 既存のフェッチがあればキャンセル
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
     }
-    
+
     // video_player終了時にフラグをリセット
     if (window.CommentFilterState) {
       window.CommentFilterState.isVideoPlayerActive = false;
       window.CommentFilterState.fetchProxyEnabled = true;
     }
-    
+
     // コメントコンテナの削除
     if (this.commentContainer) {
       this.commentContainer.remove();
@@ -356,12 +394,18 @@ export class CommentSystem {
     // イベントリスナーの削除
     if (this.videoElement) {
       if (this._timeUpdateHandler) {
-        this.videoElement.removeEventListener("timeupdate", this._timeUpdateHandler);
+        this.videoElement.removeEventListener(
+          "timeupdate",
+          this._timeUpdateHandler,
+        );
         this._timeUpdateHandler = undefined;
       }
-      
+
       // CommentFilter2イベントリスナーの削除
-      this.videoElement.removeEventListener('commentFilter2Update', this._handleCommentFilter2Update);
+      this.videoElement.removeEventListener(
+        "commentFilter2Update",
+        this._handleCommentFilter2Update,
+      );
     }
 
     // 変数のリセット
@@ -373,7 +417,7 @@ export class CommentSystem {
     // レンダラーと関連リソースの破棄
     this.renderer.destroy();
     this.commentList.remove();
-    
+
     window.logger.info("コメントシステムのリソースをクリーンアップしました！");
   }
 
@@ -399,7 +443,10 @@ export class CommentSystem {
       this.renderer.setDefaultColor(color);
       window.logger.info(`コメントのデフォルト色を ${color} に設定しました！`);
     } catch (error) {
-      window.logger.error("コメントのデフォルト色の設定に失敗しました！:", error);
+      window.logger.error(
+        "コメントのデフォルト色の設定に失敗しました！:",
+        error,
+      );
     }
   }
 
@@ -409,7 +456,9 @@ export class CommentSystem {
    */
   setNGWords(words: string[]): void {
     try {
-      this.ngWords = words.map(word => word.trim()).filter(word => word !== "");
+      this.ngWords = words
+        .map((word) => word.trim())
+        .filter((word) => word !== "");
       window.logger.info(`${this.ngWords.length}件のNGワードを設定しました！`);
     } catch (error) {
       window.logger.error("NGワードの設定に失敗しました！:", error);
@@ -423,7 +472,7 @@ export class CommentSystem {
   setNGRegex(regexStrings: string[]): void {
     try {
       this.ngRegex = regexStrings
-        .map(str => {
+        .map((str) => {
           try {
             return new RegExp(str, "i");
           } catch (error) {
@@ -433,8 +482,10 @@ export class CommentSystem {
           }
         })
         .filter((regex): regex is RegExp => regex !== null);
-      
-      window.logger.info(`${this.ngRegex.length}件のNG正規表現を設定しました！`);
+
+      window.logger.info(
+        `${this.ngRegex.length}件のNG正規表現を設定しました！`,
+      );
     } catch (error) {
       window.logger.error("NG正規表現の設定に失敗しました！:", error);
     }
@@ -446,51 +497,57 @@ export class CommentSystem {
   private hideOfficialCommentPanel(): void {
     try {
       const selectors = [
-        '#js-comment',
-        '#comment',
-        '.CommentPanel',
-        '.comment-panel',
+        "#js-comment",
+        "#comment",
+        ".CommentPanel",
+        ".comment-panel",
         '[data-testid="comment-area"]',
-        '.grid-area_\\[comment\\]',
-        '.grid-area_\\[sidebar\\]',
-        '.WatchCommentsPanel',
-        '.WatchCommentsList',
-        '.h_var\\(--watch-player-height\\)'
+        ".grid-area_\\[comment\\]",
+        ".grid-area_\\[sidebar\\]",
+        ".WatchCommentsPanel",
+        ".WatchCommentsList",
+        ".h_var\\(--watch-player-height\\)",
       ];
 
-      selectors.forEach(sel => {
-        document.querySelectorAll<HTMLElement>(sel).forEach(el => {
-          el.style.display = 'none';
+      selectors.forEach((sel) => {
+        document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+          el.style.display = "none";
         });
       });
     } catch (error) {
-      window.logger.warn('公式コメントリストを非表示にできなかったので無視します！:', error);
+      window.logger.warn(
+        "公式コメントリストを非表示にできなかったので無視します！:",
+        error,
+      );
     }
   }
-  
+
   /**
    * ★追加: 公式コメントオーバーレイを非表示にする
    */
   private hideOfficialCommentOverlay(): void {
     try {
       const overlaySelectors = [
-        '#playerCommentLayer',
-        '.CommentScreen',
-        '.CommentLayer',
-        '.VideoScreenCanvas',
-        '.VideoOverlayPanel',
-        '.VideoOverlayPanelContainer'
+        "#playerCommentLayer",
+        ".CommentScreen",
+        ".CommentLayer",
+        ".VideoScreenCanvas",
+        ".VideoOverlayPanel",
+        ".VideoOverlayPanelContainer",
       ];
-      
-      overlaySelectors.forEach(sel => {
-        document.querySelectorAll<HTMLElement>(sel).forEach(el => {
-          el.style.display = 'none';
+
+      overlaySelectors.forEach((sel) => {
+        document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
+          el.style.display = "none";
         });
       });
-      
-      window.logger.info('公式コメントオーバーレイを非表示にしました！');
+
+      window.logger.info("公式コメントオーバーレイを非表示にしました！");
     } catch (e) {
-      window.logger.warn('公式コメントオーバーレイを非表示にできなかったので無視します！:', e);
+      window.logger.warn(
+        "公式コメントオーバーレイを非表示にできなかったので無視します！:",
+        e,
+      );
     }
   }
 
@@ -500,23 +557,29 @@ export class CommentSystem {
   private getCommentFilter2Data(): SafeCommentFilter2GlobalData | null {
     try {
       const data = window[CONSTANTS.GLOBAL_DATA_KEY as keyof Window];
-      
+
       // 型ガードで安全にチェック
-      if (data && typeof data === 'object' && 
-          'originalData' in data && 
-          'filteredData' in data && 
-          'currentSmid' in data && 
-          'lastUpdated' in data &&
-          data.originalData !== null &&
-          data.filteredData !== null &&
-          data.currentSmid !== null) {
+      if (
+        data &&
+        typeof data === "object" &&
+        "originalData" in data &&
+        "filteredData" in data &&
+        "currentSmid" in data &&
+        "lastUpdated" in data &&
+        data.originalData !== null &&
+        data.filteredData !== null &&
+        data.currentSmid !== null
+      ) {
         return data as SafeCommentFilter2GlobalData;
       }
-      
+
       return null;
     } catch (error) {
-      window.logger.warn('CommentFilter2のグローバルデータ取得に失敗したので無視します！:', error);
+      window.logger.warn(
+        "CommentFilter2のグローバルデータ取得に失敗したので無視します！:",
+        error,
+      );
       return null;
     }
   }
-} 
+}

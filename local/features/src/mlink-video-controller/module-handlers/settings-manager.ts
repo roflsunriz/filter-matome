@@ -1,11 +1,11 @@
-import { ModuleSettings, ModuleConfigData } from '@/types/module-types';
+import { ModuleSettings, ModuleConfigData } from "@/types/module-types";
 
 /**
  * モジュール設定の保存・読み込みを管理するクラス
  */
 export class SettingsManager {
   private static instance: SettingsManager;
-  private readonly STORAGE_KEY = 'nicoVideoController_moduleSettings';
+  private readonly STORAGE_KEY = "nicoVideoController_moduleSettings";
   private settings: ModuleSettings = {};
   private eventListeners: Set<(settings: ModuleSettings) => void> = new Set();
 
@@ -28,12 +28,15 @@ export class SettingsManager {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         const parsed: unknown = JSON.parse(stored);
-        if (parsed && typeof parsed === 'object') {
+        if (parsed && typeof parsed === "object") {
           this.settings = parsed as ModuleSettings;
         }
       }
     } catch (error) {
-      window.logger.error('[SettingsManager] 設定の読み込みに失敗しました:', error);
+      window.logger.error(
+        "[SettingsManager] 設定の読み込みに失敗しました:",
+        error,
+      );
       this.settings = {};
     }
   }
@@ -44,12 +47,11 @@ export class SettingsManager {
   private saveSettings(): void {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.settings));
-      
-      
+
       // 設定変更を通知
       this.notifyListeners();
     } catch (error) {
-      window.logger.error('[SettingsManager] 設定の保存に失敗しました:', error);
+      window.logger.error("[SettingsManager] 設定の保存に失敗しました:", error);
     }
   }
 
@@ -60,11 +62,9 @@ export class SettingsManager {
     if (!this.settings[moduleId]) {
       this.settings[moduleId] = { enabled: false };
     }
-    
+
     this.settings[moduleId].enabled = enabled;
     this.saveSettings();
-    
-    
   }
 
   /**
@@ -81,11 +81,12 @@ export class SettingsManager {
     if (!this.settings[moduleId]) {
       this.settings[moduleId] = { enabled: false };
     }
-    
-    this.settings[moduleId].config = { ...this.settings[moduleId].config, ...config };
+
+    this.settings[moduleId].config = {
+      ...this.settings[moduleId].config,
+      ...config,
+    };
     this.saveSettings();
-    
-    
   }
 
   /**
@@ -108,7 +109,6 @@ export class SettingsManager {
   public resetSettings(): void {
     this.settings = {};
     this.saveSettings();
-    
   }
 
   /**
@@ -117,20 +117,23 @@ export class SettingsManager {
   public resetModuleSettings(moduleId: string): void {
     delete this.settings[moduleId];
     this.saveSettings();
-    
   }
 
   /**
    * 設定変更の監視を追加
    */
-  public addSettingsListener(listener: (settings: ModuleSettings) => void): void {
+  public addSettingsListener(
+    listener: (settings: ModuleSettings) => void,
+  ): void {
     this.eventListeners.add(listener);
   }
 
   /**
    * 設定変更の監視を削除
    */
-  public removeSettingsListener(listener: (settings: ModuleSettings) => void): void {
+  public removeSettingsListener(
+    listener: (settings: ModuleSettings) => void,
+  ): void {
     this.eventListeners.delete(listener);
   }
 
@@ -138,11 +141,14 @@ export class SettingsManager {
    * 設定変更をリスナーに通知
    */
   private notifyListeners(): void {
-    this.eventListeners.forEach(listener => {
+    this.eventListeners.forEach((listener) => {
       try {
         listener(this.getAllSettings());
       } catch (error) {
-        window.logger.error('[SettingsManager] リスナーの実行中にエラーが発生しました:', error);
+        window.logger.error(
+          "[SettingsManager] リスナーの実行中にエラーが発生しました:",
+          error,
+        );
       }
     });
   }
@@ -160,15 +166,18 @@ export class SettingsManager {
   public importSettings(settingsJson: string): boolean {
     try {
       const imported: unknown = JSON.parse(settingsJson);
-      if (imported && typeof imported === 'object') {
+      if (imported && typeof imported === "object") {
         this.settings = imported as ModuleSettings;
       }
       this.saveSettings();
-      
+
       return true;
     } catch (error) {
-      window.logger.error('[SettingsManager] 設定のインポートに失敗しました:', error);
+      window.logger.error(
+        "[SettingsManager] 設定のインポートに失敗しました:",
+        error,
+      );
       return false;
     }
   }
-} 
+}

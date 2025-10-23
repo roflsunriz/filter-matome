@@ -149,7 +149,7 @@ export async function showMylistSelector(): Promise<number> {
   `;
 
   // スタイルシートを追加
-  const styleElement = document.createElement('style');
+  const styleElement = document.createElement("style");
   styleElement.textContent = selectorStyles;
   document.head.appendChild(styleElement);
 
@@ -159,10 +159,14 @@ export async function showMylistSelector(): Promise<number> {
   // 要素の取得
   const modal = document.getElementById("mylistSelectorModal");
   const mylistList = document.getElementById("mylistList");
-  const newMylistName = document.getElementById("newMylistName") as HTMLInputElement;
+  const newMylistName = document.getElementById(
+    "newMylistName",
+  ) as HTMLInputElement;
   const createNewMylist = document.getElementById("createNewMylist");
   const closeButton = document.getElementById("closeMylistSelector");
-  const searchInput = document.getElementById("selectorSearchInput") as HTMLInputElement;
+  const searchInput = document.getElementById(
+    "selectorSearchInput",
+  ) as HTMLInputElement;
 
   return new Promise<number>((resolve, reject) => {
     // マイリスト一覧の表示
@@ -181,22 +185,31 @@ export async function showMylistSelector(): Promise<number> {
         const matchDetails = new Map<number, string[]>(); // マッチ情報を保存するMap
 
         if (isWatchPage) {
-          const tags = Array.from(document.querySelectorAll('a[data-anchor-page="watch"][data-anchor-area="tags"][href*="/tag/"]'))
-            .map(tag => normalizeText(tag.textContent?.trim() || ""));
-          
-          suggestedMylists = mylists.filter(mylist => {
+          const tags = Array.from(
+            document.querySelectorAll(
+              'a[data-anchor-page="watch"][data-anchor-area="tags"][href*="/tag/"]',
+            ),
+          ).map((tag) => normalizeText(tag.textContent?.trim() || ""));
+
+          suggestedMylists = mylists.filter((mylist) => {
             const mylistNameNormalized = normalizeText(mylist.name);
             // 各タグとマイリスト名の共通部分を探す
-            const matchedTags = tags.filter(tag => {
-              const shorter = tag.length < mylistNameNormalized.length ? tag : mylistNameNormalized;
-              const longer = tag.length < mylistNameNormalized.length ? mylistNameNormalized : tag;
-              
+            const matchedTags = tags.filter((tag) => {
+              const shorter =
+                tag.length < mylistNameNormalized.length
+                  ? tag
+                  : mylistNameNormalized;
+              const longer =
+                tag.length < mylistNameNormalized.length
+                  ? mylistNameNormalized
+                  : tag;
+
               const words = shorter.split(/[\s ]/);
-              return words.some(word => 
-                word.length >= 2 && longer.includes(word)
+              return words.some(
+                (word) => word.length >= 2 && longer.includes(word),
               );
             });
-            
+
             if (matchedTags.length > 0) {
               matchDetails.set(mylist.id!, matchedTags);
               return true;
@@ -220,7 +233,7 @@ export async function showMylistSelector(): Promise<number> {
                                 マッチしたタグ: ${matchDetails.get(mylist.id!)?.join(", ") || ""}
                             </div>
                         </div>
-                    `
+                    `,
                       )
                       .join("")}
                 </div>
@@ -234,7 +247,7 @@ export async function showMylistSelector(): Promise<number> {
                 <div class="mylist-item" data-id="${mylist.id}">
                     <span>${mylist.name}</span>
                 </div>
-            `
+            `,
           )
           .join("");
 
@@ -311,12 +324,12 @@ export async function showMylistSelector(): Promise<number> {
 function normalizeText(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[！-～]/g, function(s: string) {
-      return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    .replace(/[！-～]/g, function (s: string) {
+      return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
     })
     .replace(/[""]/g, '"')
     .replace(/['']/g, "'")
-    .replace(/[（）]/g, function(s: string) {
+    .replace(/[（）]/g, function (s: string) {
       return s === "（" ? "(" : ")";
     });
-} 
+}

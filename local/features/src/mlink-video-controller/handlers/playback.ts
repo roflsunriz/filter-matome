@@ -1,6 +1,6 @@
-import { NicoVideoPlayer } from '@/mlink-video-controller/services/nico-video-player';
-import { TimeFormatter } from '@/mlink-video-controller/utils/time-formatter';
-import { SeekOptions } from '@/types/mlink-video-controller-types';
+import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
+import { TimeFormatter } from "@/mlink-video-controller/utils/time-formatter";
+import { SeekOptions } from "@/types/mlink-video-controller-types";
 
 export class PlaybackHandler {
   private player: NicoVideoPlayer;
@@ -20,8 +20,12 @@ export class PlaybackHandler {
 
   public seek(options: SeekOptions): void {
     const currentTime = this.player.getCurrentTime();
-    const delta = options.direction === 'forward' ? options.seconds : -options.seconds;
-    const newTime = Math.max(0, Math.min(this.player.getDuration(), currentTime + delta));
+    const delta =
+      options.direction === "forward" ? options.seconds : -options.seconds;
+    const newTime = Math.max(
+      0,
+      Math.min(this.player.getDuration(), currentTime + delta),
+    );
     void this.player.seek(newTime);
   }
 
@@ -35,7 +39,7 @@ export class PlaybackHandler {
     return {
       isPlaying: this.player.isPlaying(),
       currentTime: this.player.getCurrentTime(),
-      duration: this.player.getDuration()
+      duration: this.player.getDuration(),
     };
   }
 
@@ -56,4 +60,4 @@ export class PlaybackHandler {
       this.updateInterval = null;
     }
   }
-} 
+}

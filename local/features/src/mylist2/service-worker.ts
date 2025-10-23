@@ -5,8 +5,8 @@
 declare const self: ServiceWorkerGlobalScope;
 
 // Service Worker環境チェック
-console.debug('Service Worker script loaded');
-console.debug('Current location:', self.location.href);
+window?.logger.debug("Service Worker script loaded");
+window?.logger.debug("Current location:", self.location.href);
 
 const CACHE_NAME = "custom-mylist2-v1";
 const CACHE_URLS = [
@@ -29,24 +29,27 @@ const THUMBNAIL_PATTERN = /nicovideo\.jp\/thumb\//;
 
 // Service Workerのインストール
 self.addEventListener("install", (event: ExtendableEvent) => {
-  console.debug('Service Worker installing...');
+  window?.logger.debug("Service Worker installing...");
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      // キャッシュ時にタイムスタンプを記録
-      const timestamp = Date.now();
-      CACHE_URLS.forEach((url) => {
-        cacheMetadata.set(url, timestamp);
-      });
-      return cache.addAll(CACHE_URLS);
-    }).catch((error) => {
-      console.error('Cache installation failed:', error);
-    })
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => {
+        // キャッシュ時にタイムスタンプを記録
+        const timestamp = Date.now();
+        CACHE_URLS.forEach((url) => {
+          cacheMetadata.set(url, timestamp);
+        });
+        return cache.addAll(CACHE_URLS);
+      })
+      .catch((error) => {
+        window?.logger.error("Cache installation failed:", error);
+      }),
   );
 });
 
 // 定期的なキャッシュクリーンアップ
 self.addEventListener("activate", (event: ExtendableEvent) => {
-  console.debug('Service Worker activating...');
+  window?.logger.debug("Service Worker activating...");
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
       try {
@@ -66,9 +69,9 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
 
         return Promise.all(deletions);
       } catch (error) {
-        console.error('Cache cleanup failed:', error);
+        window?.logger.error("Cache cleanup failed:", error);
       }
-    })
+    }),
   );
 });
 
@@ -90,7 +93,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
           }
         }
 
-      return fetch(event.request)
+        return fetch(event.request)
           .then((response) => {
             if (response.ok) {
               const responseToCache = response.clone();
@@ -102,7 +105,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
             return response;
           })
           .catch((error) => {
-            console.error("Cache save failed:", error);
+            window?.logger.error("Cache save failed:", error);
             // オフライン時のフォールバック画像を返す
             return new Response("", {
               status: 404,
@@ -121,7 +124,9 @@ self.addEventListener("fetch", (event: FetchEvent) => {
         } else {
           // 期限切れの場合、キャッシュを削除
           cacheMetadata.delete(url);
-          await caches.open(CACHE_NAME).then((cache) => cache.delete(event.request));
+          await caches
+            .open(CACHE_NAME)
+            .then((cache) => cache.delete(event.request));
         }
       }
 
@@ -140,7 +145,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
           .catch(() => {
             return new Response(
               "<error><description>オフライン：動画情報を取得できません</description></error>",
-              { headers: { "Content-Type": "text/xml" } }
+              { headers: { "Content-Type": "text/xml" } },
             );
           });
       }
@@ -157,9 +162,9 @@ self.addEventListener("fetch", (event: FetchEvent) => {
         }
         return response;
       });
-    })
+    }),
   );
 });
 
 // TypeScriptのモジュールとしてexportを追加（必要に応じて）
-export {}; 
+export {};

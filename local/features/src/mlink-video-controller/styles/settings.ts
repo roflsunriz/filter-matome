@@ -965,4 +965,4 @@ input:disabled + .slider {
     min-width: auto;
   }
 }
-`; 
+`;

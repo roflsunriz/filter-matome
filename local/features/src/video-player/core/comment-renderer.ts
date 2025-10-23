@@ -1,6 +1,6 @@
-import { COMMENT_RENDERER_CONFIG } from '@/video-player/config/constants';
-import { Comment } from '@/types/comment-types';
-import { ExtendedDocument } from '@/types/ui-types';
+import { COMMENT_RENDERER_CONFIG } from "@/video-player/config/constants";
+import { Comment } from "@/types/comment-types";
+import { ExtendedDocument } from "@/types/ui-types";
 
 /**
  * コメントレンダラークラス
@@ -34,7 +34,7 @@ export class CommentRenderer {
   private lastCleanup = 0;
   private animationFrameId: number | null = null;
   private resizeObserver: ResizeObserver | null = null; // 動的リサイズ監視用
-  
+
   // 仮想拡張キャンバス関連
   private virtualExtendedLeftWidth = 0; // 左側の仮想拡張領域の幅
   private virtualExtendedRightWidth = 0; // 右側の仮想拡張領域の幅
@@ -81,20 +81,20 @@ export class CommentRenderer {
     });
 
     // バッファリング検知の追加
-    this.videoElement.addEventListener('waiting', () => {
-      window.logger.debug('バッファリング中です...');
+    this.videoElement.addEventListener("waiting", () => {
+      window.logger.debug("バッファリング中です...");
       this.isPlaying = false;
     });
 
-    this.videoElement.addEventListener('playing', () => {
-      window.logger.debug('再生再開しました！');
+    this.videoElement.addEventListener("playing", () => {
+      window.logger.debug("再生再開しました！");
       this.isPlaying = true;
       this.lastTime = this.videoElement!.currentTime * 1000;
     });
 
     // エラー処理の追加
-    this.videoElement.addEventListener('error', (e) => {
-      window.logger.error('動画再生エラーが発生しました！', e);
+    this.videoElement.addEventListener("error", (e) => {
+      window.logger.error("動画再生エラーが発生しました！", e);
     });
   }
 
@@ -118,16 +118,23 @@ export class CommentRenderer {
     this.canvas.style.height = "100%";
     this.canvas.style.pointerEvents = "none"; // クリックイベント透過の設定
     this.canvas.style.zIndex = "1";
-    
+
     // 重要: pointerEventsがクロスブラウザで確実に適用されるよう追加対策
-    this.canvas.setAttribute('style', this.canvas.getAttribute('style') + ' pointer-events: none !important;');
-    
+    this.canvas.setAttribute(
+      "style",
+      this.canvas.getAttribute("style") + " pointer-events: none !important;",
+    );
+
     // クリックイベントが確実に透過するよう念のためイベントハンドラも追加
-    this.canvas.addEventListener('click', (e) => {
-      // キャンバス上のクリックは透過させる（下の要素にイベントを伝播）
-      e.stopPropagation();
-      return true; // イベントを通過させる
-    }, false);
+    this.canvas.addEventListener(
+      "click",
+      (e) => {
+        // キャンバス上のクリックは透過させる（下の要素にイベントを伝播）
+        e.stopPropagation();
+        return true; // イベントを通過させる
+      },
+      false,
+    );
 
     // video-containerの直下にcanvasを挿入
     const videoContainer = document.querySelector(".video-container");
@@ -169,30 +176,34 @@ export class CommentRenderer {
 
       // 全画面状態を確認
       const doc = document as ExtendedDocument;
-      const isFullscreen = doc.fullscreenElement || 
-                          doc.webkitFullscreenElement || 
-                          doc.mozFullScreenElement || 
-                          doc.msFullscreenElement ||
-                          document.documentElement.classList.contains('fullscreen-active') ||
-                          document.body.classList.contains('nc-fullscreen-active');
+      const isFullscreen =
+        doc.fullscreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.mozFullScreenElement ||
+        doc.msFullscreenElement ||
+        document.documentElement.classList.contains("fullscreen-active") ||
+        document.body.classList.contains("nc-fullscreen-active");
 
       // 全画面時の特別処理
       if (isFullscreen) {
         // ビデオが position: fixed かどうかを確認
         const videoStyle = window.getComputedStyle(this.videoElement);
-        if (videoStyle.position === 'fixed') {
+        if (videoStyle.position === "fixed") {
           // ビデオが固定位置の場合、ビデオの実際の位置・サイズを使用
           rect = this.videoElement.getBoundingClientRect();
-          
+
           // キャンバスもビデオと同じ固定位置に配置
-          this.canvas.style.position = 'fixed';
+          this.canvas.style.position = "fixed";
           this.canvas.style.top = `${rect.top}px`;
           this.canvas.style.left = `${rect.left}px`;
           this.canvas.style.width = `${rect.width}px`;
           this.canvas.style.height = `${rect.height}px`;
-          this.canvas.style.zIndex = '1001';
-          
-          window.logger.info("ビデオ固定位置でキャンバスを配置:", { rect, videoPosition: videoStyle.position });
+          this.canvas.style.zIndex = "1001";
+
+          window.logger.info("ビデオ固定位置でキャンバスを配置:", {
+            rect,
+            videoPosition: videoStyle.position,
+          });
         } else {
           // 通常の全画面処理
           rect = {
@@ -203,32 +214,35 @@ export class CommentRenderer {
             right: window.innerWidth,
             bottom: window.innerHeight,
             x: 0,
-            y: 0
+            y: 0,
           } as DOMRect;
-          
-          this.canvas.style.position = 'absolute';
-          this.canvas.style.top = '0';
-          this.canvas.style.left = '0';
-          this.canvas.style.width = '100%';
-          this.canvas.style.height = '100%';
-          this.canvas.style.zIndex = '1';
-          
-          window.logger.info("通常全画面モードでキャンバスサイズを調整します:", rect);
+
+          this.canvas.style.position = "absolute";
+          this.canvas.style.top = "0";
+          this.canvas.style.left = "0";
+          this.canvas.style.width = "100%";
+          this.canvas.style.height = "100%";
+          this.canvas.style.zIndex = "1";
+
+          window.logger.info(
+            "通常全画面モードでキャンバスサイズを調整します:",
+            rect,
+          );
         }
       } else {
         // 非全画面時：デフォルトのスタイルに戻す
-        this.canvas.style.position = 'absolute';
-        this.canvas.style.top = '0';
-        this.canvas.style.left = '0';
-        this.canvas.style.width = '100%';
-        this.canvas.style.height = '100%';
-        this.canvas.style.zIndex = '1';
+        this.canvas.style.position = "absolute";
+        this.canvas.style.top = "0";
+        this.canvas.style.left = "0";
+        this.canvas.style.width = "100%";
+        this.canvas.style.height = "100%";
+        this.canvas.style.zIndex = "1";
       }
 
       // キャンバスサイズが有効な値かチェック
       if (rect.width <= 0 || rect.height <= 0) {
         window.logger.warn("無効なキャンバスサイズです:", rect);
-        
+
         // 親要素のサイズから推測する
         const videoContainer = document.querySelector(".video-container");
         if (videoContainer) {
@@ -236,7 +250,10 @@ export class CommentRenderer {
           if (containerRect.width > 0 && containerRect.height > 0) {
             this.canvas.width = containerRect.width;
             this.canvas.height = containerRect.height;
-            window.logger.info("コンテナサイズを使用してキャンバスを調整しました:", containerRect);
+            window.logger.info(
+              "コンテナサイズを使用してキャンバスを調整しました:",
+              containerRect,
+            );
           } else {
             return;
           }
@@ -247,24 +264,31 @@ export class CommentRenderer {
         this.canvas.width = rect.width;
         this.canvas.height = rect.height;
       }
-      
+
       // 仮想拡張キャンバスのサイズを計算
-      this.virtualExtendedLeftWidth = Math.ceil(this.canvas.width * this.virtualExtendRatio);
-      this.virtualExtendedRightWidth = Math.ceil(this.canvas.width * this.virtualExtendRatio);
-      this.virtualCanvasWidth = this.virtualExtendedLeftWidth + this.canvas.width + this.virtualExtendedRightWidth;
-      
+      this.virtualExtendedLeftWidth = Math.ceil(
+        this.canvas.width * this.virtualExtendRatio,
+      );
+      this.virtualExtendedRightWidth = Math.ceil(
+        this.canvas.width * this.virtualExtendRatio,
+      );
+      this.virtualCanvasWidth =
+        this.virtualExtendedLeftWidth +
+        this.canvas.width +
+        this.virtualExtendedRightWidth;
+
       window.logger.info("仮想拡張キャンバスを設定しました！", {
         visible: this.canvas.width,
         virtualLeft: this.virtualExtendedLeftWidth,
         virtualRight: this.virtualExtendedRightWidth,
         total: this.virtualCanvasWidth,
-        isFullscreen: !!isFullscreen
+        isFullscreen: !!isFullscreen,
       });
-      
+
       // 明示的にビデオ要素のスタイルを設定（黒帯防止）
       this.videoElement.style.width = "100%";
       this.videoElement.style.height = "auto";
-      
+
       this.calculateFontSize();
 
       // レーン関連の計算を更新
@@ -274,7 +298,7 @@ export class CommentRenderer {
       const calculatedLanes = Math.floor(this.canvas.height / this.laneHeight);
       this.maxLanes = Math.min(
         calculatedLanes,
-        COMMENT_RENDERER_CONFIG.MAX_LANES_LIMIT
+        COMMENT_RENDERER_CONFIG.MAX_LANES_LIMIT,
       );
 
       // 配列サイズが有効かチェック
@@ -284,7 +308,10 @@ export class CommentRenderer {
       }
 
       // レーン状態配列を初期化（型安全）
-      this.laneStates = Array.from({ length: this.maxLanes }, () => null as Comment | null);
+      this.laneStates = Array.from(
+        { length: this.maxLanes },
+        () => null as Comment | null,
+      );
 
       window.logger.info("キャンバスとレーンの初期化完了しました！", {
         width: this.canvas.width,
@@ -301,7 +328,10 @@ export class CommentRenderer {
       window.logger.error("キャンバスのリサイズに失敗しました:", error);
       // エラー時は最小構成で初期化
       this.maxLanes = 10;
-      this.laneStates = Array.from({ length: this.maxLanes }, () => null as Comment | null);
+      this.laneStates = Array.from(
+        { length: this.maxLanes },
+        () => null as Comment | null,
+      );
     }
   }
 
@@ -313,7 +343,7 @@ export class CommentRenderer {
       this.animate(timestamp);
       this.animationFrameId = requestAnimationFrame(animate);
     };
-    
+
     this.animationFrameId = requestAnimationFrame(animate);
   }
 
@@ -329,7 +359,7 @@ export class CommentRenderer {
     }
 
     const currentTime = this.videoElement.currentTime * 1000;
-    
+
     // 定期的なクリーンアップ
     if (timestamp - this.lastCleanup > this.cleanupInterval) {
       this.cleanup(currentTime);
@@ -372,8 +402,8 @@ export class CommentRenderer {
     });
 
     // 不要なグループの削除
-    this.commentGroups = this.commentGroups.filter((group: Comment[]) => 
-      group.some((comment: Comment) => this.activeComments.has(comment))
+    this.commentGroups = this.commentGroups.filter((group: Comment[]) =>
+      group.some((comment: Comment) => this.activeComments.has(comment)),
     );
   }
 
@@ -398,13 +428,16 @@ export class CommentRenderer {
     // 新規コメントのチェックと追加
     this.comments.forEach((comment) => {
       const isInRange =
-        comment.vposMs <= renderTime && renderTime < comment.vposMs + this.commentDuration;
+        comment.vposMs <= renderTime &&
+        renderTime < comment.vposMs + this.commentDuration;
 
       if (isInRange && !this.activeComments.has(comment)) {
         // 新規コメントの初期化
         comment.startTime = renderTime - (renderTime - comment.vposMs);
         if (!comment.width && this.ctx) {
-          comment.width = this.ctx.measureText(comment.body.substring(0, this.maxCommentLength)).width;
+          comment.width = this.ctx.measureText(
+            comment.body.substring(0, this.maxCommentLength),
+          ).width;
         }
         this.activeComments.add(comment);
 
@@ -418,41 +451,53 @@ export class CommentRenderer {
 
     // グループごとにコメントを描画
     this.commentGroups.forEach((group) => {
-      const activeGroupComments = group.filter((comment) => this.activeComments.has(comment));
+      const activeGroupComments = group.filter((comment) =>
+        this.activeComments.has(comment),
+      );
 
       if (activeGroupComments.length > 0) {
         activeGroupComments.forEach((comment) => {
-          if (comment.startTime === undefined || comment.initialX === undefined || 
-              comment.speed === undefined || comment.fixedY === undefined) return;
+          if (
+            comment.startTime === undefined ||
+            comment.initialX === undefined ||
+            comment.speed === undefined ||
+            comment.fixedY === undefined
+          )
+            return;
 
           const elapsed = currentTime - comment.startTime;
-          
+
           // 仮想拡張キャンバス上でのX座標を計算
           const virtualX = comment.initialX - elapsed * comment.speed;
-          
+
           // 実際の描画領域上でのX座標に変換（左側の仮想領域を考慮）
           const actualX = virtualX - this.virtualExtendedLeftWidth;
-          
+
           // コメントの終端X座標
           const commentEndX = actualX + (comment.width || 0);
 
           // 実際の表示領域内にあるかチェック
-          const isVisible = (actualX < canvasWidth && commentEndX > 0) || !!comment.forceVisible;
-          
+          const isVisible =
+            (actualX < canvasWidth && commentEndX > 0) ||
+            !!comment.forceVisible;
+
           // 完全に画面外（仮想拡張領域も含む）に出たかチェック
           // コメントの右端が仮想拡張キャンバスの左端を完全に通過した時に削除
-          if (comment.width && virtualX + comment.width < -this.virtualExtendedLeftWidth) {
+          if (
+            comment.width &&
+            virtualX + comment.width < -this.virtualExtendedLeftWidth
+          ) {
             this.activeComments.delete(comment);
             return;
           }
-          
+
           // 表示領域内のみ描画
           if (isVisible) {
             this.drawCommentWithStroke(
               comment.body.substring(0, this.maxCommentLength),
               actualX,
               comment.fixedY,
-              comment.color || this.defaultColor
+              comment.color || this.defaultColor,
             );
           }
         });
@@ -466,7 +511,9 @@ export class CommentRenderer {
   private assignToGroup(comment: Comment, currentTime: number): void {
     // 既存のグループを探す
     let foundGroup = this.commentGroups.find((group) =>
-      group.some((c) => Math.abs(c.vposMs - comment.vposMs) <= this.vposThreshold)
+      group.some(
+        (c) => Math.abs(c.vposMs - comment.vposMs) <= this.vposThreshold,
+      ),
     );
 
     if (!foundGroup) {
@@ -494,17 +541,21 @@ export class CommentRenderer {
     } else {
       // グループ内の他のコメントの下に配置を試みる
       const prevComment = foundGroup[groupIndex - 1];
-      const preferredLane = (prevComment.fixedLane !== undefined) ? prevComment.fixedLane + 1 : 0;
+      const preferredLane =
+        prevComment.fixedLane !== undefined ? prevComment.fixedLane + 1 : 0;
       lane = this.findAvailableLane(currentTime, comment.width, preferredLane);
     }
 
     // 位置を固定
     comment.fixedLane = lane;
     comment.fixedY = lane * this.laneHeight;
-    
+
     // 仮想拡張キャンバスの右端から出現するように設定
-    comment.initialX = this.virtualExtendedLeftWidth + (this.canvas?.width ?? 0) + this.virtualExtendedRightWidth;
-    
+    comment.initialX =
+      this.virtualExtendedLeftWidth +
+      (this.canvas?.width ?? 0) +
+      this.virtualExtendedRightWidth;
+
     // コメントの速度計算
     // 可視キャンバス（実画面）+コメント幅 を commentDuration で移動する速さにします
     // これにより拡張領域を含めた全距離ではなく、
@@ -531,7 +582,10 @@ export class CommentRenderer {
     if (!this.canvas) return;
     const targetLines = 17; // 目標の行数
     const calculatedSize = Math.floor(this.canvas.height / targetLines);
-    this.fontSize = Math.max(COMMENT_RENDERER_CONFIG.MIN_FONT_SIZE, calculatedSize);
+    this.fontSize = Math.max(
+      COMMENT_RENDERER_CONFIG.MIN_FONT_SIZE,
+      calculatedSize,
+    );
   }
 
   /**
@@ -559,9 +613,14 @@ export class CommentRenderer {
   /**
    * 縁取り付きテキスト描画
    */
-  private drawCommentWithStroke(text: string, x: number, y: number, color: string): void {
+  private drawCommentWithStroke(
+    text: string,
+    x: number,
+    y: number,
+    color: string,
+  ): void {
     if (!this.ctx) return;
-    
+
     // 縁取りを描画
     this.ctx.strokeStyle = this.strokeColor;
     this.ctx.lineWidth = this.strokeWidth;
@@ -579,7 +638,9 @@ export class CommentRenderer {
     // コメントの幅を事前計算
     if (this.ctx) {
       this.ctx.font = `${this.fontSize}px Arial`;
-      const width = this.ctx.measureText(comment.body.substring(0, this.maxCommentLength)).width;
+      const width = this.ctx.measureText(
+        comment.body.substring(0, this.maxCommentLength),
+      ).width;
       comment.width = width;
     }
 
@@ -587,7 +648,7 @@ export class CommentRenderer {
 
     // コメントを時間順にソート
     this.comments.sort((a, b) => a.vposMs - b.vposMs);
-    
+
     // グループの再計算
     this.calculateCommentGroups();
   }
@@ -605,7 +666,9 @@ export class CommentRenderer {
         currentGroup.push(comment);
       } else {
         const lastComment = currentGroup[currentGroup.length - 1];
-        if (Math.abs(comment.vposMs - lastComment.vposMs) <= this.vposThreshold) {
+        if (
+          Math.abs(comment.vposMs - lastComment.vposMs) <= this.vposThreshold
+        ) {
           currentGroup.push(comment);
         } else {
           // グループ番号を割り当て
@@ -632,7 +695,11 @@ export class CommentRenderer {
   /**
    * レーンが利用可能かチェック
    */
-  private isLaneAvailable(lane: number, currentTime: number, commentWidth: number | undefined): boolean {
+  private isLaneAvailable(
+    lane: number,
+    currentTime: number,
+    commentWidth: number | undefined,
+  ): boolean {
     if (lane >= this.maxLanes) return false;
     if (!this.canvas) return false;
 
@@ -647,18 +714,24 @@ export class CommentRenderer {
 
     // レーンが空いているか、既存のコメントと重ならないか確認
     for (const existingComment of this.activeComments) {
-      if (existingComment.fixedLane === lane && existingComment.initialX !== undefined && 
-          existingComment.startTime !== undefined && existingComment.speed !== undefined) {
+      if (
+        existingComment.fixedLane === lane &&
+        existingComment.initialX !== undefined &&
+        existingComment.startTime !== undefined &&
+        existingComment.speed !== undefined
+      ) {
         // 既存コメントの幅を確認
         const existingWidth = existingComment.width || 0;
-        
+
         // 仮想キャンバス上での位置を計算
-        const virtualX = existingComment.initialX - (currentTime - existingComment.startTime) * existingComment.speed;
-          
+        const virtualX =
+          existingComment.initialX -
+          (currentTime - existingComment.startTime) * existingComment.speed;
+
         // 実際の表示領域上でのX座標に変換
         const actualX = virtualX - this.virtualExtendedLeftWidth;
         const existingEndX = actualX + existingWidth;
-        
+
         // 重なり判定: 長いコメントほど厳しく判定する
         // 既存コメントが長い場合、新しいコメントとの距離をより大きく確保
         // 新しいコメントが長い場合も同様
@@ -670,10 +743,13 @@ export class CommentRenderer {
           // 既存コメントの終端が画面右端よりも右側にあり、コメント幅に基づいた距離内なら衝突と判定
           return false;
         }
-        
+
         // コメントの長さを考慮した追加チェック
         // 短いコメントの上に長いコメントが重ならないようにする
-        if (commentWidth > existingWidth * 1.5 && existingEndX > canvasWidth - commentWidth) {
+        if (
+          commentWidth > existingWidth * 1.5 &&
+          existingEndX > canvasWidth - commentWidth
+        ) {
           // 新しいコメントが既存コメントよりかなり長い場合、より厳しく判定
           return false;
         }
@@ -685,12 +761,20 @@ export class CommentRenderer {
   /**
    * 利用可能なレーンを探す
    */
-  private findAvailableLane(currentTime: number, commentWidth: number | undefined, preferredLane: number | null = null): number {
+  private findAvailableLane(
+    currentTime: number,
+    commentWidth: number | undefined,
+    preferredLane: number | null = null,
+  ): number {
     // コメントを長さでソートするため、最適なレーンを選択するための準備
     // 長いコメントは下のレーンに、短いコメントは上のレーンに配置する傾向がある
-    
+
     // 優先レーンが指定されていて使用可能な場合はそれを使用
-    if (preferredLane !== null && preferredLane < this.maxLanes && this.isLaneAvailable(preferredLane, currentTime, commentWidth)) {
+    if (
+      preferredLane !== null &&
+      preferredLane < this.maxLanes &&
+      this.isLaneAvailable(preferredLane, currentTime, commentWidth)
+    ) {
       return preferredLane;
     }
 
@@ -699,19 +783,19 @@ export class CommentRenderer {
     if (commentWidth && this.canvas) {
       const canvasWidth = this.canvas.width;
       const lengthRatio = commentWidth / canvasWidth;
-      
+
       // 長いコメントほど下のレーンから探索
       if (lengthRatio > 0.5) {
         // 長いコメント: 下半分のレーンから探索
         const startLane = Math.floor(this.maxLanes / 2);
-        
+
         // 下から上に探索
         for (let lane = this.maxLanes - 1; lane >= startLane; lane--) {
           if (this.isLaneAvailable(lane, currentTime, commentWidth)) {
             return lane;
           }
         }
-        
+
         // 上半分も探索
         for (let lane = startLane - 1; lane >= 0; lane--) {
           if (this.isLaneAvailable(lane, currentTime, commentWidth)) {
@@ -721,14 +805,14 @@ export class CommentRenderer {
       } else {
         // 短いコメント: 上半分のレーンから探索
         const endLane = Math.floor(this.maxLanes / 2);
-        
+
         // 上から下に探索
         for (let lane = 0; lane < endLane; lane++) {
           if (this.isLaneAvailable(lane, currentTime, commentWidth)) {
             return lane;
           }
         }
-        
+
         // 下半分も探索
         for (let lane = endLane; lane < this.maxLanes; lane++) {
           if (this.isLaneAvailable(lane, currentTime, commentWidth)) {
@@ -737,7 +821,7 @@ export class CommentRenderer {
         }
       }
     }
-    
+
     // 通常の探索（上から下）
     for (let lane = 0; lane < this.maxLanes; lane++) {
       if (this.isLaneAvailable(lane, currentTime, commentWidth)) {
@@ -753,7 +837,7 @@ export class CommentRenderer {
    * 複数のコメントを追加
    */
   addComments(comments: Comment[]): void {
-    comments.forEach(comment => this.addComment(comment));
+    comments.forEach((comment) => this.addComment(comment));
   }
 
   /**
@@ -763,7 +847,10 @@ export class CommentRenderer {
     this.comments = [];
     this.activeComments.clear();
     this.commentGroups = [];
-    this.laneStates = Array.from({ length: this.maxLanes }, () => null as Comment | null);
+    this.laneStates = Array.from(
+      { length: this.maxLanes },
+      () => null as Comment | null,
+    );
     this.clearCanvas();
     window.logger.info("コメントをクリアしました！");
   }
@@ -774,7 +861,9 @@ export class CommentRenderer {
    */
   setOpacity(opacity: number): void {
     if (opacity < 0 || opacity > 1) {
-      window.logger.warn(`透明度の範囲外の値が指定されました: ${opacity}、範囲は0.0～1.0です`);
+      window.logger.warn(
+        `透明度の範囲外の値が指定されました: ${opacity}、範囲は0.0～1.0です`,
+      );
       opacity = Math.max(0, Math.min(1, opacity));
     }
     this.opacity = opacity;
@@ -788,7 +877,9 @@ export class CommentRenderer {
   setDefaultColor(color: string): void {
     // 色コードの簡易バリデーション
     if (!/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
-      window.logger.warn(`無効な色コードです: ${color}、デフォルト色を使用します`);
+      window.logger.warn(
+        `無効な色コードです: ${color}、デフォルト色を使用します`,
+      );
       return;
     }
     this.defaultColor = color;
@@ -802,21 +893,21 @@ export class CommentRenderer {
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
     }
-    
+
     // イベントリスナーのクリーンアップ
-    window.removeEventListener('resize', () => this.resizeCanvas());
-    
+    window.removeEventListener("resize", () => this.resizeCanvas());
+
     // キャンバスの削除
     if (this.canvas) {
       this.canvas.remove();
     }
-    
+
     // ResizeObserverの解除
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
     }
-    
+
     this.comments = [];
     this.activeComments.clear();
     this.commentGroups = [];
@@ -835,18 +926,20 @@ export class CommentRenderer {
     this.ctx.font = `${this.fontSize}px Arial`;
 
     // ── 1. アクティブコメント ──
-    this.activeComments.forEach(c => {
+    this.activeComments.forEach((c) => {
       if (
-        c.startTime === undefined || c.initialX === undefined ||
+        c.startTime === undefined ||
+        c.initialX === undefined ||
         c.speed === undefined
-      ) return;
+      )
+        return;
 
       const elapsed = now - c.startTime;
-      const virtualX = c.initialX - elapsed * c.speed;      // 現在位置を保持
+      const virtualX = c.initialX - elapsed * c.speed; // 現在位置を保持
 
       // 新しい幅と速度
       const newWidth = this.ctx!.measureText(
-        c.body.substring(0, this.maxCommentLength)
+        c.body.substring(0, this.maxCommentLength),
       ).width;
       const visibleDist = this.canvas!.width + newWidth;
       const newSpeed = visibleDist / this.commentDuration;
@@ -863,10 +956,10 @@ export class CommentRenderer {
     });
 
     // ── 2. 未表示コメント（キュー）──
-    this.comments.forEach(c => {
+    this.comments.forEach((c) => {
       if (c.startTime !== undefined) return; // すでに流れ始めたものは上で処理済み
       const newWidth = this.ctx!.measureText(
-        c.body.substring(0, this.maxCommentLength)
+        c.body.substring(0, this.maxCommentLength),
       ).width;
       c.width = newWidth;
       const visibleDist = this.canvas!.width + newWidth;
@@ -875,9 +968,10 @@ export class CommentRenderer {
 
     window.logger.info("コメントの幅・速度を再計算しました！", {
       activeComments: this.activeComments.size,
-      queuedComments: this.comments.filter(c => c.startTime === undefined).length,
+      queuedComments: this.comments.filter((c) => c.startTime === undefined)
+        .length,
       fontSize: this.fontSize,
-      canvasWidth: this.canvas.width
+      canvasWidth: this.canvas.width,
     });
   }
-} 
+}

@@ -116,4 +116,4 @@ export interface ExtendedFetchWatchPageResult {
   serverContext: unknown;
   serverResponse: unknown;
   apiData: NicoApiData;
-} 
+}

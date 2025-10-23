@@ -1,4 +1,8 @@
-import type { CommentData, CommentThread, NicoApiData } from "@/types/common-types";
+import type {
+  CommentData,
+  CommentThread,
+  NicoApiData,
+} from "@/types/common-types";
 
 export type PanelStatus = "idle" | "loading" | "success" | "error";
 
@@ -127,4 +131,3 @@ export interface DownloadDescriptor {
 export interface PanelSummaryBuilder<T> {
   (data: T): HTMLElement;
 }
-

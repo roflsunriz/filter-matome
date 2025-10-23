@@ -1,10 +1,9 @@
 export class ValidationService {
-  
   // 入力値のサニタイズとバリデーション用の関数
   sanitizeInput(input: string): string {
     // HTMLタグの除去
     const sanitized = input.replace(/<[^>]*>/g, "");
-    
+
     // 制御文字の除去（改行とタブは許可）- 文字コードを使って処理
     const chars = [];
     for (let i = 0; i < sanitized.length; i++) {
@@ -13,12 +12,12 @@ export class ValidationService {
       if (
         (code > 8 && code < 14 && code !== 11 && code !== 12) || // TAB,LF,CRは許可
         (code > 31 && code < 127) || // 通常の表示可能なASCII
-        (code > 127) // 非ASCII（日本語など）
+        code > 127 // 非ASCII（日本語など）
       ) {
         chars.push(sanitized[i]);
       }
     }
-    
+
     // 前後の空白を削除
     return chars.join("").trim();
   }
@@ -45,7 +44,10 @@ export class ValidationService {
 
       case "videoId":
         // 動画IDまたはURL
-        if (sanitized.includes("nicovideo.jp") || sanitized.includes("nico.ms")) {
+        if (
+          sanitized.includes("nicovideo.jp") ||
+          sanitized.includes("nico.ms")
+        ) {
           // URLの場合はURLとして有効かチェック
           try {
             new URL(sanitized);
@@ -63,4 +65,4 @@ export class ValidationService {
 
     return sanitized;
   }
-} 
+}

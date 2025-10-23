@@ -108,24 +108,22 @@ export class BasePanel extends HTMLElement {
 
   constructor() {
     super();
-    this.shadow = this.attachShadow({ mode: 'closed' });
-    
+    this.shadow = this.attachShadow({ mode: "closed" });
+
     // 外クリック監視リスナーをバインド
     this.outsideClickListener = this.handleOutsideClick.bind(this);
   }
 
   protected setupFab(icon: string, title: string) {
-    const fab = this.shadow.getElementById('fab');
+    const fab = this.shadow.getElementById("fab");
     if (fab) {
       fab.innerHTML = icon;
       fab.title = title;
-      fab.addEventListener('click', () => {
-        
+      fab.addEventListener("click", () => {
         this.togglePanel();
       });
-      
     } else {
-      window.logger.error('[BasePanel] FAB element not found in setupFab');
+      window.logger.error("[BasePanel] FAB element not found in setupFab");
     }
   }
 
@@ -134,46 +132,50 @@ export class BasePanel extends HTMLElement {
    */
   private handleOutsideClick(event: Event): void {
     if (!this.isPanelOpen) return;
-    
+
     const mouseEvent = event as MouseEvent;
-    const panel = this.shadow.querySelector('.panel');
-    const fab = this.shadow.getElementById('fab');
-    
+    const panel = this.shadow.querySelector(".panel");
+    const fab = this.shadow.getElementById("fab");
+
     if (!panel || !fab) return;
 
     // クリック座標を取得
     const clickX = mouseEvent.clientX;
     const clickY = mouseEvent.clientY;
-    
+
     // パネルとFABの領域を取得
     const panelRect = panel.getBoundingClientRect();
     const fabRect = fab.getBoundingClientRect();
-    
+
     // クリック座標がパネル内またはFAB内にあるかチェック
-    const isInsidePanel = (
-      clickX >= panelRect.left && clickX <= panelRect.right &&
-      clickY >= panelRect.top && clickY <= panelRect.bottom
-    );
-    
-    const isInsideFab = (
-      clickX >= fabRect.left && clickX <= fabRect.right &&
-      clickY >= fabRect.top && clickY <= fabRect.bottom
-    );
-    
+    const isInsidePanel =
+      clickX >= panelRect.left &&
+      clickX <= panelRect.right &&
+      clickY >= panelRect.top &&
+      clickY <= panelRect.bottom;
+
+    const isInsideFab =
+      clickX >= fabRect.left &&
+      clickX <= fabRect.right &&
+      clickY >= fabRect.top &&
+      clickY <= fabRect.bottom;
+
     // select要素がアクティブな場合は外クリック処理をスキップ
-    const activeSelect = this.shadow.querySelector('select:focus') as HTMLSelectElement;
+    const activeSelect = this.shadow.querySelector(
+      "select:focus",
+    ) as HTMLSelectElement;
     if (activeSelect) {
       return;
     }
-    
+
     // ドロップダウンメニューが開いているselect要素があるかチェック
-    const selectElements = this.shadow.querySelectorAll('select');
+    const selectElements = this.shadow.querySelectorAll("select");
     for (const select of Array.from(selectElements)) {
-      if (document.activeElement === select || select.matches(':focus')) {
+      if (document.activeElement === select || select.matches(":focus")) {
         return;
       }
     }
-    
+
     // パネル外かつFAB外の場合のみパネルを閉じる
     if (!isInsidePanel && !isInsideFab) {
       this.closePanel();
@@ -181,27 +183,27 @@ export class BasePanel extends HTMLElement {
   }
 
   private togglePanel(forceState?: boolean) {
-    const panel = this.shadow.querySelector('.panel');
+    const panel = this.shadow.querySelector(".panel");
     if (panel) {
       // forceStateが指定されている場合はその値を使用、そうでなければ現在の状態を反転
-      this.isPanelOpen = forceState !== undefined ? forceState : !this.isPanelOpen;
-      
+      this.isPanelOpen =
+        forceState !== undefined ? forceState : !this.isPanelOpen;
+
       // パネルの表示状態を更新
-      panel.classList.toggle('visible', this.isPanelOpen);
-      
+      panel.classList.toggle("visible", this.isPanelOpen);
+
       // 外クリック監視の開始/停止
       if (this.isPanelOpen) {
         // パネルが開いたら外クリック監視を開始
         setTimeout(() => {
-          document.addEventListener('click', this.outsideClickListener, true);
+          document.addEventListener("click", this.outsideClickListener, true);
         }, 100); // わずかな遅延でFABクリックイベントとの競合を避ける
       } else {
         // パネルが閉じたら外クリック監視を停止
-        document.removeEventListener('click', this.outsideClickListener, true);
+        document.removeEventListener("click", this.outsideClickListener, true);
       }
-      
     } else {
-      window.logger.error('[BasePanel] Panel element not found in togglePanel');
+      window.logger.error("[BasePanel] Panel element not found in togglePanel");
     }
   }
 
@@ -222,18 +224,18 @@ export class BasePanel extends HTMLElement {
 
   // 外クリック監視を一時的に無効化
   protected temporarilyDisableOutsideClick(): void {
-    document.removeEventListener('click', this.outsideClickListener, true);
+    document.removeEventListener("click", this.outsideClickListener, true);
   }
 
   // 外クリック監視を再開
   protected enableOutsideClick(): void {
     if (this.isPanelOpen) {
-      document.addEventListener('click', this.outsideClickListener, true);
+      document.addEventListener("click", this.outsideClickListener, true);
     }
   }
 
   // コンポーネントが削除される時にイベントリスナーをクリーンアップ
   disconnectedCallback() {
-    document.removeEventListener('click', this.outsideClickListener, true);
+    document.removeEventListener("click", this.outsideClickListener, true);
   }
-} 
+}

@@ -1,8 +1,16 @@
 import "@/types/global.d.ts";
 
 import { Mylist2DB } from "@/mylist2/components/database";
-import { MylistInfo, KeywordInfo, ManagerSettings, ExportData } from "@/types/mylist-types";
-import { DBVideo as VideoInfo, VideoInfo as BaseVideoInfo } from "@/types/video-types";
+import {
+  MylistInfo,
+  KeywordInfo,
+  ManagerSettings,
+  ExportData,
+} from "@/types/mylist-types";
+import {
+  DBVideo as VideoInfo,
+  VideoInfo as BaseVideoInfo,
+} from "@/types/video-types";
 
 import { ApiService } from "@/mylist2/services/api-service";
 import { MylistService } from "@/mylist2/services/mylist-service";
@@ -36,7 +44,10 @@ export class Mylist2Manager {
     this.mylistService = new MylistService(this.db);
     this.videoService = new VideoService(this.db);
     this.keywordService = new KeywordService(this.db);
-    this.importExportService = new ImportExportService(this.db, this.apiService);
+    this.importExportService = new ImportExportService(
+      this.db,
+      this.apiService,
+    );
     this.settingsService = new SettingsService(this.db);
     this.databaseManagementService = new DatabaseManagementService(this.db);
     this.googleDriveService = new GoogleDriveService();
@@ -60,7 +71,9 @@ export class Mylist2Manager {
   }
 
   async sortMylists(sortType: string): Promise<MylistInfo[]> {
-    return this.mylistService.sortMylists(sortType, (mylistId) => this.getVideos(mylistId));
+    return this.mylistService.sortMylists(sortType, (mylistId) =>
+      this.getVideos(mylistId),
+    );
   }
 
   async updateMylistName(mylistId: number, newName: string): Promise<void> {
@@ -88,7 +101,10 @@ export class Mylist2Manager {
     return this.videoService.deleteVideo(compositeId);
   }
 
-  async updateVideoInfo(compositeId: string, newInfo: Partial<BaseVideoInfo>): Promise<void> {
+  async updateVideoInfo(
+    compositeId: string,
+    newInfo: Partial<BaseVideoInfo>,
+  ): Promise<void> {
     return this.videoService.updateVideoInfo(compositeId, newInfo);
   }
 
@@ -126,7 +142,7 @@ export class Mylist2Manager {
     return this.apiService.extractVideoId(input);
   }
 
-  // インポート・エクスポート関連のメソッド  
+  // インポート・エクスポート関連のメソッド
   async exportData() {
     return this.importExportService.exportData();
   }
@@ -135,12 +151,16 @@ export class Mylist2Manager {
     return this.importExportService.importData(data);
   }
 
-  async importLegacyData(jsonText: string, progressCallback?: (processed: number, total: number) => void): Promise<number> {
+  async importLegacyData(
+    jsonText: string,
+    progressCallback?: (processed: number, total: number) => void,
+  ): Promise<number> {
     return this.importExportService.importLegacyData(
-      jsonText, 
-      progressCallback, 
+      jsonText,
+      progressCallback,
       (name: string) => this.createMylist(name),
-      (mylistId: number, videoInfo: BaseVideoInfo) => this.addVideo(mylistId, videoInfo)
+      (mylistId: number, videoInfo: BaseVideoInfo) =>
+        this.addVideo(mylistId, videoInfo),
     );
   }
 
@@ -156,14 +176,16 @@ export class Mylist2Manager {
   // データベース管理関連のメソッド
   async initializeDatabaseWithHealthCheck(): Promise<{
     success: boolean;
-    health: import('../components/database').DatabaseHealth;
+    health: import("../components/database").DatabaseHealth;
     persistence: boolean;
     error?: string;
   }> {
     return this.databaseManagementService.initializeDatabase();
   }
 
-  async performDatabaseHealthCheck(): Promise<import('../components/database').DatabaseHealth> {
+  async performDatabaseHealthCheck(): Promise<
+    import("../components/database").DatabaseHealth
+  > {
     return this.databaseManagementService.performHealthCheck();
   }
 
@@ -207,7 +229,11 @@ export class Mylist2Manager {
     return this.databaseManagementService.monitorStorageUsage();
   }
 
-  setDatabaseMigrationProgressCallback(callback: (progress: import('../components/database').MigrationProgress) => void): void {
+  setDatabaseMigrationProgressCallback(
+    callback: (
+      progress: import("../components/database").MigrationProgress,
+    ) => void,
+  ): void {
     this.databaseManagementService.setMigrationProgressCallback(callback);
   }
 
@@ -237,18 +263,32 @@ export class Mylist2Manager {
   }
 
   // データの全消去（設定含むかを選択可能）
-  async clearAllData(includeSettings = false): Promise<{ success: boolean; error?: string }> {
+  async clearAllData(
+    includeSettings = false,
+  ): Promise<{ success: boolean; error?: string }> {
     return this.databaseManagementService.clearAllData({ includeSettings });
   }
 
   // Google Drive アップロード (zip圧縮)
-  async uploadBackupToGoogleDrive(baseFileName: string): Promise<{ success: boolean; fileId?: string; error?: string }> {
+  async uploadBackupToGoogleDrive(
+    baseFileName: string,
+  ): Promise<{ success: boolean; fileId?: string; error?: string }> {
     try {
       const backup = await this.createDatabaseBackup();
-      if (!backup.success || !backup.backupData) return { success: false, error: backup.error || 'バックアップ作成に失敗しました' };
-      return await this.googleDriveService.uploadBackupZip(baseFileName, backup.backupData);
+      if (!backup.success || !backup.backupData)
+        return {
+          success: false,
+          error: backup.error || "バックアップ作成に失敗しました",
+        };
+      return await this.googleDriveService.uploadBackupZip(
+        baseFileName,
+        backup.backupData,
+      );
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : String(error) };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
   }
 
@@ -257,67 +297,118 @@ export class Mylist2Manager {
   }
 
   // Google Drive 上のバックアップ一覧
-  async listGoogleDriveBackups(): Promise<Array<{ id: string; name: string; modifiedTime?: string; size?: string }>> {
+  async listGoogleDriveBackups(): Promise<
+    Array<{ id: string; name: string; modifiedTime?: string; size?: string }>
+  > {
     return this.googleDriveService.listBackups();
   }
 
   // Google Drive からバックアップをダウンロードして復元
-  async restoreFromGoogleDriveBackup(fileId: string): Promise<{ success: boolean; error?: string }> {
+  async restoreFromGoogleDriveBackup(
+    fileId: string,
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const jsonText = await this.googleDriveService.downloadBackupJson(fileId);
       const res = await this.restoreDatabaseFromBackup(jsonText);
       return res;
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : String(error) };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
   }
 
   // 汎用クラウド: プロバイダ選択版
-  async uploadBackupToCloud(provider: 'gdrive' | 'dropbox' | 'onedrive' | 'mega', baseFileName: string): Promise<{ success: boolean; id?: string; error?: string }> {
+  async uploadBackupToCloud(
+    provider: "gdrive" | "dropbox" | "onedrive" | "mega",
+    baseFileName: string,
+  ): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
       const backup = await this.createDatabaseBackup();
-      if (!backup.success || !backup.backupData) return { success: false, error: backup.error || 'バックアップ作成に失敗しました' };
-      if (provider === 'gdrive') {
-        const r = await this.googleDriveService.uploadBackupZip(baseFileName, backup.backupData);
-        return r.success ? { success: true, id: r.fileId } : { success: false, error: r.error };
+      if (!backup.success || !backup.backupData)
+        return {
+          success: false,
+          error: backup.error || "バックアップ作成に失敗しました",
+        };
+      if (provider === "gdrive") {
+        const r = await this.googleDriveService.uploadBackupZip(
+          baseFileName,
+          backup.backupData,
+        );
+        return r.success
+          ? { success: true, id: r.fileId }
+          : { success: false, error: r.error };
       }
-      if (provider === 'dropbox') {
-        const r = await this.dropboxService.uploadBackupZip(baseFileName, backup.backupData);
-        return r.success ? { success: true, id: r.path } : { success: false, error: r.error };
+      if (provider === "dropbox") {
+        const r = await this.dropboxService.uploadBackupZip(
+          baseFileName,
+          backup.backupData,
+        );
+        return r.success
+          ? { success: true, id: r.path }
+          : { success: false, error: r.error };
       }
-      if (provider === 'onedrive') {
-        const r = await this.oneDriveService.uploadBackupZip(baseFileName, backup.backupData);
-        return r.success ? { success: true, id: r.fileId } : { success: false, error: r.error };
+      if (provider === "onedrive") {
+        const r = await this.oneDriveService.uploadBackupZip(
+          baseFileName,
+          backup.backupData,
+        );
+        return r.success
+          ? { success: true, id: r.fileId }
+          : { success: false, error: r.error };
       }
-      if (provider === 'mega') {
-        const r = await this.megaService.uploadBackupZip(baseFileName, backup.backupData);
-        return r.success ? { success: true, id: r.fileId } : { success: false, error: r.error };
+      if (provider === "mega") {
+        const r = await this.megaService.uploadBackupZip(
+          baseFileName,
+          backup.backupData,
+        );
+        return r.success
+          ? { success: true, id: r.fileId }
+          : { success: false, error: r.error };
       }
-      return { success: false, error: '未知のプロバイダ' };
+      return { success: false, error: "未知のプロバイダ" };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : String(error) };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
   }
 
-  async listCloudBackups(provider: 'gdrive' | 'dropbox' | 'onedrive' | 'mega'): Promise<Array<{ id: string; name: string; modifiedTime?: string; size?: string }>> {
-    if (provider === 'gdrive') return this.googleDriveService.listBackups();
-    if (provider === 'dropbox') return this.dropboxService.listBackups();
-    if (provider === 'onedrive') return this.oneDriveService.listBackups();
-    if (provider === 'mega') return this.megaService.listBackups();
+  async listCloudBackups(
+    provider: "gdrive" | "dropbox" | "onedrive" | "mega",
+  ): Promise<
+    Array<{ id: string; name: string; modifiedTime?: string; size?: string }>
+  > {
+    if (provider === "gdrive") return this.googleDriveService.listBackups();
+    if (provider === "dropbox") return this.dropboxService.listBackups();
+    if (provider === "onedrive") return this.oneDriveService.listBackups();
+    if (provider === "mega") return this.megaService.listBackups();
     return [];
   }
 
-  async restoreFromCloudBackup(provider: 'gdrive' | 'dropbox' | 'onedrive' | 'mega', id: string): Promise<{ success: boolean; error?: string }> {
+  async restoreFromCloudBackup(
+    provider: "gdrive" | "dropbox" | "onedrive" | "mega",
+    id: string,
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      let jsonText = '';
-      if (provider === 'gdrive') jsonText = await this.googleDriveService.downloadBackupJson(id);
-      else if (provider === 'dropbox') jsonText = await this.dropboxService.downloadBackupJson(id);
-      else if (provider === 'onedrive') jsonText = await this.oneDriveService.downloadBackupJson(id);
-      else if (provider === 'mega') jsonText = await this.megaService.downloadBackupJson(id);
+      let jsonText = "";
+      if (provider === "gdrive")
+        jsonText = await this.googleDriveService.downloadBackupJson(id);
+      else if (provider === "dropbox")
+        jsonText = await this.dropboxService.downloadBackupJson(id);
+      else if (provider === "onedrive")
+        jsonText = await this.oneDriveService.downloadBackupJson(id);
+      else if (provider === "mega")
+        jsonText = await this.megaService.downloadBackupJson(id);
       const res = await this.restoreDatabaseFromBackup(jsonText);
       return res;
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : String(error) };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
     }
   }
 }

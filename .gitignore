@@ -25,3 +25,6 @@ local/background-images/favorites/
 
 # config
 scripts/config.json
+
+# dist
+local/features/dist/

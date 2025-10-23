@@ -6,7 +6,7 @@
 export interface BackgroundImageItem {
   id: string;
   name: string;
-  type: 'url' | 'file';
+  type: "url" | "file";
   data: string; // URLまたはbase64データ
   createdAt: string;
   updatedAt: string;
@@ -15,4 +15,4 @@ export interface BackgroundImageItem {
 export interface BackgroundImageConfig {
   images: BackgroundImageItem[];
   selectedImageId: string | null;
-} 
+}

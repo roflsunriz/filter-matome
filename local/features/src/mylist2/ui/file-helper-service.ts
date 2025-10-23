@@ -1,7 +1,6 @@
-import { ExportData } from '@/types/mylist-types';
+import { ExportData } from "@/types/mylist-types";
 
 export class FileHelperService {
-  
   // ファイル名生成用のヘルパーメソッド
   formatDateTime(): string {
     const now = new Date();
@@ -19,16 +18,18 @@ export class FileHelperService {
   parseLength(lengthText: string): number {
     // 「分」と「秒」で区切って数値に変換する
     const [minutes, seconds] = lengthText
-      .replace(/分|秒/g, ':')  // 「分」と「秒」を:に置換
-      .split(':')
-      .map(num => parseInt(num || "0", 10));  // 文字列を数値に変換、undefinedの場合は0に
-    
+      .replace(/分|秒/g, ":") // 「分」と「秒」を:に置換
+      .split(":")
+      .map((num) => parseInt(num || "0", 10)); // 文字列を数値に変換、undefinedの場合は0に
+
     return (minutes || 0) * 60 + (seconds || 0);
   }
 
   // エクスポート処理
   async downloadFile(data: ExportData, fileName: string): Promise<void> {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
 
     // ダウンロードの完了を待つための Promise を作成
@@ -62,4 +63,4 @@ export class FileHelperService {
   async readFile(file: File): Promise<string> {
     return file.text();
   }
-} 
+}

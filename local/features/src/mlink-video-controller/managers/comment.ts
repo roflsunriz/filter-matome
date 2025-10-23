@@ -1,12 +1,16 @@
-import { NicoApiFetcher } from '@/mlink-video-controller/managers/nico-api-fetcher';
-import { MlinkVideoComment, CommentSearchResult, CommentSearchOptions } from '@/types/mlink-video-controller-types';
+import { NicoApiFetcher } from "@/mlink-video-controller/managers/nico-api-fetcher";
+import {
+  MlinkVideoComment,
+  CommentSearchResult,
+  CommentSearchOptions,
+} from "@/types/mlink-video-controller-types";
 
 export class CommentManager {
   private static instance: CommentManager;
   private apiFetcher: NicoApiFetcher;
   private searchOptions: CommentSearchOptions = {
     enableRegexp: false,
-    enableExtended: false
+    enableExtended: false,
   };
   private currentVideoId: string | null = null;
   private eventListeners: Array<() => void> = [];
@@ -34,21 +38,27 @@ export class CommentManager {
   public async fetchComments(videoId?: string): Promise<boolean> {
     const effectiveVideoId = videoId || (await this.extractVideoIdFromUrl());
     if (!effectiveVideoId) {
-      window.logger?.warn('動画IDが指定されていません');
+      window.logger?.warn("動画IDが指定されていません");
       return false;
     }
 
     // 同じ動画IDの場合はスキップ
     if (this.currentVideoId === effectiveVideoId) {
-      window.logger?.debug('同じ動画IDのため、コメント取得をスキップしました:', effectiveVideoId);
+      window.logger?.debug(
+        "同じ動画IDのため、コメント取得をスキップしました:",
+        effectiveVideoId,
+      );
       return true;
     }
 
     try {
-      window.logger?.info('コメントを取得中:', effectiveVideoId);
+      window.logger?.info("コメントを取得中:", effectiveVideoId);
       const success = await this.apiFetcher.fetchAll(effectiveVideoId);
       if (!success) {
-        window.logger?.warn('コメントの取得に失敗しました (APIレスポンスなし):', effectiveVideoId);
+        window.logger?.warn(
+          "コメントの取得に失敗しました (APIレスポンスなし):",
+          effectiveVideoId,
+        );
         return false;
       }
 
@@ -56,7 +66,7 @@ export class CommentManager {
       this.notifyDataChanged();
       return true;
     } catch (error) {
-      window.logger.error('コメントの取得に失敗しました:', error);
+      window.logger.error("コメントの取得に失敗しました:", error);
       return false;
     }
   }
@@ -72,17 +82,17 @@ export class CommentManager {
   public searchComments(query: string): CommentSearchResult {
     try {
       const results = this.apiFetcher.searchComments(query, {
-        enableRegexp: this.searchOptions.enableRegexp
+        enableRegexp: this.searchOptions.enableRegexp,
       });
 
       return {
         success: true,
-        results
+        results,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : '検索に失敗しました'
+        error: error instanceof Error ? error.message : "検索に失敗しました",
       };
     }
   }
@@ -90,7 +100,7 @@ export class CommentManager {
   public setSearchOptions(options: Partial<CommentSearchOptions>): void {
     this.searchOptions = {
       ...this.searchOptions,
-      ...options
+      ...options,
     };
   }
 
@@ -98,7 +108,9 @@ export class CommentManager {
     return { ...this.searchOptions };
   }
 
-  public getCommentDensityData(segments: number = 100): { time: number; count: number }[] {
+  public getCommentDensityData(
+    segments: number = 100,
+  ): { time: number; count: number }[] {
     return this.apiFetcher.getCommentDensityData(segments);
   }
 
@@ -118,11 +130,11 @@ export class CommentManager {
   }
 
   private notifyDataChanged(): void {
-    this.eventListeners.forEach(callback => {
+    this.eventListeners.forEach((callback) => {
       try {
         callback();
       } catch (error) {
-        window.logger?.error('データ変更通知でエラーが発生しました:', error);
+        window.logger?.error("データ変更通知でエラーが発生しました:", error);
       }
     });
   }
@@ -138,15 +150,21 @@ export class CommentManager {
     const checkUrl = async () => {
       const currentVideoId = await this.extractVideoIdFromUrl();
       if (currentVideoId && currentVideoId !== this.currentVideoId) {
-        window.logger?.info('URL変更を検出、コメントを再取得:', currentVideoId);
+        window.logger?.info("URL変更を検出、コメントを再取得:", currentVideoId);
         this.fetchComments(currentVideoId)
-          .then(success => {
+          .then((success) => {
             if (!success) {
-              window.logger?.warn('URL変更時のコメント取得に失敗:', currentVideoId);
+              window.logger?.warn(
+                "URL変更時のコメント取得に失敗:",
+                currentVideoId,
+              );
             }
           })
-          .catch(error => {
-            window.logger?.error('URL変更時のコメント取得処理で予期しないエラー:', error);
+          .catch((error) => {
+            window.logger?.error(
+              "URL変更時のコメント取得処理で予期しないエラー:",
+              error,
+            );
           });
       }
     };
@@ -155,13 +173,13 @@ export class CommentManager {
     const popstateListener = () => {
       setTimeout(checkUrl, 100); // DOM更新を待つ
     };
-    window.addEventListener('popstate', popstateListener);
+    window.addEventListener("popstate", popstateListener);
 
     // =============================================
     // 🚀 pushState/replaceState フック (SPA遷移対策)
     // =============================================
-    const patchHistoryMethod = (type: 'pushState' | 'replaceState') => {
-      type HistoryMethod = History['pushState']; // pushState と replaceState は同じシグネチャ
+    const patchHistoryMethod = (type: "pushState" | "replaceState") => {
+      type HistoryMethod = History["pushState"]; // pushState と replaceState は同じシグネチャ
 
       // インデックスアクセスで型が落ちるため一旦キャスト
       const historyObj = history as History & {
@@ -175,20 +193,22 @@ export class CommentManager {
       historyObj[type] = (...args: Parameters<HistoryMethod>) => {
         const result = original.apply(historyObj, args);
         // カスタムイベントを発火
-        window.dispatchEvent(new Event('ml-location-change'));
+        window.dispatchEvent(new Event("ml-location-change"));
         return result;
       };
     };
 
-    const win = window as Window & { __mlink_comment_history_patched?: boolean };
+    const win = window as Window & {
+      __mlink_comment_history_patched?: boolean;
+    };
 
     if (!win.__mlink_comment_history_patched) {
-      patchHistoryMethod('pushState');
-      patchHistoryMethod('replaceState');
+      patchHistoryMethod("pushState");
+      patchHistoryMethod("replaceState");
 
       // popstate でも同じイベントを呼ぶ
-      window.addEventListener('popstate', () => {
-        window.dispatchEvent(new Event('ml-location-change'));
+      window.addEventListener("popstate", () => {
+        window.dispatchEvent(new Event("ml-location-change"));
       });
 
       win.__mlink_comment_history_patched = true;
@@ -198,7 +218,7 @@ export class CommentManager {
     const locationChangeListener = () => {
       setTimeout(checkUrl, 100);
     };
-    window.addEventListener('ml-location-change', locationChangeListener);
+    window.addEventListener("ml-location-change", locationChangeListener);
 
     // MutationObserver でもDOM更新を検知（後方互換）
     const observer = new MutationObserver(() => {
@@ -206,16 +226,14 @@ export class CommentManager {
     });
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
 
     // クリーンアップ関数を記録（データ変更通知とは切り離す）
     this.cleanupHandlers.push(() => {
-      window.removeEventListener('popstate', popstateListener);
-      window.removeEventListener('ml-location-change', locationChangeListener);
+      window.removeEventListener("popstate", popstateListener);
+      window.removeEventListener("ml-location-change", locationChangeListener);
       observer.disconnect();
     });
   }
-} 
-
-
+}

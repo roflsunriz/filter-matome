@@ -1,5 +1,5 @@
-import { NicoVideoPlayer } from '@/mlink-video-controller/services/nico-video-player';
-import { PlaybackRateOptions } from '@/types/mlink-video-controller-types';
+import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
+import { PlaybackRateOptions } from "@/types/mlink-video-controller-types";
 
 export class SpeedHandler {
   private player: NicoVideoPlayer;
@@ -14,13 +14,13 @@ export class SpeedHandler {
   public setPlaybackRate(options: PlaybackRateOptions): void {
     const min = options.min ?? this.defaultMin;
     const max = options.max ?? this.defaultMax;
-    
+
     // 範囲内に制限
     const rate = Math.max(min, Math.min(max, options.value));
-    
+
     // 小数点第2位で四捨五入
     const roundedRate = Math.round(rate * 100) / 100;
-    
+
     this.player.setPlaybackRate(roundedRate);
   }
 
@@ -33,7 +33,7 @@ export class SpeedHandler {
     this.setPlaybackRate({
       value: currentRate + delta,
       min: this.defaultMin,
-      max: this.defaultMax
+      max: this.defaultMax,
     });
   }
 
@@ -52,7 +52,7 @@ export class SpeedHandler {
   public getRange(): { min: number; max: number } {
     return {
       min: this.defaultMin,
-      max: this.defaultMax
+      max: this.defaultMax,
     };
   }
-} 
+}

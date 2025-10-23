@@ -1340,8 +1340,8 @@ ${COLLAPSIBLE_CONTROLS_STYLES}
  * Mylist Manager スタイルをDOMに適用する関数
  */
 export const applyMylistManagerStyles = (): HTMLStyleElement => {
-  const styleElement = document.createElement('style');
+  const styleElement = document.createElement("style");
   styleElement.textContent = MYLIST_MANAGER_STYLES;
   document.head.appendChild(styleElement);
   return styleElement;
-}; 
+};

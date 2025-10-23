@@ -1,4 +1,8 @@
-import { ModuleInstance, ModuleConfig, ModuleStatus } from '@/types/module-types';
+import {
+  ModuleInstance,
+  ModuleConfig,
+  ModuleStatus,
+} from "@/types/module-types";
 
 /**
  * 検索ページ8列表示モジュール
@@ -16,29 +20,25 @@ export class SearchPageModule implements ModuleInstance {
   async initialize(): Promise<void> {
     try {
       await Promise.resolve();
-      
+
       // 8列表示用のCSSを注入
       this.injectEightColumnCSS();
-      
+
       this.active = true;
-      
     } catch (error) {
-      window.logger.error('[SearchPageModule] 初期化に失敗しました:', error);
+      window.logger.error("[SearchPageModule] 初期化に失敗しました:", error);
       throw error;
     }
   }
 
   destroy(): void {
     try {
-      
-      
       // 注入したCSSを削除
       this.removeEightColumnCSS();
-      
+
       this.active = false;
-      
     } catch (error) {
-      window.logger.error('[SearchPageModule] 停止処理に失敗しました:', error);
+      window.logger.error("[SearchPageModule] 停止処理に失敗しました:", error);
     }
   }
 
@@ -62,9 +62,9 @@ export class SearchPageModule implements ModuleInstance {
       this.removeEightColumnCSS();
 
       // 新しいスタイル要素を作成
-      this.styleElement = document.createElement('style');
-      this.styleElement.setAttribute('data-search-module', 'eight-column');
-      
+      this.styleElement = document.createElement("style");
+      this.styleElement.setAttribute("data-search-module", "eight-column");
+
       // 元のeight_column.cssに基づく8列表示用のCSS
       this.styleElement.textContent = `
         /* 元のeight_column.cssの内容を基にした8列表示 */
@@ -171,10 +171,8 @@ export class SearchPageModule implements ModuleInstance {
 
       // headに追加
       document.head.appendChild(this.styleElement);
-      
-      
     } catch (error) {
-      window.logger.error('[SearchPageModule] CSS注入でエラー:', error);
+      window.logger.error("[SearchPageModule] CSS注入でエラー:", error);
     }
   }
 
@@ -186,18 +184,19 @@ export class SearchPageModule implements ModuleInstance {
       if (this.styleElement && this.styleElement.parentNode) {
         this.styleElement.parentNode.removeChild(this.styleElement);
         this.styleElement = null;
-        
       }
 
       // 念のため、data属性で検索して削除
-      const existingStyles = document.querySelectorAll('style[data-search-module="eight-column"]');
-      existingStyles.forEach(style => {
+      const existingStyles = document.querySelectorAll(
+        'style[data-search-module="eight-column"]',
+      );
+      existingStyles.forEach((style) => {
         if (style.parentNode) {
           style.parentNode.removeChild(style);
         }
       });
     } catch (error) {
-      window.logger.error('[SearchPageModule] CSS削除でエラー:', error);
+      window.logger.error("[SearchPageModule] CSS削除でエラー:", error);
     }
   }
-} 
+}

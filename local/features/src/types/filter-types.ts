@@ -3,12 +3,17 @@
  */
 
 // CommentDataをインポートするため
-import type { CommentData } from '@/types/comment-types';
+import type { CommentData } from "@/types/comment-types";
 
 /**
  * 設定値の型定義
  */
-export type SettingValue = string | number | boolean | object | (string | number | boolean | object)[];
+export type SettingValue =
+  | string
+  | number
+  | boolean
+  | object
+  | (string | number | boolean | object)[];
 
 /**
  * フィルター設定値の型定義
@@ -34,10 +39,10 @@ export interface FilterSettings {
  * コマンド設定のインターフェース
  */
 export interface CommandSettings {
-  owner: string[];   // 投稿者コメント用コマンド
-  main: string[];    // メインコメント用コマンド  
-  easy: string[];    // 簡単コメント用コマンド
-  normal: string[];  // 通常コメント用コマンド
+  owner: string[]; // 投稿者コメント用コマンド
+  main: string[]; // メインコメント用コマンド
+  easy: string[]; // 簡単コメント用コマンド
+  normal: string[]; // 通常コメント用コマンド
   [key: string]: string[]; // インデックス署名を追加
 }
 
@@ -123,7 +128,7 @@ export interface CF2Comment {
  */
 export interface CF2Thread {
   id: string;
-  fork: 'main' | 'easy' | 'owner';
+  fork: "main" | "easy" | "owner";
   commentCount: number;
   comments: CF2Comment[];
 }
@@ -153,12 +158,12 @@ export interface CF2CommentApiResponse {
  * CommentFilter2用NGワードルールの型
  */
 export interface NGWordRule {
-  regex?: string;          // 正規表現パターン（ユーザーIDルールの場合は未定義）
-  regexFlags?: string;    // 正規表現フラグ（g、iなど）
-  replace?: string;        // 置換文字列（ユーザーIDルールの場合は未定義）
-  smid: string;          // 動画SMID（ALLまたは特定のSMID）
-  nicoru: number | 'EMPTY'; // ニコる数閾値
-  userId?: string;       // ユーザーID（@ルール用、完全一致）
+  regex?: string; // 正規表現パターン（ユーザーIDルールの場合は未定義）
+  regexFlags?: string; // 正規表現フラグ（g、iなど）
+  replace?: string; // 置換文字列（ユーザーIDルールの場合は未定義）
+  smid: string; // 動画SMID（ALLまたは特定のSMID）
+  nicoru: number | "EMPTY"; // ニコる数閾値
+  userId?: string; // ユーザーID（@ルール用、完全一致）
   isUserIdRule?: boolean; // ユーザーIDルールかどうかのフラグ
 }
 
@@ -222,12 +227,14 @@ export interface CompatibleCommentFilter2GlobalData {
 /**
  * CommentFilter2GlobalDataを互換性のある型に安全に変換
  */
-export function toCompatibleGlobalData(data: CommentFilter2GlobalData): CompatibleCommentFilter2GlobalData {
+export function toCompatibleGlobalData(
+  data: CommentFilter2GlobalData,
+): CompatibleCommentFilter2GlobalData {
   return {
     originalData: data.originalData,
     filteredData: data.filteredData,
     currentSmid: data.currentSmid,
-    lastUpdated: data.lastUpdated
+    lastUpdated: data.lastUpdated,
   };
 }
 
@@ -263,14 +270,14 @@ export interface NgRuleJson {
   pattern?: string;
   flags?: string;
   userId?: string;
-  
+
   // 実行アクション
   action: Action;
-  
+
   // 適用条件
   smid: string[]; // ["ALL"] or ["sm123", "sm456"]
   nicoru_cond?: NicoruCond;
-  
+
   // メタデータ
   id?: string;
   description?: string;
@@ -281,7 +288,7 @@ export interface NgRuleJson {
 export interface NgRuleJsonCollection {
   version: "3.0";
   rules: NgRuleJson[];
-  settings?: Settings;  // 設定（コメントコマンド設定を含む）
+  settings?: Settings; // 設定（コメントコマンド設定を含む）
   metadata?: {
     exportedAt: string;
     exportedBy: string;
@@ -297,7 +304,7 @@ export interface MigrationResult {
   warnings: string[];
   originalCount: number;
   migratedCount: number;
-} 
+}
 
 // === マイグレーション機能関連の型定義 ===
 
@@ -347,4 +354,4 @@ export interface SettingStorageItem {
  */
 export interface SettingsStorage {
   [key: string]: SettingStorageItem;
-} 
+}

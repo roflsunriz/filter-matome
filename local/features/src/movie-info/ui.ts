@@ -85,7 +85,10 @@ export class PanelController {
       return;
     }
     try {
-      const jsonText = typeof data === "string" ? data : JSON.stringify(data, null, pretty ? 2 : undefined);
+      const jsonText =
+        typeof data === "string"
+          ? data
+          : JSON.stringify(data, null, pretty ? 2 : undefined);
       this.currentJson = jsonText;
       this.jsonEl.textContent = jsonText;
       this.setRawVisibility(true);

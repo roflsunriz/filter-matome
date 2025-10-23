@@ -1,4 +1,4 @@
-import { NicoCache_nlInterface } from '@/types/global-types';
+import { NicoCache_nlInterface } from "@/types/global-types";
 
 export class NicoVideoPlayer {
   private static instance: NicoVideoPlayer;
@@ -13,23 +13,23 @@ export class NicoVideoPlayer {
   private checkInterval: number | null = null;
   private initialized: boolean = false;
   private isInitializing: boolean = false;
-  
+
   // ローカルストレージのキー
   private readonly STORAGE_KEYS = {
-    VOLUME: 'nicoVideoPlayerVolume',
-    PLAYBACK_RATE: 'nicoVideoPlayerPlaybackRate'
+    VOLUME: "nicoVideoPlayerVolume",
+    PLAYBACK_RATE: "nicoVideoPlayerPlaybackRate",
   };
-  
+
   // 安全な範囲の制限（初期化時のみ使用）
   private readonly SAFE_LIMITS = {
     VOLUME: {
       MIN: 0,
-      MAX: 100
+      MAX: 100,
     },
     PLAYBACK_RATE: {
       MIN: 0.1,
-      MAX: 5.0
-    }
+      MAX: 5.0,
+    },
   };
 
   private constructor() {
@@ -39,7 +39,7 @@ export class NicoVideoPlayer {
   private async initializeNicoCache(): Promise<void> {
     // NicoCache_nlが利用可能になるまで待機
     while (!window.NicoCache_nl) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
     this.nicoCache = window.NicoCache_nl;
     this.setupEventListeners();
@@ -57,15 +57,16 @@ export class NicoVideoPlayer {
   private getVideoElement(): HTMLVideoElement | null {
     try {
       if (!this.videoElement || !document.body.contains(this.videoElement)) {
-        const videos = Array.from(document.querySelectorAll('video'));
-        this.videoElement = videos.find(video => {
-          return (
-            // 新しい条件: data-name="video-content" を持つ要素
-            video.dataset.name === 'video-content' ||
-            // idにvideo-elementを持つ要素
-            video.id === 'video-element'
-          );
-        }) || null;
+        const videos = Array.from(document.querySelectorAll("video"));
+        this.videoElement =
+          videos.find((video) => {
+            return (
+              // 新しい条件: data-name="video-content" を持つ要素
+              video.dataset.name === "video-content" ||
+              // idにvideo-elementを持つ要素
+              video.id === "video-element"
+            );
+          }) || null;
 
         if (this.videoElement) {
           this.setupVideoElementListeners();
@@ -73,7 +74,10 @@ export class NicoVideoPlayer {
       }
       return this.videoElement;
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error getting video element:', error);
+      window.logger.error(
+        "[NicoVideoPlayer] Error getting video element:",
+        error,
+      );
       return null;
     }
   }
@@ -88,11 +92,9 @@ export class NicoVideoPlayer {
       // 再生状態の監視
       this.eventListeners.play = () => {
         this.isPlayingState = true;
-        
       };
       this.eventListeners.pause = () => {
         this.isPlayingState = false;
-        
       };
 
       // 時間の監視
@@ -125,12 +127,11 @@ export class NicoVideoPlayer {
 
       // エラー監視
       this.eventListeners.error = (event) => {
-        window.logger.error('[NicoVideoPlayer] Video error:', event);
+        window.logger.error("[NicoVideoPlayer] Video error:", event);
       };
 
       // 動画が読み込まれたときの処理
       this.eventListeners.loadedmetadata = () => {
-        
         // 少し遅延させて設定を復元（動画の初期化完了を待つ）
         setTimeout(() => {
           this.restoreSettings();
@@ -152,7 +153,10 @@ export class NicoVideoPlayer {
         }, 100);
       }
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error setting up event listeners:', error);
+      window.logger.error(
+        "[NicoVideoPlayer] Error setting up event listeners:",
+        error,
+      );
     }
   }
 
@@ -165,7 +169,10 @@ export class NicoVideoPlayer {
       });
       this.eventListeners = {};
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error removing event listeners:', error);
+      window.logger.error(
+        "[NicoVideoPlayer] Error removing event listeners:",
+        error,
+      );
     }
   }
 
@@ -188,7 +195,7 @@ export class NicoVideoPlayer {
         await video.play();
       }
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error playing video:', error);
+      window.logger.error("[NicoVideoPlayer] Error playing video:", error);
       this.isPlayingState = false;
     }
   }
@@ -200,7 +207,7 @@ export class NicoVideoPlayer {
         video.pause();
       }
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error pausing video:', error);
+      window.logger.error("[NicoVideoPlayer] Error pausing video:", error);
     }
   }
 
@@ -212,14 +219,14 @@ export class NicoVideoPlayer {
         this.currentTime = video.currentTime;
       }
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error seeking video:', error);
+      window.logger.error("[NicoVideoPlayer] Error seeking video:", error);
     }
   }
 
   public setVolume(volume: number): void {
     try {
       const video = this.getVideoElement();
-      
+
       // 常に0-100の範囲に丸める
       const finalVolume = Math.max(0, Math.min(100, volume));
 
@@ -227,12 +234,12 @@ export class NicoVideoPlayer {
         const normalizedVolume = finalVolume / 100;
         video.volume = normalizedVolume;
         this.currentVolume = finalVolume;
-        
+
         // 設定を保存
         this.saveSettings();
       }
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error setting volume:', error);
+      window.logger.error("[NicoVideoPlayer] Error setting volume:", error);
     }
   }
 
@@ -241,23 +248,28 @@ export class NicoVideoPlayer {
       const video = this.getVideoElement();
       if (video) {
         let finalRate = rate;
-        
+
         // 初期化時のみ安全な範囲に丸める
         if (this.isInitializing) {
-          finalRate = this.clampToSafeRange(rate, 'PLAYBACK_RATE');
+          finalRate = this.clampToSafeRange(rate, "PLAYBACK_RATE");
           if (finalRate !== rate) {
-            window.logger.warn(`[NicoVideoPlayer] Playback rate value ${rate} was clamped to safe range: ${finalRate}`);
+            window.logger.warn(
+              `[NicoVideoPlayer] Playback rate value ${rate} was clamped to safe range: ${finalRate}`,
+            );
           }
         }
-        
+
         video.playbackRate = finalRate;
         this.currentPlaybackRate = finalRate;
-        
+
         // 設定を保存
         this.saveSettings();
       }
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error setting playback rate:', error);
+      window.logger.error(
+        "[NicoVideoPlayer] Error setting playback rate:",
+        error,
+      );
     }
   }
 
@@ -307,7 +319,7 @@ export class NicoVideoPlayer {
       this.isInitializing = true;
       void this.initializeNicoCache();
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error reinitializing:', error);
+      window.logger.error("[NicoVideoPlayer] Error reinitializing:", error);
     }
   }
 
@@ -322,12 +334,18 @@ export class NicoVideoPlayer {
       this.initialized = false;
       NicoVideoPlayer.instance = undefined!;
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error destroying instance:', error);
+      window.logger.error(
+        "[NicoVideoPlayer] Error destroying instance:",
+        error,
+      );
     }
   }
 
   // 安全な範囲への丸め機能
-  private clampToSafeRange(value: number, type: 'VOLUME' | 'PLAYBACK_RATE'): number {
+  private clampToSafeRange(
+    value: number,
+    type: "VOLUME" | "PLAYBACK_RATE",
+  ): number {
     const limits = this.SAFE_LIMITS[type];
     return Math.max(limits.MIN, Math.min(limits.MAX, value));
   }
@@ -335,15 +353,19 @@ export class NicoVideoPlayer {
   // 設定をローカルストレージに保存
   private saveSettings(): void {
     try {
-      const safeVolume = this.clampToSafeRange(this.currentVolume, 'VOLUME');
-      const safePlaybackRate = this.clampToSafeRange(this.currentPlaybackRate, 'PLAYBACK_RATE');
-      
+      const safeVolume = this.clampToSafeRange(this.currentVolume, "VOLUME");
+      const safePlaybackRate = this.clampToSafeRange(
+        this.currentPlaybackRate,
+        "PLAYBACK_RATE",
+      );
+
       localStorage.setItem(this.STORAGE_KEYS.VOLUME, safeVolume.toString());
-      localStorage.setItem(this.STORAGE_KEYS.PLAYBACK_RATE, safePlaybackRate.toString());
-      
-      
+      localStorage.setItem(
+        this.STORAGE_KEYS.PLAYBACK_RATE,
+        safePlaybackRate.toString(),
+      );
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error saving settings:', error);
+      window.logger.error("[NicoVideoPlayer] Error saving settings:", error);
     }
   }
 
@@ -353,26 +375,26 @@ export class NicoVideoPlayer {
       // 設定復元時は一時的に初期化フラグを有効にして安全チェックを行う
       const wasInitializing = this.isInitializing;
       this.isInitializing = true;
-      
+
       const savedVolume = localStorage.getItem(this.STORAGE_KEYS.VOLUME);
-      const savedPlaybackRate = localStorage.getItem(this.STORAGE_KEYS.PLAYBACK_RATE);
+      const savedPlaybackRate = localStorage.getItem(
+        this.STORAGE_KEYS.PLAYBACK_RATE,
+      );
 
       if (savedVolume !== null) {
         const volume = parseFloat(savedVolume);
         this.setVolume(volume);
-        
       }
 
       if (savedPlaybackRate !== null) {
         const rate = parseFloat(savedPlaybackRate);
         this.setPlaybackRate(rate);
-        
       }
-      
+
       // 初期化フラグを元に戻す
       this.isInitializing = wasInitializing;
     } catch (error) {
-      window.logger.error('[NicoVideoPlayer] Error restoring settings:', error);
+      window.logger.error("[NicoVideoPlayer] Error restoring settings:", error);
       this.isInitializing = false; // エラー時も確実にフラグをリセット
     }
   }
@@ -391,7 +413,6 @@ export class NicoVideoPlayer {
       // 音量の外部変更を検知
       const actualVolume = this.videoElement.volume * 100;
       if (Math.abs(actualVolume - this.currentVolume) > 1) {
-        
         this.currentVolume = actualVolume;
         this.saveSettings();
       }
@@ -399,10 +420,9 @@ export class NicoVideoPlayer {
       // 再生速度の外部変更を検知
       const actualRate = this.videoElement.playbackRate;
       if (Math.abs(actualRate - this.currentPlaybackRate) > 0.01) {
-        
         this.currentPlaybackRate = actualRate;
         this.saveSettings();
       }
     }, 500); // 500msごとにチェック
   }
-} 
+}

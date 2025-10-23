@@ -1,5 +1,9 @@
-import { filterJsonThread, prepareJsonRules, JsonRuleMatchEvent } from './json-comment-filter-engine';
-import { CF2Thread, NgRuleJson, Settings } from '@/types/filter-types';
+import {
+  filterJsonThread,
+  prepareJsonRules,
+  JsonRuleMatchEvent,
+} from "@/comment-filter2/filter/json-comment-filter-engine";
+import { CF2Thread, NgRuleJson, Settings } from "@/types/filter-types";
 
 interface ProcessRequestPayload {
   threads: CF2Thread[];
@@ -15,21 +19,22 @@ interface ProcessResponsePayload {
 }
 
 interface ProcessRequest {
-  type: 'process';
+  type: "process";
   payload: ProcessRequestPayload;
 }
 
 interface ProcessResponse {
-  type: 'result';
+  type: "result";
   payload: ProcessResponsePayload;
 }
 
-const ctx: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobalScope;
+const ctx: DedicatedWorkerGlobalScope =
+  self as unknown as DedicatedWorkerGlobalScope;
 
 ctx.onmessage = (event: MessageEvent<ProcessRequest>) => {
   const { data } = event;
 
-  if (data.type === 'process') {
+  if (data.type === "process") {
     const { threads, rules, currentSmid, settings } = data.payload;
 
     const effectiveSettings: Settings | null = settings ?? null;
@@ -51,15 +56,13 @@ ctx.onmessage = (event: MessageEvent<ProcessRequest>) => {
     }
 
     const response: ProcessResponse = {
-      type: 'result',
+      type: "result",
       payload: {
         threads: processedThreads,
-        logs: allLogs
-      }
+        logs: allLogs,
+      },
     };
 
     ctx.postMessage(response);
   }
 };
-
-

@@ -54,4 +54,4 @@ declare global {
   interface Window {
     ThumbnailsFilter?: ThumbnailsFilterGlobal;
   }
-} 
+}

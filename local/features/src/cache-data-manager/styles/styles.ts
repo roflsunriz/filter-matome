@@ -1,6 +1,8 @@
-import { materialIconsStyles } from '@/common/material-icons.js';
+import { materialIconsStyles } from "@/common/material-icons.js";
 
-export const cacheListStyles = materialIconsStyles + `
+export const cacheListStyles =
+  materialIconsStyles +
+  `
 body {
     margin: 0;
     font-family: Arial, sans-serif;

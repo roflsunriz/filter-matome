@@ -2,14 +2,17 @@
  * グローバル型定義
  */
 
-import { ApiData, ExtendedApiData } from '@/types/video-types';
-import { Mylist2DB } from '@/mylist2/components/database';
-import { Mylist2Manager } from '@/mylist2/components/manager-refactored';
-import { Mylist2ManagerUI } from '@/mylist2/ui/ui-refactored';
-import { ToastrInstance } from '@/types/toastr-types';
-import { CommentApiResponse } from '@/types/comment-types';
-import { IVideoPlayerBridge } from '@/types/video-player-bridge-types';
-import { CommentFilter2GlobalData, CompatibleCommentFilter2GlobalData } from '@/types/filter-types';
+import { ApiData, ExtendedApiData } from "@/types/video-types";
+import { Mylist2DB } from "@/mylist2/components/database";
+import { Mylist2Manager } from "@/mylist2/components/manager-refactored";
+import { Mylist2ManagerUI } from "@/mylist2/ui/ui-refactored";
+import { ToastrInstance } from "@/types/toastr-types";
+import { CommentApiResponse } from "@/types/comment-types";
+import { IVideoPlayerBridge } from "@/types/video-player-bridge-types";
+import {
+  CommentFilter2GlobalData,
+  CompatibleCommentFilter2GlobalData,
+} from "@/types/filter-types";
 
 // Logger関連の型定義
 export enum LogLevel {
@@ -33,7 +36,10 @@ export interface NicoCache_nlInterface {
   watch: {
     getVideoID: () => string;
     apiData: ApiData;
-    addEventListener: (event: string, listener: () => Promise<void> | void) => void;
+    addEventListener: (
+      event: string,
+      listener: () => Promise<void> | void,
+    ) => void;
   };
   cacheUtil: {
     formatCacheInfo: () => Promise<boolean>;
@@ -51,7 +57,11 @@ interface WindowExtensionInterface {
   copy_ext: (event: MouseEvent) => void;
   EstimatedProcessingTime: (commentNum: string, videoLength: string) => string;
   EPTWrapper: (message: string) => void;
-  nicofetch: (element: string | HTMLElement, videoId: string, option: number) => void;
+  nicofetch: (
+    element: string | HTMLElement,
+    videoId: string,
+    option: number,
+  ) => void;
   toastr: ToastrInstance;
   // CommentFilter2 VideoPlayerBridge Singleton関連
   __CF2_BRIDGE__?: IVideoPlayerBridge;
@@ -66,7 +76,11 @@ interface WindowExtensionInterface {
     error: (...args: unknown[]) => void;
     debug: (...args: unknown[]) => void;
     handleError: (component: string, method: string, error: unknown) => void;
-    measurePerformance: (component: string, method: string, callback: () => void) => void;
+    measurePerformance: (
+      component: string,
+      method: string,
+      callback: () => void,
+    ) => void;
     setLevel: (level: LogLevel) => void;
     enableLogging: (filePattern: string) => void;
     disableLogging: (filePattern: string) => void;
@@ -99,7 +113,11 @@ interface WindowExtensionInterface {
     copyToClipboard: (content: string, label: string) => Promise<void>;
     getApiData: {
       thumb: (url: string) => Promise<Document>;
-      comment: (url: string, params: object, threadKey: string) => Promise<CommentApiResponse>;
+      comment: (
+        url: string,
+        params: object,
+        threadKey: string,
+      ) => Promise<CommentApiResponse>;
     };
   };
 }
@@ -116,6 +134,9 @@ export interface ExtendedNicoCache_nl extends NicoCache_nlInterface {
   watch: {
     getVideoID: () => string;
     apiData: ExtendedApiData;
-    addEventListener: (event: string, listener: () => Promise<void> | void) => void;
+    addEventListener: (
+      event: string,
+      listener: () => Promise<void> | void,
+    ) => void;
   };
-} 
+}

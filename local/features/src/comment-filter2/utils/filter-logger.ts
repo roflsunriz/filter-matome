@@ -1,9 +1,10 @@
 // フィルターログ送信ユーティリティ - CommentFilterLogger.javaとの連携
-import { CF2FilterLogEntry } from '@/types/filter-types';
+import { CF2FilterLogEntry } from "@/types/filter-types";
 
 export class FilterLogger {
   // ローカル環境でCommentFilterLogger.javaが動作していることを想定
-  private static readonly FILTER_LOG_ENDPOINT = window.location.origin + '/cache/filter_logs';
+  private static readonly FILTER_LOG_ENDPOINT =
+    window.location.origin + "/cache/filter_logs";
   private static readonly MAX_BATCH_SIZE = 100; // 一度に送信するログの最大数
   private static readonly RETRY_ATTEMPTS = 3; // リトライ回数
   private static readonly RETRY_DELAY = 1000; // リトライ間隔（ミリ秒）
@@ -42,11 +43,13 @@ export class FilterLogger {
     const existingKeys = new Set(this.logBuffer.map(createLogKey));
 
     // 重複していないログのみを追加
-    const newLogs = logs.filter(log => !existingKeys.has(createLogKey(log)));
-    
+    const newLogs = logs.filter((log) => !existingKeys.has(createLogKey(log)));
+
     if (newLogs.length > 0) {
       this.logBuffer.push(...newLogs);
-      window.logger?.debug(`[FilterLogger] Added ${newLogs.length} new logs to buffer (total: ${this.logBuffer.length})`);
+      window.logger?.debug(
+        `[FilterLogger] Added ${newLogs.length} new logs to buffer (total: ${this.logBuffer.length})`,
+      );
 
       // debounce送信をスケジュール
       this.scheduleDebouncedSend();
@@ -73,7 +76,7 @@ export class FilterLogger {
    */
   public static async flushLogBuffer(): Promise<void> {
     if (this.logBuffer.length === 0) {
-      window.logger?.debug('[FilterLogger] No logs in buffer to flush');
+      window.logger?.debug("[FilterLogger] No logs in buffer to flush");
       return;
     }
 
@@ -87,26 +90,33 @@ export class FilterLogger {
     const logsToSend = [...this.logBuffer];
     this.logBuffer = [];
 
-    window.logger?.info(`[FilterLogger] Flushing ${logsToSend.length} logs from buffer`);
+    window.logger?.info(
+      `[FilterLogger] Flushing ${logsToSend.length} logs from buffer`,
+    );
 
     // ログを送信
     try {
       const success = await this.sendFilterLogs(logsToSend);
       if (!success) {
         // 送信失敗時は警告のみ（ログは失われる）
-        window.logger?.warn('[FilterLogger] Failed to send some or all logs');
+        window.logger?.warn("[FilterLogger] Failed to send some or all logs");
       }
     } catch (error) {
-      window.logger?.error('[FilterLogger] Error while flushing log buffer:', error);
+      window.logger?.error(
+        "[FilterLogger] Error while flushing log buffer:",
+        error,
+      );
     }
   }
 
   /**
    * フィルターログを一括でCommentFilterLogger.javaに送信
    */
-  private static async sendFilterLogs(logs: CF2FilterLogEntry[]): Promise<boolean> {
+  private static async sendFilterLogs(
+    logs: CF2FilterLogEntry[],
+  ): Promise<boolean> {
     if (logs.length === 0) {
-      window.logger?.debug('[FilterLogger] No logs to send');
+      window.logger?.debug("[FilterLogger] No logs to send");
       return true;
     }
 
@@ -125,9 +135,13 @@ export class FilterLogger {
     const success = successCount === totalBatches;
 
     if (success) {
-      window.logger?.info(`[FilterLogger] Successfully sent ${logs.length} filter logs in ${totalBatches} batches`);
+      window.logger?.info(
+        `[FilterLogger] Successfully sent ${logs.length} filter logs in ${totalBatches} batches`,
+      );
     } else {
-      window.logger?.warn(`[FilterLogger] Partial success: ${successCount}/${totalBatches} batches sent successfully`);
+      window.logger?.warn(
+        `[FilterLogger] Partial success: ${successCount}/${totalBatches} batches sent successfully`,
+      );
     }
 
     return success;
@@ -147,7 +161,9 @@ export class FilterLogger {
   /**
    * バッチをリトライ付きで送信
    */
-  private static async sendBatchWithRetry(batch: CF2FilterLogEntry[]): Promise<boolean> {
+  private static async sendBatchWithRetry(
+    batch: CF2FilterLogEntry[],
+  ): Promise<boolean> {
     for (let attempt = 1; attempt <= this.RETRY_ATTEMPTS; attempt++) {
       try {
         const success = await this.sendBatch(batch);
@@ -155,7 +171,10 @@ export class FilterLogger {
           return true;
         }
       } catch (error) {
-        window.logger?.warn(`[FilterLogger] Batch send attempt ${attempt} failed:`, error);
+        window.logger?.warn(
+          `[FilterLogger] Batch send attempt ${attempt} failed:`,
+          error,
+        );
       }
 
       // 最後の試行でない場合は遅延
@@ -164,7 +183,9 @@ export class FilterLogger {
       }
     }
 
-    window.logger?.error(`[FilterLogger] Failed to send batch after ${this.RETRY_ATTEMPTS} attempts`);
+    window.logger?.error(
+      `[FilterLogger] Failed to send batch after ${this.RETRY_ATTEMPTS} attempts`,
+    );
     return false;
   }
 
@@ -174,25 +195,29 @@ export class FilterLogger {
   private static async sendBatch(batch: CF2FilterLogEntry[]): Promise<boolean> {
     try {
       const jsonData = JSON.stringify(batch);
-      
+
       const response = await fetch(this.FILTER_LOG_ENDPOINT, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': jsonData.length.toString()
+          "Content-Type": "application/json",
+          "Content-Length": jsonData.length.toString(),
         },
-        body: jsonData
+        body: jsonData,
       });
 
       if (response.ok) {
-        window.logger?.debug(`[FilterLogger] Batch of ${batch.length} logs sent successfully`);
+        window.logger?.debug(
+          `[FilterLogger] Batch of ${batch.length} logs sent successfully`,
+        );
         return true;
       } else {
-        window.logger?.warn(`[FilterLogger] Batch send failed with status: ${response.status} ${response.statusText}`);
+        window.logger?.warn(
+          `[FilterLogger] Batch send failed with status: ${response.status} ${response.statusText}`,
+        );
         return false;
       }
     } catch (error) {
-      window.logger?.error('[FilterLogger] Batch send error:', error);
+      window.logger?.error("[FilterLogger] Batch send error:", error);
       return false;
     }
   }
@@ -201,7 +226,7 @@ export class FilterLogger {
    * 指定時間待機
    */
   private static delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -212,51 +237,55 @@ export class FilterLogger {
       // ニコニコ動画の動画タイトル要素を探す
       const titleSelectors = [
         'h1[data-testid="video-title"]', // 新UI
-        '.VideoTitle', // 旧UI
-        'h1.video-title', // 別の形式
-        'title' // フォールバック（ページタイトル）
+        ".VideoTitle", // 旧UI
+        "h1.video-title", // 別の形式
+        "title", // フォールバック（ページタイトル）
       ];
 
       for (const selector of titleSelectors) {
         const element = document.querySelector(selector);
         if (element && element.textContent) {
           let title = element.textContent.trim();
-          
+
           // ページタイトルの場合はニコニコ動画の部分を除去
-          if (selector === 'title') {
-            title = title.replace(/\s*-\s*ニコニコ動画$/, '');
+          if (selector === "title") {
+            title = title.replace(/\s*-\s*ニコニコ動画$/, "");
           }
-          
+
           if (title.length > 0) {
             return title;
           }
         }
       }
 
-      return '不明なタイトル';
+      return "不明なタイトル";
     } catch (error) {
-      window.logger?.warn('[FilterLogger] Failed to get video title:', error);
-      return '不明なタイトル';
+      window.logger?.warn("[FilterLogger] Failed to get video title:", error);
+      return "不明なタイトル";
     }
   }
 
   /**
    * フィルター理由を生成
    */
-  public static generateFilterReasons(ruleType: 'regex' | 'userId', matched: boolean, hidden: boolean): string[] {
+  public static generateFilterReasons(
+    ruleType: "regex" | "userId",
+    matched: boolean,
+    hidden: boolean,
+  ): string[] {
     const reasons: string[] = [];
 
     if (matched) {
-      if (ruleType === 'regex') {
-        reasons.push('正規表現マッチ');
-      } else if (ruleType === 'userId') {
-        reasons.push('ユーザーID一致');
+      if (ruleType === "regex") {
+        reasons.push("正規表現マッチ");
+      } else if (ruleType === "userId") {
+        reasons.push("ユーザーID一致");
       }
 
       if (hidden) {
-        reasons.push('コメント非表示');
+        reasons.push("コメント非表示");
       } else {
-        reasons.push('コメント置換');
+        reasons.push("コメント置換");
       }
     }
 
@@ -267,32 +296,32 @@ export class FilterLogger {
    * フィルター詳細を生成
    */
   public static generateFilterDetails(
-    ruleType: 'regex' | 'userId', 
-    pattern?: string, 
-    userId?: string, 
-    replace?: string
+    ruleType: "regex" | "userId",
+    pattern?: string,
+    userId?: string,
+    replace?: string,
   ): Array<{ type: string; value: string | null }> {
     const details: Array<{ type: string; value: string | null }> = [];
 
-    if (ruleType === 'regex' && pattern) {
+    if (ruleType === "regex" && pattern) {
       details.push({
-        type: '正規表現',
-        value: pattern
+        type: "正規表現",
+        value: pattern,
       });
 
-      if (replace && replace !== 'EMPTY') {
+      if (replace && replace !== "EMPTY") {
         details.push({
-          type: '置換文字列',
-          value: replace
+          type: "置換文字列",
+          value: replace,
         });
       }
-    } else if (ruleType === 'userId' && userId) {
+    } else if (ruleType === "userId" && userId) {
       details.push({
-        type: 'ユーザーID',
-        value: userId
+        type: "ユーザーID",
+        value: userId,
       });
     }
 
     return details;
   }
-} 
+}

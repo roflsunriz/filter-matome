@@ -177,4 +177,4 @@ export const heatmapStyles = `
   border: 8px solid transparent;
   border-top-color: rgba(0, 0, 0, 0.95);
 }
-`; 
+`;

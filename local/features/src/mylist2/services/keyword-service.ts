@@ -18,21 +18,21 @@ export class KeywordService {
     // 重複チェック
     const isDuplicate = await this.checkDuplicateKeyword(mylistId, keyword);
     if (isDuplicate) {
-      throw new Error('このキーワードは既に登録されています');
+      throw new Error("このキーワードは既に登録されています");
     }
 
     const database = await this.db.initDB();
-    const transaction = database.transaction(['keywords'], 'readwrite');
-    const store = transaction.objectStore('keywords');
+    const transaction = database.transaction(["keywords"], "readwrite");
+    const store = transaction.objectStore("keywords");
 
     return new Promise<number>((resolve, reject) => {
       const request = store.add({
         mylistId,
         keyword,
-        addedAt: Date.now()
+        addedAt: Date.now(),
       });
       request.onsuccess = () => resolve(request.result as number);
-    	request.onerror = () => reject(new Error(this.toMessage(request.error)));
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
@@ -81,7 +81,8 @@ export class KeywordService {
         keyword.mylistId = newMylistId;
         const updateRequest = store.put(keyword);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
+        updateRequest.onerror = () =>
+          reject(new Error(this.toMessage(request.error)));
       };
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
@@ -105,24 +106,28 @@ export class KeywordService {
         keyword.keyword = newKeyword;
         const updateRequest = store.put(keyword);
         updateRequest.onsuccess = () => resolve();
-        updateRequest.onerror = () => reject(new Error(this.toMessage(request.error)));
+        updateRequest.onerror = () =>
+          reject(new Error(this.toMessage(request.error)));
       };
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
   }
 
   // キーワードの重複チェック
-  async checkDuplicateKeyword(mylistId: number, keyword: string): Promise<boolean> {
+  async checkDuplicateKeyword(
+    mylistId: number,
+    keyword: string,
+  ): Promise<boolean> {
     const database = await this.db.initDB();
-    const transaction = database.transaction(['keywords'], 'readonly');
-    const store = transaction.objectStore('keywords');
-    const index = store.index('mylistId');
+    const transaction = database.transaction(["keywords"], "readonly");
+    const store = transaction.objectStore("keywords");
+    const index = store.index("mylistId");
 
     return new Promise<boolean>((resolve, reject) => {
       const request = index.getAll(mylistId);
       request.onsuccess = () => {
         const keywords = request.result as KeywordInfo[];
-        const isDuplicate = keywords.some(k => k.keyword === keyword);
+        const isDuplicate = keywords.some((k) => k.keyword === keyword);
         resolve(isDuplicate);
       };
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
@@ -153,4 +158,4 @@ export class KeywordService {
       return isAsc ? comparison : -comparison;
     });
   }
-} 
+}

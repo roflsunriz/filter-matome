@@ -41,7 +41,7 @@ declare module "flexsearch" {
     add(document: T): this;
     search<Enrich extends boolean = false>(
       query: string,
-      options: Partial<DocumentSearchOptions<Enrich>>
+      options: Partial<DocumentSearchOptions<Enrich>>,
     ): SimpleDocumentSearchResultSetUnit[];
   }
 }
