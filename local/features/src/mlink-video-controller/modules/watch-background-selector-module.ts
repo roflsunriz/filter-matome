@@ -13,6 +13,8 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
   
   private shadowHost: HTMLElement | null = null;
   private shadowRoot: ShadowRoot | null = null;
+  private backgroundHost: HTMLElement | null = null;
+  private backgroundRoot: ShadowRoot | null = null;
   private radialContainer: HTMLElement | null = null;
   private settingsContainer: HTMLElement | null = null;
   private backgroundOverlay: HTMLElement | null = null;
@@ -92,8 +94,15 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       this.shadowRoot = null;
       this.radialContainer = null;
       this.settingsContainer = null;
-      this.backgroundOverlay = null;
     }
+
+    if (this.backgroundHost) {
+      this.backgroundHost.remove();
+      this.backgroundHost = null;
+      this.backgroundRoot = null;
+    }
+
+    this.backgroundOverlay = null;
 
     // グローバル背景スタイルを削除
     const globalStyleElement = document.getElementById('watch-background-global-styles');
@@ -146,54 +155,52 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
    * Shadow DOM作成
    */
   private createShadowDOM(): void {
-    if (this.shadowHost && this.shadowRoot) {
-      return;
+    if (!this.backgroundHost || !this.backgroundRoot) {
+      this.backgroundHost = document.createElement('div');
+      this.backgroundHost.id = 'watch-background-selector-background-shadow-host';
+      this.backgroundHost.style.cssText = 'position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1;';
+      this.backgroundRoot = this.backgroundHost.attachShadow({ mode: 'closed' });
+      document.body.appendChild(this.backgroundHost);
     }
 
-    // Shadow Hostコンテナを作成
-    this.shadowHost = document.createElement('div');
-    this.shadowHost.id = 'watch-background-selector-shadow-host';
-    this.shadowHost.style.cssText = 'position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1000;';
-    
-    // Shadow Rootをアタッチ
-    this.shadowRoot = this.shadowHost.attachShadow({ mode: 'closed' });
-    
-    // bodyに追加
-    document.body.appendChild(this.shadowHost);
+    if (!this.shadowHost || !this.shadowRoot) {
+      this.shadowHost = document.createElement('div');
+      this.shadowHost.id = 'watch-background-selector-shadow-host';
+      this.shadowHost.style.cssText = 'position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000;';
+      this.shadowRoot = this.shadowHost.attachShadow({ mode: 'closed' });
+      document.body.appendChild(this.shadowHost);
+    }
   }
-
   /**
-   * CSS統合注入（Shadow Root内）
+   * CSS���������i�w�i�z�X�g/UI�z�X�g�����j
    */
   private injectCSS(): void {
-    if (!this.shadowRoot) return;
+    this.injectBackgroundCSS();
+    this.injectUICSS();
+  }
 
-    let style = this.shadowRoot.getElementById('watch-background-selector-style') as HTMLStyleElement | null;
+  private injectBackgroundCSS(): void {
+    if (!this.backgroundRoot) return;
+
+    let style = this.backgroundRoot.getElementById('watch-background-selector-background-style') as HTMLStyleElement | null;
     if (!style) {
       style = document.createElement('style');
-      style.id = 'watch-background-selector-style';
-      this.shadowRoot.appendChild(style);
+      style.id = 'watch-background-selector-background-style';
+      this.backgroundRoot.appendChild(style);
     }
 
     style.textContent = `
       @charset "utf-8";
 
-      /*-------------------------
-       * Shadow DOM内の背景セレクタースタイル
-       *-------------------------*/
-      
-      /* ホスト要素 */
       :host {
         position: fixed;
         inset: 0;
         width: 100%;
         height: 100%;
         pointer-events: none;
-        z-index: 1000;
         display: block;
       }
 
-      /* 背景描画レイヤー */
       #bg-overlay {
         position: fixed;
         inset: 0;
@@ -212,9 +219,39 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
         transition: background-image 0.3s ease-in-out;
         z-index: 0;
       }
+    `;
+  }
+
+  private injectUICSS(): void {
+    if (!this.shadowRoot) return;
+
+    let style = this.shadowRoot.getElementById('watch-background-selector-style') as HTMLStyleElement | null;
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'watch-background-selector-style';
+      this.shadowRoot.appendChild(style);
+    }
+
+    style.textContent = `
+      @charset "utf-8";
 
       /*-------------------------
-       * ラジアルセレクター
+       * Shadow DOM���̔w�i�Z���N�^�[�X�^�C��
+       *-------------------------*/
+      
+      /* �z�X�g�v�f */
+      :host {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1000;
+        display: block;
+      }
+
+      /*-------------------------
+       * ���W�A���Z���N�^�[
        *-------------------------*/
       #bg-radial-container {
         position: fixed;
@@ -234,7 +271,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
         flex-direction: row;
       }
       
-      /* 取っ手部分（実際のHTML要素） */
+      /* ����蕔���i���ۂ�HTML�v�f�j */
       #bg-handle {
         width: 20px;
         height: 100%;
@@ -248,7 +285,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
         justify-content: center;
       }
       
-      /* メイン部分 */
+      /* ���C������ */
       #bg-main-content {
         flex: 1;
         height: 100%;
@@ -258,7 +295,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
         overflow: hidden;
       }
       
-      /* open 時（hover でも class でも可） */
+      /* open ���ihover �ł� class �ł��j */
       #bg-radial-container.open,
       #bg-radial-container:hover {
         transform: translateX(0) translateY(-50%);
@@ -307,7 +344,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       }
 
       /*-------------------------
-       * スクロールバーのスタイル
+       * �X�N���[���o�[�̃X�^�C��
        *-------------------------*/
       .settings-content::-webkit-scrollbar,
       .image-list::-webkit-scrollbar {
@@ -337,17 +374,17 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
    * 背景描画用レイヤーを作成
    */
   private ensureBackgroundOverlay(): void {
-    if (!this.shadowRoot) return;
+    if (!this.backgroundRoot) return;
 
-    if (this.backgroundOverlay && this.shadowRoot.contains(this.backgroundOverlay)) {
+    if (this.backgroundOverlay && this.backgroundRoot.contains(this.backgroundOverlay)) {
       return;
     }
 
-    let overlay: HTMLElement | null = this.shadowRoot.getElementById('bg-overlay');
+    let overlay: HTMLElement | null = this.backgroundRoot.getElementById('bg-overlay');
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.id = 'bg-overlay';
-      this.shadowRoot.prepend(overlay);
+      this.backgroundRoot.prepend(overlay);
     }
 
     this.backgroundOverlay = overlay;
@@ -852,4 +889,4 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
     this.backgroundSettings.addEventListener('settingsReset', settingsResetListener);
     this.eventListeners.push({ type: 'settingsReset', listener: settingsResetListener });
   }
-} 
+}
