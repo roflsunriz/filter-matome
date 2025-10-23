@@ -170,6 +170,7 @@ function applyRulesToComment({
   logCollector
 }: ApplyJsonRuleOptions): CF2Comment | null {
   const processedComment: CF2Comment = { ...originalComment };
+  processedComment.isPremium = true;
   processedComment.commands = normalizeCommands(processedComment.commands);
 
   let ruleApplied = false;

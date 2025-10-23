@@ -311,11 +311,8 @@ function applyRulesToComment({
 }: ApplyRulesOptions): CF2Comment | null {
   const processedComment: CF2Comment = { ...originalComment };
 
+  processedComment.isPremium = true;
   processedComment.commands = normalizeCommands(processedComment.commands);
-
-  if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-    processedComment.isPremium = true;
-  }
 
   const commandsToAdd: string[] = [];
   let shouldHideComment = false;

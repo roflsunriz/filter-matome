@@ -7,7 +7,11 @@
       MAIN: "main",
       EASY: "easy",
       OWNER: "owner"
-    }};
+    },
+    // NGワードルール形式
+    RULE_DEFAULTS: {
+      EMPTY_REPLACE: "EMPTY",
+      ALL_SMID: "ALL"}};
   const DEFAULT_COMMANDS = [
     "big",
     "medium",
@@ -434,6 +438,99 @@
       "184"
     ]
   };
+  function prepareRules(rules, currentSmid, regexCache) {
+    const preparedRules = [];
+    const userIdRuleIndexes = /* @__PURE__ */ new Map();
+    const substringMatcher = new SubstringMatcher();
+    let hasLiteralPatterns = false;
+    for (const rule of rules) {
+      if (!shouldApplyRule(rule, currentSmid)) {
+        continue;
+      }
+      const index = preparedRules.length;
+      const isValidUserRule = Boolean(rule.isUserIdRule && rule.userId);
+      const preparedRule = {
+        rule,
+        index,
+        compiledRegex: void 0,
+        isUserIdRule: isValidUserRule,
+        hasLiteralPrefilter: false,
+        minRequiredNicoru: typeof rule.nicoru === "number" ? rule.nicoru : void 0
+      };
+      if (isValidUserRule && rule.userId) {
+        const bucket = userIdRuleIndexes.get(rule.userId) ?? [];
+        bucket.push(index);
+        userIdRuleIndexes.set(rule.userId, bucket);
+      }
+      if (rule.regex) {
+        const flags = rule.regexFlags || "gi";
+        preparedRule.compiledRegex = getRegex(regexCache, rule.regex, flags);
+        if (isPlainLiteralPattern(rule.regex)) {
+          const isCaseSensitive = !flags.includes("i");
+          substringMatcher.add(rule.regex, index, isCaseSensitive);
+          preparedRule.hasLiteralPrefilter = true;
+          hasLiteralPatterns = true;
+        }
+      }
+      preparedRules.push(preparedRule);
+    }
+    if (hasLiteralPatterns) {
+      substringMatcher.build();
+    }
+    return {
+      rules: preparedRules,
+      userIdRuleIndexes,
+      substringMatcher: hasLiteralPatterns ? substringMatcher : null,
+      needsLowercase: hasLiteralPatterns ? substringMatcher.needsLowercaseText() : false
+    };
+  }
+  function filterThread({
+    thread,
+    preparedRules,
+    settings,
+    regexCache,
+    debugMode
+  }) {
+    const logs = [];
+    const threadContext = buildThreadProcessingContext(thread.comments, preparedRules);
+    const comments = thread.comments.map(
+      (comment) => applyRulesToComment({
+        originalComment: comment,
+        preparedRules,
+        threadContext,
+        threadFork: thread.fork,
+        settings,
+        regexCache,
+        debugMode: Boolean(debugMode),
+        logCollector: logs
+      })
+    ).filter((comment) => comment !== null);
+    return {
+      comments,
+      logs
+    };
+  }
+  function addOrReplaceCommand(commands, newCommand) {
+    if (!Array.isArray(commands)) {
+      commands = [];
+    }
+    const commandType = getCommandType(newCommand);
+    if (!commandType) {
+      if (!commands.includes(newCommand)) {
+        return [...commands, newCommand];
+      }
+      return commands;
+    }
+    const filteredCommands = commands.filter((cmd) => !isCommandOfType(cmd, commandType));
+    return [...filteredCommands, newCommand];
+  }
+  function addOrReplaceCommands(commands, newCommands) {
+    let result = commands;
+    for (const newCommand of newCommands) {
+      result = addOrReplaceCommand(result, newCommand);
+    }
+    return result;
+  }
   function enforceCommandSettings(existingCommands, forcedCommands) {
     if (forcedCommands.length === 0) {
       return existingCommands;
@@ -459,6 +556,220 @@
     }
     return sanitizeCommentCommands(mutableCommands);
   }
+  function isCommandOfType(command, commandType) {
+    if (commandType === COMMAND_TYPES.COLOR && /^#[0-9A-Fa-f]{6}$/.test(command)) {
+      return true;
+    }
+    const categoryCommands = COMMAND_CATEGORIES[commandType];
+    if (!categoryCommands) {
+      return false;
+    }
+    const lowerCommand = command.toLowerCase();
+    return categoryCommands.includes(lowerCommand);
+  }
+  function normalizeCommands(commands) {
+    if (!commands) {
+      return [];
+    }
+    if (Array.isArray(commands)) {
+      return commands.filter((cmd) => cmd !== null && cmd !== void 0 && cmd !== "").map((cmd) => String(cmd).trim()).filter((cmd) => cmd.length > 0);
+    }
+    if (typeof commands === "string") {
+      return commands.trim().split(/\s+/).filter((cmd) => cmd.length > 0);
+    }
+    return [];
+  }
+  function buildThreadProcessingContext(comments, preparedRules) {
+    const nicoruStats = computeThreadNicoruStats(comments);
+    const nicoruIneligibleRuleIndexes = /* @__PURE__ */ new Set();
+    for (const preparedRule of preparedRules.rules) {
+      if (typeof preparedRule.minRequiredNicoru === "number" && nicoruStats.maxNicoru < preparedRule.minRequiredNicoru) {
+        nicoruIneligibleRuleIndexes.add(preparedRule.index);
+      }
+    }
+    return {
+      nicoruStats,
+      nicoruIneligibleRuleIndexes
+    };
+  }
+  function applyRulesToComment({
+    originalComment,
+    preparedRules,
+    threadContext,
+    threadFork,
+    settings,
+    regexCache,
+    debugMode,
+    logCollector
+  }) {
+    const processedComment = { ...originalComment };
+    processedComment.isPremium = true;
+    processedComment.commands = normalizeCommands(processedComment.commands);
+    const commandsToAdd = [];
+    let shouldHideComment = false;
+    let ruleApplied = false;
+    let hasEmptyNicoruRule = false;
+    const userRuleIndexes = preparedRules.userIdRuleIndexes.get(originalComment.userId) ?? [];
+    const activeUserRuleIndexes = new Set(userRuleIndexes);
+    const matcher = preparedRules.substringMatcher;
+    const getBodyText = () => processedComment.body ?? "";
+    let lowercaseBody = preparedRules.needsLowercase ? getBodyText().toLocaleLowerCase() : void 0;
+    let literalCandidateIndexes = matcher ? new Set(matcher.match(getBodyText(), lowercaseBody)) : /* @__PURE__ */ new Set();
+    const refreshLiteralCandidates = () => {
+      lowercaseBody = preparedRules.needsLowercase ? getBodyText().toLocaleLowerCase() : void 0;
+      literalCandidateIndexes = matcher ? new Set(matcher.match(getBodyText(), lowercaseBody)) : /* @__PURE__ */ new Set();
+    };
+    for (const preparedRule of preparedRules.rules) {
+      const rule = preparedRule.rule;
+      if (threadContext.nicoruIneligibleRuleIndexes.has(preparedRule.index)) {
+        continue;
+      }
+      if (preparedRule.isUserIdRule) {
+        if (!activeUserRuleIndexes.has(preparedRule.index)) {
+          continue;
+        }
+        if (!checkNicoruRule(rule, originalComment.nicoruCount)) {
+          continue;
+        }
+        if (!rule.userId || !checkUserIdRule(rule, originalComment.userId)) {
+          continue;
+        }
+        ruleApplied = true;
+        const isHidden = rule.nicoru === "EMPTY";
+        logCollector.push({
+          comment: originalComment,
+          rule,
+          ruleType: "userId",
+          hidden: isHidden
+        });
+        if (rule.nicoru === "EMPTY") {
+          hasEmptyNicoruRule = true;
+          shouldHideComment = true;
+          commandsToAdd.push("invisible");
+        }
+        continue;
+      }
+      if (preparedRule.hasLiteralPrefilter && !literalCandidateIndexes.has(preparedRule.index)) {
+        continue;
+      }
+      if (!checkNicoruRule(rule, originalComment.nicoruCount)) {
+        continue;
+      }
+      if (!rule.regex) {
+        continue;
+      }
+      const result = applyRegexRule(getBodyText(), rule, regexCache, preparedRule.compiledRegex);
+      if (!result.matched) {
+        continue;
+      }
+      ruleApplied = true;
+      logCollector.push({
+        comment: originalComment,
+        rule,
+        ruleType: "regex",
+        hidden: result.shouldHide
+      });
+      if (result.shouldHide) {
+        if (rule.nicoru === "EMPTY") {
+          hasEmptyNicoruRule = true;
+          shouldHideComment = true;
+          commandsToAdd.push("invisible");
+        }
+      } else {
+        processedComment.body = result.replacedText;
+        if (rule.nicoru === "EMPTY") {
+          hasEmptyNicoruRule = true;
+        }
+        if (matcher) {
+          refreshLiteralCandidates();
+        } else if (preparedRules.needsLowercase) {
+          lowercaseBody = getBodyText().toLocaleLowerCase();
+        }
+      }
+    }
+    if (shouldHideComment) {
+      processedComment.body = "";
+      if (!processedComment.commands.includes("invisible")) {
+        processedComment.commands.push("invisible");
+      }
+    }
+    if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
+      if (!ruleApplied || hasEmptyNicoruRule) {
+        processedComment.commands = applyForkCommandSettings(processedComment.commands, threadFork, settings);
+      }
+    }
+    if (commandsToAdd.length > 0) {
+      processedComment.commands = addOrReplaceCommands(processedComment.commands, commandsToAdd);
+    }
+    if (ruleApplied) {
+      processedComment.body = sanitizeCommentBody(processedComment.body);
+    }
+    return processedComment;
+  }
+  function shouldApplyRule(rule, currentSmid) {
+    if (rule.smid === CONSTANTS.RULE_DEFAULTS.ALL_SMID) {
+      return true;
+    }
+    return rule.smid === currentSmid;
+  }
+  function checkNicoruRule(rule, commentNicoruCount) {
+    if (rule.nicoru === "EMPTY") {
+      return true;
+    }
+    if (typeof rule.nicoru === "number") {
+      return commentNicoruCount >= rule.nicoru;
+    }
+    return false;
+  }
+  function checkUserIdRule(rule, commentUserId) {
+    if (!rule.userId) {
+      return false;
+    }
+    return rule.userId === commentUserId;
+  }
+  function applyRegexRule(text, rule, cache, compiledRegex) {
+    if (!rule.regex) {
+      return {
+        matched: false,
+        shouldHide: false,
+        replacedText: text
+      };
+    }
+    const regex = compiledRegex ?? getRegex(cache, rule.regex, rule.regexFlags || "gi");
+    const matched = regex.test(text);
+    if (!matched) {
+      if (regex.global) {
+        regex.lastIndex = 0;
+      }
+      return {
+        matched: false,
+        shouldHide: false,
+        replacedText: text
+      };
+    }
+    if (regex.global) {
+      regex.lastIndex = 0;
+    }
+    const shouldHide = rule.replace === CONSTANTS.RULE_DEFAULTS.EMPTY_REPLACE;
+    const replacedText = shouldHide ? text : text.replace(regex, rule.replace || "");
+    if (regex.global) {
+      regex.lastIndex = 0;
+    }
+    return {
+      matched: true,
+      shouldHide,
+      replacedText
+    };
+  }
+  function getRegex(cache, pattern, flags = "gi") {
+    const cacheKey = `${pattern}:::${flags}`;
+    if (cache.has(cacheKey)) {
+      return cache.get(cacheKey);
+    }
+    const regex = new RegExp(pattern, flags);
+    cache.set(cacheKey, regex);
+    return regex;
+  }
   function getCommandType(command) {
     if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
       return COMMAND_TYPES.COLOR;
@@ -471,360 +782,16 @@
     }
     return null;
   }
-
-  function prepareJsonRules(rules, currentSmid, regexCache) {
-    const preparedRules = [];
-    const userIdRuleIndexes = /* @__PURE__ */ new Map();
-    const substringMatcher = new SubstringMatcher();
-    let hasLiteralPatterns = false;
-    for (const rule of rules) {
-      if (rule.enabled === false) {
-        continue;
-      }
-      if (!checkSmidCondition(rule.smid, currentSmid)) {
-        continue;
-      }
-      const index = preparedRules.length;
-      const isUserRule = Boolean(rule.userId && rule.userId.length > 0);
-      const preparedRule = {
-        rule,
-        index,
-        compiledRegex: void 0,
-        isUserRule,
-        hasLiteralPrefilter: false,
-        normalizedNicoruCond: normalizeNicoruCondition(rule.nicoru_cond)
-      };
-      if (isUserRule && rule.userId) {
-        const bucket = userIdRuleIndexes.get(rule.userId) ?? [];
-        bucket.push(index);
-        userIdRuleIndexes.set(rule.userId, bucket);
-      }
-      if (rule.pattern) {
-        const flags = rule.flags || "gi";
-        preparedRule.compiledRegex = getRegex(regexCache, rule.pattern, flags);
-        if (isPlainLiteralPattern(rule.pattern)) {
-          const isCaseSensitive = !flags.includes("i");
-          substringMatcher.add(rule.pattern, index, isCaseSensitive);
-          preparedRule.hasLiteralPrefilter = true;
-          hasLiteralPatterns = true;
-        }
-      }
-      preparedRules.push(preparedRule);
-    }
-    if (hasLiteralPatterns) {
-      substringMatcher.build();
-    }
-    return {
-      rules: preparedRules,
-      userIdRuleIndexes,
-      substringMatcher: hasLiteralPatterns ? substringMatcher : null,
-      needsLowercase: hasLiteralPatterns ? substringMatcher.needsLowercaseText() : false
-    };
-  }
-  function filterJsonThread({
-    thread,
-    preparedRules,
-    settings,
-    regexCache
-  }) {
-    const logs = [];
-    const threadContext = buildJsonThreadContext(thread.comments, preparedRules);
-    const comments = thread.comments.map(
-      (comment) => applyRulesToComment({
-        originalComment: comment,
-        preparedRules,
-        threadContext,
-        threadFork: thread.fork,
-        commandSettings: settings?.commandSettings ?? null,
-        regexCache,
-        logCollector: logs
-      })
-    ).filter((comment) => comment !== null);
-    return {
-      comments,
-      logs
-    };
-  }
-  function applyRulesToComment({
-    originalComment,
-    preparedRules,
-    threadContext,
-    threadFork,
-    commandSettings,
-    regexCache,
-    logCollector
-  }) {
-    const processedComment = { ...originalComment };
-    processedComment.commands = normalizeCommands(processedComment.commands);
-    let ruleApplied = false;
-    let shouldHideComment = false;
-    const numericNicoruCount = toNumber(originalComment.nicoruCount) ?? 0;
-    let hasIncludeNicoruRule = false;
-    let includeNicoruRuleMatched = false;
-    let excludeNicoruRuleMatched = false;
-    const userRuleIndexes = preparedRules.userIdRuleIndexes.get(originalComment.userId) ?? [];
-    const activeUserRuleIndexes = new Set(userRuleIndexes);
-    const matcher = preparedRules.substringMatcher;
-    const originalBody = originalComment.body ?? "";
-    const lowercaseBody = preparedRules.needsLowercase ? originalBody.toLocaleLowerCase() : void 0;
-    const literalCandidateIndexes = matcher ? new Set(matcher.match(originalBody, lowercaseBody)) : /* @__PURE__ */ new Set();
-    for (const preparedRule of preparedRules.rules) {
-      const rule = preparedRule.rule;
-      if (threadContext.nicoruIneligibleRuleIndexes.has(preparedRule.index)) {
-        continue;
-      }
-      if (preparedRule.isUserRule) {
-        if (!activeUserRuleIndexes.has(preparedRule.index)) {
-          continue;
-        }
-      } else if (rule.pattern) {
-        if (preparedRule.hasLiteralPrefilter && !literalCandidateIndexes.has(preparedRule.index)) {
-          continue;
-        }
-        const reusableRegex = preparedRule.compiledRegex ?? getRegex(regexCache, rule.pattern, rule.flags || "gi");
-        if (reusableRegex.global) {
-          reusableRegex.lastIndex = 0;
-        }
-        if (!reusableRegex.test(originalBody)) {
-          continue;
-        }
-        if (reusableRegex.global) {
-          reusableRegex.lastIndex = 0;
-        }
-      } else {
-        continue;
-      }
-      const normalizedCond = preparedRule.normalizedNicoruCond;
-      const nicoruMatches = normalizedCond ? doesNicoruConditionMatch(normalizedCond, numericNicoruCount) : true;
-      if (rule.action.type === "unspecified") {
-        if (normalizedCond) {
-          if (normalizedCond.mode === "include") {
-            hasIncludeNicoruRule = true;
-            if (nicoruMatches) {
-              includeNicoruRuleMatched = true;
-              logCollector.push({
-                comment: originalComment,
-                rule,
-                hidden: false
-              });
-            }
-          } else if (nicoruMatches) {
-            excludeNicoruRuleMatched = true;
-            logCollector.push({
-              comment: originalComment,
-              rule,
-              hidden: false
-            });
-          }
-        }
-        continue;
-      }
-      const nicoruOk = evaluateNicoruCondition(normalizedCond, originalComment.nicoruCount);
-      if (!nicoruOk) {
-        continue;
-      }
-      ruleApplied = true;
-      const actionResult = executeAction(rule.action, processedComment.body, rule, preparedRule.compiledRegex ?? getRegex(regexCache, rule.pattern ?? "", rule.flags || "gi"));
-      logCollector.push({
-        comment: originalComment,
-        rule,
-        hidden: actionResult.type === "hide"
-      });
-      if (actionResult.type === "hide") {
-        shouldHideComment = true;
-        processedComment.body = "";
-        processedComment.commands.push("invisible");
-        break;
-      }
-      if (actionResult.type === "replace" && actionResult.newText !== void 0) {
-        processedComment.body = actionResult.newText;
-      }
-    }
-    if (shouldHideComment) {
-      processedComment.body = "";
-      if (!processedComment.commands.includes("invisible")) {
-        processedComment.commands.push("invisible");
-      }
-    }
-    const shouldApplyCommandSettings = excludeNicoruRuleMatched ? false : hasIncludeNicoruRule ? includeNicoruRuleMatched : true;
-    if (shouldApplyCommandSettings) {
-      processedComment.commands = applyForkCommandSettings(processedComment.commands, threadFork, commandSettings);
-    }
-    if (ruleApplied) {
-      processedComment.body = sanitizeCommentBody(processedComment.body);
-    }
-    return processedComment;
-  }
-  function normalizeNicoruCondition(cond) {
-    if (!cond) {
-      return void 0;
-    }
-    const modeValue = (cond.mode ?? "exclude").toString().trim().toLowerCase();
-    const mode = modeValue === "include" ? "include" : "exclude";
-    if (cond.op === "range") {
-      if (!Array.isArray(cond.value) || cond.value.length !== 2) {
-        return void 0;
-      }
-      const start = toNumber(cond.value[0]);
-      const end = toNumber(cond.value[1]);
-      if (start === null || end === null) {
-        return void 0;
-      }
-      const normalizedStart = Math.min(start, end);
-      const normalizedEnd = Math.max(start, end);
-      return {
-        op: "range",
-        mode,
-        value: normalizedStart,
-        rangeEnd: normalizedEnd,
-        isValid: true
-      };
-    }
-    const numericValue = toNumber(cond.value);
-    if (numericValue === null) {
-      return void 0;
-    }
-    return {
-      op: cond.op,
-      mode,
-      value: numericValue,
-      isValid: true
-    };
-  }
-  function buildJsonThreadContext(comments, preparedRules) {
-    const nicoruStats = computeThreadNicoruStats(comments);
-    const nicoruIneligibleRuleIndexes = /* @__PURE__ */ new Set();
-    for (const preparedRule of preparedRules.rules) {
-      const normalized = preparedRule.normalizedNicoruCond;
-      if (!normalized) {
-        continue;
-      }
-      const { canBeMet, canBeUnmet } = evaluateNicoruPossibility(normalized, nicoruStats);
-      const shouldInclude = normalized.mode === "include" ? canBeMet : canBeUnmet;
-      if (!shouldInclude) {
-        nicoruIneligibleRuleIndexes.add(preparedRule.index);
-      }
-    }
-    return {
-      nicoruStats,
-      nicoruIneligibleRuleIndexes
-    };
-  }
-  function checkSmidCondition(smids, currentSmid) {
-    if (smids.includes("ALL")) {
-      return true;
-    }
-    return currentSmid ? smids.includes(currentSmid) : false;
-  }
-  function evaluateNicoruPossibility(cond, stats) {
-    const total = stats.totalComments;
-    if (total === 0) {
-      return { canBeMet: false, canBeUnmet: false };
-    }
-    switch (cond.op) {
-      case "=": {
-        const metCount = stats.countsByValue.get(cond.value) ?? 0;
-        return {
-          canBeMet: metCount > 0,
-          canBeUnmet: metCount < total
-        };
-      }
-      case ">": {
-        const canBeMet = stats.maxNicoru > cond.value;
-        const canBeUnmet = stats.minNicoru <= cond.value;
-        return { canBeMet, canBeUnmet };
-      }
-      case "<": {
-        const canBeMet = stats.minNicoru < cond.value;
-        const canBeUnmet = stats.maxNicoru >= cond.value;
-        return { canBeMet, canBeUnmet };
-      }
-      case ">=": {
-        const canBeMet = stats.maxNicoru >= cond.value;
-        const canBeUnmet = stats.minNicoru < cond.value;
-        return { canBeMet, canBeUnmet };
-      }
-      case "<=": {
-        const canBeMet = stats.minNicoru <= cond.value;
-        const canBeUnmet = stats.maxNicoru > cond.value;
-        return { canBeMet, canBeUnmet };
-      }
-      case "range": {
-        const start = cond.value;
-        const end = cond.rangeEnd ?? cond.value;
-        let metCount = 0;
-        for (const value of stats.sortedValues) {
-          if (value < start) {
-            continue;
-          }
-          if (value > end) {
-            break;
-          }
-          metCount += stats.countsByValue.get(value) ?? 0;
-        }
-        return {
-          canBeMet: metCount > 0,
-          canBeUnmet: metCount < total
-        };
-      }
-      default:
-        return { canBeMet: true, canBeUnmet: true };
-    }
-  }
-  function evaluateNicoruCondition(cond, commentNicoruCount) {
-    if (!cond || !cond.isValid) {
-      return true;
-    }
-    const numericValue = toNumber(commentNicoruCount) ?? 0;
-    const matches = doesNicoruConditionMatch(cond, numericValue);
-    return cond.mode === "include" ? matches : !matches;
-  }
-  function doesNicoruConditionMatch(cond, numericValue) {
-    switch (cond.op) {
-      case "=":
-        return numericValue === cond.value;
-      case ">":
-        return numericValue > cond.value;
-      case "<":
-        return numericValue < cond.value;
-      case ">=":
-        return numericValue >= cond.value;
-      case "<=":
-        return numericValue <= cond.value;
-      case "range":
-        return cond.rangeEnd !== void 0 && numericValue >= cond.value && numericValue <= cond.rangeEnd;
-      default:
-        return true;
-    }
-  }
-  function executeAction(action, text, rule, compiledRegex) {
-    if (action.type === "hide") {
-      return { type: "hide" };
-    }
-    if (action.type === "replace" && rule.pattern) {
-      const regex = compiledRegex;
-      if (regex.global) {
-        regex.lastIndex = 0;
-      }
-      const newText = text.replace(regex, action.replacement);
-      if (regex.global) {
-        regex.lastIndex = 0;
-      }
-      return { type: "replace", newText };
-    }
-    return { type: "none" };
-  }
-  function applyForkCommandSettings(commands, threadFork, commandSettings) {
-    const forcedCommands = getForcedCommandsForFork(threadFork, commandSettings);
+  function applyForkCommandSettings(commands, threadFork, settings) {
     const sanitizedCommands = sanitizeCommentCommands(commands);
-    const allowedCommands = getAllowedCommandsForFork(threadFork, commandSettings);
+    const allowedCommands = getAllowedCommandsForFork(threadFork, settings);
     const filteredCommands = allowedCommands ? sanitizedCommands.filter((command) => {
       if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
         return true;
       }
       return allowedCommands.has(command.toLowerCase());
     }) : sanitizedCommands;
-    const filteredForcedCommands = forcedCommands.filter((command) => {
+    const forcedCommands = getForcedCommandsForFork(threadFork, settings).filter((command) => {
       if (!allowedCommands) {
         return true;
       }
@@ -833,26 +800,28 @@
       }
       return allowedCommands.has(command.toLowerCase());
     });
-    return enforceCommandSettings(filteredCommands, filteredForcedCommands);
+    return enforceCommandSettings(filteredCommands, forcedCommands);
   }
-  function getAllowedCommandsForFork(threadFork, commandSettings) {
-    const defaultCommands = DEFAULT_FORK_COMMANDS[threadFork]?.map((command) => command.toLowerCase()) ?? [];
-    const normalizeCommands2 = (commands) => new Set((commands ?? defaultCommands).map((command) => command.toLowerCase()));
+  function getAllowedCommandsForFork(threadFork, settings) {
+    const commandSettings = settings?.commandSettings;
+    const defaultCommands = DEFAULT_FORK_COMMANDS[threadFork]?.map((command) => command.toLowerCase());
+    const toLowercaseSet = (commands) => new Set((commands ?? defaultCommands ?? []).map((command) => command.toLowerCase()));
     if (!commandSettings) {
-      return new Set(defaultCommands);
+      return defaultCommands ? new Set(defaultCommands) : null;
     }
     switch (threadFork) {
       case CONSTANTS.FORK_TYPES.OWNER:
-        return normalizeCommands2(commandSettings.owner);
+        return toLowercaseSet(commandSettings.owner);
       case CONSTANTS.FORK_TYPES.MAIN:
-        return normalizeCommands2(commandSettings.main);
+        return toLowercaseSet(commandSettings.main);
       case CONSTANTS.FORK_TYPES.EASY:
-        return normalizeCommands2(commandSettings.easy);
+        return toLowercaseSet(commandSettings.easy);
       default:
-        return new Set(defaultCommands);
+        return defaultCommands ? new Set(defaultCommands) : null;
     }
   }
-  function getForcedCommandsForFork(threadFork, commandSettings) {
+  function getForcedCommandsForFork(threadFork, settings) {
+    const commandSettings = settings?.commandSettings;
     if (!commandSettings) {
       return [];
     }
@@ -873,54 +842,24 @@
     }
     return sanitizeCommentCommands([...configuredCommands]);
   }
-  function normalizeCommands(commands) {
-    if (!commands) {
-      return [];
-    }
-    if (Array.isArray(commands)) {
-      return commands.filter((cmd) => cmd !== null && cmd !== void 0 && cmd !== "").map((cmd) => String(cmd).trim()).filter((cmd) => cmd.length > 0);
-    }
-    if (typeof commands === "string") {
-      return commands.trim().split(/\s+/).filter((cmd) => cmd.length > 0);
-    }
-    return [];
-  }
-  function getRegex(cache, pattern, flags) {
-    const cacheKey = `${pattern}:::${flags}`;
-    if (cache.has(cacheKey)) {
-      return cache.get(cacheKey);
-    }
-    const regex = new RegExp(pattern, flags);
-    cache.set(cacheKey, regex);
-    return regex;
-  }
-  function toNumber(value) {
-    if (typeof value === "number") {
-      return value;
-    }
-    if (typeof value === "string" && value.trim() !== "") {
-      const parsed = Number(value);
-      return Number.isNaN(parsed) ? null : parsed;
-    }
-    return null;
-  }
 
   const ctx = self;
   ctx.onmessage = (event) => {
     const { data } = event;
     if (data.type === "process") {
-      const { threads, rules, currentSmid, settings } = data.payload;
+      const { threads, rules, currentSmid, settings, debugMode } = data.payload;
       const effectiveSettings = settings ?? null;
       const regexCache = /* @__PURE__ */ new Map();
-      const preparedRules = prepareJsonRules(rules, currentSmid, regexCache);
+      const preparedRules = prepareRules(rules, currentSmid, regexCache);
       const processedThreads = [];
       const allLogs = [];
       for (const thread of threads) {
-        const { comments, logs } = filterJsonThread({
+        const { comments, logs } = filterThread({
           thread,
           preparedRules,
           settings: effectiveSettings,
-          regexCache
+          regexCache,
+          debugMode
         });
         processedThreads.push({ ...thread, comments });
         allLogs.push(...logs);
@@ -937,4 +876,4 @@
   };
 
 })();
-//# sourceMappingURL=json-comment-filter-worker-BBtbvj7R.js.map
+//# sourceMappingURL=comment-filter-worker-CWthI1TZ.js.map

@@ -2660,10 +2660,8 @@ function applyRulesToComment$1({
   logCollector
 }) {
   const processedComment = { ...originalComment };
+  processedComment.isPremium = true;
   processedComment.commands = normalizeCommands$1(processedComment.commands);
-  if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-    processedComment.isPremium = true;
-  }
   const commandsToAdd = [];
   let shouldHideComment = false;
   let ruleApplied = false;
@@ -2912,7 +2910,7 @@ function chunkThreads(threads, chunkSize) {
   return result;
 }
 
-const commentWorkerUrl = ""+new URL('assets/comment-filter-worker-DOV27MyE.js', import.meta.url).href+"";
+const commentWorkerUrl = ""+new URL('assets/comment-filter-worker-CWthI1TZ.js', import.meta.url).href+"";
 
 class CommentFilter {
   constructor(debugMode = false) {
@@ -3256,6 +3254,7 @@ function applyRulesToComment({
   logCollector
 }) {
   const processedComment = { ...originalComment };
+  processedComment.isPremium = true;
   processedComment.commands = normalizeCommands(processedComment.commands);
   let ruleApplied = false;
   let shouldHideComment = false;
@@ -3606,7 +3605,7 @@ function toNumber(value) {
   return null;
 }
 
-const jsonWorkerUrl = ""+new URL('assets/json-comment-filter-worker-BBtbvj7R.js', import.meta.url).href+"";
+const jsonWorkerUrl = ""+new URL('assets/json-comment-filter-worker-BCa8Uzxs.js', import.meta.url).href+"";
 
 const jsonCommentWorkerUrl = new URL(jsonWorkerUrl, import.meta.url);
 class JsonCommentFilter {
