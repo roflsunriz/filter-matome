@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #203 (2025/10/23) リリースノート](#filter-matome-203-20251023-リリースノート)
 - [filter-matome #202 (2025/10/23) リリースノート](#filter-matome-202-20251023-リリースノート)
 - [filter-matome #201 (2025/10/20) リリースノート](#filter-matome-201-20251020-リリースノート)
 - [filter-matome #200 (2025/10/15) リリースノート](#filter-matome-200-20251015-リリースノート)
@@ -112,6 +113,21 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+
+### filter-matome #203 (2025/10/23) リリースノート
+
+- ✨新機能(New)： 
+- comment-filter2で、処理最適化を実施。(コメントフィルタリングのパフォーマンス向上)
+- 「事前準備（インデックス化）＋候補絞り込み → 最終判定」で高速化。Aho–Corasick、WebWorker並列化、niroru集計の前計算、正規表現プリフィルタ、ビットセット集約、ルール優先度即Breakを採用。    
+- ✅️修正(Fixed)：   
+- なし
+- 🔴変更(Changed)：           
+- なし
+- ❌️未修正(Unfixed)：     
+- なし
+- ℹ️その他(Others)：     
+- なし
 
 ### filter-matome #202 (2025/10/23) リリースノート
 

@@ -28,7 +28,7 @@
         <h1>フィルタまとめ README</h1>
         <div class="meta">
           <p>作者：◆awd5z.AlOFJq(roflsunriz)</p>
-          <p>更新日：2025 年 08 月 28 日</p>
+          <p>更新日：2025 年 10 月 23 日</p>
         </div>
       </header>
 
@@ -126,7 +126,7 @@
           <h3>標準手順</h3>
           <ol>
             <li>新しいバージョンのファイルをnlFilters,extensionsに上書きコピー</li>
-            <li><code>local/cache,local/features,loca/images</code>フォルダを上書き更新</li>
+            <li><code>local/background-images,local/features,loca/images</code>フォルダ、mime.typesファイルを上書き更新</li>
           </ol>
         </div>
 
@@ -164,7 +164,7 @@
           </p>
         </div>
         <div class="install-steps">
-          <h3>要約（Windows / PowerShell）</h3>
+          <h3>要約（Windows / PowerShell）※管理者権限が必要です</h3>
           <pre><code class="language-powershell"># 既存の list.js / list.js.map を削除
 Remove-Item -Path "C:\NicoCache_nl\local\list.js"
 Remove-Item -Path "C:\NicoCache_nl\local\list.js.map"
@@ -201,7 +201,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
             <img src="./resources/mlink-video-controller2.avif" alt="リンクとステータス" width="500" />
           </div>
           <p>
-            カスタムマイリスト2やサムネイル動画非表示の設定画面起動、メディア情報表示、リンクなどを提供する。ビデオの再生速度変更やフレーム単位でのシーク機能、音量の微細な調整機能、トラッカー、再生・一時停止、コメント正規表現検索、動画ダウンロードリンク、コメントダウンロードリンク、キャッシュ削除リンク、キャッシュの詳細を表示する「nlMediaInfo」、その他たくさんのリンクを<code>/watch/</code>ページで提供する。
+            mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動、メディア情報表示、リンクなどを提供する。ビデオの再生速度変更やフレーム単位でのシーク機能、音量の微細な調整機能、トラッカー、再生・一時停止、コメント正規表現検索、動画ダウンロードリンク、コメントダウンロードリンク、キャッシュ削除リンク、movie-infoダッシュボード、その他たくさんのリンクを<code>/watch/</code>ページで提供する。
           </p>
         </article>
 
@@ -212,7 +212,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
             <img src="./resources/comment-filter-2-2.avif" alt="コメントフィルタ2" />
           </div>
           <p>
-            ニコニコ動画公式のNGワード機能が極めて貧弱なので、この機能で非常に強力なNG機能を提供する。基本的に、UIの説明通りにNGワード等を入力して保存するだけ。Comment Filter2を表示させるにはmlink_video_controller内のリンクが必要。ℹ️マークを押すと説明ページに飛ぶ。またテキストフィールドのレーベルにマウスをホバーさせると詳細な情報が表示される。
+            ニコニコ動画公式のNGワード機能が極めて貧弱なので、この機能で非常に強力なNG機能を提供する。基本的に、UIの説明通りにNGワード等を入力して保存するだけ。comment-filter2を表示させるにはmlink-video-controller内のリンクが必要。ℹ️マークを押すと説明ページに飛ぶ。またテキストフィールドのレーベルにマウスをホバーさせると詳細な情報が表示される。
           </p>
         </article>
 
@@ -228,6 +228,10 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
             再生されない場合、多くの場合タイミングが問題なのでF5かCtrl+F5(キャッシュを無視したハードリロード)で解決する。<code>/local/cache/</code> フォルダ以下に
             <code>（動画ID）.hls</code> フォルダまたは
             <code>（動画ID）.mp4</code> キャッシュを置いてもキャッシュを利用して再生する。
+
+            ※mp4ファイルの動画の場合、scripts/convert-to-faststart.ps1を実行してfaststart化してください。
+            faststartとは、mp4ファイルのmoovアトムをファイルの先頭に移動させ、ストリーミング再生に最適化するための技術です。
+            これにより、再生が高速化されます。
           </p>
           <div class="warning-box critical">
             <p>
@@ -245,15 +249,16 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
           </div>
           <p>コモンヘッダーのプレミアム会員勧誘要素を非表示にする。</p>
         </article>
-        <article class="filter">
-          <p>詳細なcomment-filter2の説明は<a href="https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html" target="_blank">こちら</a>を参照。</p>
-          <p>詳細なmylist2の説明は<a href="https://www.nicovideo.jp/local/features/dist/src/docs/mylist2/index.html" target="_blank">こちら</a>を参照。</p>
-        </article>
 
         <article class="filter">
           <h3>106_watch_history.txt</h3>
           <img src="./resources/watch-history.avif" alt="視聴履歴" width="500" />
           <p>視聴履歴のページを追加し(<a href="https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html" target="_blank">こちら</a>)、視聴ログを表示するようにした。ブラウザの容量が許す限り履歴を保存するようにした。統計も利用可能。</p>
+        </article>
+
+        <article class="filter">
+          <p>詳細なcomment-filter2の説明は<a href="https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html" target="_blank">こちら</a>を参照。</p>
+          <p>詳細なmylist2の説明は<a href="https://www.nicovideo.jp/local/features/dist/src/docs/mylist2/index.html" target="_blank">こちら</a>を参照。</p>
         </article>
       </section>
 
@@ -338,12 +343,12 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
           </ul>
 
           <div class="affected-features">
-            <h4>削除されてしまうかも知れない設定：</h4>
+            <h4>削除されてしまう設定：</h4>
             <ul>
               <li>mlink-video-controller（IndexedDBに保存された背景画像の設定全般）</li>
               <li>mylist2（IndexedDBに保存されたマイリストのデータ全般）</li>
               <li>comment-filter2（IndexedDBに保存されたNGコメントの設定全般）</li>
-              <li>その他「ローカルストレージ」に保存されているミニマイズ設定や音量、再生速度設定等</li>
+              <li>その他「ローカルストレージ」に保存されている音量、再生速度設定等</li>
             </ul>
           </div>
 
