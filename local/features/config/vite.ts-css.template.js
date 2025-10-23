@@ -23,10 +23,12 @@ export default function createConfig(options) {
     name, 
     formats = ['es'],
     exclude = [],
-    singleFile = true
+    singleFile = true,
+    base = '/'
   } = options;
 
   return defineConfig({
+    base,
     build: {
       target: 'esnext',
       outDir: 'dist',

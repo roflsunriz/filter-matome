@@ -1,41 +1,60 @@
-// JSON形式ルール対応フィルター部 - 新世代コメントフィルタリング処理
 import { CONSTANTS } from '@/comment-filter2/utils/constants';
-import { CF2CommentApiResponse, CommentFilter2GlobalData, CF2Comment, Settings, CF2FilterLogEntry } from '@/types/filter-types';
-import { NgRuleJson, NicoruCond, Action } from '@/types/filter-types';
-import { sanitizeCommentBody, sanitizeCommentCommands } from '@/comment-filter2/utils/sanitizer';
+import { CF2CommentApiResponse, CommentFilter2GlobalData, CF2Comment, CF2Thread, Settings, CF2FilterLogEntry } from '@/types/filter-types';
+import { NgRuleJson } from '@/types/filter-types';
 import { FilterLogger } from '@/comment-filter2/utils/filter-logger';
+import {
+  PreparedJsonRuleSet,
+  JsonRuleMatchEvent,
+  filterJsonThread,
+  prepareJsonRules,
+  chunkThreads
+} from '@/comment-filter2/filter/json-comment-filter-engine';
+import jsonWorkerUrl from '@/comment-filter2/filter/json-comment-filter-worker.ts?worker&url';
 
-// フォークタイプの定義
-type ForkType = 'main' | 'easy' | 'owner';
+const jsonCommentWorkerUrl = new URL(jsonWorkerUrl, import.meta.url);
+
+interface ProcessRequestPayload {
+  threads: CF2Thread[];
+  rules: NgRuleJson[];
+  currentSmid: string | null;
+  settings: Settings | null;
+}
+
+interface ProcessResponsePayload {
+  threads: CF2Thread[];
+  logs: JsonRuleMatchEvent[];
+}
+
+interface ProcessRequest {
+  type: 'process';
+  payload: ProcessRequestPayload;
+}
+
+interface ProcessResponse {
+  type: 'result';
+  payload: ProcessResponsePayload;
+}
 
 export class JsonCommentFilter {
   private regexCache: Map<string, RegExp> = new Map();
-  private debugMode: boolean = false;
+  private debugMode = false;
   private settings: Settings | null = null;
-  private filterLogs: CF2FilterLogEntry[] = []; // フィルターログの蓄積用
+  private filterLogs: CF2FilterLogEntry[] = [];
 
   constructor(debugMode: boolean = false) {
     this.debugMode = debugMode;
   }
 
-  /**
-   * 設定を更新
-   */
   public updateSettings(settings: Settings): void {
     this.settings = settings;
     this.debugMode = settings.debugMode;
-    // FilterLoggerの設定も更新
     FilterLogger.setLogSendingEnabled(settings?.logToCommentFilterLogger || false);
   }
 
-  /**
-   * メインのフィルタリング処理（JSON形式ルール対応）
-   */
   public async applyFilters(rules: NgRuleJson[], currentSmid: string | null): Promise<CF2CommentApiResponse | null> {
-    // minimal await to satisfy require-await while keeping logic unchanged
     await Promise.resolve();
     const globalData = this.getGlobalData();
-    
+
     if (!globalData?.originalData) {
       if (this.debugMode) {
         window.logger?.debug('[CommentFilter2] No global data available for filtering');
@@ -44,28 +63,46 @@ export class JsonCommentFilter {
     }
 
     try {
-      // フィルターログを初期化
       this.filterLogs = [];
 
       if (this.debugMode) {
         window.logger?.debug('[CommentFilter2] Starting JSON filtering with rules:', {
           totalRules: rules.length,
-          userIdRules: rules.filter(r => r.userId),
-          regexRules: rules.filter(r => r.pattern),
+          userIdRules: rules.filter(rule => Boolean(rule.userId)),
+          regexRules: rules.filter(rule => Boolean(rule.pattern)),
           currentSmid
         });
       }
 
-      const filteredData = this.processCommentData(globalData.originalData, rules, currentSmid);
-      
-      // フィルタリング済みデータをグローバルオブジェクトに保存
+      let filteredData: CF2CommentApiResponse;
+
+      if (this.shouldUseWorker(globalData.originalData.data.threads)) {
+        try {
+          filteredData = await this.processCommentDataWithWorkers(globalData.originalData, rules, currentSmid);
+        } catch (workerError) {
+          const reason = workerError instanceof Error ? workerError : new Error(String(workerError));
+          if (reason instanceof Error) {
+            window.logger?.warn('[CommentFilter2] JSON worker failed, falling back to main thread:', reason, reason.stack);
+          } else if (typeof reason === 'object' && reason !== null) {
+            window.logger?.warn('[CommentFilter2] JSON worker failed, falling back to main thread:', JSON.stringify(reason, Object.getOwnPropertyNames(reason)));
+          } else {
+            window.logger?.warn('[CommentFilter2] JSON worker failed, falling back to main thread:', String(reason));
+          }
+
+          const preparedRules = this.prepareRules(rules, currentSmid);
+          filteredData = this.processCommentData(globalData.originalData, preparedRules, currentSmid);
+        }
+      } else {
+        const preparedRules = this.prepareRules(rules, currentSmid);
+        filteredData = this.processCommentData(globalData.originalData, preparedRules, currentSmid);
+      }
+
       globalData.filteredData = filteredData;
-      
+
       if (this.debugMode) {
         this.logFilteringResults(globalData.originalData, filteredData, rules);
       }
 
-      // フィルターログをバッファに追加（FilterLoggerが自動的にdebounce送信する）
       if (this.settings?.logToCommentFilterLogger && this.filterLogs.length > 0) {
         FilterLogger.addLogsToBuffer(this.filterLogs);
       }
@@ -77,18 +114,26 @@ export class JsonCommentFilter {
     }
   }
 
-  /**
-   * コメントデータ全体を処理
-   */
   private processCommentData(
-    data: CF2CommentApiResponse, 
-    rules: NgRuleJson[], 
+    data: CF2CommentApiResponse,
+    preparedRules: PreparedJsonRuleSet,
     currentSmid: string | null
   ): CF2CommentApiResponse {
-    const processedThreads = data.data.threads.map(thread => ({
-      ...thread,
-      comments: this.filterCommentsInThread(thread.comments, rules, currentSmid, thread.fork)
-    }));
+    const processedThreads = data.data.threads.map(thread => {
+      const { comments, logs } = filterJsonThread({
+        thread,
+        preparedRules,
+        settings: this.settings,
+        regexCache: this.regexCache
+      });
+
+      this.captureLogEvents(logs, currentSmid);
+
+      return {
+        ...thread,
+        comments
+      };
+    });
 
     return {
       ...data,
@@ -99,437 +144,128 @@ export class JsonCommentFilter {
     };
   }
 
-  /**
-   * スレッド内のコメントをフィルタリング（JSON形式ルール対応）
-   */
-  private filterCommentsInThread(
-    comments: CF2Comment[], 
-    rules: NgRuleJson[], 
-    currentSmid: string | null,
-    threadFork: ForkType
-  ): CF2Comment[] {
-    if (this.debugMode) {
-      window.logger?.debug(`[CommentFilter2] Processing ${threadFork} thread with ${comments.length} comments using ${rules.length} JSON rules`);
-    }
+  private async processCommentDataWithWorkers(
+    data: CF2CommentApiResponse,
+    rules: NgRuleJson[],
+    currentSmid: string | null
+  ): Promise<CF2CommentApiResponse> {
+    const threads = data.data.threads;
 
-    return comments
-      .map(comment => this.applyRulesToComment(comment, rules, currentSmid, threadFork))
-      .filter(comment => comment !== null);
-  }
-
-  /**
-   * 単一コメントにJSON形式ルールを適用
-   */
-  private applyRulesToComment(
-    comment: CF2Comment, 
-    rules: NgRuleJson[], 
-    currentSmid: string | null,
-    threadFork: ForkType
-  ): CF2Comment | null {
-    const processedComment = { ...comment };
-    
-    // コマンド形式の正規化処理
-    processedComment.commands = this.normalizeCommands(processedComment.commands);
-    
-    // 計画書の要件：コメント種別対応
-    if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-      processedComment.isPremium = true;
-    }
-
-    let ruleApplied = false;
-    let shouldHideComment = false;
-    let shouldApplyCommands = true; // コマンド設定を適用するかどうか
-    let appliedRule: NgRuleJson | null = null; // 適用されたルール
-    let excludedByNicoru = false; // nicoru除外条件に一致してルール適用がスキップされたか
-
-    // 有効なルールのみを処理
-    const activeRules = rules.filter(rule => rule.enabled !== false);
-
-    // ルールが存在しない場合は常にコマンド設定を適用
-    if (activeRules.length === 0) {
-      if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-        processedComment.commands = this.applyForkCommandSettings(processedComment.commands, threadFork);
-      }
-      return processedComment;
-    }
-
-    for (const rule of activeRules) {
-      // ---- ルール適用条件チェック ----
-      const smidOk = this.checkSmidCondition(rule.smid, currentSmid);
-      if (!smidOk) {
-        continue;
-      }
-
-      const patternOk = rule.pattern
-        ? this.getRegex(rule.pattern, rule.flags || 'gi').test(comment.body)
-        : rule.userId
-          ? rule.userId === comment.userId
-          : false;
-      if (!patternOk) {
-        continue;
-      }
-
-      let nicoruOk = true;
-      if (rule.nicoru_cond) {
-        nicoruOk = this.checkNicoruCondition(rule.nicoru_cond, comment.nicoruCount);
-        // nicoruモードがexcludeで、条件に合致したためにnicoruOk=false となった場合、
-        // これは「ルール自体を無視するがコマンドも除外したい」ケース
-        const modeValue = (rule.nicoru_cond.mode ?? 'exclude').toString().trim().toLowerCase();
-        if (!nicoruOk && modeValue === 'exclude') {
-          excludedByNicoru = true;
-        }
-      }
-
-      // nicoru条件等でNGの場合は次へ
-      if (!nicoruOk) {
-        continue;
-      }
-
-      // ---- ここまででルール適用確定 ----
-
-      // ルールが適用された
-      ruleApplied = true;
-      appliedRule = rule;
-
-      // アクションを実行
-      const actionResult = this.executeAction(rule.action, processedComment.body, rule);
-      
-      if (actionResult.type === 'hide') {
-        shouldHideComment = true;
-        processedComment.body = '';
-        processedComment.commands.push('invisible');
-        
-        // フィルターログを追加
-        this.addFilterLog(comment, rule, true, currentSmid);
-        break; // 非表示の場合は他のルールを適用しない
-      } else if (actionResult.type === 'replace') {
-        processedComment.body = actionResult.newText || processedComment.body;
-        
-        // フィルターログを追加
-        this.addFilterLog(comment, rule, false, currentSmid);
-      } else if (actionResult.type === 'none') {
-        // 本文やコマンドは変更せず、フィルターログのみ追加
-        this.addFilterLog(comment, rule, false, currentSmid);
-      }
-    }
-
-    // 非表示処理
-    if (shouldHideComment) {
-      processedComment.body = '';
-      if (!processedComment.commands.includes('invisible')) {
-        processedComment.commands.push('invisible');
-      }
-    }
-
-    // コマンド適用判定（お主の要求に基づく新ロジック）
-    if (ruleApplied && appliedRule) {
-      // ルールが適用された場合でも、nicoru_cond.exclude が「条件に合致したか」で挙動を分岐
-      if (
-        appliedRule.nicoru_cond &&
-        appliedRule.nicoru_cond.mode === 'exclude' &&
-        excludedByNicoru // ← 条件に合致して除外扱いになった場合のみ
-      ) {
-        shouldApplyCommands = false; // コマンド除外
-      } else {
-        shouldApplyCommands = true; // それ以外は適用
-      }
-    } else {
-      // ルールが適用されていない
-      if (excludedByNicoru) {
-        // nicoru除外条件に一致してスキップされた場合はコマンド非適用
-        shouldApplyCommands = false;
-      } else {
-        // それ以外は適用
-        shouldApplyCommands = true;
-      }
-    }
-
-    // UIコマンド設定の適用
-    if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-      if (shouldApplyCommands) {
-        processedComment.commands = this.applyForkCommandSettings(processedComment.commands, threadFork);
-      } else {
-        // nicoru除外モードなどでコマンド適用を抑制する場合でも
-        // 不正コマンドの混入を防ぐためにサニタイズ処理だけは行う
-        processedComment.commands = sanitizeCommentCommands(processedComment.commands);
-      }
-    }
-
-    // NGルールが適用されたコメントのみサニタイズ
-    if (ruleApplied) {
-      processedComment.body = sanitizeCommentBody(processedComment.body);
-    }
-
-    if (this.debugMode) {
-      window.logger?.debug('[CF2] fork=%s  nicoru=%d  ruleApplied=%o  excludedByNicoru=%o  shouldApplyCmd=%o  finalCmd=%o',
-        threadFork, comment.nicoruCount, ruleApplied, excludedByNicoru, shouldApplyCommands, processedComment.commands);
-    }
-
-    return processedComment;
-  }
-
-  /**
-   * ルール適用条件をチェック（JSON形式対応）
-   */
-  private shouldApplyRule(rule: NgRuleJson, comment: CF2Comment, currentSmid: string | null): boolean {
-    // SMID条件チェック
-    if (!this.checkSmidCondition(rule.smid, currentSmid)) {
-      return false;
-    }
-
-    // パターンマッチング（正規表現またはユーザーID）
-    if (rule.pattern) {
-      const regex = this.getRegex(rule.pattern, rule.flags || 'gi');
-      if (!regex.test(comment.body)) {
-        return false;
-      }
-    } else if (rule.userId) {
-      if (rule.userId !== comment.userId) {
-        return false;
-      }
-    } else {
-      return false; // パターンもユーザーIDも指定されていない
-    }
-
-    // ニコる数条件チェック
-    if (rule.nicoru_cond && !this.checkNicoruCondition(rule.nicoru_cond, comment.nicoruCount)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * SMID条件をチェック
-   */
-  private checkSmidCondition(smids: string[], currentSmid: string | null): boolean {
-    if (smids.includes('ALL')) {
-      return true;
-    }
-    
-    return currentSmid ? smids.includes(currentSmid) : false;
-  }
-
-  /**
-   * 文字列・数値を安全に number へ変換
-   * 数値でなければ null を返す
-   */
-  private toNumber(val: unknown): number | null {
-    if (typeof val === 'number') return val;
-    if (typeof val === 'string' && val.trim() !== '') {
-      const n = Number(val);
-      return Number.isNaN(n) ? null : n;
-    }
-    return null;
-  }
-
-  /**
-   * ニコる数条件をチェック（新形式対応・型安全版）
-   */
-  private checkNicoruCondition(cond: NicoruCond, rawCount: number | string): boolean {
-    const { op, value, mode = 'exclude' } = cond;
-    
-    // ▼ ここで必ず数値化
-    const commentNicoruCount = this.toNumber(rawCount) ?? 0;
-
-    let conditionMet = false;
-    
-    switch (op) {
-      case '=': {
-        const numericValue = this.toNumber(value);
-        conditionMet = numericValue !== null && commentNicoruCount === numericValue;
-        break;
-      }
-      case '>': {
-        const numericValue = this.toNumber(value);
-        conditionMet = numericValue !== null && commentNicoruCount > numericValue;
-        break;
-      }
-      case '<': {
-        const numericValue = this.toNumber(value);
-        conditionMet = numericValue !== null && commentNicoruCount < numericValue;
-        break;
-      }
-      case '>=': {
-        const numericValue = this.toNumber(value);
-        conditionMet = numericValue !== null && commentNicoruCount >= numericValue;
-        break;
-      }
-      case '<=': {
-        const numericValue = this.toNumber(value);
-        conditionMet = numericValue !== null && commentNicoruCount <= numericValue;
-        break;
-      }
-      case 'range': {
-        if (Array.isArray(value) && value.length === 2) {
-          const numStart = this.toNumber(value[0]);
-          const numEnd = this.toNumber(value[1]);
-          if (numStart !== null && numEnd !== null) {
-            conditionMet = commentNicoruCount >= numStart && commentNicoruCount <= numEnd;
-          }
-        }
-        break;
-      }
-    }
-
-    // include/excludeモードに応じて結果を返す
-    return mode === 'include' ? conditionMet : !conditionMet;
-  }
-
-  /**
-   * アクションを実行
-   */
-  private executeAction(action: Action, text: string, rule: NgRuleJson): { type: 'hide' | 'replace' | 'none'; newText?: string } {
-    if (action.type === 'hide') {
-      return { type: 'hide' };
-    }
-
-    if (action.type === 'replace' && rule.pattern) {
-      const regex = this.getRegex(rule.pattern, rule.flags || 'gi');
-      const newText = text.replace(regex, action.replacement);
-      return { type: 'replace', newText };
-    }
-
-    // "unspecified" またはその他想定外のtypeの場合は何もしない（排他判定などは別途行う）
-    return { type: 'none' };
-  }
-
-  /**
-   * 正規表現オブジェクトを取得（キャッシュ付き・フラグ対応・lastIndex対応）
-   */
-  private getRegex(pattern: string, flags: string = 'gi'): RegExp {
-    const cacheKey = `${pattern}:::${flags}`;
-    
-    if (this.regexCache.has(cacheKey)) {
-      const cachedRegex = this.regexCache.get(cacheKey)!;
-      // グローバルフラグがある場合はlastIndexをリセット
-      if (cachedRegex.global) {
-        cachedRegex.lastIndex = 0;
-      }
-      return cachedRegex;
-    }
-
-    const regex = new RegExp(pattern, flags);
-    this.regexCache.set(cacheKey, regex);
-    return regex;
-  }
-
-  /**
-   * フォーク別のコマンド設定を適用（従来通り）
-   */
-  private applyForkCommandSettings(commands: string[], threadFork: ForkType): string[] {
-    // 設定が存在しない場合はサニタイズのみ
-    if (!this.settings?.commandSettings) {
-      return sanitizeCommentCommands(commands);
-    }
-
-    // フォーク別の許可コマンドを取得
-    const allowedCommands = this.getAllowedCommandsForFork(threadFork);
-
-    // 1. フォーク設定コマンドを **先頭に** 結合（設定側 > 既存コマンド の優先順位）
-    const combinedCommands = [...allowedCommands, ...commands];
-
-    // 2. 基本サニタイズを適用（重複・排他処理など）
-    const sanitizedCommands = sanitizeCommentCommands(combinedCommands);
-
-    // 3. 最終的にフォーク設定でフィルタリング（16進数カラーコードは常に許可）
-    const filteredCommands = sanitizedCommands.filter(command => {
-      if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
-        return true;
-      }
-      return allowedCommands.includes(command.toLowerCase());
-    });
-
-    return filteredCommands;
-  }
-
-  /**
-   * フォークタイプに対して許可されたコマンドを取得
-   */
-  private getAllowedCommandsForFork(threadFork: ForkType): string[] {
-    if (!this.settings?.commandSettings) {
-      return [];
-    }
-
-    switch (threadFork) {
-      case CONSTANTS.FORK_TYPES.OWNER:
-        return this.settings.commandSettings.owner;
-      case CONSTANTS.FORK_TYPES.MAIN:
-        return this.settings.commandSettings.main;
-      case CONSTANTS.FORK_TYPES.EASY:
-        return this.settings.commandSettings.easy;
-      default:
-        return [];
-    }
-  }
-
-  /**
-   * フィルタリング結果をログ出力（デバッグ用）
-   */
-  private logFilteringResults(
-    original: CF2CommentApiResponse, 
-    filtered: CF2CommentApiResponse, 
-    rules: NgRuleJson[]
-  ): void {
-    const originalCount = this.countComments(original);
-    const filteredCount = this.countComments(filtered);
-    const hiddenCount = originalCount - filteredCount;
-
-    window.logger.debug('[CommentFilter2] JSON Filtering Results:', {
-      originalComments: originalCount,
-      filteredComments: filteredCount,
-      hiddenComments: hiddenCount,
-      appliedRules: rules.length,
-      ruleTypes: {
-        regex: rules.filter(r => r.pattern).length,
-        userId: rules.filter(r => r.userId).length,
-        withNicoruCond: rules.filter(r => r.nicoru_cond).length
-      }
-    });
-  }
-
-  /**
-   * コメント総数をカウント
-   */
-  private countComments(data: CF2CommentApiResponse): number {
-    return data.data.threads.reduce((sum, thread) => sum + thread.comments.length, 0);
-  }
-
-  /**
-   * グローバルデータを取得
-   */
-  private getGlobalData(): CommentFilter2GlobalData | null {
-    const data = window[CONSTANTS.GLOBAL_DATA_KEY];
-    
-    if (data && typeof data === 'object' && 
-        'originalData' in data && 
-        'filteredData' in data && 
-        'currentSmid' in data && 
-        'lastUpdated' in data) {
+    if (threads.length === 0) {
       return data;
     }
-    
-    return null;
+
+    const workerCount = this.resolveWorkerCount(threads.length);
+    const chunkSize = Math.ceil(threads.length / workerCount);
+    const threadChunks = chunkThreads(threads, chunkSize);
+
+    const results = await Promise.all(
+      threadChunks.map(chunk =>
+        this.runWorker({
+          threads: chunk,
+          rules,
+          currentSmid,
+          settings: this.settings
+        })
+      )
+    );
+
+    const updatedThreads: CF2Thread[] = [];
+
+    for (const result of results) {
+      this.captureLogEvents(result.logs, currentSmid);
+      updatedThreads.push(...result.threads);
+    }
+
+    return {
+      ...data,
+      data: {
+        ...data.data,
+        threads: updatedThreads
+      }
+    };
   }
 
-  /**
-   * 正規表現キャッシュをクリア
-   */
-  public clearRegexCache(): void {
-    this.regexCache.clear();
+  private runWorker(payload: ProcessRequestPayload): Promise<ProcessResponsePayload> {
+    return new Promise((resolve, reject) => {
+      const workerUrl = jsonCommentWorkerUrl;
+      console.info('[CommentFilter2] JSON worker URL:', workerUrl.toString());
+      const worker = new Worker(workerUrl, { type: 'module' });
+
+      worker.onmessage = (event: MessageEvent<ProcessResponse>) => {
+        resolve(event.data.payload);
+        worker.terminate();
+      };
+
+      worker.onerror = (event: ErrorEvent | Event) => {
+        worker.terminate();
+
+        let reason: Error = new Error('Worker error (unknown)');
+
+        if (event instanceof ErrorEvent) {
+          const errorValue: unknown = event.error;
+
+          console.error('[CommentFilter2] JSON worker error', {
+            message: event.message,
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno,
+            error: errorValue
+          });
+
+          if (errorValue instanceof Error) {
+            reason = errorValue;
+          } else if (event.message) {
+            reason = new Error(event.message);
+          } else {
+            reason = new Error(`Worker error at ${event.filename ?? 'unknown source'}:${event.lineno ?? 0}`);
+          }
+        } else {
+          console.error('[CommentFilter2] JSON worker error (non ErrorEvent)', event);
+          reason = new Error('Worker error (non ErrorEvent)');
+        }
+
+        reject(reason);
+      };
+
+      const message: ProcessRequest = {
+        type: 'process',
+        payload
+      };
+
+      worker.postMessage(message);
+    });
   }
 
-  /**
-   * デバッグモードを設定
-   */
-  public setDebugMode(enabled: boolean): void {
-    this.debugMode = enabled;
+  private shouldUseWorker(threads: CF2Thread[]): boolean {
+    if (typeof Worker === 'undefined') {
+      return false;
+    }
+
+    if (!threads || threads.length <= 1) {
+      return false;
+    }
+
+    const hardware = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 0 : 0;
+    return hardware > 1;
   }
 
+  private resolveWorkerCount(threadCount: number): number {
+    const hardware = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 1 : 1;
+    const maxWorkers = Math.max(1, hardware - 1);
+    return Math.min(maxWorkers, Math.max(1, threadCount));
+  }
 
-  /**
-   * フィルターログエントリーを追加
-   */
+  private captureLogEvents(events: JsonRuleMatchEvent[], currentSmid: string | null): void {
+    for (const event of events) {
+      this.addFilterLog(event.comment, event.rule, event.hidden, currentSmid);
+    }
+  }
+
+  private prepareRules(rules: NgRuleJson[], currentSmid: string | null): PreparedJsonRuleSet {
+    return prepareJsonRules(rules, currentSmid, this.regexCache);
+  }
+
   private addFilterLog(
     comment: CF2Comment,
     rule: NgRuleJson,
@@ -562,32 +298,57 @@ export class JsonCommentFilter {
     }
   }
 
-  /**
-   * コマンドの形式を正規化（文字列→配列変換、クリーンアップ）
-   */
-  private normalizeCommands(commands: string | string[] | null | undefined): string[] {
-    if (!commands) {
-      return [];
-    }
+  private logFilteringResults(
+    original: CF2CommentApiResponse,
+    filtered: CF2CommentApiResponse,
+    rules: NgRuleJson[]
+  ): void {
+    const originalCount = this.countComments(original);
+    const filteredCount = this.countComments(filtered);
+    const hiddenCount = originalCount - filteredCount;
 
-    if (Array.isArray(commands)) {
-      return commands
-        .filter(cmd => cmd !== null && cmd !== undefined && cmd !== '')
-        .map(cmd => String(cmd).trim())
-        .filter(cmd => cmd.length > 0);
-    }
-
-    if (typeof commands === 'string') {
-      return commands
-        .trim()
-        .split(/\s+/)
-        .filter(cmd => cmd.length > 0);
-    }
-
-    if (this.debugMode) {
-      window.logger.warn('[CommentFilter2] Unexpected commands type:', typeof commands, commands);
-    }
-    
-    return [];
+    window.logger?.debug('[CommentFilter2] JSON Filtering Results:', {
+      originalComments: originalCount,
+      filteredComments: filteredCount,
+      hiddenComments: hiddenCount,
+      appliedRules: rules.length,
+      ruleTypes: {
+        regex: rules.filter(r => r.pattern).length,
+        userId: rules.filter(r => r.userId).length,
+        withNicoruCond: rules.filter(r => r.nicoru_cond).length
+      }
+    });
   }
-} 
+
+  private countComments(data: CF2CommentApiResponse): number {
+    return data.data.threads.reduce((sum, thread) => sum + thread.comments.length, 0);
+  }
+
+  private getGlobalData(): CommentFilter2GlobalData | null {
+    const data = (window as unknown as Record<string, unknown>)[CONSTANTS.GLOBAL_DATA_KEY];
+
+    if (
+      data &&
+      typeof data === 'object' &&
+      'originalData' in data &&
+      'filteredData' in data &&
+      'currentSmid' in data &&
+      'lastUpdated' in data
+    ) {
+      return data as CommentFilter2GlobalData;
+    }
+
+    return null;
+  }
+
+  public clearRegexCache(): void {
+    this.regexCache.clear();
+  }
+
+  public setDebugMode(enabled: boolean): void {
+    this.debugMode = enabled;
+  }
+}
+
+
+
