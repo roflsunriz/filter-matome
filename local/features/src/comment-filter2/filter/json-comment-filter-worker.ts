@@ -31,6 +31,8 @@ ctx.onmessage = (event: MessageEvent<ProcessRequest>) => {
 
   if (data.type === 'process') {
     const { threads, rules, currentSmid, settings } = data.payload;
+
+    const effectiveSettings: Settings | null = settings ?? null;
     const regexCache = new Map<string, RegExp>();
     const preparedRules = prepareJsonRules(rules, currentSmid, regexCache);
 
@@ -41,7 +43,7 @@ ctx.onmessage = (event: MessageEvent<ProcessRequest>) => {
       const { comments, logs } = filterJsonThread({
         thread,
         preparedRules,
-        settings,
+        settings: effectiveSettings,
         regexCache,
       });
       processedThreads.push({ ...thread, comments });

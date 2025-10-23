@@ -1,4 +1,4 @@
-import { CONSTANTS } from '@/comment-filter2/utils/constants';
+import { CONSTANTS, DEFAULT_FORK_COMMANDS } from '@/comment-filter2/utils/constants';
 import { sanitizeCommentBody, sanitizeCommentCommands } from '@/comment-filter2/utils/sanitizer';
 import { CF2Comment, CF2Thread, Settings } from '@/types/filter-types';
 import { NgRuleJson, NicoruCond, Action } from '@/types/filter-types';
@@ -178,14 +178,8 @@ function applyRulesToComment({
   const processedComment: CF2Comment = { ...originalComment };
   processedComment.commands = normalizeCommands(processedComment.commands);
 
-  if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-    processedComment.isPremium = true;
-  }
-
   let ruleApplied = false;
   let shouldHideComment = false;
-  let shouldApplyCommands = true;
-  let appliedRule: NgRuleJson | null = null;
 
   const userRuleIndexes = preparedRules.userIdRuleIndexes.get(originalComment.userId) ?? [];
   const activeUserRuleIndexes = new Set<number>(userRuleIndexes);
@@ -234,7 +228,6 @@ function applyRulesToComment({
       continue;
     }
 
-    appliedRule = rule;
     ruleApplied = true;
 
     const actionResult = executeAction(rule.action, processedComment.body, rule, preparedRule.compiledRegex ?? getRegex(regexCache, rule.pattern ?? '', rule.flags || 'gi'));
@@ -264,15 +257,8 @@ function applyRulesToComment({
     }
   }
 
-  if (ruleApplied && appliedRule?.nicoru_cond?.mode === 'exclude') {
-    shouldApplyCommands = false;
-  }
 
-  if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-    processedComment.commands = applyForkCommandSettings(processedComment.commands, threadFork, shouldApplyCommands, commandSettings);
-  } else if (shouldApplyCommands) {
-    processedComment.commands = sanitizeCommentCommands(processedComment.commands);
-  }
+  processedComment.commands = applyForkCommandSettings(processedComment.commands, threadFork, true, commandSettings);
 
   if (ruleApplied) {
     processedComment.body = sanitizeCommentBody(processedComment.body);
@@ -485,34 +471,43 @@ function applyForkCommandSettings(
     return sanitizeCommentCommands(commands);
   }
 
-  if (!commandSettings) {
-    return sanitizeCommentCommands(commands);
-  }
-
   const allowedCommands = getAllowedCommandsForFork(threadFork, commandSettings);
   const sanitizedCommands = sanitizeCommentCommands(commands);
+
+  if (!allowedCommands) {
+    return sanitizedCommands;
+  }
 
   return sanitizedCommands.filter(command => {
     if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
       return true;
     }
-    return allowedCommands.includes(command.toLowerCase());
+    return allowedCommands.has(command.toLowerCase());
   });
 }
 
 function getAllowedCommandsForFork(
   threadFork: ForkType,
-  commandSettings: SettingsCommandOptions
-): string[] {
+  commandSettings: SettingsCommandOptions | null
+): Set<string> | null {
+  const defaultCommands = DEFAULT_FORK_COMMANDS[threadFork]?.map(command => command.toLowerCase()) ?? [];
+
+  const normalizeCommands = (commands: readonly string[] | undefined): Set<string> =>
+    new Set((commands ?? defaultCommands).map(command => command.toLowerCase()));
+
+  if (!commandSettings) {
+    return new Set(defaultCommands);
+  }
+
   switch (threadFork) {
     case CONSTANTS.FORK_TYPES.OWNER:
-      return commandSettings.owner;
+      return normalizeCommands(commandSettings.owner);
     case CONSTANTS.FORK_TYPES.MAIN:
-      return commandSettings.main;
+      return normalizeCommands(commandSettings.main);
     case CONSTANTS.FORK_TYPES.EASY:
-      return commandSettings.easy;
+      return normalizeCommands(commandSettings.easy);
     default:
-      return [];
+      return new Set(defaultCommands);
   }
 }
 

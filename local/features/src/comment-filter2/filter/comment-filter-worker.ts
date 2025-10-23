@@ -28,6 +28,8 @@ ctx.onmessage = (event: MessageEvent<ProcessRequest>) => {
   if (data.type === 'process') {
     const { threads, rules, currentSmid, settings, debugMode } = data.payload;
 
+    const effectiveSettings: Settings | null = settings ?? null;
+
     const regexCache = new Map<string, RegExp>();
     const preparedRules = enginePrepareRules(rules, currentSmid, regexCache);
 
@@ -38,7 +40,7 @@ ctx.onmessage = (event: MessageEvent<ProcessRequest>) => {
       const { comments, logs } = filterThread({
         thread,
         preparedRules,
-        settings,
+        settings: effectiveSettings,
         regexCache,
         debugMode
       });
