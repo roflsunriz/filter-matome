@@ -8,6 +8,48 @@
       EASY: "easy",
       OWNER: "owner"
     }};
+  const DEFAULT_COMMANDS = [
+    "big",
+    "medium",
+    "small",
+    "defont",
+    "gothic",
+    "mincho",
+    "ue",
+    "naka",
+    "shita",
+    "white",
+    "red",
+    "pink",
+    "orange",
+    "yellow",
+    "green",
+    "cyan",
+    "blue",
+    "purple",
+    "black",
+    "white2",
+    "red2",
+    "pink2",
+    "orange2",
+    "yellow2",
+    "green2",
+    "cyan2",
+    "blue2",
+    "purple2",
+    "black2",
+    "_live",
+    "invisible",
+    "full",
+    "ender",
+    "patissier",
+    "ca"
+  ];
+  const DEFAULT_FORK_COMMANDS = {
+    [CONSTANTS.FORK_TYPES.MAIN]: DEFAULT_COMMANDS,
+    [CONSTANTS.FORK_TYPES.EASY]: DEFAULT_COMMANDS,
+    [CONSTANTS.FORK_TYPES.OWNER]: DEFAULT_COMMANDS
+  };
 
   const ALLOWED_COMMENT_COMMANDS = /* @__PURE__ */ new Set([
     // サイズ
@@ -51,9 +93,25 @@
     "blue2",
     "purple2",
     "black2",
-    // 内部表現の数字コマンド（ニコニコ動画が自動変換）
-    "184"
-    // red の内部表現
+    // 匿名コマンド(ユーザーIDを暗号化するためのもの)
+    "184",
+    // デバイス系コマンド（正式な一覧が無いため既知の代表例を許可）
+    "device:3ds",
+    "device:wiiu",
+    "device:psvita",
+    "device:ps4",
+    "device:ps5",
+    "device:ps6",
+    "device:xbox",
+    "device:xbox360",
+    "device:xboxone",
+    "device:xboxseries",
+    "device:nintendo",
+    "device:nintendoswitch",
+    "device:nintendoswitchlite",
+    "device:nintendoswitcholed",
+    "device:switch",
+    "device:switch2"
   ]);
   const EXCLUSIVE_COMMAND_CATEGORIES = {
     size: /* @__PURE__ */ new Set(["big", "medium", "small"]),
@@ -321,6 +379,99 @@
     };
   }
 
+  const COMMAND_TYPES = {
+    COLOR: "color",
+    POSITION: "position",
+    FONT: "font",
+    SIZE: "size",
+    SPECIAL: "special"
+  };
+  const COMMAND_CATEGORIES = {
+    [COMMAND_TYPES.COLOR]: [
+      "white",
+      "red",
+      "pink",
+      "orange",
+      "yellow",
+      "green",
+      "cyan",
+      "blue",
+      "purple",
+      "black",
+      "white2",
+      "red2",
+      "pink2",
+      "orange2",
+      "yellow2",
+      "green2",
+      "cyan2",
+      "blue2",
+      "purple2",
+      "black2"
+    ],
+    [COMMAND_TYPES.POSITION]: [
+      "ue",
+      "naka",
+      "shita"
+    ],
+    [COMMAND_TYPES.FONT]: [
+      "gothic",
+      "mincho",
+      "defont"
+    ],
+    [COMMAND_TYPES.SIZE]: [
+      "big",
+      "medium",
+      "small"
+    ],
+    [COMMAND_TYPES.SPECIAL]: [
+      "invisible",
+      "full",
+      "patissier",
+      "_live",
+      "ender",
+      "ca",
+      "184"
+    ]
+  };
+  function enforceCommandSettings(existingCommands, forcedCommands) {
+    if (forcedCommands.length === 0) {
+      return existingCommands;
+    }
+    const mutableCommands = [...existingCommands];
+    for (const forcedCommand of forcedCommands) {
+      const commandType = getCommandType(forcedCommand);
+      if (commandType) {
+        for (let index = mutableCommands.length - 1; index >= 0; index -= 1) {
+          if (getCommandType(mutableCommands[index]) === commandType) {
+            mutableCommands.splice(index, 1);
+          }
+        }
+      } else {
+        const loweredForced = forcedCommand.toLowerCase();
+        for (let index = mutableCommands.length - 1; index >= 0; index -= 1) {
+          if (mutableCommands[index].toLowerCase() === loweredForced) {
+            mutableCommands.splice(index, 1);
+          }
+        }
+      }
+      mutableCommands.push(forcedCommand);
+    }
+    return sanitizeCommentCommands(mutableCommands);
+  }
+  function getCommandType(command) {
+    if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
+      return COMMAND_TYPES.COLOR;
+    }
+    const lowerCommand = command.toLowerCase();
+    for (const [type, commands] of Object.entries(COMMAND_CATEGORIES)) {
+      if (commands.includes(lowerCommand)) {
+        return type;
+      }
+    }
+    return null;
+  }
+
   function prepareJsonRules(rules, currentSmid, regexCache) {
     const preparedRules = [];
     const userIdRuleIndexes = /* @__PURE__ */ new Map();
@@ -405,13 +556,12 @@
   }) {
     const processedComment = { ...originalComment };
     processedComment.commands = normalizeCommands(processedComment.commands);
-    if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-      processedComment.isPremium = true;
-    }
     let ruleApplied = false;
     let shouldHideComment = false;
-    let shouldApplyCommands = true;
-    let appliedRule = null;
+    const numericNicoruCount = toNumber(originalComment.nicoruCount) ?? 0;
+    let hasIncludeNicoruRule = false;
+    let includeNicoruRuleMatched = false;
+    let excludeNicoruRuleMatched = false;
     const userRuleIndexes = preparedRules.userIdRuleIndexes.get(originalComment.userId) ?? [];
     const activeUserRuleIndexes = new Set(userRuleIndexes);
     const matcher = preparedRules.substringMatcher;
@@ -444,11 +594,35 @@
       } else {
         continue;
       }
-      const nicoruOk = evaluateNicoruCondition(preparedRule.normalizedNicoruCond, originalComment.nicoruCount);
+      const normalizedCond = preparedRule.normalizedNicoruCond;
+      const nicoruMatches = normalizedCond ? doesNicoruConditionMatch(normalizedCond, numericNicoruCount) : true;
+      if (rule.action.type === "unspecified") {
+        if (normalizedCond) {
+          if (normalizedCond.mode === "include") {
+            hasIncludeNicoruRule = true;
+            if (nicoruMatches) {
+              includeNicoruRuleMatched = true;
+              logCollector.push({
+                comment: originalComment,
+                rule,
+                hidden: false
+              });
+            }
+          } else if (nicoruMatches) {
+            excludeNicoruRuleMatched = true;
+            logCollector.push({
+              comment: originalComment,
+              rule,
+              hidden: false
+            });
+          }
+        }
+        continue;
+      }
+      const nicoruOk = evaluateNicoruCondition(normalizedCond, originalComment.nicoruCount);
       if (!nicoruOk) {
         continue;
       }
-      appliedRule = rule;
       ruleApplied = true;
       const actionResult = executeAction(rule.action, processedComment.body, rule, preparedRule.compiledRegex ?? getRegex(regexCache, rule.pattern ?? "", rule.flags || "gi"));
       logCollector.push({
@@ -472,13 +646,9 @@
         processedComment.commands.push("invisible");
       }
     }
-    if (ruleApplied && appliedRule?.nicoru_cond?.mode === "exclude") {
-      shouldApplyCommands = false;
-    }
-    if ([CONSTANTS.FORK_TYPES.EASY, CONSTANTS.FORK_TYPES.MAIN, CONSTANTS.FORK_TYPES.OWNER].includes(threadFork)) {
-      processedComment.commands = applyForkCommandSettings(processedComment.commands, threadFork, shouldApplyCommands, commandSettings);
-    } else if (shouldApplyCommands) {
-      processedComment.commands = sanitizeCommentCommands(processedComment.commands);
+    const shouldApplyCommandSettings = excludeNicoruRuleMatched ? false : hasIncludeNicoruRule ? includeNicoruRuleMatched : true;
+    if (shouldApplyCommandSettings) {
+      processedComment.commands = applyForkCommandSettings(processedComment.commands, threadFork, commandSettings);
     }
     if (ruleApplied) {
       processedComment.body = sanitizeCommentBody(processedComment.body);
@@ -606,6 +776,10 @@
       return true;
     }
     const numericValue = toNumber(commentNicoruCount) ?? 0;
+    const matches = doesNicoruConditionMatch(cond, numericValue);
+    return cond.mode === "include" ? matches : !matches;
+  }
+  function doesNicoruConditionMatch(cond, numericValue) {
     switch (cond.op) {
       case "=":
         return numericValue === cond.value;
@@ -640,33 +814,64 @@
     }
     return { type: "none" };
   }
-  function applyForkCommandSettings(commands, threadFork, shouldApplyCommands, commandSettings) {
-    if (!shouldApplyCommands) {
-      return sanitizeCommentCommands(commands);
-    }
-    if (!commandSettings) {
-      return sanitizeCommentCommands(commands);
-    }
-    const allowedCommands = getAllowedCommandsForFork(threadFork, commandSettings);
+  function applyForkCommandSettings(commands, threadFork, commandSettings) {
+    const forcedCommands = getForcedCommandsForFork(threadFork, commandSettings);
     const sanitizedCommands = sanitizeCommentCommands(commands);
-    return sanitizedCommands.filter((command) => {
+    const allowedCommands = getAllowedCommandsForFork(threadFork, commandSettings);
+    const filteredCommands = allowedCommands ? sanitizedCommands.filter((command) => {
       if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
         return true;
       }
-      return allowedCommands.includes(command.toLowerCase());
+      return allowedCommands.has(command.toLowerCase());
+    }) : sanitizedCommands;
+    const filteredForcedCommands = forcedCommands.filter((command) => {
+      if (!allowedCommands) {
+        return true;
+      }
+      if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
+        return true;
+      }
+      return allowedCommands.has(command.toLowerCase());
     });
+    return enforceCommandSettings(filteredCommands, filteredForcedCommands);
   }
   function getAllowedCommandsForFork(threadFork, commandSettings) {
+    const defaultCommands = DEFAULT_FORK_COMMANDS[threadFork]?.map((command) => command.toLowerCase()) ?? [];
+    const normalizeCommands2 = (commands) => new Set((commands ?? defaultCommands).map((command) => command.toLowerCase()));
+    if (!commandSettings) {
+      return new Set(defaultCommands);
+    }
     switch (threadFork) {
       case CONSTANTS.FORK_TYPES.OWNER:
-        return commandSettings.owner;
+        return normalizeCommands2(commandSettings.owner);
       case CONSTANTS.FORK_TYPES.MAIN:
-        return commandSettings.main;
+        return normalizeCommands2(commandSettings.main);
       case CONSTANTS.FORK_TYPES.EASY:
-        return commandSettings.easy;
+        return normalizeCommands2(commandSettings.easy);
       default:
-        return [];
+        return new Set(defaultCommands);
     }
+  }
+  function getForcedCommandsForFork(threadFork, commandSettings) {
+    if (!commandSettings) {
+      return [];
+    }
+    let configuredCommands = [];
+    switch (threadFork) {
+      case CONSTANTS.FORK_TYPES.OWNER:
+        configuredCommands = commandSettings.owner;
+        break;
+      case CONSTANTS.FORK_TYPES.MAIN:
+        configuredCommands = commandSettings.main;
+        break;
+      case CONSTANTS.FORK_TYPES.EASY:
+        configuredCommands = commandSettings.easy;
+        break;
+      default:
+        configuredCommands = [];
+        break;
+    }
+    return sanitizeCommentCommands([...configuredCommands]);
   }
   function normalizeCommands(commands) {
     if (!commands) {
@@ -705,6 +910,7 @@
     const { data } = event;
     if (data.type === "process") {
       const { threads, rules, currentSmid, settings } = data.payload;
+      const effectiveSettings = settings ?? null;
       const regexCache = /* @__PURE__ */ new Map();
       const preparedRules = prepareJsonRules(rules, currentSmid, regexCache);
       const processedThreads = [];
@@ -713,7 +919,7 @@
         const { comments, logs } = filterJsonThread({
           thread,
           preparedRules,
-          settings,
+          settings: effectiveSettings,
           regexCache
         });
         processedThreads.push({ ...thread, comments });
@@ -731,4 +937,4 @@
   };
 
 })();
-//# sourceMappingURL=json-comment-filter-worker-BmGkxRux.js.map
+//# sourceMappingURL=json-comment-filter-worker-BBtbvj7R.js.map

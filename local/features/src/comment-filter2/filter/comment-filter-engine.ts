@@ -191,6 +191,37 @@ export function addOrReplaceCommands(commands: string[], newCommands: string[]):
   return result;
 }
 
+export function enforceCommandSettings(existingCommands: string[], forcedCommands: readonly string[]): string[] {
+  if (forcedCommands.length === 0) {
+    return existingCommands;
+  }
+
+  const mutableCommands = [...existingCommands];
+
+  for (const forcedCommand of forcedCommands) {
+    const commandType = getCommandType(forcedCommand);
+
+    if (commandType) {
+      for (let index = mutableCommands.length - 1; index >= 0; index -= 1) {
+        if (getCommandType(mutableCommands[index]) === commandType) {
+          mutableCommands.splice(index, 1);
+        }
+      }
+    } else {
+      const loweredForced = forcedCommand.toLowerCase();
+      for (let index = mutableCommands.length - 1; index >= 0; index -= 1) {
+        if (mutableCommands[index].toLowerCase() === loweredForced) {
+          mutableCommands.splice(index, 1);
+        }
+      }
+    }
+
+    mutableCommands.push(forcedCommand);
+  }
+
+  return sanitizeCommentCommands(mutableCommands);
+}
+
 export function getCommandsOfType(commands: string[], commandType: string): string[] {
   return commands.filter(cmd => isCommandOfType(cmd, commandType));
 }
@@ -533,17 +564,29 @@ function applyForkCommandSettings(
   const sanitizedCommands = sanitizeCommentCommands(commands);
   const allowedCommands = getAllowedCommandsForFork(threadFork, settings);
 
-  if (!allowedCommands) {
-    return sanitizedCommands;
-  }
+  const filteredCommands = allowedCommands
+    ? sanitizedCommands.filter(command => {
+        if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
+          return true;
+        }
 
-  return sanitizedCommands.filter(command => {
+        return allowedCommands.has(command.toLowerCase());
+      })
+    : sanitizedCommands;
+
+  const forcedCommands = getForcedCommandsForFork(threadFork, settings).filter(command => {
+    if (!allowedCommands) {
+      return true;
+    }
+
     if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
       return true;
     }
 
     return allowedCommands.has(command.toLowerCase());
   });
+
+  return enforceCommandSettings(filteredCommands, forcedCommands);
 }
 
 function getAllowedCommandsForFork(
@@ -570,6 +613,35 @@ function getAllowedCommandsForFork(
     default:
       return defaultCommands ? new Set(defaultCommands) : null;
   }
+}
+
+function getForcedCommandsForFork(
+  threadFork: ForkType,
+  settings: Settings | null | undefined
+): string[] {
+  const commandSettings = settings?.commandSettings;
+  if (!commandSettings) {
+    return [];
+  }
+
+  let configuredCommands: readonly string[] = [];
+
+  switch (threadFork) {
+    case CONSTANTS.FORK_TYPES.OWNER:
+      configuredCommands = commandSettings.owner;
+      break;
+    case CONSTANTS.FORK_TYPES.MAIN:
+      configuredCommands = commandSettings.main;
+      break;
+    case CONSTANTS.FORK_TYPES.EASY:
+      configuredCommands = commandSettings.easy;
+      break;
+    default:
+      configuredCommands = [];
+      break;
+  }
+
+  return sanitizeCommentCommands([...configuredCommands]);
 }
 
 export function chunkThreads(threads: CF2Thread[], chunkSize: number): CF2Thread[][] {

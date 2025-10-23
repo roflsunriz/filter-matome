@@ -12,6 +12,48 @@
     RULE_DEFAULTS: {
       EMPTY_REPLACE: "EMPTY",
       ALL_SMID: "ALL"}};
+  const DEFAULT_COMMANDS = [
+    "big",
+    "medium",
+    "small",
+    "defont",
+    "gothic",
+    "mincho",
+    "ue",
+    "naka",
+    "shita",
+    "white",
+    "red",
+    "pink",
+    "orange",
+    "yellow",
+    "green",
+    "cyan",
+    "blue",
+    "purple",
+    "black",
+    "white2",
+    "red2",
+    "pink2",
+    "orange2",
+    "yellow2",
+    "green2",
+    "cyan2",
+    "blue2",
+    "purple2",
+    "black2",
+    "_live",
+    "invisible",
+    "full",
+    "ender",
+    "patissier",
+    "ca"
+  ];
+  const DEFAULT_FORK_COMMANDS = {
+    [CONSTANTS.FORK_TYPES.MAIN]: DEFAULT_COMMANDS,
+    [CONSTANTS.FORK_TYPES.EASY]: DEFAULT_COMMANDS,
+    [CONSTANTS.FORK_TYPES.OWNER]: DEFAULT_COMMANDS
+  };
 
   const ALLOWED_COMMENT_COMMANDS = /* @__PURE__ */ new Set([
     // サイズ
@@ -55,9 +97,25 @@
     "blue2",
     "purple2",
     "black2",
-    // 内部表現の数字コマンド（ニコニコ動画が自動変換）
-    "184"
-    // red の内部表現
+    // 匿名コマンド(ユーザーIDを暗号化するためのもの)
+    "184",
+    // デバイス系コマンド（正式な一覧が無いため既知の代表例を許可）
+    "device:3ds",
+    "device:wiiu",
+    "device:psvita",
+    "device:ps4",
+    "device:ps5",
+    "device:ps6",
+    "device:xbox",
+    "device:xbox360",
+    "device:xboxone",
+    "device:xboxseries",
+    "device:nintendo",
+    "device:nintendoswitch",
+    "device:nintendoswitchlite",
+    "device:nintendoswitcholed",
+    "device:switch",
+    "device:switch2"
   ]);
   const EXCLUSIVE_COMMAND_CATEGORIES = {
     size: /* @__PURE__ */ new Set(["big", "medium", "small"]),
@@ -473,6 +531,31 @@
     }
     return result;
   }
+  function enforceCommandSettings(existingCommands, forcedCommands) {
+    if (forcedCommands.length === 0) {
+      return existingCommands;
+    }
+    const mutableCommands = [...existingCommands];
+    for (const forcedCommand of forcedCommands) {
+      const commandType = getCommandType(forcedCommand);
+      if (commandType) {
+        for (let index = mutableCommands.length - 1; index >= 0; index -= 1) {
+          if (getCommandType(mutableCommands[index]) === commandType) {
+            mutableCommands.splice(index, 1);
+          }
+        }
+      } else {
+        const loweredForced = forcedCommand.toLowerCase();
+        for (let index = mutableCommands.length - 1; index >= 0; index -= 1) {
+          if (mutableCommands[index].toLowerCase() === loweredForced) {
+            mutableCommands.splice(index, 1);
+          }
+        }
+      }
+      mutableCommands.push(forcedCommand);
+    }
+    return sanitizeCommentCommands(mutableCommands);
+  }
   function isCommandOfType(command, commandType) {
     if (commandType === COMMAND_TYPES.COLOR && /^#[0-9A-Fa-f]{6}$/.test(command)) {
       return true;
@@ -702,30 +785,64 @@
     return null;
   }
   function applyForkCommandSettings(commands, threadFork, settings) {
-    if (!settings?.commandSettings) {
-      return sanitizeCommentCommands(commands);
-    }
-    const allowedCommands = getAllowedCommandsForFork(threadFork, settings);
     const sanitizedCommands = sanitizeCommentCommands(commands);
-    const filteredCommands = sanitizedCommands.filter((command) => {
+    const allowedCommands = getAllowedCommandsForFork(threadFork, settings);
+    const filteredCommands = allowedCommands ? sanitizedCommands.filter((command) => {
       if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
         return true;
       }
-      return allowedCommands.includes(command.toLowerCase());
+      return allowedCommands.has(command.toLowerCase());
+    }) : sanitizedCommands;
+    const forcedCommands = getForcedCommandsForFork(threadFork, settings).filter((command) => {
+      if (!allowedCommands) {
+        return true;
+      }
+      if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
+        return true;
+      }
+      return allowedCommands.has(command.toLowerCase());
     });
-    return filteredCommands;
+    return enforceCommandSettings(filteredCommands, forcedCommands);
   }
   function getAllowedCommandsForFork(threadFork, settings) {
+    const commandSettings = settings?.commandSettings;
+    const defaultCommands = DEFAULT_FORK_COMMANDS[threadFork]?.map((command) => command.toLowerCase());
+    const toLowercaseSet = (commands) => new Set((commands ?? defaultCommands ?? []).map((command) => command.toLowerCase()));
+    if (!commandSettings) {
+      return defaultCommands ? new Set(defaultCommands) : null;
+    }
     switch (threadFork) {
       case CONSTANTS.FORK_TYPES.OWNER:
-        return settings.commandSettings.owner;
+        return toLowercaseSet(commandSettings.owner);
       case CONSTANTS.FORK_TYPES.MAIN:
-        return settings.commandSettings.main;
+        return toLowercaseSet(commandSettings.main);
       case CONSTANTS.FORK_TYPES.EASY:
-        return settings.commandSettings.easy;
+        return toLowercaseSet(commandSettings.easy);
       default:
-        return [];
+        return defaultCommands ? new Set(defaultCommands) : null;
     }
+  }
+  function getForcedCommandsForFork(threadFork, settings) {
+    const commandSettings = settings?.commandSettings;
+    if (!commandSettings) {
+      return [];
+    }
+    let configuredCommands = [];
+    switch (threadFork) {
+      case CONSTANTS.FORK_TYPES.OWNER:
+        configuredCommands = commandSettings.owner;
+        break;
+      case CONSTANTS.FORK_TYPES.MAIN:
+        configuredCommands = commandSettings.main;
+        break;
+      case CONSTANTS.FORK_TYPES.EASY:
+        configuredCommands = commandSettings.easy;
+        break;
+      default:
+        configuredCommands = [];
+        break;
+    }
+    return sanitizeCommentCommands([...configuredCommands]);
   }
 
   const ctx = self;
@@ -733,6 +850,7 @@
     const { data } = event;
     if (data.type === "process") {
       const { threads, rules, currentSmid, settings, debugMode } = data.payload;
+      const effectiveSettings = settings ?? null;
       const regexCache = /* @__PURE__ */ new Map();
       const preparedRules = prepareRules(rules, currentSmid, regexCache);
       const processedThreads = [];
@@ -741,7 +859,7 @@
         const { comments, logs } = filterThread({
           thread,
           preparedRules,
-          settings,
+          settings: effectiveSettings,
           regexCache,
           debugMode
         });
@@ -760,4 +878,4 @@
   };
 
 })();
-//# sourceMappingURL=comment-filter-worker-DCXOyoFW.js.map
+//# sourceMappingURL=comment-filter-worker-DOV27MyE.js.map

@@ -1,10 +1,10 @@
 import { CONSTANTS, DEFAULT_FORK_COMMANDS } from '@/comment-filter2/utils/constants';
 import { sanitizeCommentBody, sanitizeCommentCommands } from '@/comment-filter2/utils/sanitizer';
-import { CF2Comment, CF2Thread, Settings } from '@/types/filter-types';
+import { CF2Comment, CF2Thread, Settings, CommandSettings } from '@/types/filter-types';
 import { NgRuleJson, NicoruCond, Action } from '@/types/filter-types';
 import { SubstringMatcher, isPlainLiteralPattern } from './rule-indexer';
 import { computeThreadNicoruStats, ThreadNicoruStats } from './thread-nicoru-stats';
-import { chunkThreads } from './comment-filter-engine';
+import { chunkThreads, enforceCommandSettings } from './comment-filter-engine';
 
 export interface PreparedJsonRule {
   rule: NgRuleJson;
@@ -155,15 +155,9 @@ interface ApplyJsonRuleOptions {
   preparedRules: PreparedJsonRuleSet;
   threadContext: JsonThreadProcessingContext;
   threadFork: ForkType;
-  commandSettings: SettingsCommandOptions | null;
+  commandSettings: CommandSettings | null;
   regexCache: Map<string, RegExp>;
   logCollector: JsonRuleMatchEvent[];
-}
-
-interface SettingsCommandOptions {
-  owner: string[];
-  main: string[];
-  easy: string[];
 }
 
 function applyRulesToComment({
@@ -180,6 +174,10 @@ function applyRulesToComment({
 
   let ruleApplied = false;
   let shouldHideComment = false;
+  const numericNicoruCount = toNumber(originalComment.nicoruCount) ?? 0;
+  let hasIncludeNicoruRule = false;
+  let includeNicoruRuleMatched = false;
+  let excludeNicoruRuleMatched = false;
 
   const userRuleIndexes = preparedRules.userIdRuleIndexes.get(originalComment.userId) ?? [];
   const activeUserRuleIndexes = new Set<number>(userRuleIndexes);
@@ -223,7 +221,34 @@ function applyRulesToComment({
       continue;
     }
 
-    const nicoruOk = evaluateNicoruCondition(preparedRule.normalizedNicoruCond, originalComment.nicoruCount);
+    const normalizedCond = preparedRule.normalizedNicoruCond;
+    const nicoruMatches = normalizedCond ? doesNicoruConditionMatch(normalizedCond, numericNicoruCount) : true;
+
+    if (rule.action.type === 'unspecified') {
+      if (normalizedCond) {
+        if (normalizedCond.mode === 'include') {
+          hasIncludeNicoruRule = true;
+          if (nicoruMatches) {
+            includeNicoruRuleMatched = true;
+            logCollector.push({
+              comment: originalComment,
+              rule,
+              hidden: false
+            });
+          }
+        } else if (nicoruMatches) {
+          excludeNicoruRuleMatched = true;
+          logCollector.push({
+            comment: originalComment,
+            rule,
+            hidden: false
+          });
+        }
+      }
+      continue;
+    }
+
+    const nicoruOk = evaluateNicoruCondition(normalizedCond, originalComment.nicoruCount);
     if (!nicoruOk) {
       continue;
     }
@@ -257,8 +282,15 @@ function applyRulesToComment({
     }
   }
 
+  const shouldApplyCommandSettings = excludeNicoruRuleMatched
+    ? false
+    : hasIncludeNicoruRule
+      ? includeNicoruRuleMatched
+      : true;
 
-  processedComment.commands = applyForkCommandSettings(processedComment.commands, threadFork, true, commandSettings);
+  if (shouldApplyCommandSettings) {
+    processedComment.commands = applyForkCommandSettings(processedComment.commands, threadFork, commandSettings);
+  }
 
   if (ruleApplied) {
     processedComment.body = sanitizeCommentBody(processedComment.body);
@@ -417,7 +449,12 @@ function evaluateNicoruCondition(
   }
 
   const numericValue = toNumber(commentNicoruCount) ?? 0;
+  const matches = doesNicoruConditionMatch(cond, numericValue);
 
+  return cond.mode === 'include' ? matches : !matches;
+}
+
+function doesNicoruConditionMatch(cond: NormalizedNicoruCond, numericValue: number): boolean {
   switch (cond.op) {
     case '=':
       return numericValue === cond.value;
@@ -464,31 +501,40 @@ function executeAction(
 function applyForkCommandSettings(
   commands: string[],
   threadFork: ForkType,
-  shouldApplyCommands: boolean,
-  commandSettings: SettingsCommandOptions | null
+  commandSettings: CommandSettings | null
 ): string[] {
-  if (!shouldApplyCommands) {
-    return sanitizeCommentCommands(commands);
-  }
+  const forcedCommands = getForcedCommandsForFork(threadFork, commandSettings);
 
-  const allowedCommands = getAllowedCommandsForFork(threadFork, commandSettings);
   const sanitizedCommands = sanitizeCommentCommands(commands);
+  const allowedCommands = getAllowedCommandsForFork(threadFork, commandSettings);
 
-  if (!allowedCommands) {
-    return sanitizedCommands;
-  }
+  const filteredCommands = allowedCommands
+    ? sanitizedCommands.filter(command => {
+        if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
+          return true;
+        }
+        return allowedCommands.has(command.toLowerCase());
+      })
+    : sanitizedCommands;
 
-  return sanitizedCommands.filter(command => {
+  const filteredForcedCommands = forcedCommands.filter(command => {
+    if (!allowedCommands) {
+      return true;
+    }
+
     if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
       return true;
     }
+
     return allowedCommands.has(command.toLowerCase());
   });
+
+  return enforceCommandSettings(filteredCommands, filteredForcedCommands);
 }
 
 function getAllowedCommandsForFork(
   threadFork: ForkType,
-  commandSettings: SettingsCommandOptions | null
+  commandSettings: CommandSettings | null
 ): Set<string> | null {
   const defaultCommands = DEFAULT_FORK_COMMANDS[threadFork]?.map(command => command.toLowerCase()) ?? [];
 
@@ -509,6 +555,34 @@ function getAllowedCommandsForFork(
     default:
       return new Set(defaultCommands);
   }
+}
+
+function getForcedCommandsForFork(
+  threadFork: ForkType,
+  commandSettings: CommandSettings | null
+): string[] {
+  if (!commandSettings) {
+    return [];
+  }
+
+  let configuredCommands: readonly string[] = [];
+
+  switch (threadFork) {
+    case CONSTANTS.FORK_TYPES.OWNER:
+      configuredCommands = commandSettings.owner;
+      break;
+    case CONSTANTS.FORK_TYPES.MAIN:
+      configuredCommands = commandSettings.main;
+      break;
+    case CONSTANTS.FORK_TYPES.EASY:
+      configuredCommands = commandSettings.easy;
+      break;
+    default:
+      configuredCommands = [];
+      break;
+  }
+
+  return sanitizeCommentCommands([...configuredCommands]);
 }
 
 function normalizeCommands(commands: string | string[] | null | undefined): string[] {

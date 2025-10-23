@@ -16,8 +16,25 @@ const ALLOWED_COMMENT_COMMANDS = new Set([
   'white', 'red', 'pink', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'black',
   // プレミアム専用色
   'white2', 'red2', 'pink2', 'orange2', 'yellow2', 'green2', 'cyan2', 'blue2', 'purple2', 'black2',
-  // 内部表現の数字コマンド（ニコニコ動画が自動変換）
-  '184' // red の内部表現
+  // 匿名コマンド(ユーザーIDを暗号化するためのもの)
+  '184',
+  // デバイス系コマンド（正式な一覧が無いため既知の代表例を許可）
+  'device:3ds',
+  'device:wiiu',
+  'device:psvita',
+  'device:ps4',
+  'device:ps5',
+  'device:ps6',
+  'device:xbox',
+  'device:xbox360',
+  'device:xboxone',
+  'device:xboxseries',
+  'device:nintendo',
+  'device:nintendoswitch',
+  'device:nintendoswitchlite',
+  'device:nintendoswitcholed',
+  'device:switch',
+  'device:switch2'
 ]);
 
 // 排他的なコマンドのカテゴリ定義
