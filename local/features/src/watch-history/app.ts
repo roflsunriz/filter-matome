@@ -3310,7 +3310,7 @@ class WatchHistoryApp {
       }
     } else {
       // ブラウザ通知が利用できない場合のフォールバック
-      window?.logger.warn("ブラウザ通知が利用できません");
+      logger.warn?.("ブラウザ通知が利用できません");
     }
   }
 
