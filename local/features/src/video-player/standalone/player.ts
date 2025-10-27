@@ -1,9 +1,8 @@
 import { UrlManager } from "@/video-player/core/url-manager";
 import { ToastManager } from "@/video-player/utils/toast";
 import { applyStyles } from "@/video-player/utils/dom-utils";
-import { PlayerControlsShadow } from "@/video-player/ui/player-controls";
-import { CommentList } from "@/video-player/ui/comment-list";
-import { CommentSystem } from "@/video-player/core/comment-system";
+import { PlayerControlsShadow } from "@/video-player/ui/player-controls"; // CommentListは不要に
+import { DanmakuCommentSystem } from "@/video-player/core/danmaku-comment-system";
 import {
   CUSTOM_PLAYER_SHADOW_HTML,
   CUSTOM_PLAYER_SHADOW_STYLES,
@@ -14,10 +13,6 @@ import type { HlsConstructor, HlsInstance } from "@/types/video-types";
 const ensureCustomElements = (): void => {
   if (!customElements.get("player-controls-shadow")) {
     customElements.define("player-controls-shadow", PlayerControlsShadow);
-  }
-
-  if (!customElements.get("comment-list-shadow")) {
-    customElements.define("comment-list-shadow", CommentList);
   }
 };
 
@@ -37,7 +32,7 @@ export class StandalonePlayer {
   private readonly mount: HTMLElement;
   private readonly urlManager = new UrlManager();
   private readonly toastManager = new ToastManager();
-  private readonly commentSystem = new CommentSystem();
+  private readonly commentSystem = new DanmakuCommentSystem();
 
   private playerControls: PlayerControlsShadow | null = null;
   private videoElement: HTMLVideoElement | null = null;
@@ -61,7 +56,7 @@ export class StandalonePlayer {
   ): Promise<void> {
     this.enableComments = options.enableComments !== false;
 
-    await this.preparePlayerShell();
+    this.preparePlayerShell();
 
     const displayTitle =
       options.displayTitle ?? options.apiData?.video.title ?? videoId;
@@ -72,7 +67,7 @@ export class StandalonePlayer {
     }
   }
 
-  private async preparePlayerShell(): Promise<void> {
+  private preparePlayerShell(): void {
     this.mount.innerHTML = "";
 
     if (!playerStylesInjected) {
@@ -101,7 +96,10 @@ export class StandalonePlayer {
 
     if (this.enableComments) {
       try {
-        await this.commentSystem.initialize(this.videoElement);
+        this.commentSystem.initialize(
+          this.videoElement,
+          this.videoContainer,
+        );
       } catch (error) {
         window.logger.error("コメントシステムの初期化に失敗しました", error);
       }

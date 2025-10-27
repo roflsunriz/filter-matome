@@ -247,6 +247,10 @@ export class CommentList extends HTMLElement {
     this.renderComments();
   }
 
+  getComments(): Comment[] {
+    return [...this.comments];
+  }
+
   /**
    * コメントリストのレンダリング
    */

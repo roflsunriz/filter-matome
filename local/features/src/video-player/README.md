@@ -11,7 +11,7 @@ features/src/video-player/
 │   └── icons.ts                          # マテリアルアイコン定義 (700B)
 ├── core/
 │   ├── comment-fetcher.ts                # コメントAPI取得 (5.5KB)
-│   ├── comment-renderer.ts               # コメント描画エンジン (36KB)
+│   ├── danmaku-comment-system.ts         # Danmaku描画統合 (🆕 28KB)
 │   ├── comment-system.ts                 # コメントシステム統合 (21KB)
 │   ├── database-manager.ts               # 🆕 データベース統合管理システム (18KB)
 │   ├── migration-manager.ts              # 🆕 マイグレーション管理システム (15KB)
@@ -51,7 +51,7 @@ comment-system.ts ─── コメント統合管理
 comment-fetcher.ts ─── APIからコメント取得
     ↓
 comment-system.ts ─── フィルタリング・統合処理
-    ↓ ┌─── comment-renderer.ts ─── Canvas描画
+    ↓ ┌─── danmaku-comment-system.ts ─── Danmaku描画
     ↓ └─── comment-list.ts ─── リスト表示
     ↓
 プレーヤー画面表示
@@ -97,10 +97,10 @@ database-manager.ts ─── データベース統合管理
 - **機能**: レンダラー・リスト・フェッチャーの統合、CommentFilter2連携、NGフィルター
 - **編集タイミング**: コメント機能全体の修正、新しいフィルター追加、外部連携変更
 
-#### `core/comment-renderer.ts` - コメント描画エンジン (最大級ファイル)
-- **役割**: Canvas上へのコメント描画・アニメーション
-- **機能**: リアルタイムコメント描画、衝突判定、レーン管理、仮想拡張キャンバス
-- **編集タイミング**: 描画パフォーマンス改善、新しいコメント効果、レイアウト調整
+#### 🆕 `core/danmaku-comment-system.ts` - Danmaku描画統合
+- **役割**: 外部Danmakuライブラリを用いたコメント描画・表示制御
+- **機能**: コメント整形、NGフィルタリング、DOMレイヤ制御、表示/非表示切替
+- **編集タイミング**: 描画パフォーマンス調整、Danmaku設定変更、外部連携拡張
 
 ### 🎨 **UI・インターフェース**
 
@@ -200,7 +200,7 @@ database-manager.ts ─── データベース統合管理
 
 ### 🚀 **パフォーマンスを改善したい**
 - **再生シーケンス**: `standalone/player.ts`
-- **描画最適化**: `core/comment-renderer.ts`
+- **描画最適化**: `core/danmaku-comment-system.ts`
 - **DOM操作**: `utils/dom-utils.ts`
 - **UI応答**: `ui/player-controls.ts`
 
@@ -240,7 +240,7 @@ database-manager.ts ─── データベース統合管理
 
 ### 🚨 **変更時の影響範囲**
 - `config/constants.ts` 変更 → 全ファイルに影響
-- `core/comment-renderer.ts` 変更 → コメント描画全体に影響
+- `core/danmaku-comment-system.ts` 変更 → コメント描画全体に影響
 - `ui/player-controls.ts` 変更 → プレーヤーUI全体に影響
 - `index.ts` 変更 → システム全体の初期化に影響
 - **🆕 `config/database-config.ts` 変更 → 永続化全体に影響**

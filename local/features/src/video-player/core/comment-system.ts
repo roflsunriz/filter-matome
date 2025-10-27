@@ -1,4 +1,4 @@
-import { CommentRenderer } from "@/video-player/core/comment-renderer";
+import { DanmakuCommentSystem } from "@/video-player/core/danmaku-comment-system";
 import { CommentFetcher } from "@/video-player/core/comment-fetcher";
 import { CommentList } from "@/video-player/ui/comment-list";
 import { CONSTANTS } from "@/comment-filter2/utils/constants";
@@ -12,7 +12,7 @@ import {
  * コメントシステム - レンダリングとリスト表示を統合管理
  */
 export class CommentSystem {
-  private renderer: CommentRenderer;
+  private readonly danmaku = new DanmakuCommentSystem();
   private fetcher: CommentFetcher;
   private commentList: CommentList;
   private videoElement: HTMLVideoElement | null = null;
@@ -20,14 +20,12 @@ export class CommentSystem {
   private ngWords: string[] = [];
   private ngRegex: RegExp[] = [];
   private commentContainer: HTMLElement | null = null;
-  private comments: Comment[] = [];
   private isInitialized: boolean = false;
   private hasReceivedFilteredData: boolean = false;
   private _timeUpdateHandler?: (e: Event) => void; // timeUpdateリスナーの参照を保持
   private abortController: AbortController | null = null;
 
   constructor() {
-    this.renderer = new CommentRenderer();
     this.fetcher = new CommentFetcher();
     this.commentList = new CommentList();
   }
@@ -35,17 +33,19 @@ export class CommentSystem {
   /**
    * コメントシステムの初期化
    */
-  async initialize(videoElement: HTMLVideoElement): Promise<void> {
-    await Promise.resolve();
+  initialize(
+    videoElement: HTMLVideoElement,
+    container: HTMLElement,
+  ): void {
     try {
       window.logger.info("コメントシステムの初期化を開始します！");
 
       // ★追加: 前回の状態を完全リセット
       if (this.isInitialized) {
         window.logger.info("既存のコメントシステムをリセットします！");
-        this.renderer.destroy(); // アニメーション停止 & canvas削除
         this.commentList.clearComments(); // リストを空に
         this.hasReceivedFilteredData = false; // 重複フラグを戻す
+        this.danmaku.destroy();
       }
 
       this.videoElement = videoElement;
@@ -58,9 +58,7 @@ export class CommentSystem {
         );
       }
 
-      // レンダラーの初期化（★変更: 再作成するように）
-      this.renderer = new CommentRenderer();
-      this.renderer.initialize(videoElement);
+      this.danmaku.initialize(videoElement, container);
 
       // 時間更新イベントの設定
       this.setupTimeUpdateListener();
@@ -76,27 +74,8 @@ export class CommentSystem {
       this.commentContainer.className = "comment-container";
       this.commentContainer.appendChild(this.commentList);
 
-      // ───────── レイアウト調整 ─────────
-      const customPlayer = document.getElementById("custom-player");
-      if (customPlayer) {
-        let wrapper: HTMLElement | null =
-          customPlayer.parentElement as HTMLElement;
-
-        // すでにラッパーが存在するか確認
-        if (!wrapper || !wrapper.classList.contains("video-with-comments")) {
-          wrapper = document.createElement("div");
-          wrapper.className = "video-with-comments";
-
-          // customPlayer の直前に wrapper を挿入し、その中に customPlayer を移動
-          customPlayer.parentNode?.insertBefore(wrapper, customPlayer);
-          wrapper.appendChild(customPlayer);
-        }
-
-        // コメントコンテナを wrapper に追加
-        wrapper.appendChild(this.commentContainer);
-      } else {
-        // フォールバック：従来通りビデオ要素の親に追加
-        this.videoElement.parentElement?.appendChild(this.commentContainer);
+      if (!container.contains(this.commentContainer)) {
+        container.appendChild(this.commentContainer);
       }
 
       // 公式コメントリストを非表示
@@ -174,7 +153,7 @@ export class CommentSystem {
     const savedVisibility = localStorage.getItem("commentVisible");
     if (savedVisibility !== null) {
       this.isVisible = savedVisibility === "true";
-      this.renderer.setVisible(this.isVisible);
+      this.danmaku.setVisibility(this.isVisible);
     }
   }
 
@@ -194,11 +173,6 @@ export class CommentSystem {
       window.logger.info("既存のAPIフェッチをキャンセルしました！");
     }
 
-    // 既存のコメントをクリア
-    this.renderer.clearComments();
-    this.commentList.clearComments();
-
-    // フィルタ済みコメントを適用
     let comments = apiResponse.data.threads.flatMap(
       (thread) => thread.comments,
     );
@@ -207,7 +181,6 @@ export class CommentSystem {
       return comment;
     });
 
-    // 追加のNGフィルタを適用
     const filteredComments = this.filterNGComments(
       comments as unknown as Comment[],
     );
@@ -215,9 +188,9 @@ export class CommentSystem {
       `CommentFilter2適用後のコメント数です: ${filteredComments.length}`,
     );
 
-    // コメントを追加
+    this.commentList.clearComments();
     this.commentList.addComments(filteredComments);
-    filteredComments.forEach((c) => this.renderer.addComment(c));
+    this.danmaku.loadCommentsFromData(filteredComments);
   }
 
   /**
@@ -280,8 +253,7 @@ export class CommentSystem {
         return;
       }
 
-      this.commentList.addComments(filteredComments);
-      filteredComments.forEach((c) => this.renderer.addComment(c));
+      this.applyFilteredComments(apiResponse);
     } catch (error: unknown) {
       if (error instanceof DOMException && error.name === "AbortError") {
         window.logger.info(
@@ -327,7 +299,7 @@ export class CommentSystem {
    */
   toggleVisibility(): boolean {
     this.isVisible = !this.isVisible;
-    this.renderer.setVisible(this.isVisible);
+    this.danmaku.setVisibility(this.isVisible);
     localStorage.setItem("commentVisible", this.isVisible.toString());
     return this.isVisible;
   }
@@ -338,7 +310,15 @@ export class CommentSystem {
   addComment(comment: Comment): void {
     // NGフィルタリングをチェック
     if (this.isCommentAllowed(comment)) {
-      this.renderer.addComment(comment);
+      const enrichedComment: Comment = {
+        ...comment,
+        vposMs: comment.vposMs ?? comment.vpos * 10,
+      };
+      // any/unknown型の利用を避けるため型アサーションを明確化
+      const currentComments = this.commentList.getComments();
+      const nextComments: Comment[] = [...currentComments, enrichedComment];
+      this.commentList.addComments(nextComments);
+      this.danmaku.loadCommentsFromData(nextComments);
     }
   }
 
@@ -410,12 +390,11 @@ export class CommentSystem {
 
     // 変数のリセット
     this.videoElement = null;
-    this.comments = [];
     this.isInitialized = false;
     this.hasReceivedFilteredData = false;
 
     // レンダラーと関連リソースの破棄
-    this.renderer.destroy();
+    this.danmaku.destroy();
     this.commentList.remove();
 
     window.logger.info("コメントシステムのリソースをクリーンアップしました！");
@@ -427,7 +406,7 @@ export class CommentSystem {
    */
   setOpacity(opacity: number): void {
     try {
-      this.renderer.setOpacity(opacity);
+      this.danmaku.setOpacity(opacity);
       window.logger.info(`コメント透明度を ${opacity} に設定しました！`);
     } catch (error) {
       window.logger.error("コメント透明度の設定に失敗しました！:", error);
@@ -440,7 +419,7 @@ export class CommentSystem {
    */
   setDefaultColor(color: string): void {
     try {
-      this.renderer.setDefaultColor(color);
+      this.danmaku.setDefaultColor(color);
       window.logger.info(`コメントのデフォルト色を ${color} に設定しました！`);
     } catch (error) {
       window.logger.error(
