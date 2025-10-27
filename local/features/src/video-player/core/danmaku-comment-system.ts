@@ -95,6 +95,8 @@ export class DanmakuCommentSystem {
   private laneHeightPx = 0;
   // 初期描画時のフォント極小対策:レイアウト安定後の再計算キックを複数回
   private primeTimerIds: number[] = [];
+  // ★ 追加: デバウンス用
+  private styleRefreshTimer: number | null = null;
   // ★ 追加: UI設定の保持(ページ存続中は維持)
   private userOpacity: number = 1;
   private userVisible: boolean = true;
@@ -186,6 +188,33 @@ export class DanmakuCommentSystem {
 
     // ★ 追加: 初期化時に渡されるDanmakuオプションを保持
     this.lastInitOptions = danmakuOptions;
+  }
+
+  // ★ 追加: スタイル変更後の軽量再同期（rAF×1 + 50msデバウンス）
+  private refreshAfterStyleChange(): void {
+    if (this.styleRefreshTimer != null) {
+      clearTimeout(this.styleRefreshTimer);
+      this.styleRefreshTimer = null;
+    }
+    requestAnimationFrame(() => {
+      this.updateLaneMetrics();
+      this.danmaku?.resize?.();
+      // this.syncCanvasToLayer(); // syncCanvasToLayer is not defined
+      // ここが肝：現在尺へ追従
+      try { this.danmaku?.seek?.(); } catch (e) { throw new Error(e as string); }
+      if (this.videoElement && !this.videoElement.paused) {
+        try { this.danmaku?.play?.(); } catch (e) { throw new Error(e as string); }
+      }
+      // 念のため遅延でもう一度（ブラウザ遅延吸収）
+      this.styleRefreshTimer = window.setTimeout(() => {
+        try { this.danmaku?.resize?.(); } catch (e) { throw new Error(e as string); }
+        try { this.danmaku?.seek?.(); } catch (e) { throw new Error(e as string); }
+        if (this.videoElement && !this.videoElement.paused) {
+          try { this.danmaku?.play?.(); } catch (e) { throw new Error(e as string); }
+        }
+        this.styleRefreshTimer = null;
+      }, 50);
+    });
   }
 
   // ★ 追加: 初期レイアウト安定後の再計算を段階的に実行
@@ -375,29 +404,31 @@ export class DanmakuCommentSystem {
   }
 
   setOpacity(opacity: number): void {
-    const v = Math.max(0, Math.min(1, Number(opacity)));
+    // UIが 0–100 を渡す場合に備えて正規化
+    const num = Number(opacity);
+    const v = (num > 1) ? Math.max(0, Math.min(100, num)) / 100 : Math.max(0, Math.min(1, num));
     const clampedOpacity = Number.isFinite(v) ? v : 1;
     this.userOpacity = clampedOpacity;
     this.opacity = this.userOpacity; // 内部状態も同期
     if (this.danmakuLayer) {
       this.danmakuLayer.style.opacity = clampedOpacity.toString();
     }
+    // ★ スタイル変更後の軽量再同期
+    this.refreshAfterStyleChange();
   }
 
   setDefaultColor(color: string): void {
     this.defaultColor = color || "#ffffff";
 
     // スタイル再構築
-    const laneHeight = this.getLaneHeight();
-    const fontSize = this.calculateFontSize(laneHeight);
     this.comments = this.comments.map((c) => {
       const effectiveColor = c.color ?? this.defaultColor;
       const rawStyle = (c as { style?: unknown }).style;
       const inheritedStyle = this.extractCanvasStyle(rawStyle);
       const style = this.buildCommentStyle(
         effectiveColor,
-        laneHeight,
-        fontSize,
+        this.getLaneHeight(),
+        this.calculateFontSize(this.getLaneHeight()),
         inheritedStyle,
       );
       const updatedComment: DanmakuComment = {
@@ -407,7 +438,8 @@ export class DanmakuCommentSystem {
       };
       return this.stripRuntimeArtifacts(updatedComment);
     });
-    this.renderComments();
+    // 色変更は再レイアウト不要、ただし一瞬消えを避けるため同期だけ
+    this.refreshAfterStyleChange();
   }
 
   setVisibility(isVisible: boolean): void {
@@ -420,6 +452,7 @@ export class DanmakuCommentSystem {
         this.danmaku.hide();
       }
     }
+    this.refreshAfterStyleChange();
   }
 
   toggleVisibility(): boolean {
@@ -453,6 +486,11 @@ export class DanmakuCommentSystem {
     // 初期タイマを掃除
     for (const id of this.primeTimerIds) clearTimeout(id);
     this.primeTimerIds = [];
+    // ★ 追加: デバウンス用タイマーも掃除
+    if (this.styleRefreshTimer != null) {
+      clearTimeout(this.styleRefreshTimer);
+      this.styleRefreshTimer = null;
+    }
     this.danmaku?.destroy();
 
     // fullscreenchange 解除
