@@ -44,7 +44,7 @@ export class CommentSystem {
       if (this.isInitialized) {
         window.logger.info("既存のコメントシステムをリセットします！");
         this.commentList.clearComments(); // リストを空に
-        this.hasReceivedFilteredData = false; // 重複フラグを戻す
+        this.hasReceivedFilteredData = false;
         this.danmaku.destroy();
       }
 
@@ -73,6 +73,17 @@ export class CommentSystem {
       this.commentContainer = document.createElement("div");
       this.commentContainer.className = "comment-container";
       this.commentContainer.appendChild(this.commentList);
+
+      // コメントリストコンテナのスタイルを調整 (Flexboxレイアウト用)
+      this.commentContainer.style.position = "relative"; // 絶対配置から変更
+      this.commentContainer.style.width = "400px"; // コメントリストの幅
+      this.commentContainer.style.height = "100%";
+      this.commentContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+      this.commentContainer.style.zIndex = "5";
+      this.commentContainer.style.overflow = "hidden";
+      this.commentContainer.style.display = "flex"; // 子要素のCommentListを伸縮させる
+      this.commentContainer.style.flexDirection = "column";
+      this.commentContainer.style.flexShrink = "0"; // 縮まないように設定
 
       if (!container.contains(this.commentContainer)) {
         container.appendChild(this.commentContainer);
@@ -190,7 +201,7 @@ export class CommentSystem {
 
     this.commentList.clearComments();
     this.commentList.addComments(filteredComments);
-    this.danmaku.loadCommentsFromData(filteredComments);
+    this.danmaku.load(filteredComments);
   }
 
   /**
@@ -325,7 +336,7 @@ export class CommentSystem {
       const currentComments = this.commentList.getComments();
       const nextComments: Comment[] = [...currentComments, enrichedComment];
       this.commentList.addComments(nextComments);
-      this.danmaku.loadCommentsFromData(nextComments);
+      this.danmaku.load(nextComments);
     }
   }
 

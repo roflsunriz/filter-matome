@@ -8,24 +8,6 @@ import type {
   CompatibleCommentFilter2GlobalData,
 } from "./filter-types";
 
-/**
- * コメントレンダラーの設定の型定義
- */
-export interface CommentRendererConfig {
-  OPACITY: number;
-  COMMENT_DURATION_MS: number;
-  DEFAULT_FONT_SIZE: number;
-  MIN_FONT_SIZE: number;
-  DEFAULT_COLOR: string;
-  MAX_COMMENT_LENGTH: number;
-  STROKE_WIDTH: number;
-  STROKE_COLOR: string;
-  VPOS_THRESHOLD_MS: number;
-  MAX_LANES_LIMIT: number;
-  RENDER_FPS: number;
-  CLEANUP_INTERVAL_MS: number;
-  VIRTUAL_EXTEND_RATIO: number;
-}
 
 /**
  * コメントデータの型定義

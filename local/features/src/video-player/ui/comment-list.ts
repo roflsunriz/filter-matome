@@ -43,7 +43,8 @@ export class CommentList extends HTMLElement {
     return `
       :host {
         display: block;
-        width: 400px;
+        width: 100%; /* 親コンテナに追従 */
+        height: 100%; /* 親コンテナに追従 */
         background: rgba(40, 40, 40, 0.95);
         border-radius: 8px;
         overflow: hidden;

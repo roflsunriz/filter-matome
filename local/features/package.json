@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
-    "@playwright/mcp": "^0.0.33",
+    "@playwright/mcp": "^0.0.44",
     "@playwright/test": "^1.54.2",
     "@types/flexsearch": "^0.7.6",
     "@types/node": "^24.2.1",
@@ -240,6 +240,7 @@
     "cross-spawn": "^7.0.6",
     "css-select": "^6.0.0",
     "css-what": "^7.0.0",
+    "danmaku": "^2.0.9",
     "debug": "^4.4.1",
     "deep-is": "^0.1.4",
     "dir-glob": "^3.0.1",

@@ -83,6 +83,21 @@ export class StandalonePlayer {
     this.videoContainer = this.customPlayerContainer.querySelector(
       ".video-container",
     ) as HTMLElement;
+
+    // 新しいラッパーを作成し、プレイヤーとコメントリストを配置
+    const wrapper = document.createElement("div");
+    wrapper.className = "standalone-player-wrapper";
+    wrapper.style.display = "flex";
+    wrapper.style.width = "100%";
+    wrapper.style.height = "100%";
+
+    // 既存のプレイヤーをラッパーに移動
+    wrapper.appendChild(this.customPlayerContainer);
+    this.mount.appendChild(wrapper);
+
+    this.videoContainer = wrapper.querySelector(
+      ".video-container",
+    ) as HTMLElement;
     this.videoElement = this.customPlayerContainer.querySelector(
       "#video-element",
     ) as HTMLVideoElement;
@@ -98,7 +113,7 @@ export class StandalonePlayer {
       try {
         this.commentSystem.initialize(
           this.videoElement,
-          this.videoContainer,
+          wrapper, // 親コンテナを新しいラッパーに変更
         );
       } catch (error) {
         window.logger.error("コメントシステムの初期化に失敗しました", error);
