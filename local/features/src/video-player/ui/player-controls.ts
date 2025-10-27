@@ -1,7 +1,7 @@
 import { PLAYER_SETTINGS } from "@/video-player/config/constants";
 import { PLAYER_ICONS } from "@/video-player/config/icons";
 import { materialIconsStyles } from "@/common/material-icons";
-import { DanmakuCommentSystem } from "@/video-player/core/danmaku-comment-system";
+import { CommentSystem } from "@/video-player/core/comment-system";
 import * as IndexedDBUtils from "@/video-player/utils/indexed-db-utils";
 import { ExtendedDocument, ExtendedHTMLElement } from "@/types/index";
 
@@ -15,7 +15,7 @@ export class PlayerControlsShadow extends HTMLElement {
   private shadow: ShadowRoot;
   private video: HTMLVideoElement | null = null;
   private mouseTimer: number | null = null;
-  private commentSystem: DanmakuCommentSystem | null = null;
+  private commentSystem: CommentSystem | null = null;
   private userPaused: boolean = false;
   private isSettingsOpen: boolean = false;
 
@@ -112,7 +112,7 @@ export class PlayerControlsShadow extends HTMLElement {
   /**
    * コメントシステムを設定
    */
-  setCommentSystem(commentSystem: DanmakuCommentSystem): void {
+  setCommentSystem(commentSystem: CommentSystem): void {
     this.commentSystem = commentSystem;
 
     // コメントボタンの状態を更新
@@ -1919,7 +1919,7 @@ export class PlayerControlsShadow extends HTMLElement {
       // キャンバスのリサイズを強制実行（少し遅延させてビデオ位置が確定してから）
       setTimeout(() => {
         if (this.commentSystem) {
-          // danmakuのresizeメソッドを呼び出す
+          // CommentSystemのresizeメソッドを呼び出す
           this.commentSystem.resize();
           window.logger.info("コメントキャンバスのリサイズを実行しました");
         }

@@ -88,7 +88,6 @@ jobs:
             "nlFilters"
             "local/features"
             "local/features/src"
-            "local/features/dist"
           )
           
           for dir in "${required_dirs[@]}"; do

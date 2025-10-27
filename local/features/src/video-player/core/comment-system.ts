@@ -253,7 +253,7 @@ export class CommentSystem {
         return;
       }
 
-      this.applyFilteredComments(apiResponse);
+      this.loadCommentsFromApiResponse(apiResponse);
     } catch (error: unknown) {
       if (error instanceof DOMException && error.name === "AbortError") {
         window.logger.info(
@@ -267,6 +267,13 @@ export class CommentSystem {
       // 処理が完了したらabortControllerをリセット
       this.abortController = null;
     }
+  }
+
+  /**
+   * @deprecated `applyFilteredComments`にリネームされました。
+   */
+  private loadCommentsFromApiResponse(apiResponse: CommentApiResponse): void {
+    this.applyFilteredComments(apiResponse);
   }
 
   /**
@@ -528,6 +535,13 @@ export class CommentSystem {
         e,
       );
     }
+  }
+
+  /**
+   * コメント描画キャンバスのサイズをコンテナに合わせる
+   */
+  resize(): void {
+    this.danmaku.resize();
   }
 
   /**

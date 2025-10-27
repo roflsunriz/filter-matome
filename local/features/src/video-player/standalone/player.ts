@@ -1,8 +1,8 @@
 import { UrlManager } from "@/video-player/core/url-manager";
 import { ToastManager } from "@/video-player/utils/toast";
 import { applyStyles } from "@/video-player/utils/dom-utils";
-import { PlayerControlsShadow } from "@/video-player/ui/player-controls"; // CommentListは不要に
-import { DanmakuCommentSystem } from "@/video-player/core/danmaku-comment-system";
+import { PlayerControlsShadow } from "@/video-player/ui/player-controls";
+import { CommentSystem } from "@/video-player/core/comment-system";
 import {
   CUSTOM_PLAYER_SHADOW_HTML,
   CUSTOM_PLAYER_SHADOW_STYLES,
@@ -32,7 +32,7 @@ export class StandalonePlayer {
   private readonly mount: HTMLElement;
   private readonly urlManager = new UrlManager();
   private readonly toastManager = new ToastManager();
-  private readonly commentSystem = new DanmakuCommentSystem();
+  private readonly commentSystem = new CommentSystem();
 
   private playerControls: PlayerControlsShadow | null = null;
   private videoElement: HTMLVideoElement | null = null;
