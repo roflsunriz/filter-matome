@@ -2,12 +2,12 @@ import Danmaku from "danmaku";
 import type { Comment } from "@/types/comment-types";
 
 const TARGET_LANE_COUNT = 16;
-const MIN_LANE_HEIGHT_PX = 24;
+const MIN_LANE_HEIGHT_PX = 10;
 const MAX_LANE_HEIGHT_PX = 96;
 const FALLBACK_CONTAINER_HEIGHT_PX = MIN_LANE_HEIGHT_PX * TARGET_LANE_COUNT;
-const FONT_SCALE = 0.75;
-const MIN_FONT_SIZE_PX = 16;
-const MAX_FONT_SIZE_PX = 56;
+const FONT_SCALE = 0.85;
+const MIN_FONT_SIZE_PX = 8;
+const MAX_FONT_SIZE_PX = 64;
 const DEFAULT_CANVAS_FONT_FAMILY =
   '"Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", sans-serif';
 
@@ -78,6 +78,8 @@ type DanmakuComment = Comment &
   DanmakuLibraryComment & {
     text: string;
     style?: CanvasStyle;
+    // 旧系danmaku互換: 一部実装は canvasStyle を参照
+    canvasStyle?: CanvasStyle;
   };
 
 export class DanmakuCommentSystem {
@@ -91,10 +93,21 @@ export class DanmakuCommentSystem {
   private isVisible = true;
   private resizeObserver: ResizeObserver | null = null;
   private laneHeightPx = 0;
+  // 初期描画時のフォント極小対策:レイアウト安定後の再計算キックを複数回
+  private primeTimerIds: number[] = [];
+  // ★ 追加: UI設定の保持(ページ存続中は維持)
+  private userOpacity: number = 1;
+  private userVisible: boolean = true;
+  // ★ 追加: 再生成用に覚えておく
+  private lastInitOptions: DanmakuConstructorOption | null = null; // Danmakuのコンストラクタオプション
+  private sourceComments: Comment[] = []; // load/renderに使う生コメント
+  private playerRoot: HTMLElement | null = null;
+  private originalParent: HTMLElement | null = null; // danmakuLayerの元の親を保持
   private readonly canvasContextCtor =
     typeof CanvasRenderingContext2D !== "undefined"
       ? CanvasRenderingContext2D
       : undefined;
+  private _onFsChange: (() => void) | undefined = undefined;
 
   initialize(
     videoElement: HTMLVideoElement,
@@ -118,12 +131,17 @@ export class DanmakuCommentSystem {
     danmakuLayer.style.overflow = "hidden";
     danmakuLayer.style.opacity = this.opacity.toString();
     danmakuLayer.style.zIndex = "2";
-
-    if (window.getComputedStyle(this.container).position === "static") {
-      this.container.style.position = "relative";
+    
+    // 全画面化のルートである .custom-player 直下にレイヤーを置く
+    const playerRoot = this.container.querySelector(".custom-player");
+    if (!playerRoot) {
+      throw new Error(".custom-player要素が見つかりません。");
     }
-
-    this.container.appendChild(danmakuLayer);
+    this.playerRoot = playerRoot as HTMLElement;
+    if (window.getComputedStyle(this.playerRoot).position === "static") {
+      this.playerRoot.style.position = "relative";
+    }
+    playerRoot.appendChild(danmakuLayer);
     this.danmakuLayer = danmakuLayer;
 
     const danmakuOptions: DanmakuConstructorOption = {
@@ -140,23 +158,180 @@ export class DanmakuCommentSystem {
 
     this.updateLaneMetrics();
 
-    this.setupResizeObserver();
+    // ★ 初期表示フォント極小対策：
+    // レイアウト確定(rAF×2)後と、少し遅らせたタイミングでもう一度フォント/レーンを再計算
+    this.primeInitialSizing();
+    // videoのメタデータが入った直後にも再計算（naturalWidth/Height確定後）
+    this.attachVideoSizingHooks();
+
+
+    // 全画面切替の後はレイアウト確定を待ってから resize（rAF 2回）
+    const onFsChange = (): void => {
+      // レイアウト反映 → 次フレームで計測
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.recreateDanmaku(true);
+        });
+      });
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    // 破棄時に外すために WeakRef なしの簡易ハンドラを保存
+    this._onFsChange = onFsChange;
 
     // 初期表示状態をlocalStorageから読み込む
     const savedVisibility = localStorage.getItem("commentVisible");
     if (savedVisibility !== null) {
       this.setVisibility(savedVisibility === "true");
     }
+
+    // ★ 追加: 初期化時に渡されるDanmakuオプションを保持
+    this.lastInitOptions = danmakuOptions;
+  }
+
+  // ★ 追加: 初期レイアウト安定後の再計算を段階的に実行
+  private primeInitialSizing(): void {
+    const kick = (): void => {
+      this.updateLaneMetrics();
+      this.danmaku?.resize();
+      // ★ ユーザ設定を尊重して適用
+      this.applyUserStyle();
+    };
+    // rAF×2 で直後の確定を1回
+    requestAnimationFrame(() => requestAnimationFrame(kick));
+    // さらに遅延で2回（CSS/フォント/動画レイアウトが遅れて反映されるケースに対応）
+    this.primeTimerIds.push(window.setTimeout(kick, 100));
+    this.primeTimerIds.push(window.setTimeout(kick, 300));
+  }
+
+  // ★ 追加: 動画メタデータ・サイズ変化時にも再計算
+  private attachVideoSizingHooks(): void {
+    const v = this.videoElement;
+    if (!v) return;
+    const onMeta = (): void => {
+      // rAF×2 後に実寸で再計算
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        this.updateLaneMetrics();
+        this.danmaku?.resize();
+        // ★ ユーザ設定を再適用
+        this.applyUserStyle();
+      }));
+    };
+    v.addEventListener('loadedmetadata', onMeta, { once: true });
+    // 一部ブラウザは動画のレイアウト確定がplaying直後になることがある
+    v.addEventListener('playing', onMeta, { once: true });
+    // ソース切替などに備えてリスナを保持（destroyで自動解除は不要：once指定）
+  }
+
+  // ★ 追加: ユーザ設定適用(再生成/初期確定のたびに呼ぶ)
+  private applyUserStyle(): void {
+    // 可視/不透明度
+    try {
+      this.setVisibility(this.userVisible);
+    } catch (e) {
+      window.logger.warn("setVisibilityの適用に失敗", e);
+    }
+    try {
+      this.setOpacity(this.userOpacity);
+    } catch (e) {
+      window.logger.warn("setOpacityの適用に失敗", e);
+    }
+    // レイヤー側にも反映(保険)
+    if (this.danmakuLayer) {
+      this.danmakuLayer.style.opacity = String(this.userOpacity);
+    }
+  }
+
+  // ★ 追加: 再生成ルーチン（最小・堅牢）
+  private recreateDanmaku(preserveTime: boolean = true): void {
+    const root = this.playerRoot ?? this.container ?? document.body;
+    if (!root) return;
+
+    // 現在のvideoを取り直す（フルスク中に差し替えられる対策）
+    const currentVideo = document.querySelector("video");
+    if (currentVideo) this.videoElement = currentVideo;
+
+    const _time = preserveTime && this.videoElement ? this.videoElement.currentTime : 0;
+    const playing = this.videoElement ? !this.videoElement.paused : false;
+
+    // 旧インスタンス破棄
+    try {
+      this.danmaku?.destroy();
+    } catch (e) {
+      window.logger.warn("danmaku.destroy()でエラー", e);
+    }
+    this.danmaku = null;
+
+    // レイヤー確保（なければ作る／あれば中身を空に）
+    if (!this.danmakuLayer) {
+      this.danmakuLayer = document.createElement("div");
+      this.danmakuLayer.className = "danmaku-layer";
+      this.danmakuLayer.style.position = "absolute";
+      this.danmakuLayer.style.inset = "0";
+      this.danmakuLayer.style.pointerEvents = "none";
+      this.danmakuLayer.style.zIndex = "2";
+      this.danmakuLayer.style.overflow = "hidden";
+      root.appendChild(this.danmakuLayer);
+    } else {
+      this.danmakuLayer.innerHTML = ""; // ランタイムキャンバスを掃除
+      if (this.danmakuLayer.parentElement !== root) {
+        root.appendChild(this.danmakuLayer); // 最終子にして最前面へ
+      }
+    }
+
+    // Danmakuインスタンスを再生成
+    const opts = this.lastInitOptions ?? {};
+    try {
+      this.danmaku = new Danmaku({
+        ...opts,
+        container: this.danmakuLayer,
+        media: this.videoElement ?? undefined, // nullの場合はundefinedに変換
+        comments: [], // コメントは後から投入
+      }) as DanmakuInstance;
+    } catch (e) {
+      window.logger.error("[recreateDanmaku] Danmakuの生成に失敗しました", e);
+      return;
+    }
+
+    // レイアウト・DPR合わせ
+    this.updateLaneMetrics();
+    this.danmaku?.resize?.();
+    // ★ 直後にユーザ設定を再適用
+    this.applyUserStyle();
+
+    // コメント再投入
+    if (this.sourceComments.length > 0) {
+      this.load(this.sourceComments);
+    }
+
+    // シーク＆（動画が再生中なら）再開
+    try {
+      this.danmaku?.seek?.();
+    } catch (e) {
+      window.logger.warn("danmaku.seek()でエラー", e);
+    }
+    if (playing) {
+      try {
+        this.danmaku?.play?.();
+      } catch (e) {
+        window.logger.warn("danmaku.play()でエラー", e);
+      }
+    }
   }
 
   private setupResizeObserver(): void {
-    if (!this.container) return;
+    // フルスクリーンで実サイズが変わるのは playerRoot（.custom-player）
+    const target =
+      this.playerRoot ??
+      (this.container?.querySelector(".custom-player") as HTMLElement | null) ??
+      this.container;
+    if (!target) return;
 
+    this.resizeObserver?.disconnect();
     this.resizeObserver = new ResizeObserver(() => {
       this.updateLaneMetrics();
       this.danmaku?.resize();
     });
-    this.resizeObserver.observe(this.container);
+    this.resizeObserver.observe(target);
   }
 
   private renderComments(): void {
@@ -171,6 +346,7 @@ export class DanmakuCommentSystem {
   }
 
   load(comments: Comment[]): void {
+    this.sourceComments = Array.isArray(comments) ? comments : [];
     const laneHeight = this.getLaneHeight();
     const fontSize = this.calculateFontSize(laneHeight);
 
@@ -179,16 +355,18 @@ export class DanmakuCommentSystem {
       const color = c.color ?? this.defaultColor;
       const rawStyle = (c as { style?: unknown }).style;
       const inheritedStyle = this.extractCanvasStyle(rawStyle);
+      const style = this.buildCommentStyle(
+        color,
+        laneHeight,
+        fontSize,
+        inheritedStyle,
+      );
       const nextComment: DanmakuComment = {
         ...c,
         time,
         text: c.body,
-        style: this.buildCommentStyle(
-          color,
-          laneHeight,
-          fontSize,
-          inheritedStyle,
-        ),
+        style,
+        canvasStyle: style, // ← 旧API互換のため重複設定
       };
       return this.stripRuntimeArtifacts(nextComment);
     });
@@ -197,29 +375,35 @@ export class DanmakuCommentSystem {
   }
 
   setOpacity(opacity: number): void {
-    const clampedOpacity = Math.max(0, Math.min(1, opacity));
-    this.opacity = clampedOpacity;
+    const v = Math.max(0, Math.min(1, Number(opacity)));
+    const clampedOpacity = Number.isFinite(v) ? v : 1;
+    this.userOpacity = clampedOpacity;
+    this.opacity = this.userOpacity; // 内部状態も同期
     if (this.danmakuLayer) {
       this.danmakuLayer.style.opacity = clampedOpacity.toString();
     }
   }
 
   setDefaultColor(color: string): void {
-    this.defaultColor = color;
+    this.defaultColor = color || "#ffffff";
+
+    // スタイル再構築
     const laneHeight = this.getLaneHeight();
     const fontSize = this.calculateFontSize(laneHeight);
     this.comments = this.comments.map((c) => {
       const effectiveColor = c.color ?? this.defaultColor;
       const rawStyle = (c as { style?: unknown }).style;
       const inheritedStyle = this.extractCanvasStyle(rawStyle);
+      const style = this.buildCommentStyle(
+        effectiveColor,
+        laneHeight,
+        fontSize,
+        inheritedStyle,
+      );
       const updatedComment: DanmakuComment = {
         ...c,
-        style: this.buildCommentStyle(
-          effectiveColor,
-          laneHeight,
-          fontSize,
-          inheritedStyle,
-        ),
+        style,
+        canvasStyle: style, // ← 旧API互換のため重複設定
       };
       return this.stripRuntimeArtifacts(updatedComment);
     });
@@ -227,6 +411,7 @@ export class DanmakuCommentSystem {
   }
 
   setVisibility(isVisible: boolean): void {
+    this.userVisible = !!isVisible;
     this.isVisible = isVisible;
     if (this.danmaku) {
       if (this.isVisible) {
@@ -264,12 +449,25 @@ export class DanmakuCommentSystem {
 
   destroy(): void {
     this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    // 初期タイマを掃除
+    for (const id of this.primeTimerIds) clearTimeout(id);
+    this.primeTimerIds = [];
     this.danmaku?.destroy();
+
+    // fullscreenchange 解除
+    const h = this._onFsChange;
+    if (h) {
+      document.removeEventListener("fullscreenchange", h);
+      this._onFsChange = undefined;
+    }
     this.danmaku = null;
     this.danmakuLayer?.remove();
     this.danmakuLayer = null;
     this.videoElement = null;
     this.container = null;
+    this.originalParent = null;
+    this.playerRoot = null;
     this.comments = [];
   }
 
@@ -384,7 +582,8 @@ export class DanmakuCommentSystem {
       mergedStyle.fillStyle = color;
     }
 
-    mergedStyle.font = this.composeFont(mergedStyle.font, fontSize);
+    // 既存fontがCSS変数等でパース不能→10pxに落ちる事故を避ける
+    mergedStyle.font = `${fontSize}px ${DEFAULT_CANVAS_FONT_FAMILY}`;
     mergedStyle.textBaseline = this.pickTextBaseline(mergedStyle.textBaseline);
 
     return mergedStyle;

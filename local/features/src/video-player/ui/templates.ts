@@ -158,7 +158,24 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
     height: 100% !important;
     pointer-events: none !important;
     display: block !important;
-    z-index: 10 !important;
+    z-index: 1001 !important; /* player-controlsより手前、ビデオより奥 */
+  }
+
+  /* 全画面時の Danmaku レイヤー（実際の描画先はこちら） */
+  .custom-player:fullscreen .danmaku-layer,
+  .custom-player:-webkit-full-screen .danmaku-layer,
+  .custom-player:-moz-full-screen .danmaku-layer,
+  .custom-player:-ms-fullscreen .danmaku-layer,
+  html.fullscreen-active .custom-player.nc-fullscreen-player .danmaku-layer,
+  body.nc-fullscreen-active .custom-player.nc-fullscreen-player .danmaku-layer {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    pointer-events: none !important;
+    display: block !important;
+    z-index: 1001 !important; /* video(z-index:1) の上 / controls(2000) の下 */
   }
 
   /* 全画面時のプレーヤーコントロール配置 */

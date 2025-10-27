@@ -1859,75 +1859,18 @@ export class PlayerControlsShadow extends HTMLElement {
 
     // 設定メニューの表示モードを更新
     this.updateSettingsMenuMode(isFullScreen);
-
+    
     // 全画面時のビデオ要素強制調整
     if (isFullScreen) {
-      setTimeout(() => this.forceVideoCentering(), 100);
+      // 全画面時のスタイルはCSSで管理
     } else {
       // 全画面解除時はスタイルをリセット
       this.resetVideoStyles();
     }
-  }
 
-  /**
-   * 全画面時にビデオ要素を強制的に中央配置
-   */
-  private forceVideoCentering(): void {
-    const video = this.getVideo();
-    if (!video) return;
-
-    try {
-      window.logger.info("ビデオ要素の強制中央配置を実行します");
-
-      // 画面サイズを取得
-      const screenWidth = window.innerWidth;
-      const screenHeight = window.innerHeight;
-      const screenRatio = screenWidth / screenHeight;
-
-      // ビデオの本来のアスペクト比を取得
-      const videoWidth = video.videoWidth || video.clientWidth;
-      const videoHeight = video.videoHeight || video.clientHeight;
-      const videoRatio = videoWidth / videoHeight;
-
-      window.logger.info("サイズ情報:", {
-        screen: {
-          width: screenWidth,
-          height: screenHeight,
-          ratio: screenRatio,
-        },
-        video: { width: videoWidth, height: videoHeight, ratio: videoRatio },
-      });
-
-      // 強制スタイル適用（型安全に）
-      video.style.position = "fixed";
-      video.style.top = "50%";
-      video.style.left = "50%";
-      video.style.transform = "translate(-50%, -50%)";
-      video.style.zIndex = "1000";
-      video.style.backgroundColor = "#000";
-
-      if (videoRatio > screenRatio) {
-        // ビデオが横長 → 横幅を画面に合わせる
-        video.style.width = "100vw";
-        video.style.height = "auto";
-      } else {
-        // ビデオが縦長 → 縦幅を画面に合わせる
-        video.style.width = "auto";
-        video.style.height = "100vh";
-      }
-
-      // キャンバスのリサイズを強制実行（少し遅延させてビデオ位置が確定してから）
-      setTimeout(() => {
-        if (this.commentSystem) {
-          // CommentSystemのresizeメソッドを呼び出す
-          this.commentSystem.resize();
-          window.logger.info("コメントキャンバスのリサイズを実行しました");
-        }
-      }, 50);
-
-      window.logger.info("強制中央配置完了しました");
-    } catch (error) {
-      window.logger.error("ビデオ強制中央配置でエラーが発生しました:", error);
+    // 全画面切り替え時にコメントシステムのリサイズをトリガー
+    if (this.commentSystem) {
+      this.commentSystem.resize();
     }
   }
 

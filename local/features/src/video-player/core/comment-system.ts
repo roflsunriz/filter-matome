@@ -78,6 +78,7 @@ export class CommentSystem {
       this.commentContainer.style.position = "relative"; // 絶対配置から変更
       this.commentContainer.style.width = "400px"; // コメントリストの幅
       this.commentContainer.style.height = "100%";
+      this.commentContainer.style.maxHeight = "80vh";
       this.commentContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
       this.commentContainer.style.zIndex = "5";
       this.commentContainer.style.overflow = "hidden";
