@@ -47,8 +47,8 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
   }
     
   #video-element {
-    width: auto;
-    height: auto;
+    width: 85vw;
+    height: 85vh;
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
