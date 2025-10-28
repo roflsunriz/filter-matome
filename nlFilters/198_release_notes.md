@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #204 (2025/10/28) リリースノート](#filter-matome-204-20251028-リリースノート)
 - [filter-matome #203 (2025/10/23) リリースノート](#filter-matome-203-20251023-リリースノート)
 - [filter-matome #202 (2025/10/23) リリースノート](#filter-matome-202-20251023-リリースノート)
 - [filter-matome #201 (2025/10/20) リリースノート](#filter-matome-201-20251020-リリースノート)
@@ -114,6 +115,20 @@
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
 
+
+### filter-matome #204 (2025/10/28) リリースノート
+
+- ✨新機能(New)：     
+- video-playerのコメントレンダリングエンジンを自前のものからDanmaku.jsに変更した。
+- これにより衝突判定が改善され重なりが軽減されることが期待される。
+- ✅️修正(Fixed)：   
+- なし
+- 🔴変更(Changed)：           
+- なし
+- ❌️未修正(Unfixed)：     
+- なし
+- ℹ️その他(Others)：     
+- なし
 
 ### filter-matome #203 (2025/10/23) リリースノート
 
