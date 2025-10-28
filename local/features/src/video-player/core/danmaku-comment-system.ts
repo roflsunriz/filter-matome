@@ -485,10 +485,18 @@ export class DanmakuCommentSystem {
       requestAnimationFrame(() => {
         if (this.danmaku && this.videoElement) {
           // シークして現在位置のコメントを表示
-          this.danmaku.seek();
+          try {
+            this.danmaku?.seek?.();
+          } catch (e) {
+            window.logger.warn("danmaku.seek()でエラー", e);
+          }
           // 再生中だった場合は再生を継続
           if (isPlaying) {
-            this.danmaku.play();
+            try {
+              this.danmaku?.play?.();
+            } catch (e) {
+              window.logger.warn("danmaku.play()でエラー", e);
+            }
           }
         }
       });
