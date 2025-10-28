@@ -427,6 +427,25 @@ export class DanmakuCommentSystem {
     });
 
     this.renderComments();
+
+    // 動画が再生中の場合、現在位置にseekして表示を復元
+    if (this.danmaku && this.videoElement) {
+      // 現在位置にシーク
+      try {
+        this.danmaku?.seek?.();
+      } catch (e) {
+        window.logger.warn("danmaku.seek()でエラー", e);
+      }
+      
+      // 再生中の場合は再生を継続
+      if (!this.videoElement.paused) {
+        try {
+          this.danmaku?.play?.();
+        } catch (e) {
+          window.logger.warn("danmaku.play()でエラー", e);
+        }
+      }
+    }
   }
 
   setOpacity(opacity: number): void {
@@ -448,25 +467,11 @@ export class DanmakuCommentSystem {
     this.defaultColor = nextColor;
     this.userColor = nextColor;
 
-    // より確実な方法：コメントを再ロードする
     // sourceCommentsから新しい色で再構築
     if (this.sourceComments.length > 0) {
       // loadメソッドを使ってコメントを再設定
-      // これにより、新しい色でコメントが再構築される
+      // loadメソッド内でseekとplayが適切に処理される
       this.load(this.sourceComments);
-      
-      // 再生中の場合は再生を継続
-      if (this.videoElement && !this.videoElement.paused) {
-        requestAnimationFrame(() => {
-          if (this.danmaku) {
-            try {
-              this.danmaku?.play?.();
-            } catch (e) {
-              window.logger.warn("danmaku.play()でエラー", e);
-            }
-          }
-        });
-      }
     }
   }
 
