@@ -202,16 +202,36 @@ export class DanmakuCommentSystem {
       this.danmaku?.resize?.();
       // this.syncCanvasToLayer(); // syncCanvasToLayer is not defined
       // ここが肝：現在尺へ追従
-      try { this.danmaku?.seek?.(); } catch (e) { throw new Error(e as string); }
+      try { 
+        this.danmaku?.seek?.();
+      } catch (e) { 
+        window.logger.warn("danmaku.seek()でエラー", e);
+      }
       if (this.videoElement && !this.videoElement.paused) {
-        try { this.danmaku?.play?.(); } catch (e) { throw new Error(e as string); }
+        try { 
+          this.danmaku?.play?.();
+        } catch (e) { 
+          window.logger.warn("danmaku.play()でエラー", e);
+        }
       }
       // 念のため遅延でもう一度（ブラウザ遅延吸収）
       this.styleRefreshTimer = window.setTimeout(() => {
-        try { this.danmaku?.resize?.(); } catch (e) { throw new Error(e as string); }
-        try { this.danmaku?.seek?.(); } catch (e) { throw new Error(e as string); }
+        try { 
+          this.danmaku?.resize?.();
+        } catch (e) { 
+          window.logger.warn("danmaku.resize()でエラー", e);
+        }
+        try { 
+          this.danmaku?.seek?.();
+        } catch (e) { 
+          window.logger.warn("danmaku.seek()でエラー", e);
+        }
         if (this.videoElement && !this.videoElement.paused) {
-          try { this.danmaku?.play?.(); } catch (e) { throw new Error(e as string); }
+          try { 
+            this.danmaku?.play?.();
+          } catch (e) { 
+            window.logger.warn("danmaku.play()でエラー", e);
+          }
         }
         this.styleRefreshTimer = null;
       }, 50);
@@ -428,6 +448,9 @@ export class DanmakuCommentSystem {
     this.defaultColor = nextColor;
     this.userColor = nextColor;
 
+    // 現在の再生状態を保存
+    const isPlaying = this.videoElement && !this.videoElement.paused;
+
     // スタイル再構築
     this.comments = this.comments.map((c) => {
       const effectiveColor = c.color ?? this.defaultColor;
@@ -446,10 +469,30 @@ export class DanmakuCommentSystem {
       };
       return this.stripRuntimeArtifacts(updatedComment);
     });
-    // コメントを再描画して色の変更を反映
-    this.renderComments();
-    // 描画後の軽量再同期
-    this.refreshAfterStyleChange();
+
+    // Danmakuインスタンスが存在する場合のみ再レンダリング
+    if (this.danmaku) {
+      // コメントを一旦クリアして再追加
+      this.danmaku.clear();
+      this.danmaku.comments.length = 0;
+      
+      // 更新されたコメントを追加
+      for (const comment of this.comments) {
+        this.danmaku.emit(comment);
+      }
+      
+      // 現在の再生位置にシーク（これが重要）
+      requestAnimationFrame(() => {
+        if (this.danmaku && this.videoElement) {
+          // シークして現在位置のコメントを表示
+          this.danmaku.seek();
+          // 再生中だった場合は再生を継続
+          if (isPlaying) {
+            this.danmaku.play();
+          }
+        }
+      });
+    }
   }
 
   setVisibility(isVisible: boolean): void {
