@@ -456,6 +456,12 @@ export class DanmakuCommentSystem {
     const num = Number(opacity);
     const v = (num > 1) ? Math.max(0, Math.min(100, num)) / 100 : Math.max(0, Math.min(1, num));
     const clampedOpacity = Number.isFinite(v) ? v : 1;
+    
+    // 既に同じ透明度が設定されている場合は何もしない（無限ループ防止）
+    if (this.userOpacity === clampedOpacity && this.opacity === clampedOpacity) {
+      return;
+    }
+    
     this.userOpacity = clampedOpacity;
     this.opacity = this.userOpacity; // 内部状態も同期
     if (this.danmakuLayer) {
@@ -467,6 +473,12 @@ export class DanmakuCommentSystem {
 
   setDefaultColor(color: string): void {
     const nextColor = color || "#ffffff";
+    
+    // 既に同じ色が設定されている場合は何もしない（無限ループ防止）
+    if (this.defaultColor === nextColor && this.userColor === nextColor) {
+      return;
+    }
+    
     this.defaultColor = nextColor;
     this.userColor = nextColor;
 
@@ -478,8 +490,15 @@ export class DanmakuCommentSystem {
   }
 
   setVisibility(isVisible: boolean): void {
-    this.userVisible = !!isVisible;
-    this.isVisible = isVisible;
+    const nextVisible = !!isVisible;
+    
+    // 既に同じ表示状態が設定されている場合は何もしない（無限ループ防止）
+    if (this.userVisible === nextVisible && this.isVisible === nextVisible) {
+      return;
+    }
+    
+    this.userVisible = nextVisible;
+    this.isVisible = nextVisible;
     if (this.danmaku) {
       if (this.isVisible) {
         this.danmaku.show();
