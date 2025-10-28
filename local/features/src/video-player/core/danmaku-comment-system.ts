@@ -446,7 +446,9 @@ export class DanmakuCommentSystem {
       };
       return this.stripRuntimeArtifacts(updatedComment);
     });
-    // 色変更は再レイアウト不要、ただし一瞬消えを避けるため同期だけ
+    // コメントを再描画して色の変更を反映
+    this.renderComments();
+    // 描画後の軽量再同期
     this.refreshAfterStyleChange();
   }
 
