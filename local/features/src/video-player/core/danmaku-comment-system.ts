@@ -448,58 +448,25 @@ export class DanmakuCommentSystem {
     this.defaultColor = nextColor;
     this.userColor = nextColor;
 
-    // 現在の再生状態を保存
-    const isPlaying = this.videoElement && !this.videoElement.paused;
-
-    // スタイル再構築
-    this.comments = this.comments.map((c) => {
-      const effectiveColor = c.color ?? this.defaultColor;
-      const rawStyle = (c as { style?: unknown }).style;
-      const inheritedStyle = this.extractCanvasStyle(rawStyle);
-      const style = this.buildCommentStyle(
-        effectiveColor,
-        this.getLaneHeight(),
-        this.calculateFontSize(this.getLaneHeight()),
-        inheritedStyle,
-      );
-      const updatedComment: DanmakuComment = {
-        ...c,
-        style,
-        canvasStyle: style, // ← 旧API互換のため重複設定
-      };
-      return this.stripRuntimeArtifacts(updatedComment);
-    });
-
-    // Danmakuインスタンスが存在する場合のみ再レンダリング
-    if (this.danmaku) {
-      // コメントを一旦クリアして再追加
-      this.danmaku.clear();
-      this.danmaku.comments.length = 0;
+    // より確実な方法：コメントを再ロードする
+    // sourceCommentsから新しい色で再構築
+    if (this.sourceComments.length > 0) {
+      // loadメソッドを使ってコメントを再設定
+      // これにより、新しい色でコメントが再構築される
+      this.load(this.sourceComments);
       
-      // 更新されたコメントを追加
-      for (const comment of this.comments) {
-        this.danmaku.emit(comment);
-      }
-      
-      // 現在の再生位置にシーク（これが重要）
-      requestAnimationFrame(() => {
-        if (this.danmaku && this.videoElement) {
-          // シークして現在位置のコメントを表示
-          try {
-            this.danmaku?.seek?.();
-          } catch (e) {
-            window.logger.warn("danmaku.seek()でエラー", e);
-          }
-          // 再生中だった場合は再生を継続
-          if (isPlaying) {
+      // 再生中の場合は再生を継続
+      if (this.videoElement && !this.videoElement.paused) {
+        requestAnimationFrame(() => {
+          if (this.danmaku) {
             try {
               this.danmaku?.play?.();
             } catch (e) {
               window.logger.warn("danmaku.play()でエラー", e);
             }
           }
-        }
-      });
+        });
+      }
     }
   }
 
