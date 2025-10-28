@@ -10,6 +10,8 @@ const MIN_FONT_SIZE_PX = 8;
 const MAX_FONT_SIZE_PX = 64;
 const DEFAULT_CANVAS_FONT_FAMILY =
   '"Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", sans-serif';
+const TARGET_COMMENT_DURATION_SECONDS = 4;
+const SPEED_UPDATE_EPSILON = 0.1;
 
 type BaseDanmakuInstance = InstanceType<typeof Danmaku>;
 type DanmakuConstructorOption = ConstructorParameters<typeof Danmaku>[0];
@@ -93,6 +95,7 @@ export class DanmakuCommentSystem {
   private isVisible = true;
   private resizeObserver: ResizeObserver | null = null;
   private laneHeightPx = 0;
+  private lastComputedSpeed: number | null = null;
   // 初期描画時のフォント極小対策:レイアウト安定後の再計算キックを複数回
   private primeTimerIds: number[] = [];
   // ★ 追加: デバウンス用
@@ -147,6 +150,7 @@ export class DanmakuCommentSystem {
     playerRoot.appendChild(danmakuLayer);
     this.danmakuLayer = danmakuLayer;
 
+    const initialSpeed = this.computeDynamicSpeed();
     const danmakuOptions: DanmakuConstructorOption = {
       container: danmakuLayer,
       media: this.videoElement,
@@ -154,10 +158,11 @@ export class DanmakuCommentSystem {
       engine: "canvas",
       // Danmakuライブラリはレーン数を直接指定できないため、
       // コメント高さと速度を調整して全体に均等に流れるようにする。
-      speed: 180,
+      speed: initialSpeed ?? 180,
     };
 
     this.danmaku = new Danmaku(danmakuOptions) as DanmakuInstance;
+    this.lastComputedSpeed = initialSpeed ?? null;
 
     this.updateLaneMetrics();
 
@@ -520,6 +525,7 @@ export class DanmakuCommentSystem {
 
   resize(): void {
     this.danmaku?.resize();
+    this.updateDanmakuSpeed();
   }
 
   play(): void {
@@ -561,12 +567,66 @@ export class DanmakuCommentSystem {
     this.originalParent = null;
     this.playerRoot = null;
     this.comments = [];
+    this.lastComputedSpeed = null;
+  }
+
+  private getDisplayWidth(): number | null {
+    const candidates: Array<number | undefined> = [
+      this.danmakuLayer?.clientWidth,
+      this.videoElement?.clientWidth,
+      this.videoElement?.videoWidth,
+      this.container?.clientWidth,
+    ];
+    for (const value of candidates) {
+      if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  private computeDynamicSpeed(): number | null {
+    const width = this.getDisplayWidth();
+    if (!width) {
+      return null;
+    }
+    const speed = width / TARGET_COMMENT_DURATION_SECONDS;
+    if (!Number.isFinite(speed) || speed <= 0) {
+      return null;
+    }
+    return speed;
+  }
+
+  private updateDanmakuSpeed(): void {
+    if (!this.danmaku) {
+      return;
+    }
+    const nextSpeed = this.computeDynamicSpeed();
+    if (nextSpeed == null) {
+      return;
+    }
+    if (
+      this.lastComputedSpeed != null &&
+      Math.abs(this.lastComputedSpeed - nextSpeed) < SPEED_UPDATE_EPSILON
+    ) {
+      return;
+    }
+    this.danmaku.speed = nextSpeed;
+    this.lastComputedSpeed = nextSpeed;
+    if (this.lastInitOptions) {
+      this.lastInitOptions = {
+        ...this.lastInitOptions,
+        speed: nextSpeed,
+      };
+    }
   }
 
   private updateLaneMetrics(): void {
     if (!this.danmakuLayer && !this.container) {
       return;
     }
+
+    this.updateDanmakuSpeed();
 
     const containerHeight =
       this.danmakuLayer?.clientHeight ??
