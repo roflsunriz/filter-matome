@@ -100,6 +100,7 @@ export class DanmakuCommentSystem {
   // ★ 追加: UI設定の保持(ページ存続中は維持)
   private userOpacity: number = 1;
   private userVisible: boolean = true;
+  private userColor: string = "#ffffff";
   // ★ 追加: 再生成用に覚えておく
   private lastInitOptions: DanmakuConstructorOption | null = null; // Danmakuのコンストラクタオプション
   private sourceComments: Comment[] = []; // load/renderに使う生コメント
@@ -253,7 +254,7 @@ export class DanmakuCommentSystem {
 
   // ★ 追加: ユーザ設定適用(再生成/初期確定のたびに呼ぶ)
   private applyUserStyle(): void {
-    // 可視/不透明度
+    // 可視/不透明度/デフォルト色
     try {
       this.setVisibility(this.userVisible);
     } catch (e) {
@@ -263,6 +264,11 @@ export class DanmakuCommentSystem {
       this.setOpacity(this.userOpacity);
     } catch (e) {
       window.logger.warn("setOpacityの適用に失敗", e);
+    }
+    try {
+      this.setDefaultColor(this.userColor);
+    } catch (e) {
+      window.logger.warn("setDefaultColorの適用に失敗", e);
     }
     // レイヤー側にも反映(保険)
     if (this.danmakuLayer) {
@@ -418,7 +424,9 @@ export class DanmakuCommentSystem {
   }
 
   setDefaultColor(color: string): void {
-    this.defaultColor = color || "#ffffff";
+    const nextColor = color || "#ffffff";
+    this.defaultColor = nextColor;
+    this.userColor = nextColor;
 
     // スタイル再構築
     this.comments = this.comments.map((c) => {

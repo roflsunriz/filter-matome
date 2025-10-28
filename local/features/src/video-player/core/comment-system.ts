@@ -90,12 +90,6 @@ export class CommentSystem {
         container.appendChild(this.commentContainer);
       }
 
-      // 公式コメントリストを非表示
-      this.hideOfficialCommentPanel();
-
-      // ★追加: 公式コメントオーバーレイも非表示
-      this.hideOfficialCommentOverlay();
-
       this.isInitialized = true;
 
       window.logger.info("コメントシステムの初期化が完了しました！");
@@ -265,7 +259,7 @@ export class CommentSystem {
         return;
       }
 
-      this.loadCommentsFromApiResponse(apiResponse);
+      this.applyFilteredComments(apiResponse);
     } catch (error: unknown) {
       if (error instanceof DOMException && error.name === "AbortError") {
         window.logger.info(
@@ -279,13 +273,6 @@ export class CommentSystem {
       // 処理が完了したらabortControllerをリセット
       this.abortController = null;
     }
-  }
-
-  /**
-   * @deprecated `applyFilteredComments`にリネームされました。
-   */
-  private loadCommentsFromApiResponse(apiResponse: CommentApiResponse): void {
-    this.applyFilteredComments(apiResponse);
   }
 
   /**
@@ -486,66 +473,6 @@ export class CommentSystem {
       );
     } catch (error) {
       window.logger.error("NG正規表現の設定に失敗しました！:", error);
-    }
-  }
-
-  /**
-   * 公式コメントリストを非表示にする
-   */
-  private hideOfficialCommentPanel(): void {
-    try {
-      const selectors = [
-        "#js-comment",
-        "#comment",
-        ".CommentPanel",
-        ".comment-panel",
-        '[data-testid="comment-area"]',
-        ".grid-area_\\[comment\\]",
-        ".grid-area_\\[sidebar\\]",
-        ".WatchCommentsPanel",
-        ".WatchCommentsList",
-        ".h_var\\(--watch-player-height\\)",
-      ];
-
-      selectors.forEach((sel) => {
-        document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
-          el.style.display = "none";
-        });
-      });
-    } catch (error) {
-      window.logger.warn(
-        "公式コメントリストを非表示にできなかったので無視します！:",
-        error,
-      );
-    }
-  }
-
-  /**
-   * ★追加: 公式コメントオーバーレイを非表示にする
-   */
-  private hideOfficialCommentOverlay(): void {
-    try {
-      const overlaySelectors = [
-        "#playerCommentLayer",
-        ".CommentScreen",
-        ".CommentLayer",
-        ".VideoScreenCanvas",
-        ".VideoOverlayPanel",
-        ".VideoOverlayPanelContainer",
-      ];
-
-      overlaySelectors.forEach((sel) => {
-        document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
-          el.style.display = "none";
-        });
-      });
-
-      window.logger.info("公式コメントオーバーレイを非表示にしました！");
-    } catch (e) {
-      window.logger.warn(
-        "公式コメントオーバーレイを非表示にできなかったので無視します！:",
-        e,
-      );
     }
   }
 
