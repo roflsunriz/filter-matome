@@ -137,15 +137,6 @@ export class CommentList extends HTMLElement {
 
       /* レスポンシブ対応 */
       @media (max-width: 1023px) {
-        :host {
-          width: 100%;
-          max-width: 100vw;
-          height: 300px;
-          margin-top: 10px;
-          border-radius: 0;
-        }
-
-
         .comment-item {
           padding: 6px 10px;
           font-size: 12px;
@@ -157,13 +148,6 @@ export class CommentList extends HTMLElement {
           min-width: 40px;
         }
       }
-
-      /* 画面幅1024px以上での高さ自動調整 */
-      @media (min-width: 1024px) {
-        :host(.auto-height) {
-          height: var(--player-height, 400px);
-        }
-      }
     `;
   }
 
@@ -172,7 +156,6 @@ export class CommentList extends HTMLElement {
    */
   connectedCallback(): void {
     this.list = this.shadow.querySelector(".comment-list");
-    this.setupResizeObserver();
   }
 
   /**
@@ -183,26 +166,6 @@ export class CommentList extends HTMLElement {
     this.setupScrollListener();
   }
 
-  /**
-   * リサイズ監視の設定
-   */
-  private setupResizeObserver(): void {
-    if (typeof ResizeObserver === "undefined") {
-      window.logger.warn("ResizeObserverが利用できません...");
-      window.addEventListener("resize", () => this.syncHeight());
-      return;
-    }
-
-    this.resizeObserver = new ResizeObserver(() => {
-      this.syncHeight();
-    });
-
-    // プレイヤーの高さに合わせる
-    const player = document.getElementById("custom-player");
-    if (player) {
-      this.resizeObserver.observe(player);
-    }
-  }
 
   /**
    * スクロールイベントの設定
@@ -221,23 +184,6 @@ export class CommentList extends HTMLElement {
         }
       }
     });
-  }
-
-  /**
-   * プレイヤーの高さに同期
-   */
-  syncHeight(): void {
-    const player = document.getElementById("custom-player");
-    if (!player) return;
-
-    // 画面幅に応じて高さを調整
-    if (window.innerWidth > 1023) {
-      const playerHeight = player.offsetHeight;
-      this.style.setProperty("--player-height", `${playerHeight}px`);
-      this.classList.add("auto-height");
-    } else {
-      this.classList.remove("auto-height");
-    }
   }
 
   /**
@@ -359,19 +305,6 @@ export class CommentList extends HTMLElement {
     if (this.list) {
       this.list.innerHTML = "";
     }
-  }
-
-  /**
-   * コンポーネントがDOMから切断された時
-   */
-  disconnectedCallback(): void {
-    // ResizeObserverの解除
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-    }
-
-    // イベントリスナーの削除
-    window.removeEventListener("resize", () => this.syncHeight());
   }
 }
 
