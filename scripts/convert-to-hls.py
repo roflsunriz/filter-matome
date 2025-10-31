@@ -60,23 +60,23 @@ def parse_args() -> argparse.Namespace:
         "--segment-duration",
         type=int,
         default=6,
-        help="HLSセグメント長(秒)。既定値: 6",
+        help="HLSセグメント長(秒)。 (既定値: 6)",
     )
     parser.add_argument(
         "--crf",
         type=int,
         default=20,
-        help="H.264再エンコード時のCRF値。既定値: 20",
+        help="H.264再エンコード時のCRF値。値が低いほど高品質。 (既定値: 20)",
     )
     parser.add_argument(
         "--preset",
         default="veryfast",
-        help="H.264再エンコード時に使用するx264プリセット。既定値: veryfast",
+        help="H.264再エンコード時に使用するx264プリセット。 (例: ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow) (既定値: veryfast)",
     )
     parser.add_argument(
         "--audio-bitrate",
         default="192k",
-        help="AACエンコード時のビットレート。既定値: 192k",
+        help="AACエンコード時のビットレート。 (既定値: 192k)",
     )
     parser.add_argument(
         "--overwrite",

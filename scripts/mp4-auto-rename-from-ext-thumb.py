@@ -353,22 +353,22 @@ if __name__ == "__main__":
     parser.add_argument(
         'paths',
         nargs='*',
-        help='処理対象のファイルまたはディレクトリのパス。複数指定可能。'
+        help='処理対象のファイルまたはディレクトリのパス。複数指定可能。 (既定: ./cache/)'
     )
     parser.add_argument(
         '-r', '--recursive',
         action='store_true',
-        help='ディレクトリを再帰的に検索します。'
+        help='指定されたディレクトリを再帰的に検索します。'
     )
     parser.add_argument(
         '-y', '--yes',
         action='store_true',
-        help='リネーム前の確認プロンプトをスキップします。'
+        help='リネーム実行前の確認プロンプトをスキップします。'
     )
     parser.add_argument(
         '--dry-run',
         action='store_true',
-        help='実際にはリネームせず、実行内容を表示します。'
+        help='実際にはリネームを実行せず、実行される予定の操作を表示します。'
     )
     args = parser.parse_args()
     requests = import_requests()

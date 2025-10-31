@@ -9,10 +9,10 @@
   .map が存在しない場合は自動的に map 関連の処理をスキップします。
 
 .PARAMETER Target
-  シンボリックリンクのターゲットとなるビルド成果物の JS ファイルパス（例: C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js）
+  シンボリックリンクのリンク先となるビルド成果物のJSファイルパス。 (例: C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js)
 
-.PARAMETER LocalBase
-  ローカルのリンク設置ベースパス。既定は `C:\NicoCache_nl\local`。
+.PARAMETER LinkDir
+  シンボリックリンクを作成するディレクトリ。 (既定: C:\NicoCache_nl\local)
 
 .PARAMETER Force
   既存の `list.js` / `list.js.map` がある場合に強制的に削除してから作成します。
@@ -23,18 +23,86 @@
 
 param(
     [Parameter(Position=0)]
-    [string]$Target = "C:\\NicoCache_nl\\local\\features\\dist\\cache-data-manager.es.js",
+    [Alias('t','target')]
+    [string]$TargetFile = "C:\\NicoCache_nl\\local\\features\\dist\\cache-data-manager.es.js",
 
-    [string]$LocalBase = "C:\\NicoCache_nl\\local",
+    [Alias('l','linkdir','linkdirectory')]
+    [string]$LinkDir = "C:\\NicoCache_nl\\local",
 
-    [switch]$Force
+    [Alias('f','force')]
+    [switch]$Force,
+
+    [Parameter(ValueFromRemainingArguments=$true)]
+    [string[]]$AdditionalArgs = @()
 )
 
+$targetSpecified = $PSBoundParameters.ContainsKey('TargetFile')
+
+# --- GNU 風オプションの補完 ---
+if ($AdditionalArgs.Count -gt 0) {
+    for ($i = 0; $i -lt $AdditionalArgs.Count; $i++) {
+        $arg = $AdditionalArgs[$i]
+        switch -Regex ($arg) {
+            '^--force$' {
+                $Force = $true
+                continue
+            }
+            '^--no-force$' {
+                $Force = $false
+                continue
+            }
+            '^--target(?:=(.*))?$' {
+                $value = $Matches[1]
+                if (-not $value) {
+                    $i++
+                    if ($i -ge $AdditionalArgs.Count) {
+                        throw "引数 '--target' に値が指定されていません。"
+                    }
+                    $value = $AdditionalArgs[$i]
+                }
+                $TargetFile = $value
+                $targetSpecified = $true
+                continue
+            }
+            '^--link-dir(?:=(.*))?$' {
+                $value = $Matches[1]
+                if (-not $value) {
+                    $i++
+                    if ($i -ge $AdditionalArgs.Count) {
+                        throw "引数 '--link-dir' に値が指定されていません。"
+                    }
+                    $value = $AdditionalArgs[$i]
+                }
+                $LinkDir = $value
+                continue
+            }
+            '^--linkdir(?:=(.*))?$' {
+                $value = $Matches[1]
+                if (-not $value) {
+                    $i++
+                    if ($i -ge $AdditionalArgs.Count) {
+                        throw "引数 '--linkdir' に値が指定されていません。"
+                    }
+                    $value = $AdditionalArgs[$i]
+                }
+                $LinkDir = $value
+                continue
+            }
+            '^--$' {
+                continue
+            }
+            default {
+                throw "未対応の引数: $arg"
+            }
+        }
+    }
+}
+
 # 対話的 Target 入力（未指定時はデフォルトを案内）
-if (-not $PSBoundParameters.ContainsKey('Target')) {
+if (-not $targetSpecified) {
     $promptMsg = "Target を入力してください（Enter で既定 '$Target' を使用）"
-    $userInput = Read-Host $promptMsg
-    if ($userInput -ne '') { $Target = $userInput }
+    $userInput = Read-Host -Prompt "リンク先のJSファイルパスを入力してください (既定値: '$TargetFile')"
+    if ($userInput) { $TargetFile = $userInput }
 }
 
 function Remove-Item-Safely {
@@ -64,18 +132,18 @@ function Remove-Item-Safely {
 }
 
 # パス類
-$linkPath    = Join-Path $LocalBase "list.js"
-$mapLinkPath = Join-Path $LocalBase "list.js.map"
-$targetMap   = "$Target.map"
+$linkPath    = Join-Path $LinkDir "list.js"
+$mapLinkPath = Join-Path $LinkDir "list.js.map"
+$targetMap   = "$TargetFile.map"
 $hasMap      = Test-Path $targetMap
 
-Write-Host "作成対象: $linkPath -> $Target"
+Write-Host "作成対象: $linkPath -> $TargetFile"
 if (-not $hasMap) {
     Write-Host "map ファイルが存在しないため、list.js.map の更新はスキップします: $targetMap"
 }
 
-if (-not (Test-Path $Target)) {
-    Write-Error "ターゲットファイルが見つかりません: $Target"
+if (-not (Test-Path $TargetFile)) {
+    Write-Error "ターゲットファイルが見つかりません: $TargetFile"
     exit 1
 }
 
@@ -94,8 +162,8 @@ try {
     }
 
     # シンボリックリンクを作成
-    New-Item -ItemType SymbolicLink -Path $linkPath -Target $Target -ErrorAction Stop | Out-Null
-    Write-Host "作成しました: $linkPath -> $Target"
+    New-Item -ItemType SymbolicLink -Path $linkPath -Target $TargetFile -ErrorAction Stop | Out-Null
+    Write-Host "作成しました: $linkPath -> $TargetFile"
 
     if ($hasMap) {
         New-Item -ItemType SymbolicLink -Path $mapLinkPath -Target $targetMap -ErrorAction Stop | Out-Null
@@ -114,4 +182,3 @@ try {
 }
 
 Write-Host "完了。必要に応じてアプリ側のコードを確認してください。"
-

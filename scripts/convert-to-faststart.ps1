@@ -2,14 +2,14 @@
 .SYNOPSIS
   mp4 を faststart（moov 先頭）化して _faststart 付きで保存
 
-.PARAMETER Path
-  入力ルートフォルダ（既定: カレント）
+.PARAMETER InputPath
+  処理対象のファイルまたはフォルダのパス。 (既定: カレントディレクトリ)
 
 .PARAMETER Recurse
   サブフォルダも再帰処理
 
 .PARAMETER Overwrite
-  出力が既にある場合に上書き
+  出力ファイルが既に存在する場合に上書き
 
 .PARAMETER DryRun
   実行せず予定だけ表示
@@ -20,17 +20,84 @@
 
 .EXAMPLE
   # D:\videos を処理（上書き許可）
-  .\Convert-ToFaststart.ps1 -Path D:\videos -Recurse -Overwrite
+  .\Convert-ToFaststart.ps1 -InputPath D:\videos -Recurse -Overwrite
 #>
 
 [CmdletBinding(SupportsShouldProcess=$true)]
 param(
   [Parameter(Position=0)]
-  [string]$Path = (Get-Location).Path,
+  [Alias('i','input','inputpath')]
+  [string]$InputPath = (Get-Location).Path,
+  [Alias('r','recursive')]
   [switch]$Recurse,
+  [Alias('o','overwrite')]
   [switch]$Overwrite,
-  [switch]$DryRun
+  [Alias('d','dryrun')]
+  [switch]$DryRun,
+  [Alias('q','quiet')]
+  [switch]$Quiet,
+  [Parameter(ValueFromRemainingArguments=$true)]
+  [string[]]$AdditionalArgs = @()
 )
+
+# --- GNU 風オプションの補完 ---
+if ($AdditionalArgs.Count -gt 0) {
+  for ($i = 0; $i -lt $AdditionalArgs.Count; $i++) {
+    $arg = $AdditionalArgs[$i]
+    switch -Regex ($arg) {
+      '^--recursive$' {
+        $Recurse = $true
+        continue
+      }
+      '^--no-recursive$' {
+        $Recurse = $false
+        continue
+      }
+      '^--overwrite$' {
+        $Overwrite = $true
+        continue
+      }
+      '^--no-overwrite$' {
+        $Overwrite = $false
+        continue
+      }
+      '^--dry-run$' {
+        $DryRun = $true
+        continue
+      }
+      '^--no-dry-run$' {
+        $DryRun = $false
+        continue
+      }
+      '^--quiet$' {
+        $Quiet = $true
+        continue
+      }
+      '^--no-quiet$' {
+        $Quiet = $false
+        continue
+      }
+      '^--input(?:=(.*))?$' {
+        $value = $Matches[1]
+        if (-not $value) {
+          $i++
+          if ($i -ge $AdditionalArgs.Count) {
+            throw "引数 '--input' に値が指定されていません。"
+          }
+          $value = $AdditionalArgs[$i]
+        }
+        $InputPath = $value
+        continue
+      }
+      '^--$' {
+        continue
+      }
+      default {
+        throw "未対応の引数: $arg"
+      }
+    }
+  }
+}
 
 # --- 前提チェック ---
 $ffmpeg = Get-Command ffmpeg -ErrorAction SilentlyContinue
@@ -40,12 +107,12 @@ if (-not $ffmpeg) {
 }
 
 # --- 取得 ---
-$searchOpt = @{ Path = $Path; Filter = '*.mp4'; File = $true }
+$searchOpt = @{ Path = $InputPath; Filter = '*.mp4'; File = $true }
 if ($Recurse) { $searchOpt.Recurse = $true }
 
 $files = Get-ChildItem @searchOpt | Sort-Object FullName
 if (-not $files) {
-  Write-Warning "対象の .mp4 が見つかりませんでした: $Path"
+  Write-Warning "対象の .mp4 が見つかりませんでした: $InputPath"
   return 0
 }
 
@@ -107,7 +174,9 @@ foreach ($f in $files) {
       try {
         (Get-Item -LiteralPath $out).LastWriteTimeUtc = (Get-Item -LiteralPath $f.FullName).LastWriteTimeUtc
       } catch {}
-      Write-Host "OK  $($f.Name)  ->  $(Split-Path -Leaf $out)"
+      if (-not $Quiet) {
+        Write-Host "OK  $($f.Name)  ->  $(Split-Path -Leaf $out)"
+      }
       $processed++
     } else {
       Write-Host "NG  $($f.Name)" -ForegroundColor Red
