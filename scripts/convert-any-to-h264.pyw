@@ -7,6 +7,7 @@ from tkinter import ttk, filedialog, messagebox
 from tkinter.scrolledtext import ScrolledText
 import threading
 import queue
+import shlex
 from typing import List
 
 def install_tkdnd():
@@ -96,7 +97,8 @@ class VideoConverterGUI:
         codecs = [
             ("AVC (H.264) - 互換性重視", "1"),
             ("HEVC (H.265) - 圧縮効率が良い", "2"),
-            ("AV1 - 最新の圧縮技術", "3")
+            ("AV1 - 最新の圧縮技術", "3"),
+            ("アダプティブコピー (H.264の場合)", "4")
         ]
         
         for text, value in codecs:
@@ -213,6 +215,10 @@ class VideoConverterGUI:
             "3": {
                 "vcodec": "-c:v libsvtav1 -preset 4 -crf 30 -movflags +faststart",
                 "name": "av1"
+            },
+            "4": {
+                "vcodec": "", # このモードでは使用しない
+                "name": "copy"
             }
         }
         
@@ -279,16 +285,56 @@ class VideoConverterGUI:
         if vcodec_in == codec_info["name"] and acodec == "aac":
             self.log("コーデックが既に適切なのでストリームコピーします...")
             cmd = ["ffmpeg", "-i", str(input_path), "-c", "copy", output_path]
+        elif codec_info["name"] == "copy":
+            if vcodec_in == "h264":
+                if acodec == "aac":
+                    self.log("H.264/AACなのでストリームコピーします...")
+                    cmd = ["ffmpeg", "-i", str(input_path), "-c", "copy", output_path]
+                else:
+                    self.log(f"映像はH.264なのでコピーし、音声({acodec})をAACに変換します...")
+                    # -map 0 を使う場合、全てのストリーム（映像、音声、字幕）のコーデックを指定する必要がある
+                    cmd = ["ffmpeg", "-i", str(input_path), "-map", "0", # 全ストリームを対象に
+                           "-c:v", "copy",
+                           "-c:a", "aac",
+                           "-profile:a", "aac_low",
+                           "-b:a", "192k",
+                           "-ar", "48000",
+                           "-ac", "2",
+                           "-c:s", "mov_text", # 字幕をMP4互換形式(mov_text)に変換
+                           "-strict", "experimental",
+                           output_path]
+            else:
+                self.log(f"エラー: アダプティブコピーモードですが、映像コーデックがH.264ではありません (V: {vcodec_in})。スキップします。")
+                return False
         else:
-            cmd = (f'ffmpeg -i "{input_path}" {codec_info["vcodec"]} -vf format=pix_fmts=yuv420p '
-                   f'-movflags +faststart -c:a aac -profile:a aac_low -b:a 192k -ar 48000 '
-                   f'-ac 2 -strict experimental -fps_mode cfr -async 1 "{output_path}"').split()
+            cmd = ["ffmpeg", "-i", str(input_path)]
+            cmd.extend(shlex.split(codec_info["vcodec"]))
+            # 字幕も保持するために -map 0 と -c:s mov_text を追加
+            cmd.extend(["-map", "0", "-c:s", "mov_text"])
+            cmd.extend([
+                "-vf", "format=pix_fmts=yuv420p",
+                "-c:a", "aac",
+                "-profile:a", "aac_low",
+                "-b:a", "192k",
+                "-ar", "48000",
+                "-ac", "2",
+                "-strict", "experimental",
+                "-fps_mode", "cfr",
+                "-async", "1",
+                output_path
+            ])
 
         return self.run_ffmpeg(cmd)
 
     def run_ffmpeg(self, cmd):
         try:
-            self.log(f"実行するコマンド:\n{' '.join(cmd)}\n")
+            # shlex.join を使って安全にコマンド文字列を生成 (Python 3.8+)
+            try:
+                import shlex
+                self.log(f"実行するコマンド:\n{shlex.join(cmd)}\n")
+            except (ImportError, AttributeError): # Python 3.8未満の場合
+                self.log(f"実行するコマンド:\n{' '.join(map(str, cmd))}\n")
+
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
@@ -332,13 +378,12 @@ class VideoConverterGUI:
                 "-i", audio_path
             ]
             
-            # vcodecを分割して追加
-            cmd.extend(vcodec.split())
+            # vcodecを安全に分割して追加
+            cmd.extend(shlex.split(vcodec))
             
-            # 残りのオプションを追加
+            # 残りのオプションを追加 (重複していた -movflags +faststart を削除)
             cmd.extend([
                 "-vf", "format=pix_fmts=yuv420p",
-                "-movflags", "+faststart",
                 "-c:a", "aac",
                 "-profile:a", "aac_low",
                 "-b:a", "192k",
@@ -369,13 +414,12 @@ class VideoConverterGUI:
                     "-i", str(playlist_path)
                 ]
                 
-                # vcodecを分割して追加
-                cmd.extend(vcodec.split())
+                # vcodecを安全に分割して追加
+                cmd.extend(shlex.split(vcodec))
                 
-                # 残りのオプションを追加
+                # 残りのオプションを追加 (重複していた -movflags +faststart を削除)
                 cmd.extend([
                     "-vf", "format=pix_fmts=yuv420p",
-                    "-movflags", "+faststart",
                     "-c:a", "aac",
                     "-profile:a", "aac_low",
                     "-b:a", "192k",

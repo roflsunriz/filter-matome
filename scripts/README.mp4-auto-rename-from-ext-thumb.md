@@ -17,14 +17,45 @@
 - requests（自動インストール可能）
 
 ## 使い方
-1. プログラムをダウンロードして、NicoCache_nlフォルダに配置してください。
-2. カレントディレクトリをmp4-auto-rename-from-ext-thumb.pyがあるディレクトリに移動してください。
-例 cd C:/NicoCache_nl
-カレントディレクトリを移動した後は、プログラムを起動してください。
-3. コマンドライン(bash)で以下を実行：
-    python mp4-auto-rename-from-ext-thumb.py
-4. もしくは設定→既定のアプリ→.pyファイルにPythonを関連付ける
-    その後 .pyをダブルクリック
+
+### 基本的な使い方
+スクリプトをNicoCache_nlのフォルダなどに配置し、コマンドラインで実行します。
+引数を指定しない場合、スクリプトを実行した場所にある`cache`フォルダを検索対象とします。
+
+```bash
+python mp4-auto-rename-from-ext-thumb.py
+```
+
+### オプション
+
+-   **パスの指定**: 処理したいファイルやディレクトリのパスを直接指定できます。複数指定も可能です。
+
+    ```bash
+    # 特定のディレクトリを処理
+    python mp4-auto-rename-from-ext-thumb.py "C:/NicoCache_nl/cache"
+
+    # 複数のファイルやディレクトリを一度に処理
+    python mp4-auto-rename-from-ext-thumb.py "C:/videos/sm123.mp4" "D:/downloads"
+    ```
+
+-   **再帰検索 (`-r` or `--recursive`)**: ディレクトリ内を再帰的に検索します。
+
+    ```bash
+    python mp4-auto-rename-from-ext-thumb.py -r "C:/NicoCache_nl/cache"
+    ```
+
+-   **確認のスキップ (`-y` or `--yes`)**: リネーム前の確認プロンプトを省略し、自動でリネームを実行します。
+
+    ```bash
+    python mp4-auto-rename-from-ext-thumb.py -y "C:/NicoCache_nl/cache"
+    ```
+
+-   **ドライラン (`--dry-run`)**: 実際にはリネームを行わず、どのような変更が行われるかを確認できます。
+
+    ```bash
+    # 変更内容のプレビュー
+    python mp4-auto-rename-from-ext-thumb.py --dry-run "C:/NicoCache_nl/cache"
+    ```
 
 ## 変換後のファイル名形式：
 sm12345678[720p,192]タイトル.mp4

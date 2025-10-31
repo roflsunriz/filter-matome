@@ -1,5 +1,6 @@
 import os
 import re
+import argparse
 import xml.etree.ElementTree as ET
 from pathlib import Path
 import subprocess
@@ -241,11 +242,28 @@ def get_video_info_batch(video_files, requests):
 
     return results
 
-def process_video_files(cache_dir, requests):
+def process_video_files(target_paths, recursive, skip_confirmation, dry_run, requests):
     pattern = r'((?:sm|so)\d+)'
-    print(f"キャッシュディレクトリを検索中: {cache_dir}")
     
-    mp4_files = find_mp4_files_distributed(cache_dir)
+    mp4_files = []
+    if not target_paths:
+        # 引数が指定されない場合は、カレントディレクトリの 'cache' を対象とする
+        print("検索対象が指定されていません。カレントディレクトリの 'cache' フォルダを検索します。")
+        cache_dir = Path("cache")
+        if cache_dir.is_dir():
+            mp4_files.extend(find_mp4_files_distributed(cache_dir))
+    else:
+        print(f"指定されたパスを検索中: {', '.join(map(str, target_paths))}")
+        for path_str in target_paths:
+            path = Path(path_str)
+            if path.is_file() and path.suffix == '.mp4':
+                mp4_files.append(path)
+            elif path.is_dir():
+                if recursive:
+                    mp4_files.extend(path.rglob('*.mp4'))
+                else:
+                    mp4_files.extend(path.glob('*.mp4'))
+
     if not mp4_files:
         print("mp4ファイルが見つかりません...")
         return
@@ -293,7 +311,7 @@ def process_video_files(cache_dir, requests):
             print(f"- {file}")
     
     # 一括確認を取る
-    confirm = input("\nこれらすべてのファイルをリネームしますか？ (y/n): ")
+    confirm = 'y' if skip_confirmation or dry_run else input("\nこれらすべてのファイルをリネームしますか？ (y/n): ")
     if confirm.lower() != 'y':
         print("リネームを中止しました。")
         return
@@ -303,23 +321,55 @@ def process_video_files(cache_dir, requests):
     success_count = 0
     error_count = 0
     
+    if dry_run:
+        print("\n[ドライラン] 以下のリネームが実行される予定です。")
+    else:
+        print("\nリネームを実行中...")
+
     for mp4_file, new_path, old_name, new_name in rename_plans:
         try:
-            mp4_file.rename(new_path)
-            print(f"成功しました: {old_name} -> {new_name}")
+            if dry_run:
+                print(f"(Dry Run) {old_name} -> {new_name}")
+            else:
+                mp4_file.rename(new_path)
+                print(f"成功しました: {old_name} -> {new_name}")
             success_count += 1
         except Exception as e:
             print(f"エラーが発生しました: {old_name}: {e}")
             error_count += 1
     
     # 結果を表示する
-    print(f"\nリネーム完了しました！")
-    print(f"成功しました: {success_count}件")
-    print(f"失敗しました: {error_count}件")
+    result_action = "ドライラン" if dry_run else "リネーム"
+    print(f"\n{result_action}完了しました！")
+    print(f"成功予定: {success_count}件" if dry_run else f"成功しました: {success_count}件")
+    print(f"失敗予定: {error_count}件" if dry_run else f"失敗しました: {error_count}件")
     print(f"スキップしました: {len(skipped_files)}件")
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="ニコニコ動画のキャッシュファイル(mp4)を動画情報に基づきリネームします。",
+        epilog="パスが指定されない場合、カレントディレクトリの 'cache' フォルダを対象とします。"
+    )
+    parser.add_argument(
+        'paths',
+        nargs='*',
+        help='処理対象のファイルまたはディレクトリのパス。複数指定可能。'
+    )
+    parser.add_argument(
+        '-r', '--recursive',
+        action='store_true',
+        help='ディレクトリを再帰的に検索します。'
+    )
+    parser.add_argument(
+        '-y', '--yes',
+        action='store_true',
+        help='リネーム前の確認プロンプトをスキップします。'
+    )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='実際にはリネームせず、実行内容を表示します。'
+    )
+    args = parser.parse_args()
     requests = import_requests()
-    # カレントディレクトリからの相対パスに変更する
-    cache_dir = Path("cache")
-    process_video_files(cache_dir, requests)
+    process_video_files(args.paths, args.recursive, args.yes, args.dry_run, requests)

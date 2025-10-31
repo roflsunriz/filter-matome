@@ -9,6 +9,7 @@ tests-examples/
 .playwright-mcp/
 playwright.config.ts
 *.bak
+.mp4_cache
 
 # コードスペース
 *.code-workspace
