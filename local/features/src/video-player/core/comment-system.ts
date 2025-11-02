@@ -1,4 +1,4 @@
-import { DanmakuCommentSystem } from "@/video-player/core/danmaku-comment-system";
+import { CommentOverlayCommentSystem } from "@/video-player/core/comment-overlay-comment-system";
 import { CommentFetcher } from "@/video-player/core/comment-fetcher";
 import { CommentList } from "@/video-player/ui/comment-list";
 import { CONSTANTS } from "@/comment-filter2/utils/constants";
@@ -12,7 +12,7 @@ import {
  * コメントシステム - レンダリングとリスト表示を統合管理
  */
 export class CommentSystem {
-  private readonly danmaku = new DanmakuCommentSystem();
+  private readonly overlay = new CommentOverlayCommentSystem();
   private fetcher: CommentFetcher;
   private commentList: CommentList;
   private videoElement: HTMLVideoElement | null = null;
@@ -45,7 +45,7 @@ export class CommentSystem {
         window.logger.info("既存のコメントシステムをリセットします！");
         this.commentList.clearComments(); // リストを空に
         this.hasReceivedFilteredData = false;
-        this.danmaku.destroy();
+        this.overlay.destroy();
       }
 
       this.videoElement = videoElement;
@@ -58,7 +58,7 @@ export class CommentSystem {
         );
       }
 
-      this.danmaku.initialize(videoElement, container);
+      this.overlay.initialize(videoElement, container);
 
       // 時間更新イベントの設定
       this.setupTimeUpdateListener();
@@ -159,7 +159,7 @@ export class CommentSystem {
     const savedVisibility = localStorage.getItem("commentVisible");
     if (savedVisibility !== null) {
       this.isVisible = savedVisibility === "true";
-      this.danmaku.setVisibility(this.isVisible);
+      this.overlay.setVisibility(this.isVisible);
     }
   }
 
@@ -196,7 +196,7 @@ export class CommentSystem {
 
     this.commentList.clearComments();
     this.commentList.addComments(filteredComments);
-    this.danmaku.load(filteredComments);
+    this.overlay.load(filteredComments);
   }
 
   /**
@@ -305,7 +305,7 @@ export class CommentSystem {
    */
   toggleVisibility(): boolean {
     this.isVisible = !this.isVisible;
-    this.danmaku.setVisibility(this.isVisible);
+    this.overlay.setVisibility(this.isVisible);
     localStorage.setItem("commentVisible", this.isVisible.toString());
     return this.isVisible;
   }
@@ -324,7 +324,7 @@ export class CommentSystem {
       const currentComments = this.commentList.getComments();
       const nextComments: Comment[] = [...currentComments, enrichedComment];
       this.commentList.addComments(nextComments);
-      this.danmaku.load(nextComments);
+      this.overlay.load(nextComments);
     }
   }
 
@@ -400,7 +400,7 @@ export class CommentSystem {
     this.hasReceivedFilteredData = false;
 
     // レンダラーと関連リソースの破棄
-    this.danmaku.destroy();
+    this.overlay.destroy();
     this.commentList.remove();
 
     window.logger.info("コメントシステムのリソースをクリーンアップしました！");
@@ -412,7 +412,7 @@ export class CommentSystem {
    */
   setOpacity(opacity: number): void {
     try {
-      this.danmaku.setOpacity(opacity);
+      this.overlay.setOpacity(opacity);
       window.logger.info(`コメント透明度を ${opacity} に設定しました！`);
     } catch (error) {
       window.logger.error("コメント透明度の設定に失敗しました！:", error);
@@ -425,7 +425,7 @@ export class CommentSystem {
    */
   setDefaultColor(color: string): void {
     try {
-      this.danmaku.setDefaultColor(color);
+      this.overlay.setDefaultColor(color);
       window.logger.info(`コメントのデフォルト色を ${color} に設定しました！`);
     } catch (error) {
       window.logger.error(
@@ -480,7 +480,7 @@ export class CommentSystem {
    * コメント描画キャンバスのサイズをコンテナに合わせる
    */
   resize(): void {
-    this.danmaku.resize();
+    this.overlay.resize();
   }
 
   /**

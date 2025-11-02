@@ -83,6 +83,10 @@ export default function createConfig(options) {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '../src'),
+        'comment-overlay': path.resolve(
+          __dirname,
+          '../node_modules/comment-overlay/dist/comment-overlay.cjs',
+        ),
       },
     },
     // CSS処理を無効化（テンプレートリテラルに統合済み）

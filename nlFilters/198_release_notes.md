@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #205 (2025/11/05) リリースノート](#filter-matome-205-20251105-リリースノート)
 - [filter-matome #204 (2025/10/28) リリースノート](#filter-matome-204-20251028-リリースノート)
 - [filter-matome #203 (2025/10/23) リリースノート](#filter-matome-203-20251023-リリースノート)
 - [filter-matome #202 (2025/10/23) リリースノート](#filter-matome-202-20251023-リリースノート)
@@ -115,6 +116,19 @@
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
 
+
+### filter-matome #205 (2025/11/05) リリースノート
+
+- ✨新機能(New)：     
+- video-playerのスタンドアロンプレイヤーでコメント描画エンジンを`comment-overlay`に刷新し、描画品質と保守性を向上させた。
+- ✅️修正(Fixed)：   
+- なし
+- 🔴変更(Changed)：           
+- Danmaku.jsへの依存を廃止し、`comment-overlay`モジュールへ全面移行。透過率やデフォルト色の設定ロジックも新レンダラー向けに再調整した。
+- ❌️未修正(Unfixed)：     
+- なし
+- ℹ️その他(Others)：     
+- なし
 
 ### filter-matome #204 (2025/10/28) リリースノート
 

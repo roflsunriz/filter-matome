@@ -205,7 +205,7 @@
     "wrappy": "^1.0.2",
     "yocto-queue": "^1.2.1"
   },
-  "version": "204",
+  "version": "205",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -240,7 +240,7 @@
     "cross-spawn": "^7.0.6",
     "css-select": "^6.0.0",
     "css-what": "^7.0.0",
-    "danmaku": "^2.0.9",
+    "comment-overlay": "^1.1.0",
     "debug": "^4.4.1",
     "deep-is": "^0.1.4",
     "dir-glob": "^3.0.1",

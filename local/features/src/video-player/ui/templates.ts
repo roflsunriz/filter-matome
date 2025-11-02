@@ -161,13 +161,13 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
     z-index: 1001 !important; /* player-controlsより手前、ビデオより奥 */
   }
 
-  /* 全画面時の Danmaku レイヤー（実際の描画先はこちら） */
-  .custom-player:fullscreen .danmaku-layer,
-  .custom-player:-webkit-full-screen .danmaku-layer,
-  .custom-player:-moz-full-screen .danmaku-layer,
-  .custom-player:-ms-fullscreen .danmaku-layer,
-  html.fullscreen-active .custom-player.nc-fullscreen-player .danmaku-layer,
-  body.nc-fullscreen-active .custom-player.nc-fullscreen-player .danmaku-layer {
+  /* 全画面時のコメントオーバーレイレイヤー（実際の描画先はこちら） */
+  .custom-player:fullscreen .comment-overlay-layer,
+  .custom-player:-webkit-full-screen .comment-overlay-layer,
+  .custom-player:-moz-full-screen .comment-overlay-layer,
+  .custom-player:-ms-fullscreen .comment-overlay-layer,
+  html.fullscreen-active .custom-player.nc-fullscreen-player .comment-overlay-layer,
+  body.nc-fullscreen-active .custom-player.nc-fullscreen-player .comment-overlay-layer {
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;

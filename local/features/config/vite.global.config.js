@@ -63,6 +63,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '../src'),
+      'comment-overlay': path.resolve(
+        __dirname,
+        '../node_modules/comment-overlay/dist/comment-overlay.cjs',
+      ),
     },
   },
-}); 
+});
