@@ -205,7 +205,7 @@
     "wrappy": "^1.0.2",
     "yocto-queue": "^1.2.1"
   },
-  "version": "205.1",
+  "version": "205.2",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -234,7 +234,7 @@
     "color-name": "^2.0.0",
     "colorette": "^2.0.20",
     "commander": "^14.0.0",
-    "comment-overlay": "^1.2.2",
+    "comment-overlay": "^2.0.0",
     "concat-map": "^0.0.2",
     "connect-history-api-fallback": "^2.0.0",
     "consola": "^3.4.2",

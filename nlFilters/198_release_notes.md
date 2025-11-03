@@ -122,6 +122,7 @@
 - ✨新機能(New)：     
 - video-playerのスタンドアロンプレイヤーでコメント描画エンジンを`comment-overlay`に刷新し、描画品質と保守性を向上させた。
 - #205.1 - `comment-overlay`モジュールをv1.2.2に更新。
+- #205.2 - `comment-overlay`モジュールをv2.0.0に更新し、コメント開始位置をミリ秒(`vposMs`)ベースで扱うように調整。
 - ✅️修正(Fixed)：   
 - なし
 - 🔴変更(Changed)：           

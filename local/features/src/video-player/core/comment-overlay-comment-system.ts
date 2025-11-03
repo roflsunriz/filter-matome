@@ -177,13 +177,13 @@ export class CommentOverlayCommentSystem {
     this.renderer.clearComments();
 
     for (const comment of this.comments) {
-      const vpos = this.toVpos(comment);
+      const vposMs = this.toVposMs(comment);
       const commands = this.collectCommands(comment);
-      this.renderer.addComment(comment.body, vpos, commands);
+      this.renderer.addComment(comment.body, vposMs, commands);
     }
   }
 
-  private toVpos(comment: Comment): number {
+  private toVposMs(comment: Comment): number {
     const rawVposMs =
       typeof comment.vposMs === "number" && Number.isFinite(comment.vposMs)
         ? comment.vposMs
@@ -197,7 +197,9 @@ export class CommentOverlayCommentSystem {
       return 0;
     }
 
-    return Math.max(0, Math.round(rawVposMs));
+    const normalizedVposMs = Math.max(0, Math.round(rawVposMs));
+    comment.vposMs = normalizedVposMs;
+    return normalizedVposMs;
   }
 
   private collectCommands(comment: Comment): string[] {
