@@ -126,6 +126,7 @@
 - なし
 - 🔴変更(Changed)：           
 - video-playerのスタンドアロンプレイヤーで使用する`comment-overlay`モジュールをv2.2.0に更新。
+- #206.1 - `comment-overlay`モジュールをv2.2.1に更新。ビジビリティ復帰時のコメント描画が修正された。
 - ❌️未修正(Unfixed)：     
 - なし
 - ℹ️その他(Others)：     

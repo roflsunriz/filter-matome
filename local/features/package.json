@@ -205,8 +205,8 @@
     "wrappy": "^1.0.2",
     "yocto-queue": "^1.2.1"
   },
-  "version": "206",
-  "description": "",
+  "version": "206.1",
+  "description": "Enhancing scripts for Niconico",
   "main": "index.js",
   "directories": {
     "test": "tests"
@@ -234,7 +234,7 @@
     "color-name": "^2.0.0",
     "colorette": "^2.0.20",
     "commander": "^14.0.0",
-    "comment-overlay": "^2.2.0",
+    "comment-overlay": "^2.2.1",
     "concat-map": "^0.0.2",
     "connect-history-api-fallback": "^2.0.0",
     "consola": "^3.4.2",
