@@ -235,6 +235,67 @@ const isWatchPage = (): boolean => {
   );
 };
 
+let spaNavigationListenerInstalled = false;
+let isRoutingInProgress = false;
+let rerunRoutingRequested = false;
+let currentRoutingPromise: Promise<void> | null = null;
+let lastHandledUrl: string | null = null;
+
+const installSpaNavigationListener = (onChange: () => void): void => {
+  if (spaNavigationListenerInstalled) {
+    return;
+  }
+
+  spaNavigationListenerInstalled = true;
+
+  const trigger = (): void => {
+    onChange();
+  };
+
+  const wrapHistoryMethod = (
+    method: "pushState" | "replaceState",
+  ): void => {
+    const original = history[method];
+    history[method] = function (
+      this: History,
+      ...args: Parameters<History["pushState"]>
+    ): ReturnType<History["pushState"]> {
+      const result = original.apply(this, args);
+      setTimeout(trigger, 0);
+      return result;
+    } as History["pushState"];
+  };
+
+  // SPA遷移を検知するためhistory APIをフックする
+  wrapHistoryMethod("pushState");
+  wrapHistoryMethod("replaceState");
+  window.addEventListener("popstate", trigger);
+};
+
+const requestWatchPageRouting = (executor: () => Promise<void>): Promise<void> => {
+  if (isRoutingInProgress) {
+    rerunRoutingRequested = true;
+    return currentRoutingPromise ?? Promise.resolve();
+  }
+
+  isRoutingInProgress = true;
+  currentRoutingPromise = (async () => {
+    try {
+      await executor();
+    } finally {
+      isRoutingInProgress = false;
+      if (rerunRoutingRequested) {
+        rerunRoutingRequested = false;
+        void requestWatchPageRouting(executor);
+      } else {
+        currentRoutingPromise = null;
+      }
+    }
+  })();
+
+  return currentRoutingPromise;
+};
+
 export interface StandaloneUrlOptions {
   mode?: "normal" | "deleted";
   title?: string;
@@ -368,11 +429,7 @@ const showPlayerChoice = (
   });
 };
 
-export const initWatchPageRouter = async (): Promise<void> => {
-  if (!isWatchPage()) {
-    return;
-  }
-
+const routeWatchPageIfNeeded = async (): Promise<void> => {
   try {
     const result = await window.commonHelper.fetchWatchPage();
     if (!result) {
@@ -421,7 +478,9 @@ export const initWatchPageRouter = async (): Promise<void> => {
       // 記憶された設定を使用
       playerChoice = settings.preference;
       window.logger.info(
-        `記憶された設定により${playerChoice === "standalone" ? "ローカル" : "公式"}プレイヤーを使用します`,
+        `記憶された設定により${
+          playerChoice === "standalone" ? "ローカル" : "公式"
+        }プレイヤーを使用します`,
         videoId,
       );
     } else {
@@ -447,4 +506,28 @@ export const initWatchPageRouter = async (): Promise<void> => {
       error,
     );
   }
+};
+
+const runWatchPageRouting = async (): Promise<void> => {
+  const currentUrl = window.location.href;
+
+  if (!isWatchPage()) {
+    lastHandledUrl = currentUrl;
+    return;
+  }
+
+  if (lastHandledUrl === currentUrl) {
+    return;
+  }
+
+  await routeWatchPageIfNeeded();
+  lastHandledUrl = currentUrl;
+};
+
+export const initWatchPageRouter = async (): Promise<void> => {
+  installSpaNavigationListener(() => {
+    void requestWatchPageRouting(runWatchPageRouting);
+  });
+
+  await requestWatchPageRouting(runWatchPageRouting);
 };
