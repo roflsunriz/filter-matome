@@ -130,6 +130,7 @@
 - #206.2 - video-playerのスタンドアロンプレイヤーでマウスが非活性のとき非表示になるようにした。
 - #206.3 - `comment-overlay`モジュールをv2.3.0に更新。
 - #206.4 - video-playerのrouterでSPAページでも動作するようにした
+- #206.5 - `comment-overlay`モジュールをv2.4.0に更新。
 - ❌️未修正(Unfixed)：     
 - なし
 - ℹ️その他(Others)：     
