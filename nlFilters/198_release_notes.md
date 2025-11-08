@@ -132,6 +132,7 @@
 - #206.4 - video-playerのrouterでSPAページでも動作するようにした
 - #206.5 - `comment-overlay`モジュールをv2.4.0に更新。
 - #206.6 - `comment-overlay`モジュールをv2.5.0に更新。
+- #206.7 - `comment-overlay`モジュールをv2.5.1に更新。
 - ❌️未修正(Unfixed)：     
 - なし
 - ℹ️その他(Others)：     
