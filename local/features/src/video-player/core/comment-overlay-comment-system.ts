@@ -151,6 +151,14 @@ export class CommentOverlayCommentSystem {
     this.renderer?.resize();
   }
 
+  /**
+   * レンダラーをハードリセット（完全な再初期化）
+   * リサイズ時などにアーティファクトが残る場合に使用
+   */
+  hardReset(): void {
+    this.renderer?.hardReset();
+  }
+
   destroy(): void {
     this.renderer?.destroy();
     this.renderer = null;

@@ -540,6 +540,15 @@ export class StandalonePlayer {
     // デバウンス処理のため、requestAnimationFrameを使用
     requestAnimationFrame(() => {
       this.adjustLayout();
+      
+      // コメントレンダラーのハードリセットでアーティファクトを除去
+      if (this.enableComments && this.commentSystem) {
+        try {
+          this.commentSystem.hardReset();
+        } catch (error) {
+          window.logger.warn("コメントレンダラーのハードリセットに失敗しました", error);
+        }
+      }
     });
   }
 
