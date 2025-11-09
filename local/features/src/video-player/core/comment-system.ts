@@ -74,17 +74,14 @@ export class CommentSystem {
       this.commentContainer.className = "comment-container";
       this.commentContainer.appendChild(this.commentList);
 
-      // コメントリストコンテナのスタイルを調整 (Flexboxレイアウト用)
-      this.commentContainer.style.position = "relative"; // 絶対配置から変更
-      this.commentContainer.style.maxWidth = "20vw"; // コメントリストの幅
-      this.commentContainer.style.height = "100%";
-      this.commentContainer.style.maxHeight = "85vh";
-      this.commentContainer.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+      // コメントリストコンテナのスタイルを調整（レスポンシブ対応）
+      // 基本スタイルはCSSで管理し、最小限のインラインスタイルのみ設定
+      this.commentContainer.style.position = "relative";
       this.commentContainer.style.zIndex = "5";
       this.commentContainer.style.overflow = "hidden";
-      this.commentContainer.style.display = "flex"; // 子要素のCommentListを伸縮させる
+      this.commentContainer.style.display = "flex";
       this.commentContainer.style.flexDirection = "column";
-      this.commentContainer.style.flexShrink = "0"; // 縮まないように設定
+      // width, height, maxHeightはCSSのレスポンシブルールで管理
 
       if (!container.contains(this.commentContainer)) {
         container.appendChild(this.commentContainer);

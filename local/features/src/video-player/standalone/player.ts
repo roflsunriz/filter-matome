@@ -49,6 +49,11 @@ export class StandalonePlayer {
   private readonly INACTIVITY_DELAY_MS = 3000; // 3秒間非アクティブで非表示
   private readonly CONTROLS_PROXIMITY_MARGIN = 100; // コントローラー付近のマージン（ピクセル）
 
+  // レスポンシブ対応用
+  private resizeObserver: ResizeObserver | null = null;
+  private fullscreenChangeHandler: (() => void) | null = null;
+  private standaloneWrapper: HTMLElement | null = null;
+
   constructor(options: StandalonePlayerOptions) {
     this.mount = options.mount;
     ensureCustomElements();
@@ -93,9 +98,7 @@ export class StandalonePlayer {
     // 新しいラッパーを作成し、プレイヤーとコメントリストを配置
     const wrapper = document.createElement("div");
     wrapper.className = "standalone-player-wrapper";
-    wrapper.style.display = "flex";
-    wrapper.style.width = "100%";
-    wrapper.style.height = "100%";
+    this.standaloneWrapper = wrapper;
 
     // 既存のプレイヤーをラッパーに移動
     wrapper.appendChild(this.customPlayerContainer);
@@ -153,6 +156,7 @@ export class StandalonePlayer {
     }
 
     this.setupHoverControls();
+    this.setupResponsiveHandlers();
   }
 
   private async playWithCustomSource(
@@ -463,6 +467,104 @@ export class StandalonePlayer {
   }
 
   /**
+   * レスポンシブ対応のイベントハンドラーを設定
+   */
+  private setupResponsiveHandlers(): void {
+    if (!this.standaloneWrapper) {
+      return;
+    }
+
+    // 全画面切り替えイベントのハンドリング
+    this.fullscreenChangeHandler = (): void => {
+      this.handleFullscreenChange();
+    };
+
+    document.addEventListener(
+      "fullscreenchange",
+      this.fullscreenChangeHandler,
+    );
+    document.addEventListener(
+      "webkitfullscreenchange",
+      this.fullscreenChangeHandler,
+    );
+    document.addEventListener(
+      "mozfullscreenchange",
+      this.fullscreenChangeHandler,
+    );
+    document.addEventListener(
+      "MSFullscreenChange",
+      this.fullscreenChangeHandler,
+    );
+
+    // リサイズ監視
+    this.resizeObserver = new ResizeObserver(() => {
+      this.handleResize();
+    });
+
+    if (this.videoContainer) {
+      this.resizeObserver.observe(this.videoContainer);
+    }
+    if (this.standaloneWrapper) {
+      this.resizeObserver.observe(this.standaloneWrapper);
+    }
+  }
+
+  /**
+   * 全画面切り替え時の処理
+   */
+  private handleFullscreenChange(): void {
+    const isFullscreen = !!(
+      document.fullscreenElement ||
+      (document as unknown as { webkitFullscreenElement?: Element })
+        .webkitFullscreenElement ||
+      (document as unknown as { mozFullScreenElement?: Element })
+        .mozFullScreenElement ||
+      (document as unknown as { msFullscreenElement?: Element })
+        .msFullscreenElement
+    );
+
+    window.logger.info(
+      `全画面モード: ${isFullscreen ? "有効" : "無効"}`,
+    );
+
+    // 全画面から戻った時にレイアウトを再調整
+    if (!isFullscreen) {
+      this.adjustLayout();
+    }
+  }
+
+  /**
+   * リサイズ時の処理
+   */
+  private handleResize(): void {
+    // デバウンス処理のため、requestAnimationFrameを使用
+    requestAnimationFrame(() => {
+      this.adjustLayout();
+    });
+  }
+
+  /**
+   * レイアウトの調整
+   */
+  private adjustLayout(): void {
+    if (!this.videoContainer || !this.standaloneWrapper) {
+      return;
+    }
+
+    // コメントコンテナの高さをvideoコンテナに合わせる
+    const commentContainer = this.standaloneWrapper.querySelector(
+      ".comment-container",
+    );
+    if (commentContainer instanceof HTMLElement && this.videoContainer) {
+      const videoHeight = this.videoContainer.offsetHeight;
+      if (videoHeight > 0) {
+        // CSSのmax-heightと組み合わせて適切な高さを設定
+        commentContainer.style.maxHeight = `${videoHeight}px`;
+      }
+    }
+  }
+
+  /**
    * リソースのクリーンアップ（イベントリスナーの削除など）
    */
   private cleanup(): void {
@@ -474,6 +576,33 @@ export class StandalonePlayer {
 
     // タイマーのクリア
     this.clearInactivityTimer();
+
+    // ResizeObserverのクリーンアップ
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+
+    // 全画面イベントリスナーのクリーンアップ
+    if (this.fullscreenChangeHandler) {
+      document.removeEventListener(
+        "fullscreenchange",
+        this.fullscreenChangeHandler,
+      );
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        this.fullscreenChangeHandler,
+      );
+      document.removeEventListener(
+        "mozfullscreenchange",
+        this.fullscreenChangeHandler,
+      );
+      document.removeEventListener(
+        "MSFullscreenChange",
+        this.fullscreenChangeHandler,
+      );
+      this.fullscreenChangeHandler = null;
+    }
   }
 
   private setupGlobalInterface(): void {
