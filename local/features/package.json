@@ -234,7 +234,7 @@
     "color-name": "^2.0.0",
     "colorette": "^2.0.20",
     "commander": "^14.0.0",
-    "comment-overlay": "^2.5.1",
+    "comment-overlay": "^2.5.3",
     "concat-map": "^0.0.2",
     "connect-history-api-fallback": "^2.0.0",
     "consola": "^3.4.2",
