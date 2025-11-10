@@ -54,6 +54,11 @@ export class StandalonePlayer {
   private fullscreenChangeHandler: (() => void) | null = null;
   private standaloneWrapper: HTMLElement | null = null;
 
+  // 動画終了・再再生検出用
+  private hasEnded = false;
+  private endedEventHandler: (() => void) | null = null;
+  private playEventHandler: (() => void) | null = null;
+
   constructor(options: StandalonePlayerOptions) {
     this.mount = options.mount;
     ensureCustomElements();
@@ -157,6 +162,7 @@ export class StandalonePlayer {
 
     this.setupHoverControls();
     this.setupResponsiveHandlers();
+    this.setupVideoReplayHandlers();
   }
 
   private async playWithCustomSource(
@@ -467,6 +473,44 @@ export class StandalonePlayer {
   }
 
   /**
+   * 動画の再再生時にコメントをリセットするハンドラーを設定
+   */
+  private setupVideoReplayHandlers(): void {
+    if (!this.videoElement) {
+      return;
+    }
+
+    // ended イベントハンドラー
+    this.endedEventHandler = (): void => {
+      this.hasEnded = true;
+      window.logger.info("動画が終了しました");
+    };
+
+    // play イベントハンドラー
+    this.playEventHandler = (): void => {
+      if (this.hasEnded && this.enableComments) {
+        window.logger.info(
+          "動画終了後の再再生を検出、コメントをリセットして再度流します",
+        );
+
+        // コメントレンダラーをハードリセット
+        try {
+          this.commentSystem.hardReset();
+          window.logger.info("コメントレンダラーをハードリセットしました");
+        } catch (error) {
+          window.logger.error("コメントのハードリセットに失敗しました", error);
+        }
+
+        // 再再生フラグをリセット
+        this.hasEnded = false;
+      }
+    };
+
+    this.videoElement.addEventListener("ended", this.endedEventHandler);
+    this.videoElement.addEventListener("play", this.playEventHandler);
+  }
+
+  /**
    * レスポンシブ対応のイベントハンドラーを設定
    */
   private setupResponsiveHandlers(): void {
@@ -611,6 +655,18 @@ export class StandalonePlayer {
         this.fullscreenChangeHandler,
       );
       this.fullscreenChangeHandler = null;
+    }
+
+    // 動画再再生イベントリスナーのクリーンアップ
+    if (this.videoElement) {
+      if (this.endedEventHandler) {
+        this.videoElement.removeEventListener("ended", this.endedEventHandler);
+        this.endedEventHandler = null;
+      }
+      if (this.playEventHandler) {
+        this.videoElement.removeEventListener("play", this.playEventHandler);
+        this.playEventHandler = null;
+      }
     }
   }
 
