@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #207 (2025/11/11) リリースノート](#filter-matome-207-20251111-リリースノート)
 - [filter-matome #206 (2025/11/05) リリースノート](#filter-matome-206-20251105-リリースノート)
 - [filter-matome #205 (2025/11/05) リリースノート](#filter-matome-205-20251105-リリースノート)
 - [filter-matome #204 (2025/10/28) リリースノート](#filter-matome-204-20251028-リリースノート)
@@ -117,6 +118,18 @@
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
 
+### filter-matome #207 (2025/11/11) リリースノート
+
+- ✨新機能(New)：     
+- video-playerのスタンドアロンプレイヤーで、動画を最後まで再生した後再度再生したときに自動でコメントがハードリセットされて再度コメントが流れるように対応した。
+- ✅️修正(Fixed)：   
+- なし
+- 🔴変更(Changed)：           
+- なし
+- ❌️未修正(Unfixed)：     
+- なし
+- ℹ️その他(Others)：     
+- なし
 
 ### filter-matome #206 (2025/11/05) リリースノート
 
