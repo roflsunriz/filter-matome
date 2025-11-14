@@ -125,7 +125,7 @@
 - ✅️修正(Fixed)：   
 - なし
 - 🔴変更(Changed)：           
-- なし
+- #207.1 - スタンドアロンプレイヤーのシーク時にcomment-overlayのhardReset()を実行し、描画アーティファクトを防止
 - ❌️未修正(Unfixed)：     
 - なし
 - ℹ️その他(Others)：     

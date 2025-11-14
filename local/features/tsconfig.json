@@ -11,7 +11,10 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "./src/*",
+        "./node_modules/comment-overlay/dist/types/*"
+      ]
     },
     "skipLibCheck": true,
     "lib": ["DOM", "ES2020"],

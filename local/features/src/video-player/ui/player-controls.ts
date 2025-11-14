@@ -1253,6 +1253,10 @@ export class PlayerControlsShadow extends HTMLElement {
       this.updateDurationDisplay();
     });
 
+    video.addEventListener("seeked", () => {
+      this.resetCommentOverlayAfterSeek();
+    });
+
     // 外部から音量が変更された場合にもUIを同期
     video.addEventListener("volumechange", () => {
       this.syncVolumeFromVideo();
@@ -1296,6 +1300,19 @@ export class PlayerControlsShadow extends HTMLElement {
       currentTimeSpan.textContent = this.formatTime(video.currentTime);
     }
   }
+
+  private resetCommentOverlayAfterSeek(): void {
+    if (!this.commentSystem) {
+      return;
+    }
+
+    try {
+      this.commentSystem.hardReset();
+    } catch (error) {
+      window.logger.warn("Comment overlay reset failed after seek:", error);
+    }
+  }
+
 
   /**
    * 動画長表示の更新

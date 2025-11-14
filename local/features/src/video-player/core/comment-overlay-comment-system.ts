@@ -31,8 +31,18 @@ const COLOR_COMMANDS = new Set([
   "black2",
 ]);
 
+interface CommentOverlayRenderer {
+  initialize(options: { video: HTMLVideoElement; container: HTMLElement }): void;
+  destroy(): void;
+  resize(): void;
+  hardReset(): void;
+  clearComments(): void;
+  addComment(body: string, vposMs: number, commands?: string[]): unknown;
+  updateSettings(settings: RendererSettings): void;
+}
+
 export class CommentOverlayCommentSystem {
-  private renderer: CommentRenderer | null = null;
+  private renderer: CommentOverlayRenderer | null = null;
   private settings: RendererSettings = cloneDefaultSettings();
   private videoElement: HTMLVideoElement | null = null;
   private container: HTMLElement | null = null;
@@ -78,9 +88,10 @@ export class CommentOverlayCommentSystem {
       useContainerResizeObserver: true,
     };
 
-    this.renderer = new CommentRenderer(this.settings, {
+    const rendererInstance = new CommentRenderer(this.settings, {
       loggerNamespace: "StandaloneCommentOverlay",
     });
+    this.renderer = rendererInstance as unknown as CommentOverlayRenderer;
     this.renderer.initialize({
       video: videoElement,
       container: overlayLayer,
