@@ -1,14 +1,14 @@
-# Contributing to NicoCache_nl
+# Contributing to filter-matome
 
-NicoCache_nlプロジェクトへの貢献に興味を持っていただき、ありがとうございます！このガイドでは、プロジェクトに貢献する方法について説明します。
+filter-matomeプロジェクトへの貢献に興味を持っていただき、ありがとうございます！このガイドでは、プロジェクトに貢献する方法について説明します。
 
 ## 🤝 貢献方法
 
 ### バグレポート
-バグを発見した場合は、[Issue](https://github.com/your-username/NicoCache_nl/issues)を作成してください。
+バグを発見した場合は、[Issue](https://github.com/roflsunriz/filter-matome/issues)を作成してください。
 
 ### 機能要求
-新機能の提案は、[Feature Request](https://github.com/your-username/NicoCache_nl/issues)から行ってください。
+新機能の提案は、[Feature Request](https://github.com/roflsunriz/filter-matome/issues)から行ってください。
 
 ### プルリクエスト
 コードの改善や新機能の実装は、プルリクエストを通じて行ってください。
