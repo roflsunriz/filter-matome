@@ -52,7 +52,6 @@ export class StandalonePlayer {
   // レスポンシブ対応用
   private resizeObserver: ResizeObserver | null = null;
   private fullscreenChangeHandler: (() => void) | null = null;
-  private visibilityChangeHandler: (() => void) | null = null;
   private standaloneWrapper: HTMLElement | null = null;
 
   // 動画終了・再再生検出用
@@ -163,7 +162,6 @@ export class StandalonePlayer {
 
     this.setupHoverControls();
     this.setupResponsiveHandlers();
-    this.setupVisibilityHandlers();
     this.setupVideoReplayHandlers();
   }
 
@@ -489,24 +487,24 @@ export class StandalonePlayer {
     };
 
     // play イベントハンドラー
+
     this.playEventHandler = (): void => {
+
       if (this.hasEnded && this.enableComments) {
+
         window.logger.info(
-          "動画終了後の再再生を検出、コメントをリセットして再度流します",
+
+          "再生終了後の再生再開時は comment-overlay の自動ハードリセット機構に委譲します",
+
         );
 
-        // コメントレンダラーをハードリセット
-        try {
-          this.commentSystem.hardReset();
-          window.logger.info("コメントレンダラーをハードリセットしました");
-        } catch (error) {
-          window.logger.error("コメントのハードリセットに失敗しました", error);
-        }
-
-        // 再再生フラグをリセット
         this.hasEnded = false;
+
       }
+
     };
+
+
 
     this.videoElement.addEventListener("ended", this.endedEventHandler);
     this.videoElement.addEventListener("play", this.playEventHandler);
@@ -555,32 +553,7 @@ export class StandalonePlayer {
     }
   }
 
-  /**
-   * visibilitychange イベントのセットアップ
-   */
-  private setupVisibilityHandlers(): void {
-    this.cleanupVisibilityHandlers();
 
-    this.visibilityChangeHandler = (): void => {
-      if (!this.enableComments || document.visibilityState !== "visible") {
-        return;
-      }
-
-      try {
-        this.commentSystem.hardReset();
-        window.logger.info(
-          "visibility 復帰により comment-overlay の状態をリセットしました",
-        );
-      } catch (error) {
-        window.logger.warn(
-          "visibility 復帰時の comment-overlay ハードリセットに失敗しました",
-          error,
-        );
-      }
-    };
-
-    document.addEventListener("visibilitychange", this.visibilityChangeHandler);
-  }
 
   /**
    * 全画面切り替え時の処理
@@ -610,18 +583,9 @@ export class StandalonePlayer {
    * リサイズ時の処理
    */
   private handleResize(): void {
-    // デバウンス処理のため、requestAnimationFrameを使用
+    // �f�o�E���X�����̂��߁ArequestAnimationFrame���g�p
     requestAnimationFrame(() => {
       this.adjustLayout();
-      
-      // コメントレンダラーのハードリセットでアーティファクトを除去
-      if (this.enableComments && this.commentSystem) {
-        try {
-          this.commentSystem.hardReset();
-        } catch (error) {
-          window.logger.warn("コメントレンダラーのハードリセットに失敗しました", error);
-        }
-      }
     });
   }
 
@@ -686,8 +650,6 @@ export class StandalonePlayer {
       this.fullscreenChangeHandler = null;
     }
 
-    this.cleanupVisibilityHandlers();
-
     // 動画再再生イベントリスナーのクリーンアップ
     if (this.videoElement) {
       if (this.endedEventHandler) {
@@ -701,15 +663,6 @@ export class StandalonePlayer {
     }
   }
 
-  private cleanupVisibilityHandlers(): void {
-    if (this.visibilityChangeHandler) {
-      document.removeEventListener(
-        "visibilitychange",
-        this.visibilityChangeHandler,
-      );
-      this.visibilityChangeHandler = null;
-    }
-  }
 
   private setupGlobalInterface(): void {
     if (!window.NicoCache_nl) {
