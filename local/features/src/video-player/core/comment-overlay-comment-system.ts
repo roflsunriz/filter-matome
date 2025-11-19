@@ -87,6 +87,7 @@ export class CommentOverlayCommentSystem {
       isCommentVisible: this.isVisible,
       useContainerResizeObserver: true,
       enableAutoHardReset: true,
+      shadowIntensity: "strong"
     };
 
     const rendererInstance = new CommentRenderer(this.settings, {
