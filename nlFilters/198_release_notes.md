@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #207.6 (2025/11/26) リリースノート](#filter-matome-2076-20251126-リリースノート)
 - [filter-matome #207 (2025/11/11) リリースノート](#filter-matome-207-20251111-リリースノート)
 - [filter-matome #206 (2025/11/05) リリースノート](#filter-matome-206-20251105-リリースノート)
 - [filter-matome #205 (2025/11/05) リリースノート](#filter-matome-205-20251105-リリースノート)
@@ -117,6 +118,21 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #207.6 (2025/11/26) リリースノート
+
+- ✨新機能(New)：     
+- なし
+- ✅️修正(Fixed)：   
+- なし
+- 🔴変更(Changed)：           
+- mlink-video-controllerのMylist2ハンドラーをSPA完全対応に改善。`window.NicoCache_nl.watch.apiData`の代わりに`window.commonHelper.fetchWatchPage()`を使用してサーバーから直接最新のAPIデータを取得するように変更。
+- 型アサーションで型安全性を強化し、TypeScriptの厳格なESLintルールに準拠。
+- 詳細なエラーメッセージとキーワード抽出のエラーハンドリングを改善。
+- ❌️未修正(Unfixed)：     
+- なし
+- ℹ️その他(Others)：     
+- なし
 
 ### filter-matome #207 (2025/11/11) リリースノート
 
