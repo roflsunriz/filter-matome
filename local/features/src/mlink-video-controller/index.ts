@@ -5,6 +5,8 @@ class PanelManager {
   private panel: HTMLElement | null = null;
   private observer: MutationObserver;
   private currentUrl: string = "";
+  private isReinitializing: boolean = false; // 再初期化中フラグ
+  private lastPageType: "watch" | "other" = "other"; // 前回のページタイプ
 
   constructor() {
     // ページの変更を監視
@@ -16,13 +18,46 @@ class PanelManager {
 
     // URL変更を監視（SPA対応）
     this.currentUrl = location.href;
+    this.lastPageType = this.detectPageType(location.href);
     this.setupUrlWatching();
 
     // 初期化
     this.initialize();
   }
 
+  /**
+   * URLからページタイプを判定
+   */
+  private detectPageType(url: string): "watch" | "other" {
+    return /\/watch\/[a-z]{2}\d+/i.test(url) ? "watch" : "other";
+  }
+
   private handleDOMChanges(mutations: MutationRecord[]) {
+    // 再初期化中は処理しない
+    if (this.isReinitializing) {
+      return;
+    }
+
+    // パネル自身の変更は無視（無限ループ防止）
+    const isPanelChange = mutations.some((mutation) => {
+      return (
+        Array.from(mutation.addedNodes).some(
+          (node) =>
+            node instanceof HTMLElement &&
+            node.tagName === "MLINK-VIDEO-CONTROLLER",
+        ) ||
+        Array.from(mutation.removedNodes).some(
+          (node) =>
+            node instanceof HTMLElement &&
+            node.tagName === "MLINK-VIDEO-CONTROLLER",
+        )
+      );
+    });
+
+    if (isPanelChange) {
+      return;
+    }
+
     // video要素の追加/削除を検知
     const videoElementChanged = mutations.some((mutation) => {
       return (
@@ -53,8 +88,36 @@ class PanelManager {
     }
   }
 
+  /**
+   * パネルを完全に破棄
+   */
+  private destroyPanel(): void {
+    if (this.panel && this.panel.parentNode) {
+      // Web ComponentのdisconnectedCallbackが呼ばれてクリーンアップされる
+      this.panel.parentNode.removeChild(this.panel);
+      this.panel = null;
+    }
+  }
+
+  /**
+   * パネルを再作成
+   */
+  private recreatePanel(): void {
+    this.panel = document.createElement("mlink-video-controller");
+    document.body.appendChild(this.panel);
+  }
+
   private async reinitialize(): Promise<void> {
+    // 再初期化中フラグチェック（多重実行防止）
+    if (this.isReinitializing) {
+      window.logger?.debug(
+        "[MlinkVideoController] Reinitialize already in progress, skipping",
+      );
+      return;
+    }
+
     try {
+      this.isReinitializing = true;
       window.logger?.info(
         "[MlinkVideoController] Reinitializing for SPA navigation",
       );
@@ -87,6 +150,11 @@ class PanelManager {
         "[MlinkVideoController] Reinitialization failed:",
         error,
       );
+    } finally {
+      // 再初期化完了後、少し遅延してからフラグをリセット
+      setTimeout(() => {
+        this.isReinitializing = false;
+      }, 500);
     }
   }
 
@@ -123,14 +191,21 @@ class PanelManager {
   }
 
   private handleUrlChange() {
+    // 再初期化中は処理しない
+    if (this.isReinitializing) {
+      window.logger?.debug(
+        "[MlinkVideoController] Reinitialize in progress, skipping URL change handler",
+      );
+      return;
+    }
+
     const previousUrl = this.currentUrl;
     this.currentUrl = location.href;
 
-    // watch動画ページへの遷移を検出
-    const isWatchPage = /\/watch\/[a-z]{2}\d+/.test(location.pathname);
-    const wasWatchPage = /\/watch\/[a-z]{2}\d+/.test(
-      new URL(previousUrl).pathname,
-    );
+    // 現在と前回のページタイプを判定
+    const currentPageType = this.detectPageType(this.currentUrl);
+    const previousPageType = this.lastPageType;
+    const pageTypeChanged = currentPageType !== previousPageType;
 
     // 動画IDが変更されたかチェック
     const currentVideoId = this.extractVideoId(this.currentUrl);
@@ -140,22 +215,58 @@ class PanelManager {
     window.logger?.info("[MlinkVideoController] SPA navigation detected:", {
       from: previousUrl.substring(0, 50) + "...",
       to: this.currentUrl.substring(0, 50) + "...",
-      isWatchPage,
-      wasWatchPage,
+      currentPageType,
+      previousPageType,
+      pageTypeChanged,
       videoIdChanged,
       currentVideoId,
       previousVideoId,
     });
 
-    // watch動画ページに遷移した場合、または動画IDが変更された場合
-    if (isWatchPage && (videoIdChanged || !wasWatchPage)) {
+    // ページタイプが変更された場合 - 完全に破棄して再構築
+    if (pageTypeChanged) {
       window.logger?.info(
-        "[MlinkVideoController] Reinitializing for new video or page type change",
+        "[MlinkVideoController] Page type changed, destroying and recreating panel",
       );
-      // DOM更新を待ってから再初期化（非同期処理を明示的にvoidマーク）
+      this.lastPageType = currentPageType;
+
+      // DOM更新を待ってから完全再構築
+      setTimeout(() => {
+        if (this.isReinitializing) return;
+        this.isReinitializing = true;
+
+        try {
+          // 既存パネルを破棄
+          this.destroyPanel();
+
+          // 少し待ってから新しいパネルを作成
+          setTimeout(() => {
+            this.recreatePanel();
+            this.isReinitializing = false;
+            window.logger?.info(
+              "[MlinkVideoController] Panel recreation completed",
+            );
+          }, 100);
+        } catch (error) {
+          window.logger?.error(
+            "[MlinkVideoController] Panel recreation failed:",
+            error,
+          );
+          this.isReinitializing = false;
+        }
+      }, 300);
+      return;
+    }
+
+    // 同じページタイプ内での動画ID変更 - 通常の再初期化
+    if (currentPageType === "watch" && videoIdChanged) {
+      window.logger?.info(
+        "[MlinkVideoController] Video ID changed within watch page, reinitializing",
+      );
+      // DOM更新を待ってから再初期化
       setTimeout(() => {
         void this.reinitialize();
-      }, 300); // タイミング調整（短縮してレスポンスを改善）
+      }, 300);
     }
   }
 

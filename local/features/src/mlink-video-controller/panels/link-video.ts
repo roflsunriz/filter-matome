@@ -71,6 +71,7 @@ export class MlinkVideoController extends BasePanel {
   private settingsManager: SettingsManager;
   private settingsUI: SettingsUI;
   private isWatchPage: boolean = false;
+  private isHandlingSPANavigation: boolean = false; // SPA遷移処理中フラグ
 
   constructor() {
     super();
@@ -104,16 +105,28 @@ export class MlinkVideoController extends BasePanel {
   public connectedCallback(): void {
     window.logger?.debug("[MlinkVideoController] connectedCallback called");
 
-    // 初回レンダリング
-    void this.render();
+    // 初期化を非同期で実行
+    void (async () => {
+      try {
+        // 初回レンダリング
+        await this.render();
 
-    // 視聴ページの場合のみ動画関連の初期化を実行
-    if (this.isWatchPage) {
-      this.setupVideoEndedListener(); // 動画終了監視を追加
-    }
+        // 視聴ページの場合のみ動画関連の初期化を実行
+        if (this.isWatchPage) {
+          this.setupVideoEndedListener(); // 動画終了監視を追加
+        }
 
-    // モジュールシステムの初期化
-    void this.initializeModuleSystem();
+        // モジュールシステムの初期化
+        await this.initializeModuleSystem();
+
+        window.logger?.debug("[MlinkVideoController] connectedCallback initialization completed");
+      } catch (error) {
+        window.logger?.error(
+          "[MlinkVideoController] connectedCallback initialization failed:",
+          error,
+        );
+      }
+    })();
   }
 
   /**
@@ -129,62 +142,79 @@ export class MlinkVideoController extends BasePanel {
    * SPA遷移時にページタイプを再判定してUIを更新
    */
   public async handleSPANavigation(): Promise<void> {
-    const newIsWatchPage = this.detectWatchPage();
-    const pageTypeChanged = newIsWatchPage !== this.isWatchPage;
-
-    window.logger?.info(
-      "[MlinkVideoController] Handling SPA navigation:",
-      {
-        previousPageType: this.isWatchPage ? "watch" : "other",
-        currentPageType: newIsWatchPage ? "watch" : "other",
-        pageTypeChanged,
-      },
-    );
-
-    if (!pageTypeChanged) {
-      // ページタイプが変わっていない場合でも、watchページ内での動画切り替えは処理
-      if (this.isWatchPage) {
-        window.logger?.debug(
-          "[MlinkVideoController] Same page type (watch), reinitializing video services",
-        );
-        this.reinitializeVideoServices();
-      }
+    // 既に処理中の場合はスキップ（再帰防止）
+    if (this.isHandlingSPANavigation) {
+      window.logger?.debug(
+        "[MlinkVideoController] handleSPANavigation already in progress, skipping",
+      );
       return;
     }
 
-    // ページタイプが変わった場合は完全再構築
-    this.isWatchPage = newIsWatchPage;
-    window.logger?.info(
-      "[MlinkVideoController] Page type changed, rebuilding UI",
-    );
+    try {
+      this.isHandlingSPANavigation = true;
 
-    // 既存のイベントリスナーやサービスをクリーンアップ
-    this.cleanup();
+      const newIsWatchPage = this.detectWatchPage();
+      const pageTypeChanged = newIsWatchPage !== this.isWatchPage;
 
-    // 新しいページタイプに応じてサービスを初期化
-    if (this.isWatchPage) {
-      this.player = NicoVideoPlayer.getInstance();
-      this.commentManager = CommentManager.getInstance();
-      this.heatmapManager = HeatmapManager.getInstance();
-      this.playbackHandler = new PlaybackHandler();
-      this.volumeHandler = new VolumeHandler();
-      this.speedHandler = new SpeedHandler();
-    } else {
-      // watchページ以外では動画関連サービスをnullに
-      this.player = null;
-      this.commentManager = null;
-      this.heatmapManager = null;
-      this.playbackHandler = null;
-      this.volumeHandler = null;
-      this.speedHandler = null;
-    }
+      window.logger?.info(
+        "[MlinkVideoController] Handling SPA navigation:",
+        {
+          previousPageType: this.isWatchPage ? "watch" : "other",
+          currentPageType: newIsWatchPage ? "watch" : "other",
+          pageTypeChanged,
+        },
+      );
 
-    // UIを再構築
-    await this.render();
+      if (!pageTypeChanged) {
+        // ページタイプが変わっていない場合でも、watchページ内での動画切り替えは処理
+        if (this.isWatchPage) {
+          window.logger?.debug(
+            "[MlinkVideoController] Same page type (watch), reinitializing video services",
+          );
+          this.reinitializeVideoServices();
+        }
+        return;
+      }
 
-    // watchページの場合のみ動画関連の初期化
-    if (this.isWatchPage) {
-      this.setupVideoEndedListener();
+      // ページタイプが変わった場合は完全再構築
+      this.isWatchPage = newIsWatchPage;
+      window.logger?.info(
+        "[MlinkVideoController] Page type changed, rebuilding UI",
+      );
+
+      // 既存のイベントリスナーやサービスをクリーンアップ
+      this.cleanup();
+
+      // 新しいページタイプに応じてサービスを初期化
+      if (this.isWatchPage) {
+        this.player = NicoVideoPlayer.getInstance();
+        this.commentManager = CommentManager.getInstance();
+        this.heatmapManager = HeatmapManager.getInstance();
+        this.playbackHandler = new PlaybackHandler();
+        this.volumeHandler = new VolumeHandler();
+        this.speedHandler = new SpeedHandler();
+      } else {
+        // watchページ以外では動画関連サービスをnullに
+        this.player = null;
+        this.commentManager = null;
+        this.heatmapManager = null;
+        this.playbackHandler = null;
+        this.volumeHandler = null;
+        this.speedHandler = null;
+      }
+
+      // UIを再構築
+      await this.render();
+
+      // watchページの場合のみ動画関連の初期化
+      if (this.isWatchPage) {
+        this.setupVideoEndedListener();
+      }
+    } finally {
+      // 処理完了後、少し遅延してからフラグをリセット
+      setTimeout(() => {
+        this.isHandlingSPANavigation = false;
+      }, 100);
     }
   }
 
@@ -290,6 +320,14 @@ export class MlinkVideoController extends BasePanel {
 
   private async render() {
     try {
+      // Shadow DOMの存在確認
+      if (!this.shadow) {
+        throw new Error("Shadow DOM が初期化されていません");
+      }
+
+      // Shadow DOMを完全にクリア（再レンダリング時）
+      this.shadow.innerHTML = "";
+
       const style = document.createElement("style");
       style.textContent = await this.loadStyles();
 
@@ -347,6 +385,10 @@ export class MlinkVideoController extends BasePanel {
       this.shadow.appendChild(style);
       this.shadow.appendChild(template.content.cloneNode(true));
 
+      window.logger?.debug(
+        "[MlinkVideoController] Shadow DOM content appended successfully",
+      );
+
       this.initializeComponents();
       this.setupEventListeners();
 
@@ -381,6 +423,8 @@ export class MlinkVideoController extends BasePanel {
 
       // キー伝搬停止処理を設定
       this.setupKeyPropagationPrevention();
+
+      window.logger?.debug("[MlinkVideoController] Render completed successfully");
     } catch (error) {
       window.logger.error("パネルのレンダリングエラー:", error);
       throw error;
@@ -1739,8 +1783,36 @@ export class MlinkVideoController extends BasePanel {
   public disconnectedCallback(): void {
     window.logger?.debug("[MlinkVideoController] disconnectedCallback called");
 
+    // SPA遷移処理中フラグをリセット
+    this.isHandlingSPANavigation = false;
+
     // クリーンアップ処理
     this.cleanup();
+
+    // 動画関連サービスのクリーンアップ
+    if (this.player) {
+      // プレイヤーのクリーンアップ（必要に応じて）
+      this.player = null;
+    }
+    if (this.commentManager) {
+      // コメントマネージャーのクリーンアップ（必要に応じて）
+      this.commentManager = null;
+    }
+    if (this.heatmapManager) {
+      // ヒートマップマネージャーのクリーンアップ
+      this.heatmapManager.stopPeriodicUpdate();
+      this.heatmapManager = null;
+    }
+
+    // ハンドラーのクリーンアップ
+    this.playbackHandler = null;
+    this.volumeHandler = null;
+    this.speedHandler = null;
+
+    // リンクマネージャーのクリーンアップ
+    this.linkManager = null;
+
+    window.logger?.debug("[MlinkVideoController] Cleanup completed in disconnectedCallback");
 
     // 親クラスのクリーンアップを実行
     super.disconnectedCallback();

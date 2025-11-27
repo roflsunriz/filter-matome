@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #208.3 (2025/11/27) リリースノート](#filter-matome-2083-20251127-リリースノート)
 - [filter-matome #208.2 (2025/11/27) リリースノート](#filter-matome-2082-20251127-リリースノート)
 - [filter-matome #208.1 (2025/11/27) リリースノート](#filter-matome-2081-20251127-リリースノート)
 - [filter-matome #208 (2025/11/27) リリースノート](#filter-matome-208-20251127-リリースノート)
@@ -121,6 +122,26 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #208.3 (2025/11/27) リリースノート
+
+- ✨新機能(New)：
+- なし
+- ✅️修正(Fixed)：
+- 【重大バグ修正】mlink-video-controllerのSPA遷移時に発生するhandleSPANavigationの無限再帰を完全に修正。
+- 視聴ページ⇔その他のページ遷移時にパネルを完全破棄・再構築する方式に変更し、ページタイプ切り替えの確実性を向上。
+- 再初期化中フラグによる多重実行防止機構を追加し、6回連続呼び出しの問題を解決。
+- MutationObserverがパネル自身のDOM変更を無視するようフィルター処理を実装し、無限ループを防止。
+- Shadow DOM初期化チェックとクリア処理を追加し、再レンダリング時の確実性を向上。
+- 🔴変更(Changed)：
+- ページタイプ（watch/other）を明示的に管理し、タイプ変更時は従来の再初期化ではなく完全再構築を実行。
+- connectedCallback()を非同期関数として実装し、初期化の順序保証を強化。
+- disconnectedCallback()で全サービスインスタンスをnullに設定し、メモリリーク防止を徹底。
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- ユーザー提供の診断データにより、handleSPANavigationの6回連続呼び出しとShadow DOM未作成を特定。
+- 従来の部分的な再初期化から、ページタイプ変更時の完全再構築へ方針転換することで根本解決。
 
 ### filter-matome #208.2 (2025/11/27) リリースノート
 
