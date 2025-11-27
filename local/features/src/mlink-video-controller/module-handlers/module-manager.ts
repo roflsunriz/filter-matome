@@ -187,6 +187,68 @@ export class ModuleManager {
   }
 
   /**
+   * SPA遷移時にモジュールを再初期化（完全なSPA対応）
+   */
+  public async reinitializeForSPA(): Promise<void> {
+    try {
+      window.logger?.info(
+        "[ModuleManager] Reinitializing modules for SPA navigation",
+      );
+
+      // 現在のページタイプを取得
+      const currentPageType = this.pageDetector.getCurrentPageType();
+
+      // 全モジュールをチェックして、ページ対応していないものは破棄
+      for (const [moduleId, instance] of this.modules.entries()) {
+        const config = this.registry.getConfig(moduleId);
+        if (!config) continue;
+
+        // ページ判定: 現在のページに対応していないモジュールを破棄
+        if (!this.pageDetector.isTargetPage(config.targetPages)) {
+          window.logger?.debug(
+            `[ModuleManager] Unloading module ${moduleId} (not for current page)`,
+          );
+          await this.unloadModule(moduleId);
+        } else if (instance.onSPANavigate) {
+          // モジュールがSPA遷移ハンドラーを持っている場合は呼び出し
+          window.logger?.debug(
+            `[ModuleManager] Calling onSPANavigate for module ${moduleId}`,
+          );
+          await instance.onSPANavigate();
+        }
+      }
+
+      // 現在のページに必要なモジュールで未読み込みのものを読み込み
+      const targetModules = this.registry.getModulesByPage(currentPageType);
+      const enabledModules = targetModules.filter(
+        (config) =>
+          this.settings.isModuleEnabled(config.id) &&
+          !this.modules.has(config.id),
+      );
+
+      if (enabledModules.length > 0) {
+        window.logger?.info(
+          `[ModuleManager] Loading ${enabledModules.length} new modules for current page`,
+        );
+
+        const loadPromises = enabledModules.map((config) =>
+          this.loadModule(config.id),
+        );
+        await Promise.allSettled(loadPromises);
+      }
+
+      window.logger?.info(
+        "[ModuleManager] SPA navigation reinitialization completed",
+      );
+    } catch (error) {
+      window.logger.error(
+        "[ModuleManager] SPA reinitialization failed:",
+        error,
+      );
+    }
+  }
+
+  /**
    * 優先度付きモジュール読み込み（新規追加）
    */
   private async loadModuleWithPriority(

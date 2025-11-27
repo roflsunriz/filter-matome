@@ -57,6 +57,11 @@ export interface ModuleInstance {
   destroy(): void;
   isActive(): boolean;
   getStatus(): ModuleStatus;
+  /**
+   * SPA遷移時に呼び出されるオプションのメソッド
+   * モジュールがSPA遷移に対応する必要がある場合に実装します
+   */
+  onSPANavigate?(): Promise<void>;
 }
 
 export interface ModuleSettings {

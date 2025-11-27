@@ -172,6 +172,25 @@ export class VideoPlayerBridge implements IVideoPlayerBridge {
   }
 
   /**
+   * SPA遷移時に状態をリセット（外部から呼び出し可能）
+   */
+  public resetForSPANavigation(): void {
+    window.logger?.info(
+      "[CommentFilter2] Resetting VideoPlayerBridge for SPA navigation",
+    );
+    this.resetNotificationState();
+
+    // video_playerの検出もリセット（新しいページで再検出）
+    this.isVideoPlayerDetected = false;
+    this.checkVideoPlayerStatus();
+
+    // データ監視を再開
+    if (this.isVideoPlayerDetected) {
+      this.startDataMonitoring();
+    }
+  }
+
+  /**
    * video_playerとの統合を設定
    */
   private setupVideoPlayerIntegration(): void {

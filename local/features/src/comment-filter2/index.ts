@@ -60,7 +60,7 @@ export class CommentFilter2 {
   }
 
   /**
-   * データの変更を監視してフィルターを適用
+   * データの変更を監視してフィルターを適用（完全なSPA対応）
    */
   private startDataMonitoring(): void {
     // 初回ページロード時に1回実行
@@ -74,19 +74,30 @@ export class CommentFilter2 {
       void this.processCommentData();
     });
 
-    // SMID変更（動画切替）時のイベントリスナー
+    // SMID変更（動画切替・SPA遷移）時のイベントリスナー
     window.addEventListener(CONSTANTS.EVENTS.SMID_CHANGED, (event: Event) => {
       const customEvent = event as CustomEvent;
-      const detail = (customEvent.detail ?? {}) as { smid?: unknown };
+      const detail = (customEvent.detail ?? {}) as {
+        smid?: unknown;
+        previousSmid?: unknown;
+      };
       const smid = typeof detail.smid === "string" ? detail.smid : "";
-      window.logger?.debug(
-        `[CommentFilter2] Processing comment data due to SMID change: ${smid}`,
+      const previousSmid =
+        typeof detail.previousSmid === "string" ? detail.previousSmid : "";
+
+      window.logger?.info(
+        `[CommentFilter2] SPA navigation detected: ${previousSmid} -> ${smid}`,
       );
+
+      // SPA遷移時はvideo-player-bridgeをリセット
+      this.videoPlayerBridge.resetForSPANavigation();
+
+      // コメントデータを処理
       void this.processCommentData();
     });
 
     window.logger?.info(
-      "[CommentFilter2] Event-driven data monitoring initialized",
+      "[CommentFilter2] Event-driven data monitoring initialized (Full SPA support)",
     );
   }
 

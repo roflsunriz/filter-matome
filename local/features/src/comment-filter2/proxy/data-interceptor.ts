@@ -48,30 +48,38 @@ export class DataInterceptor {
   }
 
   /**
-   * SPA ナビゲーション対応セットアップ
+   * SPA ナビゲーション対応セットアップ（他モジュールのフックと共存可能）
    */
   private setupSPANavigation(): void {
-    // History API をフック
+    // 既存のフックを保存してチェーン呼び出し可能にする
+    const existingPushState = history.pushState.bind(history);
+    const existingReplaceState = history.replaceState.bind(history);
+
+    // History API をフック（既存フックを呼び出した後に処理）
     history.pushState = (...args: Parameters<typeof history.pushState>) => {
-      this.originalPushState(...args);
+      // 既存のフック（他モジュールが設定したもの）を呼び出し
+      existingPushState(...args);
       // pushState 後に SMID を更新
-      setTimeout(() => void this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 100);
     };
 
     history.replaceState = (
       ...args: Parameters<typeof history.replaceState>
     ) => {
-      this.originalReplaceState(...args);
+      // 既存のフック（他モジュールが設定したもの）を呼び出し
+      existingReplaceState(...args);
       // replaceState 後に SMID を更新
-      setTimeout(() => void this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 100);
     };
 
     // popstate イベント（ブラウザの戻る/進む）
     window.addEventListener("popstate", () => {
-      setTimeout(() => void this.updateCurrentSmid(), 0);
+      setTimeout(() => void this.updateCurrentSmid(), 100);
     });
 
-    window.logger?.debug("[CommentFilter2] SPA navigation hooks initialized");
+    window.logger?.debug(
+      "[CommentFilter2] SPA navigation hooks initialized (chaining compatible)",
+    );
   }
 
   /**

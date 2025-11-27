@@ -40,8 +40,8 @@ class PanelManager {
     });
 
     if (videoElementChanged) {
-      // video要素が変更された場合は再初期化
-      this.reinitialize();
+      // video要素が変更された場合は再初期化（非同期処理を明示的にvoidマーク）
+      void this.reinitialize();
     }
   }
 
@@ -53,23 +53,63 @@ class PanelManager {
     }
   }
 
-  private reinitialize() {
-    // プレイヤーを再初期化
-    NicoVideoPlayer.getInstance().reinitialize();
+  private async reinitialize(): Promise<void> {
+    try {
+      window.logger?.info(
+        "[MlinkVideoController] Reinitializing for SPA navigation",
+      );
+
+      // プレイヤーを再初期化
+      NicoVideoPlayer.getInstance().reinitialize();
+
+      // モジュールマネージャーも再初期化（動的インポートでモジュール取得）
+      const { ModuleManager } = await import(
+        "@/mlink-video-controller/module-handlers/module-manager"
+      );
+      const moduleManager = ModuleManager.getInstance();
+      await moduleManager.reinitializeForSPA();
+
+      window.logger?.info(
+        "[MlinkVideoController] Reinitialization completed successfully",
+      );
+    } catch (error) {
+      window.logger?.error(
+        "[MlinkVideoController] Reinitialization failed:",
+        error,
+      );
+    }
   }
 
   private setupUrlWatching() {
+    // 既存のフックを保存してチェーン呼び出し可能にする
+    const existingPushState = history.pushState.bind(history);
+    const existingReplaceState = history.replaceState.bind(history);
+
+    // History API をフック（SPA対応）
+    history.pushState = (...args: Parameters<typeof history.pushState>) => {
+      // 既存のフック（他モジュールが設定したもの）を呼び出し
+      existingPushState(...args);
+      // URL変更を処理
+      setTimeout(() => this.handleUrlChange(), 100);
+    };
+
+    history.replaceState = (
+      ...args: Parameters<typeof history.replaceState>
+    ) => {
+      // 既存のフック（他モジュールが設定したもの）を呼び出し
+      existingReplaceState(...args);
+      // URL変更を処理
+      setTimeout(() => this.handleUrlChange(), 100);
+    };
+
     // popstateイベント（戻る/進むボタン）
     window.addEventListener("popstate", () => {
-      this.handleUrlChange();
+      setTimeout(() => this.handleUrlChange(), 100);
     });
 
-    // SPAのプッシュステート対応（periodicalチェック）
-    setInterval(() => {
-      if (location.href !== this.currentUrl) {
-        this.handleUrlChange();
-      }
-    }, 1000);
+    window.logger?.info(
+      "[MlinkVideoController] SPA navigation hooks initialized (chaining compatible)",
+    );
   }
 
   private handleUrlChange() {
@@ -82,19 +122,39 @@ class PanelManager {
       new URL(previousUrl).pathname,
     );
 
-    window.logger?.info("URL変更を検出:", {
-      from: previousUrl,
-      to: this.currentUrl,
+    // 動画IDが変更されたかチェック
+    const currentVideoId = this.extractVideoId(this.currentUrl);
+    const previousVideoId = this.extractVideoId(previousUrl);
+    const videoIdChanged = currentVideoId !== previousVideoId;
+
+    window.logger?.info("[MlinkVideoController] SPA navigation detected:", {
+      from: previousUrl.substring(0, 50) + "...",
+      to: this.currentUrl.substring(0, 50) + "...",
       isWatchPage,
       wasWatchPage,
+      videoIdChanged,
+      currentVideoId,
+      previousVideoId,
     });
 
-    if (isWatchPage) {
-      // watch動画ページに遷移した場合
+    // watch動画ページに遷移した場合、または動画IDが変更された場合
+    if (isWatchPage && (videoIdChanged || !wasWatchPage)) {
+      window.logger?.info(
+        "[MlinkVideoController] Reinitializing for new video or page type change",
+      );
+      // DOM更新を待ってから再初期化（非同期処理を明示的にvoidマーク）
       setTimeout(() => {
-        this.reinitialize();
-      }, 500); // DOM更新を待つ
+        void this.reinitialize();
+      }, 300); // タイミング調整（短縮してレスポンスを改善）
     }
+  }
+
+  /**
+   * URLから動画IDを抽出
+   */
+  private extractVideoId(url: string): string | null {
+    const match = url.match(/\/watch\/([a-z]{2}\d+)/i);
+    return match ? match[1].toLowerCase() : null;
   }
 }
 

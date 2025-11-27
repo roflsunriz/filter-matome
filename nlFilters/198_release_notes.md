@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #208 (2025/11/27) リリースノート](#filter-matome-208-20251127-リリースノート)
 - [filter-matome #207.6 (2025/11/26) リリースノート](#filter-matome-2076-20251126-リリースノート)
 - [filter-matome #207 (2025/11/11) リリースノート](#filter-matome-207-20251111-リリースノート)
 - [filter-matome #206 (2025/11/05) リリースノート](#filter-matome-206-20251105-リリースノート)
@@ -118,6 +119,24 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #208 (2025/11/27) リリースノート
+
+- ✨新機能(New)：
+- comment-filter2とmlink-video-controllerを完全なSPA対応に強化。History API（pushState/replaceState/popstate）を完全にフックし、ページ遷移時の自動再初期化を実装。
+- ✅️修正(Fixed)：
+- History APIフックの競合問題を解決。既存フックを保存してチェーン呼び出し可能にすることで、複数モジュール間の共存性を確保。
+- mlink-video-controllerの非効率なsetIntervalポーリングを削除し、イベント駆動の効率的なSPA遷移検知に移行。
+- 🔴変更(Changed)：
+- comment-filter2のSPA遷移時にVideoPlayerBridgeを自動リセットし、新しいページで再検出・再接続するように改善。
+- mlink-video-controllerのモジュールマネージャーにreinitializeForSPA()メソッドを追加。SPA遷移時にページ対応モジュールの自動アンロード/ロードを実装。
+- ModuleInstance型定義にonSPANavigate()オプショナルメソッドを追加。モジュール個別のSPA対応処理が可能に。
+- 動画ID変更検知ロジックを追加し、同じページ内での動画切り替えも確実に検出。
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- SPA遷移検知のタイミングを最適化（100-300ms）してレスポンスを改善。
+- 詳細なSPA遷移ログを追加し、デバッグ性を向上。
 
 ### filter-matome #207.6 (2025/11/26) リリースノート
 
