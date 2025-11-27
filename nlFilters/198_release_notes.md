@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #208.2 (2025/11/27) リリースノート](#filter-matome-2082-20251127-リリースノート)
 - [filter-matome #208.1 (2025/11/27) リリースノート](#filter-matome-2081-20251127-リリースノート)
 - [filter-matome #208 (2025/11/27) リリースノート](#filter-matome-208-20251127-リリースノート)
 - [filter-matome #207.6 (2025/11/26) リリースノート](#filter-matome-2076-20251126-リリースノート)
@@ -120,6 +121,24 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #208.2 (2025/11/27) リリースノート
+
+- ✨新機能(New)：
+- なし
+- ✅️修正(Fixed)：
+- 【重大バグ修正】mlink-video-controllerが2回目のSPA遷移後に完全に動作しなくなる致命的な問題を修正。
+- Web ComponentsのconnectedCallback()を実装し、DOMライフサイクルに準拠した正しい初期化フローに修正。
+- Shadow DOMが作成されずUIが一切表示されない問題を根本解決。
+- SPA遷移時のクリーンアップ処理をdisconnectedCallback()に統合し、メモリリーク防止を強化。
+- 🔴変更(Changed)：
+- constructorでのレンダリング処理をconnectedCallback()に移行（Web Components標準準拠）。
+- disconnectedCallback()でcleanup()を呼び出すように統合（ライフサイクル管理の一元化）。
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- 診断スニペットによる徹底的な問題調査により、Shadow DOM未作成が根本原因と判明。
+- Web Components標準のライフサイクルメソッドに完全準拠することで、あらゆるSPA遷移パターンでの安定動作を実現。
 
 ### filter-matome #208.1 (2025/11/27) リリースノート
 

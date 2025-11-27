@@ -96,7 +96,15 @@ export class MlinkVideoController extends BasePanel {
       this.volumeHandler = new VolumeHandler();
       this.speedHandler = new SpeedHandler();
     }
+  }
 
+  /**
+   * Web Component がDOMに追加された時に呼ばれる
+   */
+  public connectedCallback(): void {
+    window.logger?.debug("[MlinkVideoController] connectedCallback called");
+
+    // 初回レンダリング
     void this.render();
 
     // 視聴ページの場合のみ動画関連の初期化を実行
@@ -104,7 +112,8 @@ export class MlinkVideoController extends BasePanel {
       this.setupVideoEndedListener(); // 動画終了監視を追加
     }
 
-    void this.initializeModuleSystem(); // モジュールシステムの初期化
+    // モジュールシステムの初期化
+    void this.initializeModuleSystem();
   }
 
   /**
@@ -1724,16 +1733,17 @@ export class MlinkVideoController extends BasePanel {
     );
   }
 
-  // BasePanelのdisconnectedCallbackを上書きして購読解除を行う
+  /**
+   * Web Component がDOMから削除された時に呼ばれる
+   */
   public disconnectedCallback(): void {
+    window.logger?.debug("[MlinkVideoController] disconnectedCallback called");
+
+    // クリーンアップ処理
+    this.cleanup();
+
     // 親クラスのクリーンアップを実行
     super.disconnectedCallback();
-
-    // コメントデータ変更イベントの購読を解除
-    if (this.commentDataChangedUnsubscribe) {
-      this.commentDataChangedUnsubscribe();
-      this.commentDataChangedUnsubscribe = null;
-    }
   }
 }
 
