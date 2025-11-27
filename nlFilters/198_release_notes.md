@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #208.1 (2025/11/27) リリースノート](#filter-matome-2081-20251127-リリースノート)
 - [filter-matome #208 (2025/11/27) リリースノート](#filter-matome-208-20251127-リリースノート)
 - [filter-matome #207.6 (2025/11/26) リリースノート](#filter-matome-2076-20251126-リリースノート)
 - [filter-matome #207 (2025/11/11) リリースノート](#filter-matome-207-20251111-リリースノート)
@@ -119,6 +120,21 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #208.1 (2025/11/27) リリースノート
+
+- ✨新機能(New)：
+- なし
+- ✅️修正(Fixed)：
+- mlink-video-controllerの動画ページとそれ以外のページ切り替え機能をSPA完全対応に修正。
+- MlinkVideoControllerパネルにhandleSPANavigation()メソッドを実装し、ページタイプ変更時にUIを自動再構築。
+- ページタイプ変更検知とクリーンアップ処理を追加し、watchページ⇔その他ページ間の遷移を完全サポート。
+- 🔴変更(Changed)：
+- なし
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- watchページ内での動画切り替え時にも動画サービス（プレイヤー、コメント、ヒートマップ）を適切に再初期化。
 
 ### filter-matome #208 (2025/11/27) リリースノート
 

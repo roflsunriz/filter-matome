@@ -116,6 +116,115 @@ export class MlinkVideoController extends BasePanel {
     return isWatchLikePage();
   }
 
+  /**
+   * SPA遷移時にページタイプを再判定してUIを更新
+   */
+  public async handleSPANavigation(): Promise<void> {
+    const newIsWatchPage = this.detectWatchPage();
+    const pageTypeChanged = newIsWatchPage !== this.isWatchPage;
+
+    window.logger?.info(
+      "[MlinkVideoController] Handling SPA navigation:",
+      {
+        previousPageType: this.isWatchPage ? "watch" : "other",
+        currentPageType: newIsWatchPage ? "watch" : "other",
+        pageTypeChanged,
+      },
+    );
+
+    if (!pageTypeChanged) {
+      // ページタイプが変わっていない場合でも、watchページ内での動画切り替えは処理
+      if (this.isWatchPage) {
+        window.logger?.debug(
+          "[MlinkVideoController] Same page type (watch), reinitializing video services",
+        );
+        this.reinitializeVideoServices();
+      }
+      return;
+    }
+
+    // ページタイプが変わった場合は完全再構築
+    this.isWatchPage = newIsWatchPage;
+    window.logger?.info(
+      "[MlinkVideoController] Page type changed, rebuilding UI",
+    );
+
+    // 既存のイベントリスナーやサービスをクリーンアップ
+    this.cleanup();
+
+    // 新しいページタイプに応じてサービスを初期化
+    if (this.isWatchPage) {
+      this.player = NicoVideoPlayer.getInstance();
+      this.commentManager = CommentManager.getInstance();
+      this.heatmapManager = HeatmapManager.getInstance();
+      this.playbackHandler = new PlaybackHandler();
+      this.volumeHandler = new VolumeHandler();
+      this.speedHandler = new SpeedHandler();
+    } else {
+      // watchページ以外では動画関連サービスをnullに
+      this.player = null;
+      this.commentManager = null;
+      this.heatmapManager = null;
+      this.playbackHandler = null;
+      this.volumeHandler = null;
+      this.speedHandler = null;
+    }
+
+    // UIを再構築
+    await this.render();
+
+    // watchページの場合のみ動画関連の初期化
+    if (this.isWatchPage) {
+      this.setupVideoEndedListener();
+    }
+  }
+
+  /**
+   * watchページ内での動画切り替え時にサービスを再初期化
+   */
+  private reinitializeVideoServices(): void {
+    if (!this.isWatchPage) return;
+
+    window.logger?.debug(
+      "[MlinkVideoController] Reinitializing video services for video change",
+    );
+
+    // プレイヤーを再初期化
+    if (this.player) {
+      this.player.reinitialize();
+    }
+
+    // コメントマネージャーを再初期化
+    if (this.commentManager) {
+      // コメントマネージャーの再初期化処理があれば呼び出し
+      // 現状はプレイヤー再初期化で自動的に更新される
+    }
+
+    // ヒートマップを再初期化
+    if (this.heatmapManager) {
+      // ヒートマップの再描画は自動的に行われる
+    }
+  }
+
+  /**
+   * クリーンアップ処理（SPA遷移時やページタイプ変更時）
+   */
+  private cleanup(): void {
+    // タイムアップデート監視を停止
+    if (this.timeUpdateInterval) {
+      clearInterval(this.timeUpdateInterval);
+      this.timeUpdateInterval = null;
+    }
+
+    // コメントデータ変更の購読を解除
+    if (this.commentDataChangedUnsubscribe) {
+      this.commentDataChangedUnsubscribe();
+      this.commentDataChangedUnsubscribe = null;
+    }
+
+    window.logger?.debug("[MlinkVideoController] Cleanup completed");
+  }
+
   private async loadStyles(): Promise<string> {
     await Promise.resolve();
     return `

@@ -62,6 +62,16 @@ class PanelManager {
       // プレイヤーを再初期化
       NicoVideoPlayer.getInstance().reinitialize();
 
+      // パネル（UI）のSPA遷移処理を呼び出し
+      if (this.panel) {
+        const mlinkPanel = this.panel as unknown as {
+          handleSPANavigation?: () => Promise<void>;
+        };
+        if (typeof mlinkPanel.handleSPANavigation === "function") {
+          await mlinkPanel.handleSPANavigation();
+        }
+      }
+
       // モジュールマネージャーも再初期化（動的インポートでモジュール取得）
       const { ModuleManager } = await import(
         "@/mlink-video-controller/module-handlers/module-manager"
