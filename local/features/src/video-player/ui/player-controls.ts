@@ -1306,11 +1306,8 @@ export class PlayerControlsShadow extends HTMLElement {
       return;
     }
 
-    try {
-      this.commentSystem.hardReset();
-    } catch (error) {
-      window.logger.warn("Comment overlay reset failed after seek:", error);
-    }
+    // comment-overlay 2.9.0+ では自動リセット機能が組み込まれているため、
+    // 手動でのhardReset呼び出しは不要
   }
 
 

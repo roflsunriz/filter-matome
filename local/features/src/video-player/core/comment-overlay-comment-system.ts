@@ -35,7 +35,6 @@ interface CommentOverlayRenderer {
   initialize(options: { video: HTMLVideoElement; container: HTMLElement }): void;
   destroy(): void;
   resize(): void;
-  hardReset(): void;
   clearComments(): void;
   addComment(body: string, vposMs: number, commands?: string[]): unknown;
   updateSettings(settings: RendererSettings): void;
@@ -86,7 +85,6 @@ export class CommentOverlayCommentSystem {
       commentOpacity: this.userOpacity,
       isCommentVisible: this.isVisible,
       useContainerResizeObserver: true,
-      enableAutoHardReset: true,
       shadowIntensity: "strong"
     };
 
@@ -162,14 +160,6 @@ export class CommentOverlayCommentSystem {
 
   resize(): void {
     this.renderer?.resize();
-  }
-
-  /**
-   * レンダラーをハードリセット（完全な再初期化）
-   * リサイズ時などにアーティファクトが残る場合に使用
-   */
-  hardReset(): void {
-    this.renderer?.hardReset();
   }
 
   destroy(): void {

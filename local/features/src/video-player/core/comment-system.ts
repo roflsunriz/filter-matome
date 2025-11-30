@@ -481,14 +481,6 @@ export class CommentSystem {
   }
 
   /**
-   * レンダラーをハードリセット（完全な再初期化）
-   * リサイズ時などにアーティファクトが残る場合に使用
-   */
-  hardReset(): void {
-    this.overlay.hardReset();
-  }
-
-  /**
    * CommentFilter2のグローバルデータを取得
    */
   private getCommentFilter2Data(): SafeCommentFilter2GlobalData | null {

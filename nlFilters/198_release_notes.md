@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #209 (2025/11/30) リリースノート](#filter-matome-209-20251130-リリースノート)
 - [filter-matome #208.3 (2025/11/27) リリースノート](#filter-matome-2083-20251127-リリースノート)
 - [filter-matome #208.2 (2025/11/27) リリースノート](#filter-matome-2082-20251127-リリースノート)
 - [filter-matome #208.1 (2025/11/27) リリースノート](#filter-matome-2081-20251127-リリースノート)
@@ -122,6 +123,24 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #209 (2025/11/30) リリースノート
+
+- ✨新機能(New)：
+- なし
+- ✅️修正(Fixed)：
+- 【依存関係更新】comment-overlayパッケージを2.9.0にアップデート。
+- 【非推奨API対応】comment-overlay 2.9.0で削除されたhardReset()とenableAutoHardResetの使用箇所を削除。
+- video-playerのコメントオーバーレイシステムで、自動リセット機能が組み込まれたため手動リセット処理を不要化。
+- 🔴変更(Changed)：
+- comment-overlay-comment-system.tsからhardReset()メソッドを削除。
+- comment-overlay-comment-system.tsの設定からenableAutoHardReset: trueオプションを削除（2.9.0+では自動で有効）。
+- comment-system.tsからhardReset()メソッドを削除。
+- player-controls.tsのresetCommentOverlayAfterSeek()を簡略化し、コメント付き説明に変更。
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- comment-overlay 2.9.0では自動リセット機能が標準装備され、手動でのhardReset呼び出しが不要になりました。
 
 ### filter-matome #208.3 (2025/11/27) リリースノート
 
