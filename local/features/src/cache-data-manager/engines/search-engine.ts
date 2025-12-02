@@ -1,16 +1,11 @@
-import FlexSearchDocument from "flexsearch/dist/module/document.js";
-import type {
-  Document as FlexSearchDocumentType,
-  DocumentSearchOptions,
-  SimpleDocumentSearchResultSetUnit,
-} from "flexsearch";
+import { Document as FlexSearchDocument, type Document } from "flexsearch";
 import type { LoadDataFromMemory } from "@/cache-data-manager/loaders/load-data-from-memory.js";
 // avoid importing project path aliases here to keep linting safe
 
 type SearchDocument = { id: string; title: string };
 
 export class SearchEngine {
-  private index: FlexSearchDocumentType<SearchDocument> | null = null;
+  private index: Document<SearchDocument> | null = null;
   private indexReady: Promise<void>;
 
   constructor(private dataLoader: LoadDataFromMemory) {
@@ -27,10 +22,10 @@ export class SearchEngine {
           {
             field: "title",
             tokenize: "forward",
-            optimize: false,
             context: {
               depth: 1,
               resolution: 9,
+              bidirectional: true,
             },
           },
         ],
@@ -46,17 +41,14 @@ export class SearchEngine {
     const index = this.index;
     if (!cleanQuery || !index) return [];
 
-    const results: SimpleDocumentSearchResultSetUnit[] = index.search(
-      cleanQuery,
-      {
-        limit: 1000,
-        suggest: true,
-        enrich: true,
-        bool: "or",
-      } satisfies Partial<DocumentSearchOptions<true>>,
-    );
+    const results = index.search<false, false, true, true, false>(cleanQuery, {
+      limit: 1000,
+      suggest: true,
+      enrich: true,
+    });
 
-    return [...new Set(results.flatMap((r) => r.result))].filter(
+    const ids = results.flatMap((r) => r.result.map((item) => item.id));
+    return [...new Set(ids)].filter(
       (id): id is string => typeof id === "string",
     );
   }
