@@ -177,6 +177,7 @@ Append<
 - **詳細機能説明**: [nlFilters/199_readme.html](nlFilters/199_readme.html)
 - **リリースノート**: [nlFilters/198_release_notes.md](nlFilters/198_release_notes.md)
 - **編集ガイド**: [nlFilters/nlFilters_編集ガイド.md](nlFilters/nlFilters_編集ガイド.md)
+- **Issue/Feature Requestの作り方**: [how-to-make-an-issue.md](how-to-make-an-issue.md)
 - **シンボリックリンク作成手順 (必須)**: [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md)
 - シンボリックリンクはNicoCache_nlのキャッシュマネージャを使用する際に必須です。
 - **機能別ドキュメント**:(インストール後に表示可能になります)
