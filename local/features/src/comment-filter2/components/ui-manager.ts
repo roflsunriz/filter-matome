@@ -20,6 +20,14 @@ import {
 } from "@/comment-filter2/templates/main-ui";
 import { CommentFilter2MainStyles } from "@/comment-filter2/styles/main";
 import { FilterLogger } from "@/comment-filter2/utils/filter-logger";
+import {
+  analyzeRegexPattern,
+  getComplexityLabel,
+  getComplexityCssClass,
+  getSeverityCssClass,
+} from "@/comment-filter2/utils/regex-analyzer";
+import type { RegexAnalysisResult } from "@/types/regex-analyzer-types";
+import { getIconSVG, ICONS } from "@/common/material-icons";
 // CSSスタイルを直接インポート
 
 // グローバル型定義は既に globalTypes.ts で定義済み
@@ -34,6 +42,8 @@ export class UIManager {
   private isVisible: boolean = false;
   private isUICreated: boolean = false;
   private currentFormat: "form" | "json" = "form";
+  private regexAnalysisDebounceTimer: ReturnType<typeof setTimeout> | null =
+    null;
   private currentSettings: Settings = {
     debugMode: false,
     isEnabled: true,
@@ -283,6 +293,9 @@ export class UIManager {
 
     // 動的要素のイベントハンドラー
     this.setupDynamicEventHandlers();
+
+    // 正規表現パターン入力のリアルタイム分析
+    this.setupRegexAnalysis();
 
     // キー伝搬停止処理を設定
     this.setupKeyPropagationPrevention();
@@ -1421,6 +1434,199 @@ export class UIManager {
     } else {
       replaceInputGroup?.classList.add(CSS_CLASSES.HIDDEN);
     }
+  }
+
+  /**
+   * 正規表現パターン入力のリアルタイム分析をセットアップ
+   */
+  private setupRegexAnalysis(): void {
+    if (!this.container) return;
+
+    const patternInput = this.container.querySelector(
+      `#${UI_ELEMENTS.PATTERN_INPUT}`,
+    ) as HTMLInputElement;
+    const flagsInput = this.container.querySelector(
+      `#${UI_ELEMENTS.FLAGS_INPUT}`,
+    ) as HTMLInputElement;
+
+    if (!patternInput || !flagsInput) {
+      window.logger?.warn(
+        "[CommentFilter2] Pattern or flags input not found for regex analysis",
+      );
+      return;
+    }
+
+    // パターン入力時のイベント（デバウンス付き）
+    const handlePatternChange = () => {
+      if (this.regexAnalysisDebounceTimer) {
+        clearTimeout(this.regexAnalysisDebounceTimer);
+      }
+      this.regexAnalysisDebounceTimer = setTimeout(() => {
+        this.analyzeAndDisplayRegexComplexity();
+      }, 300);
+    };
+
+    patternInput.addEventListener("input", handlePatternChange);
+    flagsInput.addEventListener("input", handlePatternChange);
+
+    window.logger?.debug(
+      "[CommentFilter2] Regex analysis event listeners set up",
+    );
+  }
+
+  /**
+   * 正規表現パターンを分析して結果をUIに表示
+   */
+  private analyzeAndDisplayRegexComplexity(): void {
+    if (!this.container) return;
+
+    const patternInput = this.container.querySelector(
+      `#${UI_ELEMENTS.PATTERN_INPUT}`,
+    ) as HTMLInputElement;
+    const flagsInput = this.container.querySelector(
+      `#${UI_ELEMENTS.FLAGS_INPUT}`,
+    ) as HTMLInputElement;
+    const analysisContainer = this.container.querySelector(
+      `#${UI_ELEMENTS.REGEX_ANALYSIS}`,
+    );
+
+    if (!patternInput || !flagsInput || !analysisContainer) return;
+
+    const pattern = patternInput.value.trim();
+    const flags = flagsInput.value.trim();
+
+    // パターンが空の場合は分析結果を非表示
+    if (!pattern) {
+      analysisContainer.classList.add(CSS_CLASSES.HIDDEN);
+      return;
+    }
+
+    // パターンを分析
+    const result = analyzeRegexPattern(pattern, flags);
+
+    // 分析結果をUIに反映
+    this.renderRegexAnalysisResult(result);
+  }
+
+  /**
+   * 正規表現分析結果をUIにレンダリング
+   */
+  private renderRegexAnalysisResult(result: RegexAnalysisResult): void {
+    if (!this.container) return;
+
+    const analysisContainer = this.container.querySelector(
+      `#${UI_ELEMENTS.REGEX_ANALYSIS}`,
+    );
+    const complexityBadge = this.container.querySelector(
+      `#${UI_ELEMENTS.REGEX_COMPLEXITY_BADGE}`,
+    );
+    const warningsContainer = this.container.querySelector(
+      `#${UI_ELEMENTS.REGEX_WARNINGS}`,
+    );
+    const suggestionsContainer = this.container.querySelector(
+      `#${UI_ELEMENTS.REGEX_SUGGESTIONS}`,
+    );
+
+    if (
+      !analysisContainer ||
+      !complexityBadge ||
+      !warningsContainer ||
+      !suggestionsContainer
+    ) {
+      return;
+    }
+
+    // コンテナを表示
+    analysisContainer.classList.remove(CSS_CLASSES.HIDDEN);
+
+    // リテラルパターンの場合は特別表示
+    if (result.isLiteral) {
+      analysisContainer.classList.add("cf2-literal-pattern");
+      complexityBadge.textContent = "最適化済み";
+      complexityBadge.className = "cf2-complexity-badge cf2-complexity-low";
+      warningsContainer.innerHTML = `
+        <div class="cf2-regex-literal-notice">
+          ${getIconSVG(ICONS.check)}
+          <span>リテラル文字列のため、Aho-Corasickによる高速マッチングが適用されます</span>
+        </div>
+      `;
+      suggestionsContainer.innerHTML = "";
+      return;
+    }
+
+    analysisContainer.classList.remove("cf2-literal-pattern");
+
+    // 複雑度バッジを更新
+    const complexityLabel = getComplexityLabel(result.complexity);
+    const complexityCssClass = getComplexityCssClass(result.complexity);
+    complexityBadge.textContent = `複雑度: ${complexityLabel}`;
+    complexityBadge.className = `cf2-complexity-badge ${complexityCssClass}`;
+
+    // 警告を表示
+    if (result.warnings.length > 0) {
+      const warningsHtml = result.warnings
+        .map((warning) => {
+          const severityCss = getSeverityCssClass(warning.severity);
+          const iconName =
+            warning.severity === "error"
+              ? ICONS.warning
+              : warning.severity === "warning"
+                ? ICONS.info
+                : ICONS.check;
+          const problematicPartHtml = warning.problematicPart
+            ? `<code class="cf2-regex-problematic-part">${this.escapeHtml(warning.problematicPart)}</code>`
+            : "";
+
+          return `
+          <div class="cf2-regex-warning-item ${severityCss}">
+            <span class="cf2-regex-warning-icon">${getIconSVG(iconName)}</span>
+            <div>
+              <span>${this.escapeHtml(warning.message)}</span>
+              ${problematicPartHtml}
+            </div>
+          </div>
+        `;
+        })
+        .join("");
+      warningsContainer.innerHTML = warningsHtml;
+    } else if (result.isValid) {
+      warningsContainer.innerHTML = `
+        <div class="cf2-regex-no-warnings">
+          ${getIconSVG(ICONS.check)}
+          <span>パターンに問題は検出されませんでした</span>
+        </div>
+      `;
+    } else {
+      warningsContainer.innerHTML = "";
+    }
+
+    // 提案を表示
+    if (result.suggestions.length > 0) {
+      const suggestionsHtml = result.suggestions
+        .map((suggestion) => {
+          const suggestedPatternHtml = suggestion.suggestedPattern
+            ? `<code class="cf2-regex-suggested-pattern">${this.escapeHtml(suggestion.suggestedPattern)}</code>`
+            : "";
+
+          return `
+          <div class="cf2-regex-suggestion-item">
+            <span class="cf2-regex-suggestion-icon">${getIconSVG(ICONS.push_pin)}</span>
+            <div>
+              <span>${this.escapeHtml(suggestion.message)}</span>
+              ${suggestedPatternHtml}
+            </div>
+          </div>
+        `;
+        })
+        .join("");
+      suggestionsContainer.innerHTML = suggestionsHtml;
+    } else {
+      suggestionsContainer.innerHTML = "";
+    }
+
+    window.logger?.debug(
+      `[CommentFilter2] Regex analysis: complexity=${result.complexity}, score=${String(result.score)}, warnings=${String(result.warnings.length)}`,
+    );
   }
 
   /**

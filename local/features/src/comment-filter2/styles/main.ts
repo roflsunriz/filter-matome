@@ -975,4 +975,221 @@ export const CommentFilter2MainStyles = `
     flex-direction: column;
   }
 }
+
+/* ========================================
+   正規表現複雑度分析スタイル
+   ======================================== */
+
+/* 分析結果コンテナ */
+.cf2-regex-analysis {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid rgba(55, 65, 81, 0.5);
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.cf2-regex-analysis-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.cf2-regex-analysis-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+/* 複雑度バッジ */
+.cf2-complexity-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cf2-complexity-low {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.cf2-complexity-medium {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.cf2-complexity-high {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.cf2-complexity-dangerous {
+  background: rgba(220, 38, 38, 0.3);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  animation: cf2-pulse-danger 2s ease-in-out infinite;
+}
+
+@keyframes cf2-pulse-danger {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+  }
+}
+
+/* 警告リスト */
+.cf2-regex-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cf2-regex-warning-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+/* 警告アイコン */
+.cf2-regex-warning-icon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.125rem;
+}
+
+/* 重要度別スタイル */
+.cf2-severity-info {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.cf2-severity-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+.cf2-severity-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+/* 問題のあるパターン表示 */
+.cf2-regex-problematic-part {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, 'Liberation Mono', Consolas, monospace;
+  font-size: 0.75rem;
+  color: #f87171;
+  word-break: break-all;
+}
+
+/* 提案リスト */
+.cf2-regex-suggestions {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(55, 65, 81, 0.3);
+}
+
+.cf2-regex-suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #86efac;
+  margin-bottom: 0.5rem;
+}
+
+.cf2-regex-suggestion-item:last-child {
+  margin-bottom: 0;
+}
+
+.cf2-regex-suggestion-icon {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.125rem;
+  color: #22c55e;
+}
+
+/* 提案パターン */
+.cf2-regex-suggested-pattern {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, 'Liberation Mono', Consolas, monospace;
+  font-size: 0.75rem;
+  color: #4ade80;
+}
+
+/* リテラルパターンの最適化済み表示 */
+.cf2-regex-analysis.cf2-literal-pattern {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.cf2-regex-literal-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #86efac;
+}
+
+.cf2-regex-literal-notice svg {
+  color: #22c55e;
+}
+
+/* アニメーション */
+.cf2-regex-analysis {
+  animation: cf2-analysis-fade-in 0.3s ease-out;
+}
+
+@keyframes cf2-analysis-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 警告なしの場合 */
+.cf2-regex-no-warnings {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}
 `;

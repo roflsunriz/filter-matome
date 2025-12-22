@@ -166,6 +166,16 @@ export const mainUITemplate = `
               <label for="cf2-flags-input" class="cf2-input-label">フラグ</label>
               <input type="text" id="cf2-flags-input" class="cf2-text-input" value="gi" placeholder="gi">
             </div>
+            <!-- 正規表現複雑度分析結果 -->
+            <div id="cf2-regex-analysis" class="cf2-regex-analysis cf2-hidden">
+              <div class="cf2-regex-analysis-header">
+                ${getIconSVG(ICONS.info)}
+                <span class="cf2-regex-analysis-title">パターン分析</span>
+                <span id="cf2-regex-complexity-badge" class="cf2-complexity-badge"></span>
+              </div>
+              <div id="cf2-regex-warnings" class="cf2-regex-warnings"></div>
+              <div id="cf2-regex-suggestions" class="cf2-regex-suggestions"></div>
+            </div>
           </div>
 
           <!-- ユーザーIDルール入力 -->
@@ -412,6 +422,11 @@ export const UI_ELEMENTS = {
   PATTERN_INPUT: "cf2-pattern-input",
   FLAGS_INPUT: "cf2-flags-input",
   USERID_INPUT: "cf2-userid-input",
+  // 正規表現分析
+  REGEX_ANALYSIS: "cf2-regex-analysis",
+  REGEX_COMPLEXITY_BADGE: "cf2-regex-complexity-badge",
+  REGEX_WARNINGS: "cf2-regex-warnings",
+  REGEX_SUGGESTIONS: "cf2-regex-suggestions",
   REPLACE_INPUT: "cf2-replace-input",
   SMID_INPUT: "cf2-smid-input",
   NICORU_TOGGLE: "cf2-nicoru-toggle",
