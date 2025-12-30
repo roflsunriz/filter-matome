@@ -1306,7 +1306,7 @@ export class PlayerControlsShadow extends HTMLElement {
       return;
     }
 
-    // comment-overlay 2.9.0+ では自動リセット機能が組み込まれているため、
+    // comment-overlay 2.9.0+/3.0.0+ では自動リセット機能が組み込まれているため、
     // 手動でのhardReset呼び出しは不要
   }
 

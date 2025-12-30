@@ -38,6 +38,8 @@ interface CommentOverlayRenderer {
   clearComments(): void;
   addComment(body: string, vposMs: number, commands?: string[]): unknown;
   updateSettings(settings: RendererSettings): void;
+  /** v3.0.0+ コメント表示/非表示を切り替える専用メソッド */
+  setCommentVisibility(visible: boolean): void;
 }
 
 export class CommentOverlayCommentSystem {
@@ -144,9 +146,9 @@ export class CommentOverlayCommentSystem {
       return;
     }
     this.isVisible = nextVisible;
-    this.updateSettings({
-      isCommentVisible: this.isVisible,
-    });
+    // v3.0.0+ では setCommentVisibility() を使用
+    // updateSettings({ isCommentVisible: ... }) ではキャンバスがクリアされずフリーズする
+    this.renderer?.setCommentVisibility(this.isVisible);
   }
 
   toggleVisibility(): boolean {
