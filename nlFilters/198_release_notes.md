@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #211 (2025/12/30) リリースノート](#filter-matome-211-20251230-リリースノート)
 - [filter-matome #210 (2025/12/22) リリースノート](#filter-matome-210-20251222-リリースノート)
 - [filter-matome #209 (2025/11/30) リリースノート](#filter-matome-209-20251130-リリースノート)
 - [filter-matome #208.3 (2025/11/27) リリースノート](#filter-matome-2083-20251127-リリースノート)
@@ -124,6 +125,20 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #211 (2025/12/30) リリースノート
+
+- ✨新機能(New)：
+- なし
+- ✅️修正(Fixed)：
+- なし
+- 🔴変更(Changed)：
+- 【依存関係更新】comment-overlayパッケージを3.0.0にアップデート。
+- video-playerのコメントオーバーレイシステムで、v3.0.0のsetCommentVisibility() APIに移行。updateSettings()ではキャンバスがフリーズする問題を回避。
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- comment-overlay 3.0.0ではコメント表示/非表示の切り替えにsetCommentVisibility()メソッドを使用する必要があります。
 
 ### filter-matome #210 (2025/12/22) リリースノート
 
