@@ -26,15 +26,15 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
 param(
   [Parameter(Position=0)]
-  [Alias('i','input','inputpath')]
+  [Alias('i','input')]
   [string]$InputPath = (Get-Location).Path,
   [Alias('r','recursive')]
   [switch]$Recurse,
-  [Alias('o','overwrite')]
+  [Alias('o')]
   [switch]$Overwrite,
-  [Alias('d','dryrun')]
+  [Alias('d')]
   [switch]$DryRun,
-  [Alias('q','quiet')]
+  [Alias('q','silent')]
   [switch]$Quiet,
   [Parameter(ValueFromRemainingArguments=$true)]
   [string[]]$AdditionalArgs = @()
