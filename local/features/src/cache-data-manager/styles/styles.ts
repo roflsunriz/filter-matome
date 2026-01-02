@@ -193,15 +193,7 @@ body {
     }
   }
   
-  .video-card {
-    border: 1px solid #ccc;
-    margin: 1rem;
-    padding: 1rem;
-    max-width: 400px;
-    display: flex;
-    flex-direction: column;
-    min-height: 400px;
-  }
+  /* (レガシースタイル - 下で上書き) */
   
   .video-id {
     color: #f5f6fa;
@@ -261,34 +253,53 @@ body {
     background: linear-gradient(180deg, #fff6e3, #bfecff);
   }
   
-  /* 動画カードスタイル */
+  /* 動画カードスタイル - 固定高さレイアウト */
   .video-card {
     background: var(--dark-surface);
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 420px !important; /* 固定高さ */
+    max-height: 420px !important;
+    min-height: 420px !important;
   }
   
   .video-card:hover {
     transform: translateY(-5px);
   }
+
+  /* カードヘッダー（動画ID） */
+  .card-header {
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+    height: 32px;
+    display: flex;
+    align-items: center;
+  }
   
-  /* メタデータスタイル */
+  /* メタデータスタイル - 固定高さ */
   .metadata {
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
     align-items: center;
+    height: 36px; /* 固定高さ */
+    flex-shrink: 0;
+    margin-top: auto; /* タイトルの下に押し下げ */
   }
   
   .metadata > span {
     background: rgba(255, 159, 243, 0.1);
-    padding: 0.4rem 0.8rem;
+    padding: 0.3rem 0.6rem;
     border-radius: 20px;
     border: 1px solid var(--pink);
     color: var(--text-primary);
-    font-size: 0.8em;
+    font-size: 0.75em;
+    white-space: nowrap;
   }
   
   .hd-quality {
@@ -362,19 +373,36 @@ body {
     height: 18px;
   }
   
-  /* 動画タイトル */
+  /* 動画情報エリア - 固定高さ */
+  .video-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0.8rem 1rem;
+    min-height: 0; /* flexboxでオーバーフローを有効にするため */
+  }
+
+  /* 動画タイトル - 2行で省略 */
   .video-title {
     font-family: "Comic Sans MS", cursive;
     color: var(--mint);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    font-size: 1.4rem;
-    margin: 0;
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem 0;
     background: linear-gradient(45deg, var(--pink), var(--mint));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     transition: all 0.3s ease;
-    color: var(--text-primary);
+    /* 2行で省略（...表示） */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+    height: 3.08em; /* line-height * 2行 + margin */
+    flex-shrink: 0;
   }
   
   .video-title:hover {
@@ -416,11 +444,16 @@ body {
     gap: 0.4rem;
   }
   
-  /* 動画カード内アクションボタン */
+  /* 動画カード内アクションボタン - 固定位置 */
   .video-card .card-actions {
     display: flex;
     gap: 8px;
-    padding: 12px;
+    padding: 0.8rem 1rem;
+    background: rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+    height: 56px; /* 固定高さ */
+    align-items: center;
+    justify-content: space-between;
   }
   
   .video-card button[onclick] {
@@ -549,11 +582,11 @@ body {
     }
   
     .video-card {
-      min-height: 350px;
+      height: 380px; /* モバイル向け固定高さ */
     }
   
     .thumbnail-container {
-      flex-basis: 150px;
+      height: 140px; /* モバイル向けサムネイル高さ */
     }
 
     .filter-sort-container {
@@ -572,9 +605,11 @@ body {
   }
   
   .thumbnail-container {
-    flex: 0 0 200px;
+    flex-shrink: 0;
+    height: 180px; /* 固定高さ */
     position: relative;
     overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
   }
   
   .thumbnail-image {

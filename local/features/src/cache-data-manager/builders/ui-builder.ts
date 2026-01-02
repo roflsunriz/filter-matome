@@ -84,6 +84,13 @@ export class UIBuilder {
   private initializeTemplates(): void {
     const cardTemplate = document.createElement("div");
     cardTemplate.className = "video-card";
+    // インラインスタイルで固定高さを保証
+    cardTemplate.style.height = "420px";
+    cardTemplate.style.maxHeight = "420px";
+    cardTemplate.style.minHeight = "420px";
+    cardTemplate.style.display = "flex";
+    cardTemplate.style.flexDirection = "column";
+    cardTemplate.style.overflow = "hidden";
     cardTemplate.innerHTML = createCardTemplate();
     this.templates.set("videoCard", cardTemplate);
   }

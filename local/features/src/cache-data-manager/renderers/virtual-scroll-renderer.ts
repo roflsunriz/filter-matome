@@ -11,7 +11,7 @@ interface VisibleRange {
   end: number;
 }
 
-const DEBUG = false;
+const DEBUG = true;
 let lastLogTime = 0;
 function debugLog(...args: unknown[]): void {
   if (DEBUG) {
@@ -401,9 +401,22 @@ export class VirtualScrollRenderer {
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       const rect = firstCard.getBoundingClientRect();
       if (rect.height > 0) {
-        this.measuredItemHeight = rect.height + 32; // gap込み
+        // CSSで420pxを指定しているため、異常に大きい値は無視
+        const expectedHeight = 420 + 32; // カード高さ + gap
+        const measuredWithGap = rect.height + 32;
+        
+        // 測定値が期待値の1.5倍以上なら、CSSの値を使用
+        if (measuredWithGap > expectedHeight * 1.5) {
+          this.measuredItemHeight = expectedHeight;
+          debugLog("measureItemHeight: using CSS default (measured too large):", {
+            measured: measuredWithGap,
+            using: expectedHeight,
+          });
+        } else {
+          this.measuredItemHeight = measuredWithGap;
+          debugLog("measureItemHeight FIXED:", this.measuredItemHeight);
+        }
         this.heightMeasured = true;
-        debugLog("measureItemHeight FIXED:", this.measuredItemHeight);
       }
     }
   }
