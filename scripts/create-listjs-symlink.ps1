@@ -4,12 +4,12 @@
   NicoCache_nl の `C:\NicoCache_nl\local\list.js` と `list.js.map` へシンボリックリンクを張るスクリプト
 
 .DESCRIPTION
-  指定のビルド成果物（例: cache-data-manager.es.js）から `C:\NicoCache_nl\local\list.js` へのシンボリックリンクを作成します。
-  map ファイル（<Target>.map）が存在する場合のみ `list.js.map` も作成します。
+  指定のビルド成果物（例: cacheDataManager.iife.js）から `C:\NicoCache_nl\local\list.js` へのシンボリックリンクを作成します。
+  map ファイル（<Target>.map）が存在する場合のみ `list.js.map` も作成します。iifeの場合は.mapファイルは存在しません。
   .map が存在しない場合は自動的に map 関連の処理をスキップします。
 
 .PARAMETER Target
-  シンボリックリンクのリンク先となるビルド成果物のJSファイルパス。 (例: C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js)
+  シンボリックリンクのリンク先となるビルド成果物のJSファイルパス。 (例: C:\NicoCache_nl\local\features\dist\cacheDataManager.iife.js)
 
 .PARAMETER LinkDir
   シンボリックリンクを作成するディレクトリ。 (既定: C:\NicoCache_nl\local)
@@ -18,18 +18,18 @@
   既存の `list.js` / `list.js.map` がある場合に強制的に削除してから作成します。
 
 .EXAMPLE
-  .\create-listjs-symlink.ps1 -Target "C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js" -Force
+  .\create-listjs-symlink.ps1 -Target "C:\NicoCache_nl\local\features\dist\cacheDataManager.iife.js" -Force
 #>
 
 param(
     [Parameter(Position=0)]
     [Alias('t','target')]
-    [string]$TargetFile = "C:\\NicoCache_nl\\local\\features\\dist\\cache-data-manager.es.js",
+    [string]$TargetFile = "C:\\NicoCache_nl\\local\\features\\dist\\cacheDataManager.iife.js",
 
-    [Alias('l','linkdir','linkdirectory')]
+    [Alias('l','linkdirectory')]
     [string]$LinkDir = "C:\\NicoCache_nl\\local",
 
-    [Alias('f','force')]
+    [Alias('f')]
     [switch]$Force,
 
     [Parameter(ValueFromRemainingArguments=$true)]

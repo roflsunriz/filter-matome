@@ -16,8 +16,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: nowrap;
-    height: 80px;
+    flex-wrap: wrap;
+    gap: 1rem;
+    min-height: 80px;
     font-family: "Mochiy Pop P One", "Comic Sans MS", cursive;
   }
   
@@ -201,8 +202,40 @@ body {
     --dark-surface: #3b4345;
     --text-primary: #f5f6fa;
   }
+
+  /* ===================================
+   * 仮想スクロールコンテナ
+   * =================================== */
+  .virtual-scroll-container {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #fff6e3, #bfecff);
+  }
+
+  .virtual-scroll-content {
+    width: 100%;
+  }
+
+  .virtual-scroll-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+    position: relative;
+  }
+
+  .virtual-scroll-spacer {
+    width: 100%;
+    pointer-events: none;
+  }
+
+  .virtual-scroll-sentinel {
+    width: 100%;
+    height: 1px;
+    pointer-events: none;
+  }
   
-  /* 基本グリッドレイアウト */
+  /* 基本グリッドレイアウト（フォールバック） */
   .cache-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -481,6 +514,16 @@ body {
     .thumbnail-container {
       flex-basis: 150px;
     }
+
+    .filter-sort-container {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .filter-group,
+    .sort-group {
+      flex-wrap: wrap;
+    }
   }
   
   .thumbnail-container {
@@ -493,6 +536,33 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: opacity 0.3s ease;
+  }
+
+  /* 遅延読み込み用スタイル */
+  .thumbnail-image.lazy-placeholder {
+    opacity: 0.5;
+    background: linear-gradient(90deg, #ddd 25%, #eee 50%, #ddd 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  .thumbnail-image.lazy-loaded {
+    opacity: 1;
+  }
+
+  .thumbnail-image.lazy-error {
+    opacity: 0.7;
+    filter: grayscale(100%);
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
   
   .card-content {
@@ -640,5 +710,348 @@ body {
     filter: grayscale(100%);
     opacity: 0.7;
     border: 2px dashed #ff4444;
+  }
+
+  /* ===================================
+   * フィルター・ソートUI
+   * =================================== */
+  .filter-sort-container {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.8rem 1.2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(5px);
+    flex-wrap: wrap;
+  }
+
+  .filter-group,
+  .sort-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .filter-label,
+  .sort-label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text-primary);
+    font-size: 0.85em;
+    font-weight: 500;
+  }
+
+  .filter-sort-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .filter-select,
+  .sort-select {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--mint);
+    border-radius: 10px;
+    padding: 0.4rem 0.8rem;
+    color: var(--text-primary);
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .filter-select:hover,
+  .sort-select:hover {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: var(--pink);
+  }
+
+  .filter-select:focus,
+  .sort-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--mint);
+  }
+
+  .filter-select option,
+  .sort-select option {
+    background: var(--dark-surface);
+    color: var(--text-primary);
+  }
+
+  .sort-direction-btn {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--mint);
+    border-radius: 10px;
+    padding: 0.4rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sort-direction-btn:hover {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: var(--pink);
+  }
+
+  .sort-direction-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .reset-filters-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: rgba(255, 107, 107, 0.3);
+    border: 1px solid #ff6b6b;
+    border-radius: 10px;
+    padding: 0.4rem 0.8rem;
+    color: var(--text-primary);
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .reset-filters-btn:hover {
+    background: rgba(255, 107, 107, 0.5);
+  }
+
+  .result-count {
+    color: var(--mint);
+    font-size: 0.9em;
+    font-weight: bold;
+    padding: 0.3rem 0.8rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+  }
+
+  /* ===================================
+   * 検索結果モーダル
+   * =================================== */
+  .search-results-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .search-results-modal.open {
+    opacity: 1;
+  }
+
+  .search-results-modal.closing {
+    opacity: 0;
+  }
+
+  .search-results-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+  }
+
+  .search-results-modal-content {
+    position: relative;
+    width: 95%;
+    max-width: 1400px;
+    height: 90vh;
+    max-height: 900px;
+    background: linear-gradient(135deg, var(--dark) 0%, var(--dark-surface) 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+  }
+
+  .search-results-modal.open .search-results-modal-content {
+    transform: scale(1);
+  }
+
+  .search-results-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, var(--pink) 0%, var(--purple) 100%);
+    border-bottom: 2px solid var(--mint);
+  }
+
+  .search-results-modal-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .search-query {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-primary);
+    font-family: "Mochiy Pop P One", "Comic Sans MS", cursive;
+  }
+
+  .search-count {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .search-results-modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .search-results-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+  }
+
+  .search-results-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    background: linear-gradient(180deg, rgba(255, 246, 227, 0.1), rgba(191, 236, 255, 0.1));
+  }
+
+  .search-results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .search-result-card {
+    margin: 0;
+    max-width: none;
+  }
+
+  .search-no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    color: var(--text-primary);
+    opacity: 0.7;
+  }
+
+  .search-no-results p {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+  }
+
+  .search-results-modal-footer {
+    padding: 1rem 2rem;
+    background: var(--dark-surface);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .search-results-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .pagination-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: linear-gradient(145deg, var(--purple), #8f7bb3);
+    border: none;
+    border-radius: 10px;
+    padding: 0.6rem 1.2rem;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .pagination-btn:hover:not(:disabled) {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .pagination-info {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+  }
+
+  /* ===================================
+   * スクロールトップボタン
+   * =================================== */
+  .scroll-to-top-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(145deg, var(--mint), #4cd8da);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(122, 252, 255, 0.4);
+    transition: all 0.3s ease;
+    z-index: 900;
+  }
+
+  .scroll-to-top-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(122, 252, 255, 0.5);
+  }
+
+  .scroll-to-top-btn svg {
+    color: var(--dark);
+  }
+
+  /* ===================================
+   * 結果なしメッセージ
+   * =================================== */
+  .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--dark);
+    font-size: 1.2rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+    margin: 2rem;
   }
   `;

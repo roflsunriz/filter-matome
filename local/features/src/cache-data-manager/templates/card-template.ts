@@ -2,6 +2,7 @@ import { createMaterialIcon, ICONS } from "@/common/material-icons.js";
 
 /**
  * ビデオカードテンプレートを生成する関数
+ * サムネイルは遅延読み込み対応（data-src を使用）
  */
 export function createCardTemplate(): string {
   const playIcon = createMaterialIcon(ICONS.play, {
@@ -25,13 +26,13 @@ export function createCardTemplate(): string {
       <span class="video-id"></span>
     </div>
     <div class="thumbnail-container">
-      <img loading="lazy" class="thumbnail-image">
-      </div>
-      <div class="video-info">
+      <img class="thumbnail-image lazy-placeholder" data-src="" alt="サムネイル">
+    </div>
+    <div class="video-info">
       <h3 class="video-title"></h3>
       <div class="metadata">
-      <span class="quality-badge"></span>
-      <span class="temp-file"></span>
+        <span class="quality-badge"></span>
+        <span class="temp-file"></span>
       </div>
     </div>
     <div class="card-actions">

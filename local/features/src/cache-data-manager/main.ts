@@ -5,6 +5,13 @@ import { UIBuilder } from "@/cache-data-manager/builders/ui-builder.js";
 import { EventCoordinator } from "@/cache-data-manager/coordinators/event-coordinator.js";
 import { cacheListStyles } from "@/cache-data-manager/styles/styles.js";
 
+// グローバル型定義
+declare global {
+  interface Window {
+    makeCacheList: () => void;
+  }
+}
+
 // 初期化関数の簡素化
 async function initializeList(): Promise<void> {
   const progressManager = new ProgressManager();
@@ -23,9 +30,13 @@ async function initializeList(): Promise<void> {
   await uiBuilder.renderAllEntries();
 }
 
+// HTMLから呼び出されるグローバル関数（変更不可のHTMLとの互換性維持）
+window.makeCacheList = function makeCacheList(): void {
+  void initializeList();
+};
+
 window.addEventListener("load", () => {
   const style = document.createElement("style");
   style.textContent = cacheListStyles;
   document.head.appendChild(style);
-  void initializeList();
 });

@@ -2,13 +2,12 @@ import type { UIBuilder } from "@/cache-data-manager/builders/ui-builder.js";
 import type { EventManager } from "@/cache-data-manager/managers/event-manager.js";
 import type { ProgressManager } from "@/cache-data-manager/managers/progress-manager.js";
 // APIResponse 型は normalize して扱うためここでは直接使わない
-// APIResponse 型は normalize して扱うためここでは直接使わない
 import type { APIResponse as _APIResponse } from "@/types";
 import { LazyAPIClient } from "@/cache-data-manager/clients/lazy-api-client.js";
 
 export class EventCoordinator {
   constructor(
-    private _uiBuilder: UIBuilder,
+    private uiBuilder: UIBuilder,
     private eventManager: EventManager,
     private _progressManager: ProgressManager,
   ) {
@@ -18,6 +17,7 @@ export class EventCoordinator {
   private setupEventListeners(): void {
     this.setupHeaderEvents();
     this.setupCardEvents();
+    this.setupScrollToTopButton();
   }
 
   private setupHeaderEvents(): void {
@@ -54,9 +54,14 @@ export class EventCoordinator {
       ) as HTMLElement;
       if (!card) return;
 
-      const baseId = card.dataset.id!;
+      // 検索結果モーダル内のカードは別処理
+      if (card.closest(".search-results-modal")) return;
+
+      const baseId = card.dataset.id;
+      if (!baseId) return;
+
       const title =
-        (card.querySelector(".video-title") as HTMLElement).textContent || "";
+        (card.querySelector(".video-title") as HTMLElement)?.textContent ?? "";
       const button = (event.target as HTMLElement).closest(
         "button",
       ) as HTMLButtonElement;
@@ -76,6 +81,40 @@ export class EventCoordinator {
       } else if (button.classList.contains("delete-btn")) {
         this.handleDelete(baseId, title);
       }
+    });
+  }
+
+  private setupScrollToTopButton(): void {
+    // スクロールトップボタンを作成
+    const scrollTopBtn = document.createElement("button");
+    scrollTopBtn.className = "scroll-to-top-btn";
+    scrollTopBtn.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+        <path d="M12 4l-8 8h5v8h6v-8h5z"/>
+      </svg>
+    `;
+    scrollTopBtn.title = "トップに戻る";
+    scrollTopBtn.style.display = "none";
+    document.body.appendChild(scrollTopBtn);
+
+    // スクロールイベントで表示/非表示を切り替え
+    let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+    window.addEventListener("scroll", () => {
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      scrollTimeout = setTimeout(() => {
+        if (window.scrollY > 500) {
+          scrollTopBtn.style.display = "flex";
+        } else {
+          scrollTopBtn.style.display = "none";
+        }
+      }, 100);
+    });
+
+    // クリックでトップにスクロール
+    scrollTopBtn.addEventListener("click", () => {
+      this.uiBuilder.scrollToTop();
     });
   }
 
@@ -108,7 +147,9 @@ export class EventCoordinator {
   }
 
   private handleSearch(query: string): void {
-    this.eventManager.trigger("search", { query });
+    if (query.trim()) {
+      this.eventManager.trigger("search", { query });
+    }
   }
 
   private displayDetailModal(
@@ -183,8 +224,8 @@ export class EventCoordinator {
 
     let inner = "";
     if (isErrorResponse(detail)) {
-      const code = detail.errorCode || "";
-      const desc = detail.description || "";
+      const code = detail.errorCode ?? "";
+      const desc = detail.description ?? "";
       const note =
         code === "DELETED"
           ? '<p class="error-note">この動画は削除された可能性があります</p>'
@@ -203,10 +244,10 @@ export class EventCoordinator {
         </div>
       `;
     } else if (isOkResponse(detail)) {
-      const titleSafe = detail.title || "";
-      const thumb = detail.thumbnailUrl || "";
-      const author = detail.author || "";
-      const duration = detail.duration || "";
+      const titleSafe = detail.title ?? "";
+      const thumb = detail.thumbnailUrl ?? "";
+      const author = detail.author ?? "";
+      const duration = detail.duration ?? "";
       const views =
         typeof detail.views === "number" ? detail.views.toLocaleString() : "0";
       const commentCount =
