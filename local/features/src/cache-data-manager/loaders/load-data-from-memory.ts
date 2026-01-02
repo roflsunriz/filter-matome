@@ -105,18 +105,21 @@ export class LoadDataFromMemory {
 
   public getEntriesByIds(ids: string[]): VideoData[] {
     const allEntries = this.getAllEntries();
-    const getId = (e: unknown): string | undefined => {
+    
+    // baseIdでフィルタリング（検索エンジンはbaseIdを返す）
+    const getBaseId = (e: unknown): string | undefined => {
       if (typeof e === "object" && e !== null) {
         const rec = e as Record<string, unknown>;
-        if (typeof rec.id === "string") return rec.id;
+        if (typeof rec.baseId === "string") return rec.baseId;
       }
       return undefined;
     };
 
+    const idSet = new Set(ids);
     const allUnknown = allEntries as unknown[];
     const filtered = allUnknown.filter((entry) => {
-      const id = getId(entry);
-      return typeof id === "string" && ids.includes(id);
+      const baseId = getBaseId(entry);
+      return typeof baseId === "string" && idSet.has(baseId);
     }) as VideoData[];
 
     return filtered;

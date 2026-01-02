@@ -11,6 +11,17 @@ interface VisibleRange {
   end: number;
 }
 
+const DEBUG = false;
+let lastLogTime = 0;
+function debugLog(...args: unknown[]): void {
+  if (DEBUG) {
+    const now = performance.now();
+    const delta = now - lastLogTime;
+    lastLogTime = now;
+    console.log(`[VirtualScroll +${delta.toFixed(1)}ms]`, ...args);
+  }
+}
+
 export class VirtualScrollRenderer {
   private container: HTMLElement | null = null;
   private scrollContainer: HTMLElement | null = null;
@@ -112,6 +123,8 @@ export class VirtualScrollRenderer {
   private setupObservers(): void {
     // スクロールイベントでRAF（requestAnimationFrame）を使用
     this.scrollHandler = () => {
+      // レンダリング中はスクロールイベントを無視（スクロール補正による再発火防止）
+      if (this.isRendering) return;
       if (this.rafId !== null) return; // 既にRAFが予約されている場合はスキップ
       this.rafId = requestAnimationFrame(() => {
         this.rafId = null;
@@ -223,7 +236,9 @@ export class VirtualScrollRenderer {
   }
 
   private recalculateVisibleRange(): void {
-    if (this.allData.length === 0 || this.isRendering) return;
+    if (this.allData.length === 0 || this.isRendering) {
+      return;
+    }
 
     const scrollTop = window.scrollY;
     const viewportHeight = window.innerHeight;
@@ -249,6 +264,11 @@ export class VirtualScrollRenderer {
     const endDiff = Math.abs(newEnd - this.visibleRange.end);
     
     if (startDiff >= threshold || endDiff >= threshold) {
+      debugLog("recalc TRIGGER:", {
+        scrollY: scrollTop,
+        range: { from: this.visibleRange, to: { start: newStart, end: newEnd } },
+        diffs: { start: startDiff, end: endDiff },
+      });
       this.visibleRange = { start: newStart, end: newEnd };
       this.scheduleRender();
     }
@@ -277,6 +297,7 @@ export class VirtualScrollRenderer {
   }
 
   public async setData(data: VideoData[]): Promise<void> {
+    debugLog("setData:", { dataLength: data.length });
     this.allData = data;
     this.updateColumnsCount();
     
@@ -313,8 +334,13 @@ export class VirtualScrollRenderer {
   }
 
   private async render(): Promise<void> {
-    if (!this.container || !this.createVideoCard) return;
+    if (!this.container || !this.createVideoCard) {
+      debugLog("render skipped: no container or createVideoCard");
+      return;
+    }
     
+    const scrollBefore = window.scrollY;
+    debugLog("render START:", { range: this.visibleRange, scrollY: scrollBefore });
     this.isRendering = true;
 
     const fragment = document.createDocumentFragment();
@@ -332,22 +358,41 @@ export class VirtualScrollRenderer {
     this.container.innerHTML = "";
     this.container.appendChild(fragment);
 
+    const scrollAfterDom = window.scrollY;
+    if (scrollAfterDom !== scrollBefore) {
+      debugLog("render: scroll changed after DOM update!", { before: scrollBefore, after: scrollAfterDom });
+    }
+
     // 最初のカードの高さを測定
     await this.measureItemHeight();
 
     this.updateSpacers();
-    this.isRendering = false;
+    
+    debugLog("render DONE:", { 
+      items: visibleData.length, 
+      scrollY: window.scrollY, 
+      scrollDiff: window.scrollY - scrollBefore 
+    });
 
-    if (this.pendingRender) {
-      this.pendingRender = false;
-      // 少し遅延させて連続レンダリングを防ぐ
-      setTimeout(() => {
+    // レンダリング完了後、少し遅延してからisRenderingをfalseにする
+    // これにより、スクロール補正によるイベントが落ち着くまで待つ
+    setTimeout(() => {
+      this.isRendering = false;
+      
+      if (this.pendingRender) {
+        this.pendingRender = false;
+        debugLog("render: scheduling pending render");
         this.scheduleRender();
-      }, 16);
-    }
+      }
+    }, 50);
   }
 
+  // 高さ測定が完了したかどうか
+  private heightMeasured = false;
+
   private async measureItemHeight(): Promise<void> {
+    // 一度測定したら再測定しない（高さの変動を防ぐ）
+    if (this.heightMeasured) return;
     if (!this.container) return;
     
     const firstCard = this.container.querySelector(".video-card");
@@ -357,6 +402,8 @@ export class VirtualScrollRenderer {
       const rect = firstCard.getBoundingClientRect();
       if (rect.height > 0) {
         this.measuredItemHeight = rect.height + 32; // gap込み
+        this.heightMeasured = true;
+        debugLog("measureItemHeight FIXED:", this.measuredItemHeight);
       }
     }
   }
@@ -364,6 +411,7 @@ export class VirtualScrollRenderer {
   private updateSpacers(): void {
     if (!this.topSpacer || !this.bottomSpacer) return;
 
+    const scrollBefore = window.scrollY;
     const totalRows = Math.ceil(this.allData.length / this.columnsCount);
     const startRow = Math.floor(this.visibleRange.start / this.columnsCount);
     const endRow = Math.ceil(this.visibleRange.end / this.columnsCount);
@@ -371,8 +419,37 @@ export class VirtualScrollRenderer {
     const topHeight = startRow * this.measuredItemHeight;
     const bottomHeight = (totalRows - endRow) * this.measuredItemHeight;
 
+    const prevTopHeight = parseFloat(this.topSpacer.style.height) || 0;
+    const prevBottomHeight = parseFloat(this.bottomSpacer.style.height) || 0;
+    const topHeightDiff = topHeight - prevTopHeight;
+
     this.topSpacer.style.height = `${Math.max(0, topHeight)}px`;
     this.bottomSpacer.style.height = `${Math.max(0, bottomHeight)}px`;
+
+    // topSpacerの高さが変わった場合、スクロール位置を補正して
+    // ユーザーが見ている位置を維持する
+    if (topHeightDiff !== 0 && scrollBefore > this.containerOffsetTop) {
+      const correctedScroll = scrollBefore + topHeightDiff;
+      // scrollTo を使うとスクロールイベントが再度発火するので、
+      // isRendering フラグで保護されている間に行う
+      window.scrollTo({ top: correctedScroll, behavior: "instant" });
+      
+      debugLog("updateSpacers: scroll corrected", {
+        topHeightDiff,
+        scrollBefore,
+        correctedScroll,
+        actualScroll: window.scrollY,
+      });
+    }
+    
+    // デバッグログ
+    if (topHeight !== prevTopHeight || bottomHeight !== prevBottomHeight) {
+      debugLog("updateSpacers:", {
+        topSpacer: { prev: prevTopHeight, new: topHeight, diff: topHeightDiff },
+        bottomSpacer: { prev: prevBottomHeight, new: bottomHeight },
+        range: this.visibleRange,
+      });
+    }
   }
 
   public clear(): void {

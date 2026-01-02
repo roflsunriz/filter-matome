@@ -1,75 +1,47 @@
-import { Document as FlexSearchDocument, type Document } from "flexsearch";
 import type { LoadDataFromMemory } from "@/cache-data-manager/loaders/load-data-from-memory.js";
+import type { VideoData } from "@/types";
 // avoid importing project path aliases here to keep linting safe
 
-type SearchDocument = { id: string; title: string };
-
+/**
+ * シンプルな部分一致検索エンジン
+ * FlexSearchは日本語のトークナイズに問題があるため、
+ * シンプルな部分一致検索を使用
+ */
 export class SearchEngine {
-  private index: Document<SearchDocument> | null = null;
+  private entries: VideoData[] = [];
   private indexReady: Promise<void>;
 
   constructor(private dataLoader: LoadDataFromMemory) {
-    this.indexReady = this.initializeFlexSearch();
+    this.indexReady = this.rebuildIndex();
   }
 
-  private initializeFlexSearch(): Promise<void> {
-    this.index = new FlexSearchDocument<SearchDocument>({
-      preset: "memory",
-      tokenize: "full",
-      document: {
-        id: "id",
-        index: [
-          {
-            field: "title",
-            tokenize: "forward",
-            context: {
-              depth: 1,
-              resolution: 9,
-              bidirectional: true,
-            },
-          },
-        ],
-      },
-    });
-    this.rebuildIndex();
+  private rebuildIndex(): Promise<void> {
+    this.entries = this.dataLoader.getAllEntries();
     return Promise.resolve();
   }
 
   public async search(query: string): Promise<string[]> {
     const cleanQuery = query.toLowerCase().trim();
     await this.indexReady;
-    const index = this.index;
-    if (!cleanQuery || !index) return [];
-
-    const results = index.search<false, false, true, true, false>(cleanQuery, {
-      limit: 1000,
-      suggest: true,
-      enrich: true,
-    });
-
-    const ids = results.flatMap((r) => r.result.map((item) => item.id));
-    return [...new Set(ids)].filter(
-      (id): id is string => typeof id === "string",
-    );
-  }
-
-  private rebuildIndex(): void {
-    const index = this.index;
-    if (!index) return;
-
-    const entries = this.dataLoader.getAllEntries() as unknown[];
-
-    for (const rawEntry of entries) {
-      if (typeof rawEntry !== "object" || rawEntry === null) continue;
-      const rec = rawEntry as Record<string, unknown>;
-      // VideoDataはbaseIdプロパティを使用
-      const id = typeof rec.baseId === "string" ? rec.baseId : undefined;
-      const titleRaw = typeof rec.title === "string" ? rec.title : undefined;
-      if (!id || !titleRaw) continue;
-
-      const safeTitle = titleRaw.toLowerCase();
-
-      index.add({ id, title: safeTitle });
+    
+    if (!cleanQuery) {
+      return [];
     }
+
+    // 複数キーワード対応（スペース区切り）
+    const keywords = cleanQuery.split(/\s+/).filter(k => k.length > 0);
+    
+    const matchedIds: string[] = [];
+    
+    for (const entry of this.entries) {
+      const title = entry.title.toLowerCase();
+      // 全てのキーワードがタイトルに含まれているかチェック
+      const matches = keywords.every(keyword => title.includes(keyword));
+      if (matches) {
+        matchedIds.push(entry.baseId);
+      }
+    }
+
+    return matchedIds;
   }
 }
