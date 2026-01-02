@@ -33,6 +33,7 @@ export class VirtualScrollRenderer {
 
   // スクロールイベント用
   private scrollHandler: (() => void) | null = null;
+  private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private rafId: number | null = null;
   private containerOffsetTop = 0; // キャッシュされたオフセット
 
@@ -119,6 +120,35 @@ export class VirtualScrollRenderer {
     };
     window.addEventListener("scroll", this.scrollHandler, { passive: true });
 
+    // キーボードナビゲーション対応（PageDown, PageUp, Home, End）
+    this.keydownHandler = (e: KeyboardEvent) => {
+      // 入力フィールドでは無視
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+        return;
+      }
+
+      switch (e.key) {
+        case "PageDown":
+          this.handlePageDown();
+          break;
+        case "PageUp":
+          this.handlePageUp();
+          break;
+        case "End":
+          if (e.ctrlKey) {
+            this.handleEnd();
+          }
+          break;
+        case "Home":
+          if (e.ctrlKey) {
+            this.handleHome();
+          }
+          break;
+      }
+    };
+    window.addEventListener("keydown", this.keydownHandler);
+
     // ResizeObserver でカラム数を監視
     this.resizeObserver = new ResizeObserver(() => {
       this.updateColumnsCount();
@@ -129,6 +159,67 @@ export class VirtualScrollRenderer {
     if (this.scrollContainer) {
       this.resizeObserver.observe(this.scrollContainer);
     }
+  }
+
+  private handlePageDown(): void {
+    // 現在のスクロール位置から1ページ分進める
+    const pageHeight = window.innerHeight * 0.9;
+    const newScrollTop = window.scrollY + pageHeight;
+    
+    // スクロール前に表示範囲を事前計算
+    this.preloadForScroll(newScrollTop);
+  }
+
+  private handlePageUp(): void {
+    // 現在のスクロール位置から1ページ分戻る
+    const pageHeight = window.innerHeight * 0.9;
+    const newScrollTop = Math.max(0, window.scrollY - pageHeight);
+    
+    // スクロール前に表示範囲を事前計算
+    this.preloadForScroll(newScrollTop);
+  }
+
+  private handleEnd(): void {
+    // ページ最下部へ - 最後のデータを表示するように範囲を設定
+    const visibleItems = this.getVisibleItemCount();
+    this.visibleRange = {
+      start: Math.max(0, this.allData.length - visibleItems),
+      end: this.allData.length,
+    };
+    this.scheduleRender();
+    
+    // スクロール位置も最下部へ
+    const totalRows = Math.ceil(this.allData.length / this.columnsCount);
+    const totalHeight = totalRows * this.measuredItemHeight + this.containerOffsetTop;
+    window.scrollTo({ top: totalHeight, behavior: "instant" });
+  }
+
+  private handleHome(): void {
+    // ページ先頭へ
+    this.scrollToTop();
+  }
+
+  private preloadForScroll(targetScrollTop: number): void {
+    if (this.allData.length === 0) return;
+
+    const viewportHeight = window.innerHeight;
+    const effectiveScrollTop = Math.max(0, targetScrollTop - this.containerOffsetTop);
+    
+    // バッファを適用
+    const bufferPixels = this.measuredItemHeight * this.config.bufferSize;
+    const startPixel = Math.max(0, effectiveScrollTop - bufferPixels);
+    const endPixel = effectiveScrollTop + viewportHeight + bufferPixels;
+
+    // 行数からアイテムインデックスを計算
+    const startRow = Math.floor(startPixel / this.measuredItemHeight);
+    const endRow = Math.ceil(endPixel / this.measuredItemHeight);
+
+    const newStart = Math.max(0, startRow * this.columnsCount);
+    const newEnd = Math.min(this.allData.length, endRow * this.columnsCount);
+
+    // 範囲を更新してレンダリング
+    this.visibleRange = { start: newStart, end: newEnd };
+    this.scheduleRender();
   }
 
   private recalculateVisibleRange(): void {
@@ -297,6 +388,10 @@ export class VirtualScrollRenderer {
     if (this.scrollHandler) {
       window.removeEventListener("scroll", this.scrollHandler);
       this.scrollHandler = null;
+    }
+    if (this.keydownHandler) {
+      window.removeEventListener("keydown", this.keydownHandler);
+      this.keydownHandler = null;
     }
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
