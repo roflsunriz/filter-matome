@@ -116,10 +116,14 @@ export class UIBuilder {
 
     // 基本情報設定
     (card.querySelector(".video-id") as HTMLElement).textContent = safe.baseId;
-    (card.querySelector(".video-title") as HTMLElement).textContent =
-      safe.title === "null"
-        ? "タイトルを取得できません"
-        : safe.title || "タイトルを取得できません";
+    
+    // タイトル設定（ツールチップで全文表示）
+    const titleElement = card.querySelector(".video-title") as HTMLElement;
+    const displayTitle = safe.title === "null"
+      ? "タイトルを取得できません"
+      : safe.title || "タイトルを取得できません";
+    titleElement.textContent = displayTitle;
+    titleElement.title = displayTitle; // ホバー時にツールチップで全文表示
 
     // サムネイル - 遅延読み込み用にdata-srcを設定
     const thumbnailImg = card.querySelector(
