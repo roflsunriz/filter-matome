@@ -45,6 +45,7 @@ export const ICONS = {
   fullscreen: "fullscreen",
   fullscreen_exit: "fullscreen_exit",
   search: "search",
+  search_off: "search_off",
   menu: "menu",
   home: "home",
   bookmark: "bookmark",
@@ -80,6 +81,7 @@ export const ICONS = {
   cloud_upload: "cloud_upload",
   cloud_download: "cloud_download",
   upload: "upload",
+  sort: "sort",
 } as const;
 
 const iconSourceMap: Record<IconStyle, Record<string, string>> = {

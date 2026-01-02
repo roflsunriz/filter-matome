@@ -18,7 +18,8 @@ export class LazyImageLoader {
 
   constructor(config: Partial<LazyImageConfig> = {}) {
     this.config = {
-      rootMargin: config.rootMargin ?? "200px 0px",
+      // ビューポートの上下1000pxで先読み開始（ちらつき軽減）
+      rootMargin: config.rootMargin ?? "1000px 0px",
       threshold: config.threshold ?? 0,
       fallbackSrc: config.fallbackSrc ?? "/local/images/fallback-thumbnail.svg",
       placeholderClass: config.placeholderClass ?? "lazy-placeholder",

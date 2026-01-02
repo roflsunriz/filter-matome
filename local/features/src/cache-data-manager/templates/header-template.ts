@@ -46,17 +46,22 @@ export function createHeaderTemplate(): string {
 
   return `
     <div class="header-content">
-      <span>CacheDataManager</span>
-      <span>${window.ncversion}</span>
-      <nav class="main-nav">
-        ${navItems}
-      </nav>
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="動画を検索...">
-        <span class="search-section">
-        <button id="searchBtn">${searchIcon}<span class="search-label">検索</span></button>
-        <button id="clearSearch">${clearIcon}<span class="search-label">クリア</span></button>
-        </span>
+      <div class="header-top-row">
+        <span class="header-title">CacheDataManager</span>
+        <span class="header-version">${window.ncversion}</span>
+        <nav class="main-nav">
+          ${navItems}
+        </nav>
+      </div>
+      <div class="header-controls-row">
+        <div class="filter-sort-placeholder"></div>
+          <div class="search-box">
+          <input type="text" id="searchInput" placeholder="動画を検索...">
+          <span class="search-section">
+            <button id="searchBtn">${searchIcon}<span class="search-label">検索</span></button>
+            <button id="clearSearch">${clearIcon}<span class="search-label">クリア</span></button>
+          </span>
+        </div>
       </div>
     </div>
   `;

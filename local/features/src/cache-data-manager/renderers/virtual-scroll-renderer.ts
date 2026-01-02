@@ -15,14 +15,11 @@ export class VirtualScrollRenderer {
   private container: HTMLElement | null = null;
   private scrollContainer: HTMLElement | null = null;
   private contentContainer: HTMLElement | null = null;
-  private topSentinel: HTMLElement | null = null;
-  private bottomSentinel: HTMLElement | null = null;
   private topSpacer: HTMLElement | null = null;
   private bottomSpacer: HTMLElement | null = null;
 
   private allData: VideoData[] = [];
   private visibleRange: VisibleRange = { start: 0, end: 0 };
-  private observer: IntersectionObserver | null = null;
   private resizeObserver: ResizeObserver | null = null;
 
   private readonly config: VirtualScrollConfig;
@@ -34,10 +31,15 @@ export class VirtualScrollRenderer {
   private measuredItemHeight: number;
   private columnsCount = 1;
 
+  // スクロールイベント用
+  private scrollHandler: (() => void) | null = null;
+  private scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+  private lastScrollTop = 0;
+
   constructor(config: Partial<VirtualScrollConfig> = {}) {
     this.config = {
       itemHeight: config.itemHeight ?? 420,
-      bufferSize: config.bufferSize ?? 10,
+      bufferSize: config.bufferSize ?? 20, // バッファを増やしてちらつき軽減
       containerSelector: config.containerSelector ?? ".cache-container",
     };
     this.measuredItemHeight = this.config.itemHeight;
@@ -75,17 +77,9 @@ export class VirtualScrollRenderer {
     this.topSpacer.className = "virtual-scroll-spacer virtual-scroll-spacer-top";
     this.topSpacer.style.height = "0px";
 
-    // 上部センチネル
-    this.topSentinel = document.createElement("div");
-    this.topSentinel.className = "virtual-scroll-sentinel virtual-scroll-sentinel-top";
-
     // グリッドコンテナ（実際のカードが入る）
     this.container = document.createElement("div");
     this.container.className = "virtual-scroll-grid";
-
-    // 下部センチネル
-    this.bottomSentinel = document.createElement("div");
-    this.bottomSentinel.className = "virtual-scroll-sentinel virtual-scroll-sentinel-bottom";
 
     // 下部スペーサー
     this.bottomSpacer = document.createElement("div");
@@ -94,9 +88,7 @@ export class VirtualScrollRenderer {
 
     // DOM構造を組み立て
     this.contentContainer.appendChild(this.topSpacer);
-    this.contentContainer.appendChild(this.topSentinel);
     this.contentContainer.appendChild(this.container);
-    this.contentContainer.appendChild(this.bottomSentinel);
     this.contentContainer.appendChild(this.bottomSpacer);
     this.scrollContainer.appendChild(this.contentContainer);
 
@@ -105,41 +97,67 @@ export class VirtualScrollRenderer {
   }
 
   private setupObservers(): void {
-    // Intersection Observer でセンチネルを監視
-    this.observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-
-          if (entry.target === this.topSentinel) {
-            this.loadMoreTop();
-          } else if (entry.target === this.bottomSentinel) {
-            this.loadMoreBottom();
-          }
-        }
-      },
-      {
-        root: null, // viewport
-        rootMargin: "200px 0px",
-        threshold: 0,
-      },
-    );
-
-    if (this.topSentinel) {
-      this.observer.observe(this.topSentinel);
-    }
-    if (this.bottomSentinel) {
-      this.observer.observe(this.bottomSentinel);
-    }
+    // スクロールイベントで位置ベースの仮想スクロールを実装
+    this.scrollHandler = () => {
+      this.handleScroll();
+    };
+    window.addEventListener("scroll", this.scrollHandler, { passive: true });
 
     // ResizeObserver でカラム数を監視
     this.resizeObserver = new ResizeObserver(() => {
       this.updateColumnsCount();
-      this.scheduleRender();
+      this.recalculateVisibleRange();
     });
 
     if (this.scrollContainer) {
       this.resizeObserver.observe(this.scrollContainer);
+    }
+  }
+
+  private handleScroll(): void {
+    // スクロールのデバウンス処理
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+
+    // 即座に範囲を更新（デバウンスなし）
+    this.recalculateVisibleRange();
+
+    // 追加のレンダリング用にデバウンス
+    this.scrollTimeout = setTimeout(() => {
+      this.recalculateVisibleRange();
+    }, 50);
+  }
+
+  private recalculateVisibleRange(): void {
+    if (this.allData.length === 0) return;
+
+    const scrollTop = window.scrollY;
+    const viewportHeight = window.innerHeight;
+    
+    // ヘッダーのオフセットを考慮
+    const containerTop = this.scrollContainer?.getBoundingClientRect().top ?? 0;
+    const containerOffsetTop = scrollTop + containerTop;
+    
+    // 現在のスクロール位置から表示範囲を計算
+    const effectiveScrollTop = Math.max(0, scrollTop - containerOffsetTop);
+    
+    // バッファを大きく取ってビューポート外も先読み
+    const bufferPixels = this.measuredItemHeight * this.config.bufferSize;
+    const startPixel = Math.max(0, effectiveScrollTop - bufferPixels);
+    const endPixel = effectiveScrollTop + viewportHeight + bufferPixels;
+
+    // 行数からアイテムインデックスを計算
+    const startRow = Math.floor(startPixel / this.measuredItemHeight);
+    const endRow = Math.ceil(endPixel / this.measuredItemHeight);
+
+    const newStart = Math.max(0, startRow * this.columnsCount);
+    const newEnd = Math.min(this.allData.length, endRow * this.columnsCount);
+
+    // 変更があった場合のみ再レンダリング
+    if (newStart !== this.visibleRange.start || newEnd !== this.visibleRange.end) {
+      this.visibleRange = { start: newStart, end: newEnd };
+      this.scheduleRender();
     }
   }
 
@@ -169,7 +187,7 @@ export class VirtualScrollRenderer {
     this.allData = data;
     this.updateColumnsCount();
     
-    // 初期表示範囲を設定
+    // 初期表示範囲を設定（バッファを大きく）
     const initialCount = this.getVisibleItemCount();
     this.visibleRange = {
       start: 0,
@@ -186,37 +204,6 @@ export class VirtualScrollRenderer {
 
   public getFilteredData(): VideoData[] {
     return this.allData;
-  }
-
-  private loadMoreTop(): void {
-    if (this.visibleRange.start <= 0) return;
-
-    const rowsToLoad = Math.ceil(this.config.bufferSize / this.columnsCount);
-    const itemsToLoad = rowsToLoad * this.columnsCount;
-    
-    const newStart = Math.max(0, this.visibleRange.start - itemsToLoad);
-    const newEnd = Math.min(
-      this.visibleRange.end,
-      this.allData.length,
-    );
-
-    this.visibleRange = { start: newStart, end: newEnd };
-    this.scheduleRender();
-  }
-
-  private loadMoreBottom(): void {
-    if (this.visibleRange.end >= this.allData.length) return;
-
-    const rowsToLoad = Math.ceil(this.config.bufferSize / this.columnsCount);
-    const itemsToLoad = rowsToLoad * this.columnsCount;
-    
-    const newEnd = Math.min(
-      this.visibleRange.end + itemsToLoad,
-      this.allData.length,
-    );
-
-    this.visibleRange = { start: this.visibleRange.start, end: newEnd };
-    this.scheduleRender();
   }
 
   private scheduleRender(): void {
@@ -297,9 +284,13 @@ export class VirtualScrollRenderer {
   }
 
   public destroy(): void {
-    if (this.observer) {
-      this.observer.disconnect();
-      this.observer = null;
+    if (this.scrollHandler) {
+      window.removeEventListener("scroll", this.scrollHandler);
+      this.scrollHandler = null;
+    }
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+      this.scrollTimeout = null;
     }
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
@@ -329,4 +320,3 @@ export class VirtualScrollRenderer {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 }
-

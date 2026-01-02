@@ -1,4 +1,4 @@
-import { createMaterialIcon } from "@/common/material-icons.js";
+import { ICONS, createMaterialIcon } from "@/common/material-icons.js";
 import {
   type FilterManager,
   type QualityFilter,
@@ -52,7 +52,7 @@ export class FilterSortUI {
       classes: "filter-sort-icon",
     });
 
-    const sortIcon = createMaterialIcon("sort", {
+    const sortIcon = createMaterialIcon(ICONS.sort, {
       color: "white",
       size: "small",
       classes: "filter-sort-icon",

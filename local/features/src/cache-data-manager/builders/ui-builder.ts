@@ -219,13 +219,14 @@ export class UIBuilder {
 
     const filterSortContainer = this.filterSortUI.createUI();
 
-    // ヘッダーの検索ボックスの後に挿入
-    const headerContent = document.querySelector(".header-content");
-    const searchBox = headerContent?.querySelector(".search-box");
-    if (searchBox) {
-      searchBox.after(filterSortContainer);
+    // プレースホルダーをフィルターUIで置き換え
+    const placeholder = document.querySelector(".filter-sort-placeholder");
+    if (placeholder) {
+      placeholder.replaceWith(filterSortContainer);
     } else {
-      headerContent?.appendChild(filterSortContainer);
+      // フォールバック: header-controls-rowに追加
+      const controlsRow = document.querySelector(".header-controls-row");
+      controlsRow?.appendChild(filterSortContainer);
     }
   }
 

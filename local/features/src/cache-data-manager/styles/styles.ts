@@ -10,20 +10,33 @@ body {
   
   .header-content {
     background: linear-gradient(135deg, var(--pink) 0%, var(--purple) 100%);
-    padding: 1.5rem 2rem;
+    padding: 1rem 2rem;
     border-radius: 0 0 30px 30px;
     box-shadow: 0 8px 32px rgba(255, 159, 243, 0.2);
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
-    min-height: 80px;
+    flex-direction: column;
+    gap: 0.8rem;
     font-family: "Mochiy Pop P One", "Comic Sans MS", cursive;
   }
+
+  .header-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .header-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    width: 100%;
+  }
   
-  .header-content > span:first-child {
-    font-size: 2rem;
+  .header-title {
+    font-size: 1.8rem;
     letter-spacing: 0.1em;
     text-shadow: 3px 3px 0 var(--purple), -1px -1px 0 var(--mint), 0 0 10px rgba(255, 255, 255, 0.4);
     background: linear-gradient(45deg, var(--mint) 20%, var(--pink) 80%);
@@ -34,6 +47,24 @@ body {
     transform-style: preserve-3d;
     perspective: 1000px;
     animation: title-spin 5.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    white-space: nowrap;
+  }
+
+  .header-version {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    border: 2px solid var(--mint);
+    backdrop-filter: blur(5px);
+    font-size: 0.8em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+  }
+
+  .header-version:hover {
+    transform: scale(1.05) rotate(2deg);
+    background: rgba(255, 255, 255, 0.25);
   }
   
   @keyframes title-spin {
@@ -160,22 +191,6 @@ body {
     100% {
       transform: rotateY(360deg);
     }
-  }
-  
-  .header-content > span:nth-child(2) {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 0.4rem 1rem;
-    border-radius: 20px;
-    border: 2px solid var(--mint);
-    backdrop-filter: blur(5px);
-    font-size: 0.9em;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-  }
-  
-  .header-content > span:nth-child(2):hover {
-    transform: scale(1.05) rotate(2deg);
-    background: rgba(255, 255, 255, 0.25);
   }
   
   .video-card {
@@ -417,28 +432,33 @@ body {
   }
   
   /* 検索関連 */
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
   #searchInput {
     border: 2px solid var(--mint);
     border-radius: 25px;
-    padding: 8px 20px;
+    padding: 6px 16px;
     color: var(--dark);
-    display: block;
-    width: 100%;
+    width: 200px;
     box-sizing: border-box;
-    margin-bottom: 0.5rem;
+    font-size: 0.9em;
   }
 
   .search-section {
     display: flex;
-    gap: 8px;
-    margin-top: 0;
-    margin-bottom: 0.5rem;
+    gap: 6px;
   }
 
   #searchBtn,
   #clearSearch {
     background: linear-gradient(145deg, var(--purple), #8f7bb3);
-    margin-left: 0;
+    padding: 6px 12px;
+    font-size: 0.85em;
   }
   
   /* 動画カード内ボタン */
@@ -496,8 +516,29 @@ body {
   }
   
   /* レスポンシブ対応 */
+  @media (max-width: 1200px) {
+    .header-controls-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .search-box {
+      width: 100%;
+    }
+
+    #searchInput {
+      flex: 1;
+      width: auto;
+      min-width: 150px;
+    }
+
+    .filter-sort-container {
+      width: 100%;
+    }
+  }
+
   @media (max-width: 768px) {
-    .header-content {
+    .header-top-row {
       flex-direction: column;
       align-items: flex-start;
     }
@@ -523,6 +564,10 @@ body {
     .filter-group,
     .sort-group {
       flex-wrap: wrap;
+    }
+
+    .main-nav {
+      display: none;
     }
   }
   
@@ -718,8 +763,8 @@ body {
   .filter-sort-container {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
-    padding: 0.8rem 1.2rem;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 15px;
     backdrop-filter: blur(5px);

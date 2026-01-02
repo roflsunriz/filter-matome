@@ -1,5 +1,5 @@
 import type { VideoData } from "@/types";
-import { createMaterialIcon } from "@/common/material-icons.js";
+import { ICONS, createMaterialIcon } from "@/common/material-icons.js";
 
 /**
  * 検索結果モーダルの設定
@@ -151,7 +151,7 @@ export class SearchResultsModal {
     if (pageResults.length === 0) {
       this.contentContainer.innerHTML = `
         <div class="search-no-results">
-          ${createMaterialIcon("search_off", { color: "white", size: "large" })}
+          ${createMaterialIcon(ICONS.search_off, { color: "white", size: "large" })}
           <p>検索結果がありません</p>
         </div>
       `;
