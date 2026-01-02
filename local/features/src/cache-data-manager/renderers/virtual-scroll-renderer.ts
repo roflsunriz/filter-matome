@@ -11,7 +11,7 @@ interface VisibleRange {
   end: number;
 }
 
-const DEBUG = true;
+const DEBUG = false;
 let lastLogTime = 0;
 function debugLog(...args: unknown[]): void {
   if (DEBUG) {

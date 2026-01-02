@@ -20,8 +20,7 @@ src/
 ├── engines/
 │   └── search-engine.ts                 # 検索エンジン (1.8KB)
 ├── renderers/
-│   ├── batch-renderer.ts                # バッチレンダリング (非推奨)
-│   └── virtual-scroll-renderer.ts       # 仮想スクロールレンダリング [NEW]
+│   └── virtual-scroll-renderer.ts       # 仮想スクロールレンダリング
 ├── components/
 │   ├── filter-sort-ui.ts                # フィルター・ソートUIコンポーネント [NEW]
 │   ├── search-results-modal.ts          # 検索結果モーダル [NEW]
@@ -160,11 +159,6 @@ EventCoordinator ─── ユーザー操作待機
   - スペーサー要素による全体高さ維持
   - 動的カラム数計算
 - **編集タイミング**: パフォーマンス改善、バッファサイズ調整
-
-#### `renderers/batch-renderer.ts` - バッチレンダリング (非推奨)
-- **役割**: 大量データの高速レンダリング（レガシー）
-- **機能**: バッチ処理、DocumentFragment活用、検索結果表示
-- **編集タイミング**: 互換性維持のみ
 
 #### `coordinators/event-coordinator.ts` - イベント調整
 - **役割**: ユーザー操作の処理・調整
