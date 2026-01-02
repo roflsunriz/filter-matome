@@ -96,7 +96,9 @@ import saveOutlinedIcon from "@material-design-icons/svg/outlined/save.svg?url";
 import scheduleOutlinedIcon from "@material-design-icons/svg/outlined/schedule.svg?url";
 import scienceOutlinedIcon from "@material-design-icons/svg/outlined/science.svg?url";
 import searchOutlinedIcon from "@material-design-icons/svg/outlined/search.svg?url";
+import searchOffOutlinedIcon from "@material-design-icons/svg/outlined/search_off.svg?url";
 import settingsOutlinedIcon from "@material-design-icons/svg/outlined/settings.svg?url";
+import sortOutlinedIcon from "@material-design-icons/svg/outlined/sort.svg?url";
 import shareOutlinedIcon from "@material-design-icons/svg/outlined/share.svg?url";
 import skipNextOutlinedIcon from "@material-design-icons/svg/outlined/skip_next.svg?url";
 import skipPreviousOutlinedIcon from "@material-design-icons/svg/outlined/skip_previous.svg?url";
@@ -224,7 +226,9 @@ export const outlinedIconMap = {
   schedule: scheduleOutlinedIcon,
   science: scienceOutlinedIcon,
   search: searchOutlinedIcon,
+  search_off: searchOffOutlinedIcon,
   settings: settingsOutlinedIcon,
+  sort: sortOutlinedIcon,
   share: shareOutlinedIcon,
   skip_next: skipNextOutlinedIcon,
   skip_previous: skipPreviousOutlinedIcon,

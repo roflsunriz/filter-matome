@@ -62,7 +62,8 @@ export class SearchEngine {
     for (const rawEntry of entries) {
       if (typeof rawEntry !== "object" || rawEntry === null) continue;
       const rec = rawEntry as Record<string, unknown>;
-      const id = typeof rec.id === "string" ? rec.id : undefined;
+      // VideoDataはbaseIdプロパティを使用
+      const id = typeof rec.baseId === "string" ? rec.baseId : undefined;
       const titleRaw = typeof rec.title === "string" ? rec.title : undefined;
       if (!id || !titleRaw) continue;
 
