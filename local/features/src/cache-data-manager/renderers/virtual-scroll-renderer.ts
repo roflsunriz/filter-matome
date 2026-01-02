@@ -358,11 +358,6 @@ export class VirtualScrollRenderer {
     this.container.innerHTML = "";
     this.container.appendChild(fragment);
 
-    const scrollAfterDom = window.scrollY;
-    if (scrollAfterDom !== scrollBefore) {
-      debugLog("render: scroll changed after DOM update!", { before: scrollBefore, after: scrollAfterDom });
-    }
-
     // 最初のカードの高さを測定
     await this.measureItemHeight();
 
@@ -370,8 +365,7 @@ export class VirtualScrollRenderer {
     
     debugLog("render DONE:", { 
       items: visibleData.length, 
-      scrollY: window.scrollY, 
-      scrollDiff: window.scrollY - scrollBefore 
+      scrollY: window.scrollY
     });
 
     // レンダリング完了後、少し遅延してからisRenderingをfalseにする
@@ -424,7 +418,6 @@ export class VirtualScrollRenderer {
   private updateSpacers(): void {
     if (!this.topSpacer || !this.bottomSpacer) return;
 
-    const scrollBefore = window.scrollY;
     const totalRows = Math.ceil(this.allData.length / this.columnsCount);
     const startRow = Math.floor(this.visibleRange.start / this.columnsCount);
     const endRow = Math.ceil(this.visibleRange.end / this.columnsCount);
@@ -434,32 +427,16 @@ export class VirtualScrollRenderer {
 
     const prevTopHeight = parseFloat(this.topSpacer.style.height) || 0;
     const prevBottomHeight = parseFloat(this.bottomSpacer.style.height) || 0;
-    const topHeightDiff = topHeight - prevTopHeight;
 
     this.topSpacer.style.height = `${Math.max(0, topHeight)}px`;
     this.bottomSpacer.style.height = `${Math.max(0, bottomHeight)}px`;
-
-    // topSpacerの高さが変わった場合、スクロール位置を補正して
-    // ユーザーが見ている位置を維持する
-    if (topHeightDiff !== 0 && scrollBefore > this.containerOffsetTop) {
-      const correctedScroll = scrollBefore + topHeightDiff;
-      // scrollTo を使うとスクロールイベントが再度発火するので、
-      // isRendering フラグで保護されている間に行う
-      window.scrollTo({ top: correctedScroll, behavior: "instant" });
-      
-      debugLog("updateSpacers: scroll corrected", {
-        topHeightDiff,
-        scrollBefore,
-        correctedScroll,
-        actualScroll: window.scrollY,
-      });
-    }
     
-    // デバッグログ
+    // デバッグログ（高さが変わった場合のみ）
     if (topHeight !== prevTopHeight || bottomHeight !== prevBottomHeight) {
       debugLog("updateSpacers:", {
-        topSpacer: { prev: prevTopHeight, new: topHeight, diff: topHeightDiff },
+        topSpacer: { prev: prevTopHeight, new: topHeight },
         bottomSpacer: { prev: prevBottomHeight, new: bottomHeight },
+        totalHeight: topHeight + bottomHeight + (endRow - startRow) * this.measuredItemHeight,
         range: this.visibleRange,
       });
     }
