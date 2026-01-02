@@ -217,10 +217,13 @@ body {
     width: 100%;
     min-height: 100vh;
     background: linear-gradient(180deg, #fff6e3, #bfecff);
+    /* ブラウザのスクロールアンカリングを無効化 */
+    overflow-anchor: none;
   }
 
   .virtual-scroll-content {
     width: 100%;
+    overflow-anchor: none;
   }
 
   .virtual-scroll-grid {
@@ -229,11 +232,13 @@ body {
     gap: 2rem;
     padding: 2rem;
     position: relative;
+    overflow-anchor: none;
   }
 
   .virtual-scroll-spacer {
     width: 100%;
     pointer-events: none;
+    overflow-anchor: none;
   }
 
   .virtual-scroll-sentinel {
