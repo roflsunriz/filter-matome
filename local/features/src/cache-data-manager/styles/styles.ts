@@ -1027,13 +1027,18 @@ body {
 
   .search-results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    overflow-anchor: none;
   }
 
+  /* 検索結果カード - メインリストと同じ固定サイズ */
   .search-result-card {
     margin: 0;
     max-width: none;
+    height: 420px !important;
+    max-height: 420px !important;
+    min-height: 420px !important;
   }
 
   .search-no-results {
