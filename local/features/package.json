@@ -203,7 +203,7 @@
     "wrappy": "^1.0.2",
     "yocto-queue": "^1.2.1"
   },
-  "version": "211",
+  "version": "212",
   "description": "Enhancing scripts for Niconico",
   "main": "index.js",
   "directories": {

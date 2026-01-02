@@ -10,6 +10,7 @@
 <h1>カスタムフィルターのリリースノート</h1>
 
 <ul>
+<li><a href="#filter-matome-212-20260103-リリースノート">filter-matome #212 (2026/01/03) リリースノート</a></li>
 <li><a href="#filter-matome-211-20251230-リリースノート">filter-matome #211 (2025/12/30) リリースノート</a></li>
 <li><a href="#filter-matome-210-20251222-リリースノート">filter-matome #210 (2025/12/22) リリースノート</a></li>
 <li><a href="#filter-matome-209-20251130-リリースノート">filter-matome #209 (2025/11/30) リリースノート</a></li>
@@ -18,6 +19,29 @@
 <li><a href="#filter-matome-2081-20251127-リリースノート">filter-matome #208.1 (2025/11/27) リリースノート</a></li>
 <li><a href="#filter-matome-208-20251127-リリースノート">filter-matome #208 (2025/11/27) リリースノート</a></li>
 <li><a href="#filter-matome-2076-20251126-リリースノート">filter-matome #207.6 (2025/11/26) リリースノート</a></li>
+</ul>
+
+<h3 id="filter-matome-212-20260103-リリースノート">filter-matome #212 (2026/01/03) リリースノート</h3>
+
+<ul>
+<li>✨新機能(New)：</li>
+<li>【cache-data-manager】仮想スクロール対応：大量データでもスムーズなスクロールを実現</li>
+<li>【cache-data-manager】フィルター・ソート機能：画質・ステータスでフィルタリング、複数条件でソート可能</li>
+<li>【cache-data-manager】検索結果モーダル：検索結果を別モーダルで表示、メインリストを維持</li>
+<li>【cache-data-manager】サムネイル遅延読み込み：パフォーマンス向上のためビューポート外で先読み</li>
+<li>【cache-data-manager】キーボードナビゲーション：PageDown/PageUp/Home/Endキーでスクロール操作</li>
+<li>【cache-data-manager】タイトルツールチップ：省略されたタイトルをホバーで全文表示</li>
+<li>✅️修正(Fixed)：</li>
+<li>【cache-data-manager】スクロールが勝手に動く不具合を修正（overflow-anchor無効化）</li>
+<li>【cache-data-manager】検索結果が空になる問題を修正（部分一致検索に変更）</li>
+<li>🔴変更(Changed)：</li>
+<li>【cache-data-manager】FlexSearchから独自の部分一致検索に移行（日本語トークナイズ問題対策）</li>
+<li>【cache-data-manager】batch-renderer.tsを削除（仮想スクロールに完全移行）</li>
+<li>【cache-data-manager】ヘッダーを2行構成に変更（検索バーとフィルターバーを同列配置）</li>
+<li>❌️未修正(Unfixed)：</li>
+<li>なし</li>
+<li>ℹ️その他(Others)：</li>
+<li>cache-data-managerの大規模リファクタリング完了</li>
 </ul>
 
 <h3 id="filter-matome-211-20251230-リリースノート">filter-matome #211 (2025/12/30) リリースノート</h3>
