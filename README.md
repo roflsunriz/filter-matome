@@ -188,7 +188,7 @@ Append<
 ## ⚠️ 重要な注意事項
 
 ### シンボリックリンク作成（必須）
-NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\local\list.js` という固定パス・固定名で参照します。ビルド成果物（例: `cache-data-manager.es.js`）へこの固定パス名でシンボリックリンクを作成しないと機能しません。詳細手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照してください。
+NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\local\list.js` という固定パス・固定名で参照します。ビルド成果物（例: `cacheDataManager.iife.js`）へこの固定パス名でシンボリックリンクを作成しないと機能しません。詳細手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照してください。
 
 ### 使用上の注意
 - **全機能同時使用前提**: 個別機能の抜き出しは動作保証外
