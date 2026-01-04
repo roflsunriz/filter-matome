@@ -161,8 +161,6 @@ const toApiData = (source: NicoApiData, fallbackVideoId: string): ApiData => {
     description: toOptionalString(videoRecord["description"]),
     shortDescription: toOptionalString(videoRecord["shortDescription"]),
     likeCount: toOptionalNumber(videoRecord["likeCount"]),
-    advertisePoint: toOptionalNumber(videoRecord["advertisePoint"]),
-    giftPoint: toOptionalNumber(videoRecord["giftPoint"]),
     watchableUserTypeForPayment: toOptionalString(
       videoRecord["watchableUserTypeForPayment"],
     ),
@@ -399,15 +397,8 @@ const toApiData = (source: NicoApiData, fallbackVideoId: string): ApiData => {
     }
   }
 
-  const giftRecord = ensureRecord(root["gift"]);
-  const totalPoint = readNumber(giftRecord, "totalPoint");
-  const gift = totalPoint !== undefined ? { totalPoint } : undefined;
-
   if (!video.watchableUserTypeForPayment && payment?.video.watchableUserType) {
     video.watchableUserTypeForPayment = payment.video.watchableUserType;
-  }
-  if (!video.giftPoint && totalPoint !== undefined) {
-    video.giftPoint = totalPoint;
   }
 
   const result: ApiData = { video };
@@ -428,9 +419,6 @@ const toApiData = (source: NicoApiData, fallbackVideoId: string): ApiData => {
   }
   if (comment) {
     result.comment = comment;
-  }
-  if (gift) {
-    result.gift = gift;
   }
 
   return result;
@@ -605,16 +593,6 @@ const renderStats = (container: HTMLElement, apiData: ApiData): void => {
     createStatItem(
       "いいね数",
       formatNumber(apiData.video.likeCount ?? apiData.video.count.like ?? null),
-    ),
-    createStatItem(
-      "広告ポイント",
-      formatNumber(
-        apiData.video.advertisePoint ?? apiData.gift?.totalPoint ?? null,
-      ),
-    ),
-    createStatItem(
-      "ギフトポイント",
-      formatNumber(apiData.gift?.totalPoint ?? null),
     ),
   );
 };
