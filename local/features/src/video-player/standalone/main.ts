@@ -10,6 +10,7 @@ import {
   createStatItem,
 } from "@/video-player/standalone/utils";
 import type { ApiData, NicoApiData } from "@/types/index";
+import DOMPurify from "dompurify";
 
 type RecordLike = Record<string, unknown>;
 
@@ -435,11 +436,94 @@ const toApiData = (source: NicoApiData, fallbackVideoId: string): ApiData => {
   return result;
 };
 
-const htmlToPlainText = (value: string): string => {
-  const withNewLine = value.replace(/<br\s*\/?>(?![\n])/gi, "\n");
-  const container = document.createElement("div");
-  container.innerHTML = withNewLine;
-  return (container.textContent ?? value).trim();
+/**
+ * HTMLを安全にサニタイズする
+ * - 危険なタグ（script, iframe, object, embed等）を除去
+ * - 危険な属性（onclick, onerror等のイベントハンドラ）を除去
+ * - 安全なHTMLタグ（a, br, p, strong, b, i, u, em, span, div等）は許可
+ */
+const sanitizeHtml = (html: string): string => {
+  // DOMPurifyの設定：安全なタグと属性のみ許可
+  const config: DOMPurify.Config = {
+    ALLOWED_TAGS: [
+      "a",
+      "b",
+      "br",
+      "code",
+      "div",
+      "em",
+      "font",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "hr",
+      "i",
+      "img",
+      "li",
+      "ol",
+      "p",
+      "pre",
+      "s",
+      "small",
+      "span",
+      "strong",
+      "sub",
+      "sup",
+      "table",
+      "tbody",
+      "td",
+      "tfoot",
+      "th",
+      "thead",
+      "tr",
+      "u",
+      "ul",
+    ],
+    ALLOWED_ATTR: [
+      "href",
+      "src",
+      "alt",
+      "title",
+      "class",
+      "id",
+      "style",
+      "target",
+      "rel",
+      "width",
+      "height",
+      "color",
+      "size",
+      "face",
+    ],
+    // リンクは新しいタブで開く
+    ADD_ATTR: ["target", "rel"],
+    // javascript: や data: などの危険なプロトコルをブロック
+    ALLOWED_URI_REGEXP:
+      /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
+    // data属性も許可しない
+    ALLOW_DATA_ATTR: false,
+  };
+
+  return DOMPurify.sanitize(html, config);
+};
+
+/**
+ * サニタイズ済みHTML内のリンクに target="_blank" と rel="noopener noreferrer" を追加
+ */
+const addTargetBlankToLinks = (container: HTMLElement): void => {
+  const links = container.querySelectorAll("a[href]");
+  links.forEach((link) => {
+    const anchor = link as HTMLAnchorElement;
+    // 外部リンクまたは絶対URLの場合のみ target="_blank" を追加
+    const href = anchor.getAttribute("href") ?? "";
+    if (href.startsWith("http://") || href.startsWith("https://")) {
+      anchor.setAttribute("target", "_blank");
+      anchor.setAttribute("rel", "noopener noreferrer");
+    }
+  });
 };
 
 const getVideoIdFromQuery = (): string | null => {
@@ -535,6 +619,22 @@ const renderStats = (container: HTMLElement, apiData: ApiData): void => {
   );
 };
 
+/**
+ * ニコニコ大百科へのリンク用「百」SVGアイコンを生成
+ */
+const createNicopediaIcon = (): string => {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" class="nc-tag__nicopedia-icon">
+    <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="14" font-weight="bold" font-family="sans-serif">百</text>
+  </svg>`;
+};
+
+/**
+ * タグ名をURLエンコードする（タグ検索・大百科用）
+ */
+const encodeTagForUrl = (tagName: string): string => {
+  return encodeURIComponent(tagName);
+};
+
 const renderTags = (container: HTMLElement, apiData: ApiData): void => {
   container.innerHTML = "";
   const tags = apiData.tag?.items ?? [];
@@ -553,18 +653,37 @@ const renderTags = (container: HTMLElement, apiData: ApiData): void => {
     if (!name) {
       continue;
     }
+
+    // タグチップのコンテナ
     const chip = document.createElement("span");
     chip.className = "nc-tag";
-    chip.textContent = name;
+
+    // タグ検索へのリンク（タグ名をクリック）
+    const tagLink = document.createElement("a");
+    tagLink.className = "nc-tag__link";
+    tagLink.href = `https://www.nicovideo.jp/tag/${encodeTagForUrl(name)}`;
+    tagLink.target = "_blank";
+    tagLink.rel = "noopener noreferrer";
+    tagLink.textContent = name;
+    tagLink.title = `「${name}」のタグ検索`;
+
+    // ニコニコ大百科へのリンク（「百」アイコン）
+    const nicopediaLink = document.createElement("a");
+    nicopediaLink.className = "nc-tag__nicopedia";
+    nicopediaLink.href = `https://dic.nicovideo.jp/a/${encodeTagForUrl(name)}`;
+    nicopediaLink.target = "_blank";
+    nicopediaLink.rel = "noopener noreferrer";
+    nicopediaLink.innerHTML = createNicopediaIcon();
+    nicopediaLink.title = `「${name}」のニコニコ大百科`;
+
+    chip.append(tagLink, nicopediaLink);
     container.append(chip);
   }
 };
 
 const renderDescription = (element: HTMLElement, apiData: ApiData): void => {
+  // 動画の説明文を優先的に使用（owner.descriptionは投稿者の説明なので後回し）
   const candidates = [
-    typeof apiData.owner?.description === "string"
-      ? apiData.owner.description
-      : null,
     typeof apiData.video.description === "string"
       ? apiData.video.description
       : null,
@@ -579,7 +698,13 @@ const renderDescription = (element: HTMLElement, apiData: ApiData): void => {
     element.textContent = "説明文はありません。";
     return;
   }
-  element.textContent = htmlToPlainText(source);
+
+  // HTMLをサニタイズしてから設定
+  const sanitizedHtml = sanitizeHtml(source);
+  element.innerHTML = sanitizedHtml;
+
+  // リンクに target="_blank" を追加
+  addTargetBlankToLinks(element);
 };
 
 const collectOwnerDisplayData = (apiData: ApiData): OwnerDisplayData | null => {
