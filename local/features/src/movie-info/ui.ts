@@ -7,16 +7,106 @@ const STATUS_MESSAGES: Record<PanelStatus, string> = {
   error: "error",
 };
 
+// モーダル管理クラス
+class JsonModalManager {
+  private static instance: JsonModalManager | null = null;
+  private overlay: HTMLDivElement | null = null;
+  private titleEl: HTMLHeadingElement | null = null;
+  private jsonEl: HTMLPreElement | null = null;
+
+  private constructor() {
+    this.createModal();
+  }
+
+  public static getInstance(): JsonModalManager {
+    if (!JsonModalManager.instance) {
+      JsonModalManager.instance = new JsonModalManager();
+    }
+    return JsonModalManager.instance;
+  }
+
+  private createModal(): void {
+    // オーバーレイ
+    this.overlay = document.createElement("div");
+    this.overlay.className = "json-modal-overlay";
+    this.overlay.addEventListener("click", (e) => {
+      if (e.target === this.overlay) {
+        this.close();
+      }
+    });
+
+    // モーダル本体
+    const modal = document.createElement("div");
+    modal.className = "json-modal";
+
+    // ヘッダー
+    const header = document.createElement("div");
+    header.className = "json-modal-header";
+
+    this.titleEl = document.createElement("h3");
+    this.titleEl.textContent = "Raw JSON";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "json-modal-close";
+    closeBtn.textContent = "×";
+    closeBtn.setAttribute("aria-label", "閉じる");
+    closeBtn.addEventListener("click", () => this.close());
+
+    header.appendChild(this.titleEl);
+    header.appendChild(closeBtn);
+
+    // ボディ
+    const body = document.createElement("div");
+    body.className = "json-modal-body";
+
+    this.jsonEl = document.createElement("pre");
+    this.jsonEl.className = "json-viewer";
+    body.appendChild(this.jsonEl);
+
+    modal.appendChild(header);
+    modal.appendChild(body);
+    this.overlay.appendChild(modal);
+    document.body.appendChild(this.overlay);
+
+    // Escキーで閉じる
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.overlay?.classList.contains("visible")) {
+        this.close();
+      }
+    });
+  }
+
+  public open(title: string, jsonText: string): void {
+    if (!this.overlay || !this.titleEl || !this.jsonEl) {
+      return;
+    }
+    this.titleEl.textContent = title;
+    this.jsonEl.textContent = jsonText;
+    this.overlay.classList.add("visible");
+    document.body.style.overflow = "hidden";
+  }
+
+  public close(): void {
+    if (!this.overlay) {
+      return;
+    }
+    this.overlay.classList.remove("visible");
+    document.body.style.overflow = "";
+  }
+}
+
 export class PanelController {
   private readonly root: HTMLElement;
   private readonly statusEl: HTMLElement;
   private readonly summaryEl: HTMLElement;
-  private readonly rawContainer: HTMLDetailsElement | null;
-  private readonly jsonEl: HTMLPreElement | null;
+  private readonly showJsonButton: HTMLButtonElement | null;
   private readonly copyButton: HTMLButtonElement | null;
   private readonly downloadButton: HTMLButtonElement | null;
+  private readonly spinnerOverlay: HTMLElement | null;
+  private readonly spinnerText: HTMLElement | null;
   private currentJson: string | null = null;
   private downloadDescriptor: DownloadDescriptor | null = null;
+  private panelTitle: string = "Raw JSON";
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -32,11 +122,26 @@ export class PanelController {
 
     this.statusEl = statusEl;
     this.summaryEl = summaryEl;
-    this.rawContainer = root.querySelector('[data-role="raw"]');
-    this.jsonEl = root.querySelector('[data-role="json"]');
+    this.showJsonButton = root.querySelector('button[data-role="show-json"]');
     this.copyButton = root.querySelector('button[data-role="copy"]');
     this.downloadButton = root.querySelector('button[data-role="download"]');
 
+    // スピナーオーバーレイを作成
+    this.spinnerOverlay = this.createSpinnerOverlay();
+    this.spinnerText = this.spinnerOverlay.querySelector(".panel-spinner-text");
+    root.appendChild(this.spinnerOverlay);
+
+    // パネルタイトルを取得
+    const headerTitle = root.querySelector(".panel-header h2");
+    if (headerTitle) {
+      this.panelTitle = headerTitle.textContent ?? "Raw JSON";
+    }
+
+    if (this.showJsonButton) {
+      this.showJsonButton.addEventListener("click", () => {
+        this.openJsonModal();
+      });
+    }
     if (this.copyButton) {
       this.copyButton.addEventListener("click", () => {
         void this.handleCopy();
@@ -51,10 +156,27 @@ export class PanelController {
     this.reset("未取得です");
   }
 
+  private createSpinnerOverlay(): HTMLElement {
+    const overlay = document.createElement("div");
+    overlay.className = "panel-spinner-overlay";
+
+    const spinner = document.createElement("div");
+    spinner.className = "panel-spinner";
+
+    const text = document.createElement("div");
+    text.className = "panel-spinner-text";
+    text.textContent = "取得中...";
+
+    overlay.appendChild(spinner);
+    overlay.appendChild(text);
+    return overlay;
+  }
+
   public reset(message: string): void {
     this.setStatus("idle", message);
     this.setSummaryContent(null);
-    this.setRawVisibility(false);
+    this.setShowJsonButtonVisibility(false);
+    this.setSpinnerVisible(false);
     this.currentJson = null;
     this.downloadDescriptor = null;
     if (this.copyButton) {
@@ -63,14 +185,18 @@ export class PanelController {
     if (this.downloadButton) {
       this.downloadButton.disabled = true;
     }
-    if (this.jsonEl) {
-      this.jsonEl.textContent = "";
-    }
   }
 
   public setStatus(status: PanelStatus, message: string): void {
-    this.statusEl.dataset.state = STATUS_MESSAGES[status];
+    this.statusEl.dataset["state"] = STATUS_MESSAGES[status];
     this.statusEl.textContent = message;
+
+    // ローディング状態のときスピナーを表示
+    if (status === "loading") {
+      this.setSpinnerVisible(true, message);
+    } else {
+      this.setSpinnerVisible(false);
+    }
   }
 
   public setSummaryContent(content: HTMLElement | null): void {
@@ -81,24 +207,20 @@ export class PanelController {
   }
 
   public setJsonData(data: unknown, pretty: boolean = true): void {
-    if (!this.jsonEl) {
-      return;
-    }
     try {
       const jsonText =
         typeof data === "string"
           ? data
           : JSON.stringify(data, null, pretty ? 2 : undefined);
       this.currentJson = jsonText;
-      this.jsonEl.textContent = jsonText;
-      this.setRawVisibility(true);
+      this.setShowJsonButtonVisibility(true);
       if (this.copyButton) {
         this.copyButton.disabled = false;
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.jsonEl.textContent = "JSON変換に失敗しました";
       this.currentJson = null;
+      this.setShowJsonButtonVisibility(false);
       if (this.copyButton) {
         this.copyButton.disabled = true;
       }
@@ -113,16 +235,39 @@ export class PanelController {
     }
   }
 
-  private setRawVisibility(visible: boolean): void {
-    if (!this.rawContainer) {
+  private setShowJsonButtonVisibility(visible: boolean): void {
+    if (!this.showJsonButton) {
       return;
     }
     if (visible) {
-      this.rawContainer.removeAttribute("hidden");
+      this.showJsonButton.removeAttribute("hidden");
+      this.showJsonButton.disabled = false;
     } else {
-      this.rawContainer.setAttribute("hidden", "hidden");
-      this.rawContainer.open = false;
+      this.showJsonButton.setAttribute("hidden", "hidden");
+      this.showJsonButton.disabled = true;
     }
+  }
+
+  private setSpinnerVisible(visible: boolean, text?: string): void {
+    if (!this.spinnerOverlay) {
+      return;
+    }
+    if (visible) {
+      if (this.spinnerText && text) {
+        this.spinnerText.textContent = text;
+      }
+      this.spinnerOverlay.classList.add("visible");
+    } else {
+      this.spinnerOverlay.classList.remove("visible");
+    }
+  }
+
+  private openJsonModal(): void {
+    if (!this.currentJson) {
+      return;
+    }
+    const modal = JsonModalManager.getInstance();
+    modal.open(this.panelTitle + " - Raw JSON", this.currentJson);
   }
 
   private async handleCopy(): Promise<void> {
