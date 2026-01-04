@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #214 (2026/01/05) リリースノート](#filter-matome-214-20260105-リリースノート)
 - [filter-matome #213 (2026/01/05) リリースノート](#filter-matome-213-20260105-リリースノート)
 - [filter-matome #212 (2026/01/03) リリースノート](#filter-matome-212-20260103-リリースノート)
 - [filter-matome #211 (2025/12/30) リリースノート](#filter-matome-211-20251230-リリースノート)
@@ -127,6 +128,21 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #214 (2026/01/05) リリースノート
+
+- ✨新機能(New)：
+- 【video-player】スタンドアロンプレイヤーのタグ表示をリンク化。タグクリックでニコニコ動画のタグ検索ページへ遷移。
+- 【video-player】タグに「百」アイコンを追加し、クリックでニコニコ大百科へ遷移（公式ニコニコ動画と同じ仕様）。
+- 【video-player】スタンドアロンプレイヤーの説明文（Description）でHTMLタグをレンダリングするように変更。DOMPurifyで危険なHTMLのみサニタイズし、安全なHTMLはそのまま表示。
+- ✅️修正(Fixed)：
+- なし
+- 🔴変更(Changed)：
+- 【video-player】スタンドアロンプレイヤーから取得不可な「広告ポイント」と「ギフトポイント」の表示を削除。
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- DOMPurify依存パッケージを追加。
 
 ### filter-matome #213 (2026/01/05) リリースノート
 
