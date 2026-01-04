@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #213 (2026/01/05) リリースノート](#filter-matome-213-20260105-リリースノート)
 - [filter-matome #212 (2026/01/03) リリースノート](#filter-matome-212-20260103-リリースノート)
 - [filter-matome #211 (2025/12/30) リリースノート](#filter-matome-211-20251230-リリースノート)
 - [filter-matome #210 (2025/12/22) リリースノート](#filter-matome-210-20251222-リリースノート)
@@ -126,6 +127,20 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #213 (2026/01/05) リリースノート
+
+- ✨新機能(New)：
+- なし
+- ✅️修正(Fixed)：
+- なし
+- 🔴変更(Changed)：
+- 【movie-info】raw JSONの表示方式をアコーディオンからモーダルに変更。「Raw JSONを表示」ボタンでフルスクリーンモーダルとして表示。
+- 【movie-info】APIデータ取得処理中に各パネル内で円形スピナーアニメーションを表示し、取得中であることを視覚的に強調。
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- なし
 
 ### filter-matome #212 (2026/01/03) リリースノート
 
