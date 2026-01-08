@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #215 (2026/01/08) リリースノート](#filter-matome-215-20260108-リリースノート)
 - [filter-matome #214 (2026/01/05) リリースノート](#filter-matome-214-20260105-リリースノート)
 - [filter-matome #213 (2026/01/05) リリースノート](#filter-matome-213-20260105-リリースノート)
 - [filter-matome #212 (2026/01/03) リリースノート](#filter-matome-212-20260103-リリースノート)
@@ -128,6 +129,19 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #215 (2026/01/08) リリースノート
+
+- ✨新機能(New)：
+- なし
+- ✅️修正(Fixed)：
+- なし
+- 🔴変更(Changed)：
+- 【watch-history】カラースキームをダークテーマに変更。背景・カード・テキスト・ボーダー・入力欄等をダーク系カラーに統一。目に優しい夜間表示を実現。
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- なし
 
 ### filter-matome #214 (2026/01/05) リリースノート
 
