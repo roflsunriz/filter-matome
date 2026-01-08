@@ -6,6 +6,17 @@
 
 **filter-matome**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
 
+### watch-hisotry
+![watch-history](./cover-images/watch-history.jpg)
+### mylist2
+![mylist2](./cover-images/mylist2.jpg)
+### comment-filter2
+![comment-filter2](./cover-images/comment-filter2.jpg)
+### video-player
+![video-player](./cover-images/video-player.jpg)
+### mlink-video-controller
+![mlink-video-controller](./cover-images/mlink-video-controller.jpg)
+
 ## ✨ 主な機能
 
 ### 🎯 コア機能
