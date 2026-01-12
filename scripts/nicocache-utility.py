@@ -646,7 +646,7 @@ def create_scheduled_task():
              '/RU', 'Users', 
              '/SC', 'ONLOGON', 
              '/TN', 'NicoCache_nl_AutoLaunch', 
-             '/TR', 'cmd.exe /c "cd /d C:\\NicoCache_nl && nicocache-gui-launcher.bat"'
+             '/TR', 'powershell.exe cd C:\\NicoCache_nl ; nico-cache-gui-launcher.bat'
             ],
             capture_output=True,
             text=True
