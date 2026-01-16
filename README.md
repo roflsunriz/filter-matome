@@ -37,10 +37,10 @@
 
 ### 前提条件
 - [NicoCache_nl](https://w.atwiki.jp/nicocachenlwiki/) 本体のインストール
-- [Adoptium Temurin OpenJDK 17 LTS 17.0.17+10](https://adoptium.net/temurin/releases?version=17&os=any&arch=any) 以上 又は [Adoptium Temurin OpenJDK 21 LTS 21.0.9+10-LTS](https://adoptium.net/temurin/releases?version=21&os=any&arch=any) 以上
-- [Apache Ant 1.10.15](https://ant.apache.org/bindownload.cgi) 以上
-- [Boucy Castle 1.8.3](https://www.bouncycastle.org/download/bouncy-castle-java/#latest) 以上 (PKIX/CMS/EAC/PKCS/OCSP/TSP/OPENSSL(bcpkix), Provider(bcprov), ASN.1 Utility Classes(bcutil))
-- 対応ブラウザ: [Firefox 147](https://www.firefox.com/ja/download/all/desktop-release/) 以上(推奨), [Chrome 144.0.7559.59/60](https://www.google.com/chrome/other-platforms/) 以上
+- [Adoptium Temurin OpenJDK 17 LTS](https://adoptium.net/temurin/releases?version=17&os=any&arch=any) 17.0.17+10 以上 又は [Adoptium Temurin OpenJDK 21 LTS](https://adoptium.net/temurin/releases?version=21&os=any&arch=any) 21.0.9+10-LTS 以上
+- [Apache Ant](https://ant.apache.org/bindownload.cgi) 1.10.15 以上
+- [Boucy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest) 1.8.3 以上 (PKIX/CMS/EAC/PKCS/OCSP/TSP/OPENSSL(bcpkix), Provider(bcprov), ASN.1 Utility Classes(bcutil))
+- 対応ブラウザ: [Firefox](https://www.firefox.com/ja/download/all/desktop-release/) 147 以上(推奨), [Chrome](https://www.google.com/chrome/other-platforms/) 144.0.7559.59/60 以上
 
 ### インストール手順
 

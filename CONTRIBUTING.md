@@ -17,7 +17,7 @@ filter-matomeプロジェクトへの貢献に興味を持っていただき、�
 
 ### 前提条件
 - Node.js 24.12.0 以上
-- Java Development Kit (JDK) 17 以上 22 以下
+- Java Development Kit (JDK) 17 LTS 又は 21 LTS
 - Git 2.52.0.windows.1 以上
 
 ### セットアップ手順
