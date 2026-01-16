@@ -6,6 +6,8 @@
 
 **filter-matome**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
 
+## 機能プレビュー
+
 ### watch-hisotry
 ![watch-history](./cover-images/watch-history.jpg)
 ### mylist2
@@ -35,10 +37,10 @@
 
 ### 前提条件
 - [NicoCache_nl](https://w.atwiki.jp/nicocachenlwiki/) 本体のインストール
-- Java Development Kit (JDK) 17以上 (Adoptium OpenJDK 17)
-- Apache Ant 1.10.12以上
-- Boucy Castle 1.70以上
-- 対応ブラウザ: Firefox (推奨), Chrome
+- [Adoptium Temurin OpenJDK 17 LTS 17.0.17+10](https://adoptium.net/temurin/releases?version=17&os=any&arch=any) 以上 又は [Adoptium Temurin OpenJDK 21 LTS 21.0.9+10-LTS](https://adoptium.net/temurin/releases?version=21&os=any&arch=any) 以上
+- [Apache Ant 1.10.15](https://ant.apache.org/bindownload.cgi) 以上
+- [Boucy Castle 1.8.3](https://www.bouncycastle.org/download/bouncy-castle-java/#latest) 以上 (PKIX/CMS/EAC/PKCS/OCSP/TSP/OPENSSL(bcpkix), Provider(bcprov), ASN.1 Utility Classes(bcutil))
+- 対応ブラウザ: [Firefox 147](https://www.firefox.com/ja/download/all/desktop-release/) 以上(推奨), [Chrome 144.0.7559.59/60](https://www.google.com/chrome/other-platforms/) 以上
 
 ### インストール手順
 
@@ -92,14 +94,14 @@
 - **エクスポート・インポート**: データの移行・バックアップ
 - **正規表現対応**: 柔軟なパターンマッチング
 - **リアルタイム処理**: 高速なコメント処理
-- **NGユーザー・ニコる数設定**: コメントのNGユーザー・ニコる数設定
-- **コメントコマンド設定**: コメントコマンドの設定
-- **フィルターログ送信**: フィルターログの送信
+- **NGユーザー・ニコる数設定**: NGユーザー設定によるフィルタリング・ニコる数による除外・含める設定
+- **コメントコマンド設定**: "big"や"shita"や"red"などのコメントコマンドの設定
+- **フィルターログ送信**: CommentFilterExtensionへのフィルターログの送信
 
 ### 動画プレイヤー拡張 (video-player)
 - **期限切れ動画再生**: キャッシュを活用した視聴継続
-- **削除済み動画対応**: 失われた動画の復活
-- **HLS対応**: 多様な動画形式をサポート
+- **削除済み動画対応**: キャッシュが存在するが削除されてしまった動画の視聴
+- **HLS対応**: 最新のニコニコ動画仕様の対応
 - **同期機能**: コメントと動画の完全同期
 - **NGワード・NG正規表現**: コメントのNGワード・NG正規表現
 
@@ -117,8 +119,8 @@
 ## 🔧 開発者向け情報
 
 ### 技術スタック
-- **言語**: TypeScript 5.9.2
-- **ビルドツール**: Vite 7.0.6
+- **言語**: TypeScript 5.9.3
+- **ビルドツール**: Vite 7.2.6
 - **ストレージ**: IndexedDB
 - **UI**: Material Design Icons
 - **フィルター言語**: nlFilter (NicoCache_nl独自DSL)
@@ -127,23 +129,23 @@
 ```
 local/
 ├─ background-images/    # 視聴ページ用の背景画像
-├──images/               # マテリアルアイコン、画像
+├──images/               # ドキュメント用画像、フォールバックサムネイル
 └─┬── features/          # メイン機能群
   ├── src/               # TypeScriptソースコード
   ├── dist/              # ビルド済みファイル
   └── config/            # Vite設定ファイル群
 
 nlFilters/
-├──resources/                # 199_readme.htmlの画像, js, css
-├── 100_common.txt           # 共通ライブラリ(トースト通知、ロギング、共通ヘッダ、マテリアルアイコンヘルパなどを提供する共通ライブラリ)
-├── 101_disable_official.txt # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
-├── 102_mlink_video_controller.txt # マルチリンクビデオコントローラー(視聴ページにマルチリンクビデオコントローラーを追加)
-├── 103_comment_filter2.txt  # コメントフィルター(視聴ページにコメントフィルターを追加)
-├── 104_video_player.txt     # 動画プレイヤー(視聴ページに動画プレイヤーを追加)
-├── 105_premium_hide.txt     # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
-├── 106_watch_history.txt    # 視聴履歴(視聴ページにウォッチトラッカーを追加)
-├── 198_release_notes.*      # リリースノート
-└── 199_readme.html          # 詳細ドキュメント
+├──resources/                       # 199_readme.htmlの画像, js, css
+├── 100_common.txt                  # 共通ライブラリ(トースト通知、ロギング、共通ヘッダ、マテリアルアイコンヘルパなどを提供する共通ライブラリ)
+├── 101_disable_official.txt        # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
+├── 102_mlink_video_controller.txt  # マルチリンクビデオコントローラー(視聴ページにマルチリンクビデオコントローラーを追加)
+├── 103_comment_filter2.txt         # コメントフィルター(視聴ページにコメントフィルターを追加)
+├── 104_video_player.txt            # 動画プレイヤー(視聴ページに動画プレイヤーを追加)
+├── 105_premium_hide.txt            # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
+├── 106_watch_history.txt           # 視聴履歴(視聴ページにウォッチトラッカーを追加)
+├── 198_release_notes.*             # リリースノート
+└── 199_readme.html                 # 詳細ドキュメント
 ```
 
 ### ビルド方法
@@ -239,7 +241,7 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 
 ## 📄 ライセンス
 
-MIT License - Copyright (c) 2017-2025 ◆awd5z.AlOFJq(roflsunriz)
+MIT License - Copyright (c) 2017-2026 ◆awd5z.AlOFJq(roflsunriz)
 
 私の名前を明記している限り、本ソフトウェアは自由に使用、複製、改変、配布、商用利用、非商用利用できます。詳細は[LICENSE](LICENSE)ファイルをご覧ください。
 
@@ -265,7 +267,7 @@ git push origin :refs/tags/#300
 
 ## 🤝 コントリビューション
 
-プルリクエストや課題報告を歓迎します。大きな変更を行う前に、まずissueを作成して議論することをお勧めします。
+プルリクエストや課題報告を歓迎します。大きな変更を行う前に、まずIssueを作成して議論することをお勧めします。
 
 ## 🙏 謝辞
 

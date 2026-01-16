@@ -16,9 +16,9 @@ filter-matomeプロジェクトへの貢献に興味を持っていただき、�
 ## 🛠️ 開発環境のセットアップ
 
 ### 前提条件
-- Node.js 20以上
-- Java Development Kit (JDK) 17以上
-- Git
+- Node.js 24.12.0 以上
+- Java Development Kit (JDK) 17 以上 22 以下
+- Git 2.52.0.windows.1 以上
 
 ### セットアップ手順
 
