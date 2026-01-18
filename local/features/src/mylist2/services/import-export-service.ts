@@ -66,14 +66,14 @@ export class ImportExportService {
 
     return new Promise<void>((resolve, reject) => {
       try {
-        // マイリストの追加
+        // マイリストの追加（既存データがある場合は上書き）
         data.mylists.forEach((mylist: MylistInfo) => {
-          mylistStore.add(mylist);
+          mylistStore.put(mylist);
         });
 
-        // 動画情報の追加
+        // 動画情報の追加（既存データがある場合は上書き）
         data.videos.forEach((video: DBVideo) => {
-          videoStore.add(video);
+          videoStore.put(video);
           // キャッシュにも追加
           this.apiService.setCacheData(video.originalId, {
             id: video.originalId,
@@ -88,10 +88,10 @@ export class ImportExportService {
           });
         });
 
-        // キーワードの追加（新規）
+        // キーワードの追加（既存データがある場合は上書き）
         if (data.keywords) {
           data.keywords.forEach((keyword: KeywordInfo) => {
-            keywordStore.add(keyword);
+            keywordStore.put(keyword);
           });
         }
 

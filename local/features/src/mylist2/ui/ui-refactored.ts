@@ -1402,82 +1402,113 @@ export class Mylist2ManagerUI {
             let mylistId: number | undefined;
 
             // ファイル形式を判定
+            let data: unknown;
             try {
-              const data = JSON.parse(text) as unknown;
-              if (
-                Array.isArray(data) &&
-                typeof data[0] === "object" &&
-                data[0] !== null &&
-                "vid" in data[0]
-              ) {
-                // カスタムマイリスト1の形式
-                this.showProgress();
-                mylistId = await this.manager.importLegacyData(
-                  text,
-                  (current: number, total: number) =>
-                    this.updateProgress(current, total),
-                );
-                await this.showCustomAlert(
-                  "カスタムマイリスト1のデータを正常にインポートしました",
-                );
-              } else {
-                // Mylist2の形式
-                this.showProgress();
-                // data は unknown なので ExportData の形状を厳密に確認し、明示的に構築
-                const rec = data as Record<string, unknown>;
-                if (!rec || typeof rec !== "object") {
-                  throw new Error("無効なデータ形式です");
-                }
-                const mylistsUnknown = rec.mylists;
-                const videosUnknown = rec.videos;
-                const keywordsUnknown = rec.keywords;
-                if (
-                  !Array.isArray(mylistsUnknown) ||
-                  !Array.isArray(videosUnknown)
-                ) {
-                  throw new Error("Mylist2のエクスポート形式ではありません");
-                }
-                const isMylistInfo = (v: unknown): v is MylistInfo => {
-                  if (typeof v !== "object" || v === null) return false;
-                  const r = v as Record<string, unknown>;
-                  return (
-                    typeof r.name === "string" &&
-                    typeof r.createdAt === "number"
-                  );
-                };
-                const isDBVideo = (v: unknown): v is VideoInfo => {
-                  if (typeof v !== "object" || v === null) return false;
-                  const r = v as Record<string, unknown>;
-                  return (
-                    typeof r.id === "string" &&
-                    typeof r.originalId === "string" &&
-                    typeof r.mylistId === "number"
-                  );
-                };
-                const isKeywordInfo = (v: unknown): v is KeywordInfo => {
-                  if (typeof v !== "object" || v === null) return false;
-                  const r = v as Record<string, unknown>;
-                  return (
-                    typeof r.keyword === "string" &&
-                    typeof r.addedAt === "number"
-                  );
-                };
-                const exportData: ExportData = {
-                  mylists: (mylistsUnknown as unknown[]).filter(isMylistInfo),
-                  videos: (videosUnknown as unknown[]).filter(isDBVideo),
-                  keywords: Array.isArray(keywordsUnknown)
-                    ? (keywordsUnknown as unknown[]).filter(isKeywordInfo)
-                    : [],
-                };
-                await this.manager.importData(exportData);
-                await this.showCustomAlert("データを正常にインポートしました");
+              data = JSON.parse(text) as unknown;
+            } catch {
+              throw new Error("無効なJSONファイルです: JSONの解析に失敗しました");
+            }
+
+            // 既存データの存在チェック
+            const existingData = await this.manager.exportData();
+            const hasExistingData =
+              existingData.mylists.length > 0 ||
+              existingData.videos.length > 0 ||
+              existingData.keywords.length > 0;
+
+            if (hasExistingData) {
+              const existingInfo = [
+                existingData.mylists.length > 0
+                  ? `マイリスト: ${existingData.mylists.length}件`
+                  : null,
+                existingData.videos.length > 0
+                  ? `動画: ${existingData.videos.length}件`
+                  : null,
+                existingData.keywords.length > 0
+                  ? `キーワード: ${existingData.keywords.length}件`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join("、");
+
+              const confirmed = await this.showCustomConfirm(
+                `現在のストレージにデータが存在します（${existingInfo}）。\n\nインポートを実行すると、同じIDを持つデータは上書きされます。\n続行しますか？`,
+                "warning",
+                "データ上書き確認",
+              );
+              if (!confirmed) {
+                input.value = "";
+                return;
               }
-            } catch (error) {
-              const errorMessage =
-                error instanceof Error
-                  ? error.message
-                  : "JSONの解析に失敗しました";
-              throw new Error("無効なJSONファイルです: " + errorMessage);
+            }
+
+            if (
+              Array.isArray(data) &&
+              typeof data[0] === "object" &&
+              data[0] !== null &&
+              "vid" in data[0]
+            ) {
+              // カスタムマイリスト1の形式
+              this.showProgress();
+              mylistId = await this.manager.importLegacyData(
+                text,
+                (current: number, total: number) =>
+                  this.updateProgress(current, total),
+              );
+              await this.showCustomAlert(
+                "カスタムマイリスト1のデータを正常にインポートしました",
+              );
+            } else {
+              // Mylist2の形式
+              this.showProgress();
+              // data は unknown なので ExportData の形状を厳密に確認し、明示的に構築
+              const rec = data as Record<string, unknown>;
+              if (!rec || typeof rec !== "object") {
+                throw new Error("無効なデータ形式です");
+              }
+              const mylistsUnknown = rec.mylists;
+              const videosUnknown = rec.videos;
+              const keywordsUnknown = rec.keywords;
+              if (
+                !Array.isArray(mylistsUnknown) ||
+                !Array.isArray(videosUnknown)
+              ) {
+                throw new Error("Mylist2のエクスポート形式ではありません");
+              }
+              const isMylistInfo = (v: unknown): v is MylistInfo => {
+                if (typeof v !== "object" || v === null) return false;
+                const r = v as Record<string, unknown>;
+                return (
+                  typeof r.name === "string" &&
+                  typeof r.createdAt === "number"
+                );
+              };
+              const isDBVideo = (v: unknown): v is VideoInfo => {
+                if (typeof v !== "object" || v === null) return false;
+                const r = v as Record<string, unknown>;
+                return (
+                  typeof r.id === "string" &&
+                  typeof r.originalId === "string" &&
+                  typeof r.mylistId === "number"
+                );
+              };
+              const isKeywordInfo = (v: unknown): v is KeywordInfo => {
+                if (typeof v !== "object" || v === null) return false;
+                const r = v as Record<string, unknown>;
+                return (
+                  typeof r.keyword === "string" &&
+                  typeof r.addedAt === "number"
+                );
+              };
+              const exportData: ExportData = {
+                mylists: (mylistsUnknown as unknown[]).filter(isMylistInfo),
+                videos: (videosUnknown as unknown[]).filter(isDBVideo),
+                keywords: Array.isArray(keywordsUnknown)
+                  ? (keywordsUnknown as unknown[]).filter(isKeywordInfo)
+                  : [],
+              };
+              await this.manager.importData(exportData);
+              await this.showCustomAlert("データを正常にインポートしました");
             }
 
             // マイリスト一覧を更新
