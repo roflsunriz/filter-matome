@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #216 (2026/01/21) リリースノート](#filter-matome-216-20260121-リリースノート)
 - [filter-matome #215 (2026/01/08) リリースノート](#filter-matome-215-20260108-リリースノート)
 - [filter-matome #214 (2026/01/05) リリースノート](#filter-matome-214-20260105-リリースノート)
 - [filter-matome #213 (2026/01/05) リリースノート](#filter-matome-213-20260105-リリースノート)
@@ -129,6 +130,19 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #216 (2026/01/21) リリースノート
+
+- ✨新機能(New)：
+- なし
+- ✅️修正(Fixed)：
+- なし
+- 🔴変更(Changed)：
+- 【mylist2】インポート時既存データ上書きエラーの修正、上書き時に警告機能の追加
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- install-requirements.ps1を追加し、pythonの依存パッケージをインストールするようにした。
 
 ### filter-matome #215 (2026/01/08) リリースノート
 
