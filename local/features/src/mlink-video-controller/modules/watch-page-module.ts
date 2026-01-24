@@ -381,7 +381,14 @@ export class WatchPageModule implements ModuleInstance {
    * タグ数を取得する
    */
   private getTagCount(): number {
-    // タグコンテナ内のd_inline-flex要素を取得
+    // 方法1: APIデータから取得（最も確実）
+    const tagItems = window.NicoCache_nl?.watch?.apiData?.tag?.items;
+    if (Array.isArray(tagItems)) {
+      return tagItems.length;
+    }
+
+    // 方法2: DOM解析（フォールバック）
+    // タグ要素は <a data-anchor-area="tags" data-anchor-href="/tag/..."> という構造
     const tagContainer = document.querySelector(
       ".pos_relative.d_flex.flex-wrap_wrap.gap_base",
     );
@@ -389,33 +396,12 @@ export class WatchPageModule implements ModuleInstance {
       return 0;
     }
 
-    const tagElements = tagContainer.querySelectorAll("div.d_inline-flex");
+    // タグへのリンク要素を取得（data-anchor-href が /tag/ で始まる要素）
+    const tagElements = tagContainer.querySelectorAll(
+      'a[data-anchor-area="tags"][data-anchor-href^="/tag/"]',
+    );
 
-    // タグカウンター関連の要素を除外
-    const filteredTags = Array.from(tagElements).filter((element) => {
-      // IDがTagItemsCounterまたはTagItemsShareButtonの要素を除外
-      if (
-        element.id === "TagItemsCounter" ||
-        element.id === "TagItemsShareButton"
-      ) {
-        return false;
-      }
-
-      // title属性が「タグ個数」または「共有ボタン」の要素を除外
-      const title = element.getAttribute("title");
-      if (title === "タグ個数" || title === "共有ボタン") {
-        return false;
-      }
-
-      // TagItemクラスを持つ要素（わらわが追加した要素）を除外
-      if (element.classList.contains("TagItem")) {
-        return false;
-      }
-
-      return true;
-    });
-
-    return filteredTags.length;
+    return tagElements.length;
   }
 
   /**
