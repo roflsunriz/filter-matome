@@ -175,7 +175,7 @@
         </div>
         <!-- 動画一覧 -->
         <div id="videoList" class="video-list">
-          <!-- 動画アイテムのテンプレート -->
+          <!-- 動画アイテムのテンプレート（仮想スクロール対応・アクションメニュー方式） -->
           <template id="videoItemTemplate">
             <div class="video-item">
               <input type="checkbox" class="video-select" />
@@ -193,16 +193,10 @@
                   <span class="video-upload-date"></span>
                 </div>
               </div>
-              <div class="video-actions">
-                <button class="move-video" title="移動"><img class="material-icon icon-white" data-style="outlined" data-icon="drive_file_move" alt="move" loading="lazy"/></button>
-                <button class="copy-video" title="コピー"><img class="material-icon icon-white" data-style="outlined" data-icon="content_copy" alt="copy" loading="lazy"/></button>
-                <button class="delete-video" title="削除"><img class="material-icon icon-white" data-style="outlined" data-icon="delete" alt="delete" loading="lazy"/></button>
-                <button class="refresh-video" title="情報更新"><img class="material-icon icon-white" data-style="outlined" data-icon="refresh" alt="refresh" loading="lazy"/></button>
-                <button class="open-video-details" title="詳細"><img class="material-icon icon-white" data-style="outlined" data-icon="info" alt="info" loading="lazy"/></button>
-              </div>
+              <button class="action-trigger" aria-label="アクションメニュー" title="アクション">⋮</button>
             </div>
           </template>
-          <!-- キーワードアイテムのテンプレート -->
+          <!-- キーワードアイテムのテンプレート（仮想スクロール対応・アクションメニュー方式） -->
           <template id="keywordItemTemplate">
             <div class="video-item keyword-item">
               <input type="checkbox" class="video-select" />
@@ -220,12 +214,7 @@
                   <a href="#" class="mylist-search" target="_blank">マイリスト検索</a>
                 </div>
               </div>
-              <div class="video-actions">
-                <button class="edit-keyword" title="編集"><img class="material-icon icon-white" data-style="outlined" data-icon="edit" alt="edit" loading="lazy"/></button>
-                <button class="move-keyword" title="移動"><img class="material-icon icon-white" data-style="outlined" data-icon="drive_file_move" alt="move" loading="lazy"/></button>
-                <button class="copy-keyword" title="コピー"><img class="material-icon icon-white" data-style="outlined" data-icon="content_copy" alt="copy" loading="lazy"/></button>
-                <button class="delete-keyword" title="削除"><img class="material-icon icon-white" data-style="outlined" data-icon="delete" alt="delete" loading="lazy"/></button>
-              </div>
+              <button class="action-trigger" aria-label="アクションメニュー" title="アクション">⋮</button>
             </div>
           </template>
         </div>

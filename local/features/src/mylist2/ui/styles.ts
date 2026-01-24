@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mylist2 Manager 用の CSS スタイル（style.css 相当） */
 
 export const MYLIST_MANAGER_STYLES_PART1 = `
@@ -1324,6 +1324,179 @@ export const COLLAPSIBLE_CONTROLS_STYLES = `
 `;
 
 /**
+ * 仮想スクロールとアクションメニュー用のスタイル
+ */
+export const VIRTUAL_SCROLL_ACTION_MENU_STYLES = `
+/* ============================
+   仮想スクロール用スタイル
+   ============================ */
+
+/* スクロールコンテナ */
+.video-list {
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 高さスペーサー */
+.video-list-spacer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+/* 仮想スクロール時のアイテム配置 */
+.video-list .video-item,
+.video-list .keyword-item {
+  position: absolute;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid var(--cml2-border);
+  gap: 10px;
+  background: var(--cml2-bg);
+}
+
+/* ホバー時の背景 */
+.video-list .video-item:hover,
+.video-list .keyword-item:hover {
+  background: var(--cml2-panel);
+}
+
+/* ============================
+   アクショントリガーボタン
+   ============================ */
+
+.action-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--cml2-muted);
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.action-trigger:hover {
+  background: var(--cml2-panel);
+  color: var(--cml2-text);
+}
+
+.action-trigger:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--cml2-focus-ring);
+  opacity: 1;
+}
+
+/* ホバー時にトリガーを表示 */
+.video-item:hover .action-trigger,
+.keyword-item:hover .action-trigger,
+.video-item:focus-within .action-trigger,
+.keyword-item:focus-within .action-trigger {
+  opacity: 1;
+}
+
+/* タッチデバイスでは常時表示 */
+@media (hover: none) and (pointer: coarse) {
+  .action-trigger {
+    opacity: 1;
+  }
+}
+
+/* ============================
+   ポップオーバーメニュー
+   ============================ */
+
+.cml2-action-popover {
+  position: fixed;
+  z-index: 99999;
+  min-width: 140px;
+  background: var(--cml2-panel, #2a2b2c);
+  border: 1px solid var(--cml2-border, #333333);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  padding: 4px 0;
+  animation: cml2-popover-fade-in 0.15s ease-out;
+}
+
+@keyframes cml2-popover-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cml2-action-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--cml2-text, #ffffff);
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.cml2-action-popover-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cml2-action-popover-item:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.cml2-action-popover-item.danger {
+  color: var(--cml2-danger, #e74c3c);
+}
+
+.cml2-action-popover-item.danger:hover {
+  background: rgba(231, 76, 60, 0.15);
+}
+
+.cml2-action-popover-item .material-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.cml2-action-popover-label {
+  flex: 1;
+}
+
+/* ============================
+   動画アクションボタン（旧スタイル互換）
+   ============================ */
+
+/* 旧来の .video-actions は非表示 */
+.video-item .video-actions,
+.keyword-item .video-actions {
+  display: none;
+}
+`;
+
+/**
  * すべての Mylist Manager スタイルを統合 */
 export const MYLIST_MANAGER_STYLES = `
 ${MYLIST_MANAGER_STYLES_PART1}
@@ -1335,6 +1508,8 @@ ${MYLIST_MANAGER_STYLES_PART3}
 ${MYLIST_MANAGER_STYLES_PART4}
 
 ${COLLAPSIBLE_CONTROLS_STYLES}
+
+${VIRTUAL_SCROLL_ACTION_MENU_STYLES}
 `;
 /**
  * Mylist Manager スタイルをDOMに適用する関数

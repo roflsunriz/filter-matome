@@ -4,8 +4,6 @@ import { Mylist2Manager } from "@/mylist2/components/manager-refactored";
 import { MylistInfo, KeywordInfo, ExportData } from "@/types/mylist-types";
 import { DBVideo as VideoInfo } from "@/types/video-types";
 import {
-  createMaterialIcon,
-  ICONS,
   hydrateMaterialIconImages,
 } from "@/common/material-icons";
 
@@ -16,6 +14,14 @@ import { FileHelperService } from "@/mylist2/ui/file-helper-service";
 import { EventHandlers } from "@/mylist2/ui/event-handlers";
 import { BatchOperations } from "@/mylist2/ui/batch-operations";
 import { linkify } from "@/mylist2/utils/linkify";
+import {
+  VirtualScrollManager,
+  type VirtualScrollItem,
+} from "@/mylist2/ui/virtual-scroll";
+import {
+  getActionMenuManager,
+  type ActionMenuContext,
+} from "@/mylist2/ui/action-menu";
 
 export class Mylist2ManagerUI {
   private manager: Mylist2Manager;
@@ -29,7 +35,12 @@ export class Mylist2ManagerUI {
   private progressService: ProgressService;
   private fileHelperService: FileHelperService;
   private eventHandlers: EventHandlers;
-  private batchOperations: BatchOperations;
+  private batchOperations!: BatchOperations;
+
+  // 仮想スクロールとアクションメニュー
+  private virtualScrollManager: VirtualScrollManager;
+  private currentVideos: VideoInfo[] = [];
+  private currentKeywords: KeywordInfo[] = [];
 
   constructor() {
     this.manager = new Mylist2Manager();
@@ -40,6 +51,13 @@ export class Mylist2ManagerUI {
     this.validationService = new ValidationService();
     this.progressService = new ProgressService();
     this.fileHelperService = new FileHelperService();
+
+    // 仮想スクロールマネージャーの初期化
+    this.virtualScrollManager = new VirtualScrollManager({
+      itemHeight: 92,
+      bufferSize: 5,
+      containerSelector: "#videoList",
+    });
 
     // イベントハンドラーの初期化
     this.eventHandlers = new EventHandlers(
@@ -56,17 +74,24 @@ export class Mylist2ManagerUI {
       () => this.loadVideos(),
     );
 
-    // 一括操作の初期化
+    // 一括操作の初期化（仮想スクロール対応）
     this.batchOperations = new BatchOperations(
       this.manager,
       this.modalService,
       this.progressService,
       this.eventHandlers,
       () => this.loadVideos(),
+      this.virtualScrollManager,
     );
 
     // テンプレートを最初に初期化
     this.initializeTemplates();
+
+    // 仮想スクロールの初期化
+    this.initializeVirtualScroll();
+
+    // アクションメニューの初期化
+    this.initializeActionMenu();
 
     // イベントリスナーを初期化（ただし設定は後で）
     this.initializeEventListeners();
@@ -347,6 +372,173 @@ export class Mylist2ManagerUI {
     this.keywordItemTemplate = keywordTemplateElement;
   }
 
+  /**
+   * 仮想スクロールの初期化
+   */
+  private initializeVirtualScroll(): void {
+    const initialized = this.virtualScrollManager.initialize(
+      this.renderVirtualScrollItem.bind(this),
+    );
+
+    if (!initialized) {
+      window.logger.error("仮想スクロールの初期化に失敗しました");
+      return;
+    }
+
+    // アクショントリガーのクリックイベントを委譲で処理
+    const container = document.getElementById("videoList");
+    if (container) {
+      container.addEventListener("click", (e) => {
+        const trigger = (e.target as HTMLElement).closest(".action-trigger");
+        if (trigger) {
+          e.stopPropagation();
+          this.handleActionTriggerClick(trigger as HTMLElement);
+        }
+      });
+    }
+
+    window.logger.info("仮想スクロールを初期化しました");
+  }
+
+  /**
+   * 仮想スクロール用のアイテムレンダラー
+   */
+  private renderVirtualScrollItem(
+    item: VirtualScrollItem,
+    _index: number,
+  ): HTMLElement {
+    if (item.type === "video") {
+      return this.renderVideoItem(item.data);
+    } else {
+      return this.renderKeywordItem(item.data);
+    }
+  }
+
+  /**
+   * アクションメニューの初期化
+   */
+  private initializeActionMenu(): void {
+    const actionMenu = getActionMenuManager();
+
+    // 動画用ハンドラーを登録
+    actionMenu.registerHandlers({
+      move: async (ctx: ActionMenuContext) => {
+        if (ctx.type === "video") {
+          await this.eventHandlers.moveVideo(ctx.element, ctx.data.title);
+        } else {
+          const keywordId = ctx.data.id;
+          if (keywordId !== undefined) {
+            const event = { target: ctx.element } as unknown as Event;
+            await this.eventHandlers.handleKeywordMove(event);
+          }
+        }
+      },
+      copy: async (ctx: ActionMenuContext) => {
+        if (ctx.type === "video") {
+          await this.eventHandlers.copyVideo(ctx.element, ctx.data.title);
+        } else {
+          const event = { target: ctx.element } as unknown as Event;
+          await this.eventHandlers.handleKeywordCopy(event);
+        }
+      },
+      delete: async (ctx: ActionMenuContext) => {
+        if (ctx.type === "video") {
+          const compositeId = ctx.element.dataset.compositeId;
+          if (compositeId) {
+            const confirmed = await this.modalService.showCustomConfirm(
+              `「${ctx.data.title}」をマイリストから削除しますか？`,
+            );
+            if (confirmed) {
+              await this.manager.deleteVideo(compositeId);
+              await this.loadVideos();
+            }
+          }
+        } else {
+          const event = { target: ctx.element } as unknown as Event;
+          await this.eventHandlers.handleKeywordDelete(event);
+        }
+      },
+      refresh: async (ctx: ActionMenuContext) => {
+        if (ctx.type === "video") {
+          const videoId = ctx.data.originalId;
+          const compositeId = ctx.element.dataset.compositeId;
+          if (videoId && compositeId) {
+            try {
+              this.progressService.showProgress();
+              this.progressService.updateProgress(0, 1);
+              const videoInfo = await this.manager.fetchVideoInfo(videoId);
+              await this.manager.updateVideoInfo(compositeId, videoInfo);
+              await this.loadVideos();
+              this.progressService.updateProgress(1, 1);
+            } catch (error) {
+              window.logger.error("動画情報の更新に失敗しました:", error);
+              const errorMessage =
+                error instanceof Error ? error.message : "不明なエラー";
+              await this.modalService.showCustomAlert(
+                "動画情報の更新に失敗しました: " + errorMessage,
+              );
+            } finally {
+              this.progressService.hideProgress();
+            }
+          }
+        }
+      },
+      details: async (ctx: ActionMenuContext) => {
+        if (ctx.type === "video") {
+          const compositeId = ctx.element.dataset.compositeId;
+          const memoFromDom = ctx.element.dataset.memo ?? "";
+          await this.showVideoDetailsModal(ctx.data, compositeId, memoFromDom);
+        }
+      },
+      edit: async (ctx: ActionMenuContext) => {
+        if (ctx.type === "keyword") {
+          const event = { target: ctx.element } as unknown as Event;
+          await this.eventHandlers.handleKeywordEdit(event);
+        }
+      },
+    });
+
+    window.logger.info("アクションメニューを初期化しました");
+  }
+
+  /**
+   * アクショントリガークリック時の処理
+   */
+  private handleActionTriggerClick(trigger: HTMLElement): void {
+    const itemElement = trigger.closest(".video-item, .keyword-item") as HTMLElement;
+    if (!itemElement) return;
+
+    const actionMenu = getActionMenuManager();
+    const isKeyword = itemElement.classList.contains("keyword-item");
+
+    if (isKeyword) {
+      const keywordIdStr = itemElement.dataset.id;
+      if (!keywordIdStr) return;
+
+      const keywordId = parseInt(keywordIdStr, 10);
+      const keywordData = this.currentKeywords.find((k) => k.id === keywordId);
+      if (!keywordData) return;
+
+      actionMenu.show(trigger, {
+        type: "keyword",
+        data: keywordData,
+        element: itemElement,
+      });
+    } else {
+      const compositeId = itemElement.dataset.compositeId;
+      if (!compositeId) return;
+
+      const videoData = this.currentVideos.find((v) => v.id === compositeId);
+      if (!videoData) return;
+
+      actionMenu.show(trigger, {
+        type: "video",
+        data: videoData,
+        element: itemElement,
+      });
+    }
+  }
+
   private initializeAdditionalControls(): void {
     this.initializeHeaderControls();
     this.initializeSearchEventListeners();
@@ -354,35 +546,25 @@ export class Mylist2ManagerUI {
   }
 
   renderVideoList(videos: VideoInfo[], keywords: KeywordInfo[]): void {
-    const videoList = document.getElementById("videoList");
-    if (!videoList) {
-      window.logger.error("動画リスト要素が見つかりません");
-      return;
-    }
+    // 現在のデータを保持（アクションメニューで参照するため）
+    this.currentVideos = videos;
+    this.currentKeywords = keywords;
 
-    videoList.innerHTML = "";
+    // 仮想スクロール用のデータを構築
+    const items: VirtualScrollItem[] = [
+      ...keywords.map((k): VirtualScrollItem => ({ type: "keyword", data: k })),
+      ...videos.map((v): VirtualScrollItem => ({ type: "video", data: v })),
+    ];
 
-    // キーワードの表示
-    keywords.forEach((keyword) => {
-      const keywordElement = this.renderKeywordItem(keyword);
-      videoList.appendChild(keywordElement);
-    });
-
-    // 動画の表示
-    videos.forEach((video) => {
-      const videoElement = this.renderVideoItem(video);
-      videoList.appendChild(videoElement);
-    });
-
-    // イベントリスナーの追加
-    this.setupVideoListEvents(videoList);
+    // 仮想スクロールマネージャーにデータを設定
+    this.virtualScrollManager.setData(items);
   }
 
   renderVideoItem(video: VideoInfo): HTMLElement {
     // 保持しているテンプレートを使用
     if (!this.videoItemTemplate) {
       window.logger.error("動画テンプレートが初期化されていません！");
-      // フォールバック用の要素を作成
+      // フォールバック用の要素を作成（シンプル化済み）
       const fallbackElement = document.createElement("div");
       fallbackElement.className = "video-item";
       fallbackElement.innerHTML = `
@@ -403,13 +585,7 @@ export class Mylist2ManagerUI {
             <span class="video-upload-date">投稿日: ${new Date(video.uploadedAt).toLocaleDateString()}</span>
           </div>
         </div>
-        <div class="video-actions">
-          <button class="move-video">${createMaterialIcon("drive_file_move", { color: "white" })}移動</button>
-          <button class="copy-video">${createMaterialIcon("content_copy", { color: "white" })}コピー</button>
-          <button class="delete-video">${createMaterialIcon(ICONS.delete, { color: "white" })}削除</button>
-          <button class="refresh-video">${createMaterialIcon(ICONS.refresh, { color: "white" })}情報更新</button>
-          <button class="open-video-details">${createMaterialIcon("info", { color: "white" })}詳細</button>
-        </div>
+        <button class="action-trigger" aria-label="アクションメニュー" title="アクション">⋮</button>
       `;
       fallbackElement.dataset.id = video.originalId;
       fallbackElement.dataset.compositeId = video.id;
@@ -516,9 +692,10 @@ export class Mylist2ManagerUI {
       window.logger.error("キーワードテンプレートが初期化されていません！");
       const fallbackElement = document.createElement("div");
       fallbackElement.className = "video-item keyword-item";
+      const encodedKeyword = encodeURIComponent(keyword.keyword);
       fallbackElement.innerHTML = `
         <input type="checkbox" class="video-select" />
-        <div class="keyword-icon">${createMaterialIcon(ICONS.search, { color: "white" })}</div>
+        <div class="keyword-icon"><img class="material-icon icon-dark" data-style="outlined" data-icon="search" alt="search" loading="lazy"/></div>
         <div class="video-info">
           <div class="video-title">
             <span class="keyword-text">${keyword.keyword}</span>
@@ -526,18 +703,19 @@ export class Mylist2ManagerUI {
           <div class="keyword-meta">
             <span class="keyword-added-date">追加日時: ${new Date(keyword.addedAt).toLocaleString()}</span>
           </div>
+          <div class="keyword-links">
+            <a href="https://www.nicovideo.jp/search/${encodedKeyword}" class="keyword-search" target="_blank">キーワード検索</a>
+            <a href="https://www.nicovideo.jp/tag/${encodedKeyword}" class="tag-search" target="_blank">タグ検索</a>
+            <a href="https://www.nicovideo.jp/mylist_search/${encodedKeyword}" class="mylist-search" target="_blank">マイリスト検索</a>
+          </div>
         </div>
-        <div class="video-actions">
-          <button class="edit-keyword">${createMaterialIcon(ICONS.edit, { color: "white" })}編集</button>
-          <button class="move-keyword">${createMaterialIcon("drive_file_move", { color: "white" })}移動</button>
-          <button class="copy-keyword">${createMaterialIcon("content_copy", { color: "white" })}コピー</button>
-          <button class="delete-keyword">${createMaterialIcon(ICONS.delete, { color: "white" })}削除</button>
-        </div>
+        <button class="action-trigger" aria-label="アクションメニュー" title="アクション">⋮</button>
       `;
       if (keyword.id !== undefined) {
         fallbackElement.dataset.id = keyword.id.toString();
       }
       fallbackElement.dataset.type = "keyword";
+      hydrateMaterialIconImages(fallbackElement);
       return fallbackElement;
     }
 
@@ -599,265 +777,14 @@ export class Mylist2ManagerUI {
     }
   }
 
-  private setupVideoListEvents(videoList: HTMLElement): void {
-    // 動画関連のボタンイベント設定
-    this.setupVideoActions(videoList);
-    // キーワード関連のボタンイベント設定
-    this.setupKeywordActions(videoList);
-  }
-
-  private setupVideoActions(videoList: HTMLElement): void {
-    // 移動ボタン
-    videoList.querySelectorAll(".move-video").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        void this.eventHandlers.handleVideoMove(event);
-      });
-    });
-
-    // コピーボタン
-    videoList.querySelectorAll(".copy-video").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        void this.eventHandlers.handleVideoCopy(event);
-      });
-    });
-
-    // 削除ボタン
-    videoList.querySelectorAll(".delete-video").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        void this.eventHandlers.handleVideoDelete(event);
-      });
-    });
-
-    // 情報更新ボタン
-    videoList.querySelectorAll(".refresh-video").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        void this.eventHandlers.handleVideoRefresh(event);
-      });
-    });
-
-    // 詳細表示ボタン
-    videoList.querySelectorAll(".open-video-details").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        void (async () => {
-          const target = (event.currentTarget as HTMLElement).closest(
-            ".video-item",
-          );
-          if (!target) return;
-          const compositeId =
-            target.getAttribute("data-composite-id") || undefined;
-          if (!compositeId) {
-            // フォールバック: DOM上のデータ属性だけで表示
-            const descFromDom =
-              target.getAttribute("data-description") || undefined;
-            const tagsFromDom = target.getAttribute("data-tags") || undefined;
-            const memoFromDom = target.getAttribute("data-memo") || "";
-            const fallback: Partial<VideoInfo> = {};
-            if (descFromDom) fallback.description = descFromDom;
-            if (tagsFromDom) {
-              try {
-                fallback.tags = JSON.parse(tagsFromDom) as string[];
-              } catch (err) {
-                void err;
-              }
-            }
-            await this.showVideoDetailsModal(
-              fallback as VideoInfo,
-              undefined,
-              memoFromDom,
-            );
-            return;
-          }
-          try {
-            const db = await this.manager.getDB();
-            const tx = db.transaction(["videos"], "readonly");
-            const store = tx.objectStore("videos");
-            const video = await new Promise<VideoInfo | null>(
-              (resolve, reject) => {
-                const req = store.get(compositeId);
-                req.onsuccess = () =>
-                  resolve((req.result as unknown as VideoInfo) || null);
-                req.onerror = () => {
-                  const err = req.error;
-                  reject(
-                    new Error(err instanceof Error ? err.message : String(err)),
-                  );
-                };
-              },
-            );
-            db.close();
-            const descFromDom =
-              target.getAttribute("data-description") || undefined;
-            const tagsFromDom = target.getAttribute("data-tags") || undefined;
-            const memoFromDom = target.getAttribute("data-memo") || "";
-            if (video) {
-              const enriched: VideoInfo = {
-                ...video,
-                description: video.description ?? descFromDom,
-                tags:
-                  video.tags ??
-                  (tagsFromDom
-                    ? ((): string[] | undefined => {
-                        try {
-                          return JSON.parse(tagsFromDom) as string[];
-                        } catch {
-                          return undefined;
-                        }
-                      })()
-                    : undefined),
-              } as VideoInfo;
-              await this.showVideoDetailsModal(
-                enriched,
-                compositeId,
-                memoFromDom,
-              );
-            } else {
-              // DBに見つからない場合でもDOMの情報でモーダルを表示
-              const fallback: Partial<VideoInfo> = {};
-              if (descFromDom) fallback.description = descFromDom;
-              if (tagsFromDom) {
-                try {
-                  fallback.tags = JSON.parse(tagsFromDom) as string[];
-                } catch (err) {
-                  void err;
-                }
-              }
-              await this.showVideoDetailsModal(
-                fallback as VideoInfo,
-                compositeId,
-                memoFromDom,
-              );
-            }
-          } catch (e) {
-            const msg = e instanceof Error ? e.message : String(e);
-            window.logger.error("詳細表示に失敗:", msg);
-          }
-        })();
-      });
-    });
-
-    // 追加のイベント委譲（再描画や将来のDOM変更にも強い）
-    videoList.addEventListener("click", (ev) => {
-      void (async () => {
-        const trigger = (ev.target as HTMLElement).closest(
-          ".open-video-details",
-        );
-        if (!trigger) return;
-        const target = (trigger as HTMLElement).closest(".video-item");
-        if (!target) return;
-        const compositeId =
-          target.getAttribute("data-composite-id") || undefined;
-        const descFromDom =
-          target.getAttribute("data-description") || undefined;
-        const tagsFromDom = target.getAttribute("data-tags") || undefined;
-        const memoFromDom = target.getAttribute("data-memo") || "";
-        try {
-          if (!compositeId) {
-            const fallback: Partial<VideoInfo> = {};
-            if (descFromDom) fallback.description = descFromDom;
-            if (tagsFromDom) {
-              try {
-                fallback.tags = JSON.parse(tagsFromDom) as string[];
-              } catch (err) {
-                void err;
-              }
-            }
-            await this.showVideoDetailsModal(
-              fallback as VideoInfo,
-              compositeId,
-              memoFromDom,
-            );
-            return;
-          }
-          const db = await this.manager.getDB();
-          const tx = db.transaction(["videos"], "readonly");
-          const store = tx.objectStore("videos");
-          const video = await new Promise<VideoInfo | null>(
-            (resolve, reject) => {
-              const req = store.get(compositeId);
-              req.onsuccess = () =>
-                resolve((req.result as unknown as VideoInfo) || null);
-              req.onerror = () => {
-                const err = req.error;
-                reject(
-                  new Error(err instanceof Error ? err.message : String(err)),
-                );
-              };
-            },
-          );
-          db.close();
-          if (video) {
-            const enriched: VideoInfo = {
-              ...video,
-              description: video.description ?? descFromDom,
-              tags:
-                video.tags ??
-                (tagsFromDom
-                  ? ((): string[] | undefined => {
-                      try {
-                        return JSON.parse(tagsFromDom) as string[];
-                      } catch {
-                        return undefined;
-                      }
-                    })()
-                  : undefined),
-            } as VideoInfo;
-            await this.showVideoDetailsModal(
-              enriched,
-              compositeId,
-              memoFromDom,
-            );
-          } else {
-            const fallback: Partial<VideoInfo> = {};
-            if (descFromDom) fallback.description = descFromDom;
-            if (tagsFromDom) {
-              try {
-                fallback.tags = JSON.parse(tagsFromDom) as string[];
-              } catch (err) {
-                void err;
-              }
-            }
-            await this.showVideoDetailsModal(
-              fallback as VideoInfo,
-              compositeId,
-              memoFromDom,
-            );
-          }
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : String(e);
-          window.logger.error("詳細表示(委譲)に失敗:", msg);
-        }
-      })();
-    });
-  }
-
-  private setupKeywordActions(videoList: HTMLElement): void {
-    // 移動ボタン
-    videoList.querySelectorAll(".move-keyword").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        void this.eventHandlers.handleKeywordMove(event);
-      });
-    });
-
-    // コピーボタン
-    videoList.querySelectorAll(".copy-keyword").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        void this.eventHandlers.handleKeywordCopy(event);
-      });
-    });
-
-    // 削除ボタン
-    videoList.querySelectorAll(".delete-keyword").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        void this.eventHandlers.handleKeywordDelete(event);
-      });
-    });
-
-    // 編集ボタン
-    videoList.querySelectorAll(".edit-keyword").forEach((button) => {
-      button.addEventListener("click", (event) => {
-        void this.eventHandlers.handleKeywordEdit(event);
-      });
-    });
+  /**
+   * 動画リストのイベント設定
+   * 仮想スクロール対応: イベントは initializeVirtualScroll で委譲方式で設定済み
+   */
+  private setupVideoListEvents(_videoList: HTMLElement): void {
+    // 仮想スクロールとアクションメニューを使用するため、
+    // 個別のボタンイベント設定は不要
+    // イベントは initializeVirtualScroll() で委譲方式で処理
   }
 
   // 残りのメソッド実装
@@ -1041,46 +968,31 @@ export class Mylist2ManagerUI {
             return;
           }
 
-          const selectedItems = Array.from(
-            document.querySelectorAll(".video-select:checked"),
-          )
-            .map(
-              (checkbox) =>
-                (checkbox as HTMLInputElement).closest(
-                  ".video-item, .keyword-item",
-                ) as HTMLElement,
-            )
-            .filter((item) => item !== null);
+          // 仮想スクロールマネージャーから選択されたアイテムを取得
+          const selectedVideos = this.virtualScrollManager.getSelectedVideos();
+          const selectedKeywords = this.virtualScrollManager.getSelectedKeywords();
 
-          if (selectedItems.length === 0) {
+          if (selectedVideos.length === 0 && selectedKeywords.length === 0) {
             await this.showCustomAlert("項目を選択してください");
             return;
           }
 
-          // キーワードと動画を分離
-          const selectedVideos = selectedItems.filter(
-            (item) => !item.classList.contains("keyword-item"),
-          );
-          const selectedKeywords = selectedItems.filter((item) =>
-            item.classList.contains("keyword-item"),
-          );
-
           try {
             switch (action) {
               case "move":
-                await this.batchOperations.moveSelectedItems(
+                await this.batchOperations.moveSelectedItemsFromData(
                   selectedVideos,
                   selectedKeywords,
                 );
                 break;
               case "copy":
-                await this.batchOperations.copySelectedItems(
+                await this.batchOperations.copySelectedItemsFromData(
                   selectedVideos,
                   selectedKeywords,
                 );
                 break;
               case "delete":
-                await this.batchOperations.deleteSelectedItems(
+                await this.batchOperations.deleteSelectedItemsFromData(
                   selectedVideos,
                   selectedKeywords,
                 );
@@ -1093,12 +1005,15 @@ export class Mylist2ManagerUI {
                   return;
                 }
                 if (selectedVideos.length > 0) {
-                  await this.batchOperations.refreshSelectedVideos(
+                  await this.batchOperations.refreshSelectedVideosFromData(
                     selectedVideos,
                   );
                 }
                 break;
             }
+
+            // 操作後に選択をクリア
+            this.virtualScrollManager.deselectAll();
           } catch (error) {
             window.logger.error("一括操作に失敗しました:", error);
             const errorMessage =
@@ -1539,15 +1454,8 @@ export class Mylist2ManagerUI {
     const selectAllVideosElement = document.getElementById("selectAllVideos");
     if (selectAllVideosElement) {
       selectAllVideosElement.addEventListener("click", () => {
-        const checkboxes =
-          document.querySelectorAll<HTMLInputElement>(".video-select");
-        checkboxes.forEach((checkbox) => {
-          // 親要素がキーワードアイテムでない場合のみ選択
-          const parentItem = checkbox.closest(".video-item, .keyword-item");
-          if (parentItem && !parentItem.classList.contains("keyword-item")) {
-            checkbox.checked = true;
-          }
-        });
+        // 仮想スクロールマネージャーを使用
+        this.virtualScrollManager.selectAllVideos();
       });
     }
 
@@ -1556,9 +1464,8 @@ export class Mylist2ManagerUI {
       document.getElementById("deselectAllVideos");
     if (deselectAllVideosElement) {
       deselectAllVideosElement.addEventListener("click", () => {
-        const checkboxes =
-          document.querySelectorAll<HTMLInputElement>(".video-select");
-        checkboxes.forEach((checkbox) => (checkbox.checked = false));
+        // 仮想スクロールマネージャーを使用
+        this.virtualScrollManager.deselectAll();
       });
     }
   }
@@ -1819,44 +1726,10 @@ export class Mylist2ManagerUI {
     });
   }
 
-  // 動画の検索フィルター
+  // 動画の検索フィルター（仮想スクロール対応）
   filterVideos(searchText: string): void {
-    const items = document.querySelectorAll(".video-item, .keyword-item");
-    items.forEach((item) => {
-      if (item.classList.contains("keyword-item")) {
-        const keywordElement = item.querySelector(".keyword-text");
-        if (!keywordElement) return;
-
-        const keyword = keywordElement.textContent?.toLowerCase() || "";
-
-        if (keyword.includes(searchText)) {
-          item.classList.remove("hidden");
-        } else {
-          item.classList.add("hidden");
-        }
-      } else {
-        const titleElement =
-          item.querySelector(".video-title-link") ||
-          item.querySelector(".video-title");
-        const authorElement = item.querySelector(".video-author");
-
-        if (!titleElement || !authorElement) return;
-
-        const title = titleElement.textContent?.toLowerCase() || "";
-        const author = authorElement.textContent?.toLowerCase() || "";
-        const memo = (item.getAttribute("data-memo") || "").toLowerCase();
-
-        if (
-          title.includes(searchText) ||
-          author.includes(searchText) ||
-          memo.includes(searchText)
-        ) {
-          item.classList.remove("hidden");
-        } else {
-          item.classList.add("hidden");
-        }
-      }
-    });
+    // 仮想スクロールマネージャーのフィルター機能を使用
+    this.virtualScrollManager.setFilter(searchText);
   }
 
   async initializeSettings(): Promise<void> {
