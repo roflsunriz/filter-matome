@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #217.1 (2026/01/24) リリースノート](#filter-matome-2171-20260124-リリースノート)
 - [filter-matome #217 (2026/01/24) リリースノート](#filter-matome-217-20260124-リリースノート)
 - [filter-matome #216 (2026/01/21) リリースノート](#filter-matome-216-20260121-リリースノート)
 - [filter-matome #215 (2026/01/08) リリースノート](#filter-matome-215-20260108-リリースノート)
@@ -131,6 +132,11 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #217.1 (2026/01/24) リリースノート
+
+- ✅️修正(Fixed)：
+- 【mylist2】マイリスト設定モーダルで各種操作（名前変更、削除、エクスポート等）を行った際に、確認ダイアログやアラートが設定モーダルの下に表示される問題を修正。モーダルのマウント先をdocument.bodyに変更してスタッキングコンテキストの問題を解消。
 
 ### filter-matome #217 (2026/01/24) リリースノート
 
