@@ -1417,6 +1417,45 @@ export const VIRTUAL_SCROLL_ACTION_MENU_STYLES = `
 }
 
 /* ============================
+   チェックボックスのホバー表示
+   ============================ */
+
+/* 仮想スクロール時のチェックボックスはホバーで表示 */
+.video-list .video-item .video-select,
+.video-list .keyword-item .video-select {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* ホバー時にチェックボックスを表示 */
+.video-list .video-item:hover .video-select,
+.video-list .keyword-item:hover .video-select,
+.video-list .video-item:focus-within .video-select,
+.video-list .keyword-item:focus-within .video-select {
+  opacity: 1;
+}
+
+/* チェック済みの場合は常時表示 */
+.video-list .video-item .video-select:checked,
+.video-list .keyword-item .video-select:checked {
+  opacity: 1;
+}
+
+/* フォーカス時も表示 */
+.video-list .video-item .video-select:focus,
+.video-list .keyword-item .video-select:focus {
+  opacity: 1;
+}
+
+/* タッチデバイスでは常時表示 */
+@media (hover: none) and (pointer: coarse) {
+  .video-list .video-item .video-select,
+  .video-list .keyword-item .video-select {
+    opacity: 1;
+  }
+}
+
+/* ============================
    ポップオーバーメニュー
    ============================ */
 
