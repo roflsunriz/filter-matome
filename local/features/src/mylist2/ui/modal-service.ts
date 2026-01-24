@@ -31,9 +31,8 @@ export class ModalService {
         </div>
       `;
 
-      const mountRoot =
-        document.getElementById("Mylist2Manager") || document.body;
-      mountRoot.insertAdjacentHTML("beforeend", modalHTML);
+      // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
+      document.body.insertAdjacentHTML("beforeend", modalHTML);
       const modal = document.querySelector(".cml2-alert-modal") as HTMLElement;
       const okButton = document.getElementById(
         "alertOkButton",
@@ -108,9 +107,8 @@ export class ModalService {
         </div>
       `;
 
-      const mountRoot =
-        document.getElementById("Mylist2Manager") || document.body;
-      mountRoot.insertAdjacentHTML("beforeend", modalHTML);
+      // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
+      document.body.insertAdjacentHTML("beforeend", modalHTML);
       const modal = document.querySelector(".cml2-alert-modal") as HTMLElement;
       const okButton = document.getElementById(
         "confirmOkButton",
@@ -194,9 +192,8 @@ export class ModalService {
         </div>
       `;
 
-      const mountRoot =
-        document.getElementById("Mylist2Manager") || document.body;
-      mountRoot.insertAdjacentHTML("beforeend", modalHTML);
+      // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
+      document.body.insertAdjacentHTML("beforeend", modalHTML);
 
       return new Promise<number | null>((resolve) => {
         const modal = document.querySelector(".cml2-modal") as HTMLElement;
@@ -322,9 +319,8 @@ export class ModalService {
             </div>
           </div>
         </div>`;
-      const mountRoot =
-        document.getElementById("Mylist2Manager") || document.body;
-      mountRoot.insertAdjacentHTML("beforeend", html);
+      // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
+      document.body.insertAdjacentHTML("beforeend", html);
       const modal = document.querySelector(".cml2-modal") as HTMLElement;
       const cleanup = () => {
         document.removeEventListener("keydown", onKey);
@@ -380,9 +376,8 @@ export class ModalService {
             </div>
           </div>
         </div>`;
-      const mountRoot =
-        document.getElementById("Mylist2Manager") || document.body;
-      mountRoot.insertAdjacentHTML("beforeend", html);
+      // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
+      document.body.insertAdjacentHTML("beforeend", html);
       const modal = document.querySelector(".cml2-modal") as HTMLElement;
       const cleanup = () => {
         document.removeEventListener("keydown", onKey);
@@ -443,9 +438,8 @@ export class ModalService {
             </div>
           </div>
         </div>`;
-      const mountRoot =
-        document.getElementById("Mylist2Manager") || document.body;
-      mountRoot.insertAdjacentHTML("beforeend", html);
+      // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
+      document.body.insertAdjacentHTML("beforeend", html);
       const modal = document.querySelector(".cml2-modal") as HTMLElement;
       const cleanup = () => {
         document.removeEventListener("keydown", onKey);
@@ -507,9 +501,8 @@ export class ModalService {
             </div>
           </div>
         </div>`;
-      const mountRoot =
-        document.getElementById("Mylist2Manager") || document.body;
-      mountRoot.insertAdjacentHTML("beforeend", html);
+      // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
+      document.body.insertAdjacentHTML("beforeend", html);
       const modal = document.querySelector(".cml2-modal") as HTMLElement;
       const select = document.getElementById(
         "cml2Selection",
