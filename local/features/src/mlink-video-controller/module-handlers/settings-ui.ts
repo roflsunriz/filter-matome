@@ -83,6 +83,12 @@ export class SettingsUI {
           this.refreshWatchPageSubModules();
         }
       }
+
+      // 🆕 排他グループ対応: enabled/disabled イベント時にトグルスイッチを同期
+      if (event.type === "enabled" || event.type === "disabled") {
+        this.syncModuleToggle(event.moduleId, event.type === "enabled");
+        this.updateModuleStatus(event.moduleId);
+      }
     });
 
     this.isInitialized = true;
@@ -442,6 +448,26 @@ export class SettingsUI {
       const moduleStatus = this.moduleManager.getModuleStatus(moduleId);
       status.textContent = this.getStatusText(moduleStatus);
       status.className = `module-status ${moduleStatus.toLowerCase()}`;
+    }
+  }
+
+  /**
+   * 🆕 排他グループ対応: モジュールのトグルスイッチ状態を同期
+   * 排他グループの他モジュールが無効化された際にUI上のトグルも連動させる
+   */
+  private syncModuleToggle(moduleId: string, enabled: boolean): void {
+    if (!this.shadowRoot) return;
+
+    const moduleItem = this.shadowRoot.querySelector(
+      `[data-module-id="${moduleId}"]`,
+    );
+    if (moduleItem) {
+      const toggle = moduleItem.querySelector(
+        ".module-toggle",
+      ) as HTMLInputElement;
+      if (toggle && toggle.checked !== enabled) {
+        toggle.checked = enabled;
+      }
     }
   }
 
