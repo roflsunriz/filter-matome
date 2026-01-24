@@ -97,8 +97,8 @@ export class Mylist2ManagerUI {
     this.initializeEventListeners();
     this.initializeAdditionalControls();
 
-    // 折りたたみ可能なコントロールの初期化
-    this.initializeCollapsibleControls();
+    // 設定モーダルとFABの初期化
+    this.initializeSettingsModal();
 
     // 設定の初期化（これによってマイリストも読み込まれる）
     void this.initializeSettings();
@@ -1862,159 +1862,68 @@ export class Mylist2ManagerUI {
     });
   }
 
-  // 折りたたみ可能なコントロールの初期化
-  initializeCollapsibleControls(): void {
-    const hoverArea = document.querySelector(
-      ".control-hover-area",
-    ) as HTMLElement;
-    const collapsibleControls = document.querySelector(
-      ".collapsible-controls",
-    ) as HTMLElement;
-    const alwaysShowCheckbox = document.getElementById(
-      "alwaysShowControls",
-    ) as HTMLInputElement;
+  // 設定モーダルとFABの初期化
+  initializeSettingsModal(): void {
+    const fab = document.getElementById("settingsFab") as HTMLButtonElement;
+    const modal = document.getElementById("settingsModal") as HTMLElement;
+    const closeButton = document.getElementById(
+      "settingsModalClose",
+    ) as HTMLButtonElement;
 
-    if (!hoverArea || !collapsibleControls || !alwaysShowCheckbox) {
-      window.logger.warn("折りたたみ可能なコントロール要素が見つかりません");
+    if (!fab || !modal || !closeButton) {
+      window.logger.warn("設定モーダルまたはFAB要素が見つかりません");
       return;
     }
 
-    let autoHideTimer: number | null = null;
-    let isControlsVisible = false;
-    let alwaysVisible = false;
-
-    // LocalStorageから設定を読み込み
-    const savedSetting = localStorage.getItem("mylist2-always-show-controls");
-    if (savedSetting === "true") {
-      alwaysVisible = true;
-      alwaysShowCheckbox.checked = true;
-    }
-
-    // 表示モードの切り替え関数
-    const updateDisplayMode = () => {
-      if (alwaysVisible) {
-        // 常時表示モード
-        collapsibleControls.classList.add("always-visible");
-        hoverArea.classList.add("always-visible-mode");
-        isControlsVisible = true;
-        if (autoHideTimer) {
-          clearTimeout(autoHideTimer);
-          autoHideTimer = null;
-        }
-      } else {
-        // ホバー表示モード
-        collapsibleControls.classList.remove("always-visible");
-        hoverArea.classList.remove("always-visible-mode");
-        if (isControlsVisible) {
-          hideControls();
-        }
+    // モーダルを開く
+    const openModal = () => {
+      modal.classList.add("visible");
+      // モーダル内の最初の入力要素にフォーカス
+      const firstInput = modal.querySelector("input") as HTMLInputElement;
+      if (firstInput) {
+        firstInput.focus();
       }
     };
 
-    // マウスホバーとフォーカス状態の管理
-    const showControls = () => {
-      if (alwaysVisible) return; // 常時表示モードでは何もしない
+    // モーダルを閉じる
+    const closeModal = () => {
+      modal.classList.remove("visible");
+      // FABにフォーカスを戻す
+      fab.focus();
+    };
 
-      if (autoHideTimer) {
-        clearTimeout(autoHideTimer);
-        autoHideTimer = null;
+    // FABクリックでモーダルを開く
+    fab.addEventListener("click", openModal);
+
+    // 閉じるボタン
+    closeButton.addEventListener("click", closeModal);
+
+    // 背景クリックで閉じる
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        closeModal();
       }
-      isControlsVisible = true;
-      collapsibleControls.classList.add("transitioning");
-      collapsibleControls.style.transform = "translateY(0)";
-    };
-
-    const hideControls = () => {
-      if (alwaysVisible) return; // 常時表示モードでは何もしない
-
-      autoHideTimer = window.setTimeout(() => {
-        isControlsVisible = false;
-        collapsibleControls.style.transform = "translateY(-100%)";
-        setTimeout(() => {
-          collapsibleControls.classList.remove("transitioning");
-        }, 300);
-      }, 2000); // 2秒後に自動で隠す
-    };
-
-    // チェックボックスのイベントリスナー
-    alwaysShowCheckbox.addEventListener("change", () => {
-      alwaysVisible = alwaysShowCheckbox.checked;
-      // LocalStorageに設定を保存
-      localStorage.setItem(
-        "mylist2-always-show-controls",
-        alwaysVisible.toString(),
-      );
-      updateDisplayMode();
     });
 
-    // ホバーエリアのイベント
-    hoverArea.addEventListener("mouseenter", showControls);
-    hoverArea.addEventListener("mouseleave", hideControls);
-
-    // コントロールエリア自体のイベント
-    collapsibleControls.addEventListener("mouseenter", showControls);
-    collapsibleControls.addEventListener("mouseleave", hideControls);
-
-    // フォーカスイベント（キーボードナビゲーション対応）
-    collapsibleControls.addEventListener("focusin", showControls);
-    collapsibleControls.addEventListener("focusout", () => {
-      // フォーカスがコントロールエリア外に移った場合のみ隠す
-      setTimeout(() => {
-        if (!collapsibleControls.contains(document.activeElement)) {
-          hideControls();
-        }
-      }, 100);
+    // Escapeキーで閉じる
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("visible")) {
+        closeModal();
+      }
     });
 
-    // タッチデバイス対応
-    if ("ontouchstart" in window) {
-      let touchTimer: number | null = null;
-
-      hoverArea.addEventListener("touchstart", (e) => {
-        if (alwaysVisible) return; // 常時表示モードでは何もしない
-
-        e.preventDefault();
-        if (isControlsVisible) {
-          hideControls();
-        } else {
-          showControls();
-        }
-      });
-
-      // タッチ後の自動隠し
-      collapsibleControls.addEventListener("touchend", () => {
-        if (alwaysVisible) return; // 常時表示モードでは何もしない
-
-        if (touchTimer) clearTimeout(touchTimer);
-        touchTimer = window.setTimeout(() => {
-          hideControls();
-        }, 5000); // タッチデバイスでは5秒後に隠す
-      });
-    }
-
-    // キーボードショートカット（Ctrl + Shift + C でコントロール表示切り替え）
+    // キーボードショートカット（Ctrl + Shift + S で設定モーダルを開く）
     document.addEventListener("keydown", (event) => {
-      if (event.ctrlKey && event.shiftKey && event.code === "KeyC") {
+      if (event.ctrlKey && event.shiftKey && event.code === "KeyS") {
         event.preventDefault();
-        if (isControlsVisible) {
-          hideControls();
+        if (modal.classList.contains("visible")) {
+          closeModal();
         } else {
-          showControls();
+          openModal();
         }
       }
     });
 
-    // 初期状態の設定（LocalStorageに設定がない場合のみデフォルト値を設定）
-    if (savedSetting === null && window.innerWidth > 1024) {
-      // 初回アクセスかつ大画面の場合のみデフォルトで常時表示をオン
-      alwaysVisible = true;
-      alwaysShowCheckbox.checked = true;
-      localStorage.setItem("mylist2-always-show-controls", "true");
-    }
-
-    // 初期表示モードの適用
-    updateDisplayMode();
-
-    window.logger.info("折りたたみ可能なコントロールが初期化されました");
+    window.logger.info("設定モーダルとFABが初期化されました");
   }
 }

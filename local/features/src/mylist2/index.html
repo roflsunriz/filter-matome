@@ -64,7 +64,6 @@
       }
     </script>
     
-    <!-- 折りたたみ可能なコントロール用のCSSをTypeScriptから適用 -->
   </head>
   <body>
     <!-- 共通ヘッダー -->
@@ -97,44 +96,6 @@
       </div>
       <!-- メインコンテンツ（選択中のマイリストの内容） -->
       <div class="mylist-main">
-        <!-- 選択中のマイリスト情報 -->
-        <!-- ホバーエリア（コントロール表示用） -->
-        <div class="control-hover-area" title="ホバーでコントロールを表示"></div>
-        
-        <!-- 折りたたみ可能なコントロールエリア -->
-        <div class="collapsible-controls">
-          <div class="current-mylist-info">
-            <input type="text" id="currentMylistName" class="mylist-name-edit" />
-            <button id="saveMylistName" class="cml2-btn" title="名前を保存"><img class="material-icon icon-white" data-style="outlined" data-icon="save" alt="save" loading="lazy"/></button>
-            <button id="deleteMylist" class="cml2-btn cml2-btn-danger" title="マイリストを削除"><img class="material-icon icon-white" data-style="outlined" data-icon="delete" alt="delete" loading="lazy"/></button>
-            <select id="themeSelect" title="テーマ">
-              <option value="dark-blue">ダーク + ブルー</option>
-              <option value="dark-green">ダーク + グリーン</option>
-              <option value="dark-amber">ダーク + アンバー</option>
-              <option value="dark-violet">ダーク + バイオレット</option>
-              <option value="dark-red">ダーク + レッド</option>
-            </select>
-            <div class="import-export-controls">
-              <button id="exportMylist" class="cml2-btn" title="エクスポート"><img class="material-icon icon-white" data-style="outlined" data-icon="file_upload" alt="export" loading="lazy"/></button>
-              <input type="file" id="importFile" accept=".json" style="display: none" />
-              <button id="importMylist" class="cml2-btn" title="インポート"><img class="material-icon icon-white" data-style="outlined" data-icon="file_download" alt="import" loading="lazy"/></button>
-              <div class="controls-toggle-setting">
-                <label for="alwaysShowControls" class="controls-toggle-label">
-                  <input type="checkbox" id="alwaysShowControls" class="controls-toggle-checkbox" />
-                  <span class="controls-toggle-text">常時表示</span>
-                </label>
-              </div>
-            </div>
-          </div>
-          <!-- 動画追加フォーム -->
-          <div class="video-add-form">
-            <input type="text" id="videoIdInput" placeholder="動画ID または URL でマイリスト追加" />
-            <button id="addVideo" title="動画追加"><img class="material-icon icon-white" data-style="outlined" data-icon="add" alt="add" loading="lazy"/></button>
-            <input type="text" id="keywordInput" placeholder="キーワードを追加" />
-            <button id="addKeyword" title="キーワード追加"><img class="material-icon icon-white" data-style="outlined" data-icon="add" alt="add" loading="lazy"/></button>
-          </div>
-        </div>
-        
         <!-- 動画一覧のコントロール（常時表示） -->
         <div class="video-list-controls always-visible">
           <select id="videoSortType">
@@ -219,7 +180,99 @@
           </template>
         </div>
       </div>
+      
+      <!-- FAB（設定モーダルを開く） -->
+      <button id="settingsFab" class="cml2-fab" data-tooltip="マイリスト設定" title="マイリスト設定">
+        <img class="material-icon icon-white" data-style="outlined" data-icon="settings" alt="settings" loading="lazy"/>
+      </button>
     </div>
+    
+    <!-- マイリスト設定モーダル -->
+    <div id="settingsModal" class="cml2-settings-modal">
+      <div class="cml2-settings-content">
+        <div class="cml2-settings-header">
+          <h2 class="cml2-settings-title">マイリスト設定</h2>
+          <button id="settingsModalClose" class="cml2-settings-close" title="閉じる">
+            <img class="material-icon icon-white" data-style="outlined" data-icon="close" alt="close" loading="lazy"/>
+          </button>
+        </div>
+        
+        <!-- マイリスト名編集セクション -->
+        <div class="cml2-settings-section">
+          <div class="cml2-settings-section-title">マイリスト名</div>
+          <div class="cml2-settings-mylist-name">
+            <input type="text" id="currentMylistName" placeholder="マイリスト名を入力..." />
+            <button id="saveMylistName" class="cml2-btn" title="名前を保存">
+              <img class="material-icon icon-white" data-style="outlined" data-icon="save" alt="save" loading="lazy"/>
+            </button>
+          </div>
+        </div>
+        
+        <!-- テーマ選択セクション -->
+        <div class="cml2-settings-section cml2-settings-theme">
+          <div class="cml2-settings-section-title">テーマ</div>
+          <select id="themeSelect" title="テーマ">
+            <option value="dark-blue">ダーク + ブルー</option>
+            <option value="dark-green">ダーク + グリーン</option>
+            <option value="dark-amber">ダーク + アンバー</option>
+            <option value="dark-violet">ダーク + バイオレット</option>
+            <option value="dark-red">ダーク + レッド</option>
+          </select>
+        </div>
+        
+        <!-- 動画追加セクション -->
+        <div class="cml2-settings-section">
+          <div class="cml2-settings-section-title">動画を追加</div>
+          <div class="cml2-settings-add-form">
+            <input type="text" id="videoIdInput" placeholder="動画ID または URL" />
+            <button id="addVideo" class="cml2-btn" title="動画追加">
+              <img class="material-icon icon-white" data-style="outlined" data-icon="add" alt="add" loading="lazy"/>
+              <span>追加</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- キーワード追加セクション -->
+        <div class="cml2-settings-section">
+          <div class="cml2-settings-section-title">キーワードを追加</div>
+          <div class="cml2-settings-add-form">
+            <input type="text" id="keywordInput" placeholder="キーワード" />
+            <button id="addKeyword" class="cml2-btn" title="キーワード追加">
+              <img class="material-icon icon-white" data-style="outlined" data-icon="add" alt="add" loading="lazy"/>
+              <span>追加</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- インポート・エクスポートセクション -->
+        <div class="cml2-settings-section">
+          <div class="cml2-settings-section-title">データ管理</div>
+          <div class="cml2-settings-actions">
+            <button id="exportMylist" class="cml2-btn" title="エクスポート">
+              <img class="material-icon icon-white" data-style="outlined" data-icon="file_upload" alt="export" loading="lazy"/>
+              <span>エクスポート</span>
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display: none" />
+            <button id="importMylist" class="cml2-btn" title="インポート">
+              <img class="material-icon icon-white" data-style="outlined" data-icon="file_download" alt="import" loading="lazy"/>
+              <span>インポート</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 危険ゾーン -->
+        <div class="cml2-settings-section cml2-settings-danger-zone">
+          <div class="cml2-settings-section-title">危険な操作</div>
+          <div class="cml2-settings-actions">
+            <button id="deleteMylist" class="cml2-btn cml2-btn-danger" title="マイリストを削除">
+              <img class="material-icon icon-white" data-style="outlined" data-icon="delete" alt="delete" loading="lazy"/>
+              <span>マイリストを削除</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!-- モーダルウィンドウ（マイリスト選択） -->
     <div id="mylistSelectModal" class="modal" style="display: none">
       <div class="modal-content">

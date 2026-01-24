@@ -1041,78 +1041,9 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 `;
 
 /**
- * 折りたたみ可能なコントロール用のCSSスタイル
+ * サイドバーユーティリティ用のCSSスタイル
  */
-export const COLLAPSIBLE_CONTROLS_STYLES = `
-/* ホバーエリア */
-.control-hover-area {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 20px;
-  z-index: 8100;
-  background: linear-gradient(180deg, rgba(26, 27, 28, 0.1) 0%, transparent 100%);
-  cursor: pointer;
-  opacity: 0.3;
-  transition: opacity 0.2s ease;
-}
-
-.control-hover-area:hover {
-  opacity: 0.6;
-}
-
-/* 折りたたみ可能なコントロールエリア */
-.collapsible-controls {
-  position: relative;
-  z-index: 8050;
-  background: rgba(26, 27, 28, 0.98);
-  color: var(--cml2-text);
-  backdrop-filter: blur(10px);
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateY(-10px);
-  border-radius: 8px;
-}
-
-/* ホバー時の表示 */
-.control-hover-area:hover + .collapsible-controls,
-.collapsible-controls:hover {
-  max-height: 800px;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* モバイル用の調整 */
-@media (max-width: 768px) {
-  .control-hover-area {
-    height: 30px;
-    background: linear-gradient(180deg, rgba(26, 27, 28, 0.2) 0%, transparent 100%);
-  }
-  
-  .collapsible-controls {
-    background: rgba(26, 27, 28, 0.99);
-  }
-  
-  /* 常時表示設定のモバイル調整 */
-  .controls-toggle-setting {
-    margin-left: 8px;
-  }
-  
-  .controls-toggle-label {
-    font-size: 11px;
-  }
-  
-  /* タッチデバイスでも使いやすくするため、フォーカス時も表示 */
-  .collapsible-controls:focus-within {
-    max-height: 800px;
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+export const SIDEBAR_UTILITY_STYLES = `
 /* サイドバー内要素の統一 */
 #newMylistName {
   width: 100%;
@@ -1152,174 +1083,11 @@ export const COLLAPSIBLE_CONTROLS_STYLES = `
   }
 }
 
-/* ホバーエリアのヒント表示 */
-.control-hover-area::after {
-  content: "ホバーでコントロールを表示";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-  background: rgba(42, 43, 44, 0.9);
-  padding: 2px 8px;
-  border-radius: 12px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-  border: 1px solid var(--cml2-border);
-}
-
-.control-hover-area:hover::after {
-  opacity: 1;
-}
-
-/* アニメーションの最適化 */
-.collapsible-controls * {
-  will-change: auto;
-}
-
-.collapsible-controls.transitioning {
-  will-change: transform, opacity, max-height;
-}
-
-/* 小さい画面でのデバイス最適化 */
+/* 小さい画面でのレイアウト調整 */
 @media (max-width: 480px) {
-  .control-hover-area {
-    height: 40px;
-  }
-  
-  .control-hover-area::after {
-    content: "タッチでコントロールを切り替え";
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-    background: rgba(42, 43, 44, 0.95);
-  }
-  
-  .collapsible-controls {
-    padding: 10px;
-  }
-  
-  .current-mylist-info,
-  .video-add-form,
   .video-list-controls {
     margin-bottom: 10px;
   }
-}
-
-
-
-/* コントロール用ボタンスタイルを統一 */
-.collapsible-controls .cml2-btn,
-.collapsible-controls button {
-  background: var(--cml2-accent);
-  color: var(--cml2-text);
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.collapsible-controls .cml2-btn:hover,
-.collapsible-controls button:hover {
-  background: var(--cml2-accent-hover);
-}
-
-.collapsible-controls .cml2-btn.cml2-btn-danger {
-  background: var(--cml2-danger);
-}
-
-.collapsible-controls .cml2-btn.cml2-btn-danger:hover {
-  background: var(--cml2-danger-hover);
-}
-
-/* インプット要素のスタイル統一 */
-.collapsible-controls input[type="text"],
-.collapsible-controls select {
-  background: var(--cml2-panel);
-  border: 1px solid var(--cml2-border);
-  color: var(--cml2-text);
-  padding: 8px 12px;
-  border-radius: 4px;
-}
-
-.collapsible-controls input[type="text"]:focus,
-.collapsible-controls select:focus {
-  outline: none;
-  border-color: var(--cml2-accent);
-  box-shadow: 0 0 0 2px var(--cml2-focus-ring);
-}
-
-/* 常時表示設定のスタイル */
-.controls-toggle-setting {
-  display: flex;
-  align-items: center;
-  margin-left: 10px;
-}
-
-.controls-toggle-label {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  user-select: none;
-  transition: color 0.2s ease;
-}
-
-.controls-toggle-label:hover {
-  color: rgba(255, 255, 255, 1);
-}
-
-.controls-toggle-checkbox {
-  width: 16px;
-  height: 16px;
-  margin-right: 6px;
-  background: var(--cml2-panel);
-  border: 1px solid var(--cml2-border);
-  border-radius: 3px;
-  cursor: pointer;
-  position: relative;
-  appearance: none;
-  transition: all 0.2s ease;
-}
-
-.controls-toggle-checkbox:checked {
-  background: var(--cml2-accent);
-  border-color: var(--cml2-accent);
-}
-
-.controls-toggle-checkbox:checked::after {
-  content: "✓";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.controls-toggle-checkbox:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--cml2-focus-ring);
-}
-
-.controls-toggle-text {
-  white-space: nowrap;
-}
-
-/* 常時表示モードのまとめ */
-.collapsible-controls.always-visible {
-  max-height: none !important;
-  opacity: 1 !important;
-  transform: translateY(0) !important;
-}
-
-/* 常時表示モード時はホバーエリアを非表示 */
-.control-hover-area.always-visible-mode {
-  display: none;
 }
 `;
 
@@ -1536,6 +1304,329 @@ export const VIRTUAL_SCROLL_ACTION_MENU_STYLES = `
 `;
 
 /**
+ * FAB（Floating Action Button）とマイリスト設定モーダル用スタイル
+ */
+export const FAB_AND_SETTINGS_MODAL_STYLES = `
+/* ============================
+   FAB（Floating Action Button）
+   ============================ */
+
+.cml2-fab {
+  position: fixed;
+  bottom: 80px;
+  right: 80px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--cml2-accent, #2a88bd);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 8500;
+}
+
+.cml2-fab:hover {
+  background: var(--cml2-accent-hover, #3498db);
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.cml2-fab:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--cml2-focus-ring, rgba(52, 152, 219, 0.3)), 
+              0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+.cml2-fab:active {
+  transform: scale(0.95);
+}
+
+.cml2-fab .material-icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* FABのツールチップ */
+.cml2-fab::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  font-size: 13px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.cml2-fab:hover::before {
+  opacity: 1;
+}
+
+/* 動画リストの下部にFABと重ならないようパディング追加 */
+.video-list {
+  padding-bottom: 80px;
+}
+
+/* ============================
+   マイリスト設定モーダル
+   ============================ */
+
+.cml2-settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  animation: cml2-modal-fade-in 0.2s ease-out;
+}
+
+.cml2-settings-modal.visible {
+  display: flex;
+}
+
+@keyframes cml2-modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.cml2-settings-content {
+  background: var(--cml2-bg, #1a1b1c);
+  color: var(--cml2-text, #ffffff);
+  padding: 24px;
+  border-radius: 12px;
+  min-width: 400px;
+  max-width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  animation: cml2-settings-slide-up 0.25s ease-out;
+}
+
+@keyframes cml2-settings-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cml2-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cml2-border, #333333);
+}
+
+.cml2-settings-title {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 600;
+}
+
+.cml2-settings-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--cml2-muted, #888888);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.cml2-settings-close:hover {
+  background: var(--cml2-panel, #2a2b2c);
+  color: var(--cml2-text, #ffffff);
+}
+
+.cml2-settings-close .material-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* 設定セクション */
+.cml2-settings-section {
+  margin-bottom: 24px;
+}
+
+.cml2-settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.cml2-settings-section-title {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--cml2-muted, #888888);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+/* マイリスト名編集 */
+.cml2-settings-mylist-name {
+  display: flex;
+  gap: 8px;
+}
+
+.cml2-settings-mylist-name input {
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--cml2-panel, #2a2b2c);
+  border: 1px solid var(--cml2-border, #333333);
+  border-radius: 6px;
+  color: var(--cml2-text, #ffffff);
+  font-size: 14px;
+}
+
+.cml2-settings-mylist-name input:focus {
+  outline: none;
+  border-color: var(--cml2-accent, #2a88bd);
+  box-shadow: 0 0 0 2px var(--cml2-focus-ring, rgba(52, 152, 219, 0.3));
+}
+
+/* テーマ選択 */
+.cml2-settings-theme select {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--cml2-panel, #2a2b2c);
+  border: 1px solid var(--cml2-border, #333333);
+  border-radius: 6px;
+  color: var(--cml2-text, #ffffff);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.cml2-settings-theme select:focus {
+  outline: none;
+  border-color: var(--cml2-accent, #2a88bd);
+}
+
+/* アクションボタングループ */
+.cml2-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cml2-settings-actions .cml2-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.cml2-settings-actions .cml2-btn .material-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* 動画/キーワード追加フォーム */
+.cml2-settings-add-form {
+  display: flex;
+  gap: 8px;
+}
+
+.cml2-settings-add-form input {
+  flex: 1;
+  padding: 10px 14px;
+  background: var(--cml2-panel, #2a2b2c);
+  border: 1px solid var(--cml2-border, #333333);
+  border-radius: 6px;
+  color: var(--cml2-text, #ffffff);
+  font-size: 14px;
+}
+
+.cml2-settings-add-form input:focus {
+  outline: none;
+  border-color: var(--cml2-accent, #2a88bd);
+  box-shadow: 0 0 0 2px var(--cml2-focus-ring, rgba(52, 152, 219, 0.3));
+}
+
+.cml2-settings-add-form .cml2-btn {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 危険ゾーン */
+.cml2-settings-danger-zone {
+  padding-top: 16px;
+  border-top: 1px solid var(--cml2-border, #333333);
+}
+
+.cml2-settings-danger-zone .cml2-settings-section-title {
+  color: var(--cml2-danger, #e74c3c);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 520px) {
+  .cml2-settings-content {
+    min-width: auto;
+    width: calc(100% - 32px);
+    margin: 16px;
+    padding: 20px;
+  }
+
+  .cml2-settings-actions {
+    flex-direction: column;
+  }
+
+  .cml2-settings-actions .cml2-btn {
+    width: 100%;
+  }
+
+  .cml2-fab {
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .cml2-fab .material-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .cml2-fab::before {
+    display: none;
+  }
+}
+`;
+
+/**
  * すべての Mylist Manager スタイルを統合 */
 export const MYLIST_MANAGER_STYLES = `
 ${MYLIST_MANAGER_STYLES_PART1}
@@ -1546,9 +1637,11 @@ ${MYLIST_MANAGER_STYLES_PART3}
 
 ${MYLIST_MANAGER_STYLES_PART4}
 
-${COLLAPSIBLE_CONTROLS_STYLES}
+${SIDEBAR_UTILITY_STYLES}
 
 ${VIRTUAL_SCROLL_ACTION_MENU_STYLES}
+
+${FAB_AND_SETTINGS_MODAL_STYLES}
 `;
 /**
  * Mylist Manager スタイルをDOMに適用する関数
