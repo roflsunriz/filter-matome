@@ -554,7 +554,7 @@ export const MYLIST_MANAGER_STYLES_PART3 = `
   display: flex;
   justify-content: center;
   align-items: center;
-  /* 進捗は背面。お知らせ(.cml2-alert-modal: z-index 99999)が前面 */
+  /* 進捗は背面。お知らせ(.cml2-alert-modal: z-index 100200)が前面 */
   z-index: 9500;
 }
 
@@ -704,7 +704,7 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 99999;
+  z-index: 100100;
 }
 
 .cml2-modal-content {
@@ -910,7 +910,7 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 99999;
+  z-index: 100100;
 }
 
 #keywordEditModal .modal-content {
@@ -991,7 +991,7 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 99999;
+  z-index: 100200;
 }
 
 .cml2-alert-content {
@@ -1392,7 +1392,7 @@ export const FAB_AND_SETTINGS_MODAL_STYLES = `
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 99999;
+  z-index: 100000;
   animation: cml2-modal-fade-in 0.2s ease-out;
 }
 

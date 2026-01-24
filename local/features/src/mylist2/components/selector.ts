@@ -42,7 +42,7 @@ export async function showMylistSelector(): Promise<number> {
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 10000;
+      z-index: 100100;
       backdrop-filter: blur(5px);
     }
 
