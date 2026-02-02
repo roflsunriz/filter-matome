@@ -55,9 +55,9 @@ movie-info/
 TypeScript ファイルを変更した場合は以下を実行し、エラーが出たら修正してください。
 
 ```
-npm run lint
-npm run type-check
-npm run build
+bun run lint
+bun run type-check
+bun run build
 ```
 
-ビルドは `local/features/` で実行します。個別ビルドは `npm run build:movie-info` を利用できます。
+ビルドは `local/features/` で実行します。個別ビルドは `bun run build:movie-info` を利用できます。

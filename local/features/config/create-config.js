@@ -112,7 +112,7 @@ export default createConfigTemplate({
           // 整形してファイルに書き戻す
           fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n");
           console.log(`package.jsonに "${scriptName}" スクリプトを追加しました。`);
-          console.log(`ビルドコマンド: npm run ${scriptName}`);
+          console.log(`ビルドコマンド: bun run ${scriptName}`);
         } else {
           console.warn("package.jsonが見つかりませんでした。スクリプト追加をスキップします。");
         }

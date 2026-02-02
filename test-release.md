@@ -70,7 +70,7 @@ gh run view [RUN_ID]
 
 2. **ビルドエラー**
    ```
-   npm ci failed
+   bun install failed
    ```
    → package.json の存在と依存関係を確認
 

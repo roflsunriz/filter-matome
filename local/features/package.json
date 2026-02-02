@@ -3,9 +3,10 @@
   "private": true,
   "type": "module",
   "workspaces": [],
+  "packageManager": "bun@1.3.8",
   "scripts": {
     "dev": "vite --config config/vite.global.config.js",
-    "build": "npm run build:ALL",
+    "build": "bun run build:ALL",
     "build:default": "vite build --config config/vite.global.config.js",
     "type-check": "tsc --noEmit",
     "preview": "vite preview",
@@ -15,7 +16,7 @@
     "build:mylist2-service-worker": "vite build --config config/vite.mylist2-service-worker.config.js",
     "build:comment-filter2-docs": "vite build --config config/vite.comment-filter2-docs.config.js",
     "build:video-player:router": "vite build --config config/vite.video-player.config.js",
-    "build:video-player": "npm run build:video-player:router && npm run build:video-player-standalone",
+    "build:video-player": "bun run build:video-player:router && bun run build:video-player-standalone",
     "build:video-player-standalone": "vite build --config config/vite.video-player-standalone.config.js",
     "build:common": "vite build --config config/vite.common.config.js",
     "build:mlink-video-controller": "vite build --config config/vite.mlink-video-controller.config.js",
@@ -26,7 +27,7 @@
     "build:mylist2-docs": "vite build --config config/vite.mylist2-docs.config.js",
     "build:watch-tracker": "vite build --config config/vite.watch-tracker.config.js",
     "build:watch-history": "vite build --config config/vite.watch-history.config.js",
-    "error-check": "tsc --noEmit && npm run lint && npm run type-check"
+    "error-check": "tsc --noEmit && bun run lint && bun run type-check"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

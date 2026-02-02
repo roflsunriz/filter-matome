@@ -13,7 +13,7 @@ declare const _google: any;
  * Google Drive 連携（ブラウザのみ、バックエンド無し）
  * - 認可: Google Identity Services (Token Client)
  * - 権限: drive.file（本アプリが作成したファイル/フォルダに限定）
- * - 圧縮: fflate を動的インポート（npm管理）
+ * - 圧縮: fflate を動的インポート（bun管理）
  */
 export class GoogleDriveService {
   private accessToken: string | null = null;

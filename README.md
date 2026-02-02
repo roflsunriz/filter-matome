@@ -151,11 +151,11 @@ nlFilters/
 ### ビルド方法
 ```bash
 cd local/features
-npm install
-npm run build
+bun install
+bun run build
 
 # 個別ビルド(詳細はpackage.jsonを参照)
-npm run build:comment-filter2
+bun run build:comment-filter2
 ```
 
 ### nlFilter文法
@@ -229,7 +229,7 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 - [LibreJP 開発スレッド](https://sportschan.org/librejp/thread/16592.html)
 
 ### 開発ツール
-- [Node.js](https://nodejs.org/ja/download)
+- [Bun](https://bun.com/docs/installation)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [Apache Ant](https://ant.apache.org/bindownload.cgi)
 - [Adoptium OpenJDK](https://adoptium.net/temurin/releases/?version=17)

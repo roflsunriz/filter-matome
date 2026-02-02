@@ -18,10 +18,8 @@ jobs:
         with:
           fetch-depth: 0  # 全履歴を取得してリリースノート生成に使用
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -32,12 +30,12 @@ jobs:
       - name: Install dependencies
         run: |
           cd local/features
-          npm ci
+          bun install
 
       - name: Build features
         run: |
           cd local/features
-          npm run build:ALL
+          bun run build:ALL
 
       # nl-media-info は features に統合済みのため個別ビルドは不要
 
@@ -83,7 +81,7 @@ jobs:
           find release/NicoCache_nl -name "*.map" -type f -delete || true
           # package.json, package-lock.jsonは開発環境構築に必要なので削除しない
           # find release/NicoCache_nl -name "package.json" -type f -delete || true
-          # find release/NicoCache_nl -name "package-lock.json" -type f -delete || true
+          # find release/NicoCache_nl -name "bun.lock" -type f -delete || true
           find release/NicoCache_nl -name "tsconfig.json" -type f -delete || true
           find release/NicoCache_nl -name ".eslintrc.json" -type f -delete || true
           find release/NicoCache_nl -name "playwright.config.ts" -type f -delete || true
@@ -117,8 +115,8 @@ jobs:
           echo "5. ブラウザでハード再読み込み（Ctrl+F5）" >> release_notes.md
           echo "" >> release_notes.md
           echo "### 🛠️ 開発環境の構築" >> release_notes.md
-          echo "1. Node.js と npm をインストール" >> release_notes.md
-          echo "2. \`cd local/features && npm install\` でフィーチャー開発環境を構築" >> release_notes.md
+          echo "1. Bun をインストール" >> release_notes.md
+          echo "2. \`cd local/features && bun install\` でフィーチャー開発環境を構築" >> release_notes.md
           echo "3. 各機能の README.md を参照してビルド・開発を開始" >> release_notes.md
           echo "" >> release_notes.md
           echo "### ⚠️ 注意事項" >> release_notes.md

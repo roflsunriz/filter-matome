@@ -1,20 +1,7 @@
 // Cross-platform sequential build runner without relying on shell operators
 import { spawnSync } from 'node:child_process';
 
-// Build a robust npm command that works on Windows/POSIX and inside Node
-function getNpmInvokeCommand(scriptName) {
-  // Prefer npm_execpath to avoid PATH/cmd issues
-  const npmExecPath = process.env.npm_execpath;
-  if (npmExecPath && process.execPath) {
-    // Execute: node <npmExecPath> run <script>
-    const nodePath = process.execPath.includes(' ') ? `"${process.execPath}"` : process.execPath;
-    const npmPath = npmExecPath.includes(' ') ? `"${npmExecPath}"` : npmExecPath;
-    return `${nodePath} ${npmPath} run ${scriptName}`;
-  }
-  // Fallback to npm(.cmd)
-  const base = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  return `${base} run ${scriptName}`;
-}
+const command = 'bun';
 
 const scripts = [
   'build:mylist2',
@@ -31,9 +18,9 @@ const scripts = [
   'build:movie-info',
 ];
 for (const scriptName of scripts) {
-  const cmd = getNpmInvokeCommand(scriptName);
-  console.log(`[build-all] Running: ${cmd}`);
-  const result = spawnSync(cmd, { stdio: 'inherit', shell: true });
+  const args = ['run', scriptName];
+  console.log(`[build-all] Running: ${command} ${args.join(' ')}`);
+  const result = spawnSync(command, args, { stdio: 'inherit' });
   if (result.error) {
     console.error(`[build-all] Failed to start command: ${cmd}`);
     console.error(result.error);

@@ -9,7 +9,7 @@ type FflateHelpers = Pick<
  * Dropbox アカウントのみ、バックエンドなし
  * - 想定: 個別対応のアクセストークン（設定/環境による）
  * - 権限: files.content.write / files.content.read を含むトークン
- * - 実装: fflate を動的インポート（npm管理）
+ * - 実装: fflate を動的インポート（bun管理）
  *
  * 注意: 本実装は SDK を使わず fetch で Dropbox API を直接呼び出します。
  */

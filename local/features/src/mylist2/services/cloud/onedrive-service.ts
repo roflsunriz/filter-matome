@@ -8,7 +8,7 @@ type FflateHelpers = Pick<
 /**
  * OneDrive 連携（ブラウザのみ、バックエンド無し）
  * - 認可: 手動入力の Microsoft Graph アクセストークン (scope: Files.ReadWrite)
- * - 圧縮: fflate を動的インポート（npm管理）
+ * - 圧縮: fflate を動的インポート（bun管理）
  *
  * 備考: アクセストークンは有効期限が短い場合があります。必要に応じて再入力してください。
  */

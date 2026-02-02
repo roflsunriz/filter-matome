@@ -14,10 +14,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -28,20 +26,20 @@ jobs:
       - name: Install dependencies (features)
         run: |
           cd local/features
-          npm ci
+          bun install
 
       - name: Build features
         run: |
           cd local/features
-          npm run build:ALL
+          bun run build:ALL
 
       # nl-media-info は features に統合済みのため個別ビルドは不要
 
       - name: Lint check (if available)
         run: |
           cd local/features
-          if npm run lint --silent 2>/dev/null; then
-            npm run lint
+          if bun run lint --silent 2>/dev/null; then
+            bun run lint
           else
             echo "Lint script not available, skipping..."
           fi
@@ -49,8 +47,8 @@ jobs:
       - name: Type check (if available)
         run: |
           cd local/features
-          if npm run type-check --silent 2>/dev/null; then
-            npm run type-check
+          if bun run type-check --silent 2>/dev/null; then
+            bun run type-check
           else
             echo "Type check script not available, skipping..."
           fi
@@ -58,8 +56,8 @@ jobs:
       - name: Test (if available)
         run: |
           cd local/features
-          if npm run test --silent 2>/dev/null; then
-            npm run test
+          if bun run test --silent 2>/dev/null; then
+            bun run test
           else
             echo "Test script not available, skipping..."
           fi

@@ -16,7 +16,7 @@ filter-matomeプロジェクトへの貢献に興味を持っていただき、�
 ## 🛠️ 開発環境のセットアップ
 
 ### 前提条件
-- Node.js 24.12.0 以上
+- Bun 1.3.8 以上
 - Java Development Kit (JDK) 17 LTS 又は 21 LTS
 - Git 2.52.0.windows.1 以上
 
@@ -31,16 +31,18 @@ filter-matomeプロジェクトへの貢献に興味を持っていただき、�
 
 2. **依存関係のインストール**
    ```bash
+   # Bunをインストール
+   powershell -c "irm bun.sh/install.ps1|iex"
    # features モジュール
    cd local/features
-   npm install
+   bun install
    ```
 
 3. **ビルド実行**
    ```bash
    # features モジュール
    cd local/features
-   npm run build
+   bun run build
    ```
 
 4. **エラーチェック**
@@ -48,7 +50,7 @@ filter-matomeプロジェクトへの貢献に興味を持っていただき、�
    ```bash
    # features モジュール
    cd local/features
-   npm run error-check
+   bun error-check
    ```
 
 
@@ -115,9 +117,9 @@ docs: READMEの導入手順を更新
 ### 自動テスト
 ```bash
 cd local/features
-npm run lint    # 静的解析
-npm run type-check    # 型チェック
-npm run error-check    # エラーチェック(ESLintとTypeCheck)
+bun run lint    # 静的解析
+bun run type-check    # 型チェック
+bun error-check    # エラーチェック(ESLintとTypeCheck)
 ```
 
 Playwrightでの自動テスト

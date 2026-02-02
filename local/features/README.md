@@ -192,7 +192,7 @@ dist/*.es.js ─── 本番ファイル出力
 4. **レガシーシステム**: 
    - **`list.js`**: 直接編集可能
    - **その他`*.js`**: 外部配布のため編集不可（特別な理由がある場合のみファイル名変更して対応）
-5. **ビルド**: `npm run build:ALL` で全体再ビルド
+5. **ビルド**: `bun run build:ALL` で全体再ビルド
 
 ### 🎨 **UIデザインを変更したい**
 
@@ -282,16 +282,17 @@ dist/*.es.js ─── 本番ファイル出力
 #### 🔧 **ローカル開発**
 ```bash
 # 開発サーバー起動
-npm run dev
+bun dev
 
 # 個別ビルド
-npm run build:comment-filter2
-npm run build:video-player
-npm run build:mylist2
+bun run build:comment-filter2
+bun run build:video-player
+bun run build:mylist2
 
 # 全体ビルド
-npm run build:ALL
+bun run build:ALL
 ```
+`bun run build:ALL` は `scripts/build-all.mjs` を経由し、個別ビルドスクリプトを `bun run` で順番に起動します。
 
 #### 🧪 **デバッグアクセス**
 ```javascript

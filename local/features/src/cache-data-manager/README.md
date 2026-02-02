@@ -319,10 +319,10 @@ EventCoordinator ─── ユーザー操作待機
 - Intersection Observerを使用した遅延処理推奨
 
 ### 🎛️ **ビルド・開発環境**
-- **開発サーバー**: `npm run dev` (Vite HMR対応)
-- **本番ビルド**: `npm run build` → `dist/list.js`
-- **個別ビルド**: `npm run build:cache-data-manager`
-- **型チェック**: `npm run type-check`
+- **開発サーバー**: `bun dev` (Vite HMR対応)
+- **本番ビルド**: `bun run build` → `dist/list.js`
+- **個別ビルド**: `bun run build:cache-data-manager`
+- **型チェック**: `bun run type-check`
 - **設定ファイル**: `config/vite.config.ts`
 
 ## 🔍 デバッグ・テスト
