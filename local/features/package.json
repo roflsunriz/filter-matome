@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts",
+    "test": "",
     "build:mylist2": "vite build --config config/vite.mylist2.config.js",
     "build:mylist2-service-worker": "vite build --config config/vite.mylist2-service-worker.config.js",
     "build:comment-filter2-docs": "vite build --config config/vite.comment-filter2-docs.config.js",
