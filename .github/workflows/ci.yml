@@ -35,32 +35,16 @@ jobs:
 
       # nl-media-info は features に統合済みのため個別ビルドは不要
 
-      - name: Lint check (if available)
+      - name: Lint check
         run: |
           cd local/features
-          if bun run lint --silent 2>/dev/null; then
-            bun run lint
-          else
-            echo "Lint script not available, skipping..."
-          fi
+          bun run lint
 
-      - name: Type check (if available)
+      - name: Type check
         run: |
           cd local/features
-          if bun run type-check --silent 2>/dev/null; then
-            bun run type-check
-          else
-            echo "Type check script not available, skipping..."
-          fi
+          bun run type-check
 
-      - name: Test (if available)
-        run: |
-          cd local/features
-          if bun run test --silent 2>/dev/null; then
-            bun run test
-          else
-            echo "Test script not available, skipping..."
-          fi
 
       - name: Validate nlFilters syntax
         run: |
