@@ -1,4 +1,4 @@
-/* eslint-env serviceworker */
+/* global ServiceWorkerGlobalScope, ExtendableEvent, FetchEvent, Response */
 
 /// <reference lib="webworker" />
 
