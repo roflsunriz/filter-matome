@@ -87,11 +87,14 @@ export class StandalonePlayer {
 
     const displayTitle =
       options.displayTitle ?? options.apiData?.video.title ?? videoId;
-    await this.playWithCustomSource(videoId, displayTitle);
 
-    if (this.enableComments) {
-      await this.loadComments(videoId);
-    }
+    // 動画再生とコメント取得を並列実行（コメントは再生状態に依存しない）
+    await Promise.all([
+      this.playWithCustomSource(videoId, displayTitle),
+      this.enableComments
+        ? this.loadComments(videoId)
+        : Promise.resolve(),
+    ]);
   }
 
   private preparePlayerShell(): void {
@@ -211,27 +214,6 @@ export class StandalonePlayer {
     } else {
       this.videoElement.src = url;
       this.toastManager.showInfo("ネイティブ再生を試みます");
-    }
-
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const onCanPlay = (): void => {
-          cleanup();
-          resolve();
-        };
-        const onError = (): void => {
-          cleanup();
-          reject(new Error("動画読み込みエラー"));
-        };
-        const cleanup = (): void => {
-          this.videoElement?.removeEventListener("canplay", onCanPlay);
-          this.videoElement?.removeEventListener("error", onError);
-        };
-        this.videoElement?.addEventListener("canplay", onCanPlay);
-        this.videoElement?.addEventListener("error", onError);
-      });
-    } catch (error) {
-      window.logger.warn("動画メタデータ取得に失敗しました", error);
     }
 
     const wasMuted = this.videoElement.muted;
