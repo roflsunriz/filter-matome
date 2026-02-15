@@ -182,20 +182,27 @@
                   <h4 class="delete-condition-title">条件付き削除</h4>
                   <div class="delete-condition-inputs">
                     <div class="delete-condition-item">
-                      <label class="delete-condition-label">視聴回数</label>
+                      <label class="delete-condition-toggle">
+                        <input type="checkbox" id="delete-use-watch-count" class="delete-condition-checkbox" checked>
+                        <span class="delete-condition-label">視聴回数</span>
+                      </label>
                       <div class="delete-condition-input-group">
                         <input type="number" id="delete-watch-count" class="delete-condition-input" min="0" value="3">
                         <span class="delete-condition-suffix">回以下</span>
                       </div>
                     </div>
                     <div class="delete-condition-item">
-                      <label class="delete-condition-label">進捗率</label>
+                      <label class="delete-condition-toggle">
+                        <input type="checkbox" id="delete-use-progress-rate" class="delete-condition-checkbox" checked>
+                        <span class="delete-condition-label">進捗率</span>
+                      </label>
                       <div class="delete-condition-input-group">
                         <input type="number" id="delete-progress-rate" class="delete-condition-input" min="0" max="100" value="50">
                         <span class="delete-condition-suffix">%以下</span>
                       </div>
                     </div>
                   </div>
+                  <p class="delete-condition-hint" id="delete-condition-hint">両方有効時はAND条件で削除します</p>
                   <button id="delete-by-condition-btn" class="btn btn-warning btn-full">
                     <img class="material-icon icon-white" data-style="outlined" data-icon="delete_sweep" alt="delete_sweep" loading="lazy" />
                     条件付き削除

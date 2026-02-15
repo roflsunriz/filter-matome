@@ -1123,18 +1123,29 @@ export class WatchHistoryDatabase {
 
   /**
    * 条件に一致する視聴履歴を削除する（条件付き削除）
-   * @param maxWatchCount 最大視聴回数（この回数以下を削除）
-   * @param maxProgressRate 最大進捗率（この進捗率以下を削除、0-100の範囲）
+   * @param maxWatchCount 最大視聴回数（この回数以下を削除、nullの場合は視聴回数条件を無視）
+   * @param maxProgressRate 最大進捗率（この進捗率以下を削除、0-100の範囲、nullの場合は進捗率条件を無視）
    */
   async deleteEntriesByCondition(
-    maxWatchCount: number,
-    maxProgressRate: number,
+    maxWatchCount: number | null,
+    maxProgressRate: number | null,
   ): Promise<DBResult<number>> {
     if (!this.db) {
       return { success: false, error: "データベース未初期化" };
     }
 
-    if (maxWatchCount < 0 || maxProgressRate < 0 || maxProgressRate > 100) {
+    if (maxWatchCount === null && maxProgressRate === null) {
+      return {
+        success: false,
+        error: "少なくとも1つの条件を指定してください",
+      };
+    }
+
+    if (
+      (maxWatchCount !== null && maxWatchCount < 0) ||
+      (maxProgressRate !== null &&
+        (maxProgressRate < 0 || maxProgressRate > 100))
+    ) {
       return {
         success: false,
         error: "無効な条件値（視聴回数は0以上、進捗率は0-100の範囲）",
@@ -1181,11 +1192,13 @@ export class WatchHistoryDatabase {
                 ? Math.round((lastPosition / entry.lengthSec) * 100)
                 : 0;
 
-            // 条件をチェック：視聴回数がmaxWatchCount以下 AND 進捗率がmaxProgressRate以下
-            if (
-              entry.watchCount <= maxWatchCount &&
-              progressRate <= maxProgressRate
-            ) {
+            // 有効な条件のみチェック（nullの条件は常にマッチ）
+            const watchCountMatch =
+              maxWatchCount === null || entry.watchCount <= maxWatchCount;
+            const progressRateMatch =
+              maxProgressRate === null || progressRate <= maxProgressRate;
+
+            if (watchCountMatch && progressRateMatch) {
               // 削除対象として記録
               deletedVideoIds.push(entry.videoId);
 

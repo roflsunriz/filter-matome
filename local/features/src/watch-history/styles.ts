@@ -1798,10 +1798,38 @@ const seriesStyles = `
     gap: 0.5rem;
   }
 
+  .delete-condition-item.disabled .delete-condition-input-group {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .delete-condition-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .delete-condition-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: #667eea;
+    cursor: pointer;
+    margin: 0;
+  }
+
   .delete-condition-label {
     font-size: 12px;
     font-weight: 600;
     color: #a0a0b0;
+  }
+
+  .delete-condition-hint {
+    font-size: 11px;
+    color: #808090;
+    margin: 0 0 0.75rem 0;
+    font-style: italic;
   }
 
   .delete-condition-input-group {

@@ -132,6 +132,9 @@ class WatchHistoryApp {
       "delete-by-condition-btn",
       "delete-watch-count",
       "delete-progress-rate",
+      "delete-use-watch-count",
+      "delete-use-progress-rate",
+      "delete-condition-hint",
       "stats-total-videos",
       "stats-total-time",
       "stats-completion-rate",
@@ -308,6 +311,14 @@ class WatchHistoryApp {
     this.elements["delete-by-condition-btn"]?.addEventListener(
       "click",
       this.guardEvent(() => this.handleConditionalDelete()),
+    );
+    this.elements["delete-use-watch-count"]?.addEventListener(
+      "change",
+      () => this.updateDeleteConditionUI(),
+    );
+    this.elements["delete-use-progress-rate"]?.addEventListener(
+      "change",
+      () => this.updateDeleteConditionUI(),
     );
 
     // タブ切り替え
@@ -3046,12 +3057,23 @@ class WatchHistoryApp {
 
   /**
    * 条件に一致する視聴履歴を削除する
+   * @param maxWatchCount 視聴回数上限（nullの場合は条件無効）
+   * @param maxProgressRate 進捗率上限（nullの場合は条件無効）
    */
   private async deleteHistoryEntriesByCondition(
-    maxWatchCount: number,
-    maxProgressRate: number,
+    maxWatchCount: number | null,
+    maxProgressRate: number | null,
   ): Promise<void> {
-    if (maxWatchCount < 0 || maxProgressRate < 0 || maxProgressRate > 100) {
+    if (maxWatchCount === null && maxProgressRate === null) {
+      this.showToast("少なくとも1つの条件を有効にしてください", "error");
+      return;
+    }
+
+    if (
+      (maxWatchCount !== null && maxWatchCount < 0) ||
+      (maxProgressRate !== null &&
+        (maxProgressRate < 0 || maxProgressRate > 100))
+    ) {
       this.showToast("無効な条件値です", "error");
       return;
     }
@@ -3062,9 +3084,11 @@ class WatchHistoryApp {
         entry.lengthSec > 0
           ? Math.round((entry.lastPosition / entry.lengthSec) * 100)
           : 0;
-      return (
-        entry.watchCount <= maxWatchCount && progressRate <= maxProgressRate
-      );
+      const watchCountMatch =
+        maxWatchCount === null || entry.watchCount <= maxWatchCount;
+      const progressRateMatch =
+        maxProgressRate === null || progressRate <= maxProgressRate;
+      return watchCountMatch && progressRateMatch;
     });
 
     if (matchingEntries.length === 0) {
@@ -3072,9 +3096,22 @@ class WatchHistoryApp {
       return;
     }
 
+    // 確認メッセージを条件に応じて生成
+    const conditionParts: string[] = [];
+    if (maxWatchCount !== null) {
+      conditionParts.push(`${maxWatchCount}回以下視聴`);
+    }
+    if (maxProgressRate !== null) {
+      conditionParts.push(`${maxProgressRate}%以下進捗`);
+    }
+    const conditionText =
+      conditionParts.length === 2
+        ? conditionParts.join("かつ")
+        : conditionParts[0] ?? "";
+
     if (
       !confirm(
-        `${maxWatchCount}回以下視聴かつ${maxProgressRate}%以下進捗の履歴（${matchingEntries.length}件）を削除しますか？\n\nこの操作は取り消せません。`,
+        `${conditionText}の履歴（${matchingEntries.length}件）を削除しますか？\n\nこの操作は取り消せません。`,
       )
     ) {
       return;
@@ -3102,6 +3139,12 @@ class WatchHistoryApp {
    * 条件付き削除のハンドラー
    */
   private handleConditionalDelete(): void {
+    const useWatchCount = (
+      this.elements["delete-use-watch-count"] as HTMLInputElement | undefined
+    )?.checked;
+    const useProgressRate = (
+      this.elements["delete-use-progress-rate"] as HTMLInputElement | undefined
+    )?.checked;
     const watchCountInput = this.elements[
       "delete-watch-count"
     ] as HTMLInputElement;
@@ -3114,10 +3157,62 @@ class WatchHistoryApp {
       return;
     }
 
-    const maxWatchCount = parseInt(watchCountInput.value) || 0;
-    const maxProgressRate = parseInt(progressRateInput.value) || 0;
+    const maxWatchCount = useWatchCount
+      ? (parseInt(watchCountInput.value) || 0)
+      : null;
+    const maxProgressRate = useProgressRate
+      ? (parseInt(progressRateInput.value) || 0)
+      : null;
 
     void this.deleteHistoryEntriesByCondition(maxWatchCount, maxProgressRate);
+  }
+
+  /**
+   * 条件付き削除UIの状態を更新する
+   * チェックボックスのON/OFFに応じて入力欄のdisabled状態とヒントテキストを切り替える
+   */
+  private updateDeleteConditionUI(): void {
+    const useWatchCount = (
+      this.elements["delete-use-watch-count"] as HTMLInputElement | undefined
+    )?.checked ?? true;
+    const useProgressRate = (
+      this.elements["delete-use-progress-rate"] as HTMLInputElement | undefined
+    )?.checked ?? true;
+
+    // 入力欄の親要素にdisabledクラスを切り替え
+    const watchCountItem = this.elements["delete-use-watch-count"]
+      ?.closest(".delete-condition-item");
+    const progressRateItem = this.elements["delete-use-progress-rate"]
+      ?.closest(".delete-condition-item");
+
+    if (watchCountItem) {
+      watchCountItem.classList.toggle("disabled", !useWatchCount);
+    }
+    if (progressRateItem) {
+      progressRateItem.classList.toggle("disabled", !useProgressRate);
+    }
+
+    // ヒントテキストを更新
+    const hint = this.elements["delete-condition-hint"];
+    if (hint) {
+      if (useWatchCount && useProgressRate) {
+        hint.textContent = "両方有効時はAND条件で削除します";
+      } else if (useWatchCount) {
+        hint.textContent = "視聴回数の条件のみで削除します";
+      } else if (useProgressRate) {
+        hint.textContent = "進捗率の条件のみで削除します";
+      } else {
+        hint.textContent = "少なくとも1つの条件を有効にしてください";
+      }
+    }
+
+    // ボタンの有効/無効切り替え
+    const deleteBtn = this.elements[
+      "delete-by-condition-btn"
+    ] as HTMLButtonElement | undefined;
+    if (deleteBtn) {
+      deleteBtn.disabled = !useWatchCount && !useProgressRate;
+    }
   }
 
   /**
