@@ -13,7 +13,7 @@ import { ProgressService } from "@/mylist2/ui/progress-service";
 import { FileHelperService } from "@/mylist2/ui/file-helper-service";
 import { EventHandlers } from "@/mylist2/ui/event-handlers";
 import { BatchOperations } from "@/mylist2/ui/batch-operations";
-import { linkify } from "@/mylist2/utils/linkify";
+import { sanitizeDescriptionHtml } from "@/mylist2/utils/linkify";
 import {
   VirtualScrollManager,
   type VirtualScrollItem,
@@ -1516,7 +1516,7 @@ export class Mylist2ManagerUI {
     const memoEl = modal.querySelector<HTMLTextAreaElement>(".video-memo");
     if (descEl instanceof HTMLElement) {
       const text = video.description || "(説明なし)";
-      descEl.innerHTML = linkify(text);
+      descEl.innerHTML = sanitizeDescriptionHtml(text);
     }
     if (tagsEl) {
       const tags = video.tags && video.tags.length > 0 ? video.tags : [];
