@@ -150,6 +150,8 @@ export class EventHandlers {
       this.progressService.showProgress();
       this.progressService.updateProgress(0, 1);
 
+      // キャッシュを無効化して最新のAPI情報を取得する
+      this.manager.invalidateVideoCache(videoId);
       const videoInfo = await this.manager.fetchVideoInfo(videoId);
       await this.manager.updateVideoInfo(compositeId, videoInfo);
       await this.loadVideos();

@@ -194,6 +194,8 @@ export class ApiService {
           uploadedAt: existingData.uploadedAt || Date.now(),
           authorName: existingData.authorName || "不明",
           length: parseInt(String(existingData.length)) || 0,
+          description: existingData.description,
+          tags: existingData.tags,
         };
       }
     }
@@ -216,6 +218,8 @@ export class ApiService {
         uploadedAt: existingData?.uploadedAt || Date.now(),
         authorName: existingData?.authorName || "不明",
         length: parseInt(String(existingData?.length)) || 0,
+        description: existingData?.description,
+        tags: existingData?.tags,
       };
     }
 
@@ -256,6 +260,11 @@ export class ApiService {
   // キャッシュをクリア
   clearCache(): void {
     this.apiCache.clear();
+  }
+
+  // 特定の動画のキャッシュを無効化（情報更新時に使用）
+  invalidateCache(videoId: string): void {
+    this.apiCache.delete(videoId);
   }
 
   // キャッシュにデータを追加

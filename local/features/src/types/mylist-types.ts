@@ -51,6 +51,8 @@ export interface MylistManager {
   deleteKeyword(keywordId: number): Promise<void>;
   updateKeyword(keywordId: number, newKeyword: string): Promise<void>;
   addVideo(targetMylistId: number, videoData: VideoInfo): Promise<string>;
+  /** 特定の動画のAPIキャッシュを無効化（情報更新前に呼び出す） */
+  invalidateVideoCache(videoId: string): void;
 }
 
 /**

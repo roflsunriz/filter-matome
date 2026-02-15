@@ -155,7 +155,8 @@ export class BatchOperations {
         const compositeId = video.id;
 
         try {
-          // APIから最新の情報を取得
+          // キャッシュを無効化して最新のAPI情報を取得する
+          this.manager.invalidateVideoCache(videoId);
           const videoInfo = await this.manager.fetchVideoInfo(videoId);
 
           // データベースの情報を更新
@@ -350,7 +351,8 @@ export class BatchOperations {
         if (!videoId || !compositeId) continue;
 
         try {
-          // APIから最新の情報を取得
+          // キャッシュを無効化して最新のAPI情報を取得する
+          this.manager.invalidateVideoCache(videoId);
           const videoInfo = await this.manager.fetchVideoInfo(videoId);
 
           // データベースの情報を更新

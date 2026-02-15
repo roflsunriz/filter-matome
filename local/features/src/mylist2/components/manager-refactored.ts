@@ -142,6 +142,11 @@ export class Mylist2Manager {
     return this.apiService.extractVideoId(input);
   }
 
+  // 特定の動画のAPIキャッシュを無効化（情報更新前に呼び出す）
+  invalidateVideoCache(videoId: string): void {
+    this.apiService.invalidateCache(videoId);
+  }
+
   // インポート・エクスポート関連のメソッド
   async exportData() {
     return this.importExportService.exportData();

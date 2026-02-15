@@ -85,6 +85,8 @@ export class ImportExportService {
             uploadedAt: video.uploadedAt,
             authorName: video.authorName,
             length: video.length,
+            description: video.description,
+            tags: video.tags,
           });
         });
 
