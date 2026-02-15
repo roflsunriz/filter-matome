@@ -637,6 +637,40 @@ type ResolvedNextVideo = {
 };
 
 /**
+ * 数値のみの動画IDかどうかを判定する
+ * 例: "12345" → true, "sm12345" → false
+ */
+const isNumericOnlyVideoId = (id: string): boolean => /^\d+$/.test(id);
+
+/**
+ * 数値のみ動画IDをプレフィックス付きID（sm/so）に正規化する
+ * fetchWatchPage でウォッチページを取得し、apiData.video.id から正規IDを得る
+ */
+const resolveNumericVideoId = async (
+  numericId: string,
+): Promise<string> => {
+  try {
+    const result = await window.commonHelper.fetchWatchPage(numericId);
+    if (!result) {
+      window.logger.warn(
+        `数値ID ${numericId} のウォッチページ取得に失敗しました`,
+      );
+      return numericId;
+    }
+    const resolved = toApiData(result.apiData, numericId);
+    const canonicalId = resolved.video.id;
+    if (canonicalId && canonicalId !== numericId) {
+      window.logger.info(`数値ID解決: ${numericId} → ${canonicalId}`);
+      return canonicalId;
+    }
+    return canonicalId || numericId;
+  } catch (error) {
+    window.logger.warn(`数値ID ${numericId} の解決に失敗しました`, error);
+    return numericId;
+  }
+};
+
+/**
  * 次の動画IDを解決する（シリーズ優先、説明文フォールバック）
  */
 const resolveNextVideoId = (
@@ -1050,6 +1084,14 @@ const main = async (): Promise<void> => {
     // シリーズ連続再生: 再生完了時に次の動画へ自動遷移
     const resolved = resolveNextVideoId(apiData, videoId);
     if (resolved) {
+      // 数値のみIDはバックグラウンドでプレフィックス付きIDに正規化
+      // 動画再生中に解決が完了するため、遷移時には正規IDが利用可能
+      const canonicalIdPromise: Promise<string> = isNumericOnlyVideoId(
+        resolved.id,
+      )
+        ? resolveNumericVideoId(resolved.id)
+        : Promise.resolve(resolved.id);
+
       player.onVideoEnded(() => {
         const autoNext =
           localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true";
@@ -1058,12 +1100,14 @@ const main = async (): Promise<void> => {
         }
         const sourceLabel =
           resolved.source === "description" ? "説明文リンク" : "シリーズ";
-        window.logger.info(
-          `連続再生(${sourceLabel}): 次の動画 ${resolved.id} へ遷移します`,
-        );
-        const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set("videoId", resolved.id);
-        window.location.href = nextUrl.toString();
+        void canonicalIdPromise.then((nextId) => {
+          window.logger.info(
+            `連続再生(${sourceLabel}): 次の動画 ${nextId} へ遷移します`,
+          );
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.set("videoId", nextId);
+          window.location.href = nextUrl.toString();
+        });
       });
     }
   } catch (error) {
