@@ -46,6 +46,14 @@ export const STANDALONE_PAGE_STYLES = [
   ".nc-series__item { padding: 10px 14px; border-radius: 12px; background: rgba(32, 38, 60, 0.72); display: flex; flex-direction: column; gap: 4px; }",
   ".nc-section-title { font-size: 16px; font-weight: 600; color: #d9e2ff; }",
   ".nc-empty { color: #7d86a8; font-size: 13px; }",
+
+  /* 連続再生チェックボックス */
+  ".nc-stat-item--auto-next { cursor: pointer; transition: box-shadow 0.15s ease; }",
+  ".nc-stat-item--auto-next:hover { box-shadow: inset 0 0 0 1px rgba(142, 170, 255, 0.38); }",
+  ".nc-stat-item--disabled { opacity: 0.5; cursor: default; }",
+  ".nc-stat-item--disabled:hover { box-shadow: inset 0 0 0 1px rgba(142, 170, 255, 0.18); }",
+  ".nc-stat-item__auto-next-label { display: flex; align-items: center; gap: 8px; cursor: inherit; }",
+  ".nc-stat-item__auto-next-checkbox { width: 16px; height: 16px; accent-color: #7aa2ff; cursor: inherit; margin: 0; flex-shrink: 0; }",
   
   /* レスポンシブ対応 - タブレット */
   "@media (max-width: 1024px) { .nc-main { gap: 20px; } .standalone-player-wrapper { flex-direction: column; } .standalone-player-wrapper .comment-container { width: 100%; max-width: 100%; min-width: 100%; max-height: 400px; } .video-container { max-height: 60vh; } }",

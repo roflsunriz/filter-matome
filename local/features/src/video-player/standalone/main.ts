@@ -8,6 +8,7 @@ import {
   formatDateTime,
   formatDuration,
   createStatItem,
+  createAutoNextStatItem,
 } from "@/video-player/standalone/utils";
 import type { ApiData, NicoApiData } from "@/types/index";
 import DOMPurify from "dompurify";
@@ -584,8 +585,15 @@ const renderMeta = (container: HTMLElement, apiData: ApiData): void => {
   appendMetaItem(container, "ジャンル", resolveGenreLabel(apiData));
 };
 
+const AUTO_NEXT_STORAGE_KEY = "video-player-auto-next";
+
 const renderStats = (container: HTMLElement, apiData: ApiData): void => {
   container.innerHTML = "";
+
+  const hasNextVideo = !!apiData.series?.next?.id;
+  const savedPref =
+    localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true";
+
   container.append(
     createStatItem("再生数", formatNumber(apiData.video.count.view)),
     createStatItem("コメント数", formatNumber(apiData.video.count.comment)),
@@ -593,6 +601,13 @@ const renderStats = (container: HTMLElement, apiData: ApiData): void => {
     createStatItem(
       "いいね数",
       formatNumber(apiData.video.likeCount ?? apiData.video.count.like ?? null),
+    ),
+    createAutoNextStatItem(
+      savedPref,
+      !hasNextVideo,
+      (checked: boolean) => {
+        localStorage.setItem(AUTO_NEXT_STORAGE_KEY, String(checked));
+      },
     ),
   );
 };
@@ -947,6 +962,24 @@ const main = async (): Promise<void> => {
     assignWatchContext(videoId, apiData);
 
     await player.initialize(videoId, { apiData });
+
+    // シリーズ連続再生: 再生完了時に次の動画へ自動遷移
+    const nextVideoId = apiData.series?.next?.id;
+    if (nextVideoId) {
+      player.onVideoEnded(() => {
+        const autoNext =
+          localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true";
+        if (!autoNext) {
+          return;
+        }
+        window.logger.info(
+          `連続再生: 次の動画 ${nextVideoId} へ遷移します`,
+        );
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set("videoId", nextVideoId);
+        window.location.href = nextUrl.toString();
+      });
+    }
   } catch (error) {
     window.logger.error("Standalone player failed", error);
     layout.title.textContent = "動画情報の取得に失敗しました";

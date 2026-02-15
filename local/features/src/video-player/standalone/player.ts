@@ -59,6 +59,17 @@ export class StandalonePlayer {
   private endedEventHandler: (() => void) | null = null;
   private playEventHandler: (() => void) | null = null;
 
+  // 外部から登録される動画終了時コールバック
+  private externalEndedCallback: (() => void) | null = null;
+
+  /**
+   * 動画再生終了時に呼び出される外部コールバックを登録する
+   * シリーズ連続再生などの外部ロジックで使用
+   */
+  public onVideoEnded(callback: () => void): void {
+    this.externalEndedCallback = callback;
+  }
+
   constructor(options: StandalonePlayerOptions) {
     this.mount = options.mount;
     ensureCustomElements();
@@ -484,6 +495,7 @@ export class StandalonePlayer {
     this.endedEventHandler = (): void => {
       this.hasEnded = true;
       window.logger.info("動画が終了しました");
+      this.externalEndedCallback?.();
     };
 
     // play イベントハンドラー
@@ -661,6 +673,9 @@ export class StandalonePlayer {
         this.playEventHandler = null;
       }
     }
+
+    // 外部コールバックのクリーンアップ
+    this.externalEndedCallback = null;
   }
 
 

@@ -53,3 +53,53 @@ export const createStatItem = (label: string, value: string): HTMLElement => {
   item.append(labelEl, valueEl);
   return item;
 };
+
+/**
+ * 連続再生チェックボックス付き統計アイテムを生成する
+ * @param checked 初期チェック状態
+ * @param disabled シリーズの次の動画がない場合 true
+ * @param onChange チェック状態変更時のコールバック
+ */
+export const createAutoNextStatItem = (
+  checked: boolean,
+  disabled: boolean,
+  onChange: (checked: boolean) => void,
+): HTMLElement => {
+  const item = document.createElement("div");
+  item.className = "nc-stat-item nc-stat-item--auto-next";
+  if (disabled) {
+    item.classList.add("nc-stat-item--disabled");
+  }
+
+  const labelEl = document.createElement("label");
+  labelEl.className = "nc-stat-item__auto-next-label";
+
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.className = "nc-stat-item__auto-next-checkbox";
+  checkbox.checked = checked && !disabled;
+  checkbox.disabled = disabled;
+  checkbox.addEventListener("change", () => {
+    onChange(checkbox.checked);
+  });
+
+  const textEl = document.createElement("span");
+  textEl.className = "nc-stat-item__label";
+  textEl.textContent = "連続再生";
+
+  labelEl.append(checkbox, textEl);
+
+  const statusEl = document.createElement("span");
+  statusEl.className = "nc-stat-item__value";
+  if (disabled) {
+    statusEl.textContent = "シリーズなし";
+  } else {
+    statusEl.textContent = checked ? "ON" : "OFF";
+    checkbox.addEventListener("change", () => {
+      statusEl.textContent = checkbox.checked ? "ON" : "OFF";
+    });
+  }
+
+  item.append(labelEl, statusEl);
+  return item;
+};
