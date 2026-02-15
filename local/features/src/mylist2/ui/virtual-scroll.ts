@@ -107,6 +107,7 @@ export class VirtualScrollManager {
   setData(items: VirtualScrollItem[]): void {
     this.items = items;
     this.applyFilter();
+    this.invalidateRenderedRange();
     this.render();
   }
 
@@ -116,6 +117,7 @@ export class VirtualScrollManager {
   setFilter(filterText: string): void {
     this.filterText = filterText.toLowerCase();
     this.applyFilter();
+    this.invalidateRenderedRange();
     this.render();
   }
 
@@ -194,6 +196,15 @@ export class VirtualScrollManager {
     } else {
       return `video:${element.dataset.compositeId ?? ""}`;
     }
+  }
+
+  /**
+   * レンダリング済み範囲のキャッシュを無効化する
+   * データや選択状態が変わった際に呼び出し、次回 render() で必ず再描画させる
+   */
+  private invalidateRenderedRange(): void {
+    this.visibleStartIndex = -1;
+    this.visibleEndIndex = -1;
   }
 
   /**
@@ -292,6 +303,7 @@ export class VirtualScrollManager {
         this.selectedIds.add(`video:${item.data.id}`);
       }
     });
+    this.invalidateRenderedRange();
     this.render();
     this.selectionChangeCallback?.(this.selectedIds);
   }
@@ -301,6 +313,7 @@ export class VirtualScrollManager {
    */
   deselectAll(): void {
     this.selectedIds.clear();
+    this.invalidateRenderedRange();
     this.render();
     this.selectionChangeCallback?.(this.selectedIds);
   }
