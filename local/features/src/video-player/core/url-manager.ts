@@ -26,11 +26,11 @@ export class UrlManager {
         ref: `/cache/file/nicocachenl_refcache=${videoId}.hls//master.m3u8`,
       };
 
-      // /cache/info/v2 からキャッシュ情報を取得
-      const cacheInfoUrls = await this.getCacheInfoUrls(videoId);
-
-      // /cache/find_cache からCustomCacheReturnerの情報を取得
-      const customCacheUrls = await this.getCustomCacheUrls(videoId);
+      // /cache/info/v2 と /cache/find_cache を並列で取得
+      const [cacheInfoUrls, customCacheUrls] = await Promise.all([
+        this.getCacheInfoUrls(videoId),
+        this.getCustomCacheUrls(videoId),
+      ]);
 
       // 両方の情報を統合
       const allUrls = { ...urls, ...cacheInfoUrls, ...customCacheUrls };
@@ -80,22 +80,28 @@ export class UrlManager {
         return {};
       }
 
-      const urls: Partial<VideoUrlInfo> = {};
+      // 全キャッシュ ID を収集し、並列で取得してから順序どおりマージ
+      const tasks: Promise<Partial<VideoUrlInfo>>[] = [];
 
       // preferred キャッシュIDを使用
       if (videoCacheInfo.preferred) {
-        const cacheId = videoCacheInfo.preferred;
-        const customCacheUrls = await this.getCustomCacheUrls(cacheId);
-        Object.assign(urls, customCacheUrls);
+        tasks.push(this.getCustomCacheUrls(videoCacheInfo.preferred));
       }
 
       // caches オブジェクトからキャッシュIDを取得
       if (videoCacheInfo.caches && typeof videoCacheInfo.caches === "object") {
         const cacheRecord = videoCacheInfo.caches as Record<string, unknown>;
         for (const cacheId of Object.keys(cacheRecord)) {
-          const customCacheUrls = await this.getCustomCacheUrls(cacheId);
-          Object.assign(urls, customCacheUrls);
+          tasks.push(this.getCustomCacheUrls(cacheId));
         }
+      }
+
+      const results = await Promise.all(tasks);
+
+      // preferred を先に適用し、caches で上書き（既存動作と同一のマージ順）
+      const urls: Partial<VideoUrlInfo> = {};
+      for (const result of results) {
+        Object.assign(urls, result);
       }
 
       return urls;
@@ -204,17 +210,19 @@ export class UrlManager {
       "ref",
     ];
 
-    for (const key of urlKeys) {
-      const url = urls[key];
-      if (url) {
-        const fullUrl = this.getFullUrl(url);
-        const exists = await this.checkUrlExists(fullUrl);
-        if (exists) {
-          return fullUrl;
-        }
-      }
-    }
+    // 全候補を並列でチェックし、優先度順で最初に存在した URL を返す
+    const candidates = urlKeys
+      .map((key) => urls[key])
+      .filter((url): url is string => url !== undefined)
+      .map((url) => this.getFullUrl(url));
 
-    return null;
+    const results = await Promise.all(
+      candidates.map(async (fullUrl) => ({
+        url: fullUrl,
+        exists: await this.checkUrlExists(fullUrl),
+      })),
+    );
+
+    return results.find((r) => r.exists)?.url ?? null;
   }
 }
