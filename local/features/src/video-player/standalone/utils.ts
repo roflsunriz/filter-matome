@@ -59,11 +59,13 @@ export const createStatItem = (label: string, value: string): HTMLElement => {
  * @param checked 初期チェック状態
  * @param disabled シリーズの次の動画がない場合 true
  * @param onChange チェック状態変更時のコールバック
+ * @param sourceHint ソースのヒント表示（例: "説明文"）。省略時はシリーズ由来とみなす
  */
 export const createAutoNextStatItem = (
   checked: boolean,
   disabled: boolean,
   onChange: (checked: boolean) => void,
+  sourceHint?: string,
 ): HTMLElement => {
   const item = document.createElement("div");
   item.className = "nc-stat-item nc-stat-item--auto-next";
@@ -92,11 +94,14 @@ export const createAutoNextStatItem = (
   const statusEl = document.createElement("span");
   statusEl.className = "nc-stat-item__value";
   if (disabled) {
-    statusEl.textContent = "シリーズなし";
+    statusEl.textContent = "リンクなし";
   } else {
-    statusEl.textContent = checked ? "ON" : "OFF";
+    const suffix = sourceHint ? ` (${sourceHint})` : "";
+    const formatStatus = (on: boolean): string =>
+      (on ? "ON" : "OFF") + suffix;
+    statusEl.textContent = formatStatus(checked);
     checkbox.addEventListener("change", () => {
-      statusEl.textContent = checkbox.checked ? "ON" : "OFF";
+      statusEl.textContent = formatStatus(checkbox.checked);
     });
   }
 

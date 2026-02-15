@@ -587,10 +587,93 @@ const renderMeta = (container: HTMLElement, apiData: ApiData): void => {
 
 const AUTO_NEXT_STORAGE_KEY = "video-player-auto-next";
 
-const renderStats = (container: HTMLElement, apiData: ApiData): void => {
+/**
+ * 説明文（HTML）から動画IDを抽出し、現在の動画の「次」を推定する
+ *
+ * 対応パターン:
+ *   - watch/sm12345, watch/so12345, watch/nm12345（プレフィックス付き）
+ *   - watch/12345（数値のみ）
+ *   - https://www.nicovideo.jp/watch/... 形式の完全URL
+ *
+ * 推定ロジック:
+ *   1. 現在の動画IDが説明文中に見つかれば、その直後に出現する別の動画IDを返す
+ *   2. 現在の動画IDが見つからない場合は、説明文中の最後の動画IDを返す
+ */
+const extractNextVideoIdFromDescription = (
+  description: string,
+  currentVideoId: string,
+): string | null => {
+  // watch/ に続く動画IDを全て抽出（sm/so/nm + 数字、または数字のみ）
+  const pattern = /watch\/([a-z]{0,2}\d+)/gi;
+  const ids: string[] = [];
+  let match: RegExpExecArray | null = pattern.exec(description);
+  while (match !== null) {
+    const id = match[1];
+    if (id && !ids.includes(id)) {
+      ids.push(id);
+    }
+    match = pattern.exec(description);
+  }
+
+  if (ids.length === 0) {
+    return null;
+  }
+
+  // 現在の動画IDが説明文にある場合、その直後のIDを次の動画とする
+  const currentIndex = ids.indexOf(currentVideoId);
+  if (currentIndex !== -1 && currentIndex < ids.length - 1) {
+    return ids[currentIndex + 1] ?? null;
+  }
+
+  // 現在の動画IDが見つからない、または末尾の場合は最後のIDを返す
+  // ただし自分自身は除外する
+  const candidates = ids.filter((id) => id !== currentVideoId);
+  return candidates.length > 0 ? (candidates[candidates.length - 1] ?? null) : null;
+};
+
+type ResolvedNextVideo = {
+  id: string;
+  source: "series" | "description";
+};
+
+/**
+ * 次の動画IDを解決する（シリーズ優先、説明文フォールバック）
+ */
+const resolveNextVideoId = (
+  apiData: ApiData,
+  currentVideoId: string,
+): ResolvedNextVideo | null => {
+  // 優先: シリーズデータ
+  const seriesNextId = apiData.series?.next?.id;
+  if (seriesNextId) {
+    return { id: seriesNextId, source: "series" };
+  }
+
+  // フォールバック: 説明文中の動画リンク
+  const descriptionSource =
+    apiData.video.description ?? apiData.video.shortDescription;
+  if (descriptionSource) {
+    const descriptionNextId = extractNextVideoIdFromDescription(
+      descriptionSource,
+      currentVideoId,
+    );
+    if (descriptionNextId) {
+      return { id: descriptionNextId, source: "description" };
+    }
+  }
+
+  return null;
+};
+
+const renderStats = (
+  container: HTMLElement,
+  apiData: ApiData,
+  currentVideoId: string,
+): void => {
   container.innerHTML = "";
 
-  const hasNextVideo = !!apiData.series?.next?.id;
+  const resolved = resolveNextVideoId(apiData, currentVideoId);
+  const hasNextVideo = resolved !== null;
   const savedPref =
     localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true";
 
@@ -608,6 +691,7 @@ const renderStats = (container: HTMLElement, apiData: ApiData): void => {
       (checked: boolean) => {
         localStorage.setItem(AUTO_NEXT_STORAGE_KEY, String(checked));
       },
+      resolved?.source === "description" ? "説明文" : undefined,
     ),
   );
 };
@@ -953,7 +1037,7 @@ const main = async (): Promise<void> => {
     document.title = "video-player - " + apiData.video.title;
 
     renderMeta(layout.metaList, apiData);
-    renderStats(layout.statsList, apiData);
+    renderStats(layout.statsList, apiData, videoId);
     renderTags(layout.tags, apiData);
     renderDescription(layout.description, apiData);
     renderOwner(layout, apiData);
@@ -964,19 +1048,21 @@ const main = async (): Promise<void> => {
     await player.initialize(videoId, { apiData });
 
     // シリーズ連続再生: 再生完了時に次の動画へ自動遷移
-    const nextVideoId = apiData.series?.next?.id;
-    if (nextVideoId) {
+    const resolved = resolveNextVideoId(apiData, videoId);
+    if (resolved) {
       player.onVideoEnded(() => {
         const autoNext =
           localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true";
         if (!autoNext) {
           return;
         }
+        const sourceLabel =
+          resolved.source === "description" ? "説明文リンク" : "シリーズ";
         window.logger.info(
-          `連続再生: 次の動画 ${nextVideoId} へ遷移します`,
+          `連続再生(${sourceLabel}): 次の動画 ${resolved.id} へ遷移します`,
         );
         const nextUrl = new URL(window.location.href);
-        nextUrl.searchParams.set("videoId", nextVideoId);
+        nextUrl.searchParams.set("videoId", resolved.id);
         window.location.href = nextUrl.toString();
       });
     }
