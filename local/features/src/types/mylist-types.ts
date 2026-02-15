@@ -26,12 +26,21 @@ export interface KeywordInfo {
 }
 
 /**
+ * 動画リンクの遷移先
+ * - "official": 公式プレーヤー (https://www.nicovideo.jp/watch/...)
+ * - "local": ローカルプレーヤー (video-player standalone)
+ */
+export type VideoLinkTarget = "official" | "local";
+
+/**
  * マネージャー設定の型定義
  */
 export interface ManagerSettings {
   mylistSortType: string;
   videoSortType: string;
   theme?: string;
+  /** 動画リンクの遷移先: "official" = 公式プレーヤー, "local" = video-player standalone */
+  videoLinkTarget?: VideoLinkTarget;
 }
 
 /**

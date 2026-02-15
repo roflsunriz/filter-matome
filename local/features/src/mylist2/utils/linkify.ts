@@ -1,5 +1,7 @@
 import DOMPurify from "dompurify";
 
+import type { VideoLinkTarget } from "@/types/mylist-types";
+
 // 文字列をHTMLエスケープ
 export const escapeHtml = (s: string): string =>
   s
@@ -8,6 +10,22 @@ export const escapeHtml = (s: string): string =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+
+// --- 動画リンク先設定（モジュールレベル） ---
+let currentVideoLinkTarget: VideoLinkTarget = "official";
+
+/** linkify で生成される動画IDリンクの遷移先を設定する */
+export const setVideoLinkTarget = (target: VideoLinkTarget): void => {
+  currentVideoLinkTarget = target;
+};
+
+/** 動画IDからリンクURLを生成する */
+export const buildVideoUrl = (videoId: string): string => {
+  if (currentVideoLinkTarget === "local") {
+    return `/local/features/dist/src/video-player/standalone/index.html?videoId=${encodeURIComponent(videoId)}`;
+  }
+  return `https://www.nicovideo.jp/watch/${videoId}`;
+};
 
 // URL/動画ID/mylist検出用の正規表現
 const LINKIFY_RE =
@@ -30,8 +48,8 @@ const linkifyText = (text: string): string => {
       href = `https://www.nicovideo.jp/mylist/${m[3]}`;
       label = m[2];
     } else if (m[4]) {
-      href = `https://www.nicovideo.jp/watch/${m[5]}`;
-      label = m[5];
+      href = buildVideoUrl(m[5] ?? "");
+      label = m[5] ?? "";
     }
     result += `<a class="cml2-video-link" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
     last = LINKIFY_RE.lastIndex;

@@ -1,7 +1,7 @@
 import "@/types/global.d.ts";
 
 import { Mylist2Manager } from "@/mylist2/components/manager-refactored";
-import { MylistInfo, KeywordInfo, ExportData } from "@/types/mylist-types";
+import type { MylistInfo, KeywordInfo, ExportData, VideoLinkTarget } from "@/types/mylist-types";
 import { DBVideo as VideoInfo } from "@/types/video-types";
 import {
   hydrateMaterialIconImages,
@@ -13,7 +13,7 @@ import { ProgressService } from "@/mylist2/ui/progress-service";
 import { FileHelperService } from "@/mylist2/ui/file-helper-service";
 import { EventHandlers } from "@/mylist2/ui/event-handlers";
 import { BatchOperations } from "@/mylist2/ui/batch-operations";
-import { sanitizeDescriptionHtml } from "@/mylist2/utils/linkify";
+import { sanitizeDescriptionHtml, buildVideoUrl, setVideoLinkTarget } from "@/mylist2/utils/linkify";
 import {
   VirtualScrollManager,
   type VirtualScrollItem,
@@ -41,6 +41,9 @@ export class Mylist2ManagerUI {
   private virtualScrollManager: VirtualScrollManager;
   private currentVideos: VideoInfo[] = [];
   private currentKeywords: KeywordInfo[] = [];
+
+  // 動画リンク先設定
+  private videoLinkTarget: VideoLinkTarget = "official";
 
   constructor() {
     this.manager = new Mylist2Manager();
@@ -572,7 +575,7 @@ export class Mylist2ManagerUI {
         <img class="video-thumbnail" src="${video.thumbnailUrl}" alt="サムネイル" />
         <div class="video-info">
           <div class="video-title">
-            <a href="https://www.nicovideo.jp/watch/${video.originalId}" target="_blank">${video.title}</a>
+            <a href="${buildVideoUrl(video.originalId)}" target="_blank">${video.title}</a>
           </div>
           <div class="video-stats">
             <span class="view-count">再生数: ${video.viewCount.toLocaleString()}</span>
@@ -637,7 +640,7 @@ export class Mylist2ManagerUI {
         "",
       );
       const titleText = trimmedTitle ? trimmedTitle : "無題";
-      titleLink.href = `https://www.nicovideo.jp/watch/${video.originalId}`;
+      titleLink.href = buildVideoUrl(video.originalId);
       titleLink.textContent = titleText;
       titleLink.className = "video-title-link";
       titleLink.target = "_blank";
@@ -1782,6 +1785,12 @@ export class Mylist2ManagerUI {
     this.virtualScrollManager.setFilter(searchText);
   }
 
+  /** 動画リンク先設定を適用する（インスタンス＋linkifyモジュール） */
+  private applyVideoLinkTarget(target: VideoLinkTarget): void {
+    this.videoLinkTarget = target;
+    setVideoLinkTarget(target);
+  }
+
   async initializeSettings(): Promise<void> {
     const settings = await this.manager.loadManagerSettings();
 
@@ -1794,6 +1803,9 @@ export class Mylist2ManagerUI {
     ) as HTMLSelectElement;
     const themeSelect = document.getElementById(
       "themeSelect",
+    ) as HTMLSelectElement | null;
+    const videoLinkTargetSelect = document.getElementById(
+      "videoLinkTargetSelect",
     ) as HTMLSelectElement | null;
 
     if (!mylistSort || !videoSort) {
@@ -1808,6 +1820,23 @@ export class Mylist2ManagerUI {
     if (themeSelect) themeSelect.value = themeValue;
     this.applyTheme(themeValue);
 
+    // 動画リンク先初期値
+    const videoLinkTargetValue: VideoLinkTarget =
+      settings.videoLinkTarget === "local" ? "local" : "official";
+    if (videoLinkTargetSelect)
+      videoLinkTargetSelect.value = videoLinkTargetValue;
+    this.applyVideoLinkTarget(videoLinkTargetValue);
+
+    /** 現在のUI上の全設定値を収集する */
+    const collectCurrentSettings = () => ({
+      mylistSortType: mylistSort.value,
+      videoSortType: videoSort.value,
+      theme: themeSelect ? themeSelect.value : themeValue,
+      videoLinkTarget: (videoLinkTargetSelect?.value === "local"
+        ? "local"
+        : "official") as VideoLinkTarget,
+    });
+
     // 初期表示時に並び替えを実行
     await this.loadMylists(); // マイリスト一覧の並び替え
     if (this.currentMylistId) {
@@ -1818,13 +1847,7 @@ export class Mylist2ManagerUI {
     mylistSort.addEventListener(
       "change",
       this.guardEvent(async () => {
-        await this.manager.saveManagerSettings({
-          mylistSortType: mylistSort.value,
-          videoSortType: videoSort.value,
-          theme: themeSelect
-            ? themeSelect.value
-            : (settings as { theme?: string }).theme || "dark-blue",
-        });
+        await this.manager.saveManagerSettings(collectCurrentSettings());
         await this.loadMylists();
       }),
     );
@@ -1832,13 +1855,7 @@ export class Mylist2ManagerUI {
     videoSort.addEventListener(
       "change",
       this.guardEvent(async () => {
-        await this.manager.saveManagerSettings({
-          mylistSortType: mylistSort.value,
-          videoSortType: videoSort.value,
-          theme: themeSelect
-            ? themeSelect.value
-            : (settings as { theme?: string }).theme || "dark-blue",
-        });
+        await this.manager.saveManagerSettings(collectCurrentSettings());
         await this.loadVideos();
       }),
     );
@@ -1847,13 +1864,24 @@ export class Mylist2ManagerUI {
       themeSelect.addEventListener(
         "change",
         this.guardEvent(async () => {
-          const newTheme = themeSelect.value;
-          await this.manager.saveManagerSettings({
-            mylistSortType: mylistSort.value,
-            videoSortType: videoSort.value,
-            theme: newTheme,
-          });
-          this.applyTheme(newTheme);
+          const current = collectCurrentSettings();
+          await this.manager.saveManagerSettings(current);
+          this.applyTheme(current.theme);
+        }),
+      );
+    }
+
+    if (videoLinkTargetSelect) {
+      videoLinkTargetSelect.addEventListener(
+        "change",
+        this.guardEvent(async () => {
+          const current = collectCurrentSettings();
+          await this.manager.saveManagerSettings(current);
+          this.applyVideoLinkTarget(current.videoLinkTarget);
+          // 動画リンクを即時更新するために再描画
+          if (this.currentMylistId) {
+            await this.loadVideos();
+          }
         }),
       );
     }
