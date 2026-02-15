@@ -47,15 +47,11 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
   }
     
   #video-element {
-    width: auto;
-    height: auto;
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     object-position: center center; /* 通常表示時も中央配置を保証します */
     display: block;
-    margin: auto; /* flexboxコンテナ内での中央配置 */
-    flex-shrink: 0; /* 縮小を防ぐ */
   }
 
   #comment-canvas {
