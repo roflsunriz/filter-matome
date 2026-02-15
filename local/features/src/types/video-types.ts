@@ -89,6 +89,8 @@ export interface DBVideo extends VideoInfo {
   addedAt: number;
   /** ユーザー任意のメモ */
   memo?: string;
+  /** 説明文の取得元 ("thumb"=getthumbinfo, "watch"=視聴ページ) */
+  descriptionSource?: "thumb" | "watch";
 }
 
 /**

@@ -147,6 +147,24 @@ export class Mylist2Manager {
     this.apiService.invalidateCache(videoId);
   }
 
+  /** 視聴ページ経由でリッチHTML説明文を取得する */
+  async fetchRichDescription(videoId: string): Promise<string | null> {
+    return this.apiService.fetchRichDescription(videoId);
+  }
+
+  /** 説明文とその取得元を更新する（視聴ページからのエンリッチメント用） */
+  async updateVideoDescription(
+    compositeId: string,
+    description: string,
+    descriptionSource: "thumb" | "watch",
+  ): Promise<void> {
+    return this.videoService.updateVideoDescription(
+      compositeId,
+      description,
+      descriptionSource,
+    );
+  }
+
   // インポート・エクスポート関連のメソッド
   async exportData() {
     return this.importExportService.exportData();

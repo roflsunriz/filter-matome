@@ -43,6 +43,7 @@ export class VideoService {
           authorName: videoInfo.authorName || "不明",
           length: videoInfo.length || 0,
           description: videoInfo.description || "",
+          descriptionSource: "thumb" as const,
           tags:
             videoInfo.tags && videoInfo.tags.length > 0
               ? videoInfo.tags
@@ -154,6 +155,11 @@ export class VideoService {
           return;
         }
 
+        // エンリッチ済み(watch)の説明文はgetthumbinfoデータで上書きしない
+        const keepExistingDescription =
+          existingVideo.descriptionSource === "watch" &&
+          newInfo.description !== undefined;
+
         const updatedVideo: DBVideo = {
           ...existingVideo,
           title: newInfo.title || existingVideo.title,
@@ -164,8 +170,9 @@ export class VideoService {
           uploadedAt: newInfo.uploadedAt || existingVideo.uploadedAt,
           authorName: newInfo.authorName || existingVideo.authorName,
           length: newInfo.length || existingVideo.length || 0,
-          description:
-            newInfo.description !== undefined
+          description: keepExistingDescription
+            ? existingVideo.description
+            : newInfo.description !== undefined
               ? newInfo.description
               : existingVideo.description,
           tags:
@@ -182,6 +189,38 @@ export class VideoService {
           reject(new Error("データベースの更新に失敗しました"));
       };
 
+      request.onerror = () => reject(new Error("動画情報の取得に失敗しました"));
+    });
+  }
+
+  /** 説明文とその取得元を更新する（視聴ページからのエンリッチメント用） */
+  async updateVideoDescription(
+    compositeId: string,
+    description: string,
+    descriptionSource: "thumb" | "watch",
+  ): Promise<void> {
+    const database = await this.db.initDB();
+    const transaction = database.transaction(["videos"], "readwrite");
+    const store = transaction.objectStore("videos");
+
+    return new Promise<void>((resolve, reject) => {
+      const request = store.get(compositeId);
+      request.onsuccess = () => {
+        const existingVideo = request.result as DBVideo | null;
+        if (!existingVideo) {
+          reject(new Error("動画が見つかりません"));
+          return;
+        }
+        const updated: DBVideo = {
+          ...existingVideo,
+          description,
+          descriptionSource,
+        };
+        const updateRequest = store.put(updated);
+        updateRequest.onsuccess = () => resolve();
+        updateRequest.onerror = () =>
+          reject(new Error("データベースの更新に失敗しました"));
+      };
       request.onerror = () => reject(new Error("動画情報の取得に失敗しました"));
     });
   }

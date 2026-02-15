@@ -1517,6 +1517,22 @@ export class Mylist2ManagerUI {
     if (descEl instanceof HTMLElement) {
       const text = video.description || "(説明なし)";
       descEl.innerHTML = sanitizeDescriptionHtml(text);
+
+      // 視聴ページからのリッチ説明文をまだ取得していない場合、遅延エンリッチメント
+      if (video.descriptionSource !== "watch" && compositeId) {
+        const loadingEl = document.createElement("div");
+        loadingEl.style.cssText =
+          "color:#888;font-size:12px;margin-top:6px;font-style:italic";
+        loadingEl.textContent = "完全な説明文を取得中…";
+        descEl.after(loadingEl);
+
+        void this.enrichDescription(
+          video.originalId,
+          compositeId,
+          descEl,
+          loadingEl,
+        );
+      }
     }
     if (tagsEl) {
       const tags = video.tags && video.tags.length > 0 ? video.tags : [];
@@ -1604,6 +1620,40 @@ export class Mylist2ManagerUI {
     }
     document.addEventListener("keydown", onKeydown);
     modal.addEventListener("click", onBackdrop);
+  }
+
+  /**
+   * 視聴ページからリッチHTML説明文を取得し、UI・DBを更新する。
+   * showVideoDetailsModal から呼ばれる。
+   */
+  private async enrichDescription(
+    videoId: string,
+    compositeId: string,
+    descEl: HTMLElement,
+    loadingEl: HTMLElement,
+  ): Promise<void> {
+    try {
+      const richDesc = await this.manager.fetchRichDescription(videoId);
+      if (richDesc !== null) {
+        descEl.innerHTML = sanitizeDescriptionHtml(richDesc);
+        await this.manager.updateVideoDescription(
+          compositeId,
+          richDesc,
+          "watch",
+        );
+        // DOMのdata属性も更新
+        const item = document.querySelector(
+          `.video-item[data-composite-id="${compositeId}"]`,
+        );
+        if (item instanceof HTMLElement) {
+          item.dataset.description = richDesc;
+        }
+      }
+    } catch (error) {
+      window.logger.error("リッチ説明文の取得に失敗:", error);
+    } finally {
+      loadingEl.remove();
+    }
   }
 
   initializeHeaderControls(): void {

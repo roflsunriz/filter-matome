@@ -271,4 +271,35 @@ export class ApiService {
   setCacheData(videoId: string, videoInfo: VideoInfo): void {
     this.apiCache.set(videoId, videoInfo);
   }
+
+  /**
+   * 視聴ページ経由でリッチHTML説明文を取得する。
+   * getthumbinfo では取得できない完全なHTML（スタイル・リンク等）を返す。
+   * 取得失敗時は null を返す。
+   */
+  async fetchRichDescription(videoId: string): Promise<string | null> {
+    try {
+      const result = await window.commonHelper.fetchWatchPage(videoId);
+      if (!result) {
+        window.logger.warn(
+          `[fetchRichDescription] 視聴ページの取得に失敗: ${videoId}`,
+        );
+        return null;
+      }
+      const description = result.apiData?.video?.description;
+      if (typeof description === "string") {
+        return description;
+      }
+      window.logger.warn(
+        `[fetchRichDescription] 説明文が見つかりません: ${videoId}`,
+      );
+      return null;
+    } catch (error) {
+      window.logger.error(
+        `[fetchRichDescription] エラー: ${videoId}`,
+        error,
+      );
+      return null;
+    }
+  }
 }
