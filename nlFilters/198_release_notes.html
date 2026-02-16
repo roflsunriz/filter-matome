@@ -5,6 +5,7 @@
                 <h1 id="カスタムフィルターのリリースノート">カスタムフィルターのリリースノート</h1>
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 <ul>
+<li><a href="#filter-matome-218-20260217-%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%88">filter-matome #218 (2026/02/17) リリースノート</a></li>
 <li><a href="#filter-matome-2171-20260124-%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%88">filter-matome #217.1 (2026/01/24) リリースノート</a></li>
 <li><a href="#filter-matome-217-20260124-%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%88">filter-matome #217 (2026/01/24) リリースノート</a></li>
 <li><a href="#filter-matome-216-20260121-%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%88">filter-matome #216 (2026/01/21) リリースノート</a></li>
@@ -136,6 +137,25 @@
 <li><a href="#filter-matome-96120200308-%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%88">filter-matome #96.1(2020/03/08) リリースノート</a></li>
 <li><a href="#filter-matome-94-95-20191125-%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%88">filter-matome #94 (#95) (2019/11/25) リリースノート</a></li>
 <li><a href="#filter-matome-9402-20191124-%E3%83%AA%E3%83%AA%E3%83%BC%E3%82%B9%E3%83%8E%E3%83%BC%E3%83%88">filter-matome #94.02 (2019/11/24) リリースノート</a></li>
+</ul>
+<h3 id="filter-matome-218-20260217-リリースノート">filter-matome #218 (2026/02/17) リリースノート</h3>
+<ul>
+<li>✨新機能(New)：</li>
+<li>【video-player】シリーズ連続再生機能を追加。説明文リンクのフォールバック対応、数値のみ動画IDのAPI経由正規化にも対応。</li>
+<li>【mylist2】詳細モーダルで視聴ページからリッチHTML説明文を遅延取得。DOMPurifyで安全にレンダリング。</li>
+<li>【mylist2】動画リンクのターゲット設定を追加し、公式プレイヤーをバイパス可能に。</li>
+<li>【watch-history】条件付き削除機能のUIを強化。</li>
+<li>✅️修正(Fixed)：</li>
+<li>【mylist2】ソート切替時に仮想スクロールの表示が即座に反映されない不具合を修正。</li>
+<li>【mylist2】情報更新時にdescription/tagsが更新されない不具合を修正。</li>
+<li>【video-player】再生前のビデオ要素にコンテナと同サイズを確保し、レイアウトシフトを防止。</li>
+<li>🔴変更(Changed)：</li>
+<li>なし</li>
+<li>❌️未修正(Unfixed)：</li>
+<li>なし</li>
+<li>ℹ️その他(Others)：</li>
+<li>【video-player】URL探索・存在チェックをPromise.allで並列化し、canplay待ちを除去してコメント読み込みを並列化。再生開始までのパフォーマンスを改善。</li>
+<li>パッケージ管理をnpmからBunに移行。CIワークフローの簡素化。サービスワーカーのグローバルスコープ定義を改善。</li>
 </ul>
 <h3 id="filter-matome-2171-20260124-リリースノート">filter-matome #217.1 (2026/01/24) リリースノート</h3>
 <ul>

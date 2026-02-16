@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #218 (2026/02/17) リリースノート](#filter-matome-218-20260217-リリースノート)
 - [filter-matome #217.1 (2026/01/24) リリースノート](#filter-matome-2171-20260124-リリースノート)
 - [filter-matome #217 (2026/01/24) リリースノート](#filter-matome-217-20260124-リリースノート)
 - [filter-matome #216 (2026/01/21) リリースノート](#filter-matome-216-20260121-リリースノート)
@@ -132,6 +133,25 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #218 (2026/02/17) リリースノート
+
+- ✨新機能(New)：
+- 【video-player】シリーズ連続再生機能を追加。説明文リンクのフォールバック対応、数値のみ動画IDのAPI経由正規化にも対応。
+- 【mylist2】詳細モーダルで視聴ページからリッチHTML説明文を遅延取得。DOMPurifyで安全にレンダリング。
+- 【mylist2】動画リンクのターゲット設定を追加し、公式プレイヤーをバイパス可能に。
+- 【watch-history】条件付き削除機能のUIを強化。
+- ✅️修正(Fixed)：
+- 【mylist2】ソート切替時に仮想スクロールの表示が即座に反映されない不具合を修正。
+- 【mylist2】情報更新時にdescription/tagsが更新されない不具合を修正。
+- 【video-player】再生前のビデオ要素にコンテナと同サイズを確保し、レイアウトシフトを防止。
+- 🔴変更(Changed)：
+- なし
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- 【video-player】URL探索・存在チェックをPromise.allで並列化し、canplay待ちを除去してコメント読み込みを並列化。再生開始までのパフォーマンスを改善。
+- パッケージ管理をnpmからBunに移行。CIワークフローの簡素化。サービスワーカーのグローバルスコープ定義を改善。
 
 ### filter-matome #217.1 (2026/01/24) リリースノート
 
