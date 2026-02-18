@@ -7,9 +7,43 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  build-and-test:
+  # ─────────────────────────────────────────────
+  # ジョブ①: Lint + 型チェック（ビルド不要・高速フィードバック）
+  # ─────────────────────────────────────────────
+  lint-typecheck:
     runs-on: ubuntu-latest
-    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Cache Bun packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('local/features/bun.lock', 'local/features/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        working-directory: local/features
+        run: bun install
+
+      - name: Lint check
+        working-directory: local/features
+        run: bun run lint
+
+      - name: Type check
+        working-directory: local/features
+        run: bun run type-check
+
+  # ─────────────────────────────────────────────
+  # ジョブ②: ビルド + アーティファクト保存
+  # ─────────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,28 +57,43 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install dependencies (features)
-        run: |
-          cd local/features
-          bun install
+      - name: Cache Bun packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('local/features/bun.lock', 'local/features/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        working-directory: local/features
+        run: bun install
 
       - name: Build features
-        run: |
-          cd local/features
-          bun run build:ALL
+        working-directory: local/features
+        run: bun run build:ALL
 
-      # nl-media-info は features に統合済みのため個別ビルドは不要
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-artifacts
+          path: |
+            local/features/dist/
+            extensions/CommentFilterLogger.*
+            extensions/CustomCacheReturner.*
+            extensions/downloadThruFFmpeg.*
+            extensions/ExtUtil.*
+          retention-days: 7
 
-      - name: Lint check
-        run: |
-          cd local/features
-          bun run lint
-
-      - name: Type check
-        run: |
-          cd local/features
-          bun run type-check
-
+  # ─────────────────────────────────────────────
+  # ジョブ③: 構造・構文バリデーション（Bun/Java 不要・軽量）
+  # ─────────────────────────────────────────────
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Validate nlFilters syntax
         run: |
@@ -64,14 +113,14 @@ jobs:
       - name: Check file structure
         run: |
           echo "Checking project structure..."
-          
+
           # 必須ディレクトリの確認
           required_dirs=(
             "nlFilters"
             "local/features"
             "local/features/src"
           )
-          
+
           for dir in "${required_dirs[@]}"; do
             if [ ! -d "$dir" ]; then
               echo "Error: Required directory $dir is missing"
@@ -80,7 +129,7 @@ jobs:
               echo "✓ $dir exists"
             fi
           done
-          
+
           # 重要ファイルの確認
           important_files=(
             "README.md"
@@ -98,7 +147,7 @@ jobs:
             "extensions/ExtUtil.java"
             "extensions/ExtUtil.class"
           )
-          
+
           for file in "${important_files[@]}"; do
             if [ ! -f "$file" ]; then
               echo "Warning: Important file $file is missing"
@@ -106,18 +155,5 @@ jobs:
               echo "✓ $file exists"
             fi
           done
-          
-          echo "File structure check completed."
 
-      - name: Archive build artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: build-artifacts
-          path: |
-            local/features/dist/
-            extensions/CommentFilterLogger.*
-            extensions/CustomCacheReturner.*
-            extensions/downloadThruFFmpeg.*
-            extensions/ExtUtil.*
-          retention-days: 7
+          echo "File structure check completed."

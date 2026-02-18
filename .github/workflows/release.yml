@@ -9,14 +9,14 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  # ─────────────────────────────────────────────
+  # ジョブ①: ビルド → リリースアーカイブ作成（並列実行）
+  # ─────────────────────────────────────────────
+  build:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # 全履歴を取得してリリースノート生成に使用
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -27,15 +27,21 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Cache Bun packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('local/features/bun.lock', 'local/features/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
       - name: Install dependencies
-        run: |
-          cd local/features
-          bun install
+        working-directory: local/features
+        run: bun install
 
       - name: Build features
-        run: |
-          cd local/features
-          bun run build:ALL
+        working-directory: local/features
+        run: bun run build:ALL
 
       # nl-media-info は features に統合済みのため個別ビルドは不要
 
@@ -47,7 +53,7 @@ jobs:
           # リリース用のディレクトリを作成
           mkdir -p release/NicoCache_nl
           mkdir -p release/NicoCache_nl/extensions
-          
+
           # 必要なファイルをコピー
           cp -r nlFilters release/NicoCache_nl/
           cp -r local release/NicoCache_nl/
@@ -57,13 +63,13 @@ jobs:
           cp creating-symlink-for-listjs.md release/NicoCache_nl/
           cp "nico-cache-nl-starter.bat" release/NicoCache_nl/
           cp "nico-cache-gui-launcher.bat" release/NicoCache_nl/
-          
+
           # mime.typesをコピー
           cp local/mime.types release/NicoCache_nl/local/ || echo "Warning: mime.types not found in local folder"
 
           # 空フォルダを確実に含めるため.gitkeepファイルを作成
           touch release/NicoCache_nl/local/cache/.gitkeep || true
-          
+
           # extensionsフォルダの特定ファイルをコピー（コンパイル不要）
           cp extensions/CommentFilterLogger.java release/NicoCache_nl/extensions/ || echo "Warning: CommentFilterLogger.java not found"
           cp extensions/CommentFilterLogger.class release/NicoCache_nl/extensions/ || echo "Warning: CommentFilterLogger.class not found"
@@ -75,7 +81,7 @@ jobs:
           cp extensions/ExtUtil.class release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.class not found"
           cp extensions/nlMediaInfo.java release/NicoCache_nl/extensions/ || echo "Warning: nlMediaInfo.java not found"
           cp extensions/nlMediaInfo.class release/NicoCache_nl/extensions/ || echo "Warning: nlMediaInfo.class not found"
-          
+
           # 開発用ファイルを除外（ただし、開発環境構築に必要なpackage.json等は保持）
           find release/NicoCache_nl -name "node_modules" -type d -exec rm -rf {} + || true
           find release/NicoCache_nl -name "*.map" -type f -delete || true
@@ -89,14 +95,28 @@ jobs:
           # テスト関連ファイルは除外
           find release/NicoCache_nl -name "tests" -type d -exec rm -rf {} + || true
           find release/NicoCache_nl -name "tests-examples" -type d -exec rm -rf {} + || true
-          
+
           # 7zアーカイブを作成
           cd release
           7z a -t7z ../filter-matome-${GITHUB_REF#refs/tags/}.7z NicoCache_nl/
 
-      - name: Extract version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      - name: Upload release archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-archive
+          path: filter-matome-${{ github.ref_name }}.7z
+          retention-days: 1
+
+  # ─────────────────────────────────────────────
+  # ジョブ②: リリースノート生成（ビルド不要・並列実行）
+  # ─────────────────────────────────────────────
+  generate-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 全履歴を取得してリリースノート生成に使用
 
       - name: Generate release notes
         id: release_notes
@@ -124,7 +144,7 @@ jobs:
           echo "- 詳細な変更内容は[リリースノート](nlFilters/198_release_notes.md)を確認" >> release_notes.md
           echo "- 問題が発生した場合はクリーンインストールを試行" >> release_notes.md
           echo "" >> release_notes.md
-          
+
           # 最新のコミットメッセージを追加
           echo "### 📝 このリリースの変更内容" >> release_notes.md
           git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release_notes.md || echo "- filter-matome ${GITHUB_REF#refs/tags/} リリース" >> release_notes.md
@@ -167,11 +187,34 @@ jobs:
               ;;
           esac
 
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release_notes.md
+          retention-days: 1
+
+  # ─────────────────────────────────────────────
+  # ジョブ③: GitHub Release 作成（build・generate-notes 完了後）
+  # ─────────────────────────────────────────────
+  release:
+    needs: [build, generate-notes]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release archive
+        uses: actions/download-artifact@v4
+        with:
+          name: release-archive
+
+      - name: Download release notes
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            filter-matome-${{ github.ref_name }}.7z
+          files: filter-matome-${{ github.ref_name }}.7z
           body_path: release_notes.md
           draft: false
           prerelease: false
