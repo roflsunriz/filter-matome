@@ -1,6 +1,7 @@
 # カスタムフィルターのリリースノート
 <link rel="Shortcut Icon" href="./resources/nico.svg" type="image/svg+xml" />
 
+- [filter-matome #218.1 (2026/02/19) リリースノート](#filter-matome-2181-20260219-リリースノート)
 - [filter-matome #218 (2026/02/17) リリースノート](#filter-matome-218-20260217-リリースノート)
 - [filter-matome #217.1 (2026/01/24) リリースノート](#filter-matome-2171-20260124-リリースノート)
 - [filter-matome #217 (2026/01/24) リリースノート](#filter-matome-217-20260124-リリースノート)
@@ -133,6 +134,19 @@
 - [filter-matome #96.1(2020/03/08) リリースノート](#filter-matome-96120200308-リリースノート)
 - [filter-matome #94 (#95) (2019/11/25) リリースノート](#filter-matome-94-95-20191125-リリースノート)
 - [filter-matome #94.02 (2019/11/24) リリースノート](#filter-matome-9402-20191124-リリースノート)
+
+### filter-matome #218.1 (2026/02/19) リリースノート
+
+- ✨新機能(New)：
+- 【video-player】プレイヤーコントロール操作中のカーソル可視性管理を追加。マウス非操作時に自動でカーソルを非表示にし、操作時に再表示。
+- ✅️修正(Fixed)：
+- なし
+- 🔴変更(Changed)：
+- 【video-player】コントロール表示ロジックをリファクタリング。StandalonePlayerのグローバルマウスハンドラーと不活動タイマーを削除し、PlayerControlsShadowに集約。マウスがビデオエリアに入った際のコントロール表示を改善。
+- ❌️未修正(Unfixed)：
+- なし
+- ℹ️その他(Others)：
+- なし
 
 ### filter-matome #218 (2026/02/17) リリースノート
 
