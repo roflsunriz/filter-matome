@@ -15,6 +15,7 @@ export class PlayerControlsShadow extends HTMLElement {
   private shadow: ShadowRoot;
   private video: HTMLVideoElement | null = null;
   private mouseTimer: number | null = null;
+  private cursorTimer: number | null = null;
   private commentSystem: CommentSystem | null = null;
   private userPaused: boolean = false;
   private isSettingsOpen: boolean = false;
@@ -1995,8 +1996,12 @@ export class PlayerControlsShadow extends HTMLElement {
     // キーボードイベントの削除
     document.removeEventListener("keydown", this.handleKeyboardShortcuts);
 
-    // マウスタイマーのクリア
+    // タイマーのクリア
     this.clearHideTimer();
+    this.clearCursorTimer();
+
+    // カーソルを必ず元に戻す
+    this.showCursor();
 
     // 参照のクリア
     this.video = null;
@@ -2039,23 +2044,29 @@ export class PlayerControlsShadow extends HTMLElement {
   private setupHoverEvents(): void {
     // プレイヤーコンテナ全体でのマウスイベント
     const playerContainer =
-      this.closest(".custom-player") || this.parentElement;
+      this.closest(".custom-player") ?? this.parentElement;
 
     if (playerContainer) {
       // マウスが入った時
       playerContainer.addEventListener("mouseenter", () => {
         this.showControls();
+        this.showCursor();
+        this.hideCursorWithDelay();
       });
 
-      // マウスが出た時
+      // マウスが出た時（プレイヤー外へ）
       playerContainer.addEventListener("mouseleave", () => {
         this.hideControlsWithDelay();
+        this.showCursor();
+        this.clearCursorTimer();
       });
 
       // マウスが動いた時（コントロール上でも）
       playerContainer.addEventListener("mousemove", () => {
         this.showControls();
         this.hideControlsWithDelay();
+        this.showCursor();
+        this.hideCursorWithDelay();
       });
     }
 
@@ -2063,10 +2074,13 @@ export class PlayerControlsShadow extends HTMLElement {
     this.addEventListener("mouseenter", () => {
       this.showControls();
       this.clearHideTimer();
+      this.showCursor();
+      this.clearCursorTimer();
     });
 
     this.addEventListener("mouseleave", () => {
       this.hideControlsWithDelay();
+      this.hideCursorWithDelay();
     });
   }
 
@@ -2100,6 +2114,39 @@ export class PlayerControlsShadow extends HTMLElement {
     if (this.mouseTimer !== null) {
       clearTimeout(this.mouseTimer);
       this.mouseTimer = null;
+    }
+  }
+
+  /**
+   * マウスカーソルを表示する
+   */
+  private showCursor(): void {
+    const container = this.closest(".custom-player") ?? this.parentElement;
+    if (container instanceof HTMLElement) {
+      container.classList.remove("cursor-hidden");
+    }
+  }
+
+  /**
+   * マウスカーソルを遅延して非表示にする（3秒後）
+   */
+  private hideCursorWithDelay(): void {
+    this.clearCursorTimer();
+    this.cursorTimer = window.setTimeout(() => {
+      const container = this.closest(".custom-player") ?? this.parentElement;
+      if (container instanceof HTMLElement) {
+        container.classList.add("cursor-hidden");
+      }
+    }, 3000);
+  }
+
+  /**
+   * カーソル非表示タイマーをクリア
+   */
+  private clearCursorTimer(): void {
+    if (this.cursorTimer !== null) {
+      clearTimeout(this.cursorTimer);
+      this.cursorTimer = null;
     }
   }
 

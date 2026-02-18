@@ -190,28 +190,10 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
     background: linear-gradient(transparent, rgba(0, 0, 0, 0.8)) !important;
   }
 
-  /* マウスホバー用のスタイル（ビデオコンテナ） */
-  .video-container:hover {
-    cursor: default;
-  }
-
-  /* 全画面表示中のカーソル制御 - ネイティブAPI + フォールバック */
-  .custom-player:fullscreen .video-container,
-  .custom-player:-webkit-full-screen .video-container,
-  .custom-player:-moz-full-screen .video-container,
-  .custom-player:-ms-fullscreen .video-container,
-  html.fullscreen-active .custom-player.nc-fullscreen-player .video-container,
-  body.nc-fullscreen-active .custom-player.nc-fullscreen-player .video-container {
-    cursor: none;
-  }
-
-  .custom-player:fullscreen .video-container:hover,
-  .custom-player:-webkit-full-screen .video-container:hover,
-  .custom-player:-moz-full-screen .video-container:hover,
-  .custom-player:-ms-fullscreen .video-container:hover,
-  html.fullscreen-active .custom-player.nc-fullscreen-player .video-container:hover,
-  body.nc-fullscreen-active .custom-player.nc-fullscreen-player .video-container:hover {
-    cursor: default;
+  /* カーソル制御は PlayerControlsShadow.setupHoverEvents() の JS で管理 */
+  .custom-player.cursor-hidden,
+  .custom-player.cursor-hidden * {
+    cursor: none !important;
   }
 
   /* モバイル対応 */
