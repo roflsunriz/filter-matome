@@ -1968,11 +1968,11 @@ export class PlayerControlsShadow extends HTMLElement {
    * 表示状態の制御
    */
   show(): void {
-    this.classList.add("visible");
+    this.classList.add("controls-visible");
   }
 
   hide(): void {
-    this.classList.remove("visible");
+    this.classList.remove("controls-visible");
   }
 
   /**

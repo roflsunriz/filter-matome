@@ -43,12 +43,6 @@ export class StandalonePlayer {
   private hls: HlsInstance | null = null;
   private enableComments = true;
 
-  // マウス非アクティブ検出用
-  private globalMouseMoveHandler: ((event: MouseEvent) => void) | null = null;
-  private inactivityTimer: number | null = null;
-  private readonly INACTIVITY_DELAY_MS = 3000; // 3秒間非アクティブで非表示
-  private readonly CONTROLS_PROXIMITY_MARGIN = 100; // コントローラー付近のマージン（ピクセル）
-
   // レスポンシブ対応用
   private resizeObserver: ResizeObserver | null = null;
   private fullscreenChangeHandler: (() => void) | null = null;
@@ -248,51 +242,10 @@ export class StandalonePlayer {
       return;
     }
 
-    let hoverTimer: number | null = null;
-
+    // マウスがビデオ領域に入ったときにコントロールを表示する
+    // 非表示タイマーの制御は PlayerControlsShadow.setupHoverEvents() に一元化
     this.videoContainer.addEventListener("mouseenter", () => {
       this.playerControls?.show();
-      this.clearInactivityTimer();
-    });
-
-    // グローバルなマウス移動イベントリスナーを設定
-    this.globalMouseMoveHandler = (event: MouseEvent): void => {
-      // コントローラー付近にマウスがある場合は非表示にしない
-      if (this.isMouseNearControls(event.clientX, event.clientY)) {
-        this.playerControls?.show();
-        this.clearInactivityTimer();
-        return;
-      }
-
-      // コントローラー付近でない場合、非アクティブタイマーをリセット
-      this.playerControls?.show();
-      this.resetInactivityTimer();
-    };
-
-    document.addEventListener("mousemove", this.globalMouseMoveHandler);
-
-    // ビデオコンテナでのマウス移動（既存の動作を維持）
-    this.videoContainer.addEventListener("mousemove", () => {
-      this.playerControls?.show();
-      if (hoverTimer !== null) {
-        clearTimeout(hoverTimer);
-      }
-      hoverTimer = window.setTimeout(() => {
-        if (
-          this.playerControls &&
-          !this.playerControls.classList.contains("always-visible")
-        ) {
-          this.playerControls.hide();
-        }
-      }, 2000);
-    });
-
-    this.videoContainer.addEventListener("mouseleave", () => {
-      if (!this.playerControls) {
-        return;
-      }
-      // マウスがコンテナから離れた後も、非アクティブタイマーを開始
-      this.resetInactivityTimer();
     });
 
     this.videoContainer.addEventListener("click", (event) => {
@@ -313,72 +266,6 @@ export class StandalonePlayer {
         this.videoElement.pause();
       }
     });
-  }
-
-  /**
-   * マウスがコントローラー付近にあるかを判定
-   * @param mouseX マウスのX座標（clientX）
-   * @param mouseY マウスのY座標（clientY）
-   * @returns コントローラー付近にある場合true
-   */
-  private isMouseNearControls(mouseX: number, mouseY: number): boolean {
-    if (!this.playerControls) {
-      return false;
-    }
-
-    try {
-      const rect = this.playerControls.getBoundingClientRect();
-
-      // マージンを考慮した範囲を計算
-      const margin = this.CONTROLS_PROXIMITY_MARGIN;
-      const leftBound = rect.left - margin;
-      const rightBound = rect.right + margin;
-      const topBound = rect.top - margin;
-      const bottomBound = rect.bottom + margin;
-
-      return (
-        mouseX >= leftBound &&
-        mouseX <= rightBound &&
-        mouseY >= topBound &&
-        mouseY <= bottomBound
-      );
-    } catch (error) {
-      window.logger.warn("コントローラー位置の取得に失敗しました", error);
-      return false;
-    }
-  }
-
-  /**
-   * 非アクティブタイマーをリセット（マウスが動いた時）
-   */
-  private resetInactivityTimer(): void {
-    this.clearInactivityTimer();
-
-    if (
-      !this.playerControls ||
-      this.playerControls.classList.contains("always-visible")
-    ) {
-      return;
-    }
-
-    this.inactivityTimer = window.setTimeout(() => {
-      if (
-        this.playerControls &&
-        !this.playerControls.classList.contains("always-visible")
-      ) {
-        this.playerControls.hide();
-      }
-    }, this.INACTIVITY_DELAY_MS);
-  }
-
-  /**
-   * 非アクティブタイマーをクリア
-   */
-  private clearInactivityTimer(): void {
-    if (this.inactivityTimer !== null) {
-      clearTimeout(this.inactivityTimer);
-      this.inactivityTimer = null;
-    }
   }
 
   private isHLSUrl(url: string): boolean {
@@ -608,15 +495,6 @@ export class StandalonePlayer {
    * リソースのクリーンアップ（イベントリスナーの削除など）
    */
   private cleanup(): void {
-    // グローバルマウス移動イベントリスナーの削除
-    if (this.globalMouseMoveHandler) {
-      document.removeEventListener("mousemove", this.globalMouseMoveHandler);
-      this.globalMouseMoveHandler = null;
-    }
-
-    // タイマーのクリア
-    this.clearInactivityTimer();
-
     // ResizeObserverのクリーンアップ
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
