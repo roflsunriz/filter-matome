@@ -59,6 +59,8 @@ jobs:
           cp -r local release/NicoCache_nl/
           cp -r scripts release/NicoCache_nl/
           cp README.md release/NicoCache_nl/
+          cp CHANGELOG.md release/NicoCache_nl/
+          cp USAGE.md release/NicoCache_nl/
           cp LICENSE release/NicoCache_nl/
           cp creating-symlink-for-listjs.md release/NicoCache_nl/
           cp "nico-cache-nl-starter.bat" release/NicoCache_nl/
@@ -141,7 +143,7 @@ jobs:
           echo "" >> release_notes.md
           echo "### ⚠️ 注意事項" >> release_notes.md
           echo "- 更新前に各機能の設定をエクスポートすることを推奨" >> release_notes.md
-          echo "- 詳細な変更内容は[リリースノート](nlFilters/198_release_notes.md)を確認" >> release_notes.md
+          echo "- 詳細な変更内容は[CHANGELOG.md](CHANGELOG.md)を確認" >> release_notes.md
           echo "- 問題が発生した場合はクリーンインストールを試行" >> release_notes.md
           echo "" >> release_notes.md
 
@@ -150,22 +152,20 @@ jobs:
           git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> release_notes.md || echo "- filter-matome ${GITHUB_REF#refs/tags/} リリース" >> release_notes.md
 
           echo "" >> release_notes.md
-          echo "### 📄 nlFilters リリースノート抜粋" >> release_notes.md
+          echo "### 📄 CHANGELOG 抜粋" >> release_notes.md
           TAG="${GITHUB_REF#refs/tags/}"
-          # allow flexible spacing (ASCII space or fullwidth U+3000), zero or more occurrences
-          # allow optional trailing text after the tag (e.g. "(2025/09/29) リリースノート")
-          SECTION_RE="^###[ 　]*filter-matome[ 　]*${TAG}"
-          if grep -E -q -- "${SECTION_RE}" nlFilters/198_release_notes.md; then
-            # 見出し行から次の見出し直前までを抽出（スペースの有無や全角スペースに対応）
+          # Keep a Changelog format: ## [#VERSION] - YYYY-MM-DD
+          SECTION_RE="^##[ ]*\[${TAG}\]"
+          if grep -E -q -- "${SECTION_RE}" CHANGELOG.md; then
             awk -v tag="${TAG}" '
-              BEGIN { p=0; re="^###[ 　]*filter-matome[ 　]*" tag "" }
-              $0 ~ re { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
-              p && $0 ~ "^###[ 　]*filter-matome" { p=0; print ""; print "</details>" }
+              BEGIN { p=0; re="^##[ ]*\\[" tag "\\]" }
+              $0 ~ re { p=1; print ""; print "<details><summary>CHANGELOG.md からの抜粋</summary>\n"; print ""; print $0; next }
+              p && /^## \[/ { p=0; print ""; print "</details>" }
               p { print }
               END { if (p==1) { print ""; print "</details>" } }
-            ' nlFilters/198_release_notes.md >> release_notes.md
+            ' CHANGELOG.md >> release_notes.md
           else
-            echo "- 該当するセクションが見つかりませんでした。全文は nlFilters/198_release_notes.md を参照してください。" >> release_notes.md
+            echo "- 該当するセクションが見つかりませんでした。全文は CHANGELOG.md を参照してください。" >> release_notes.md
           fi
 
       - name: Fallback notes for decimal tags
@@ -174,15 +174,15 @@ jobs:
           case "$TAG" in
             *.*)
               TAG_MAJOR="${TAG%%.*}"
-              SECTION_RE="^###[ 　]*filter-matome[ 　]*${TAG_MAJOR}"
-              if grep -E -q -- "${SECTION_RE}" nlFilters/198_release_notes.md; then
+              SECTION_RE="^##[ ]*\[${TAG_MAJOR}\]"
+              if grep -E -q -- "${SECTION_RE}" CHANGELOG.md; then
                 awk -v tag="${TAG_MAJOR}" '
-                  BEGIN { p=0; re="^###[ 　]*filter-matome[ 　]*" tag "" }
-                  $0 ~ re { p=1; print ""; print "<details><summary>nlFilters/198_release_notes.md からの抜粋</summary>\n"; print ""; print $0; next }
-                  p && $0 ~ "^###[ 　]*filter-matome" { p=0; print ""; print "</details>" }
+                  BEGIN { p=0; re="^##[ ]*\\[" tag "\\]" }
+                  $0 ~ re { p=1; print ""; print "<details><summary>CHANGELOG.md からの抜粋</summary>\n"; print ""; print $0; next }
+                  p && /^## \[/ { p=0; print ""; print "</details>" }
                   p { print }
                   END { if (p==1) { print ""; print "</details>" } }
-                ' nlFilters/198_release_notes.md >> release_notes.md
+                ' CHANGELOG.md >> release_notes.md
               fi
               ;;
           esac

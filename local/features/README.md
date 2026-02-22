@@ -37,8 +37,7 @@ NicoCache_nl/
 ├── .vscode/                              # 🛠️ **開発環境設定**
 └── nlFilters/                            # 📄 **フィルター・ドキュメント**
     ├── *.txt                             # フィルタールール
-    ├── 199_readme.html                   # 使用方法説明
-    └── 198_release_notes.*               # リリースノート
+    └── *.txt                             # フィルタールール（ドキュメントはルートのCHANGELOG.md, USAGE.mdに移行）
 ```
 
 ## 🏗️ アーキテクチャ概要

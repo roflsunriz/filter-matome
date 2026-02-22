@@ -136,16 +136,14 @@ local/
   └── config/            # Vite設定ファイル群
 
 nlFilters/
-├──resources/                       # 199_readme.htmlの画像, js, css
+├──resources/                       # USAGE.mdの画像, js, css
 ├── 100_common.txt                  # 共通ライブラリ(トースト通知、ロギング、共通ヘッダ、マテリアルアイコンヘルパなどを提供する共通ライブラリ)
 ├── 101_disable_official.txt        # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
 ├── 102_mlink_video_controller.txt  # マルチリンクビデオコントローラー(視聴ページにマルチリンクビデオコントローラーを追加)
 ├── 103_comment_filter2.txt         # コメントフィルター(視聴ページにコメントフィルターを追加)
 ├── 104_video_player.txt            # 動画プレイヤー(視聴ページに動画プレイヤーを追加)
 ├── 105_premium_hide.txt            # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
-├── 106_watch_history.txt           # 視聴履歴(視聴ページにウォッチトラッカーを追加)
-├── 198_release_notes.*             # リリースノート
-└── 199_readme.html                 # 詳細ドキュメント
+└── 106_watch_history.txt           # 視聴履歴(視聴ページにウォッチトラッカーを追加)
 ```
 
 ### ビルド方法
@@ -187,8 +185,8 @@ Append<
 
 ## 📚 ドキュメント
 
-- **詳細機能説明**: [nlFilters/199_readme.html](nlFilters/199_readme.html)
-- **リリースノート**: [nlFilters/198_release_notes.md](nlFilters/198_release_notes.md)
+- **使い方ガイド**: [USAGE.md](USAGE.md)
+- **変更履歴**: [CHANGELOG.md](CHANGELOG.md)
 - **編集ガイド**: [nlFilters/nlFilters_編集ガイド.md](nlFilters/nlFilters_編集ガイド.md)
 - **Issue/Feature Requestの作り方**: [how-to-make-an-issue.md](how-to-make-an-issue.md)
 - **シンボリックリンク作成手順 (必須)**: [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md)
@@ -206,7 +204,7 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 ### 使用上の注意
 - **全機能同時使用前提**: 個別機能の抜き出しは動作保証外
 - **データバックアップ**: ブラウザデータ削除前に必ずエクスポート実行
-- **更新時の確認**: リリースノートを必ず確認してから更新
+- **更新時の確認**: [CHANGELOG.md](CHANGELOG.md)を必ず確認してから更新
 - **ハード再読み込み**: 機能の有効/無効切り替え後はCtrl+F5実行
 
 ### データ削除リスク
@@ -250,7 +248,7 @@ MIT License - Copyright (c) 2017-2026 ◆awd5z.AlOFJq(roflsunriz)
 ### 最新バージョン
 
 - **リリース形式**: `#300`, `#301` などの番号形式
-- **リリース履歴**: [nlFilters/198_release_notes.md](nlFilters/198_release_notes.md)
+- **リリース履歴**: [CHANGELOG.md](CHANGELOG.md)
 
 ### リリース作成方法（開発者向け）
 ```bash

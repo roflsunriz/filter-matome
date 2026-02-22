@@ -241,7 +241,7 @@ git push origin :refs/tags/#190
 
 ### バージョン管理
 - **形式**: `#188`, `#189`, `#190` など
-- **履歴**: [nlFilters/198_release_notes.md](nlFilters/198_release_notes.md)
+- **履歴**: [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
