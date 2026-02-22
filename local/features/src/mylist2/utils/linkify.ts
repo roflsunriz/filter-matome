@@ -20,34 +20,20 @@ export const setVideoLinkTarget = (target: VideoLinkTarget): void => {
 };
 
 /**
- * ローカルプレーヤーへルーティングすべき動画かどうかを判定する。
+ * 同期的にローカルプレーヤーへルーティングすべき動画かどうかを判定する。
  *
  * 対象:
  *  - 公式動画 (so プレフィックスの動画ID)
  *  - 「dアニメストア ニコニコ支店」の投稿者
- *  - 非表示動画 (タイトルに「非公開」「非表示」を含む)
- *  - 削除済み動画 (タイトルに「削除」を含む、またはフォールバックタイトル「不明な動画」)
+ *
+ * 削除済み・非公開動画は API で非同期に判定するため、ここには含めない。
  */
 export const shouldUseLocalPlayer = (
   videoId: string,
   context?: VideoLinkContext,
 ): boolean => {
   if (videoId.startsWith("so")) return true;
-
   if (context?.authorName === "dアニメストア ニコニコ支店") return true;
-
-  if (context?.title) {
-    const t = context.title;
-    if (
-      t.includes("削除") ||
-      t.includes("非公開") ||
-      t.includes("非表示") ||
-      t === "不明な動画"
-    ) {
-      return true;
-    }
-  }
-
   return false;
 };
 
@@ -63,6 +49,50 @@ export const buildVideoUrl = (
     return `/local/features/dist/src/video-player/standalone/index.html?videoId=${encodeURIComponent(videoId)}`;
   }
   return `https://www.nicovideo.jp/watch/${videoId}`;
+};
+
+// --- 動画公開状態の API チェック ---
+const availabilityCache = new Map<string, boolean>();
+
+/**
+ * ext.nicovideo.jp/api/getthumbinfo で動画の公開状態を確認する。
+ * @returns true = 公開中（公式プレーヤーで再生可能）, false = 削除済みまたは非公開
+ */
+export const checkVideoAvailability = async (
+  videoId: string,
+): Promise<boolean> => {
+  const cached = availabilityCache.get(videoId);
+  if (cached !== undefined) return cached;
+
+  try {
+    const response = await fetch(
+      `https://ext.nicovideo.jp/api/getthumbinfo/${videoId}`,
+    );
+    const text = await response.text();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "text/xml");
+    const status = xml.documentElement.getAttribute("status");
+    const available = status === "ok";
+    availabilityCache.set(videoId, available);
+    return available;
+  } catch {
+    availabilityCache.set(videoId, false);
+    return false;
+  }
+};
+
+/**
+ * 動画リンクのクリック時に API 可用性チェックが必要かどうかを判定する。
+ * shouldUseLocalPlayer で即座にルーティング先が確定する動画、
+ * および local モードでない場合はチェック不要。
+ */
+export const needsAvailabilityCheck = (
+  videoId: string,
+  context?: VideoLinkContext,
+): boolean => {
+  if (currentVideoLinkTarget !== "local") return false;
+  if (shouldUseLocalPlayer(videoId, context)) return false;
+  return true;
 };
 
 // URL/動画ID/mylist検出用の正規表現

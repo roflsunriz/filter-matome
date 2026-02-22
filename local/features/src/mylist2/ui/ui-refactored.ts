@@ -13,7 +13,13 @@ import { ProgressService } from "@/mylist2/ui/progress-service";
 import { FileHelperService } from "@/mylist2/ui/file-helper-service";
 import { EventHandlers } from "@/mylist2/ui/event-handlers";
 import { BatchOperations } from "@/mylist2/ui/batch-operations";
-import { sanitizeDescriptionHtml, buildVideoUrl, setVideoLinkTarget } from "@/mylist2/utils/linkify";
+import {
+  sanitizeDescriptionHtml,
+  buildVideoUrl,
+  setVideoLinkTarget,
+  needsAvailabilityCheck,
+  checkVideoAvailability,
+} from "@/mylist2/utils/linkify";
 import {
   VirtualScrollManager,
   type VirtualScrollItem,
@@ -92,6 +98,9 @@ export class Mylist2ManagerUI {
 
     // 仮想スクロールの初期化
     this.initializeVirtualScroll();
+
+    // video-player ルーティング用 API チェックハンドラの初期化
+    this.setupVideoLinkApiCheck();
 
     // アクションメニューの初期化
     this.initializeActionMenu();
@@ -404,6 +413,48 @@ export class Mylist2ManagerUI {
   }
 
   /**
+   * video-player ルーティングの API 可用性チェック用クリックハンドラー。
+   *
+   * data-needs-api-check 属性を持つリンクがクリックされたとき、
+   * getthumbinfo API で公開状態を確認し、削除済み/非公開なら video-player へ遷移する。
+   * 公開中なら公式プレーヤーへ遷移する。
+   */
+  private setupVideoLinkApiCheck(): void {
+    const container = document.getElementById("videoList");
+    if (!container) return;
+
+    container.addEventListener("click", (e) => {
+      if (!(e.target instanceof HTMLElement)) return;
+      const el = e.target.closest("a[data-needs-api-check]");
+      if (!el || !(el instanceof HTMLAnchorElement)) return;
+
+      const videoId = el.dataset.videoId;
+      if (!videoId) return;
+
+      e.preventDefault();
+
+      const originalText = el.textContent ?? "";
+      el.textContent = `${originalText}（確認中…）`;
+      el.style.cursor = "wait";
+      el.style.pointerEvents = "none";
+
+      void (async () => {
+        try {
+          const available = await checkVideoAvailability(videoId);
+          const url = available
+            ? `https://www.nicovideo.jp/watch/${videoId}`
+            : `/local/features/dist/src/video-player/standalone/index.html?videoId=${encodeURIComponent(videoId)}`;
+          window.open(url, "_blank");
+        } finally {
+          el.textContent = originalText;
+          el.style.cursor = "";
+          el.style.pointerEvents = "";
+        }
+      })();
+    });
+  }
+
+  /**
    * 仮想スクロール用のアイテムレンダラー
    */
   private renderVirtualScrollItem(
@@ -571,12 +622,15 @@ export class Mylist2ManagerUI {
       const fallbackElement = document.createElement("div");
       fallbackElement.className = "video-item";
       const linkCtx = { authorName: video.authorName, title: video.title };
+      const apiCheckAttrs = needsAvailabilityCheck(video.originalId, linkCtx)
+        ? ` data-needs-api-check="true" data-video-id="${video.originalId}"`
+        : "";
       fallbackElement.innerHTML = `
         <input type="checkbox" class="video-select" />
         <img class="video-thumbnail" src="${video.thumbnailUrl}" alt="サムネイル" />
         <div class="video-info">
           <div class="video-title">
-            <a href="${buildVideoUrl(video.originalId, linkCtx)}" target="_blank">${video.title}</a>
+            <a href="${buildVideoUrl(video.originalId, linkCtx)}" target="_blank"${apiCheckAttrs}>${video.title}</a>
           </div>
           <div class="video-stats">
             <span class="view-count">再生数: ${video.viewCount.toLocaleString()}</span>
@@ -641,13 +695,15 @@ export class Mylist2ManagerUI {
         "",
       );
       const titleText = trimmedTitle ? trimmedTitle : "無題";
-      titleLink.href = buildVideoUrl(video.originalId, {
-        authorName: video.authorName,
-        title: video.title,
-      });
+      const linkContext = { authorName: video.authorName, title: video.title };
+      titleLink.href = buildVideoUrl(video.originalId, linkContext);
       titleLink.textContent = titleText;
       titleLink.className = "video-title-link";
       titleLink.target = "_blank";
+      if (needsAvailabilityCheck(video.originalId, linkContext)) {
+        titleLink.dataset.needsApiCheck = "true";
+        titleLink.dataset.videoId = video.originalId;
+      }
       titleElement.appendChild(titleLink);
     }
 
