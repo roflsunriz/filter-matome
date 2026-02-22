@@ -28,7 +28,7 @@
         <h1>フィルタまとめ README</h1>
         <div class="meta">
           <p>作者：◆awd5z.AlOFJq(roflsunriz)</p>
-          <p>更新日：2025 年 10 月 23 日</p>
+          <p>更新日：2026 年 2 月 22 日</p>
         </div>
       </header>
 
@@ -160,7 +160,7 @@
         <div class="install-warning">
           <p>
             NicoCache_nl はキャッシュデータ用スクリプトを <code>C:\NicoCache_nl\local\list.js</code> の固定パス・固定名で参照します。<br />
-            ビルド成果物（例: <code>cache-data-manager.es.js</code>）へこの固定パス名で<strong>シンボリックリンクを作成</strong>しないと機能しません。
+            ビルド成果物（例: <code>cache-data-manager.iife.js</code>）へこの固定パス名で<strong>シンボリックリンクを作成</strong>しないと機能しません。
           </p>
         </div>
         <div class="install-steps">
@@ -170,8 +170,8 @@ Remove-Item -Path "C:\NicoCache_nl\local\list.js"
 Remove-Item -Path "C:\NicoCache_nl\local\list.js.map"
 
 # ビルド成果物へリンクを作成
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js" -Target "C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js"
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Target "C:\NicoCache_nl\local\features\dist\cache-data-manager.es.js.map"</code></pre>
+New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js" -Target "C:\NicoCache_nl\local\features\dist\cache-data-manager.iife.js"
+New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Target "C:\NicoCache_nl\local\features\dist\cache-data-manager.iife.js.map"</code></pre>
           <p>
             詳細な手順は <a href="../creating-symlink-for-listjs.md" target="_blank">creating-symlink-for-listjs.md</a> を参照してください。
           </p>
@@ -183,7 +183,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
         <article class="filter">
           <h3>100_common.txt</h3>
           <p>
-            共通ライブラリ（common.css, common.es.js）をニコニコ動画全体に挿入するフィルタ。トースト通知、ロギング、動画プレイヤー位置情報、コメントリスト位置情報などの基盤機能を提供する。
+            共通ライブラリ（common.css, common.es.js）をニコニコ動画全体に挿入するフィルタ。トースト通知、ロギング、マテリアルデザインアイコンなどの基盤機能を提供する。
           </p>
         </article>
 
@@ -504,8 +504,8 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
           <h3>🎥 拡張機能</h3>
           <ul>
             <li>
-              <a href="https://gist.github.com/roflsunriz/521b6e81ab7ee0dc772f1996de6016c3" target="_blank"
-                >dAnimeNicoCommentRenderer2 : dアニメでニコニコ動画のコメントをレンダリングするプログラム(改訂整理版) </a
+              <a href="https://github.com/roflsunriz/web-page-enhancement-scripts" target="_blank"
+                >d-anime-nico-comment-renderer : dアニメでニコニコ動画のコメントをレンダリングするユーザースクリプト </a
               >
             </li>
           </ul>
