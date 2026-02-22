@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#219] - 2026-02-22
+
+### Changed
+- 【mylist2】video-playerバイパスを条件付きルーティングに変更。so動画・「dアニメストア ニコニコ支店」投稿者は即座にvideo-playerへ遷移し、それ以外の動画はクリック時にgetthumbinfo APIで公開状態を確認して削除済み/非公開ならvideo-player、公開中なら公式プレーヤーへ遷移するように。
+
 ## [#218.1] - 2026-02-19
 
 ### Added
