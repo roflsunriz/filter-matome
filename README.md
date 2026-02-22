@@ -136,7 +136,6 @@ local/
   └── config/            # Vite設定ファイル群
 
 nlFilters/
-├──resources/                       # USAGE.mdの画像, js, css
 ├── 100_common.txt                  # 共通ライブラリ(トースト通知、ロギング、共通ヘッダ、マテリアルアイコンヘルパなどを提供する共通ライブラリ)
 ├── 101_disable_official.txt        # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
 ├── 102_mlink_video_controller.txt  # マルチリンクビデオコントローラー(視聴ページにマルチリンクビデオコントローラーを追加)
@@ -144,6 +143,8 @@ nlFilters/
 ├── 104_video_player.txt            # 動画プレイヤー(視聴ページに動画プレイヤーを追加)
 ├── 105_premium_hide.txt            # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
 └── 106_watch_history.txt           # 視聴履歴(視聴ページにウォッチトラッカーを追加)
+
+resources/                 # USAGE.mdで使われる画像リソース
 ```
 
 ### ビルド方法

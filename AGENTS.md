@@ -17,7 +17,7 @@
 - local/features/src/types/ には、各プロジェクトの型定義があります。
 - local/features/dist/ には、ビルド済みのファイルがあります。
 - nlFilters/ には、各プロジェクトのフィルターがあります。NicoCache_nl専用DSLフィルターです。NicoCache_nlはローカルプロキシサーバーで、ニコニコ動画のコンテンツをローカルにキャッシュして視聴することができます。nlFiltersを使用するとNicoCache_nlでスクリプトやCSSを追加することができます。特定のHTMLを置き換えたりもできます。
-- nlFilters/resources/ には、USAGE.mdで使われる画像リソースがあります。
+- resources/ には、USAGE.mdで使われる画像リソースがあります。
 - scripts/ にはNicoCache_nl用のスクリプトがあります。
 - ビルドするときにはlocal/features/ に移動して bun run build を実行してください。
 - comment-filter2 にはvideo-playerと連携するためのvideo-player-bridge.tsがあります。

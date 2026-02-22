@@ -58,6 +58,7 @@ jobs:
           cp -r nlFilters release/NicoCache_nl/
           cp -r local release/NicoCache_nl/
           cp -r scripts release/NicoCache_nl/
+          cp -r resources release/NicoCache_nl/
           cp README.md release/NicoCache_nl/
           cp CHANGELOG.md release/NicoCache_nl/
           cp USAGE.md release/NicoCache_nl/
@@ -87,12 +88,12 @@ jobs:
           # 開発用ファイルを除外（ただし、開発環境構築に必要なpackage.json等は保持）
           find release/NicoCache_nl -name "node_modules" -type d -exec rm -rf {} + || true
           find release/NicoCache_nl -name "*.map" -type f -delete || true
-          # package.json, package-lock.jsonは開発環境構築に必要なので削除しない
+          # 開発環境構築に必要なファイルは削除しない
           # find release/NicoCache_nl -name "package.json" -type f -delete || true
           # find release/NicoCache_nl -name "bun.lock" -type f -delete || true
-          find release/NicoCache_nl -name "tsconfig.json" -type f -delete || true
-          find release/NicoCache_nl -name ".eslintrc.json" -type f -delete || true
-          find release/NicoCache_nl -name "playwright.config.ts" -type f -delete || true
+          # find release/NicoCache_nl -name "tsconfig.json" -type f -delete || true
+          # find release/NicoCache_nl -name ".eslintrc.json" -type f -delete || true
+          # find release/NicoCache_nl -name "playwright.config.ts" -type f -delete || true
 
           # テスト関連ファイルは除外
           find release/NicoCache_nl -name "tests" -type d -exec rm -rf {} + || true
