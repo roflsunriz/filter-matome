@@ -570,12 +570,13 @@ export class Mylist2ManagerUI {
       // フォールバック用の要素を作成（シンプル化済み）
       const fallbackElement = document.createElement("div");
       fallbackElement.className = "video-item";
+      const linkCtx = { authorName: video.authorName, title: video.title };
       fallbackElement.innerHTML = `
         <input type="checkbox" class="video-select" />
         <img class="video-thumbnail" src="${video.thumbnailUrl}" alt="サムネイル" />
         <div class="video-info">
           <div class="video-title">
-            <a href="${buildVideoUrl(video.originalId)}" target="_blank">${video.title}</a>
+            <a href="${buildVideoUrl(video.originalId, linkCtx)}" target="_blank">${video.title}</a>
           </div>
           <div class="video-stats">
             <span class="view-count">再生数: ${video.viewCount.toLocaleString()}</span>
@@ -640,7 +641,10 @@ export class Mylist2ManagerUI {
         "",
       );
       const titleText = trimmedTitle ? trimmedTitle : "無題";
-      titleLink.href = buildVideoUrl(video.originalId);
+      titleLink.href = buildVideoUrl(video.originalId, {
+        authorName: video.authorName,
+        title: video.title,
+      });
       titleLink.textContent = titleText;
       titleLink.className = "video-title-link";
       titleLink.target = "_blank";

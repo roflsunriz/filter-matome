@@ -33,6 +33,15 @@ export interface KeywordInfo {
 export type VideoLinkTarget = "official" | "local";
 
 /**
+ * buildVideoUrl でローカルプレーヤーへのルーティング判定に使うコンテキスト。
+ * videoId だけでは判定できない条件（投稿者名・タイトル）を補完する。
+ */
+export interface VideoLinkContext {
+  authorName?: string;
+  title?: string;
+}
+
+/**
  * マネージャー設定の型定義
  */
 export interface ManagerSettings {

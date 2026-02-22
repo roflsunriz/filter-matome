@@ -32,7 +32,7 @@ features/src/mylist2/
 │   ├── file-helper-service.ts            # ファイル操作ヘルパー (65行)
 │   └── validation-service.ts             # バリデーション (6行)
 └── utils/
-    └── linkify.ts                        # URLリンク変換ユーティリティ
+    └── linkify.ts                        # URLリンク変換・video-playerルーティング判定
 ```
 
 ## 🏗️ アーキテクチャ概要
@@ -190,6 +190,16 @@ ProgressService ─── 進捗表示
 - **編集タイミング**: 選択機能改善、おすすめロジック変更
 
 ### 🛠️ **ユーティリティ**
+
+#### `utils/linkify.ts` - URLリンク変換・video-playerルーティング判定
+- **役割**: テキスト内の URL / 動画ID / mylist をリンクへ変換、動画リンク先の判定
+- **機能**: HTMLエスケープ、DOMPurifyサニタイズ、video-playerルーティング判定
+- **ルーティング条件**: 設定が `local` のとき、以下に該当する動画のみ video-player standalone へルーティングする:
+  1. `so` プレフィックスの動画ID（公式/チャンネル動画）
+  2. 投稿者が「dアニメストア ニコニコ支店」
+  3. タイトルに「削除」「非公開」「非表示」を含む動画
+  4. タイトルが「不明な動画」の動画（API取得失敗のフォールバック）
+- **編集タイミング**: リンク変換ロジック変更、ルーティング条件追加
 
 #### `ui/file-helper-service.ts` - ファイル操作ヘルパー
 - **役割**: ファイル操作・データ変換支援

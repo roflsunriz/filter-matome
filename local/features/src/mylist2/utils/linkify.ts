@@ -1,6 +1,6 @@
 import DOMPurify from "dompurify";
 
-import type { VideoLinkTarget } from "@/types/mylist-types";
+import type { VideoLinkTarget, VideoLinkContext } from "@/types/mylist-types";
 
 // 文字列をHTMLエスケープ
 export const escapeHtml = (s: string): string =>
@@ -19,9 +19,47 @@ export const setVideoLinkTarget = (target: VideoLinkTarget): void => {
   currentVideoLinkTarget = target;
 };
 
+/**
+ * ローカルプレーヤーへルーティングすべき動画かどうかを判定する。
+ *
+ * 対象:
+ *  - 公式動画 (so プレフィックスの動画ID)
+ *  - 「dアニメストア ニコニコ支店」の投稿者
+ *  - 非表示動画 (タイトルに「非公開」「非表示」を含む)
+ *  - 削除済み動画 (タイトルに「削除」を含む、またはフォールバックタイトル「不明な動画」)
+ */
+export const shouldUseLocalPlayer = (
+  videoId: string,
+  context?: VideoLinkContext,
+): boolean => {
+  if (videoId.startsWith("so")) return true;
+
+  if (context?.authorName === "dアニメストア ニコニコ支店") return true;
+
+  if (context?.title) {
+    const t = context.title;
+    if (
+      t.includes("削除") ||
+      t.includes("非公開") ||
+      t.includes("非表示") ||
+      t === "不明な動画"
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 /** 動画IDからリンクURLを生成する */
-export const buildVideoUrl = (videoId: string): string => {
-  if (currentVideoLinkTarget === "local") {
+export const buildVideoUrl = (
+  videoId: string,
+  context?: VideoLinkContext,
+): string => {
+  if (
+    currentVideoLinkTarget === "local" &&
+    shouldUseLocalPlayer(videoId, context)
+  ) {
     return `/local/features/dist/src/video-player/standalone/index.html?videoId=${encodeURIComponent(videoId)}`;
   }
   return `https://www.nicovideo.jp/watch/${videoId}`;
