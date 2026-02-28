@@ -14,7 +14,7 @@ NicoCache_nl/
 │       │   ├── mlink-video-controller/   # モジュール管理システム (18KB README)
 │       │   ├── common/                   # 共通ライブラリ・ヘッダー (8.9KB README)
 │       │   ├── types/                    # 型定義システム (12KB README)
-│       │   └── docs/                     # ドキュメントページ (8.1KB README)
+│       │   └── docs/                     # （旧）ドキュメントページ（HTML/TS実装。現在はルートの docs/ にMarkdownとして集約）
 │       ├── config/                       # Vite設定ファイル群
 │       ├── dist/                         # ビルド出力ファイル
 │       ├── scripts/                      # スクリプト類
@@ -140,10 +140,9 @@ dist/*.es.js ─── 本番ファイル出力
 - **編集対象**: 新機能の型定義追加、型安全性向上
 - **📚 詳細**: `src/types/README.md`
 
-#### `src/docs/` - ドキュメントページ
-- **役割**: ユーザー向け機能説明・使用方法
-- **主要ファイル**: `comment-filter2/index.html`, `mylist2/index.html`
-- **編集対象**: ドキュメント更新、新機能説明追加
+#### `src/docs/` - （旧）ドキュメントページ
+- **役割**: 以前のユーザー向け機能説明・使用方法（HTML/TSでビルドして配信する方式）
+- **現状**: ルートの `docs/` に Markdown として集約
 - **📚 詳細**: `src/docs/README.md`
 
 ### 🔧 **レガシーシステム**
@@ -199,7 +198,7 @@ dist/*.es.js ─── 本番ファイル出力
 1. **ヘッダー**: `src/common/header.ts` + `src/common/css-constants.ts`
 2. **個別プロジェクト**: 各 `src/プロジェクト名/styles/` または `styles.ts`
 3. **モジュール**: `src/mlink-video-controller/styles/`
-4. **ドキュメント**: `src/docs/プロジェクト名/styles.ts`
+4. **ドキュメント**: ルートの `docs/`（Markdown）
 
 ### 🔄 **API・データ形式を変更したい**
 

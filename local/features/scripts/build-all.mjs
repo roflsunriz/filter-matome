@@ -6,12 +6,10 @@ const command = 'bun';
 const scripts = [
   'build:mylist2',
   'build:mylist2-service-worker',
-  'build:comment-filter2-docs',
   'build:video-player',
   'build:common',
   'build:mlink-video-controller',
   'build:comment-filter2',
-  'build:mylist2-docs',
   'build:watch-tracker',
   'build:watch-history',
   'build:cache-data-manager',

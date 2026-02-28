@@ -152,8 +152,9 @@ mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動�
 
 ---
 
-- 詳細なcomment-filter2の説明は[こちら](https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html)を参照。
-- 詳細なmylist2の説明は[こちら](https://www.nicovideo.jp/local/features/dist/src/docs/mylist2/index.html)を参照。
+- 詳細な comment-filter2 の説明は [comment-filter2.md](comment-filter2.md) を参照。
+- 詳細な mylist2 の説明は [mylist2.md](mylist2.md) を参照。
+ 
 
 ---
 

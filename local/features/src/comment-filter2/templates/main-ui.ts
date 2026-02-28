@@ -11,7 +11,7 @@ export const mainUITemplate = `
     <div class="cf2-title">
       ${getIconSVG(ICONS.filter)}
       <span class="cf2-title-text">comment-filter2</span>
-              <a href="https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html" target="_blank">${getIconSVG(ICONS.info)}</a>
+              <a href="https://github.com/roflsunriz/filter-matome/blob/main/docs/comment-filter2.md" target="_blank">${getIconSVG(ICONS.info)}</a>
     </div>
     <button id="cf2-close-btn" class="cf2-close-btn" title="閉じる">
       ${getIconSVG(ICONS.close)}

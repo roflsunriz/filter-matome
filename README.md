@@ -186,20 +186,21 @@ Append<
 
 ## 📚 ドキュメント
 
-- **使い方ガイド**: [USAGE.md](USAGE.md)
+- **使い方ガイド**: [docs/USAGE.md](docs/USAGE.md)
 - **変更履歴**: [CHANGELOG.md](CHANGELOG.md)
-- **Issue/Feature Requestの作り方**: [how-to-make-an-issue.md](how-to-make-an-issue.md)
-- **シンボリックリンク作成手順 (必須)**: [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md)
+- **Issue/Feature Requestの作り方**: [docs/how-to-make-an-issue.md](docs/how-to-make-an-issue.md)
+- **シンボリックリンク作成手順 (必須)**: [docs/creating-symlink-for-listjs.md](docs/creating-symlink-for-listjs.md)
 - シンボリックリンクはNicoCache_nlのキャッシュマネージャを使用する際に必須です。
-- **機能別ドキュメント**:(インストール後に表示可能になります)
-  - [Comment Filter2 説明](https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html)
-  - [Mylist2 説明](https://www.nicovideo.jp/local/features/dist/src/docs/mylist2/index.html)
+- **機能別ドキュメント**
+  - [Comment Filter2](docs/comment-filter2.md)
+  - [Mylist2](docs/mylist2.md)
 
 
 ## ⚠️ 重要な注意事項
 
 ### シンボリックリンク作成（必須）
-NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\local\list.js` という固定パス・固定名で参照します。ビルド成果物（例: `cacheDataManager.iife.js`）へこの固定パス名でシンボリックリンクを作成しないと機能しません。詳細手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照してください。
+NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\local\list.js` という固定パス・固定名で参照します。ビルド成果物（例: `cacheDataManager.iife.js`）へこの固定パス名でシンボリックリンクを作成しないと機能しません。詳細手順は [docs/creating-symlink-for-listjs.md](docs/creating-symlink-for-listjs.md) を参照してください。
+
 
 ### 使用上の注意
 - **全機能同時使用前提**: 個別機能の抜き出しは動作保証外

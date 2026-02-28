@@ -15,7 +15,6 @@
     "test": "",
     "build:mylist2": "vite build --config config/vite.mylist2.config.js",
     "build:mylist2-service-worker": "vite build --config config/vite.mylist2-service-worker.config.js",
-    "build:comment-filter2-docs": "vite build --config config/vite.comment-filter2-docs.config.js",
     "build:video-player:router": "vite build --config config/vite.video-player.config.js",
     "build:video-player": "bun run build:video-player:router && bun run build:video-player-standalone",
     "build:video-player-standalone": "vite build --config config/vite.video-player-standalone.config.js",
@@ -25,7 +24,6 @@
     "build:ALL": "node scripts/build-all.mjs",
     "build:cache-data-manager": "vite build --config config/vite.cache-data-manager.config.js",
     "build:movie-info": "vite build --config config/vite.movie-info.config.js",
-    "build:mylist2-docs": "vite build --config config/vite.mylist2-docs.config.js",
     "build:watch-tracker": "vite build --config config/vite.watch-tracker.config.js",
     "build:watch-history": "vite build --config config/vite.watch-history.config.js",
     "error-check": "tsc --noEmit && bun run lint && bun run type-check"

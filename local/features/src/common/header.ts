@@ -350,12 +350,6 @@ export class CommonHeader implements CommonHeaderInstance {
                   <a href="https://www.nicovideo.jp/cache/" target="_blank" title="キャッシュ">
                     キャッシュ
                   </a>
-                  <a href="https://www.nicovideo.jp/local/features/dist/src/docs/mylist2/index.html" target="_blank" title="mylist2 README">
-                    README(ML2)
-                  </a>
-                  <a href="https://www.nicovideo.jp/local/features/dist/src/docs/comment-filter2/index.html" target="_blank" title="CommentFilter2 README">
-                    README(CF2)
-                  </a>
                   <a href="https://github.com/roflsunriz/filter-matome" target="_blank" title="filter-matome">
                     filter-matome (GitHub)
                   </a>

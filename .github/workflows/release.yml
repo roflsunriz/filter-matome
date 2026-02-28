@@ -61,9 +61,9 @@ jobs:
           cp -r resources release/NicoCache_nl/
           cp README.md release/NicoCache_nl/
           cp CHANGELOG.md release/NicoCache_nl/
-          cp USAGE.md release/NicoCache_nl/
+          cp docs/USAGE.md release/NicoCache_nl/
           cp LICENSE release/NicoCache_nl/
-          cp creating-symlink-for-listjs.md release/NicoCache_nl/
+          cp docs/creating-symlink-for-listjs.md release/NicoCache_nl/
           cp "nico-cache-nl-starter.bat" release/NicoCache_nl/
           cp "nico-cache-gui-launcher.bat" release/NicoCache_nl/
 

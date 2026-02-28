@@ -134,9 +134,9 @@ jobs:
           important_files=(
             "README.md"
             "LICENSE"
-            "creating-symlink-for-listjs.md"
+            "docs/creating-symlink-for-listjs.md"
             "CHANGELOG.md"
-            "USAGE.md"
+            "docs/USAGE.md"
             "nlFilters/nlFilters_編集ガイド.md"
             "extensions/CommentFilterLogger.java"
             "extensions/CommentFilterLogger.class"
