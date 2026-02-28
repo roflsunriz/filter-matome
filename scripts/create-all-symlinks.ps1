@@ -100,8 +100,8 @@ if (-not (Test-Path -LiteralPath $targetRoot)) {
 # リンク先の親ディレクトリをすべて検証
 $missingParents = @()
 foreach ($mapping in $linkMappings) {
-    $parentDir = Split-Path -LiteralPath $mapping.Link -Parent
-    if (-not (Test-Path -LiteralPath $parentDir)) {
+    $parentDir = Split-Path -Path $mapping.Link -Parent
+    if (-not $parentDir -or -not (Test-Path -LiteralPath $parentDir)) {
         if ($missingParents -notcontains $parentDir) {
             $missingParents += $parentDir
         }
@@ -113,7 +113,10 @@ if ($missingParents.Count -gt 0) {
         Write-Warning "  $dir"
     }
     Write-Warning "NicoCache_nl のディレクトリ構成を確認してください。"
-    exit 1
+    if (-not $DryRun) {
+        exit 1
+    }
+    Write-Warning "Dry-run モードのため続行します。"
 }
 
 # --- 安全な削除ヘルパー ---
