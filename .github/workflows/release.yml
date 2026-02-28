@@ -59,6 +59,7 @@ jobs:
           cp -r local release/NicoCache_nl/
           cp -r scripts release/NicoCache_nl/
           cp -r resources release/NicoCache_nl/
+          cp -r docs release/NicoCache_nl/
           cp README.md release/NicoCache_nl/
           cp CHANGELOG.md release/NicoCache_nl/
           cp docs/USAGE.md release/NicoCache_nl/
