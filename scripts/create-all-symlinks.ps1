@@ -72,18 +72,18 @@ $linkMappings = @(
     @{ Source = 'C:\filter-matome\local\features';                                   Link = 'C:\NicoCache_nl\local\features' }
     @{ Source = 'C:\filter-matome\local\images';                                     Link = 'C:\NicoCache_nl\local\images' }
     @{ Source = 'C:\filter-matome\local\mime.types';                                 Link = 'C:\NicoCache_nl\local\mime.types' }
-    @{ Source = 'C:\filter-matome\nlFilters\100_common.txt';                         Link = 'C:\NicoCache_nl\local\nlFilters\100_common.txt' }
-    @{ Source = 'C:\filter-matome\nlFilters\101_disable_official_function.txt';       Link = 'C:\NicoCache_nl\local\nlFilters\101_disable_official_function.txt' }
-    @{ Source = 'C:\filter-matome\nlFilters\102_mlink_video_controller.txt';          Link = 'C:\NicoCache_nl\local\nlFilters\102_mlink_video_controller.txt' }
-    @{ Source = 'C:\filter-matome\nlFilters\103_comment_filter2.txt';                 Link = 'C:\NicoCache_nl\local\nlFilters\103_comment_filter2.txt' }
-    @{ Source = 'C:\filter-matome\nlFilters\104_video_player.txt';                    Link = 'C:\NicoCache_nl\local\nlFilters\104_video_player.txt' }
-    @{ Source = 'C:\filter-matome\nlFilters\105_premium_hide.txt';                    Link = 'C:\NicoCache_nl\local\nlFilters\105_premium_hide.txt' }
-    @{ Source = 'C:\filter-matome\nlFilters\106_watch_history.txt';                   Link = 'C:\NicoCache_nl\local\nlFilters\106_watch_history.txt' }
-    @{ Source = 'C:\filter-matome\extensions\CommentFilterLogger.class';              Link = 'C:\NicoCache_nl\local\extensions\CommentFilterLogger.class' }
-    @{ Source = 'C:\filter-matome\extensions\CustomCacheReturner.class';              Link = 'C:\NicoCache_nl\local\extensions\CustomCacheReturner.class' }
-    @{ Source = 'C:\filter-matome\extensions\downloadThruFFmpeg.class';               Link = 'C:\NicoCache_nl\local\extensions\downloadThruFFmpeg.class' }
-    @{ Source = 'C:\filter-matome\extensions\ExtUtil.class';                          Link = 'C:\NicoCache_nl\local\extensions\ExtUtil.class' }
-    @{ Source = 'C:\filter-matome\extensions\nlMediaInfo.class';                      Link = 'C:\NicoCache_nl\local\extensions\nlMediaInfo.class' }
+    @{ Source = 'C:\filter-matome\nlFilters\100_common.txt';                         Link = 'C:\NicoCache_nl\nlFilters\100_common.txt' }
+    @{ Source = 'C:\filter-matome\nlFilters\101_disable_official_function.txt';       Link = 'C:\NicoCache_nl\nlFilters\101_disable_official_function.txt' }
+    @{ Source = 'C:\filter-matome\nlFilters\102_mlink_video_controller.txt';          Link = 'C:\NicoCache_nl\nlFilters\102_mlink_video_controller.txt' }
+    @{ Source = 'C:\filter-matome\nlFilters\103_comment_filter2.txt';                 Link = 'C:\NicoCache_nl\nlFilters\103_comment_filter2.txt' }
+    @{ Source = 'C:\filter-matome\nlFilters\104_video_player.txt';                    Link = 'C:\NicoCache_nl\nlFilters\104_video_player.txt' }
+    @{ Source = 'C:\filter-matome\nlFilters\105_premium_hide.txt';                    Link = 'C:\NicoCache_nl\nlFilters\105_premium_hide.txt' }
+    @{ Source = 'C:\filter-matome\nlFilters\106_watch_history.txt';                   Link = 'C:\NicoCache_nl\nlFilters\106_watch_history.txt' }
+    @{ Source = 'C:\filter-matome\extensions\CommentFilterLogger.class';              Link = 'C:\NicoCache_nl\extensions\CommentFilterLogger.class' }
+    @{ Source = 'C:\filter-matome\extensions\CustomCacheReturner.class';              Link = 'C:\NicoCache_nl\extensions\CustomCacheReturner.class' }
+    @{ Source = 'C:\filter-matome\extensions\downloadThruFFmpeg.class';               Link = 'C:\NicoCache_nl\extensions\downloadThruFFmpeg.class' }
+    @{ Source = 'C:\filter-matome\extensions\ExtUtil.class';                          Link = 'C:\NicoCache_nl\extensions\ExtUtil.class' }
+    @{ Source = 'C:\filter-matome\extensions\nlMediaInfo.class';                      Link = 'C:\NicoCache_nl\extensions\nlMediaInfo.class' }
     @{ Source = 'C:\filter-matome\nico-cache-gui-launcher.bat';                      Link = 'C:\NicoCache_nl\nico-cache-gui-launcher.bat' }
     @{ Source = 'C:\filter-matome\nico-cache-nl-starter.bat';                        Link = 'C:\NicoCache_nl\nico-cache-nl-starter.bat' }
     @{ Source = 'C:\filter-matome\local\features\dist\cacheDataManager.iife.js';     Link = 'C:\NicoCache_nl\local\list.js' }
