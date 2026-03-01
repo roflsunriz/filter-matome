@@ -1218,9 +1218,7 @@ export class Mylist2ManagerUI {
               });
               await this.showCustomAlert("エクスポートが完了しました");
             } else if (choice.action === "cloud") {
-              const provider =
-                await this.modalService.showCloudProviderSelectModal();
-              if (!provider) return;
+              const provider = "gdrive" as const;
               const dateTime = this.formatDateTime();
               const baseName = `Mylist2_${dateTime}`;
               const result = await this.manager.uploadBackupToCloud(
@@ -1228,26 +1226,12 @@ export class Mylist2ManagerUI {
                 baseName,
               );
               if (result.success) {
-                const providerName =
-                  provider === "gdrive"
-                    ? "Google Drive"
-                    : provider === "onedrive"
-                      ? "OneDrive"
-                      : provider === "dropbox"
-                        ? "Dropbox"
-                        : "MEGA";
+                const providerName = "Google Drive";
                 await this.showCustomAlert(
                   `${providerName} にバックアップを保存しました`,
                 );
               } else {
-                const providerName =
-                  provider === "gdrive"
-                    ? "Google Drive"
-                    : provider === "onedrive"
-                      ? "OneDrive"
-                      : provider === "dropbox"
-                        ? "Dropbox"
-                        : "MEGA";
+                const providerName = "Google Drive";
                 await this.showCustomAlert(
                   `${providerName} へのバックアップに失敗しました: ` +
                     (result.error || "不明なエラー"),
@@ -1308,19 +1292,10 @@ export class Mylist2ManagerUI {
               );
             }
           } else if (choice.action === "cloud") {
-            const provider =
-              await this.modalService.showCloudProviderSelectModal();
-            if (!provider) return;
+            const provider = "gdrive" as const;
             try {
               const backups = await this.manager.listCloudBackups(provider);
-              const providerName =
-                provider === "gdrive"
-                  ? "Google Drive"
-                  : provider === "onedrive"
-                    ? "OneDrive"
-                    : provider === "dropbox"
-                      ? "Dropbox"
-                      : "MEGA";
+              const providerName = "Google Drive";
               if (!backups || backups.length === 0) {
                 await this.showCustomAlert(
                   `${providerName} にバックアップが見つかりません`,

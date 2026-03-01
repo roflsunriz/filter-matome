@@ -5,9 +5,29 @@ type FflateHelpers = Pick<
   "zipSync" | "unzipSync" | "strToU8" | "strFromU8"
 >;
 
-// Google Identity Services が提供するグローバル
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const _google: any;
+type StoredAccessToken = {
+  accessToken: string;
+  accessTokenExpireAt: number;
+};
+
+class GisAuthError extends Error {
+  readonly code: string;
+  constructor(code: string) {
+    super(code);
+    this.name = "GisAuthError";
+    this.code = code;
+  }
+}
+
+type TokenClientResponse = {
+  access_token?: string;
+  error?: string;
+  expires_in?: number;
+};
+
+type TokenClient = {
+  requestAccessToken: (opts: { prompt?: string }) => void;
+};
 
 /**
  * Google Drive 連携（ブラウザのみ、バックエンド無し）
@@ -24,12 +44,14 @@ export class GoogleDriveService {
   private readonly defaultClientId =
     "757779940916-u31ia8oafa998j6qqavdpqjjn988it8b.apps.googleusercontent.com";
   private fflateModulePromise: Promise<FflateHelpers> | null = null;
+  private readonly accessTokenStorageKey = "mylist2_google_access_token";
 
   constructor(clientIdFromConfig?: string | null) {
     this.clientId =
       clientIdFromConfig ||
       localStorage.getItem("mylist2_google_client_id") ||
       this.defaultClientId;
+    this.loadStoredAccessToken();
   }
 
   // fflateモジュールを一度だけ動的ロード
@@ -52,15 +74,47 @@ export class GoogleDriveService {
     localStorage.setItem("mylist2_google_client_id", clientId);
   }
 
+  private loadStoredAccessToken(): void {
+    try {
+      const raw = localStorage.getItem(this.accessTokenStorageKey);
+      if (!raw) return;
+      const parsed: unknown = JSON.parse(raw);
+      if (typeof parsed !== "object" || parsed === null) return;
+      const rec = parsed as Record<string, unknown>;
+      const accessToken = rec.accessToken;
+      const accessTokenExpireAt = rec.accessTokenExpireAt;
+      if (
+        typeof accessToken !== "string" ||
+        typeof accessTokenExpireAt !== "number"
+      ) {
+        return;
+      }
+      this.accessToken = accessToken;
+      this.accessTokenExpireAt = accessTokenExpireAt;
+    } catch {
+      // ignore
+    }
+  }
+
+  private persistAccessToken(token: string, expireAt: number): void {
+    try {
+      const data: StoredAccessToken = {
+        accessToken: token,
+        accessTokenExpireAt: expireAt,
+      };
+      localStorage.setItem(this.accessTokenStorageKey, JSON.stringify(data));
+    } catch {
+      // ignore
+    }
+  }
+
   private async ensureGisLoaded(): Promise<void> {
     await Promise.resolve();
     const win = window as unknown as {
       google?: {
         accounts?: {
           oauth2?: {
-            initTokenClient: (cfg: unknown) => {
-              requestAccessToken: (opts: unknown) => void;
-            };
+            initTokenClient: (cfg: unknown) => TokenClient;
           };
         };
       };
@@ -82,6 +136,63 @@ export class GoogleDriveService {
     return !!this.accessToken && Date.now() < this.accessTokenExpireAt - 5000;
   }
 
+  private async requestAccessToken(prompt?: string): Promise<string> {
+    await this.ensureGisLoaded();
+    return await new Promise<string>((resolve, reject) => {
+      try {
+        const win = window as unknown as {
+          google: {
+            accounts: {
+              oauth2: {
+                initTokenClient: (cfg: {
+                  client_id: string | null;
+                  scope: string;
+                  callback: (resp: TokenClientResponse) => void;
+                }) => TokenClient;
+              };
+            };
+          };
+        };
+        const tokenClient = win.google.accounts.oauth2.initTokenClient({
+          client_id: this.clientId,
+          scope: this.scope,
+          callback: (resp: TokenClientResponse) => {
+            if (resp.access_token) {
+              this.accessToken = resp.access_token;
+              const expiresInSec =
+                typeof resp.expires_in === "number" ? resp.expires_in : 3600;
+              this.accessTokenExpireAt = Date.now() + expiresInSec * 1000;
+              this.persistAccessToken(this.accessToken, this.accessTokenExpireAt);
+              resolve(resp.access_token);
+              return;
+            }
+            const code = resp.error || "Failed to obtain access token";
+            reject(new GisAuthError(code));
+          },
+        });
+        tokenClient.requestAccessToken({ prompt });
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error(String(e)));
+      }
+    });
+  }
+
+  private shouldFallbackToConsent(error: unknown): boolean {
+    const code =
+      error instanceof GisAuthError
+        ? error.code
+        : error instanceof Error
+          ? error.message
+          : String(error);
+    return (
+      code.includes("consent_required") ||
+      code.includes("interaction_required") ||
+      code.includes("login_required") ||
+      code.includes("popup_closed_by_user") ||
+      code.includes("access_denied")
+    );
+  }
+
   private async ensureAccessToken(): Promise<string> {
     if (this.isTokenValid()) return this.accessToken as string;
     if (!this.clientId) {
@@ -93,53 +204,15 @@ export class GoogleDriveService {
       this.setClientId(input);
     }
 
-    await this.ensureGisLoaded();
-    const token = await new Promise<string>((resolve, reject) => {
-      try {
-        const win = window as unknown as {
-          google: {
-            accounts: {
-              oauth2: {
-                initTokenClient: (cfg: {
-                  client_id: string | null;
-                  scope: string;
-                  callback: (resp: {
-                    access_token?: string;
-                    error?: string;
-                    expires_in?: number;
-                  }) => void;
-                }) => {
-                  requestAccessToken: (opts: { prompt: string }) => void;
-                };
-              };
-            };
-          };
-        };
-        const tokenClient = win.google.accounts.oauth2.initTokenClient({
-          client_id: this.clientId,
-          scope: this.scope,
-          callback: (resp: {
-            access_token?: string;
-            error?: string;
-            expires_in?: number;
-          }) => {
-            if (resp && resp.access_token) {
-              this.accessToken = resp.access_token;
-              const expiresInSec =
-                typeof resp.expires_in === "number" ? resp.expires_in : 3600;
-              this.accessTokenExpireAt = Date.now() + expiresInSec * 1000;
-              resolve(resp.access_token);
-            } else {
-              reject(new Error(resp?.error || "Failed to obtain access token"));
-            }
-          },
-        });
-        tokenClient.requestAccessToken({ prompt: "consent" });
-      } catch (e) {
-        reject(e instanceof Error ? e : new Error(String(e)));
-      }
-    });
-    return token;
+    // まずはサイレント（ログイン状態があればダイアログ無し）
+    try {
+      return await this.requestAccessToken("");
+    } catch (e) {
+      if (!this.shouldFallbackToConsent(e)) throw e;
+    }
+
+    // 必要な場合のみ、同意/ログインを促す
+    return await this.requestAccessToken("consent");
   }
 
   private async fetchDrive<T = unknown>(

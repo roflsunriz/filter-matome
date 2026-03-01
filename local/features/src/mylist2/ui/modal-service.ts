@@ -416,69 +416,6 @@ export class ModalService {
     });
   }
 
-  // クラウドプロバイダ選択モーダル
-  async showCloudProviderSelectModal(): Promise<
-    "gdrive" | "onedrive" | "dropbox" | "mega" | null
-  > {
-    return new Promise((resolve) => {
-      const html = `
-        <div class="cml2-modal" style="display:flex">
-          <div class="cml2-modal-content">
-            <h3 class="cml2-modal-title">クラウドストレージを選択</h3>
-            <div class="cml2-modal-body">
-              <div style="display:flex; flex-direction:column; gap:8px">
-                <button class="cml2-btn" id="selG">${createMaterialIcon(ICONS.cloud_upload, { color: "white" })}Google Drive</button>
-                <button class="cml2-btn" id="selO">${createMaterialIcon(ICONS.cloud_upload, { color: "white" })}OneDrive</button>
-                <button class="cml2-btn" id="selD">${createMaterialIcon(ICONS.cloud_upload, { color: "white" })}Dropbox</button>
-                <button class="cml2-btn" id="selM">${createMaterialIcon(ICONS.cloud_upload, { color: "white" })}MEGA (β)</button>
-              </div>
-            </div>
-            <div class="cml2-modal-footer">
-              <button class="cml2-btn" id="selCancel">${createMaterialIcon(ICONS.close, { color: "white" })}キャンセル</button>
-            </div>
-          </div>
-        </div>`;
-      // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
-      document.body.insertAdjacentHTML("beforeend", html);
-      const modal = document.querySelector(".cml2-modal") as HTMLElement;
-      const cleanup = () => {
-        document.removeEventListener("keydown", onKey);
-        modal?.removeEventListener("click", onBackdrop);
-        modal?.remove();
-      };
-      const onKey = (e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-          cleanup();
-          resolve(null);
-        }
-      };
-      const onBackdrop = (e: MouseEvent) => {
-        if (e.target === modal) {
-          cleanup();
-          resolve(null);
-        }
-      };
-      const bind = (
-        id: string,
-        result: "gdrive" | "onedrive" | "dropbox" | "mega" | null,
-      ) => {
-        const el = document.getElementById(id);
-        if (el)
-          el.addEventListener("click", () => {
-            cleanup();
-            resolve(result);
-          });
-      };
-      bind("selG", "gdrive");
-      bind("selO", "onedrive");
-      bind("selD", "dropbox");
-      bind("selM", "mega");
-      bind("selCancel", null);
-      document.addEventListener("keydown", onKey);
-      modal.addEventListener("click", onBackdrop);
-    });
-  }
-
   // 汎用選択モーダル（セレクトで一つ選ぶ）
   async showSelectionModal(
     title: string,

@@ -20,9 +20,6 @@ import { ImportExportService } from "@/mylist2/services/import-export-service";
 import { SettingsService } from "@/mylist2/services/settings-service";
 import { DatabaseManagementService } from "@/mylist2/services/database-management-service";
 import { GoogleDriveService } from "@/mylist2/services/cloud/google-drive-service";
-import { DropboxService } from "@/mylist2/services/cloud/dropbox-service";
-import { OneDriveService } from "@/mylist2/services/cloud/onedrive-service";
-import { MegaService } from "@/mylist2/services/cloud/mega-service";
 
 export class Mylist2Manager {
   private db: Mylist2DB;
@@ -34,9 +31,6 @@ export class Mylist2Manager {
   private settingsService: SettingsService;
   private databaseManagementService: DatabaseManagementService;
   private googleDriveService: GoogleDriveService;
-  private dropboxService: DropboxService;
-  private oneDriveService: OneDriveService;
-  private megaService: MegaService;
 
   constructor() {
     this.db = new Mylist2DB();
@@ -51,9 +45,6 @@ export class Mylist2Manager {
     this.settingsService = new SettingsService(this.db);
     this.databaseManagementService = new DatabaseManagementService(this.db);
     this.googleDriveService = new GoogleDriveService();
-    this.dropboxService = new DropboxService();
-    this.oneDriveService = new OneDriveService();
-    this.megaService = new MegaService();
   }
 
   // データベースへのアクセスを提供するpublicメソッド
@@ -344,7 +335,7 @@ export class Mylist2Manager {
 
   // 汎用クラウド: プロバイダ選択版
   async uploadBackupToCloud(
-    provider: "gdrive" | "dropbox" | "onedrive" | "mega",
+    provider: "gdrive",
     baseFileName: string,
   ): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
@@ -354,43 +345,14 @@ export class Mylist2Manager {
           success: false,
           error: backup.error || "バックアップ作成に失敗しました",
         };
-      if (provider === "gdrive") {
-        const r = await this.googleDriveService.uploadBackupZip(
-          baseFileName,
-          backup.backupData,
-        );
-        return r.success
-          ? { success: true, id: r.fileId }
-          : { success: false, error: r.error };
-      }
-      if (provider === "dropbox") {
-        const r = await this.dropboxService.uploadBackupZip(
-          baseFileName,
-          backup.backupData,
-        );
-        return r.success
-          ? { success: true, id: r.path }
-          : { success: false, error: r.error };
-      }
-      if (provider === "onedrive") {
-        const r = await this.oneDriveService.uploadBackupZip(
-          baseFileName,
-          backup.backupData,
-        );
-        return r.success
-          ? { success: true, id: r.fileId }
-          : { success: false, error: r.error };
-      }
-      if (provider === "mega") {
-        const r = await this.megaService.uploadBackupZip(
-          baseFileName,
-          backup.backupData,
-        );
-        return r.success
-          ? { success: true, id: r.fileId }
-          : { success: false, error: r.error };
-      }
-      return { success: false, error: "未知のプロバイダ" };
+      void provider;
+      const r = await this.googleDriveService.uploadBackupZip(
+        baseFileName,
+        backup.backupData,
+      );
+      return r.success
+        ? { success: true, id: r.fileId }
+        : { success: false, error: r.error };
     } catch (error) {
       return {
         success: false,
@@ -400,31 +362,21 @@ export class Mylist2Manager {
   }
 
   async listCloudBackups(
-    provider: "gdrive" | "dropbox" | "onedrive" | "mega",
+    provider: "gdrive",
   ): Promise<
     Array<{ id: string; name: string; modifiedTime?: string; size?: string }>
   > {
-    if (provider === "gdrive") return this.googleDriveService.listBackups();
-    if (provider === "dropbox") return this.dropboxService.listBackups();
-    if (provider === "onedrive") return this.oneDriveService.listBackups();
-    if (provider === "mega") return this.megaService.listBackups();
-    return [];
+    void provider;
+    return this.googleDriveService.listBackups();
   }
 
   async restoreFromCloudBackup(
-    provider: "gdrive" | "dropbox" | "onedrive" | "mega",
+    provider: "gdrive",
     id: string,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      let jsonText = "";
-      if (provider === "gdrive")
-        jsonText = await this.googleDriveService.downloadBackupJson(id);
-      else if (provider === "dropbox")
-        jsonText = await this.dropboxService.downloadBackupJson(id);
-      else if (provider === "onedrive")
-        jsonText = await this.oneDriveService.downloadBackupJson(id);
-      else if (provider === "mega")
-        jsonText = await this.megaService.downloadBackupJson(id);
+      void provider;
+      const jsonText = await this.googleDriveService.downloadBackupJson(id);
       const res = await this.restoreDatabaseFromBackup(jsonText);
       return res;
     } catch (error) {
