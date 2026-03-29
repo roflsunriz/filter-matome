@@ -136,14 +136,14 @@ def run_nicocache_minimized():
 def run_nicocache_gui_launcher():
     try:
         # バッチファイルのパスを取得（ルート基準）
-        batch_path = _root_path("NicoCacheGUILauncher.bat")
+        batch_path = _root_path("nico-cache-gui-launcher.bat")
         if not os.path.exists(batch_path):
-            print("エラー: NicoCacheGUILauncher.batが見つかりません！")
+            print("エラー: nico-cache-gui-launcher.batが見つかりません！")
             return
         
         # 通常のウィンドウで起動
         subprocess.Popen(batch_path, creationflags=win32process.CREATE_NEW_CONSOLE)
-        print("NicoCacheGUILauncher.batを起動しました！")
+        print("nico-cache-gui-launcher.batを起動しました！")
     except Exception as e:
         print(f"エラーが発生しました: {e}")
 
@@ -761,7 +761,7 @@ def open_adoptium():
 def show_menu():
     print("=== NicoCache Utility ===")
     print("1. NicoCache_nl.batを最小化状態で起動")
-    print("2. nicocache-gui-launcher.batを起動")
+    print("2. nico-cache-gui-launcher.batを起動")
     print("3. java.exeとjavaw.exeを強制終了")
     print("4. ant extract jarを実行")
     print("5. 拡張機能(extensions)をコンパイル")
