@@ -1,7 +1,7 @@
 # Usage Guide
 
-> Author: ◆awd5z.AlOFJq (roflsunriz)
-> Last updated: 2026-02-22
+> Author: roflsunriz  
+> Last updated: 2026-04-15  
 
 ## Table of Contents
 
@@ -35,14 +35,14 @@
 
 ## 1. Installation
 
-GitHubページのリリースページ(<https://github.com/roflsunriz/filter-matome/releases>)からダウンロードしてください。
+GitHubページのリリースページ(<https://github.com/roflsunriz/filter-matome/releases>)からダウンロードすること。
 
 **注意事項：**
 
 - ディレクトリ構造を壊さずにそのまま`local`フォルダは`local`フォルダに、`nlFilters`は`nlFilters`フォルダに、`extensions`フォルダは`extensions`フォルダに上書きする。
 - **フィルタの抜き差しは上級者向けなのでnlFiltersの文法を完全に理解し、HTML/CSS/JavaScriptの知識が十分にあり、デベロッパーコンソールを十全に扱え、自己解決できる者だけが自己の責任で対応すること。**
 
-問題を発見した場合は[GitHubのIssue](https://github.com/roflsunriz/filter-matome/issues)にて報告してください。あるいはIssueで相談してからPull Requestを送ってください。
+問題を発見した場合は[GitHubのIssue](https://github.com/roflsunriz/filter-matome/issues)にて報告する。あるいはIssueで相談してからPull Requestを送る。
 
 ### 標準手順
 
@@ -55,19 +55,19 @@ GitHubページのリリースページ(<https://github.com/roflsunriz/filter-ma
 
 ### 参考資料
 
-- [拡張機能のインストールガイド](https://w.atwiki.jp/nicocachenlwiki/pages/21.html)
-- [拡張機能のアップデート手順](https://w.atwiki.jp/nicocachenlwiki/pages/25.html)
+- [拡張機能](https://roflsunriz.github.io/setup-nicocache-nl/extensions/)
 
 ---
 
 ### 1.1 Symlink Setup (Required)
 
-NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\local\list.js` の固定パス・固定名で参照します。
+NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\local\list.js` の固定パス・固定名で参照する。
 
-ビルド成果物（例: `cache-data-manager.iife.js`）へこの固定パス名で**シンボリックリンクを作成**しないと機能しません。
+ビルド成果物（例: `cache-data-manager.iife.js`）へこの固定パス名で**シンボリックリンクを作成**しないと機能しない。
 
-**要約（Windows / PowerShell）※管理者権限が必要です**
+**要約（Windows / PowerShell）※管理者権限が必要**
 
+Windows + R -> 「wt」または「wt.exe」と入力 -> Ctrl + Shift + Enter -> UAC「はい」
 ```powershell
 # 既存の list.js / list.js.map を削除
 Remove-Item -Path "C:\NicoCache_nl\local\list.js"
@@ -78,7 +78,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js" -Target "C
 New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Target "C:\NicoCache_nl\local\features\dist\cache-data-manager.iife.js.map"
 ```
 
-詳細な手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照してください。
+詳細な手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照。
 
 ---
 
@@ -86,15 +86,15 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 **注意事項：**
 
-- 毎回リリースノートを確認してください。
-- 各 nlFilter は`<link rel="...">`や`<script src="...">`で`./local/features/*`から呼び出す形になっているものが多いため、ファイルの更新日が変わっていないことがあることに注意してください。更新による差分を見たいときは[WinMerge](https://winmerge.org/?lang=ja)が便利です。
-- また、nlFilters フォルダから削除された nlFilter(txt)や、local/features から削除された css,js ファイル、または中身のないファイル群は deprecated(廃止予定)又は abolition(廃止)としているため削除してください。
+- 毎回リリースノートを確認すること。
+- 各 nlFilter は`<link rel="...">`や`<script src="...">`で`./local/features/*`から呼び出す形になっているものが多いため、ファイルの更新日が変わっていないことがあることに注意する。更新による差分を見たいときは[WinMerge](https://winmerge.org/?lang=ja)が便利。
+- また、nlFilters フォルダから削除された nlFilter(txt)や、local/features から削除された css,js ファイル、または中身のないファイル群は deprecated(廃止予定)又は abolition(廃止)としているため削除すること。
 
 **免責事項：**
 
-- 全てのフィルタは同時使用を前提に設計しているため、自分で勝手に取捨選択した結果動作しなくても動作保証外・サポート（返信）対象外とします。
-- 基本的にこのフィルタは私が使用しているものをお裾分けしているという形を取っている為、**あなたが自分で変更・改変・改造した結果不具合が起きても私は一切の責任を負いません。自身の力に於いて解決**してください。困ったらクリーンインストール！
-- MITライセンス(MIT license)[(日本語訳リンク)](https://licenses.opensource.jp/MIT/MIT.html)を宣言します。改変・再配布・商用利用・非商用利用等自由、但し再配布する際に私の名前(◆awd5z.AlOFJq)を明記してください。
+- 全てのフィルタは同時使用を前提に設計しているため、自分で勝手に取捨選択した結果動作しなくても動作保証外・サポート（返信）対象外とする。
+- 基本的にこのフィルタは私が使用しているものをお裾分けしているという形を取っている為、**あなたが自分で変更・改変・改造した結果不具合が起きても私は一切の責任を負わない。自身の力に於いて解決**すること。困ったらクリーンインストール！
+- MITライセンス(MIT license)[(日本語訳リンク)](https://licenses.opensource.jp/MIT/MIT.html)を宣言する。改変・再配布・商用利用・非商用利用等自由、但し再配布する際に私の名前(roflsunriz)を明記すること。
 
 ---
 
@@ -108,29 +108,29 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 ### 102_mlink_video_controller.txt
 
-![リンクとステータス](resources/mlink-video-controller1.avif)
+![リンクとステータス](../resources/mlink-video-controller1.avif)
 
-![リンクとステータス](resources/mlink-video-controller2.avif)
+![リンクとステータス](../resources/mlink-video-controller2.avif)
 
 mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動、メディア情報表示、リンクなどを提供する。ビデオの再生速度変更やフレーム単位でのシーク機能、音量の微細な調整機能、トラッカー、再生・一時停止、コメント正規表現検索、動画ダウンロードリンク、コメントダウンロードリンク、キャッシュ削除リンク、movie-infoダッシュボード、その他たくさんのリンクを`/watch/`ページで提供する。
 
 ### 103_comment_filter2.txt
 
-![コメントフィルタ1](resources/comment-filter-2-1.avif)
+![コメントフィルタ1](../resources/comment-filter-2-1.avif)
 
-![コメントフィルタ2](resources/comment-filter-2-2.avif)
+![コメントフィルタ2](../resources/comment-filter-2-2.avif)
 
 ニコニコ動画公式のNGワード機能が極めて貧弱なので、この機能で非常に強力なNG機能を提供する。基本的に、UIの説明通りにNGワード等を入力して保存するだけ。comment-filter2を表示させるにはmlink-video-controller内のリンクが必要。ℹ️マークを押すと説明ページに飛ぶ。またテキストフィールドのレーベルにマウスをホバーさせると詳細な情報が表示される。
 
 ### 104_video_player.txt
 
-![カスタムキャッシュ](resources/cache.avif)
+![カスタムキャッシュ](../resources/cache.avif)
 
 キャッシュ済みの有料動画（視聴期限切れ）などをコメント付きで視聴するための機能。正しいIDを動画ファイルに指定し、cacheフォルダに置くことで任意の動画に任意のコメントを被せて視聴することも可能。mlink-video-controller内のモジュールのDeletedVideoDetectorで削除済み動画を検知し、その動画をこのプレイヤーで再生する機能も有する。
 
 再生されない場合、多くの場合タイミングが問題なのでF5かCtrl+F5(キャッシュを無視したハードリロード)で解決する。`/local/cache/` フォルダ以下に `（動画ID）.hls` フォルダまたは `（動画ID）.mp4` キャッシュを置いてもキャッシュを利用して再生する。
 
-※mp4ファイルの動画の場合、scripts/convert-to-faststart.ps1を実行してfaststart化してください。faststartとは、mp4ファイルのmoovアトムをファイルの先頭に移動させ、ストリーミング再生に最適化するための技術です。これにより、再生が高速化されます。
+※mp4ファイルの動画の場合、scripts/convert-to-faststart.ps1を実行してfaststart化すること。faststartとは、mp4ファイルのmoovアトムをファイルの先頭に移動させ、ストリーミング再生に最適化する技術。これにより、再生が高速化される。
 
 > **注意**
 >
@@ -138,15 +138,15 @@ mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動�
 
 ### 105_premium_hide.txt
 
-![適用前](resources/premium-recruit-hide-1.png)
+![適用前](../resources/premium-recruit-hide-1.png)
 
-![適用後](resources/premium-recruit-hide-2.png)
+![適用後](../resources/premium-recruit-hide-2.png)
 
 コモンヘッダーのプレミアム会員勧誘要素を非表示にする。
 
 ### 106_watch_history.txt
 
-![視聴履歴](resources/watch-history.avif)
+![視聴履歴](../resources/watch-history.avif)
 
 視聴履歴のページを追加し([こちら](https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html))、視聴ログを表示するようにした。ブラウザの容量が許す限り履歴を保存するようにした。統計も利用可能。
 
@@ -160,9 +160,9 @@ mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動�
 
 ## 3. Enabling/Disabling Filters
 
-[nlFilter の文法](https://w.atwiki.jp/nicocachenlwiki/pages/17.html)を参照
+[nlFilter の文法](https://roflsunriz.github.io/setup-nicocache-nl/nl-filters-syntax/)を参照
 
-必要に応じてコメントアウトされているフィルタを有効にしたり、無効にしたりする。有効化されている状態とは、[Replace]/[Script]/[Style]/[Request]と書かれている状態で、無効化されている状態とは、そのカギカッコの前に半角シャープ記号を書き足した状況、つまり#[Replace]#[Script]#[Style]#[Request]のような状態のことである。
+必要に応じてコメントアウトされているフィルタを有効にしたり、無効にしたりする。有効化されている状態とは、[Replace]/[Script]/[Style]/[Request]と書かれている状態で、無効化されている状態とは、そのカギカッコの前に半角シャープ記号を書き足した状況、つまり#[Replace]#[Script]#[Style]#[Request]のような状態のこと。
 
 **使用例：**
 
@@ -172,13 +172,13 @@ mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動�
 
 nlFiltersのシンタックスハイライト機能は[NLF Code](https://github.com/roflsunriz/NLF-Code)が利用可能。
 
-![フィルタ切り替え画面](resources/toggle.png)
+![フィルタ切り替え画面](../resources/toggle.png)
 
 ---
 
 ## 4. Watch Page Background Image Settings
 
-![背景画像](resources/background-image-settings.avif)
+![背景画像](../resources/background-image-settings.avif)
 
 [CSS: カスケーディングスタイルシート:MDN](https://developer.mozilla.org/ja/docs/Web/CSS)を参照
 
@@ -200,7 +200,7 @@ nico_wallpaperGと併用している場合衝突が起きるのでそのとき�
 
 ### ブラウザデータ削除時の注意
 
-以下の操作を行うと設定データが消去されます：
+以下の操作を行うと設定データが消去される：
 
 - サイトデータの削除
 - オフライン作業用データの削除
@@ -221,7 +221,7 @@ nico_wallpaperGと併用している場合衝突が起きるのでそのとき�
 2. エクスポートファイルを安全な場所に保存
 3. データ削除後に「インポート」で復元
 
-保存されている各データはWebサイトにフォーカスがある状態でF12キーを押すと開発者ツールが開き、「ストレージ」タブや「アプリケーション」タブで確認できます。
+保存されている各データはWebサイトにフォーカスがある状態でF12キーを押すと開発者ツールが開き、「ストレージ」タブや「アプリケーション」タブで確認できる。
 
 ### 各機能のエクスポート方法
 
@@ -242,7 +242,7 @@ nico_wallpaperGと併用している場合衝突が起きるのでそのとき�
 
 The MIT License
 
-Copyright (c) 2017-2025 ◆awd5z.AlOFJq
+Copyright (c) 2017-2026 roflsunriz
 
 本ソフトウェアおよび関連する文書のファイル（以下「ソフトウェア」）の複製を取得した全ての人物に対し、以下の条件に従うことを前提に、ソフトウェアを無制限に扱うことを無償で許可します。これには、ソフトウェアの複製を使用、複製、改変、結合、公開、頒布、再許諾、および/または販売する権利、およびソフトウェアを提供する人物に同様の行為を許可する権利が含まれますが、これらに限定されません。
 
@@ -254,7 +254,7 @@ Copyright (c) 2017-2025 ◆awd5z.AlOFJq
 
 The MIT License
 
-Copyright 2017-2025 ◆awd5z.AlOFJq
+Copyright 2017-2026 roflsunriz
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -262,7 +262,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-法的に有効なのは英語版のライセンス条文のみです。詳細は[MITライセンス（日本語訳）](https://licenses.opensource.jp/MIT/MIT.html)と[MITライセンス（英語原文）](https://opensource.org/license/mit)を参照してください。
+法的に有効なのは英語版のライセンス条文のみ。詳細は[MITライセンス（日本語訳）](https://licenses.opensource.jp/MIT/MIT.html)と[MITライセンス（英語原文）](https://opensource.org/license/mit)を参照。
 
 </details>
 
@@ -284,7 +284,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 - [おーぷん2ちゃんねる スレッド](https://ana.open2ch.net/test/read.cgi/software/1675001508/)
 - [Talkスレッド](https://talk.jp/boards/software/1675038388)
 - [開発スレッド](https://sportschan.org/librejp/thread/16592.html)
-- [NicoCache_nl Wiki](https://w.atwiki.jp/nicocachenlwiki/pages/1.html)
+- [NicoCache_nl Usage Guide](https://roflsunriz.github.io/setup-nicocache-nl/regex/)
 - [ファイル置き場 避難所3](https://nicocache.jpn.org/)
 
 ### 開発資料

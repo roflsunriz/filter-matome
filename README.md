@@ -60,7 +60,7 @@ winget install Google.Chrome
 
 1. **NicoCache_nl本体の導入**
    ```bash
-   # NicoCache_nl Wikiを参照してインストール
+   # NicoCache_nl Usage Guideを参照してインストール
    ```
    [インストール方法](https://roflsunriz.github.io/setup-nicocache-nl/install-win/)
 
@@ -200,20 +200,14 @@ Append<
 
 ## 📚 ドキュメント
 
-- **使い方ガイド**: [docs/USAGE.md](docs/USAGE.md)
+- **使い方ガイド**: [ガイド](https://roflsunriz.github.io/filter-matome/)
 - **変更履歴**: [CHANGELOG.md](CHANGELOG.md)
-- **Issue/Feature Requestの作り方**: [docs/how-to-make-an-issue.md](docs/how-to-make-an-issue.md)
-- **シンボリックリンク作成手順 (必須)**: [docs/creating-symlink-for-listjs.md](docs/creating-symlink-for-listjs.md)
-- シンボリックリンクはNicoCache_nlのキャッシュマネージャを使用する際に必須です。
-- **機能別ドキュメント**
-  - [Comment Filter2](docs/comment-filter2.md)
-  - [Mylist2](docs/mylist2.md)
 
 
 ## ⚠️ 重要な注意事項
 
 ### シンボリックリンク作成（必須）
-NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\local\list.js` という固定パス・固定名で参照します。ビルド成果物（例: `cacheDataManager.iife.js`）へこの固定パス名でシンボリックリンクを作成しないと機能しません。詳細手順は [docs/creating-symlink-for-listjs.md](docs/creating-symlink-for-listjs.md) を参照してください。
+NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\local\list.js` という固定パス・固定名で参照します。ビルド成果物（例: `cacheDataManager.iife.js`）へこの固定パス名でシンボリックリンクを作成しないと機能しません。詳細手順はガイドを参照してください。
 
 
 ### 使用上の注意
@@ -254,7 +248,7 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 
 ## 📄 ライセンス
 
-MIT License - Copyright (c) 2017-2026 ◆awd5z.AlOFJq(roflsunriz)
+MIT License - Copyright (c) 2017-2026 roflsunriz
 
 私の名前を明記している限り、本ソフトウェアは自由に使用、複製、改変、配布、商用利用、非商用利用できます。詳細は[LICENSE](LICENSE)ファイルをご覧ください。
 
