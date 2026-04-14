@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#220] - 2026-04-15
+
+### Added
+- 【scripts】`filter-matome` から `NicoCache_nl` へまとめてシンボリックリンクを作成する `create-all-symlinks.ps1` を追加。
+- 【scripts】`create-all-symlinks.ps1` 用の README を追加し、使い方・オプション・必要条件・トラブルシューティングを整理。
+
+### Changed
+- 【docs】`how-to-update.md` を更新し、前回のリリースタグからのコミット履歴を参照して詳細な CHANGELOG を作成する手順を明記。
+- 【docs】ルート README と関連ドキュメントを整理し、ドキュメント群の配置変更後の案内を反映。
+- 【scripts】`create-all-symlinks.ps1` を対話入力と引数指定の両方に対応させ、dry-run 時の挙動とリンクマッピングを改善。
+- 【mylist2】クラウドバックアップの対象を Google Drive のみに整理し、Dropbox / OneDrive / MEGA のサポートを削除。
+- 【ci】リリースアーカイブに `docs/` フォルダを含めるように変更。
+
+### Fixed
+- 【scripts】`create-all-symlinks.ps1` の `Split-Path` パラメータセット競合を修正し、dry-run 時に親ディレクトリがなくても処理を継続できるように改善。
+- 【scripts】`nlFilters/extensions` のリンク先パスから `local\` を除去し、要件に合わせて修正。
+- 【scripts】`nicocache-utility.py` 内のバッチファイル名参照を `nico-cache-gui-launcher.bat` に統一。
+
 ## [#219] - 2026-02-22
 
 ### Changed
