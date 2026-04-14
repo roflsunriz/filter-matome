@@ -36,11 +36,25 @@
 ## 📦 導入方法
 
 ### 前提条件
-- [NicoCache_nl](https://w.atwiki.jp/nicocachenlwiki/) 本体のインストール
-- [Adoptium Temurin OpenJDK 17 LTS](https://adoptium.net/temurin/releases?version=17&os=any&arch=any) 17.0.17+10 以上 又は [Adoptium Temurin OpenJDK 21 LTS](https://adoptium.net/temurin/releases?version=21&os=any&arch=any) 21.0.9+10-LTS 以上
-- [Apache Ant](https://ant.apache.org/bindownload.cgi) 1.10.15 以上
-- [Boucy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest) 1.8.3 以上 (PKIX/CMS/EAC/PKCS/OCSP/TSP/OPENSSL(bcpkix), Provider(bcprov), ASN.1 Utility Classes(bcutil))
-- 対応ブラウザ: [Firefox](https://www.firefox.com/ja/download/all/desktop-release/) 147 以上(推奨), [Chrome](https://www.google.com/chrome/other-platforms/) 144.0.7559.59/60 以上
+- [NicoCache_nl](https://roflsunriz.github.io/setup-nicocache-nl/) 本体のインストール
+- [Adoptium Temurin OpenJDK 17 LTS](https://adoptium.net/temurin/releases?version=17&os=any&arch=any)
+```powershell
+winget install EclipseAdoptium.Temurin.17.JDK
+```
+- または [Adoptium Temurin OpenJDK 21 LTS](https://adoptium.net/temurin/releases?version=21&os=any&arch=any)
+```powershell
+winget install EclipseAdoptium.Temurin.21.JDK
+```
+- [Apache Ant](https://ant.apache.org/bindownload.cgi)
+- [Boucy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest) (PKIX/CMS/EAC/PKCS/OCSP/TSP/OPENSSL(bcpkix), Provider(bcprov), ASN.1 Utility Classes(bcutil))
+- 対応ブラウザ: [Firefox](https://www.firefox.com/ja/download/all/desktop-release/)(推奨)
+```powershell
+winget install Mozilla.Firefox.ja
+```
+- または [Chrome](https://www.google.com/chrome/other-platforms/)
+```powershell
+winget install Google.Chrome
+```
 
 ### インストール手順
 
@@ -48,7 +62,7 @@
    ```bash
    # NicoCache_nl Wikiを参照してインストール
    ```
-   [インストール方法](https://w.atwiki.jp/nicocachenlwiki/pages/30.html)
+   [インストール方法](https://roflsunriz.github.io/setup-nicocache-nl/install-win/)
 
 2. **フィルター群の配置**
    ```bash
@@ -221,7 +235,7 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 ## 🔗 関連リンク
 
 ### コミュニティ
-- [NicoCache_nl Wiki](https://w.atwiki.jp/nicocachenlwiki/)
+- [NicoCache_nl Usage Guide](https://roflsunriz.github.io/setup-nicocache-nl/)
 - [5ちゃんねる 本スレッド](https://find.5ch.net/search?q=NicoCache)
 - [Talk スレッド](https://talk.jp/boards/software/1675038388)
 - [おーぷん2ちゃんねる スレッド](https://ana.open2ch.net/test/read.cgi/software/1675001508/)
