@@ -29,3 +29,6 @@ scripts/config.json
 
 # dist
 local/features/dist/
+
+# MkDocs
+.mkdocs-build/

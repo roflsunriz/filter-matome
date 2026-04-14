@@ -200,8 +200,21 @@ Append<
 
 ## 📚 ドキュメント
 
-- **使い方ガイド**: [ガイド](https://roflsunriz.github.io/filter-matome/)
+- **ドキュメントサイト**: [https://roflsunriz.github.io/filter-matome/](https://roflsunriz.github.io/filter-matome/)
+- **使い方ガイド**: [USAGE](https://roflsunriz.github.io/filter-matome/USAGE/)
 - **変更履歴**: [CHANGELOG.md](CHANGELOG.md)
+
+### ドキュメント開発
+```bash
+pip install -r requirements-docs.txt
+./scripts/serve-docs.ps1
+```
+
+個別実行する場合:
+```bash
+python scripts/prepare_mkdocs_docs.py
+mkdocs serve
+```
 
 
 ## ⚠️ 重要な注意事項

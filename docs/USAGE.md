@@ -1,36 +1,5 @@
 # Usage Guide
 
-> Author: roflsunriz  
-> Last updated: 2026-04-15  
-
-## Table of Contents
-
-- [Table of Contents](#table-of-contents)
-- [1. Installation](#1-installation)
-  - [標準手順](#標準手順)
-  - [クリーンインストール手順](#クリーンインストール手順)
-  - [参考資料](#参考資料)
-  - [1.1 Symlink Setup (Required)](#11-symlink-setup-required)
-- [2. Filter Descriptions](#2-filter-descriptions)
-  - [100\_common.txt](#100_commontxt)
-  - [101\_disable\_official\_function.txt](#101_disable_official_functiontxt)
-  - [102\_mlink\_video\_controller.txt](#102_mlink_video_controllertxt)
-  - [103\_comment\_filter2.txt](#103_comment_filter2txt)
-  - [104\_video\_player.txt](#104_video_playertxt)
-  - [105\_premium\_hide.txt](#105_premium_hidetxt)
-  - [106\_watch\_history.txt](#106_watch_historytxt)
-- [3. Enabling/Disabling Filters](#3-enablingdisabling-filters)
-- [4. Watch Page Background Image Settings](#4-watch-page-background-image-settings)
-- [5. Important: Data Deletion Warning](#5-important-data-deletion-warning)
-  - [ブラウザデータ削除時の注意](#ブラウザデータ削除時の注意)
-  - [各機能のエクスポート方法](#各機能のエクスポート方法)
-- [6. License](#6-license)
-- [7. Related Links](#7-related-links)
-  - [開発ツール](#開発ツール)
-  - [コミュニティ](#コミュニティ)
-  - [開発資料](#開発資料)
-  - [拡張機能](#拡張機能)
-
 ---
 
 ## 1. Installation
