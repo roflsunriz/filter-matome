@@ -18,11 +18,14 @@ theme:
 
 nav:
   - ホーム: index.md
-  - 使い方ガイド: USAGE.md
-  - comment-filter2: comment-filter2.md
-  - mylist2: mylist2.md
-  - Issue の作り方: how-to-make-an-issue.md
-  - list.js シンボリックリンク作成: creating-symlink-for-listjs.md
+  - filter-matome:
+    - 使い方ガイド README: USAGE.md
+    - list.js シンボリックリンク作成: creating-symlink-for-listjs.md
+  - 機能別ドキュメント:
+    - mylist2 README: mylist2.md
+    - comment-filter2 README: comment-filter2.md
+  - Github:
+    - Issue の作り方: how-to-make-an-issue.md
 
 plugins:
   - search

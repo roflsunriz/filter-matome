@@ -2,13 +2,18 @@
 
 filter-matome の導入手順、各機能の使い方、補助資料をまとめたドキュメントサイトです。
 
-## 主要ドキュメント
+## filter-matome
 
-- [使い方ガイド](USAGE.md)
-- [comment-filter2](comment-filter2.md)
-- [mylist2](mylist2.md)
-- [GitHubでIssue / Feature Requestを作成する方法](how-to-make-an-issue.md)
+- [使い方ガイド README](USAGE.md)
 - [NicoCache_nl 用 list.js シンボリックリンク作成手順](creating-symlink-for-listjs.md)
+
+## 機能別ドキュメント
+- [mylist2 README](mylist2.md)
+- [comment-filter2 README](comment-filter2.md)
+
+## GitHub
+- [GitHubでIssue / Feature Requestを作成する方法](how-to-make-an-issue.md)
+
 
 ## 補足
 
