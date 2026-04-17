@@ -6,12 +6,11 @@ on:
       - main
     paths:
       - "docs/**"
-      - "resources/**"
+      - "docs/resources/**"
       - "local/images/**"
       - "README.md"
       - "mkdocs.yml"
       - "requirements-docs.txt"
-      - "scripts/prepare_mkdocs_docs.py"
       - "scripts/mkdocs_hooks.py"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
@@ -48,9 +47,6 @@ jobs:
 
       - name: Set build date
         run: echo "DOCS_BUILD_DATE=$(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M JST')" >> "$GITHUB_ENV"
-
-      - name: Prepare MkDocs sources
-        run: python scripts/prepare_mkdocs_docs.py
 
       - name: Build site
         run: mkdocs build --strict
