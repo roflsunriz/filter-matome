@@ -77,23 +77,23 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 ### 102_mlink_video_controller.txt
 
-![リンクとステータス](../resources/mlink-video-controller1.avif)
+![リンクとステータス](resources/mlink-video-controller1.avif)
 
-![リンクとステータス](../resources/mlink-video-controller2.avif)
+![リンクとステータス](resources/mlink-video-controller2.avif)
 
 mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動、メディア情報表示、リンクなどを提供する。ビデオの再生速度変更やフレーム単位でのシーク機能、音量の微細な調整機能、トラッカー、再生・一時停止、コメント正規表現検索、動画ダウンロードリンク、コメントダウンロードリンク、キャッシュ削除リンク、movie-infoダッシュボード、その他たくさんのリンクを`/watch/`ページで提供する。
 
 ### 103_comment_filter2.txt
 
-![コメントフィルタ1](../resources/comment-filter-2-1.avif)
+![コメントフィルタ1](resources/comment-filter-2-1.avif)
 
-![コメントフィルタ2](../resources/comment-filter-2-2.avif)
+![コメントフィルタ2](resources/comment-filter-2-2.avif)
 
 ニコニコ動画公式のNGワード機能が極めて貧弱なので、この機能で非常に強力なNG機能を提供する。基本的に、UIの説明通りにNGワード等を入力して保存するだけ。comment-filter2を表示させるにはmlink-video-controller内のリンクが必要。ℹ️マークを押すと説明ページに飛ぶ。またテキストフィールドのレーベルにマウスをホバーさせると詳細な情報が表示される。
 
 ### 104_video_player.txt
 
-![カスタムキャッシュ](../resources/cache.avif)
+![カスタムキャッシュ](resources/cache.avif)
 
 キャッシュ済みの有料動画（視聴期限切れ）などをコメント付きで視聴するための機能。正しいIDを動画ファイルに指定し、cacheフォルダに置くことで任意の動画に任意のコメントを被せて視聴することも可能。mlink-video-controller内のモジュールのDeletedVideoDetectorで削除済み動画を検知し、その動画をこのプレイヤーで再生する機能も有する。
 
@@ -107,15 +107,15 @@ mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動�
 
 ### 105_premium_hide.txt
 
-![適用前](../resources/premium-recruit-hide-1.png)
+![適用前](resources/premium-recruit-hide-1.png)
 
-![適用後](../resources/premium-recruit-hide-2.png)
+![適用後](resources/premium-recruit-hide-2.png)
 
 コモンヘッダーのプレミアム会員勧誘要素を非表示にする。
 
 ### 106_watch_history.txt
 
-![視聴履歴](../resources/watch-history.avif)
+![視聴履歴](resources/watch-history.avif)
 
 視聴履歴のページを追加し([こちら](https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html))、視聴ログを表示するようにした。ブラウザの容量が許す限り履歴を保存するようにした。統計も利用可能。
 
@@ -141,13 +141,13 @@ mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動�
 
 nlFiltersのシンタックスハイライト機能は[NLF Code](https://github.com/roflsunriz/NLF-Code)が利用可能。
 
-![フィルタ切り替え画面](../resources/toggle.png)
+![フィルタ切り替え画面](resources/toggle.png)
 
 ---
 
 ## 4. Watch Page Background Image Settings
 
-![背景画像](../resources/background-image-settings.avif)
+![背景画像](resources/background-image-settings.avif)
 
 [CSS: カスケーディングスタイルシート:MDN](https://developer.mozilla.org/ja/docs/Web/CSS)を参照
 

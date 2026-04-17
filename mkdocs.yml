@@ -5,7 +5,7 @@ repo_url: https://github.com/roflsunriz/filter-matome
 repo_name: roflsunriz/filter-matome
 edit_uri: edit/main/docs/
 
-docs_dir: .mkdocs-build/docs
+docs_dir: docs
 site_dir: .mkdocs-build/site
 
 theme:

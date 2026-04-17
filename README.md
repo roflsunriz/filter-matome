@@ -158,7 +158,7 @@ nlFilters/
 ├── 105_premium_hide.txt            # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
 └── 106_watch_history.txt           # 視聴履歴(視聴ページにウォッチトラッカーを追加)
 
-resources/                 # USAGE.mdで使われる画像リソース
+docs/resources/            # USAGE.mdで使われる画像リソース
 ```
 
 ### ビルド方法
@@ -207,12 +207,6 @@ Append<
 ### ドキュメント開発
 ```bash
 pip install -r requirements-docs.txt
-./scripts/serve-docs.ps1
-```
-
-個別実行する場合:
-```bash
-python scripts/prepare_mkdocs_docs.py
 mkdocs serve
 ```
 
