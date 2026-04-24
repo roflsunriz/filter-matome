@@ -32,3 +32,7 @@ local/features/dist/
 
 # MkDocs
 .mkdocs-build/
+
+# Claw-Code
+.claw/
+CLAUDE.md
