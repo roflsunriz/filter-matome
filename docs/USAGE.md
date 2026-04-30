@@ -169,7 +169,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 - `C:\NicoCache_nl\local\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`し、該当動画IDのページを開く。 
 
 !!! note
-    mp4ファイルをscripts/convert-to-faststart.ps1でfaststart変換すると、読み込みから再生開始までの待ち時間が短縮される。
+    mp4ファイルを`scripts/convert-to-faststart.ps1`でfaststart変換すると、読み込みから再生開始までの待ち時間が短縮される。
 
 
 ### 105_premium_hide.txt
