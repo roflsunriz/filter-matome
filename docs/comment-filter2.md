@@ -18,9 +18,48 @@ CommentFilter2 は、ニコニコ動画のコメントを **強力にフィル�
 ```json
 {
   "pattern": "正規表現パターン",
+  "flags": "正規表現フラグ",
+  "action": { "type": "アクションタイプ", "replacement": "置換後文字列(replaceのときのみ)" },
+  "smid": ["動画ID指定"],
+  "enabled": 有効・無効
+}
+```
+
+実際の指定例  
+
+niconicoをhogehogeに置換（無効）  
+
+```json
+{
+  "pattern": "(?:nico){2}",
+  "flags": "gim",
+  "action": { "type": "replace", "replacement": "hogehoge" },
+  "smid": ["sm123", "sm456", "so123"],
+  "enabled": false
+}
+```
+
+niconicoを非表示（有効）  
+
+```json
+{
+  "pattern": "(?:nico){2}",
   "flags": "gi",
-  "action": { "type": "replace", "replacement": "置換後文字列" },
-  "smid": ["ALL"],
+  "action": { "type": "hide" },
+  "smid": ["sm123", "sm456", "so123"],
+  "enabled": true
+}
+```
+
+改行を含むあらゆる文字列がニコる数5以上のときcomment-filter2の動作から除外  
+
+```json
+{
+  "pattern": "[\\s\\S]+",
+  "flags": "gi",
+  "action": { "type": "unspecified" },
+  "smid": ["sm123", "sm456", "so123"],
+  "nicoru_cond": {"op": ">=", "value": 5, "mode": "exclude"},
   "enabled": true
 }
 ```
@@ -79,7 +118,13 @@ CommentFilter2 は、ニコニコ動画のコメントを **強力にフィル�
 "nicoru_cond": {"op": "range", "value": [3, 10], "mode": "include"}
 ```
 
-- **演算子**: `=` / `>` / `<` / `>=` / `<=` / `range`
+- **演算子**:
+  - `=`: 等しい
+  - `>`: より大きい
+  - `<`: より小さい
+  - `>=`: 以上
+  - `<=`: 以下
+  - `range`: 範囲指定
 - **モード**: `include`（条件に合致するもののみ） / `exclude`（条件に合致するものを除外）
 
 ### その他のオプション
@@ -116,6 +161,7 @@ CommentFilter2 は、ニコニコ動画のコメントを **強力にフィル�
 【改行リサイズ無効】`ender`  
 【従来保持方式へ変更】`patissier`  
 【ニコられても消えにくくしない】`ca`
+【色】`white` / `red` / `pink` / `orange` / `yellow` / `green` / `cyan` / `blue` / `purple` / `black` / `white2` / `red2` / `pink2` / `orange2` / `yellow2` / `green2` / `cyan2` / `blue2` / `purple2` / `black2` / `#RRGGBB`
 
 入力例: `small,gothic,_live,#004e72`
 
