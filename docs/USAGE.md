@@ -4,7 +4,7 @@
 
 ## 1. Installation
 
-GitHubページのリリースページ(<https://github.com/roflsunriz/filter-matome/releases>)からダウンロードすること。
+GitHubページの[リリースページ](https://github.com/roflsunriz/filter-matome/releases)からダウンロードすること。
 
 !!! warning "注意事項"
 
