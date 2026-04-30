@@ -14,13 +14,33 @@ GitHubページのリリースページ(<https://github.com/roflsunriz/filter-ma
 問題を発見した場合は[GitHubのIssue](https://github.com/roflsunriz/filter-matome/issues)にて報告する。あるいはIssueで相談してからPull Requestを送る。
 
 ### 標準手順
+`$env:USERPROFILE\Downloads`にダウンロードしたとする  
+  
+1. 7zファイル`filter-matome-.xxx.7z`を7-zipで展開する  
+2. `$env:USERPROFILE\Downloads\filter-matome-.xxx\NicoCache_nl`にある`extensions`, `local`, `scripts`, `nlFilters`を `C:\NicoCache_nl`に上書きコピーする  
 
-1. 新しいバージョンのファイルをnlFilters,extensionsに上書きコピー
-2. `local/background-images,local/features,loca/images`フォルダ、mime.typesファイルを上書き更新
+    !!! note
+
+        `scripts` フォルダは便利なスクリプトがひとまとめになっているが使わないなら必ずしもコピー必須ではない
+
+3. NicoCache_nlを再起動する
+
+        Stop-Process -Name java -Force
+        Stop-Process -Name javaw -Force
+        Set-Location $env:NICOCACHE_HOME
+        Start-Process pwsh -ArgumentList "-WindowStyle Hidden -File `"$env:NICOCACHE_HOME\RunNicoCache.ps1`""
 
 ### クリーンインストール手順
 
-`nlFilters`から100*〜199*.txtを削除後、ダウンロード済みパッケージの構成とNicoCache_nlのファイル構成を比べて必要なファイルのみを残したあと標準手順を実行する。
+`C:\NicoCache_nl`にインストールしたとする  
+
+1. `C:\NicoCache_nl`フォルダを開く  
+2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `nlMediaInfo.class`を削除する  
+3. `local`フォルダにある`background-images`, `features`, `images`, フォルダ, `mime.types`, `list.js` のシンボリックリンクを削除する  
+4. `scripts`フォルダを削除する  
+5. `nlFilters`フォルダの `100_common.txt`, `101_disable_official_function.txt`, `102_mlink_video_controller.txt`, `103_comment_filter2.txt`, `104_video_player.txt`, `105_premium_hide.txt`, `106_watch_history.txt`, `nlFilters_編集ガイド.md`を削除する  
+6. NicoCache_nlを再起動する  
+7. 上記標準手順に従ってインストールする  
 
 ### 参考資料
 
@@ -32,7 +52,7 @@ GitHubページのリリースページ(<https://github.com/roflsunriz/filter-ma
 
 NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\local\list.js` の固定パス・固定名で参照する。
 
-ビルド成果物（例: `cache-data-manager.iife.js`）へこの固定パス名で**シンボリックリンクを作成**しないと機能しない。
+ビルド成果物（ `local/features/dist/cache-data-manager.iife.js`）へこの固定パス名で**シンボリックリンクを作成**しないと機能しない。
 
 **要約（Windows / PowerShell）※管理者権限が必要**
 
@@ -56,8 +76,8 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 **注意事項：**
 
 - 毎回リリースノートを確認すること。
-- 各 nlFilter は`<link rel="...">`や`<script src="...">`で`./local/features/*`から呼び出す形になっているものが多いため、ファイルの更新日が変わっていないことがあることに注意する。更新による差分を見たいときは[WinMerge](https://winmerge.org/?lang=ja)が便利。
-- また、nlFilters フォルダから削除された nlFilter(txt)や、local/features から削除された css,js ファイル、または中身のないファイル群は deprecated(廃止予定)又は abolition(廃止)としているため削除すること。
+- 各 nlFilter は`<link rel="...">`や`<script src="...">`で`./local/features/*`から呼び出す形になっているため、ファイルの更新日が変わっていないことがあることに注意する。更新による差分を見たいときは[WinMerge](https://winmerge.org/?lang=ja)が便利。
+- また、`nlFilters` フォルダから削除された nlFilter(txt)や、local/features から削除された css,js ファイル、または中身のないファイル群は deprecated(廃止予定)又は abolition(廃止)としているため削除すること。
 
 **免責事項：**
 
@@ -79,9 +99,49 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 ![リンクとステータス](resources/mlink-video-controller1.avif)
 
-![リンクとステータス](resources/mlink-video-controller2.avif)
+![リンクとステータス2](resources/mlink-video-controller2.avif)
 
-mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動、メディア情報表示、リンクなどを提供する。ビデオの再生速度変更やフレーム単位でのシーク機能、音量の微細な調整機能、トラッカー、再生・一時停止、コメント正規表現検索、動画ダウンロードリンク、コメントダウンロードリンク、キャッシュ削除リンク、movie-infoダッシュボード、その他たくさんのリンクを`/watch/`ページで提供する。
+ニコニコ動画の視聴ページを開くと、右下に紫色のメニューが現れる。そのメニューを開くと、順に、コメントヒートマップと再生関連の微調整タブ、音量微調整タブ、再生速度変更タブ、コメント検索タブ、関連リンクタブ、モジュール設定タブに切り替えられる。  
+
+再生関連タブでは、シークバーによる位置調整、ヒートマップ切り替え、0:00に戻るボタン、再生一時停止切り替え、最後までスキップ、繰り返し再生、秒数指定スキップ、ワンクリック秒数スキップボタンがある。  
+
+音量タブでは、音量バーによる調整、音量ゼロ、微小、最大、各パーセンテージによる調整ができる。  
+
+再生速度タブでは再生速度調整バーとワンクリックボタンによる変更ができる。  
+
+コメント検索タブでは通常表現と正規表現による検索ができる。詳細表示チェックボックスをオンにすると、ID, No., 投稿日時, コメントコマンド, プレミアムステータス, スコアといった情報が表示される。  
+
+関連リンクタブでは、filter-matome関連リンク、niconico関連リンク、NicoCache_nlリンクが表示される。  
+`キャッシュリスト`の使用には上記キャッシュデータ用マネージャのシンボリックリンクセットアップが必要。その他、`保存:動画`, `保存:音声`のリンクの動作には `downloadThruFFmpeg.class` が必要。 動画または音声の保存時はJavaによるファイルダイアログが出るのでタスクバーにあるNicoCacheのアイコンをダブルクリックしてファイルダイアログをフォアグラウンドに移動したほうがよい。（自動でフォアグラウンドにならないため） `Processing Started`となるとダウンロード処理開始。 `保存:コメント` は現在NicoCache_nl本体自体が最新のコメントデータ形式に未対応のため動作していない。  
+
+モジュールタブではmlink-video-controllerに統合された各種機能モジュールのオン・オフができる。  
+
+`ヘッダープライバシー`モジュールはニコニコ動画のコモンヘッダー（画面上部の黒いヘッダ）に表示されるユーザー名とアイコンを非表示にできる。スクリーンショットでユーザー名を共有したくない場合に便利。  
+
+`検索結果8列表示`モジュールは現在新検索に移行したため非対応（動作しない）  
+
+`デイリー福引ハイライト`モジュールはニコニコインフォで配布されているニコニ広告用のポイント福引で、特定のキーワードを含むものをハイライトすることで簡単に福引にアクセスできるように支援する補助機能。  
+
+`Watch Page統合`モジュールはタグカウンター（タグの個数を数える）の導入。ヘッダ一行化は問題が多いためオミット。`Watch Page サブモジュール`は`Watch Page統合`モジュールの詳細設定。  
+
+`マイリストセレクタ`モジュールはmylist2(旧カスタムマイリスト)への追加UI提供。関連リンクタブの`mylist2に追加`リンクの動作に影響する。  
+
+`タブセッション拡張`モジュールは通常一般会員では同時に開ける視聴ページが3つまでに制限されているものを無制限に拡張する。  
+
+`サムネイルフィルター`モジュールは検索ページやその他ページで非表示にしたい動画を指定してサムネイルを非表示にしてくれるモジュールだがニコニコ動画の構造変化が激しいため動作しないかもしれない。関連リンクタブの`動画非表示設定`から調整できる。  
+
+`削除動画検出器`モジュールは、投稿者が削除または非表示設定された動画を自動検知してキャッシュが存在する場合にローカルプレーヤーに自動ルーティングするモジュール。  
+
+`背景セレクター`モジュールはラジアル背景画像セレクターと背景画像自動適用をオンにする。視聴ページの右横に半透明のハンドルにマウスホバーするとラジアル背景画像セレクターが現れ、回転とクリックで背景画像を変更可能。`背景画像設定`で変更可能。  
+
+`マトリックス背景`は映画マトリックスシリーズに出てくる緑色の縦書きカタカナプログラムコードの動的表示背景を設定する。`背景セレクター`と排他的動作。
+
+`即時適用`・・・すぐにモジュールの変更を適用（リロードなし）  
+`再読み込みして適用`・・・ページをリロードして適用（より確実）  
+`設定エクスポート`・・・モジュールの各種設定をローカルに保存  
+`設定インポート`・・・モジュールの各種設定をローカルから読み込み  
+`設定リセット`・・・デフォルト設定に戻す    
+
 
 ### 103_comment_filter2.txt
 
@@ -89,21 +149,26 @@ mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動�
 
 ![コメントフィルタ2](resources/comment-filter-2-2.avif)
 
-ニコニコ動画公式のNGワード機能が極めて貧弱なので、この機能で非常に強力なNG機能を提供する。基本的に、UIの説明通りにNGワード等を入力して保存するだけ。comment-filter2を表示させるにはmlink-video-controller内のリンクが必要。ℹ️マークを押すと説明ページに飛ぶ。またテキストフィールドのレーベルにマウスをホバーさせると詳細な情報が表示される。
+詳しい使い方は[comment-filter2.md](comment-filter2.md)を参照されたい。
 
 ### 104_video_player.txt
 
 ![カスタムキャッシュ](resources/cache.avif)
 
-キャッシュ済みの有料動画（視聴期限切れ）などをコメント付きで視聴するための機能。正しいIDを動画ファイルに指定し、cacheフォルダに置くことで任意の動画に任意のコメントを被せて視聴することも可能。mlink-video-controller内のモジュールのDeletedVideoDetectorで削除済み動画を検知し、その動画をこのプレイヤーで再生する機能も有する。
+キャッシュ済みの有料期限切れ動画 / キャッシュ済み削除動画 / キャッシュ済み非公開動画 をローカルプレーヤーでコメント付きで再生するための機能。（ニコニコ動画の仕様上、いつの時点からか削除済み動画と非公開動画ではコメントも非公開になったのでコメントはうまく表示されないかもしれない）
 
-再生されない場合、多くの場合タイミングが問題なのでF5かCtrl+F5(キャッシュを無視したハードリロード)で解決する。`/local/cache/` フォルダ以下に `（動画ID）.hls` フォルダまたは `（動画ID）.mp4` キャッシュを置いてもキャッシュを利用して再生する。
+#### 再生方法
+- URLを直接指定する方法(https://www.nicovideo.jp/local/features/dist/src/video-player/standalone/index.html?videoId=<動画ID>)
+- mylist2に該当動画を登録して自動ルーティングさせる方法(https://www.nicovideo.jp/watch/soXXXXXXXX を登録するとキャッシュがあれば自動でリダイレクトする)
 
-※mp4ファイルの動画の場合、scripts/convert-to-faststart.ps1を実行してfaststart化すること。faststartとは、mp4ファイルのmoovアトムをファイルの先頭に移動させ、ストリーミング再生に最適化する技術。これにより、再生が高速化される。
+#### 任意で用意した動画をコメントを被せて再生
+- [Hohoema](https://github.com/tor4kichi/Hohoema)を使用する方法
+- `C:\NicoCache_nl\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`し、該当動画IDのページを開く。 
+- `C:\NicoCache_nl\local\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`し、該当動画IDのページを開く。 
 
-> **注意**
->
-> フォルダ名または動画ファイル名に動画タイトルや画質、音質、lowその他余計なものが含まれていると再生できないため必ずそれらを削除すること。
+!!! note
+    mp4ファイルをscripts/convert-to-faststart.ps1でfaststart変換すると、読み込みから再生開始までの待ち時間が短縮される。
+
 
 ### 105_premium_hide.txt
 
@@ -117,12 +182,15 @@ mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動�
 
 ![視聴履歴](resources/watch-history.avif)
 
-視聴履歴のページを追加し([こちら](https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html))、視聴ログを表示するようにした。ブラウザの容量が許す限り履歴を保存するようにした。統計も利用可能。
+視聴履歴タブでは、視聴ページで再生した動画の履歴が表示される。左のサイドバーから検索、ソート、フィルタ、削除、簡易統計が可能。右サイドバーでは各動画をクリックすると動画IDや投稿者などの詳細情報が表示される。更にそこから動画を開いたりメモを追加することも可能。  
 
----
+統計タブでは詳細な再生アクティビティを確認可能。  
 
-- 詳細な comment-filter2 の説明は [comment-filter2.md](comment-filter2.md) を参照。
-- 詳細な mylist2 の説明は [mylist2.md](mylist2.md) を参照。
+シリーズタブでは投稿者が設定した動画シリーズのナビゲーションが利用可能。  
+
+シリーズアラートでは視聴履歴のページを開いている限り、新規投稿されたシリーズの新規動画を自動通知する設定が可能。（視聴履歴のページを閉じると動作しない）`新規アラート追加`で追加、`手動チェック`で新規動画がないかチェック、`通知権限確認`でブラウザの通知権限の動作確認。  
+
+`データベース管理`では、より大容量の履歴を保存するためのデータベース永続化と、旧データからの自動マイグレーションなどの設定が可能。  
  
 
 ---
@@ -131,7 +199,7 @@ mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動�
 
 [nlFilter の文法](https://roflsunriz.github.io/setup-nicocache-nl/nl-filters-syntax/)を参照
 
-必要に応じてコメントアウトされているフィルタを有効にしたり、無効にしたりする。有効化されている状態とは、[Replace]/[Script]/[Style]/[Request]と書かれている状態で、無効化されている状態とは、そのカギカッコの前に半角シャープ記号を書き足した状況、つまり#[Replace]#[Script]#[Style]#[Request]のような状態のこと。
+必要に応じフィルタを有効化する方法と無効化する方法を紹介する。フィルタのカギ括弧にシャープ記号を付けると無効状態になる。
 
 **使用例：**
 
@@ -139,7 +207,8 @@ mylist2やcomment-filter2やサムネイル動画非表示の設定画面起動�
 |---------|---------|
 | `#[Replace]` | `[Replace]` |
 
-nlFiltersのシンタックスハイライト機能は[NLF Code](https://github.com/roflsunriz/NLF-Code)が利用可能。
+!!! note
+    VSCodeでのnlFiltersのシンタックスハイライト機能は[NLF Code](https://github.com/roflsunriz/NLF-Code)が利用可能。
 
 ![フィルタ切り替え画面](resources/toggle.png)
 
@@ -151,17 +220,20 @@ nlFiltersのシンタックスハイライト機能は[NLF Code](https://github.
 
 [CSS: カスケーディングスタイルシート:MDN](https://developer.mozilla.org/ja/docs/Web/CSS)を参照
 
-背景画像を変更したい場合は、画像を[Squoosh](https://squoosh.app/)等で好きな画像形式に変換し(ブラウザが解釈できる形式であれば変換する必要はない)、Nicocache_nlの`local/background-images/favorites`等任意のフォルダに画像をコピペする。(NicoCache_nlからファイルを参照するには`local`フォルダ以下でなければならない。)mlink-video-controllerの設定タブ、背景画像設定から背景画像を設定できる。URL指定とファイル選択ができ、ファイル選択したときはIndexedDBにbase64エンコードデータとして保存される。URL指定は`https://www.nicovideo.jp/local/background-images/microsoft/background1.avif`のように指定する。`local`フォルダの`hoge`フォルダにimage.jpgがあれば`https://www.nicovideo.jp/local/hoge/image.jpg`と指定する。外部Webサイトのパス(https://www.nicovideo.jp/local/ 以外のパス)も指定可能だが、読み込み時サーバーに負荷がかかる恐れがあるので非推奨。円環が大きくなり過ぎない範囲で任意の数指定可能。もちろんフォルダーパスも自由。
+背景画像を変更するには、まず画像を[Squoosh](https://squoosh.app/)などでブラウザが扱える形式に変換する。変換は必須ではない。次に、NicoCache_nl の `local/background-images/favorites` など、`local` 配下の任意のフォルダに画像を配置する。NicoCache_nl から参照できるのは `local` 配下のファイルだけである。
 
-**注意事項（nico_wallpaperG併用時）：**
+そのうえで、mlink-video-controller の設定タブにある「背景画像設定」から背景画像を指定する。指定方法は URL 指定とファイル選択の 2 種類である。ファイル選択した画像は、IndexedDB に base64 形式で保存される。
 
-nico_wallpaperGと併用している場合衝突が起きるのでそのときは、どちらを優先するかによるがmlink-video-controllerにて背景セレクターとマトリックス背景を無効化し、「wp1.css」に以下を追記する。（デフォルトの場合）
+URL は `https://www.nicovideo.jp/local/background.jpg` のように、`local` 配下のファイルをそのまま指定するのが最も単純な例である。たとえば `C:\NicoCache_nl\local\background-images\favorites\background1.avif` に画像を置いた場合、URL は `https://www.nicovideo.jp/local/background-images/favorites/background1.avif` になる。さらに、`local` フォルダ内の `hoge` フォルダに `image.jpg` がある場合は、`https://www.nicovideo.jp/local/hoge/image.jpg` になる。`https://www.nicovideo.jp/local/` 以外の外部 URL も指定できるが、読み込み時に外部サーバーへ無用な負荷をかけるおそれがあるため非推奨である。フォルダ構成や指定数に厳密な制限はないが、常識的な範囲で設定することを推奨する。
 
-```css
-:root {
-  --bg-img: url('https://www.nicovideo.jp/local/nico_wallpaperG/wp1.jpg') repeat center fixed !important;
-}
-```
+!!! warning "注意事項（nico_wallpaperG併用時）"
+    nico_wallpaperGと併用している場合衝突が起きるので、そのときはどちらを優先するかによるが mlink-video-controller にて背景セレクターとマトリックス背景を無効化し、「wp1.css」に以下を追記する。（デフォルトの場合）
+
+    ```css
+    :root {
+      --bg-img: url('https://www.nicovideo.jp/local/nico_wallpaperG/wp1.jpg') repeat center fixed !important;
+    }
+    ```
 
 ---
 
@@ -196,44 +268,30 @@ nico_wallpaperGと併用している場合衝突が起きるのでそのとき�
 
 **mylist2**
 
-<https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html> にアクセスし、「エクスポート」ボタンをクリック
+mylist2 > 「マイリスト設定」 > 「エクスポート」
 
 **comment-filter2**
 
-ニコニコ動画の視聴ページに行き、コメントフィルタ設定画面の「エクスポート」ボタンをクリック
+ニコニコ動画の視聴ページ > 画面右下のmlink-video-controller > 関連リンクタブの`comment-filter2` > 「データ管理」の`エクスポート`
 
 ---
 
 ## 6. License
 
-<details>
-<summary>ライセンス条文（クリックで展開）</summary>
+!!! note "MIT LICENSE"
 
-The MIT License
+    The MIT License  
+      
+    Copyright 2017-2026 roflsunriz  
+      
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  
+      
+    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  
+      
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  
 
-Copyright (c) 2017-2026 roflsunriz
 
-本ソフトウェアおよび関連する文書のファイル（以下「ソフトウェア」）の複製を取得した全ての人物に対し、以下の条件に従うことを前提に、ソフトウェアを無制限に扱うことを無償で許可します。これには、ソフトウェアの複製を使用、複製、改変、結合、公開、頒布、再許諾、および/または販売する権利、およびソフトウェアを提供する人物に同様の行為を許可する権利が含まれますが、これらに限定されません。
-
-上記の著作権表示および本許諾表示を、ソフトウェアの全ての複製または実質的な部分に記載するものとします。
-
-ソフトウェアは「現状有姿」で提供され、商品性、特定目的への適合性、および権利の非侵害性に関する保証を含むがこれらに限定されず、明示的であるか黙示的であるかを問わず、いかなる種類の保証も行われません。著作者または著作権者は、契約、不法行為、またはその他の行為であるかを問わず、ソフトウェアまたはソフトウェアの使用もしくはその他に取り扱いに起因または関連して生じるいかなる請求、損害賠償、その他の責任について、一切の責任を負いません。
-
----
-
-The MIT License
-
-Copyright 2017-2026 roflsunriz
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-法的に有効なのは英語版のライセンス条文のみ。詳細は[MITライセンス（日本語訳）](https://licenses.opensource.jp/MIT/MIT.html)と[MITライセンス（英語原文）](https://opensource.org/license/mit)を参照。
-
-</details>
+法的に有効なのは英語版のライセンス条文。詳細は[日本語訳](https://licenses.opensource.jp/MIT/MIT.html)と[英語原文](https://opensource.org/license/mit)を参照。
 
 ---
 

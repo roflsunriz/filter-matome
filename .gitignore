@@ -35,4 +35,6 @@ local/features/dist/
 
 # Claw-Code
 .claw/
+.sandbox-tmp/
+.sandbox.home/
 CLAUDE.md
