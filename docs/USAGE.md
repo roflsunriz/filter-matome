@@ -6,12 +6,14 @@
 
 GitHubページのリリースページ(<https://github.com/roflsunriz/filter-matome/releases>)からダウンロードすること。
 
-**注意事項：**
+!!! warning "注意事項"
 
-- ディレクトリ構造を壊さずにそのまま`local`フォルダは`local`フォルダに、`nlFilters`は`nlFilters`フォルダに、`extensions`フォルダは`extensions`フォルダに上書きする。
-- **フィルタの抜き差しは上級者向けなのでnlFiltersの文法を完全に理解し、HTML/CSS/JavaScriptの知識が十分にあり、デベロッパーコンソールを十全に扱え、自己解決できる者だけが自己の責任で対応すること。**
+    - ディレクトリ構造を壊さずにそのまま`local`フォルダは`local`フォルダに、`nlFilters`は`nlFilters`フォルダに、`extensions`フォルダは`extensions`フォルダに上書きする。
+    - **フィルタの抜き差しは上級者向けなのでnlFiltersの文法を完全に理解し、HTML/CSS/JavaScriptの知識が十分にあり、デベロッパーコンソールを十全に扱え、自己解決できる者だけが自己の責任で対応すること。**
 
-問題を発見した場合は[GitHubのIssue](https://github.com/roflsunriz/filter-matome/issues)にて報告する。あるいはIssueで相談してからPull Requestを送る。
+!!! note
+
+    問題を発見した場合は[GitHubのIssue](https://github.com/roflsunriz/filter-matome/issues)にて報告する。あるいはIssueで相談してからPull Requestを送る。
 
 ### 標準手順
 `$env:USERPROFILE\Downloads`にダウンロードしたとする  
@@ -73,11 +75,11 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 ## 2. Filter Descriptions
 
-**注意事項：**
+!!! warning "注意事項"
 
-- 毎回リリースノートを確認すること。
-- 各 nlFilter は`<link rel="...">`や`<script src="...">`で`./local/features/*`から呼び出す形になっているため、ファイルの更新日が変わっていないことがあることに注意する。更新による差分を見たいときは[WinMerge](https://winmerge.org/?lang=ja)が便利。
-- また、`nlFilters` フォルダから削除された nlFilter(txt)や、local/features から削除された css,js ファイル、または中身のないファイル群は deprecated(廃止予定)又は abolition(廃止)としているため削除すること。
+    - 毎回リリースノートを確認すること。
+    - 各 nlFilter は`<link rel="...">`や`<script src="...">`で`./local/features/*`から呼び出す形になっているため、ファイルの更新日が変わっていないことがあることに注意する。更新による差分を見たいときは[WinMerge](https://winmerge.org/?lang=ja)が便利。
+    - また、`nlFilters` フォルダから削除された nlFilter(txt)や、local/features から削除された css,js ファイル、または中身のないファイル群は deprecated(廃止予定)又は abolition(廃止)としているため削除すること。
 
 **免責事項：**
 
