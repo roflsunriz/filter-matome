@@ -29,7 +29,9 @@ class PageDetectorImpl implements PageDetector {
       return PageType.SEARCH;
     } else if (pathname.includes("/ranking/")) {
       return PageType.RANKING;
-    } else if (url.includes("blog.nicovideo.jp")) {
+    } else if (
+      url.startsWith("https://blog.nicovideo.jp/niconews/category/nicoad/")
+    ) {
       return PageType.NICO_INFO;
     }
 
@@ -485,7 +487,7 @@ export class ModuleManager {
           break;
         }
 
-        case "nico_info_highlight": {
+        case "daily_lottery_highlight": {
           const { NicoInfoPageModule } = await import(
             "../modules/nico-info-page-module"
           );

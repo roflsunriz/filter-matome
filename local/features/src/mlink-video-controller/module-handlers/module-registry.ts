@@ -53,7 +53,7 @@ export class ModuleRegistry {
     this.registerModule({
       id: "daily_lottery_highlight",
       name: "デイリー福引ハイライト",
-      description: "デイリー福引をハイライト表示します",
+      description: "ニコニ広告のお知らせ内でデイリー福引をハイライト表示します",
       version: "1.0.0",
       enabled: false,
       targetPages: [PageType.NICO_INFO],

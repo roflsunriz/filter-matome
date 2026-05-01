@@ -176,7 +176,7 @@ UI更新
 #### その他モジュール
 - `header-module.ts` - ヘッダープライバシー機能
 - `search-page-module.ts` - 検索結果8列表示
-- `nico-info-page-module.ts` - ニコインフォページ機能
+- `nico-info-page-module.ts` - ニコニ広告お知らせページ機能
 - `watch-matrix-background-module.ts` - マトリックス背景
 - `watch-mylist-selector-module.ts` - マイリストセレクタ
 - `watch-tab-sessions-module.ts` - タブセッション読み取りフィルタ

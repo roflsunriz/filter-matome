@@ -6,7 +6,7 @@ import {
 
 /**
  * ニコニコインフォページモジュール
- * デイリー福引をハイライト表示する機能
+ * ニコニ広告のお知らせ内でデイリー福引をハイライト表示する機能
  */
 export class NicoInfoPageModule implements ModuleInstance {
   public config: ModuleConfig;
@@ -134,7 +134,7 @@ export class NicoInfoPageModule implements ModuleInstance {
   }
 
   /**
-   * デイリー福引をハイライト表示
+   * ニコニ広告のお知らせ内でデイリー福引をハイライト表示
    */
   private restyler(): void {
     try {

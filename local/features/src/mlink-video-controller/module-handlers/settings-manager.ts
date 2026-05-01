@@ -30,6 +30,9 @@ export class SettingsManager {
         const parsed: unknown = JSON.parse(stored);
         if (parsed && typeof parsed === "object") {
           this.settings = parsed as ModuleSettings;
+          if (this.migrateLegacyModuleSettings()) {
+            this.saveSettings();
+          }
         }
       }
     } catch (error) {
@@ -39,6 +42,26 @@ export class SettingsManager {
       );
       this.settings = {};
     }
+  }
+
+  /**
+   * 誤って使われていたモジュールIDの設定を現行IDへ移行
+   */
+  private migrateLegacyModuleSettings(): boolean {
+    const legacyId = "nico_info_highlight";
+    const currentId = "daily_lottery_highlight";
+    const legacySettings = this.settings[legacyId];
+
+    if (!legacySettings) {
+      return false;
+    }
+
+    if (!this.settings[currentId]) {
+      this.settings[currentId] = legacySettings;
+    }
+
+    delete this.settings[legacyId];
+    return true;
   }
 
   /**
