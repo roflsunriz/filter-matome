@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#221] - 2026-05-01
+
+### Changed
+- 【release】リリースアーカイブから `docs/`、`resources/`、`GUIDE.md` を外し、代わりにルートの `GUIDE.html` ランディングページからセットアップガイドへ誘導する構成に変更。
+- 【release】リリースノート生成と README の案内を新しいガイドフローに合わせて更新。
+- 【mlink-video-controller】検索結果 8 列表示モジュールを削除し、module-registry と module-manager から `search_eight_column` を除去。
+- 【mlink-video-controller】モジュール一覧の README 表記を整理し、不要になった `search-page-module.ts` を削除。
+- 【mlink-video-controller】デイリー福引ハイライトのモジュール ID を `daily_lottery_highlight` に統一し、誤って使われていた `nico_info_highlight` 設定の自動移行を追加。
+- 【docs】バグ報告テンプレートにスクリーンショットと OCR の確認手順を追加し、環境情報の記入項目を明確化。
+- 【docs】キャッシュデータ関連の不要なチェック項目を整理し、バグ報告時の確認内容を簡素化。
+- 【docs】シンボリックリンク作成手順、USAGE、README の説明を順次見直し、導入時の案内を整備。
+- 【scripts】`create-all-symlinks.ps1` の入力方法と dry-run 周辺の挙動を改善し、リンクマッピングの信頼性を高めた。
+- 【ci】MkDocs ドキュメントワークフローとリリースワークフローを新しいドキュメント構成に追従させた。
+
 ## [#220] - 2026-04-15
 
 ### Added
