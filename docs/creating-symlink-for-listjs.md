@@ -1,7 +1,8 @@
 ### NicoCache_nl 用 `local/list.js` シンボリックリンク作成手順（Windows / PowerShell）
 
-**重要**: NicoCache_nl はキャッシュデータマネージャースクリプトを `C:\NicoCache_nl\local\list.js` という「固定のパス・固定のファイル名」で参照する。設定で場所や名前は変更不能。  
-そのため、ビルド成果物（例: `cacheDataManager.iife.js`）へ必ずこの固定パス名でシンボリックリンクを張る必要がある。`.map`ファイルはソースからビルドしたときに生成されるデバッグ用ファイル。
+!!! warning "重要"
+      NicoCache_nl はキャッシュデータマネージャースクリプトを `C:\NicoCache_nl\local\list.js` という「固定のパス・固定のファイル名」で参照する。設定で場所や名前は変更不能。  
+      そのため、ビルド成果物（例: `cacheDataManager.iife.js`）へ必ずこの固定パス名でシンボリックリンクを張る必要がある。`.map`ファイルはソースからビルドしたときに生成されるデバッグ用ファイル。
 
 ---
 
