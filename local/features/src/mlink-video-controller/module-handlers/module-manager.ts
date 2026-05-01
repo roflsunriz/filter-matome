@@ -479,14 +479,6 @@ export class ModuleManager {
           break;
         }
 
-        case "search_eight_column": {
-          const { SearchPageModule } = await import(
-            "../modules/search-page-module"
-          );
-          instance = new SearchPageModule(config);
-          break;
-        }
-
         case "daily_lottery_highlight": {
           const { NicoInfoPageModule } = await import(
             "../modules/nico-info-page-module"

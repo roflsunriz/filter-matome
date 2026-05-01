@@ -25,7 +25,6 @@ features/src/mlink-video-controller/
 │   ├── deleted-video-detector-module.ts  # 削除動画検出モジュール (2.9KB)
 │   ├── header-module.ts                  # ヘッダーモジュール (4.9KB)
 │   ├── nico-info-page-module.ts          # ニコインフォページ (5.3KB)
-│   ├── search-page-module.ts             # 検索ページモジュール (5.2KB)
 │   ├── thumbnails-filter-module.ts       # サムネイルフィルター (23KB)
 │   ├── watch-background-selector-module.ts # 背景セレクター (28KB)
 │   ├── watch-matrix-background-module.ts # マトリックス背景 (7.2KB)
@@ -175,7 +174,6 @@ UI更新
 
 #### その他モジュール
 - `header-module.ts` - ヘッダープライバシー機能
-- `search-page-module.ts` - 検索結果8列表示
 - `nico-info-page-module.ts` - ニコニ広告お知らせページ機能
 - `watch-matrix-background-module.ts` - マトリックス背景
 - `watch-mylist-selector-module.ts` - マイリストセレクタ

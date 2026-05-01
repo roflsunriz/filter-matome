@@ -36,19 +36,6 @@ export class ModuleRegistry {
       icon: createMaterialIcon("lock", { style: "outlined", color: "white" }),
     });
 
-    // Search Page モジュール
-    this.registerModule({
-      id: "search_eight_column",
-      name: "検索結果8列表示",
-      description: "動画検索結果を8列で表示します",
-      version: "1.0.0",
-      enabled: false,
-      targetPages: [PageType.SEARCH],
-      dependencies: [],
-      category: ModuleCategory.UI_ENHANCEMENT,
-      icon: createMaterialIcon("search", { style: "outlined", color: "white" }),
-    });
-
     // Nico Info Page モジュール
     this.registerModule({
       id: "daily_lottery_highlight",
