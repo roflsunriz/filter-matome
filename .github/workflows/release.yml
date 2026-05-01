@@ -13,7 +13,7 @@ jobs:
   # ジョブ①: ビルド → リリースアーカイブ作成（並列実行）
   # ─────────────────────────────────────────────
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,10 +45,8 @@ jobs:
 
       # nl-media-info は features に統合済みのため個別ビルドは不要
 
-      - name: Install 7zip
-        run: sudo apt-get update && sudo apt-get install -y p7zip-full
-
       - name: Create release archive
+        shell: bash
         run: |
           # リリース用のディレクトリを作成
           mkdir -p release/NicoCache_nl
@@ -58,14 +56,12 @@ jobs:
           cp -r nlFilters release/NicoCache_nl/
           cp -r local release/NicoCache_nl/
           cp -r scripts release/NicoCache_nl/
-          cp -r docs release/NicoCache_nl/
           cp README.md release/NicoCache_nl/
           cp CHANGELOG.md release/NicoCache_nl/
-          cp docs/USAGE.md release/NicoCache_nl/
           cp LICENSE release/NicoCache_nl/
-          cp docs/creating-symlink-for-listjs.md release/NicoCache_nl/
           cp "nico-cache-nl-starter.bat" release/NicoCache_nl/
           cp "nico-cache-gui-launcher.bat" release/NicoCache_nl/
+          cp GUIDE.html release/NicoCache_nl/
 
           # mime.typesをコピー
           cp local/mime.types release/NicoCache_nl/local/ || echo "Warning: mime.types not found in local folder"
@@ -129,6 +125,7 @@ jobs:
           echo "" >> release_notes.md
           echo "### 📦 ダウンロード" >> release_notes.md
           echo "- **7Z**: \`filter-matome-${GITHUB_REF#refs/tags/}.7z\`" >> release_notes.md
+          echo "- アーカイブのルートに \`GUIDE.html\` を同梱" >> release_notes.md
           echo "" >> release_notes.md
           echo "### 🔄 導入方法" >> release_notes.md
           echo "1. 既存のfilter-matomeのバックアップを作成" >> release_notes.md
@@ -136,6 +133,7 @@ jobs:
           echo "3. \`nlFilters\`, \`local\`, \`extensions\`フォルダを上書きコピー" >> release_notes.md
           echo "4. 必要に応じて\`mime.types\`を上書きコピー" >> release_notes.md
           echo "5. ブラウザでハード再読み込み（Ctrl+F5）" >> release_notes.md
+          echo "6. \`GUIDE.html\` を開いて \`USAGE GUIDE\` と \`NicoCache_nl SETUP GUIDE\` を確認する" >> release_notes.md
           echo "" >> release_notes.md
           echo "### 🛠️ 開発環境の構築" >> release_notes.md
           echo "1. Bun をインストール" >> release_notes.md

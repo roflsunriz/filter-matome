@@ -58,6 +58,8 @@ winget install Google.Chrome
 
 ### インストール手順
 
+- リリースアーカイブのルートには `GUIDE.html` を同梱しています。`USAGE GUIDE` と `NicoCache_nl SETUP GUIDE` への入口として使えます。
+
 1. **NicoCache_nl本体の導入**
    ```bash
    # NicoCache_nl Usage Guideを参照してインストール

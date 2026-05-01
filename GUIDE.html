@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>filter-matome Guide</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f4ef;
+        --panel: #ffffff;
+        --text: #1f2328;
+        --muted: #5f6b7a;
+        --link: #0b63ce;
+        --border: #d7dde5;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, var(--bg), #ffffff 60%);
+        color: var(--text);
+      }
+      main {
+        max-width: 720px;
+        margin: 8vh auto;
+        padding: 0 20px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 1.8rem;
+      }
+      p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      ul {
+        margin: 0;
+        padding-left: 1.2rem;
+      }
+      li + li {
+        margin-top: 12px;
+      }
+      a {
+        color: var(--link);
+      }
+      a:hover {
+        text-decoration: none;
+      }
+      .note {
+        margin-top: 18px;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <h1>filter-matome Guide</h1>
+        <p>アーカイブ展開後に、まず開く案内ページです。</p>
+        <ul>
+          <li>
+            <a href="https://roflsunriz.github.io/filter-matome/">
+              USAGE GUIDE
+            </a>
+          </li>
+          <li>
+            <a href="https://roflsunriz.github.io/setup-nicocache-nl/">
+              NicoCache_nl SETUP GUIDE
+            </a>
+          </li>
+        </ul>
+        <p class="note">
+          Windows と Linux のどちらでもブラウザで開けます。
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
