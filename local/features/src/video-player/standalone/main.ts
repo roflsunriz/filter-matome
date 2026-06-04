@@ -12,6 +12,7 @@ import {
 } from "@/video-player/standalone/utils";
 import type { ApiData, NicoApiData } from "@/types/index";
 import DOMPurify from "dompurify";
+import type { Config as DOMPurifyConfig } from "dompurify";
 
 type RecordLike = Record<string, unknown>;
 
@@ -433,7 +434,7 @@ const toApiData = (source: NicoApiData, fallbackVideoId: string): ApiData => {
  */
 const sanitizeHtml = (html: string): string => {
   // DOMPurifyの設定：安全なタグと属性のみ許可
-  const config: DOMPurify.Config = {
+  const config: DOMPurifyConfig = {
     ALLOWED_TAGS: [
       "a",
       "b",

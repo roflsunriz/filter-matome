@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#222] - 2026-06-04
+
+### Changed
+- 【build】TypeScript 7 対応として `tsconfig.json` から非推奨の `baseUrl` を削除し、Vite バンドル前提の `moduleResolution: "bundler"` に変更。
+- 【video-player】再生開始フェーズを改善し、候補 URL の優先度付き並列プローブと隠し video/HLS による実再生プローブを追加。
+- 【video-player】最初に `loadedmetadata` / `canplay` へ到達した動画ソースを本再生に採用し、失敗時は次候補へフォールバックするように変更。
+- 【video-player】IndexedDB のスキーマ更新を `onupgradeneeded` のバージョン変更トランザクション内で同期的に完了させる方式へ変更。
+- 【video-player】`comment-overlay` v3 の API に合わせ、存在しない `renderer.updateSettings()` 呼び出しを `settings` セッター経由の更新へ置き換え。
+- 【video-player】コメント透明度・デフォルト色の変更後にコメントを再同期して即時再描画するように改善。
+- 【docs】video-player README に IndexedDB 昇格時の注意点と再生開始プローブ仕様を追記。
+
+### Fixed
+- 【video-player】Firefox / Chrome で `NicoCachePlayerDB` 作成後に設定保存が進まない問題を修正。
+- 【video-player】コメント透明度・デフォルト色の設定時に `this.renderer.updateSettings is not a function` が発生する問題を修正。
+- 【video-player】Firefox で HLS 候補の準備待ちが積み重なり、再生開始まで大きく遅延する問題を軽減。
+
 ## [#221] - 2026-05-01
 
 ### Changed

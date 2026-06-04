@@ -1,4 +1,5 @@
 import DOMPurify from "dompurify";
+import type { Config as DOMPurifyConfig } from "dompurify";
 
 import type { VideoLinkTarget, VideoLinkContext } from "@/types/mylist-types";
 
@@ -133,7 +134,7 @@ const linkifyText = (text: string): string => {
 export const linkify = (text: string): string => linkifyText(text);
 
 // DOMPurify設定: 動画説明文向けの安全なタグ・属性のみ許可
-const PURIFY_CONFIG: DOMPurify.Config = {
+const PURIFY_CONFIG: DOMPurifyConfig = {
   ALLOWED_TAGS: [
     "a",
     "b",
