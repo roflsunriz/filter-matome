@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#222.1] - 2026-06-04
+
+### Changed
+- 【video-player】`NicoCachePlayerDB` 初期化後に必須ストア・インデックスを検証し、作成失敗の残骸がある場合は一度だけ削除・再作成するように変更。
+- 【mylist2】`Mylist2DB` 初期化時にスキーマ検証と破損DBの一回再作成を追加。
+- 【watch-history】`NicoWatchHistory` 初期化時に `watchHistory` / `seriesAlerts` のストア・インデックス検証と自己修復を追加。
+- 【comment-filter2】`CommentFilter2DB` 初期化時に `rules` / `settings` / `json_rules` のスキーマ検証と自己修復を追加。
+- 【mlink-video-controller】背景画像設定DBの起動時スキーマ検証と破損DBの一回再作成を追加。
+- 【docs】AGENTS.md に日本語 Conventional Commits のコミットメッセージ規約を追加。
+
+### Fixed
+- 【video-player】作成失敗の残骸が残った `NicoCachePlayerDB` で設定保存が継続的に失敗する問題を修正。
+
 ## [#222] - 2026-06-04
 
 ### Changed

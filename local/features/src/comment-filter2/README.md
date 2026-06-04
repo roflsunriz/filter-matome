@@ -67,6 +67,7 @@ comment-filter2/
 - `filter/json-comment-filter.ts`: ルール前処理 (`prepareJsonRules`)、Web Worker 分散 (`json-comment-filter-worker.ts`)、nicoru 条件やコマンド制限の適用、フィルタログ記録を実装。
 - `filter/comment-filter.ts`: 旧 NGWord 形式 (正規表現+ユーザー ID) の互換実装。UI のレガシーインポートや既存データ移行用に保持。
 - `storage/indexed-db.ts`: バージョン 3 (JSON ルールストア) への移行、整合性チェック/修復、バックアップ・リストア、マイグレーション履歴取得などを実装。
+- `storage/indexed-db.ts`: 初期化後に必須ストアとインデックスを検証し、作成失敗の残骸がある場合は一度だけDBを削除・再作成します。
 - `utils/filter-logger.ts`: フィルタ結果をバッファリングし、`settings.logToCommentFilterLogger` が真のとき外部ロガーへ送信。
 - `filter/rule-indexer.ts`: Aho-Corasick を用いたリテラルパターンの事前絞り込みで、正規表現評価回数を削減。
 - `filter/thread-nicoru-stats.ts`: 各スレッドのニコる統計を算出し、`nicoru_cond` 付きルールの発火条件に利用。

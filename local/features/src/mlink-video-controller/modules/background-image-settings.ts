@@ -339,7 +339,7 @@ export class BackgroundImageSettings {
   /**
    * IndexedDBを初期化
    */
-  private async initializeDB(): Promise<IDBDatabase> {
+  private async initializeDB(repairAttempted: boolean = false): Promise<IDBDatabase> {
     if (this.db) {
       return this.db;
     }
@@ -360,16 +360,51 @@ export class BackgroundImageSettings {
       request.onsuccess = async () => {
         this.db = request.result;
 
-        // データベースの整合性をチェック
-        const isValid = await this.validateDatabaseIntegrity();
-        if (!isValid) {
+        try {
+          this.validateSchema(this.db);
+        } catch (error) {
+          this.db.close();
+          this.db = null;
+
+          if (repairAttempted) {
+            reject(error instanceof Error ? error : new Error(String(error)));
+            return;
+          }
+
           window.logger.warn(
-            "[BackgroundImageSettings] データベース整合性に問題があります",
+            "[BackgroundImageSettings] IndexedDBの破損を検出したため再作成します:",
+            error,
           );
+          try {
+            await this.deleteDatabase();
+            resolve(await this.initializeDB(true));
+          } catch (repairError) {
+            reject(
+              repairError instanceof Error
+                ? repairError
+                : new Error(String(repairError)),
+            );
+          }
+          return;
         }
 
-        // 自動バックアップ作成
-        await this.createAutoBackup();
+        try {
+          // データベースの整合性をチェック
+          const isValid = await this.validateDatabaseIntegrity();
+          if (!isValid) {
+            window.logger.warn(
+              "[BackgroundImageSettings] データベース整合性に問題があります",
+            );
+          }
+
+          // 自動バックアップ作成
+          await this.createAutoBackup();
+        } catch (error) {
+          window.logger.warn(
+            "[BackgroundImageSettings] データベース整合性チェックまたはバックアップに失敗:",
+            error,
+          );
+        }
 
         resolve(this.db);
       };
@@ -405,6 +440,44 @@ export class BackgroundImageSettings {
           await this.performMigration(db, oldVersion, DB_VERSION);
         }
       };
+    });
+  }
+
+  private validateSchema(db: IDBDatabase): void {
+    const expectedSchema: Record<string, string[]> = {
+      [STORE_NAME]: ["name", "type", "createdAt", "updatedAt"],
+      [METADATA_STORE_NAME]: [],
+    };
+
+    Object.entries(expectedSchema).forEach(([storeName, indexNames]) => {
+      if (!db.objectStoreNames.contains(storeName)) {
+        throw new Error(`Missing object store: ${storeName}`);
+      }
+
+      if (indexNames.length === 0) {
+        return;
+      }
+
+      const transaction = db.transaction([storeName], "readonly");
+      const store = transaction.objectStore(storeName);
+      indexNames.forEach((indexName) => {
+        if (!store.indexNames.contains(indexName)) {
+          throw new Error(`Missing index: ${storeName}.${indexName}`);
+        }
+      });
+    });
+  }
+
+  private deleteDatabase(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(DB_NAME);
+      request.onsuccess = () => resolve();
+      request.onerror = () => {
+        const error = request.error;
+        reject(error instanceof Error ? error : new Error(String(error)));
+      };
+      request.onblocked = () =>
+        reject(new Error("IndexedDB deletion was blocked"));
     });
   }
 

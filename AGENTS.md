@@ -7,6 +7,7 @@
 - Typescriptのファイル編集後は bun run lint, bun run type-check, bun run buildを実行してコード品質を確認してください。必要があればクリーンになるまで修正してください
 - Typescriptではない場合はbun run lint, bun run type-check, bun run buildは必要ありません。
 - 作業が完了したら、新規ファイルを含む git diff を確認し、変更内容を要約した 5 行までのコミットメッセージを生成してください。
+- コミットメッセージは日本語 Conventional Commits に従ってください。例: `fix(video-player): 設定DBの自己修復を追加`、`docs: 更新手順を補足`。
 
 ## Environment
 

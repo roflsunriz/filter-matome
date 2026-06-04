@@ -54,7 +54,10 @@ export class DatabaseManager {
       return this.initializationPromise;
     }
 
-    this.initializationPromise = this.performInitialization();
+    this.initializationPromise = this.performInitialization().catch((error) => {
+      this.initializationPromise = null;
+      throw error;
+    });
     return this.initializationPromise;
   }
 
@@ -63,12 +66,36 @@ export class DatabaseManager {
    */
   private async performInitialization(): Promise<void> {
     try {
-      this.db = await this.openDatabase();
+      this.db = await this.openHealthyDatabase();
       window.logger?.info("データベース初期化完了しました！");
     } catch (error) {
       window.logger?.error("データベース初期化失敗しました！:", error);
       throw error;
     }
+  }
+
+  /**
+   * DB を開いた直後にスキーマを検証し、壊れた作成残骸があれば一度だけ再作成
+   */
+  private async openHealthyDatabase(): Promise<IDBDatabase> {
+    let db: IDBDatabase | null = null;
+
+    try {
+      db = await this.openDatabase();
+      this.validateSchema(db);
+      return db;
+    } catch (error) {
+      db?.close();
+      window.logger?.warn(
+        "データベースの破損を検出したため再作成します！:",
+        error,
+      );
+      await this.recreateDatabase();
+    }
+
+    const recreatedDb = await this.openDatabase();
+    this.validateSchema(recreatedDb);
+    return recreatedDb;
   }
 
   /**
@@ -154,6 +181,59 @@ export class DatabaseManager {
         },
       });
     }
+  }
+
+  /**
+   * 期待するストアとインデックスが揃っているか検証
+   */
+  private validateSchema(db: IDBDatabase): void {
+    Object.values(DB_STORES).forEach((storeConfig) => {
+      if (!db.objectStoreNames.contains(storeConfig.name)) {
+        throw new Error(
+          `必須オブジェクトストアが不足しています: ${storeConfig.name}`,
+        );
+      }
+
+      const transaction = db.transaction([storeConfig.name], "readonly");
+      const store = transaction.objectStore(storeConfig.name);
+
+      storeConfig.indexes?.forEach((indexConfig) => {
+        if (!store.indexNames.contains(indexConfig.name)) {
+          throw new Error(
+            `必須インデックスが不足しています: ${storeConfig.name}.${indexConfig.name}`,
+          );
+        }
+      });
+    });
+  }
+
+  /**
+   * 壊れた IndexedDB を閉じて削除し、次の openDatabase で作り直せる状態にする
+   */
+  private async recreateDatabase(): Promise<void> {
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
+
+    await this.deleteDatabase();
+  }
+
+  /**
+   * IndexedDB の削除
+   */
+  private deleteDatabase(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const deleteRequest = indexedDB.deleteDatabase(DB_CONFIG.NAME);
+      deleteRequest.onsuccess = () => {
+        window.logger?.info("データベースを削除しました！");
+        resolve();
+      };
+      deleteRequest.onerror = () =>
+        reject(new Error(this.toMessage(deleteRequest.error)));
+      deleteRequest.onblocked = () =>
+        reject(new Error("データベース削除がブロックされました"));
+    });
   }
 
   /**
@@ -631,16 +711,8 @@ export class DatabaseManager {
    */
   async reset(): Promise<void> {
     this.close();
-
-    return new Promise((resolve, reject) => {
-      const deleteRequest = indexedDB.deleteDatabase(DB_CONFIG.NAME);
-      deleteRequest.onsuccess = () => {
-        window.logger?.info("データベースをリセットしました！");
-        resolve();
-      };
-      deleteRequest.onerror = () =>
-        reject(new Error(this.toMessage(deleteRequest.error)));
-    });
+    await this.deleteDatabase();
+    window.logger?.info("データベースをリセットしました！");
   }
 
   /**

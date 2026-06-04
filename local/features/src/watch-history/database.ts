@@ -59,7 +59,7 @@ export class WatchHistoryDatabase {
   /**
    * データベースを初期化する
    */
-  async initialize(): Promise<DBResult<void>> {
+  async initialize(repairAttempted: boolean = false): Promise<DBResult<void>> {
     try {
       logger.debug("データベース初期化開始:", {
         dbName: this.config.dbName,
@@ -179,6 +179,25 @@ export class WatchHistoryDatabase {
         },
       );
 
+      if (initResult.success && this.db) {
+        try {
+          this.validateSchema(this.db);
+        } catch (error) {
+          if (repairAttempted) {
+            throw error;
+          }
+
+          logger.warn(
+            "IndexedDBの破損を検出したため再作成します:",
+            error,
+          );
+          this.db.close();
+          this.db = null;
+          await this.deleteDatabase();
+          return await this.initialize(true);
+        }
+      }
+
       // 永続化を自動で要求
       if (initResult.success && migrationManager.getConfig().autoPersist) {
         try {
@@ -190,8 +209,54 @@ export class WatchHistoryDatabase {
 
       return initResult;
     } catch (error) {
+      if (!repairAttempted) {
+        logger.warn("IndexedDB初期化失敗のため再作成を試行します:", error);
+        this.db?.close();
+        this.db = null;
+        await this.deleteDatabase();
+        return await this.initialize(true);
+      }
       return { success: false, error: `初期化失敗: ${String(error)}` };
     }
+  }
+
+  private validateSchema(db: IDBDatabase): void {
+    const expectedSchema: Record<string, string[]> = {
+      [this.config.storeName]: [
+        "watchedAt",
+        "ownerId",
+        "completed",
+        "firstWatchedAt",
+        "title",
+        "seriesId",
+      ],
+      seriesAlerts: ["seriesId", "enabled", "nextCheckAt"],
+    };
+
+    Object.entries(expectedSchema).forEach(([storeName, indexNames]) => {
+      if (!db.objectStoreNames.contains(storeName)) {
+        throw new Error(`Missing object store: ${storeName}`);
+      }
+
+      const transaction = db.transaction([storeName], "readonly");
+      const store = transaction.objectStore(storeName);
+      indexNames.forEach((indexName) => {
+        if (!store.indexNames.contains(indexName)) {
+          throw new Error(`Missing index: ${storeName}.${indexName}`);
+        }
+      });
+    });
+  }
+
+  private deleteDatabase(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(this.config.dbName);
+      request.onsuccess = () => resolve();
+      request.onerror = () =>
+        reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
+      request.onblocked = () =>
+        reject(new Error("IndexedDB deletion was blocked"));
+    });
   }
 
   /**

@@ -47,70 +47,131 @@ export class FilterStorage {
   /**
    * データベースを初期化（マイグレーション対応）
    */
-  public async initialize(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, this.dbVersion);
+  public async initialize(repairAttempted: boolean = false): Promise<void> {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open(this.dbName, this.dbVersion);
 
-      request.onerror = () => {
-        reject(new Error("IndexedDB initialization failed"));
-      };
+        request.onerror = () => {
+          reject(new Error("IndexedDB initialization failed"));
+        };
 
-      request.onsuccess = () => {
-        this.db = request.result;
-        resolve();
-      };
+        request.onsuccess = () => {
+          this.db = request.result;
+          try {
+            this.validateSchema(this.db);
+            resolve();
+          } catch (error) {
+            this.db.close();
+            this.db = null;
+            reject(error instanceof Error ? error : new Error(String(error)));
+          }
+        };
 
-      request.onupgradeneeded = async (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        const oldVersion = event.oldVersion;
+        request.onupgradeneeded = async (event) => {
+          const db = (event.target as IDBOpenDBRequest).result;
+          const oldVersion = event.oldVersion;
 
-        window.logger?.info(
-          `[CommentFilter2] Upgrading database from version ${oldVersion} to ${this.dbVersion}`,
-        );
+          window.logger?.info(
+            `[CommentFilter2] Upgrading database from version ${oldVersion} to ${this.dbVersion}`,
+          );
 
-        // Rulesストアの作成/更新
-        if (!db.objectStoreNames.contains(CONSTANTS.DB_CONFIG.STORES.RULES)) {
-          const rulesStore = db.createObjectStore(
-            CONSTANTS.DB_CONFIG.STORES.RULES,
-            {
+          // Rulesストアの作成/更新
+          if (
+            !db.objectStoreNames.contains(CONSTANTS.DB_CONFIG.STORES.RULES)
+          ) {
+            const rulesStore = db.createObjectStore(
+              CONSTANTS.DB_CONFIG.STORES.RULES,
+              {
+                keyPath: "id",
+                autoIncrement: true,
+              },
+            );
+            rulesStore.createIndex("smid", "smid", { unique: false });
+            rulesStore.createIndex("enabled", "enabled", { unique: false });
+          }
+
+          // Settingsストアの作成
+          if (
+            !db.objectStoreNames.contains(CONSTANTS.DB_CONFIG.STORES.SETTINGS)
+          ) {
+            db.createObjectStore(CONSTANTS.DB_CONFIG.STORES.SETTINGS, {
+              keyPath: "key",
+            });
+          }
+
+          // JSON Rulesストアの作成（新形式用）
+          if (!db.objectStoreNames.contains("json_rules")) {
+            const jsonRulesStore = db.createObjectStore("json_rules", {
               keyPath: "id",
               autoIncrement: true,
-            },
-          );
-          rulesStore.createIndex("smid", "smid", { unique: false });
-          rulesStore.createIndex("enabled", "enabled", { unique: false });
-        }
+            });
+            jsonRulesStore.createIndex("enabled", "enabled", { unique: false });
+            jsonRulesStore.createIndex("smid", "smid", {
+              unique: false,
+              multiEntry: true,
+            });
+          }
 
-        // Settingsストアの作成
-        if (
-          !db.objectStoreNames.contains(CONSTANTS.DB_CONFIG.STORES.SETTINGS)
-        ) {
-          db.createObjectStore(CONSTANTS.DB_CONFIG.STORES.SETTINGS, {
-            keyPath: "key",
-          });
-        }
+          // バージョン2→3のマイグレーション
+          if (oldVersion < 3) {
+            await this.migrateToVersion3(
+              db,
+              (event.target as IDBOpenDBRequest).transaction!,
+            );
+          }
+        };
+      });
+    } catch (error) {
+      if (repairAttempted) {
+        throw error;
+      }
 
-        // JSON Rulesストアの作成（新形式用）
-        if (!db.objectStoreNames.contains("json_rules")) {
-          const jsonRulesStore = db.createObjectStore("json_rules", {
-            keyPath: "id",
-            autoIncrement: true,
-          });
-          jsonRulesStore.createIndex("enabled", "enabled", { unique: false });
-          jsonRulesStore.createIndex("smid", "smid", {
-            unique: false,
-            multiEntry: true,
-          });
-        }
+      window.logger?.warn(
+        "[CommentFilter2] IndexedDBの破損を検出したため再作成します:",
+        error,
+      );
+      await this.deleteDatabase();
+      await this.initialize(true);
+    }
+  }
 
-        // バージョン2→3のマイグレーション
-        if (oldVersion < 3) {
-          await this.migrateToVersion3(
-            db,
-            (event.target as IDBOpenDBRequest).transaction!,
-          );
+  private validateSchema(db: IDBDatabase): void {
+    const expectedSchema: Record<string, string[]> = {
+      [CONSTANTS.DB_CONFIG.STORES.RULES]: ["smid", "enabled"],
+      [CONSTANTS.DB_CONFIG.STORES.SETTINGS]: [],
+      json_rules: ["enabled", "smid"],
+    };
+
+    Object.entries(expectedSchema).forEach(([storeName, indexNames]) => {
+      if (!db.objectStoreNames.contains(storeName)) {
+        throw new Error(`Missing object store: ${storeName}`);
+      }
+
+      if (indexNames.length === 0) {
+        return;
+      }
+
+      const transaction = db.transaction([storeName], "readonly");
+      const store = transaction.objectStore(storeName);
+      indexNames.forEach((indexName) => {
+        if (!store.indexNames.contains(indexName)) {
+          throw new Error(`Missing index: ${storeName}.${indexName}`);
         }
+      });
+    });
+  }
+
+  private deleteDatabase(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(this.dbName);
+      request.onsuccess = () => resolve();
+      request.onerror = () => {
+        const error = request.error;
+        reject(error instanceof Error ? error : new Error(String(error)));
       };
+      request.onblocked = () =>
+        reject(new Error("IndexedDB deletion was blocked"));
     });
   }
 

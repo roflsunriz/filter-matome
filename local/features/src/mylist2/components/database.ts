@@ -383,6 +383,31 @@ export class Mylist2DB {
   }
 
   async initDB(): Promise<IDBDatabase> {
+    return await this.openHealthyDatabase();
+  }
+
+  private async openHealthyDatabase(): Promise<IDBDatabase> {
+    let db: IDBDatabase | null = null;
+
+    try {
+      db = await this.openDatabase();
+      this.validateSchema(db);
+      return db;
+    } catch (error) {
+      db?.close();
+      window.logger?.warn(
+        "[Mylist2DB] IndexedDBの破損を検出したため再作成します:",
+        error,
+      );
+      await this.deleteDatabase();
+    }
+
+    const recreatedDb = await this.openDatabase();
+    this.validateSchema(recreatedDb);
+    return recreatedDb;
+  }
+
+  private openDatabase(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
       const request: IDBOpenDBRequest = indexedDB.open(
         this.dbName,
@@ -502,6 +527,57 @@ export class Mylist2DB {
 
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
+    });
+  }
+
+  private validateSchema(db: IDBDatabase): void {
+    const expectedSchema: Record<string, string[]> = {
+      mylists: ["name", "sortOrder", "createdAt"],
+      videos: [
+        "mylistId",
+        "originalId",
+        "title",
+        "viewCount",
+        "commentCount",
+        "mylistCount",
+        "addedAt",
+        "thumbnailUrl",
+        "uploadedAt",
+        "authorName",
+        "length",
+        "tags",
+      ],
+      manager: [],
+      keywords: ["mylistId", "keyword", "addedAt"],
+      metadata: [],
+    };
+
+    Object.entries(expectedSchema).forEach(([storeName, indexNames]) => {
+      if (!db.objectStoreNames.contains(storeName)) {
+        throw new Error(`Missing object store: ${storeName}`);
+      }
+
+      if (indexNames.length === 0) {
+        return;
+      }
+
+      const transaction = db.transaction([storeName], "readonly");
+      const store = transaction.objectStore(storeName);
+      indexNames.forEach((indexName) => {
+        if (!store.indexNames.contains(indexName)) {
+          throw new Error(`Missing index: ${storeName}.${indexName}`);
+        }
+      });
+    });
+  }
+
+  private deleteDatabase(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(this.dbName);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
+      request.onblocked = () =>
+        reject(new Error("IndexedDB deletion was blocked"));
     });
   }
 
