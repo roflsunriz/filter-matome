@@ -794,6 +794,7 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private setupSettingsEvents(): void {
     const settingsBtn = this.shadow.querySelector("#settings");
+    const settingsMenu = this.shadow.querySelector("#player-settings-menu");
 
     if (settingsBtn) {
       settingsBtn.addEventListener("click", (e) => {
@@ -802,9 +803,16 @@ export class PlayerControlsShadow extends HTMLElement {
       });
     }
 
+    if (settingsMenu) {
+      settingsMenu.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+    }
+
     // 設定メニュー外クリックで閉じる
     document.addEventListener("click", (e) => {
-      if (!this.contains(e.target as Node)) {
+      const path = e.composedPath();
+      if (!path.includes(this)) {
         this.closeSettingsMenu();
       }
     });
@@ -1112,7 +1120,9 @@ export class PlayerControlsShadow extends HTMLElement {
     ) as HTMLButtonElement;
 
     if (ngWordInput && addNgWordBtn) {
-      addNgWordBtn.addEventListener("click", () => {
+      addNgWordBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
         const word = ngWordInput.value.trim();
         if (
           word &&
@@ -1135,7 +1145,9 @@ export class PlayerControlsShadow extends HTMLElement {
     ) as HTMLButtonElement;
 
     if (ngRegexInput && addNgRegexBtn) {
-      addNgRegexBtn.addEventListener("click", () => {
+      addNgRegexBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
         const regex = ngRegexInput.value.trim();
 
         try {
@@ -1165,7 +1177,9 @@ export class PlayerControlsShadow extends HTMLElement {
       "#apply-comment-settings",
     ) as HTMLButtonElement;
     if (applyBtn) {
-      applyBtn.addEventListener("click", () => {
+      applyBtn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
         void this.applyCommentSettings();
       });
     }
@@ -1386,6 +1400,11 @@ export class PlayerControlsShadow extends HTMLElement {
     ) as HTMLElement;
 
     if (settingsMenu) {
+      if (this.isSettingsOpen) {
+        this.resetTempSettingsFromCurrent();
+        this.updateSettingsUI();
+      }
+
       settingsMenu.classList.toggle("visible", this.isSettingsOpen);
 
       if (this.isSettingsOpen) {
@@ -1404,6 +1423,13 @@ export class PlayerControlsShadow extends HTMLElement {
         });
       }
     }
+  }
+
+  private resetTempSettingsFromCurrent(): void {
+    this.tempOpacity = this.commentOpacity;
+    this.tempColor = this.commentColor;
+    this.tempNgWords = [...this.ngWords];
+    this.tempNgRegex = [...this.ngRegex];
   }
 
   /**
@@ -1561,8 +1587,8 @@ export class PlayerControlsShadow extends HTMLElement {
     ) as HTMLElement;
 
     if (opacitySlider && opacityValue) {
-      opacitySlider.value = String(this.commentOpacity);
-      opacityValue.textContent = String(this.commentOpacity);
+      opacitySlider.value = String(this.tempOpacity);
+      opacityValue.textContent = String(this.tempOpacity);
     }
 
     // 色選択
@@ -1570,12 +1596,12 @@ export class PlayerControlsShadow extends HTMLElement {
       "#comment-color",
     ) as HTMLSelectElement;
     if (colorSelect) {
-      colorSelect.value = this.commentColor;
+      colorSelect.value = this.tempColor;
     }
 
     // NGリストの更新
-    this.updateNGWordList();
-    this.updateNGRegexList();
+    this.updateNGWordList(true);
+    this.updateNGRegexList(true);
   }
 
   /**

@@ -17,6 +17,7 @@ export class CommentSystem {
   private commentList: CommentList;
   private videoElement: HTMLVideoElement | null = null;
   private isVisible = true;
+  private sourceComments: Comment[] = [];
   private ngWords: string[] = [];
   private ngRegex: RegExp[] = [];
   private commentContainer: HTMLElement | null = null;
@@ -169,6 +170,12 @@ export class CommentSystem {
       apiResponse,
     );
     this.hasReceivedFilteredData = true;
+    this.sourceComments = apiResponse.data.threads
+      .flatMap((thread) => thread.comments)
+      .map((comment) => ({
+        ...(comment as unknown as Comment),
+        vposMs: comment.vpos * 10,
+      }));
 
     // 既存のAPIフェッチがあればキャンセル
     if (this.abortController) {
@@ -176,17 +183,7 @@ export class CommentSystem {
       window.logger.info("既存のAPIフェッチをキャンセルしました！");
     }
 
-    let comments = apiResponse.data.threads.flatMap(
-      (thread) => thread.comments,
-    );
-    comments = comments.map((comment) => {
-      comment.vposMs = comment.vpos * 10;
-      return comment;
-    });
-
-    const filteredComments = this.filterNGComments(
-      comments as unknown as Comment[],
-    );
+    const filteredComments = this.filterNGComments(this.sourceComments);
     window.logger.info(
       `CommentFilter2適用後のコメント数です: ${filteredComments.length}`,
     );
@@ -229,21 +226,19 @@ export class CommentSystem {
       );
 
       // コメントをフィルタ
-      let comments = apiResponse.data.threads.flatMap(
+      const comments = apiResponse.data.threads.flatMap(
         (thread) => thread.comments,
       );
       window.logger.info(`取得したコメント数です: ${comments.length}`);
 
       // vposをミリ秒に変換
-      comments = comments.map((comment) => {
-        comment.vposMs = comment.vpos * 10;
-        return comment;
-      });
+      const sourceComments = comments.map((comment) => ({
+        ...(comment as unknown as Comment),
+        vposMs: comment.vpos * 10,
+      }));
 
       // NGコメントをフィルタ
-      const filteredComments = this.filterNGComments(
-        comments as unknown as Comment[],
-      );
+      const filteredComments = this.filterNGComments(sourceComments);
       window.logger.info(
         `フィルタ後のコメント数です: ${filteredComments.length}`,
       );
@@ -395,6 +390,7 @@ export class CommentSystem {
     this.videoElement = null;
     this.isInitialized = false;
     this.hasReceivedFilteredData = false;
+    this.sourceComments = [];
 
     // レンダラーと関連リソースの破棄
     this.overlay.destroy();
@@ -441,6 +437,7 @@ export class CommentSystem {
       this.ngWords = words
         .map((word) => word.trim())
         .filter((word) => word !== "");
+      this.applyCurrentCommentFilter();
       window.logger.info(`${this.ngWords.length}件のNGワードを設定しました！`);
     } catch (error) {
       window.logger.error("NGワードの設定に失敗しました！:", error);
@@ -468,9 +465,21 @@ export class CommentSystem {
       window.logger.info(
         `${this.ngRegex.length}件のNG正規表現を設定しました！`,
       );
+      this.applyCurrentCommentFilter();
     } catch (error) {
       window.logger.error("NG正規表現の設定に失敗しました！:", error);
     }
+  }
+
+  private applyCurrentCommentFilter(): void {
+    if (this.sourceComments.length === 0) {
+      return;
+    }
+
+    const filteredComments = this.filterNGComments(this.sourceComments);
+    this.commentList.clearComments();
+    this.commentList.addComments(filteredComments);
+    this.overlay.load(filteredComments);
   }
 
   /**
