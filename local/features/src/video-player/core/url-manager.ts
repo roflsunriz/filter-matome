@@ -8,6 +8,14 @@ import type { CacheInfoResponse } from "@/types/video-types";
  */
 export class UrlManager {
   private readonly baseUrl: string;
+  private readonly urlPriority: (keyof VideoUrlInfo)[] = [
+    "customHls",
+    "customMp4",
+    "hls",
+    "mp4",
+    "auto",
+    "ref",
+  ];
 
   constructor() {
     this.baseUrl = URLS.BASE;
@@ -195,34 +203,64 @@ export class UrlManager {
   }
 
   /**
+   * 優先度順に並べた動画URL候補を取得
+   */
+  public async getCandidateUrls(videoId: string): Promise<string[]> {
+    const urls = await this.getUrls(videoId);
+    return this.urlPriority
+      .map((key) => urls[key])
+      .filter((url): url is string => url !== undefined)
+      .map((url) => this.getFullUrl(url));
+  }
+
+  /**
    * 複数の候補から有効なURLを検索
    * @param videoId 動画ID
    * @returns 最初に見つかった有効なURL
    */
   public async findFirstAvailableUrl(videoId: string): Promise<string | null> {
-    const urls = await this.getUrls(videoId);
-    const urlKeys: (keyof VideoUrlInfo)[] = [
-      "customHls",
-      "customMp4",
-      "hls",
-      "mp4",
-      "auto",
-      "ref",
-    ];
+    const candidates = await this.getCandidateUrls(videoId);
+    const results: Array<boolean | undefined> = candidates.map(() => undefined);
 
-    // 全候補を並列でチェックし、優先度順で最初に存在した URL を返す
-    const candidates = urlKeys
-      .map((key) => urls[key])
-      .filter((url): url is string => url !== undefined)
-      .map((url) => this.getFullUrl(url));
+    return new Promise((resolve) => {
+      if (candidates.length === 0) {
+        resolve(null);
+        return;
+      }
 
-    const results = await Promise.all(
-      candidates.map(async (fullUrl) => ({
-        url: fullUrl,
-        exists: await this.checkUrlExists(fullUrl),
-      })),
-    );
+      let settledCount = 0;
 
-    return results.find((r) => r.exists)?.url ?? null;
+      const tryResolve = (): void => {
+        for (let index = 0; index < candidates.length; index++) {
+          const result = results[index];
+          if (result === true) {
+            resolve(candidates[index]);
+            return;
+          }
+          if (result === undefined) {
+            return;
+          }
+        }
+
+        if (settledCount === candidates.length) {
+          resolve(null);
+        }
+      };
+
+      candidates.forEach((candidateUrl, index) => {
+        void this.checkUrlExists(candidateUrl)
+          .then((exists) => {
+            results[index] = exists;
+          })
+          .catch((error) => {
+            window.logger.warn(`URL存在チェック失敗 (${candidateUrl}):`, error);
+            results[index] = false;
+          })
+          .finally(() => {
+            settledCount++;
+            tryResolve();
+          });
+      });
+    });
   }
 }

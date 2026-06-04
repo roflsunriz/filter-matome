@@ -17,6 +17,14 @@ const ensureCustomElements = (): void => {
 };
 
 let playerStylesInjected = false;
+const SOURCE_PROBE_TIMEOUT_MS = 5000;
+const VIDEO_READY_TIMEOUT_MS = 8000;
+
+interface VideoSourceProbe {
+  url: string;
+  ready: Promise<string>;
+  cleanup: () => void;
+}
 
 export interface StandalonePlayerOptions {
   mount: HTMLElement;
@@ -185,7 +193,7 @@ export class StandalonePlayer {
       videoId,
     );
 
-    const url = await this.urlManager.findFirstAvailableUrl(videoId);
+    const url = await this.playFirstAvailableSource(videoId, title);
     if (!url) {
       this.toastManager.showError(
         "動画ソースが見つかりません",
@@ -193,8 +201,222 @@ export class StandalonePlayer {
       );
       throw new Error("動画ソースが見つかりません");
     }
+  }
 
-    await this.playVideo(url, title);
+  private async playFirstAvailableSource(
+    videoId: string,
+    title: string,
+  ): Promise<string | null> {
+    const candidates = await this.urlManager.getCandidateUrls(videoId);
+    const probes = candidates.map((url) => this.createVideoSourceProbe(url));
+
+    try {
+      return await this.playFirstReadyFallback(probes, title);
+    } finally {
+      probes.forEach((probe) => probe.cleanup());
+    }
+  }
+
+  private createVideoSourceProbe(url: string): VideoSourceProbe {
+    const probeVideo = document.createElement("video");
+    probeVideo.preload = "metadata";
+    probeVideo.muted = true;
+    probeVideo.playsInline = true;
+    probeVideo.crossOrigin = "anonymous";
+    probeVideo.style.position = "fixed";
+    probeVideo.style.width = "1px";
+    probeVideo.style.height = "1px";
+    probeVideo.style.opacity = "0";
+    probeVideo.style.pointerEvents = "none";
+    probeVideo.style.left = "-10px";
+    probeVideo.style.top = "-10px";
+
+    let active = true;
+    let hls: HlsInstance | null = null;
+    let timeoutId: number | null = null;
+    let settled = false;
+    let resolveReady: (readyUrl: string) => void = () => {};
+    let rejectReady: (error: Error) => void = () => {};
+
+    const cleanup = (): void => {
+      active = false;
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      probeVideo.removeEventListener("loadedmetadata", handleReady);
+      probeVideo.removeEventListener("canplay", handleReady);
+      probeVideo.removeEventListener("error", handleError);
+      hls?.destroy();
+      hls = null;
+      probeVideo.pause();
+      probeVideo.removeAttribute("src");
+      probeVideo.load();
+      probeVideo.remove();
+    };
+
+    const settleReady = (): void => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      resolveReady(url);
+    };
+
+    const settleError = (error: Error): void => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      rejectReady(error);
+    };
+
+    function handleReady(): void {
+      settleReady();
+    }
+
+    function handleError(): void {
+      const mediaError = probeVideo.error;
+      settleError(
+        new Error(
+          mediaError?.message ||
+            `動画ソースの実再生プローブに失敗しました: code=${mediaError?.code ?? "unknown"}`,
+        ),
+      );
+    }
+
+    const ready = new Promise<string>((resolve, reject) => {
+      resolveReady = resolve;
+      rejectReady = reject;
+    });
+
+    timeoutId = window.setTimeout(() => {
+      settleError(
+        new Error(`動画ソースの実再生プローブがタイムアウトしました: ${url}`),
+      );
+    }, SOURCE_PROBE_TIMEOUT_MS);
+
+    probeVideo.addEventListener("loadedmetadata", handleReady, { once: true });
+    probeVideo.addEventListener("canplay", handleReady, { once: true });
+    probeVideo.addEventListener("error", handleError, { once: true });
+    document.body.appendChild(probeVideo);
+
+    void this.attachProbeSource(probeVideo, url, settleError)
+      .then((probeHls) => {
+        if (!active) {
+          probeHls?.destroy();
+          return;
+        }
+        hls = probeHls;
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+        settleError(
+          error instanceof Error
+            ? error
+            : new Error(`動画ソースの実再生プローブに失敗しました: ${String(error)}`),
+        );
+      });
+
+    return { url, ready, cleanup };
+  }
+
+  private async attachProbeSource(
+    probeVideo: HTMLVideoElement,
+    url: string,
+    onError: (error: Error) => void,
+  ): Promise<HlsInstance | null> {
+    if (!this.isHLSUrl(url)) {
+      probeVideo.src = url;
+      probeVideo.load();
+      return null;
+    }
+
+    const HlsConstructor = await this.ensureHlsLibrary();
+    if (HlsConstructor && HlsConstructor.isSupported()) {
+      const hls = new HlsConstructor();
+      hls.on(HlsConstructor.Events.ERROR, (_event: unknown, data: unknown) => {
+        window.logger.warn("HLS probe error", data);
+        onError(new Error(`HLS実再生プローブに失敗しました: ${url}`));
+      });
+      hls.loadSource(url);
+      hls.attachMedia(probeVideo);
+      return hls;
+    }
+
+    probeVideo.src = url;
+    probeVideo.load();
+    return null;
+  }
+
+  private async waitForFirstReadyProbe(
+    probes: VideoSourceProbe[],
+  ): Promise<string | null> {
+    if (probes.length === 0) {
+      return null;
+    }
+
+    return new Promise((resolve) => {
+      let pendingCount = probes.length;
+      let resolved = false;
+
+      probes.forEach((probe) => {
+        void probe.ready
+          .then((url) => {
+            if (resolved) {
+              return;
+            }
+            resolved = true;
+            resolve(url);
+          })
+          .catch((error) => {
+            window.logger.warn(
+              `動画ソースの実再生プローブに失敗しました: ${probe.url}`,
+              error,
+            );
+          })
+          .finally(() => {
+            pendingCount--;
+            if (!resolved && pendingCount === 0) {
+              resolve(null);
+            }
+          });
+      });
+    });
+  }
+
+  private async playFirstReadyFallback(
+    probes: VideoSourceProbe[],
+    title: string,
+  ): Promise<string | null> {
+    while (probes.length > 0) {
+      const url = await this.waitForFirstReadyProbe(probes);
+      if (!url) {
+        return null;
+      }
+
+      const readyIndex = probes.findIndex((probe) => probe.url === url);
+      if (readyIndex >= 0) {
+        const [readyProbe] = probes.splice(readyIndex, 1);
+        readyProbe.cleanup();
+      }
+
+      try {
+        await this.playVideo(url, title);
+        return url;
+      } catch (error) {
+        window.logger.warn(
+          `動画ソースの再生準備に失敗しました。次候補を試します: ${url}`,
+          error,
+        );
+        this.cleanupPlayback();
+      }
+    }
+
+    return null;
   }
 
   private async playVideo(url: string, title: string): Promise<void> {
@@ -209,6 +431,7 @@ export class StandalonePlayer {
       this.videoElement.src = url;
       this.toastManager.showInfo("ネイティブ再生を試みます");
     }
+    await this.waitForVideoReady();
 
     const wasMuted = this.videoElement.muted;
     try {
@@ -303,6 +526,52 @@ export class StandalonePlayer {
     this.toastManager.showInfo(
       "HLS.jsが利用できないためネイティブ再生を試みます",
     );
+  }
+
+  private async waitForVideoReady(): Promise<void> {
+    const video = this.videoElement;
+    if (!video) {
+      throw new Error("動画要素が初期化されていません");
+    }
+
+    if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      return;
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      const timeoutId = window.setTimeout(() => {
+        cleanup();
+        reject(new Error("動画メタデータの読み込みがタイムアウトしました"));
+      }, VIDEO_READY_TIMEOUT_MS);
+
+      const cleanup = (): void => {
+        window.clearTimeout(timeoutId);
+        video.removeEventListener("loadedmetadata", handleReady);
+        video.removeEventListener("canplay", handleReady);
+        video.removeEventListener("error", handleError);
+      };
+
+      const handleReady = (): void => {
+        cleanup();
+        resolve();
+      };
+
+      const handleError = (): void => {
+        cleanup();
+        const mediaError = video.error;
+        reject(
+          new Error(
+            mediaError?.message ||
+              `動画ソースの読み込みに失敗しました: code=${mediaError?.code ?? "unknown"}`,
+          ),
+        );
+      };
+
+      video.addEventListener("loadedmetadata", handleReady, { once: true });
+      video.addEventListener("canplay", handleReady, { once: true });
+      video.addEventListener("error", handleError, { once: true });
+      video.load();
+    });
   }
 
   private async loadComments(videoId: string): Promise<void> {
