@@ -4,12 +4,13 @@
  */
 
 import { ModeValue } from "@/types/index";
+import { DB_CONFIG } from "@/video-player/config/database-config";
 import { DatabaseManager } from "@/video-player/core/database-manager";
 
 // レガシー互換性のための定数
 const DB_NAME = "NicoCachePlayerDB";
 const STORE_NAME = "playerSettings";
-const DB_VERSION = 1;
+const DB_VERSION = DB_CONFIG.CURRENT_VERSION;
 
 // 昇格機能のインスタンス
 const dbManager = DatabaseManager.getInstance();

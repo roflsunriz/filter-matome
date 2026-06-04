@@ -6,6 +6,7 @@
 import { MigrationManager } from "@/video-player/core/migration-manager";
 import {
   DB_CONFIG,
+  DB_STORES,
   VideoCache,
   ViewHistory,
   UserStats,
@@ -91,7 +92,7 @@ export class DatabaseManager {
         resolve(db);
       };
 
-      request.onupgradeneeded = async (event) => {
+      request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
         const oldVersion = event.oldVersion;
         const newVersion = event.newVersion || DB_CONFIG.CURRENT_VERSION;
@@ -101,16 +102,12 @@ export class DatabaseManager {
         );
 
         try {
-          // マイグレーション実行
-          const result = await this.migrationManager.executeMigration(
-            db,
-            oldVersion,
-            newVersion,
-          );
-
-          if (!result.success) {
-            throw new Error(result.error || "マイグレーション失敗");
+          const transaction = request.transaction;
+          if (!transaction) {
+            throw new Error("バージョン変更トランザクションを取得できません");
           }
+
+          this.upgradeSchema(db, transaction);
         } catch (error) {
           window.logger?.error(
             "マイグレーション実行エラーが発生しました！:",
@@ -120,6 +117,43 @@ export class DatabaseManager {
         }
       };
     });
+  }
+
+  /**
+   * IndexedDB のスキーマをバージョン変更トランザクション内で同期的に更新
+   */
+  private upgradeSchema(db: IDBDatabase, transaction: IDBTransaction): void {
+    Object.values(DB_STORES).forEach((storeConfig) => {
+      const store = db.objectStoreNames.contains(storeConfig.name)
+        ? transaction.objectStore(storeConfig.name)
+        : db.createObjectStore(storeConfig.name, {
+            keyPath: storeConfig.keyPath,
+            autoIncrement: storeConfig.autoIncrement,
+          });
+
+      storeConfig.indexes?.forEach((indexConfig) => {
+        if (!store.indexNames.contains(indexConfig.name)) {
+          store.createIndex(indexConfig.name, indexConfig.name, {
+            unique: indexConfig.unique,
+          });
+        }
+      });
+    });
+
+    if (db.objectStoreNames.contains("systemInfo")) {
+      const systemStore = transaction.objectStore("systemInfo");
+      systemStore.put({
+        key: `schema_v${DB_CONFIG.CURRENT_VERSION}`,
+        value: true,
+        version: DB_CONFIG.CURRENT_VERSION,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        metadata: {
+          description: "video-player IndexedDB スキーマ更新完了",
+          timestamp: Date.now(),
+        },
+      });
+    }
   }
 
   /**
