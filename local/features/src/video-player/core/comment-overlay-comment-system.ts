@@ -37,7 +37,9 @@ interface CommentOverlayRenderer {
   resize(): void;
   clearComments(): void;
   addComment(body: string, vposMs: number, commands?: string[]): unknown;
-  updateSettings(settings: RendererSettings): void;
+  settings: RendererSettings;
+  performInitialSync(frameTimeMs?: number): void;
+  draw(): void;
   /** v3.0.0+ コメント表示/非表示を切り替える専用メソッド */
   setCommentVisibility(visible: boolean): void;
 }
@@ -87,7 +89,7 @@ export class CommentOverlayCommentSystem {
       commentOpacity: this.userOpacity,
       isCommentVisible: this.isVisible,
       useContainerResizeObserver: true,
-      shadowIntensity: "strong"
+      shadowIntensity: "strong",
     };
 
     const rendererInstance = new CommentRenderer(this.settings, {
@@ -180,7 +182,14 @@ export class CommentOverlayCommentSystem {
       ngWords: [...this.settings.ngWords],
       ngRegexps: [...this.settings.ngRegexps],
     };
-    this.renderer?.updateSettings(this.settings);
+
+    if (!this.renderer) {
+      return;
+    }
+
+    this.renderer.settings = this.settings;
+    this.renderer.performInitialSync();
+    this.renderer.draw();
   }
 
   private renderAllComments(): void {
