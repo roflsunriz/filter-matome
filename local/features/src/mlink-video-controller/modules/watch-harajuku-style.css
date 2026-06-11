@@ -52,7 +52,7 @@
 
   html,
   body {
-    background: var(--hy-bg) !important;
+    background: transparent !important;
     color: var(--hy-text) !important;
     font-family: "Arial", "Helvetica", "Meiryo", "MS PGothic", sans-serif !important;
     font-size: 12px !important;
@@ -64,7 +64,7 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: var(--hy-bg) !important;
+    background: transparent !important;
   }
 
   a,
@@ -351,7 +351,7 @@
 
   #root main {
     display: block !important;
-    background: var(--hy-bg) !important;
+    background: transparent !important;
     margin-top: 0 !important;
   }
 
@@ -1047,7 +1047,7 @@
   :root[data-hy-theme="light"] body,
   :root[data-hy-theme="light"] #root main,
   :root[data-hy-theme="light"] body::before {
-    background: #fff !important;
+    background: transparent !important;
     color: #222 !important;
   }
 
@@ -1055,7 +1055,7 @@
   :root[data-hy-theme="dark"] body,
   :root[data-hy-theme="dark"] #root main,
   :root[data-hy-theme="dark"] body::before {
-    background: #151515 !important;
+    background: transparent !important;
     color: #e8e8e8 !important;
   }
 
@@ -1241,12 +1241,12 @@
     html,
     body,
     #root main {
-      background: var(--hy-bg) !important;
+      background: transparent !important;
       color: var(--hy-text) !important;
     }
 
     body::before {
-      background: var(--hy-bg) !important;
+      background: transparent !important;
     }
 
     #root > div > header,

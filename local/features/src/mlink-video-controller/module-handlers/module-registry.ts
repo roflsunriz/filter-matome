@@ -106,7 +106,6 @@ export class ModuleRegistry {
         style: "outlined",
         color: "white",
       }),
-      exclusiveGroup: "watch_background",
     });
 
     this.registerModule({
