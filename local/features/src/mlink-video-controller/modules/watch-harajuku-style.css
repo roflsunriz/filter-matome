@@ -209,7 +209,7 @@
     height: 56px !important;
     min-height: 56px !important;
     padding: 0 !important;
-    background: #fff !important;
+    background: transparent !important;
     border: 0 !important;
     box-shadow: none !important;
     color: var(--hy-text) !important;
@@ -1070,6 +1070,10 @@
     color: #222 !important;
   }
 
+  :root[data-hy-theme="light"] #root > div > header {
+    background: transparent !important;
+  }
+
   :root[data-hy-theme="light"] #root > div > header a[title="ニコニコ動画"]::after {
     color: #111 !important;
     text-shadow: 0 1px 0 #fff !important;
@@ -1164,7 +1168,7 @@
   :root[data-hy-theme="light"] #root > div > header a:not([title="ニコニコ動画"]),
   :root[data-hy-theme="light"] #root > div > header [class*="bg_layer"],
   :root[data-hy-theme="light"] #root > div > header [class*="bg-c_layer"] {
-    background: #fff !important;
+    background: transparent !important;
     color: #111 !important;
   }
 
@@ -1178,8 +1182,12 @@
     color: #e8e8e8 !important;
   }
 
+  :root[data-hy-theme="dark"] #CommonHeader {
+    background: transparent !important;
+  }
+
   :root[data-hy-theme="dark"] #root > div > header {
-    background: #151515 !important;
+    background: transparent !important;
     color: #e8e8e8 !important;
   }
 
@@ -1251,7 +1259,7 @@
 
     #root > div > header,
     #CommonHeader {
-      background: #151515 !important;
+      background: transparent !important;
       color: var(--hy-text) !important;
     }
 
