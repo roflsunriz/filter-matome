@@ -434,24 +434,12 @@ export class WatchPageModule implements ModuleInstance {
       const href = `href="https://commons.nicovideo.jp/works/${currentVideoInfo.videoId}" target="_blank"`;
 
       const tagCounterHTML = `
-        <div title="タグ個数" id="TagItemsCounter" class="TagItem d_inline-flex pr_x0_5 h_x4 ai_center bdr_full bg-c_action.base flex-wrap_wrap fw_bold ov_hidden [&amp;:has(>_a:nth-child(1):hover)]:bg-c_action.baseHover">
-          <a title="コンテンツツリー" data-anchor-page="watch" data-anchor-area="tags" class="pl_x2 pr_base h_100% d_flex ai_center" ${href}>
-            タグ個数${option.tagLength}個/最大11個
-          </a>
-          <a data-anchor-page="watch" data-anchor-area="tags" target="_blank" class="fill_monotone.L100 fs_2xl bdr_full ov_hidden" ${href}>
-            <svg id="TagItemsCounter_icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" class="w_font h_font" style="fill: currentColor;">
-              <path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
-            </svg>
-          </a>
-        </div>
-        <div title="共有ボタン" id="TagItemsShareButton" class="TagItem d_inline-flex pr_x0_5 h_x4 ai_center bdr_full bg-c_action.base flex-wrap_wrap fw_bold ov_hidden [&amp;:has(>_a:nth-child(1):hover)]:bg-c_action.baseHover">
-          <button title="${currentVideoInfo.title}を共有" class="pl_x2 pr_base h_100% d_flex ai_center cursor_pointer gap_x0_5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" style="fill: currentColor;">
-              <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
-            </svg>
-            共有
-          </button>
-        </div>
+        <a title="タグ個数" id="TagItemsCounter" data-anchor-page="watch" data-anchor-area="tags" class="d_inline-flex h_x4 px_x2 ai_center bdr_full bg-c_action.base flex-wrap_nowrap fw_bold ov_hidden [&amp;:has(>_a:nth-child(1):hover)]:bg-c_action.baseHover [&amp;_>_span]:lc_1" ${href}>
+          <span>タグ個数${option.tagLength}個/最大11個</span>
+        </a>
+        <a title="${currentVideoInfo.title}を共有" id="TagItemsShareButton" data-anchor-page="watch" data-anchor-area="tags" class="d_inline-flex h_x4 px_x2 ai_center bdr_full bg-c_action.base flex-wrap_nowrap fw_bold ov_hidden [&amp;:has(>_a:nth-child(1):hover)]:bg-c_action.baseHover [&amp;_>_span]:lc_1" href="#">
+          <span>共有</span>
+        </a>
       `;
 
       option.element.insertAdjacentHTML("beforeend", tagCounterHTML);
@@ -474,9 +462,11 @@ export class WatchPageModule implements ModuleInstance {
    * 共有ボタンのイベントハンドラー設定
    */
   private setupShareButton(): void {
-    const shareButton = document.querySelector("#TagItemsShareButton button");
+    const shareButton = document.getElementById("TagItemsShareButton");
     if (shareButton) {
-      shareButton.addEventListener("click", () => {
+      shareButton.addEventListener("click", (event) => {
+        event.preventDefault();
+
         // クリック時に動的に最新の動画情報を取得
         const currentVideoInfo = this.getCurrentVideoInfo();
         const textToCopy = `${currentVideoInfo.title}\nhttps://nico.ms/${currentVideoInfo.videoId}`;
@@ -607,12 +597,10 @@ export class WatchPageModule implements ModuleInstance {
     if (!tagCounter) return;
 
     const currentTagCount = this.getTagCount();
-    const tagCounterLink = tagCounter.querySelector(
-      'a[title="コンテンツツリー"]',
-    );
+    const tagCounterLabel = tagCounter.querySelector("span");
 
-    if (tagCounterLink) {
-      tagCounterLink.textContent = `タグ個数${currentTagCount}個/最大11個`;
+    if (tagCounterLabel) {
+      tagCounterLabel.textContent = `タグ個数${currentTagCount}個/最大11個`;
     }
 
     // 共有ボタンの情報も更新（動画情報が変わった場合に備えて）
@@ -639,10 +627,7 @@ export class WatchPageModule implements ModuleInstance {
     });
 
     // ボタンのtitle属性を更新（ホバー時の表示）
-    const button = shareButton.querySelector("button");
-    if (button) {
-      button.setAttribute("title", `${currentVideoInfo.title}を共有`);
-    }
+    shareButton.setAttribute("title", `${currentVideoInfo.title}を共有`);
   }
 
   /**
