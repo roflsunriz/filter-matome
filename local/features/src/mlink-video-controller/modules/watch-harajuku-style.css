@@ -908,6 +908,11 @@
     overflow: hidden !important;
   }
 
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > header [aria-label*="動画の詳細情報"] > * {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > header [aria-label*="動画の詳細情報"]::after {
     content: "続きを読む";
     position: absolute;
