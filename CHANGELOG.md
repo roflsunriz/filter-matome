@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#223] - 2026-06-12
+
+### Added
+- 【mlink-video-controller】Harajuku リポジトリの成果物を取り込み、Watch ページをニコニコ動画（原宿）風に表示する `原宿風Watch` ビジュアルモジュールを追加。
+- 【mlink-video-controller】原宿風Watchに、原宿風CSS注入、再生数・コメント数・マイリスト数・投稿日時の集約表示、ライト/ダークテーマ切替、SPA再描画対応を追加。
+
+### Changed
+- 【mlink-video-controller】原宿風Watchを背景セレクターと同時使用できるようにし、背景系モジュールの排他グループから除外。
+- 【mlink-video-controller】原宿風Watchのページ全体・ヘッダー外側・テレビちゃん／原宿タイトル周辺の背景指定を透明化し、背景セレクターの背景が見えるように調整。
+- 【mlink-video-controller】タグ個数表示と共有ボタンを既存タグと同じ `a[data-anchor-area="tags"] > span` 構造へ変更し、原宿風Watch適用時の通常タグと算出スタイルが揃うように調整。
+- 【mlink-video-controller】タグ編集ボタンを通常タグ風の高さ・余白・フォント・背景・枠色に統一し、light/dark 配色の文字色も通常タグに合わせて補正。
+- 【build】`bun run build` が使用する `scripts/build-all.mjs` を逐次実行から並列実行へ変更し、既定ではCPU数を上限に各ビルドを同時実行するように改善。
+- 【build】`BUILD_CONCURRENCY` 環境変数で全体ビルドの並列数を調整できるようにし、失敗したビルドの集約表示を追加。
+- 【docs】mlink-video-controller README に原宿風Watchモジュールの概要と背景セレクター同時使用の説明を追加。
+
+### Fixed
+- 【mlink-video-controller】原宿風Watchと背景セレクターを同時に有効化できない問題を修正。
+- 【mlink-video-controller】原宿風Watch適用時にページ全体の強制背景指定が背景セレクターを覆う問題を修正。
+- 【mlink-video-controller】light テーマで「続きを読む」ボタンの文字の裏に元要素が重なって見える問題を修正。
+- 【mlink-video-controller】原宿風Watch適用時、タグ個数表示と共有ボタンの高さや余白が既存タグと微妙にずれる問題を修正。
+- 【mlink-video-controller】light テーマでタグ編集ボタンの文字色が通常タグと同じ青色にならず黒く表示される問題を修正。
+
 ## [#222.1] - 2026-06-04
 
 ### Changed
