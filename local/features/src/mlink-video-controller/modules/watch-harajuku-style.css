@@ -1435,3 +1435,74 @@
     background: #252525 !important;
     border-color: #252525 !important;
   }
+
+  button[data-element-name="tag_edit"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: normal !important;
+    gap: normal !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    padding: 0 8px !important;
+    margin-top: 4px !important;
+    border: 1px solid #aaa !important;
+    border-radius: var(--hy-radius) !important;
+    background: linear-gradient(#fff, #e7e7e7) !important;
+    color: var(--hy-link) !important;
+    font-size: 12px !important;
+    font-weight: normal !important;
+    line-height: 16.8px !important;
+    flex: 0 0 auto !important;
+    max-width: none !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
+
+  button[data-element-name="tag_edit"] svg {
+    display: none !important;
+  }
+
+  button[data-element-name="tag_edit"] span {
+    display: flow-root !important;
+    height: 16.8px !important;
+    overflow: hidden !important;
+    color: inherit !important;
+    font: inherit !important;
+    line-height: inherit !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+  }
+
+  :root[data-hy-theme="light"] button[data-element-name="tag_edit"] {
+    background: linear-gradient(#fff, #e7e7e7) !important;
+    border-color: #999 !important;
+    color: #0645ad !important;
+  }
+
+  :root[data-hy-theme="light"] #root#root main button[data-element-name="tag_edit"],
+  :root[data-hy-theme="light"] #root#root main button[data-element-name="tag_edit"] span {
+    color: #0645ad !important;
+    fill: #0645ad !important;
+  }
+
+  :root[data-hy-theme="dark"] button[data-element-name="tag_edit"] {
+    background: linear-gradient(#323232, #222) !important;
+    border-color: #5f5f5f !important;
+    color: var(--hy-link) !important;
+  }
+
+  :root[data-hy-theme="dark"] #root#root main button[data-element-name="tag_edit"],
+  :root[data-hy-theme="dark"] #root#root main button[data-element-name="tag_edit"] span {
+    color: var(--hy-link) !important;
+    fill: var(--hy-link) !important;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    button[data-element-name="tag_edit"] {
+      background: linear-gradient(#323232, #222) !important;
+      border-color: #5f5f5f !important;
+      color: var(--hy-link) !important;
+    }
+  }
