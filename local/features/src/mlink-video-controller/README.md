@@ -27,6 +27,8 @@ features/src/mlink-video-controller/
 │   ├── nico-info-page-module.ts          # ニコインフォページ (5.3KB)
 │   ├── thumbnails-filter-module.ts       # サムネイルフィルター (23KB)
 │   ├── watch-background-selector-module.ts # 背景セレクター (28KB)
+│   ├── watch-harajuku-module.ts          # 原宿風Watch表示 (新規)
+│   ├── watch-harajuku-style.css          # 原宿風Watch表示CSS (新規)
 │   ├── watch-matrix-background-module.ts # マトリックス背景 (7.2KB)
 │   ├── watch-mylist-selector-module.ts   # マイリストセレクタ (6.1KB)
 │   ├── watch-tab-sessions-module.ts      # タブセッション拡張 (12KB)
@@ -146,6 +148,11 @@ UI更新
 - **役割**: ラジアル背景選択UI
 - **機能**: Shadow DOM、ラジアル選択、背景画像管理、設定連携
 - **編集タイミング**: 背景選択UI変更、新しい背景タイプ追加
+
+#### `modules/watch-harajuku-module.ts` - 原宿風Watch表示
+- **役割**: Watchページをニコニコ動画（原宿）風のビジュアルに変更
+- **機能**: 原宿風CSS注入、再生数・コメント数・マイリスト数・投稿日時の集約表示、ライト/ダークテーマ切替、SPA遷移対応
+- **編集タイミング**: 原宿風レイアウトの調整、テーマボタンやメタ情報表示の変更
 
 #### `modules/watch-page-module.ts` - Watchページ統合（26KB）
 - **役割**: Watchページの各種機能統合

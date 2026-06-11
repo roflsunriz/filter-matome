@@ -94,6 +94,22 @@ export class ModuleRegistry {
     });
 
     this.registerModule({
+      id: "watch_harajuku",
+      name: "原宿風Watch",
+      description: "Watchページをニコニコ動画（原宿）風の表示に変更します",
+      version: "1.0.0",
+      enabled: false,
+      targetPages: [PageType.WATCH],
+      dependencies: [],
+      category: ModuleCategory.VISUAL,
+      icon: createMaterialIcon("palette", {
+        style: "outlined",
+        color: "white",
+      }),
+      exclusiveGroup: "watch_background",
+    });
+
+    this.registerModule({
       id: "watch_mylist_selector",
       name: "マイリストセレクタ",
       description: "カスタムマイリストへの動画追加UIを提供します",

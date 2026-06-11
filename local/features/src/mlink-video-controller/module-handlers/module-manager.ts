@@ -462,6 +462,14 @@ export class ModuleManager {
             break;
           }
 
+          case "watch_harajuku": {
+            const { WatchHarajukuModule } = await import(
+              "../modules/watch-harajuku-module"
+            );
+            instance = new WatchHarajukuModule(config);
+            break;
+          }
+
           default:
             throw new Error(`未知のビジュアル系モジュールID: ${config.id}`);
         }
