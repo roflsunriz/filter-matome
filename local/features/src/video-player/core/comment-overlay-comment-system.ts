@@ -31,12 +31,26 @@ const COLOR_COMMANDS = new Set([
   "black2",
 ]);
 
+interface CommentOverlayMeta {
+  no?: number;
+  fork?: string;
+  source?: string;
+  threadId?: string;
+  date?: number;
+  userIdHash?: string;
+}
+
 interface CommentOverlayRenderer {
   initialize(options: { video: HTMLVideoElement; container: HTMLElement }): void;
   destroy(): void;
   resize(): void;
   clearComments(): void;
-  addComment(body: string, vposMs: number, commands?: string[]): unknown;
+  addComment(
+    body: string,
+    vposMs: number,
+    commands?: string[],
+    meta?: CommentOverlayMeta | null,
+  ): unknown;
   settings: RendererSettings;
   performInitialSync(frameTimeMs?: number): void;
   draw(): void;
@@ -201,8 +215,37 @@ export class CommentOverlayCommentSystem {
     for (const comment of this.comments) {
       const vposMs = this.toVposMs(comment);
       const commands = this.collectCommands(comment);
-      this.renderer.addComment(comment.body, vposMs, commands);
+      this.renderer.addComment(
+        comment.body,
+        vposMs,
+        commands,
+        this.buildCommentMeta(comment),
+      );
     }
+  }
+
+  private buildCommentMeta(comment: Comment): CommentOverlayMeta {
+    return {
+      ...(typeof comment.no === "number" && Number.isFinite(comment.no)
+        ? { no: comment.no }
+        : {}),
+      ...(typeof comment.fork === "string" && comment.fork.length > 0
+        ? { fork: comment.fork }
+        : {}),
+      ...(typeof comment.source === "string" && comment.source.length > 0
+        ? { source: comment.source }
+        : {}),
+      ...(typeof comment.threadId === "string" && comment.threadId.length > 0
+        ? { threadId: comment.threadId }
+        : {}),
+      ...(typeof comment.postedAt === "number" &&
+      Number.isFinite(comment.postedAt)
+        ? { date: comment.postedAt }
+        : {}),
+      ...(typeof comment.userId === "string" && comment.userId.length > 0
+        ? { userIdHash: comment.userId }
+        : {}),
+    };
   }
 
   private toVposMs(comment: Comment): number {

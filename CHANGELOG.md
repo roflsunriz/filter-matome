@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#224] - 2026-06-20
+
+### Changed
+- 【video-player】`comment-overlay` を v4.0.0 に更新し、v4 の同一 `vposMs` コメント並び制御で使われるメタ情報を描画エンジンへ渡すように変更。
+- 【video-player】コメント API / CommentFilter2 由来のコメントへスレッド `fork` 情報を保持し、`no`、`fork`、`source`、`threadId`、`postedAt`、`userId` を `comment-overlay` の校正メタ情報へ連携。
+- 【features】`package.json` の `version` を `224` に更新し、`comment-overlay` を `4.0.0` に固定。
+- 【features】`dependencies` と `devDependencies` の重複を整理し、Bun install 時の重複依存警告を解消。
+
 ## [#223] - 2026-06-12
 
 ### Added

@@ -171,7 +171,12 @@ export class CommentSystem {
     );
     this.hasReceivedFilteredData = true;
     this.sourceComments = apiResponse.data.threads
-      .flatMap((thread) => thread.comments)
+      .flatMap((thread) =>
+        thread.comments.map((comment) => ({
+          ...comment,
+          fork: thread.fork,
+        })),
+      )
       .map((comment) => ({
         ...(comment as unknown as Comment),
         vposMs: comment.vpos * 10,
@@ -226,8 +231,11 @@ export class CommentSystem {
       );
 
       // コメントをフィルタ
-      const comments = apiResponse.data.threads.flatMap(
-        (thread) => thread.comments,
+      const comments = apiResponse.data.threads.flatMap((thread) =>
+        thread.comments.map((comment) => ({
+          ...comment,
+          fork: thread.fork,
+        })),
       );
       window.logger.info(`取得したコメント数です: ${comments.length}`);
 

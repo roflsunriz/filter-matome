@@ -26,6 +26,8 @@ export interface CommentData {
   nicoruCount?: number;
   nicoruId?: string;
   source?: string;
+  fork?: string;
+  threadId?: string;
   isMyPost?: boolean;
 }
 
