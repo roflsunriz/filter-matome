@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#224.1] - 2026-06-20
+
+### Changed
+- 【features】`package.json` の `version` を `224.1` に更新。
+- 【video-player】動画メタデータの実アスペクト比から全画面時の動画表示矩形を計算し、`video-container` とコメントオーバーレイを同じ矩形へ中央配置するように変更。
+- 【video-player】全画面切り替え直後の viewport 更新タイミング差を吸収するため、全画面レイアウトの再計算を複数タイミングで実行するように変更。
+
+### Fixed
+- 【video-player】Firefox の 16:9 以外の画面比率の全画面表示で、左右余白がない状態でも動画が上下中央に配置されない問題を修正。
+- 【video-player】ブラウザ別 fullscreen 疑似クラスを同一セレクタリストに混在させたことで、未対応ブラウザで全画面スタイルが無効化される問題を修正。
+
 ## [#224] - 2026-06-20
 
 ### Changed

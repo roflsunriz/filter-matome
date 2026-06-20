@@ -17,8 +17,8 @@ export const STANDALONE_PAGE_STYLES = [
   ".standalone-player-wrapper .comment-container { flex: 0 0 auto; width: clamp(280px, 25vw, 400px); min-width: 280px; max-width: 400px; background: rgba(23, 26, 38, 0.92); border-radius: 12px; padding: 12px; box-shadow: inset 0 0 0 1px rgba(127, 158, 255, 0.16); box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; max-height: calc(100vh - 200px); }",
   
   /* videoとvideo-containerのレスポンシブ対応（通常表示時のみ） */
-  ".standalone-player-wrapper .custom-player:not(:fullscreen):not(:-webkit-full-screen):not(:-moz-full-screen):not(:-ms-fullscreen) { width: 100%; height: auto; }",
-  ".standalone-player-wrapper .custom-player:not(:fullscreen):not(:-webkit-full-screen):not(:-moz-full-screen):not(:-ms-fullscreen) .video-container { position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: calc(100vh - 200px); }",
+  ".standalone-player-wrapper .custom-player:not(:fullscreen):not(.nc-fullscreen-player) { width: 100%; height: auto; }",
+  ".standalone-player-wrapper .custom-player:not(:fullscreen):not(.nc-fullscreen-player) .video-container { position: relative; width: 100%; aspect-ratio: var(--video-aspect-ratio, 16 / 9); max-height: calc(100vh - 200px); }",
   
   ".nc-info-card { background: rgba(20, 24, 36, 0.88); border-radius: 16px; padding: 20px; box-shadow: inset 0 0 0 1px rgba(112, 138, 210, 0.22); display: flex; flex-direction: column; gap: 22px; }",
   ".nc-stat-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }",

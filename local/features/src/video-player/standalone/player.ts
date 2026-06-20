@@ -54,12 +54,14 @@ export class StandalonePlayer {
   // レスポンシブ対応用
   private resizeObserver: ResizeObserver | null = null;
   private fullscreenChangeHandler: (() => void) | null = null;
+  private fullscreenLayoutTimers: number[] = [];
   private standaloneWrapper: HTMLElement | null = null;
 
   // 動画終了・再再生検出用
   private hasEnded = false;
   private endedEventHandler: (() => void) | null = null;
   private playEventHandler: (() => void) | null = null;
+  private videoMetadataHandler: (() => void) | null = null;
 
   // 外部から登録される動画終了時コールバック
   private externalEndedCallback: (() => void) | null = null;
@@ -138,6 +140,8 @@ export class StandalonePlayer {
     if (!this.videoElement) {
       throw new Error("動画要素が生成できませんでした");
     }
+
+    this.setupVideoAspectRatioHandler();
 
     if (this.enableComments) {
       try {
@@ -432,6 +436,7 @@ export class StandalonePlayer {
       this.toastManager.showInfo("ネイティブ再生を試みます");
     }
     await this.waitForVideoReady();
+    this.updateVideoAspectRatio();
 
     const wasMuted = this.videoElement.muted;
     try {
@@ -621,6 +626,126 @@ export class StandalonePlayer {
     }
   }
 
+  private setupVideoAspectRatioHandler(): void {
+    if (!this.videoElement) {
+      return;
+    }
+
+    this.videoMetadataHandler = (): void => {
+      this.updateVideoAspectRatio();
+    };
+    this.videoElement.addEventListener(
+      "loadedmetadata",
+      this.videoMetadataHandler,
+    );
+  }
+
+  private updateVideoAspectRatio(): void {
+    if (!this.videoElement || !this.customPlayerContainer) {
+      return;
+    }
+
+    const { videoWidth, videoHeight } = this.videoElement;
+    if (videoWidth <= 0 || videoHeight <= 0) {
+      return;
+    }
+
+    this.customPlayerContainer.style.setProperty(
+      "--video-aspect-ratio",
+      `${videoWidth} / ${videoHeight}`,
+    );
+    this.updateFullscreenVideoRect(videoWidth, videoHeight);
+
+    this.adjustLayout();
+    this.commentSystem.resize();
+  }
+
+  private updateFullscreenVideoRect(
+    videoWidth: number,
+    videoHeight: number,
+  ): void {
+    if (!this.customPlayerContainer) {
+      return;
+    }
+
+    const viewportWidth =
+      window.innerWidth || document.documentElement.clientWidth;
+    const viewportHeight =
+      window.innerHeight || document.documentElement.clientHeight;
+
+    if (viewportWidth <= 0 || viewportHeight <= 0) {
+      return;
+    }
+
+    const videoAspect = videoWidth / videoHeight;
+    const viewportAspect = viewportWidth / viewportHeight;
+    const rect =
+      videoAspect > viewportAspect
+        ? {
+            width: viewportWidth,
+            height: viewportWidth / videoAspect,
+            left: 0,
+            top: (viewportHeight - viewportWidth / videoAspect) / 2,
+          }
+        : {
+            width: viewportHeight * videoAspect,
+            height: viewportHeight,
+            left: (viewportWidth - viewportHeight * videoAspect) / 2,
+            top: 0,
+          };
+
+    this.customPlayerContainer.style.setProperty(
+      "--fullscreen-video-left",
+      `${rect.left.toFixed(3)}px`,
+    );
+    this.customPlayerContainer.style.setProperty(
+      "--fullscreen-video-top",
+      `${rect.top.toFixed(3)}px`,
+    );
+    this.customPlayerContainer.style.setProperty(
+      "--fullscreen-video-width",
+      `${rect.width.toFixed(3)}px`,
+    );
+    this.customPlayerContainer.style.setProperty(
+      "--fullscreen-video-height",
+      `${rect.height.toFixed(3)}px`,
+    );
+  }
+
+  private refreshFullscreenLayout(): void {
+    this.updateVideoAspectRatio();
+    this.commentSystem.resize();
+  }
+
+  private clearFullscreenLayoutTimers(): void {
+    this.fullscreenLayoutTimers.forEach((timerId) => {
+      clearTimeout(timerId);
+    });
+    this.fullscreenLayoutTimers = [];
+  }
+
+  private scheduleFullscreenLayoutRefresh(): void {
+    this.clearFullscreenLayoutTimers();
+    this.refreshFullscreenLayout();
+
+    requestAnimationFrame(() => {
+      this.refreshFullscreenLayout();
+      requestAnimationFrame(() => {
+        this.refreshFullscreenLayout();
+      });
+    });
+
+    [100, 300, 700].forEach((delay) => {
+      const timerId = window.setTimeout(() => {
+        this.refreshFullscreenLayout();
+        this.fullscreenLayoutTimers = this.fullscreenLayoutTimers.filter(
+          (id) => id !== timerId,
+        );
+      }, delay);
+      this.fullscreenLayoutTimers.push(timerId);
+    });
+  }
+
   /**
    * 動画の再再生時にコメントをリセットするハンドラーを設定
    */
@@ -723,6 +848,8 @@ export class StandalonePlayer {
       `全画面モード: ${isFullscreen ? "有効" : "無効"}`,
     );
 
+    this.scheduleFullscreenLayoutRefresh();
+
     // 全画面から戻った時にレイアウトを再調整
     if (!isFullscreen) {
       this.adjustLayout();
@@ -735,6 +862,7 @@ export class StandalonePlayer {
   private handleResize(): void {
     // �f�o�E���X�����̂��߁ArequestAnimationFrame���g�p
     requestAnimationFrame(() => {
+      this.updateVideoAspectRatio();
       this.adjustLayout();
     });
   }
@@ -790,9 +918,17 @@ export class StandalonePlayer {
       );
       this.fullscreenChangeHandler = null;
     }
+    this.clearFullscreenLayoutTimers();
 
     // 動画再再生イベントリスナーのクリーンアップ
     if (this.videoElement) {
+      if (this.videoMetadataHandler) {
+        this.videoElement.removeEventListener(
+          "loadedmetadata",
+          this.videoMetadataHandler,
+        );
+        this.videoMetadataHandler = null;
+      }
       if (this.endedEventHandler) {
         this.videoElement.removeEventListener("ended", this.endedEventHandler);
         this.endedEventHandler = null;

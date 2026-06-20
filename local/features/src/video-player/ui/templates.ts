@@ -26,6 +26,11 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
     position: relative;
     width: 100%;
     height: initial !important;
+    --video-aspect-ratio: 16 / 9;
+    --fullscreen-video-left: 0px;
+    --fullscreen-video-top: 0px;
+    --fullscreen-video-width: 100vw;
+    --fullscreen-video-height: 100vh;
     background: #000;
     color: white;
     font-family: Arial, sans-serif;
@@ -76,9 +81,6 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
 
   /* 全画面表示時の基本スタイル - ネイティブAPI + フォールバック */
   .custom-player:fullscreen,
-  .custom-player:-webkit-full-screen,
-  .custom-player:-moz-full-screen,
-  .custom-player:-ms-fullscreen,
   html.fullscreen-active .custom-player.nc-fullscreen-player,
   body.nc-fullscreen-active .custom-player.nc-fullscreen-player {
     position: fixed !important;
@@ -99,16 +101,16 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
 
   /* 全画面時のビデオコンテナスタイル - ネイティブAPI + フォールバック */
   .custom-player:fullscreen .video-container,
-  .custom-player:-webkit-full-screen .video-container,
-  .custom-player:-moz-full-screen .video-container,
-  .custom-player:-ms-fullscreen .video-container,
   html.fullscreen-active .custom-player.nc-fullscreen-player .video-container,
   body.nc-fullscreen-active .custom-player.nc-fullscreen-player .video-container {
     position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
+    top: var(--fullscreen-video-top) !important;
+    left: var(--fullscreen-video-left) !important;
+    width: var(--fullscreen-video-width) !important;
+    height: var(--fullscreen-video-height) !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: var(--video-aspect-ratio) !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -118,33 +120,23 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
 
   /* 全画面時のビデオ要素スタイル - ネイティブAPI + フォールバック */
   .custom-player:fullscreen #video-element,
-  .custom-player:-webkit-full-screen #video-element,
-  .custom-player:-moz-full-screen #video-element,
-  .custom-player:-ms-fullscreen #video-element,
   html.fullscreen-active .custom-player.nc-fullscreen-player #video-element,
   body.nc-fullscreen-active .custom-player.nc-fullscreen-player #video-element {
-    /* position + transform による確実な中央配置 */
-    position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    max-width: 100vw !important;
-    max-height: 100vh !important;
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    transform: none !important;
     object-fit: contain !important;
     object-position: center center !important;
     display: block !important;
-    /* レターボックス/ピラーボックス用の背景色 */
     background-color: #000 !important;
     z-index: 1 !important;
   }
 
   /* 全画面時のコメントキャンバス - ネイティブAPI + フォールバック */
   .custom-player:fullscreen #comment-canvas,
-  .custom-player:-webkit-full-screen #comment-canvas,
-  .custom-player:-moz-full-screen #comment-canvas,
-  .custom-player:-ms-fullscreen #comment-canvas,
   html.fullscreen-active .custom-player.nc-fullscreen-player #comment-canvas,
   body.nc-fullscreen-active .custom-player.nc-fullscreen-player #comment-canvas {
     position: absolute !important;
@@ -159,16 +151,16 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
 
   /* 全画面時のコメントオーバーレイレイヤー（実際の描画先はこちら） */
   .custom-player:fullscreen .comment-overlay-layer,
-  .custom-player:-webkit-full-screen .comment-overlay-layer,
-  .custom-player:-moz-full-screen .comment-overlay-layer,
-  .custom-player:-ms-fullscreen .comment-overlay-layer,
   html.fullscreen-active .custom-player.nc-fullscreen-player .comment-overlay-layer,
   body.nc-fullscreen-active .custom-player.nc-fullscreen-player .comment-overlay-layer {
     position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
+    top: var(--fullscreen-video-top) !important;
+    left: var(--fullscreen-video-left) !important;
+    width: var(--fullscreen-video-width) !important;
+    height: var(--fullscreen-video-height) !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: var(--video-aspect-ratio) !important;
     pointer-events: none !important;
     display: block !important;
     z-index: 1001 !important; /* video(z-index:1) の上 / controls(2000) の下 */
@@ -176,9 +168,6 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
 
   /* 全画面時のプレーヤーコントロール配置 */
   .custom-player:fullscreen player-controls-shadow,
-  .custom-player:-webkit-full-screen player-controls-shadow,
-  .custom-player:-moz-full-screen player-controls-shadow,
-  .custom-player:-ms-fullscreen player-controls-shadow,
   html.fullscreen-active .custom-player.nc-fullscreen-player player-controls-shadow,
   body.nc-fullscreen-active .custom-player.nc-fullscreen-player player-controls-shadow {
     position: fixed !important;
