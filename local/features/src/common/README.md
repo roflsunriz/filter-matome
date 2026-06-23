@@ -51,6 +51,7 @@ index.ts ─── 自動初期化・スタイル適用
   - `fetchWatchPage` - 動画情報取得
   - `fetchNicoComments` - コメントデータ取得
   - `fetchNicoDataWithComments` - 統合データ取得
+  - `fetchWatchPage`/`fetchNicoComments` の短期メモリキャッシュ・同時リクエスト共有
 - **編集タイミング**: API仕様変更対応、新しいエンドポイント追加
 
 ### 🎨 **UI・インターフェース**

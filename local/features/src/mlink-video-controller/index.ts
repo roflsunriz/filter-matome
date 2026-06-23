@@ -1,5 +1,8 @@
 import "@/mlink-video-controller/panels/link-video";
+import { CommentApiCache } from "@/mlink-video-controller/managers/comment-api-cache";
 import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
+
+CommentApiCache.getInstance().install();
 
 class PanelManager {
   private panel: HTMLElement | null = null;

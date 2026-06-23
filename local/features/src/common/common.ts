@@ -27,6 +27,30 @@ type VideoIdSource =
 const WATCH_VIDEO_ID_PATTERN = /\/watch\/([a-z]{2}\d+)/i;
 const VIDEO_ID_QUERY_PATTERN = /[?&]videoId=([a-z]{2}\d+)/i;
 const GENERIC_VIDEO_ID_PATTERN = /([a-z]{2}\d+)/i;
+const WATCH_PAGE_CACHE_TTL_MS = 5 * 60 * 1000;
+const COMMENT_CACHE_TTL_MS = 30 * 1000;
+const MAX_COMMON_CACHE_ENTRIES = 16;
+
+type TimedCacheEntry<T> = {
+  value: T;
+  expiresAt: number;
+};
+
+type NicoCommentResult = {
+  comments: CommentData[];
+  mainThread: CommentThread;
+};
+
+const watchPageCache = new Map<
+  string,
+  TimedCacheEntry<ExtendedFetchWatchPageResult>
+>();
+const watchPageInflight = new Map<
+  string,
+  Promise<ExtendedFetchWatchPageResult | void>
+>();
+const commentCache = new Map<string, TimedCacheEntry<NicoCommentResult>>();
+const commentInflight = new Map<string, Promise<NicoCommentResult | void>>();
 
 const normalizeVideoId = (value?: string | null): string | null => {
   if (typeof value !== "string") {
@@ -83,6 +107,53 @@ const extractVideoIdFromString = (value: string): string | null => {
     return normalizeVideoId(genericMatch[1]);
   }
   return null;
+};
+
+const getTimedCache = <T>(
+  cache: Map<string, TimedCacheEntry<T>>,
+  key: string,
+): T | null => {
+  const entry = cache.get(key);
+  if (!entry) {
+    return null;
+  }
+  if (entry.expiresAt <= Date.now()) {
+    cache.delete(key);
+    return null;
+  }
+  return entry.value;
+};
+
+const setTimedCache = <T>(
+  cache: Map<string, TimedCacheEntry<T>>,
+  key: string,
+  value: T,
+  ttlMs: number,
+): void => {
+  cache.set(key, {
+    value,
+    expiresAt: Date.now() + ttlMs,
+  });
+
+  if (cache.size <= MAX_COMMON_CACHE_ENTRIES) {
+    return;
+  }
+
+  const oldest = [...cache.entries()].sort(
+    (a, b) => a[1].expiresAt - b[1].expiresAt,
+  )[0];
+  if (oldest) {
+    cache.delete(oldest[0]);
+  }
+};
+
+const createCommentCacheKey = (apiData: NicoApiData): string => {
+  const nvComment = apiData.comment.nvComment;
+  return JSON.stringify({
+    server: nvComment.server,
+    params: nvComment.params,
+    threadKey: nvComment.threadKey,
+  });
 };
 
 window.commonHelper = {
@@ -148,49 +219,86 @@ window.commonHelper = {
       return;
     }
 
-    try {
-      const response = await window.commonHelper.fetchRequest(
-        "https://www.nicovideo.jp/watch/" + SMID,
-      );
-
-      if (!response.ok) {
-        console.error("HTTP status code : " + response.status);
-        console.error("HTTP status Text : " + response.statusText);
-        throw new Error(String(response.status));
-      }
-
-      const text = await response.text();
-      const doc = new DOMParser().parseFromString(text, "text/html");
-
-      const serverContextRaw: unknown = JSON.parse(
-        doc
-          .querySelector('meta[name="server-context"]')
-          ?.getAttribute("content") || "{}",
-      );
-      const serverContext =
-        serverContextRaw && typeof serverContextRaw === "object"
-          ? (serverContextRaw as Record<string, unknown>)
-          : {};
-      const serverResponseContent =
-        doc
-          .querySelector('meta[name="server-response"]')
-          ?.getAttribute("content") || "{}";
-      const serverResponseUnknown: unknown = JSON.parse(
-        decodeURIComponent(serverResponseContent),
-      );
-      if (!serverResponseUnknown || typeof serverResponseUnknown !== "object") {
-        throw new Error("Invalid server response");
-      }
-      const serverResponse = serverResponseUnknown as NicoApiServerResponse;
-
-      return {
-        serverContext: serverContext,
-        serverResponse: serverResponse,
-        apiData: serverResponse.data.response,
-      };
-    } catch (error) {
-      console.error(error);
+    const cacheKey = SMID.toLowerCase();
+    const cachedResult = getTimedCache(watchPageCache, cacheKey);
+    if (cachedResult) {
+      return cachedResult;
     }
+
+    const inflight = watchPageInflight.get(cacheKey);
+    if (inflight) {
+      return await inflight;
+    }
+
+    const request = (async (): Promise<ExtendedFetchWatchPageResult | void> => {
+      try {
+        const response = await window.commonHelper.fetchRequest(
+          "https://www.nicovideo.jp/watch/" + SMID,
+        );
+
+        if (!response.ok) {
+          console.error("HTTP status code : " + response.status);
+          console.error("HTTP status Text : " + response.statusText);
+          throw new Error(String(response.status));
+        }
+
+        const text = await response.text();
+        const doc = new DOMParser().parseFromString(text, "text/html");
+
+        const serverContextRaw: unknown = JSON.parse(
+          doc
+            .querySelector('meta[name="server-context"]')
+            ?.getAttribute("content") || "{}",
+        );
+        const serverContext =
+          serverContextRaw && typeof serverContextRaw === "object"
+            ? (serverContextRaw as Record<string, unknown>)
+            : {};
+        const serverResponseContent =
+          doc
+            .querySelector('meta[name="server-response"]')
+            ?.getAttribute("content") || "{}";
+        const serverResponseUnknown: unknown = JSON.parse(
+          decodeURIComponent(serverResponseContent),
+        );
+        if (
+          !serverResponseUnknown ||
+          typeof serverResponseUnknown !== "object"
+        ) {
+          throw new Error("Invalid server response");
+        }
+        const serverResponse = serverResponseUnknown as NicoApiServerResponse;
+
+        return {
+          serverContext: serverContext,
+          serverResponse: serverResponse,
+          apiData: serverResponse.data.response,
+        };
+      } catch (error) {
+        console.error(error);
+      } finally {
+        watchPageInflight.delete(cacheKey);
+      }
+    })();
+
+    watchPageInflight.set(cacheKey, request);
+    const result = await request;
+    if (result) {
+      const resolvedVideoId =
+        typeof result.apiData.video?.id === "string"
+          ? result.apiData.video.id
+          : null;
+      const resolvedCacheKey =
+        normalizeVideoId(resolvedVideoId) ?? cacheKey;
+      setTimedCache(watchPageCache, cacheKey, result, WATCH_PAGE_CACHE_TTL_MS);
+      setTimedCache(
+        watchPageCache,
+        resolvedCacheKey,
+        result,
+        WATCH_PAGE_CACHE_TTL_MS,
+      );
+    }
+    return result;
   },
 
   // ニコニコ動画のコメントデータを取得する関数
@@ -199,51 +307,76 @@ window.commonHelper = {
   ): Promise<{ comments: CommentData[]; mainThread: CommentThread } | void> => {
     try {
       const commentServer = apiData.comment.nvComment.server + "/v1/threads";
+      const cacheKey = createCommentCacheKey(apiData);
+      const cachedResult = getTimedCache(commentCache, cacheKey);
+      if (cachedResult) {
+        return cachedResult;
+      }
+
+      const inflight = commentInflight.get(cacheKey);
+      if (inflight) {
+        return await inflight;
+      }
 
       const requestBody = {
         params: apiData.comment.nvComment.params,
         threadKey: apiData.comment.nvComment.threadKey,
       };
 
-      const response = await window.commonHelper.fetchRequest(commentServer, {
-        method: "POST",
-        headers: {
-          "x-client-os-type": "others",
-          "X-Frontend-Id": "6",
-          "X-Frontend-Version": "0",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        console.error("コメントデータ取得エラー: " + response.status);
-        throw new Error(`コメントAPI Error: ${response.status}`);
-      }
-
-      const commentData = (await response.json()) as CommentApiResponse;
-
-      // メインスレッドを選択（fork === "main"かつcommentCountが最多）
-      const mainThread = commentData.data.threads
-        .filter((thread) => thread.fork === "main")
-        .reduce((prev, current) => {
-          return prev.commentCount > current.commentCount ? prev : current;
+      const request = (async (): Promise<NicoCommentResult | void> => {
+        const response = await window.commonHelper.fetchRequest(commentServer, {
+          method: "POST",
+          headers: {
+            "x-client-os-type": "others",
+            "X-Frontend-Id": "6",
+            "X-Frontend-Version": "0",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
         });
 
-      if (!mainThread) {
-        console.error("メインスレッドが見つかりません");
-        return {
-          comments: [],
-          mainThread: { id: "", fork: "main", commentCount: 0, comments: [] },
-        };
-      }
+        if (!response.ok) {
+          console.error("コメントデータ取得エラー: " + response.status);
+          throw new Error(`コメントAPI Error: ${response.status}`);
+        }
 
-      return {
-        comments: mainThread.comments,
-        mainThread: mainThread,
-      };
+        const commentData = (await response.json()) as CommentApiResponse;
+
+        // メインスレッドを選択（fork === "main"かつcommentCountが最多）
+        const mainThread = commentData.data.threads
+          .filter((thread) => thread.fork === "main")
+          .reduce((prev, current) => {
+            return prev.commentCount > current.commentCount ? prev : current;
+          });
+
+        if (!mainThread) {
+          console.error("メインスレッドが見つかりません");
+          return {
+            comments: [],
+            mainThread: { id: "", fork: "main", commentCount: 0, comments: [] },
+          };
+        }
+
+        return {
+          comments: mainThread.comments,
+          mainThread: mainThread,
+        };
+      })();
+
+      commentInflight.set(cacheKey, request);
+      const result = await request;
+      if (result) {
+        setTimedCache(commentCache, cacheKey, result, COMMENT_CACHE_TTL_MS);
+      }
+      return result;
     } catch (error) {
       console.error("コメントデータ取得エラー:", error);
+    } finally {
+      try {
+        commentInflight.delete(createCommentCacheKey(apiData));
+      } catch {
+        // apiDataが不正な場合は削除不要
+      }
     }
   },
 

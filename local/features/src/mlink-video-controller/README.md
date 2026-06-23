@@ -11,6 +11,7 @@ features/src/mlink-video-controller/
 │   ├── speed.ts                          # 再生速度ハンドラー (1.5KB)
 │   └── volume.ts                         # 音量制御ハンドラー (1.9KB)
 ├── managers/
+│   ├── comment-api-cache.ts              # コメントAPI fetch cloneキャッシュ
 │   ├── comment.ts                        # コメント管理 (2.3KB)
 │   ├── control.ts                        # 統合制御管理 (3.5KB)
 │   ├── heatmap.ts                        # ヒートマップ管理 (25KB)
@@ -212,9 +213,15 @@ UI更新
 - **機能**: Canvas描画、FAB表示、オーバーレイ表示、SPA対応、設定保存
 - **編集タイミング**: ヒートマップ表示改善、新しい表示モード追加
 
+#### `managers/comment-api-cache.ts` - コメントAPIキャッシュ
+- **役割**: 公式コメントAPIレスポンスを `fetch` の `Response.clone()` で捕捉し、動画IDごとに短期キャッシュ
+- **機能**: `window.fetch` のチェーン可能なラップ、mainスレッド選択、キャッシュ待機、キャッシュ上限管理
+- **編集タイミング**: コメントAPI捕捉条件の変更、キャッシュ保持方針の調整、fetchフック共存性の改善
+- **設計方針**: comment-filter2 のグローバルデータには依存せず、mlink-video-controller 内で独立して取得済みレスポンスを再利用
+
 #### `managers/nico-api-fetcher.ts` - API取得（5.0KB）
 - **役割**: ニコニコAPIデータ取得・管理
-- **機能**: コメントデータ取得、検索機能、密度データ生成
+- **機能**: コメントAPIキャッシュ優先のコメント取得、検索機能、密度データ生成、未捕捉時の既存APIフォールバック
 - **編集タイミング**: API仕様変更対応、新しいデータ取得機能追加
 
 #### `managers/control.ts` - 統合制御管理（3.5KB）

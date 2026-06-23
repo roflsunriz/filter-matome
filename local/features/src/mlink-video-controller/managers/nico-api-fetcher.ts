@@ -1,13 +1,20 @@
+import {
+  CommentApiCache,
+  normalizeCachedComments,
+} from "@/mlink-video-controller/managers/comment-api-cache";
 import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
 import { MlinkVideoComment } from "@/types/mlink-video-controller-types";
 
 export class NicoApiFetcher {
   private static instance: NicoApiFetcher;
   private player: NicoVideoPlayer;
+  private commentApiCache: CommentApiCache;
   private comments: MlinkVideoComment[] = [];
 
   private constructor() {
     this.player = NicoVideoPlayer.getInstance();
+    this.commentApiCache = CommentApiCache.getInstance();
+    this.commentApiCache.install();
   }
 
   public static getInstance(): NicoApiFetcher {
@@ -19,6 +26,21 @@ export class NicoApiFetcher {
 
   public async fetchAll(videoId: string): Promise<boolean> {
     try {
+      const cachedMainThread =
+        this.commentApiCache.getMainThread(videoId) ??
+        (await this.commentApiCache.waitForMainThread(videoId));
+      if (cachedMainThread && cachedMainThread.comments.length > 0) {
+        this.comments = normalizeCachedComments(cachedMainThread.comments);
+        window.logger?.debug(
+          "[NicoApiFetcher] コメントAPIキャッシュからコメントを取得しました",
+          {
+            videoId,
+            comments: this.comments.length,
+          },
+        );
+        return true;
+      }
+
       const res = await window.commonHelper.fetchNicoDataWithComments(videoId);
       if (!res) {
         window.logger.warn(
