@@ -241,34 +241,45 @@
     text-shadow: 0 -1px 0 #000 !important;
   }
 
-  .HarajukuBackgroundPriorityButton-colorScheme,
-  .HarajukuBackgroundPriorityButton-background {
+  .HarajukuBackgroundPriorityButton-colorSchemeIcon,
+  .HarajukuBackgroundPriorityButton-backgroundIcon {
     position: absolute !important;
-    top: 0 !important;
-    z-index: 1 !important;
-    width: 24px !important;
-    height: 22px !important;
-    color: inherit !important;
-    line-height: 22px !important;
-    text-align: center !important;
+    top: 5px !important;
+    z-index: 0 !important;
+    width: 14px !important;
+    height: 14px !important;
+    border-radius: 50% !important;
+    box-sizing: border-box !important;
     pointer-events: none !important;
   }
 
-  .HarajukuBackgroundPriorityButton-colorScheme {
-    left: 4px !important;
+  .HarajukuBackgroundPriorityButton-colorSchemeIcon {
+    left: 8px !important;
+    border: 1px solid #555 !important;
+    background: linear-gradient(90deg, #111 0 50%, #fff 50% 100%) !important;
   }
 
-  .HarajukuBackgroundPriorityButton-background {
-    right: 4px !important;
+  .HarajukuBackgroundPriorityButton-backgroundIcon {
+    right: 8px !important;
+    border: 1px solid rgba(0, 0, 0, .35) !important;
+    background: conic-gradient(#f44336, #ffeb3b, #4caf50, #03a9f4, #3f51b5, #e91e63, #f44336) !important;
+  }
+
+  :root[data-hy-theme="dark"] .HarajukuBackgroundPriorityButton-colorSchemeIcon {
+    border-color: #aaa !important;
+  }
+
+  :root[data-hy-theme="dark"] .HarajukuBackgroundPriorityButton-backgroundIcon {
+    border-color: rgba(255, 255, 255, .55) !important;
   }
 
   .HarajukuBackgroundPriorityButton-knob {
     position: absolute !important;
-    left: 3px !important;
-    top: 3px !important;
-    z-index: 2 !important;
-    width: 18px !important;
-    height: 18px !important;
+    left: 1px !important;
+    top: 1px !important;
+    z-index: 10 !important;
+    width: 22px !important;
+    height: 22px !important;
     border: 1px solid #777 !important;
     border-radius: 50% !important;
     background: linear-gradient(#fff, #dcdcdc) !important;

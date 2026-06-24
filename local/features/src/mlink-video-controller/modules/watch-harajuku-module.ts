@@ -383,21 +383,21 @@ export class WatchHarajukuModule implements ModuleInstance {
     button.className = "HarajukuBackgroundPriorityButton";
     button.addEventListener("click", this.toggleBackgroundPriority);
 
-    const colorScheme = document.createElement("span");
-    colorScheme.className = "HarajukuBackgroundPriorityButton-colorScheme";
-    colorScheme.setAttribute("aria-hidden", "true");
-    colorScheme.textContent = "色";
+    const colorSchemeIcon = document.createElement("span");
+    colorSchemeIcon.className =
+      "HarajukuBackgroundPriorityButton-colorSchemeIcon";
+    colorSchemeIcon.setAttribute("aria-hidden", "true");
 
     const knob = document.createElement("span");
     knob.className = "HarajukuBackgroundPriorityButton-knob";
     knob.setAttribute("aria-hidden", "true");
 
-    const background = document.createElement("span");
-    background.className = "HarajukuBackgroundPriorityButton-background";
-    background.setAttribute("aria-hidden", "true");
-    background.textContent = "画";
+    const backgroundIcon = document.createElement("span");
+    backgroundIcon.className =
+      "HarajukuBackgroundPriorityButton-backgroundIcon";
+    backgroundIcon.setAttribute("aria-hidden", "true");
 
-    button.append(colorScheme, knob, background);
+    button.append(colorSchemeIcon, knob, backgroundIcon);
     return button;
   }
 
