@@ -384,21 +384,24 @@ export class ModuleManager {
    * モジュールの有効/無効を切り替え
    */
   public async toggleModule(moduleId: string, enabled: boolean): Promise<void> {
+    const previousEnabled = this.settings.isModuleEnabled(moduleId);
+
     try {
       if (enabled) {
         // 排他グループのチェック
         await this.handleExclusiveGroup(moduleId);
 
+        this.settings.updateModuleEnabled(moduleId, true);
         await this.loadModule(moduleId);
         this.emitEvent({ type: "enabled", moduleId });
       } else {
         await this.unloadModule(moduleId);
+        this.settings.updateModuleEnabled(moduleId, false);
         this.emitEvent({ type: "disabled", moduleId });
       }
-
-      // 設定を保存
-      this.settings.updateModuleEnabled(moduleId, enabled);
     } catch (error) {
+      this.settings.updateModuleEnabled(moduleId, previousEnabled);
+
       window.logger.error(
         `[ModuleManager] モジュール ${moduleId} の切り替えに失敗しました:`,
         error,

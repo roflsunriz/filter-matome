@@ -172,7 +172,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       this.shadowHost = document.createElement("div");
       this.shadowHost.id = "watch-background-selector-shadow-host";
       this.shadowHost.style.cssText =
-        "position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000;";
+        "position: fixed; right: 0; top: 50%; width: 20px; height: 0; transform: translateY(-50%); pointer-events: auto; z-index: 1000; overflow: visible;";
       this.shadowRoot = this.shadowHost.attachShadow({ mode: "closed" });
       document.body.appendChild(this.shadowHost);
     }
@@ -252,11 +252,11 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       /* �z�X�g�v�f */
       :host {
         position: fixed;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
+        right: 0;
+        top: 50%;
+        pointer-events: auto;
         z-index: 1000;
+        overflow: visible;
         display: block;
       }
 
@@ -457,6 +457,8 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
     container.style.height = `${containerHeight}px`;
     container.style.setProperty("--hide-offset", `${wheelDiameter}px`);
 
+    this.configureInteractiveHost(handleWidth, containerHeight, containerWidth);
+
     // 取っ手要素作成
     const handle = document.createElement("div");
     handle.id = "bg-handle";
@@ -537,6 +539,27 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
   }
 
   /**
+   * 右端の取っ手だけを通常時のイベント領域にし、展開中だけ全幅を操作可能にする
+   */
+  private configureInteractiveHost(
+    collapsedWidth: number,
+    height: number,
+    expandedWidth: number,
+  ): void {
+    if (!this.shadowHost) return;
+
+    this.shadowHost.style.right = "0";
+    this.shadowHost.style.top = "50%";
+    this.shadowHost.style.width = `${collapsedWidth}px`;
+    this.shadowHost.style.height = `${height}px`;
+    this.shadowHost.style.transform = "translateY(-50%)";
+    this.shadowHost.style.pointerEvents = "auto";
+    this.shadowHost.style.overflow = "visible";
+    this.shadowHost.dataset.collapsedWidth = `${collapsedWidth}`;
+    this.shadowHost.dataset.expandedWidth = `${expandedWidth}`;
+  }
+
+  /**
    * ホバーリスナー設定
    */
   private attachHoverListeners(): void {
@@ -544,11 +567,25 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
     const rc = this.radialContainer;
 
     rc.addEventListener("mouseenter", () => {
+      if (this.shadowHost) {
+        const expandedWidth = this.shadowHost.dataset.expandedWidth;
+        if (expandedWidth) {
+          this.shadowHost.style.width = `${expandedWidth}px`;
+        }
+      }
       rc.classList.add("open");
     });
 
     rc.addEventListener("mouseleave", () => {
-      setTimeout(() => rc.classList.remove("open"), 100);
+      setTimeout(() => {
+        rc.classList.remove("open");
+        if (this.shadowHost) {
+          const collapsedWidth = this.shadowHost.dataset.collapsedWidth;
+          if (collapsedWidth) {
+            this.shadowHost.style.width = `${collapsedWidth}px`;
+          }
+        }
+      }, 100);
     });
   }
 
