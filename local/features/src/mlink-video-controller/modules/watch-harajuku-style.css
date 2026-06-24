@@ -675,12 +675,43 @@
   div[class*="grid-area_"][class*="sidebar"] section > header {
     height: 25px !important;
     min-height: 25px !important;
+    position: relative !important;
     background: linear-gradient(#686868, #1f1f1f) !important;
     border: 1px solid #111 !important;
     border-bottom: 0 !important;
     color: #fff !important;
+    overflow: hidden !important;
     text-align: center !important;
     text-shadow: 0 -1px 0 #000 !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] section > header [aria-label*="コメントリスト"][aria-label*="開閉"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 25px !important;
+    min-height: 25px !important;
+    padding: 0 !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] section > header [aria-label*="コメントリスト"][aria-label*="開閉"] > svg {
+    position: absolute !important;
+    left: 10px !important;
+    top: 50% !important;
+    flex: 0 0 16px !important;
+    width: 16px !important;
+    min-width: 16px !important;
+    max-width: 16px !important;
+    height: 16px !important;
+    min-height: 16px !important;
+    max-height: 16px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: translateY(-50%) !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] section > header [aria-label*="コメントリスト"][aria-label*="開閉"] h1 {
+    line-height: 25px !important;
   }
 
   div[class*="grid-area_"][class*="sidebar"] section > div {
