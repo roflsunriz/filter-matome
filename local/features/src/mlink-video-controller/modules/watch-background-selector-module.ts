@@ -178,7 +178,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
     }
   }
   /**
-   * CSS���������i�w�i�z�X�g/UI�z�X�g�����j
+   * CSSを注入（背景ホスト/UIホスト用）
    */
   private injectCSS(): void {
     this.injectBackgroundCSS();
@@ -246,10 +246,10 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       @charset "utf-8";
 
       /*-------------------------
-       * Shadow DOM���̔w�i�Z���N�^�[�X�^�C��
+       * Shadow DOM内の背景セレクタースタイル
        *-------------------------*/
       
-      /* �z�X�g�v�f */
+      /* ホスト要素 */
       :host {
         position: fixed;
         right: 0;
@@ -261,7 +261,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       }
 
       /*-------------------------
-       * ���W�A���Z���N�^�[
+       * ラジアルセレクター
        *-------------------------*/
       #bg-radial-container {
         position: fixed;
@@ -281,7 +281,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
         flex-direction: row;
       }
       
-      /* ����蕔���i���ۂ�HTML�v�f�j */
+      /* 取っ手部分（実際のHTML要素） */
       #bg-handle {
         width: 20px;
         height: 100%;
@@ -295,7 +295,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
         justify-content: center;
       }
       
-      /* ���C������ */
+      /* メイン内容 */
       #bg-main-content {
         flex: 1;
         height: 100%;
@@ -305,7 +305,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
         overflow: hidden;
       }
       
-      /* open ���ihover �ł� class �ł��j */
+      /* open状態（hoverでもclassでも開く） */
       #bg-radial-container.open,
       #bg-radial-container:hover {
         transform: translateX(0) translateY(-50%);
@@ -354,7 +354,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       }
 
       /*-------------------------
-       * �X�N���[���o�[�̃X�^�C��
+       * スクロールバーのスタイル
        *-------------------------*/
       .settings-content::-webkit-scrollbar,
       .image-list::-webkit-scrollbar {

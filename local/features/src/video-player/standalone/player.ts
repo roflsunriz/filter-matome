@@ -860,7 +860,7 @@ export class StandalonePlayer {
    * リサイズ時の処理
    */
   private handleResize(): void {
-    // �f�o�E���X�����̂��߁ArequestAnimationFrame���g�p
+    // デバウンス相当のため、requestAnimationFrameを使用
     requestAnimationFrame(() => {
       this.updateVideoAspectRatio();
       this.adjustLayout();
