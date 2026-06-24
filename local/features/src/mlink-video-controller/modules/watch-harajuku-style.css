@@ -65,6 +65,7 @@
     --hy-link: #0645ad;
     --hy-link-hover: #c00;
     --hy-player: #111;
+    color-scheme: light;
   }
 
   :root[data-hy-theme="dark"] {
@@ -79,6 +80,7 @@
     --hy-link: #8dbbff;
     --hy-link-hover: #ff9a9a;
     --hy-player: #050505;
+    color-scheme: dark;
   }
 
   html,
@@ -1194,18 +1196,26 @@
 
   html[data-hy-theme="light"],
   :root[data-hy-theme="light"] body,
+  :root[data-hy-theme="light"] #root,
+  :root[data-hy-theme="light"] #root > div,
+  :root[data-hy-theme="light"] [aria-label="nicovideo-content"],
   :root[data-hy-theme="light"] #root main,
   :root[data-hy-theme="light"] body::before {
-    background: transparent !important;
+    background: var(--hy-page) !important;
     color: #222 !important;
+    color-scheme: light !important;
   }
 
   html[data-hy-theme="dark"],
   :root[data-hy-theme="dark"] body,
+  :root[data-hy-theme="dark"] #root,
+  :root[data-hy-theme="dark"] #root > div,
+  :root[data-hy-theme="dark"] [aria-label="nicovideo-content"],
   :root[data-hy-theme="dark"] #root main,
   :root[data-hy-theme="dark"] body::before {
-    background: transparent !important;
+    background: var(--hy-page) !important;
     color: #e8e8e8 !important;
+    color-scheme: dark !important;
   }
 
   :root[data-hy-theme="light"] #root > div > header,
@@ -1545,6 +1555,160 @@
       border-color: #0966a8 !important;
       color: #fff !important;
     }
+  }
+
+  html[data-hy-theme="light"],
+  :root[data-hy-theme="light"] body,
+  :root[data-hy-theme="light"] #root,
+  :root[data-hy-theme="light"] #root > div,
+  :root[data-hy-theme="light"] [aria-label="nicovideo-content"],
+  :root[data-hy-theme="light"] #root main,
+  :root[data-hy-theme="light"] body::before {
+    background: var(--hy-page) !important;
+    color: #222 !important;
+    color-scheme: light !important;
+  }
+
+  html[data-hy-theme="dark"],
+  :root[data-hy-theme="dark"] body,
+  :root[data-hy-theme="dark"] #root,
+  :root[data-hy-theme="dark"] #root > div,
+  :root[data-hy-theme="dark"] [aria-label="nicovideo-content"],
+  :root[data-hy-theme="dark"] #root main,
+  :root[data-hy-theme="dark"] body::before {
+    background: var(--hy-page) !important;
+    color: #e8e8e8 !important;
+    color-scheme: dark !important;
+  }
+
+  :root[data-hy-theme] section[class*="grid-template-areas"]::after,
+  :root[data-hy-theme] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2),
+  :root[data-hy-theme] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header),
+  :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
+    background: var(--hy-panel) !important;
+    border-color: var(--hy-border) !important;
+    color: var(--hy-text) !important;
+  }
+
+  :root[data-hy-theme] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) > div[class*="contentOverlay"] {
+    background: color-mix(in srgb, var(--hy-panel) 82%, transparent) !important;
+    color: var(--hy-text) !important;
+  }
+
+  :root[data-hy-theme] .PlayerPresenter > div:nth-child(2),
+  :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) div:has(> textarea[placeholder="コメントを入力"]),
+  :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) [class*="bg-c_layer"],
+  :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) [class*="bg_layer"],
+  :root[data-hy-theme] [data-element-area="video_action"],
+  :root[data-hy-theme] button[data-element-area="video_action"] {
+    background: linear-gradient(var(--hy-panel-2), var(--hy-panel)) !important;
+    border-color: var(--hy-border) !important;
+    color: var(--hy-text) !important;
+  }
+
+  :root[data-hy-theme] .PlayerPresenter textarea[placeholder="コメントを入力"],
+  :root[data-hy-theme] .PlayerPresenter input[placeholder="コマンド"] {
+    background: var(--hy-bg) !important;
+    border-color: var(--hy-border) !important;
+    color: var(--hy-text) !important;
+  }
+
+  :root[data-hy-theme] [data-element-area="video_action"] *,
+  :root[data-hy-theme] button[data-element-area="video_action"] *,
+  :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] *,
+  :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) [class*="bg-c_layer"] *,
+  :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) [class*="bg_layer"] * {
+    color: var(--hy-text) !important;
+    fill: var(--hy-text) !important;
+  }
+
+  :root[data-hy-theme="light"] section[class*="grid-template-areas"]::after,
+  :root[data-hy-theme="light"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2),
+  :root[data-hy-theme="light"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header),
+  :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
+    background: #fff !important;
+    border-color: #999 !important;
+    color: #111 !important;
+  }
+
+  :root[data-hy-theme="light"] .PlayerPresenter > div:nth-child(2),
+  :root[data-hy-theme="light"] .PlayerPresenter > div:nth-child(2) div:has(> textarea[placeholder="コメントを入力"]),
+  :root[data-hy-theme="light"] .PlayerPresenter > div:nth-child(2) [class*="bg-c_layer"],
+  :root[data-hy-theme="light"] .PlayerPresenter > div:nth-child(2) [class*="bg_layer"],
+  :root[data-hy-theme="light"] [data-element-area="video_action"],
+  :root[data-hy-theme="light"] button[data-element-area="video_action"] {
+    background: linear-gradient(#fff, #e1e1e1) !important;
+    border-color: #aaa !important;
+    color: #111 !important;
+  }
+
+  :root[data-hy-theme="light"] .PlayerPresenter textarea[placeholder="コメントを入力"],
+  :root[data-hy-theme="light"] .PlayerPresenter input[placeholder="コマンド"] {
+    background: #fff !important;
+    border-color: #999 !important;
+    color: #111 !important;
+  }
+
+  :root[data-hy-theme="light"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) > div[class*="contentOverlay"] {
+    background: rgba(242, 242, 242, .86) !important;
+    color: #111 !important;
+  }
+
+  :root[data-hy-theme="dark"] section[class*="grid-template-areas"]::after,
+  :root[data-hy-theme="dark"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2),
+  :root[data-hy-theme="dark"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header),
+  :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
+    background: var(--hy-panel) !important;
+    border-color: var(--hy-border) !important;
+    color: var(--hy-text) !important;
+  }
+
+  :root[data-hy-theme="dark"] .PlayerPresenter > div:nth-child(2),
+  :root[data-hy-theme="dark"] .PlayerPresenter > div:nth-child(2) div:has(> textarea[placeholder="コメントを入力"]),
+  :root[data-hy-theme="dark"] .PlayerPresenter > div:nth-child(2) [class*="bg-c_layer"],
+  :root[data-hy-theme="dark"] .PlayerPresenter > div:nth-child(2) [class*="bg_layer"],
+  :root[data-hy-theme="dark"] [data-element-area="video_action"],
+  :root[data-hy-theme="dark"] button[data-element-area="video_action"] {
+    background: linear-gradient(#2b2b2b, #171717) !important;
+    border-color: #666 !important;
+    color: #eee !important;
+  }
+
+  :root[data-hy-theme="dark"] .PlayerPresenter textarea[placeholder="コメントを入力"],
+  :root[data-hy-theme="dark"] .PlayerPresenter input[placeholder="コマンド"] {
+    background: #151515 !important;
+    border-color: #666 !important;
+    color: #eee !important;
+  }
+
+  :root[data-hy-theme="dark"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) > div[class*="contentOverlay"] {
+    background: rgba(32, 32, 32, .88) !important;
+    color: #eee !important;
+  }
+
+  :root[data-hy-theme="light"] #root#root main .PlayerPresenter textarea[placeholder="コメントを入力"],
+  :root[data-hy-theme="light"] #root#root main .PlayerPresenter input[placeholder="コマンド"] {
+    background: #fff !important;
+    background-image: none !important;
+    border-color: #999 !important;
+    color: #111 !important;
+  }
+
+  :root[data-hy-theme="dark"] #root#root main .PlayerPresenter textarea[placeholder="コメントを入力"],
+  :root[data-hy-theme="dark"] #root#root main .PlayerPresenter input[placeholder="コマンド"] {
+    background: #151515 !important;
+    background-image: none !important;
+    border-color: #666 !important;
+    color: #eee !important;
   }
 
   #root#root main .PlayerPresenter > div:first-child button,
