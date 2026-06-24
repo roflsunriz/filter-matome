@@ -1826,6 +1826,10 @@
   #CommonHeader#CommonHeader#CommonHeader .common-header-3ymwy4.common-header-3ymwy4,
   #CommonHeader#CommonHeader#CommonHeader .common-header-71539i.common-header-71539i,
   #CommonHeader#CommonHeader#CommonHeader .common-header-71539i.common-header-71539i *,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-1yny3xz.common-header-1yny3xz,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-1yny3xz.common-header-1yny3xz *,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz *,
   #CommonHeader#CommonHeader#CommonHeader .common-header-1xzs4ko.common-header-1xzs4ko,
   #CommonHeader#CommonHeader#CommonHeader .common-header-1xzs4ko.common-header-1xzs4ko *,
   #CommonHeader#CommonHeader#CommonHeader .common-header-n0qa7l.common-header-n0qa7l,
@@ -1852,8 +1856,31 @@
     text-shadow: none !important;
   }
 
+  #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-oms0ym.common-header-oms0ym svg,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-oms0ym.common-header-oms0ym svg g,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-oms0ym.common-header-oms0ym svg path {
+    fill: none !important;
+  }
+
+  #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-oms0ym.common-header-oms0ym svg path[fill] {
+    fill: #999 !important;
+  }
+
+  #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-1frfhkj.common-header-1frfhkj svg,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-1frfhkj.common-header-1frfhkj svg g,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-1frfhkj.common-header-1frfhkj svg path {
+    fill: none !important;
+  }
+
+  #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-1frfhkj.common-header-1frfhkj svg path[fill] {
+    fill: #c2c2c2 !important;
+  }
+
   #CommonHeader#CommonHeader#CommonHeader .common-header-1usu4l0.common-header-1usu4l0:hover,
   #CommonHeader#CommonHeader#CommonHeader .common-header-71539i.common-header-71539i:hover,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-gqt77n.common-header-gqt77n:hover,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-d2321f.common-header-d2321f:hover,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-1ip78db.common-header-1ip78db:hover,
   #CommonHeader#CommonHeader#CommonHeader .common-header-c1a1qc.common-header-c1a1qc:hover,
   #CommonHeader#CommonHeader#CommonHeader .common-header-u5s84m.common-header-u5s84m:hover,
   #CommonHeader#CommonHeader#CommonHeader .common-header-mocem5.common-header-mocem5:hover {
