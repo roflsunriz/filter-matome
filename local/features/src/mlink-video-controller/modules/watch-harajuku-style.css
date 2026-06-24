@@ -1511,3 +1511,30 @@
       color: var(--hy-link) !important;
     }
   }
+
+  /* Keep official CommonHeader hover menus readable on their light menu-item backgrounds. */
+  #CommonHeader#CommonHeader#CommonHeader .common-header-1usu4l0.common-header-1usu4l0,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-1usu4l0.common-header-1usu4l0 *,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-3ymwy4.common-header-3ymwy4,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-71539i.common-header-71539i,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-71539i.common-header-71539i *,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-1xzs4ko.common-header-1xzs4ko,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-1xzs4ko.common-header-1xzs4ko *,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-n0qa7l.common-header-n0qa7l,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-c1a1qc.common-header-c1a1qc,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-c1a1qc.common-header-c1a1qc *,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-yxm7eu.common-header-yxm7eu,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-yxm7eu.common-header-yxm7eu *,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-sufle8.common-header-sufle8,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-sufle8.common-header-sufle8 * {
+    color: #111 !important;
+    fill: #111 !important;
+    text-shadow: none !important;
+  }
+
+  #CommonHeader#CommonHeader#CommonHeader .common-header-1usu4l0.common-header-1usu4l0:hover,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-71539i.common-header-71539i:hover,
+  #CommonHeader#CommonHeader#CommonHeader .common-header-c1a1qc.common-header-c1a1qc:hover {
+    color: #111 !important;
+    text-decoration: none !important;
+  }
