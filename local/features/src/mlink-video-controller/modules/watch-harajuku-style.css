@@ -1914,6 +1914,13 @@
     }
   }
 
+  :root[data-hy-background-priority="background-image"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) {
+    background: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+
   html[data-hy-background-priority="background-image"],
   :root[data-hy-background-priority="background-image"] body,
   :root[data-hy-background-priority="background-image"] #root,
