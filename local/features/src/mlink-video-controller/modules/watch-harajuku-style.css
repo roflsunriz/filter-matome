@@ -203,6 +203,89 @@
     background: linear-gradient(#f5f5f5, #aaa) !important;
   }
 
+  .HarajukuBackgroundPriorityButton {
+    position: absolute !important;
+    right: 76px !important;
+    top: -30px !important;
+    z-index: 30 !important;
+    width: 64px !important;
+    height: 24px !important;
+    min-width: 64px !important;
+    padding: 0 !important;
+    border: 1px solid #777 !important;
+    border-radius: 12px !important;
+    background: linear-gradient(#fff, #d8d8d8) !important;
+    color: #111 !important;
+    font-family: "MS PGothic", "Meiryo", sans-serif !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+    line-height: 22px !important;
+    text-align: center !important;
+    text-shadow: 0 1px 0 #fff !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    box-shadow: inset 0 1px rgba(255, 255, 255, .85), 0 1px 1px rgba(0, 0, 0, .25) !important;
+    overflow: hidden !important;
+  }
+
+  .HarajukuBackgroundPriorityButton:hover {
+    border-color: #555 !important;
+    background: linear-gradient(#fff, #cfcfcf) !important;
+    text-decoration: none !important;
+  }
+
+  :root[data-hy-theme="dark"] .HarajukuBackgroundPriorityButton {
+    border-color: #666 !important;
+    background: linear-gradient(#3a3a3a, #202020) !important;
+    color: #eee !important;
+    text-shadow: 0 -1px 0 #000 !important;
+  }
+
+  .HarajukuBackgroundPriorityButton-colorScheme,
+  .HarajukuBackgroundPriorityButton-background {
+    position: absolute !important;
+    top: 0 !important;
+    z-index: 1 !important;
+    width: 24px !important;
+    height: 22px !important;
+    color: inherit !important;
+    line-height: 22px !important;
+    text-align: center !important;
+    pointer-events: none !important;
+  }
+
+  .HarajukuBackgroundPriorityButton-colorScheme {
+    left: 4px !important;
+  }
+
+  .HarajukuBackgroundPriorityButton-background {
+    right: 4px !important;
+  }
+
+  .HarajukuBackgroundPriorityButton-knob {
+    position: absolute !important;
+    left: 3px !important;
+    top: 3px !important;
+    z-index: 2 !important;
+    width: 18px !important;
+    height: 18px !important;
+    border: 1px solid #777 !important;
+    border-radius: 50% !important;
+    background: linear-gradient(#fff, #dcdcdc) !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .35) !important;
+    pointer-events: none !important;
+  }
+
+  :root[data-hy-background-priority="background-image"] .HarajukuBackgroundPriorityButton-knob {
+    left: 41px !important;
+  }
+
+  :root[data-hy-theme="dark"] .HarajukuBackgroundPriorityButton-knob {
+    border-color: #222 !important;
+    background: linear-gradient(#f5f5f5, #aaa) !important;
+  }
+
   #CommonHeader a[href^="https://www.nicovideo.jp?"] {
     position: absolute !important;
     left: calc((100vw - var(--hy-width)) / 2 + 8px) !important;
@@ -1818,6 +1901,17 @@
       border-color: #5f5f5f !important;
       color: var(--hy-link) !important;
     }
+  }
+
+  html[data-hy-background-priority="background-image"],
+  :root[data-hy-background-priority="background-image"] body,
+  :root[data-hy-background-priority="background-image"] #root,
+  :root[data-hy-background-priority="background-image"] #root > div,
+  :root[data-hy-background-priority="background-image"] [aria-label="nicovideo-content"],
+  :root[data-hy-background-priority="background-image"] #root main,
+  :root[data-hy-background-priority="background-image"] body::before {
+    background: transparent !important;
+    background-image: none !important;
   }
 
   /* Keep official CommonHeader hover menus readable on their light menu-item backgrounds. */

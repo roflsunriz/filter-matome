@@ -7,6 +7,7 @@ import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
 import harajukuStyle from "./watch-harajuku-style.css?inline";
 
 type ThemeName = "light" | "dark";
+type BackgroundPriority = "color-scheme" | "background-image";
 type MetaSourceLabel = "再生" | "コメント" | "マイリスト" | "投稿日時";
 
 interface MetaItem {
@@ -26,6 +27,7 @@ interface StructuredVideoData {
 }
 
 const THEME_KEY = "harajuku-theme";
+const BACKGROUND_PRIORITY_KEY = "harajuku-background-priority";
 const STYLE_ID = "mlink-watch-harajuku-style";
 const CHROME_CLASS = "HarajukuWatchChrome";
 
@@ -75,6 +77,7 @@ export class WatchHarajukuModule implements ModuleInstance {
 
     this.injectStyle();
     this.setTheme(this.getTheme());
+    this.setBackgroundPriority(this.getBackgroundPriority());
     this.scheduleRender();
     this.startRetryTimer();
     this.startObserver();
@@ -97,6 +100,7 @@ export class WatchHarajukuModule implements ModuleInstance {
     });
 
     document.documentElement.removeAttribute("data-hy-theme");
+    document.documentElement.removeAttribute("data-hy-background-priority");
     document.documentElement.style.colorScheme = "";
 
     this.scheduled = false;
@@ -144,6 +148,12 @@ export class WatchHarajukuModule implements ModuleInstance {
     return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
   }
 
+  private getBackgroundPriority(): BackgroundPriority {
+    return localStorage.getItem(BACKGROUND_PRIORITY_KEY) === "background-image"
+      ? "background-image"
+      : "color-scheme";
+  }
+
   private setTheme(theme: ThemeName): void {
     const nextTheme: ThemeName = theme === "dark" ? "dark" : "light";
     localStorage.setItem(THEME_KEY, nextTheme);
@@ -167,6 +177,36 @@ export class WatchHarajukuModule implements ModuleInstance {
 
   private toggleTheme = (): void => {
     this.setTheme(this.getTheme() === "dark" ? "light" : "dark");
+  };
+
+  private setBackgroundPriority(priority: BackgroundPriority): void {
+    const nextPriority: BackgroundPriority =
+      priority === "background-image" ? "background-image" : "color-scheme";
+    localStorage.setItem(BACKGROUND_PRIORITY_KEY, nextPriority);
+    document.documentElement.dataset.hyBackgroundPriority = nextPriority;
+
+    const button = document.querySelector<HTMLButtonElement>(
+      ".HarajukuBackgroundPriorityButton",
+    );
+    if (!button) {
+      return;
+    }
+
+    const isBackgroundPriority = nextPriority === "background-image";
+    button.setAttribute(
+      "aria-label",
+      isBackgroundPriority ? "カラースキーム優先に切替" : "背景画像優先に切替",
+    );
+    button.setAttribute("aria-pressed", isBackgroundPriority ? "true" : "false");
+    button.dataset.hyBackgroundPriorityButton = nextPriority;
+  }
+
+  private toggleBackgroundPriority = (): void => {
+    this.setBackgroundPriority(
+      this.getBackgroundPriority() === "background-image"
+        ? "color-scheme"
+        : "background-image",
+    );
   };
 
   private textOf(element: Element | null | undefined): string {
@@ -337,6 +377,30 @@ export class WatchHarajukuModule implements ModuleInstance {
     return button;
   }
 
+  private createBackgroundPriorityButton(): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "HarajukuBackgroundPriorityButton";
+    button.addEventListener("click", this.toggleBackgroundPriority);
+
+    const colorScheme = document.createElement("span");
+    colorScheme.className = "HarajukuBackgroundPriorityButton-colorScheme";
+    colorScheme.setAttribute("aria-hidden", "true");
+    colorScheme.textContent = "色";
+
+    const knob = document.createElement("span");
+    knob.className = "HarajukuBackgroundPriorityButton-knob";
+    knob.setAttribute("aria-hidden", "true");
+
+    const background = document.createElement("span");
+    background.className = "HarajukuBackgroundPriorityButton-background";
+    background.setAttribute("aria-hidden", "true");
+    background.textContent = "画";
+
+    button.append(colorScheme, knob, background);
+    return button;
+  }
+
   private makeStatItem(label: string, key: string): HTMLDivElement {
     const node = document.createElement("div");
     node.className = key === "postedAt" ? "HarajukuStats-date" : "HarajukuStats-row";
@@ -364,7 +428,11 @@ export class WatchHarajukuModule implements ModuleInstance {
       stats.append(this.makeStatItem(item.label, item.key));
     }
 
-    chrome.append(stats, this.createThemeButton());
+    chrome.append(
+      stats,
+      this.createBackgroundPriorityButton(),
+      this.createThemeButton(),
+    );
     return chrome;
   }
 
@@ -378,9 +446,12 @@ export class WatchHarajukuModule implements ModuleInstance {
     if (!chrome) {
       chrome = this.createChrome();
       sidebar.prepend(chrome);
-      this.setTheme(this.getTheme());
+    } else if (!chrome.querySelector(".HarajukuBackgroundPriorityButton")) {
+      chrome.append(this.createBackgroundPriorityButton());
     }
 
+    this.setTheme(this.getTheme());
+    this.setBackgroundPriority(this.getBackgroundPriority());
     return chrome;
   }
 
