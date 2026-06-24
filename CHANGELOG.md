@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#225] - 2026-06-24
+
+### Added
+- 【mlink-video-controller】コメントAPIレスポンスを `fetch` の `Response.clone()` で捕捉し、動画IDごとに短期キャッシュする `CommentApiCacheManager` を追加。
+- 【mlink-video-controller】コメントAPIキャッシュを `NicoApiFetcher` へ連携し、取得済み公式APIレスポンスからコメントを再利用できるように追加。
+
+### Changed
+- 【features】`package.json` の `version` を `225` に更新。
+- 【mlink-video-controller】原宿風Watchのプレイヤー設定パネルをコメントリスト上に相対配置し、動画タイトルからコメントリスト下端までの高さに合わせてスクロール可能に変更。
+- 【mlink-video-controller】原宿風WatchのNG設定パネルをプレイヤー設定パネルと同じ相対配置へ揃え、閉じるボタンが前面に出るように変更。
+- 【mlink-video-controller】原宿風Watchの横幅・サイドバー幅・タイトル/詳細/タグ欄の位置をCSS変数と `clamp()` ベースへ整理し、4:3、3:2、16:9、4Kなど複数解像度で崩れにくい配置に改善。
+- 【mlink-video-controller】原宿風Watchの明示テーマトグルがOS/ブラウザ配色より優先されるよう、背景・パネル・入力欄・タグ編集/NG設定周辺の配色指定を強化。
+- 【docs】mlink-video-controller README に原宿風Watchのレスポンシブ方針と、コモンヘッダーのホバーメニュー配色保護対象を追記。
+
+### Fixed
+- 【mlink-video-controller】原宿風Watch適用時、コモンヘッダーの「その他」メニューとアカウントメニューが白飛びする問題を修正。
+- 【mlink-video-controller】原宿風Watch適用時、アカウントメニューの「アカウント設定」「ヘッダー追従」周辺が白飛びする問題を修正。
+- 【mlink-video-controller】原宿風Watch適用時、コモンヘッダーの「フォロー新着」と「お知らせ」ホバーメニューが白飛びする問題を修正。
+- 【mlink-video-controller】原宿風Watch適用時、お知らせメニュー右側のSVGアイコンが黒/グレーの四角形に見える問題を修正。
+- 【mlink-video-controller】原宿風Watch適用時、コメントリスト開閉アイコンの `^` 表示位置がずれる問題を修正。
+- 【mlink-video-controller】原宿風Watch適用時、タグ編集中のマスクがタグ一覧全体を覆わずにずれる問題を修正。
+- 【mlink-video-controller】原宿風Watch適用時、動画の詳細情報、タグ一覧、コメント入力欄、いいね/共有欄、NG設定パネル、タグ編集パネルの背景色が明示テーマに完全追従しない問題を修正。
+- 【mlink-video-controller】ヘッダープライバシーのアカウント名検出を実DOMで確認したCommonHeaderクラスへ合わせ、アカウントメニューのホバー表示内でもユーザー名を非表示化できるように修正。
+
 ## [#224.1] - 2026-06-20
 
 ### Changed
