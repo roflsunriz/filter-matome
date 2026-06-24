@@ -1114,6 +1114,13 @@
     background: #fff !important;
   }
 
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) > div[class*="contentOverlay"] {
+    inset: -1px 0 -15px !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: 3 !important;
+  }
+
   div[class*="grid-area_"][class*="bottom"] section {
     margin-top: 8px !important;
     max-height: 230px !important;
