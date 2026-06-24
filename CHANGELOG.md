@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#225.1] - 2026-06-24
+
+### Added
+- 【mlink-video-controller】原宿風Watchにカラースキーム優先/背景画像優先を切り替えるトグルを追加し、背景画像優先時はページ土台の背景を透明化して背景セレクターの画像を見えるようにした。
+- 【mlink-video-controller】背景画像設定モーダルのURL入力欄に `https://www.nicovideo.jp/local/background-images/` をプリ入力し、開いた直後と追加後に末尾へカーソルを置くようにした。
+
+### Changed
+- 【features】`package.json` の `version` を `225.1` に更新。
+- 【README】latest バッジを `#225.1` に更新。
+- 【mlink-video-controller】原宿風Watchの背景優先トグルを `色`/`画` の文字表示から、白黒アイコン/フルカラーアイコン表示へ変更。
+- 【docs】`watch-background-selector-module.ts` と standalone player の文字化けしていたコメントを読みやすい日本語へ修正。
+
+### Fixed
+- 【mlink-video-controller】背景セレクターを設定UIからONにした直後、設定保存前に読み込み判定が走ってラジアルメニューが表示されない問題を修正。
+- 【mlink-video-controller】背景選択ラジアルメニューのShadow Hostが全画面透明レイヤーかつ `pointer-events: none` になっていたため、右端の取っ手をhoverしても開けない問題を修正。
+- 【mlink-video-controller】背景選択ラジアルメニューの通常時イベント領域を右端の取っ手幅に限定し、展開中だけメニュー全幅を操作可能にするよう修正。
+- 【mlink-video-controller】原宿風Watchの背景優先トグルで、ポッチがアイコンを覆わず重なりが崩れる問題を修正。
+
 ## [#225] - 2026-06-24
 
 ### Added
