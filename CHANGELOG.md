@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#225.2] - 2026-06-24
+
+### Changed
+- 【features】`package.json` の `version` を `225.2` に更新。
+- 【README】latest バッジを `#225.2` に更新。
+- 【mlink-video-controller】原宿風Watchの背景画像優先モードで、タグ一覧の外側背景だけを透明化するよう調整。
+
+### Fixed
+- 【mlink-video-controller】背景画像優先モードでタグチップ自体の矩形まで透明になっていた問題を修正。
+
 ## [#225.1] - 2026-06-24
 
 ### Added
