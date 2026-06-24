@@ -12,6 +12,9 @@ import { BackgroundImageSettings } from "@/mlink-video-controller/modules/backgr
 import { createMaterialIcon } from "@/common/material-icons";
 import { BackgroundImageItem } from "@/types/background-image-types";
 
+const DEFAULT_BACKGROUND_IMAGE_URL_PREFIX =
+  "https://www.nicovideo.jp/local/background-images/";
+
 /**
  * 設定UIを管理するクラス
  */
@@ -729,7 +732,7 @@ export class SettingsUI {
           <div class="settings-section">
             <h4>${createMaterialIcon("edit", { style: "outlined", color: "white" })} 方法1: URL入力</h4>
             <div class="url-input-section">
-              <input type="text" id="modal-image-url-input" placeholder="画像URLを入力してください" />
+              <input type="text" id="modal-image-url-input" value="${DEFAULT_BACKGROUND_IMAGE_URL_PREFIX}" placeholder="画像URLを入力してください" />
               <input type="text" id="modal-image-name-input" placeholder="画像名を入力してください" />
               <button id="modal-add-url-image" class="add-btn">URL画像を追加</button>
             </div>
@@ -770,9 +773,28 @@ export class SettingsUI {
 
     // イベントリスナーを設定
     this.setupBackgroundModalEventListeners();
+    this.focusModalUrlInput();
 
     // 画像リストを初期化
     void this.refreshModalImageList();
+  }
+
+  /**
+   * URL欄へフォーカスし、プリ入力されたベースURLの末尾にカーソルを置く
+   */
+  private focusModalUrlInput(): void {
+    if (!this.shadowRoot) return;
+
+    const urlInput = this.shadowRoot.querySelector<HTMLInputElement>(
+      "#modal-image-url-input",
+    );
+    if (!urlInput) return;
+
+    setTimeout(() => {
+      urlInput.focus();
+      const cursorPosition = urlInput.value.length;
+      urlInput.setSelectionRange(cursorPosition, cursorPosition);
+    }, 0);
   }
 
   /**
@@ -934,8 +956,9 @@ export class SettingsUI {
       await this.backgroundSettings.addImage(name, "url", imageUrl);
 
       // 入力フィールドをクリア
-      urlInput.value = "";
+      urlInput.value = DEFAULT_BACKGROUND_IMAGE_URL_PREFIX;
       nameInput.value = "";
+      this.focusModalUrlInput();
 
       // 画像リストを更新
       await this.refreshModalImageList();
