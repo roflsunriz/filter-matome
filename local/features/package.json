@@ -46,7 +46,7 @@
     "vite": "^7.2.6",
     "vite-plugin-html": "^3.2.2"
   },
-  "version": "225.2",
+  "version": "225.3",
   "description": "Enhancing scripts for Niconico",
   "main": "index.js",
   "directories": {

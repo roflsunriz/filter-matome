@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#225.3] - 2026-06-24
+
+### Changed
+- 【features】`package.json` の `version` を `225.3` に更新。
+- 【README】latest バッジを `#225.3` に更新。
+- 【mlink-video-controller】原宿風Watchの動画詳細展開高を実測してCSS変数へ反映し、詳細が長い動画でもタグ欄とプレイヤー位置が追従するよう変更。
+- 【mlink-video-controller】NG設定・タグ編集・動画プレイヤー設定パネルの高さを、タイトル上端から可視サイドバー本体の下端までに自動同期するよう変更。
+
+### Fixed
+- 【mlink-video-controller】原宿風Watchで、開いたサイドバーパネルの下端がコメントリストの見えている下端より下に伸びる問題を修正。
+- 【mlink-video-controller】動画詳細情報の `aria-hidden` 変更時に高さ再計算が走らず、展開直後のパネル高さが古い値のままになる場合がある問題を修正。
+
 ## [#225.2] - 2026-06-24
 
 ### Changed
