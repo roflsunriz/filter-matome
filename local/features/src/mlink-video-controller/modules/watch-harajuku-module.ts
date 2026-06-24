@@ -34,10 +34,15 @@ const CHROME_CLASS = "HarajukuWatchChrome";
 const SELECTORS = {
   sidebarPanel:
     'div[class*="grid-area_"][class*="sidebar"] > div > div:first-child',
+  grid: 'section[class*="grid-template-areas"]',
   bottom:
     'section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"]',
   detailList:
     'section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type dl',
+  detailContent:
+    'section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header)',
+  title:
+    'section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:first-child h1',
 } as const;
 
 const META_ITEMS: MetaItem[] = [
@@ -54,6 +59,7 @@ export class WatchHarajukuModule implements ModuleInstance {
   public readonly config: ModuleConfig;
 
   private observer: MutationObserver | null = null;
+  private resizeObserver: ResizeObserver | null = null;
   private retryTimer: number | null = null;
   private scheduled = false;
   private _isActive = false;
@@ -88,6 +94,9 @@ export class WatchHarajukuModule implements ModuleInstance {
   destroy(): void {
     this.observer?.disconnect();
     this.observer = null;
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    window.removeEventListener("resize", this.scheduleRender);
 
     if (this.retryTimer !== null) {
       window.clearInterval(this.retryTimer);
@@ -101,6 +110,8 @@ export class WatchHarajukuModule implements ModuleInstance {
 
     document.documentElement.removeAttribute("data-hy-theme");
     document.documentElement.removeAttribute("data-hy-background-priority");
+    document.documentElement.style.removeProperty("--hy-detail-expanded-height");
+    document.documentElement.style.removeProperty("--hy-watch-sidebar-panel-height");
     document.documentElement.style.colorScheme = "";
 
     this.scheduled = false;
@@ -456,6 +467,8 @@ export class WatchHarajukuModule implements ModuleInstance {
   }
 
   private renderChrome(): boolean {
+    this.updateLayoutMetrics();
+
     const chrome = this.ensureChrome();
     if (!chrome) {
       return false;
@@ -480,6 +493,60 @@ export class WatchHarajukuModule implements ModuleInstance {
     }
 
     return true;
+  }
+
+  private px(value: number): string {
+    return `${Math.max(0, Math.round(value))}px`;
+  }
+
+  private updateLayoutMetrics(): void {
+    const root = document.documentElement;
+    const grid = document.querySelector<HTMLElement>(SELECTORS.grid);
+    const title = document.querySelector<HTMLElement>(SELECTORS.title);
+    const sidebar = document.querySelector<HTMLElement>(SELECTORS.sidebarPanel);
+    const detailContent = document.querySelector<HTMLElement>(
+      SELECTORS.detailContent,
+    );
+
+    if (detailContent?.getAttribute("aria-hidden") === "false") {
+      const borderHeight =
+        detailContent.getBoundingClientRect().height - detailContent.clientHeight;
+      const nextDetailHeight = Math.max(
+        detailContent.scrollHeight + Math.max(0, borderHeight),
+        detailContent.getBoundingClientRect().height,
+      );
+      root.style.setProperty(
+        "--hy-detail-expanded-height",
+        this.px(nextDetailHeight),
+      );
+    }
+
+    if (title && sidebar) {
+      const titleTop = title.getBoundingClientRect().top;
+      const sidebarBottom = sidebar.getBoundingClientRect().bottom;
+      root.style.setProperty(
+        "--hy-watch-sidebar-panel-height",
+        this.px(sidebarBottom - titleTop),
+      );
+    }
+
+    this.observeLayoutTargets([grid, title, sidebar, detailContent]);
+  }
+
+  private observeLayoutTargets(targets: Array<Element | null | undefined>): void {
+    if (!("ResizeObserver" in window)) {
+      return;
+    }
+
+    if (!this.resizeObserver) {
+      this.resizeObserver = new ResizeObserver(this.scheduleRender);
+    }
+
+    for (const target of targets) {
+      if (target) {
+        this.resizeObserver.observe(target);
+      }
+    }
   }
 
   private scheduleRender = (): void => {
@@ -521,9 +588,12 @@ export class WatchHarajukuModule implements ModuleInstance {
 
     this.observer = new MutationObserver(this.scheduleRender);
     this.observer.observe(document.body, {
+      attributes: true,
       childList: true,
       subtree: true,
       characterData: true,
     });
+
+    window.addEventListener("resize", this.scheduleRender);
   }
 }

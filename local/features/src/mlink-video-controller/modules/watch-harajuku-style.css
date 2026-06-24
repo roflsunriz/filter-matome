@@ -51,6 +51,7 @@
       var(--hy-tags-to-player-gap)
     );
     --hy-player-width: calc(var(--hy-width) - var(--hy-sidebar-width) - var(--hy-gap));
+    --hy-watch-sidebar-panel-height: min(100%, calc(var(--hy-pre-player-height) + var(--watch-player-height, 60vh) + 49px));
   }
 
   :root[data-hy-theme="light"] {
@@ -595,50 +596,23 @@
     fill: #fff !important;
   }
 
-  [aria-label="動画プレーヤー設定"] {
-    position: absolute !important;
-    left: calc(var(--hy-player-width) + var(--hy-gap)) !important;
-    right: auto !important;
-    top: 0 !important;
-    width: var(--hy-sidebar-width) !important;
-    height: min(100%, calc(var(--hy-pre-player-height) + var(--watch-player-height, 60vh) + 49px)) !important;
-    max-height: min(100%, calc(var(--hy-pre-player-height) + var(--watch-player-height, 60vh) + 49px)) !important;
-    padding-top: 0 !important;
-    z-index: 60 !important;
-  }
-
-  #root [aria-label="動画プレーヤー設定"][aria-label="動画プレーヤー設定"] > section[class][class] {
-    width: 100% !important;
-    height: 100% !important;
-    max-height: 100% !important;
-    margin-top: 0 !important;
-    transform: none !important;
-  }
-
-  [aria-label="動画プレーヤー設定"] > section > div {
-    min-height: 0 !important;
-  }
-
-  [aria-label="動画プレーヤー設定"] > button[aria-label="Close"] {
-    top: 0.5lh !important;
-    right: 0.5lh !important;
-    left: auto !important;
-    z-index: 2 !important;
-  }
-
+  [aria-label="動画プレーヤー設定"],
+  [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"],
   [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] {
     position: absolute !important;
     left: calc(var(--hy-player-width) + var(--hy-gap)) !important;
     right: auto !important;
     top: 0 !important;
     width: var(--hy-sidebar-width) !important;
-    height: min(100%, calc(var(--hy-pre-player-height) + var(--watch-player-height, 60vh) + 49px)) !important;
-    max-height: min(100%, calc(var(--hy-pre-player-height) + var(--watch-player-height, 60vh) + 49px)) !important;
+    height: var(--hy-watch-sidebar-panel-height) !important;
+    max-height: var(--hy-watch-sidebar-panel-height) !important;
     padding-top: 0 !important;
     transform: none !important;
     z-index: 60 !important;
   }
 
+  #root [aria-label="動画プレーヤー設定"][aria-label="動画プレーヤー設定"] > section[class][class],
+  #root [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section[class][class],
   #root [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class][class] {
     width: 100% !important;
     height: 100% !important;
@@ -647,15 +621,14 @@
     transform: none !important;
   }
 
+  [aria-label="動画プレーヤー設定"] > section > div,
+  [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section > div,
   [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section > div {
     min-height: 0 !important;
   }
 
-  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section > header {
-    position: relative !important;
-    z-index: 4 !important;
-  }
-
+  [aria-label="動画プレーヤー設定"] > button[aria-label="Close"],
+  [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] button[aria-label="Close"],
   [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] button[aria-label="Close"] {
     position: absolute !important;
     top: 0.5lh !important;
@@ -663,6 +636,12 @@
     left: auto !important;
     z-index: 5 !important;
     pointer-events: auto !important;
+  }
+
+  [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section > header,
+  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section > header {
+    position: relative !important;
+    z-index: 4 !important;
   }
 
   button[aria-label="コメント投稿ボタン"] {
@@ -1678,6 +1657,10 @@
   :root[data-hy-theme] section[class*="grid-template-areas"]::after,
   :root[data-hy-theme] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2),
   :root[data-hy-theme] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header),
+  :root[data-hy-theme] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"],
   :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
   :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
   :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
@@ -1712,6 +1695,7 @@
 
   :root[data-hy-theme] [data-element-area="video_action"] *,
   :root[data-hy-theme] button[data-element-area="video_action"] *,
+  :root[data-hy-theme] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] *,
   :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] *,
   :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) [class*="bg-c_layer"] *,
   :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) [class*="bg_layer"] * {
@@ -1722,6 +1706,10 @@
   :root[data-hy-theme="light"] section[class*="grid-template-areas"]::after,
   :root[data-hy-theme="light"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2),
   :root[data-hy-theme="light"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header),
+  :root[data-hy-theme="light"] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme="light"] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme="light"] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme="light"] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"],
   :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
   :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
   :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
@@ -1757,6 +1745,10 @@
   :root[data-hy-theme="dark"] section[class*="grid-template-areas"]::after,
   :root[data-hy-theme="dark"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2),
   :root[data-hy-theme="dark"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header),
+  :root[data-hy-theme="dark"] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme="dark"] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme="dark"] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme="dark"] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"],
   :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
   :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
   :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
