@@ -385,6 +385,15 @@ window.commonHelper = {
     input?: VideoIdSource | null,
   ): Promise<string | null> => {
     try {
+      // SPA直後はNicoCache_nl.watch側が一つ前の動画IDを保持していることがある。
+      // 現在URLや明示された入力に動画IDがある場合は、それを最優先にする。
+      const urlVideoId = window.commonHelper.extractVideoIdFromUrl(
+        input ?? window.location,
+      );
+      if (urlVideoId) {
+        return urlVideoId;
+      }
+
       // SPAのレンダリング完了を待つ（NicoCache_nlが利用可能になるまで、最大5秒）
       await new Promise<void>((resolve) => {
         let attempts = 0;
@@ -414,7 +423,7 @@ window.commonHelper = {
         checkReady();
       });
 
-      // 1. 最優先: NicoCache_nl.watch.getVideoIDから取得を試行
+      // 1. URLに動画IDが無い場合のみ: NicoCache_nl.watch.getVideoIDから取得を試行
       const windowWithNico = window as Window & {
         NicoCache_nl?: {
           watch?: {
@@ -453,13 +462,7 @@ window.commonHelper = {
         }
       }
 
-      // 3. フォールバック: URLから抽出
-      const urlVideoId = window.commonHelper.extractVideoIdFromUrl(input);
-      if (urlVideoId) {
-        return urlVideoId;
-      }
-
-      // 4. フォールバック: fetchWatchPageで取得
+      // 3. フォールバック: fetchWatchPageで取得
       try {
         const watchPageResult = await window.commonHelper.fetchWatchPage();
         if (
