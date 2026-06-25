@@ -72,8 +72,8 @@ export class CommonHeader implements CommonHeaderInstance {
       :host {
         display: block;
         position: relative;
-        top: var(--header-offset-top, -8px);
-        left: var(--header-offset-left, -8px);
+        top: var(--header-offset-top, 0);
+        left: var(--header-offset-left, 0);
         width: 100%;
         margin: 0;
         padding: 0;
@@ -84,12 +84,13 @@ export class CommonHeader implements CommonHeaderInstance {
         color: var(--header-text-color, #fff);
         padding: var(--header-padding, 8px 20px);
         transition: all 0.3s ease;
-        height: var(--header-height, 49px);
+        min-height: var(--header-height, 49px);
         font-size: var(--header-font-size, 15px);
         position: relative;
-        width: var(--header-width, 100vw);
+        width: min(var(--header-width, 100%), 100%);
         box-sizing: border-box;
         margin: 0;
+        overflow: visible;
       }
 
       .custom-header.fixed {
@@ -99,7 +100,7 @@ export class CommonHeader implements CommonHeaderInstance {
         right: 0;
         z-index: var(--header-z-index, 9000);
         box-shadow: var(--header-fixed-shadow, 0 2px 5px rgba(0, 0, 0, 0.2));
-        height: var(--header-height, 49px);
+        min-height: var(--header-height, 49px);
         font-size: var(--header-font-size, 15px);
       }
 
@@ -107,8 +108,11 @@ export class CommonHeader implements CommonHeaderInstance {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
         max-width: 1200px;
         margin: 0 auto;
+        min-width: 0;
       }
 
       /* ヘッダー左部分 */
@@ -116,11 +120,26 @@ export class CommonHeader implements CommonHeaderInstance {
         display: flex;
         align-items: center;
         gap: 20px;
+        flex: 0 1 auto;
+        min-width: 0;
       }
 
       .header-left h1 {
         margin: 0;
         font-size: 1.2em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .header-center {
+        flex: 1 1 320px;
+        min-width: 240px;
+      }
+
+      .header-right {
+        flex: 0 1 auto;
+        min-width: 0;
       }
 
       /* 検索部分 */
@@ -128,6 +147,9 @@ export class CommonHeader implements CommonHeaderInstance {
         position: relative;
         display: flex;
         align-items: center;
+        gap: 8px;
+        min-width: 0;
+        width: 100%;
       }
 
       .search-clear-btn {
@@ -154,11 +176,18 @@ export class CommonHeader implements CommonHeaderInstance {
       }
 
       .search-container select {
-        margin-right: 10px;
+        flex: 0 0 auto;
+        min-width: 96px;
+      }
+
+      .search-container input {
+        flex: 1 1 140px;
+        min-width: 0;
+        width: 100%;
       }
 
       .search-container button {
-        margin-left: 10px;
+        margin-left: 0;
         background: var(--header-search-btn-bg, #2a88bd);
         color: #ffffff;
         border: none;
@@ -195,7 +224,7 @@ export class CommonHeader implements CommonHeaderInstance {
 
       .clear-btn {
         background: var(--header-clear-btn-bg, #f44336);
-        margin-left: 5px;
+        margin-left: 0;
       }
 
       .clear-btn:hover {
@@ -207,6 +236,9 @@ export class CommonHeader implements CommonHeaderInstance {
         display: flex;
         gap: 15px;
         align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        min-width: 0;
       }
 
       .header-links a {
@@ -216,6 +248,7 @@ export class CommonHeader implements CommonHeaderInstance {
         display: flex;
         align-items: center;
         gap: 4px;
+        white-space: nowrap;
       }
 
       .header-links a:hover {
@@ -258,6 +291,53 @@ export class CommonHeader implements CommonHeaderInstance {
 
       .more-links:hover .dropdown-content {
         display: block;
+      }
+
+      @media (max-width: 960px) {
+        .header-content {
+          justify-content: flex-start;
+        }
+
+        .header-center {
+          order: 3;
+          flex-basis: 100%;
+        }
+
+        .header-right {
+          margin-left: auto;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .custom-header {
+          padding: 8px 12px;
+        }
+
+        .header-left {
+          flex-basis: 100%;
+        }
+
+        .header-right {
+          width: 100%;
+          margin-left: 0;
+        }
+
+        .header-links {
+          justify-content: flex-start;
+          gap: 10px;
+        }
+
+        .search-container {
+          flex-wrap: wrap;
+        }
+
+        .search-container select {
+          flex: 1 1 120px;
+        }
+
+        .search-container input {
+          flex: 1 1 180px;
+        }
       }
 
       /* マテリアルアイコンの統合 */

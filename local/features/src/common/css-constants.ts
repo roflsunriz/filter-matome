@@ -6,25 +6,25 @@
 export const CSS_CONSTANTS = `
 :root {
   /* ヘッダー位置調整定数 */
-  --header-offset-top: -8px;
-  --header-offset-left: -8px;
-  --header-width: 100vw;
+  --header-offset-top: 0;
+  --header-offset-left: 0;
+  --header-width: 100%;
   --header-height: 49px;
   --header-z-index: 9000;
   
   /* 各環境での微調整 */
-  --header-mylist2-top: -8px;
-  --header-mylist2-left: -8px;
+  --header-mylist2-top: 0;
+  --header-mylist2-left: 0;
   --header-mylist2-docs-top: -21px;
   --header-mylist2-docs-left: -335px;
   --header-comment-filter2-docs-top: -22px;
   --header-comment-filter2-docs-left: -22px;
-  --header-video-player-width: 102vw;
-  --header-video-player-top: -32px;
-  --header-video-player-left: -134px;
-  --header-movie-info-width: 101vw;
-  --header-movie-info-top: -32px;
-  --header-movie-info-left: -340px;
+  --header-video-player-width: 100%;
+  --header-video-player-top: 0;
+  --header-video-player-left: 0;
+  --header-movie-info-width: 100%;
+  --header-movie-info-top: 0;
+  --header-movie-info-left: 0;
 
   /* ヘッダー背景・色関連 */
   --header-bg-color: #252525;

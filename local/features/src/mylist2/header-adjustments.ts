@@ -13,6 +13,14 @@ export const MYLIST2_HEADER_ADJUSTMENT_STYLES = `
   --header-offset-top: var(--header-mylist2-top);
   --header-offset-left: var(--header-mylist2-left);
 }
+
+body {
+  margin: 0;
+}
+
+#headerContainer {
+  width: 100%;
+}
 `;
 
 /**

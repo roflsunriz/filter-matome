@@ -2,7 +2,9 @@ export const STANDALONE_PAGE_STYLES = [
   "body.nc-standalone-body { margin: 0; padding: 0; background: #0b0d14; color: #f4f6ff; font-family: 'Segoe UI', 'Helvetica Neue', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; min-height: 100vh; overflow-x: hidden; }",
   "a { color: #7aa2ff; text-decoration: none; }",
   "a:hover { text-decoration: underline; }",
-  ".nc-standalone-page { max-width: 90vw; margin: 0 auto; padding: 32px 20px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; }",
+  ".nc-standalone-page { margin: 0; padding: 0 0 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; }",
+  ".nc-common-header-container { width: 100%; margin: 0; }",
+  ".nc-header, .nc-main, .nc-description { width: 90vw; margin-left: auto; margin-right: auto; box-sizing: border-box; }",
   ".nc-header { display: flex; flex-direction: column; gap: 12px; }",
   ".nc-header__breadcrumbs { font-size: 13px; color: #8a94ad; display: flex; align-items: center; gap: 8px; }",
   ".nc-header__breadcrumbs a { color: inherit; }",
@@ -59,5 +61,5 @@ export const STANDALONE_PAGE_STYLES = [
   "@media (max-width: 1024px) { .nc-main { gap: 20px; } .standalone-player-wrapper { flex-direction: column; } .standalone-player-wrapper .comment-container { width: 100%; max-width: 100%; min-width: 100%; max-height: 400px; } .video-container { max-height: 60vh; } }",
   
   /* レスポンシブ対応 - モバイル */
-  "@media (max-width: 768px) { .nc-standalone-page { padding: 16px 12px 32px; gap: 16px; max-width: 100vw; } .nc-header__title { font-size: 20px; } .nc-player-surface { padding: 12px; border-radius: 12px; } .standalone-player-wrapper .comment-container { max-height: 300px; padding: 8px; } .nc-stat-list { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); } }",
+  "@media (max-width: 768px) { .nc-standalone-page { padding-bottom: 32px; gap: 16px; } .nc-header, .nc-main, .nc-description { width: calc(100vw - 24px); } .nc-header__title { font-size: 20px; } .nc-player-surface { padding: 12px; border-radius: 12px; } .standalone-player-wrapper .comment-container { max-height: 300px; padding: 8px; } .nc-stat-list { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); } }",
 ].join("\n");
