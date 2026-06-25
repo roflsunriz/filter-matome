@@ -222,8 +222,13 @@ export class LinkManager {
     return "";
   }
 
+  private openServiceLink(topUrl: string, videoUrl: string): void {
+    window.open(videoUrl || topUrl);
+  }
+
   public async handleAction(action: string): Promise<void> {
-    if (!isWatchLikePage() && this.WATCH_PAGE_ONLY_ACTIONS.has(action)) {
+    const isWatchPage = isWatchLikePage();
+    if (!isWatchPage && this.WATCH_PAGE_ONLY_ACTIONS.has(action)) {
       window.toastr?.info(
         "このリンクは視聴ページでのみ利用できます",
         "利用不可",
@@ -232,8 +237,8 @@ export class LinkManager {
       return;
     }
 
-    const videoId = await getActiveVideoId();
-    const threadId = this.getThreadId();
+    const videoId = isWatchPage ? await getActiveVideoId() : "";
+    const threadId = isWatchPage ? this.getThreadId() : "";
     // const commentFilterUI = new CommentFilterUI();
 
     const actionMap: ActionMap = {
@@ -317,32 +322,28 @@ export class LinkManager {
         handleVideoOperation("cache_remove", videoId);
       },
       nicochart: () => {
-        if (!videoId) {
-          window.open("http://www.nicochart.jp/");
-          return;
-        }
-        window.open(`http://www.nicochart.jp/watch/${videoId}`);
+        this.openServiceLink(
+          "http://www.nicochart.jp/",
+          videoId ? `http://www.nicochart.jp/watch/${videoId}` : "",
+        );
       },
       nicolog: () => {
-        if (!videoId) {
-          window.open("https://www.nicolog.jp/");
-          return;
-        }
-        window.open(`https://www.nicolog.jp/watch/${videoId}`);
+        this.openServiceLink(
+          "https://www.nicolog.jp/",
+          videoId ? `https://www.nicolog.jp/watch/${videoId}` : "",
+        );
       },
       nicoran: () => {
-        if (!videoId) {
-          window.open("http://nicoranweb.com/");
-          return;
-        }
-        window.open(`http://nicoranweb.com/watch/${videoId}`);
+        this.openServiceLink(
+          "http://nicoranweb.com/",
+          videoId ? `http://nicoranweb.com/watch/${videoId}` : "",
+        );
       },
       nicozon: () => {
-        if (!videoId) {
-          window.open("https://www.nicozon.net/");
-          return;
-        }
-        window.open(`https://www.nicozon.net/watch/${videoId}`);
+        this.openServiceLink(
+          "https://www.nicozon.net/",
+          videoId ? `https://www.nicozon.net/watch/${videoId}` : "",
+        );
       },
       search: "https://gokulin.info/search/",
       commentviewer: "https://yyya-nico.com/nv_comment_viewer/",
