@@ -368,6 +368,7 @@ manager.setDatabaseMigrationProgressCallback((progress) => {
 - データベース操作: IndexedDBの応答時間
 - UI描画: 大量データ表示時のパフォーマンス
 - 一括 getthumbinfo 操作: 開始前モーダルで並列数・開始ディレイを調整し、削除/非公開検知結果は動画レコードの `availabilityStatus` と一覧バッジに反映します。
+- 動画一覧ソートの「利用不可」は、削除・非公開・取得不可・状態不明の動画をスクロールトップ側に集めます。
 
 ## 🆕 新機能: データベース永続化昇格・自動マイグレーション機能
 

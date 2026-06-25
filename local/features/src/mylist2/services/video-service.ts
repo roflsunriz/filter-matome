@@ -9,6 +9,13 @@ import {
 
 export class VideoService {
   private db: Mylist2DB;
+  private readonly unavailableStatuses = new Set<VideoAvailabilityStatus>([
+    "deleted",
+    "private",
+    "unavailable",
+    "unknown",
+  ]);
+
   private toMessage(value: unknown): string {
     return value instanceof Error ? value.message : String(value);
   }
@@ -117,12 +124,28 @@ export class VideoService {
           comparison = (a.addedAt || 0) - (b.addedAt || 0);
           break;
 
+        case "availability": {
+          const aUnavailable = this.isUnavailableVideo(a) ? 1 : 0;
+          const bUnavailable = this.isUnavailableVideo(b) ? 1 : 0;
+          comparison =
+            aUnavailable - bUnavailable ||
+            (a.addedAt || 0) - (b.addedAt || 0);
+          break;
+        }
+
         default:
           comparison = (a.uploadedAt || 0) - (b.uploadedAt || 0);
       }
 
       return isAsc ? comparison : -comparison;
     });
+  }
+
+  private isUnavailableVideo(video: DBVideo): boolean {
+    return (
+      video.availabilityStatus !== undefined &&
+      this.unavailableStatuses.has(video.availabilityStatus)
+    );
   }
 
   async deleteVideo(compositeId: string): Promise<string> {
