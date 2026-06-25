@@ -504,6 +504,7 @@ export class WatchHarajukuModule implements ModuleInstance {
     const grid = document.querySelector<HTMLElement>(SELECTORS.grid);
     const title = document.querySelector<HTMLElement>(SELECTORS.title);
     const sidebar = document.querySelector<HTMLElement>(SELECTORS.sidebarPanel);
+    const sidebarColumn = sidebar?.parentElement;
     const detailContent = document.querySelector<HTMLElement>(
       SELECTORS.detailContent,
     );
@@ -553,14 +554,29 @@ export class WatchHarajukuModule implements ModuleInstance {
 
     if (title && sidebar) {
       const titleTop = title.getBoundingClientRect().top;
-      const sidebarBottom = sidebar.getBoundingClientRect().bottom;
+      const sidebarBottom =
+        sidebarColumn?.getBoundingClientRect().bottom ??
+        sidebar.getBoundingClientRect().bottom;
       root.style.setProperty(
         "--hy-watch-sidebar-panel-height",
         this.px(sidebarBottom - titleTop),
       );
     }
 
-    this.observeLayoutTargets([grid, title, sidebar, detailContent]);
+    const sidebarExtraPanels = Array.from(
+      sidebarColumn?.querySelectorAll(
+        ':scope > section, :scope > [data-scope="tabs"][data-part="root"]',
+      ) ?? [],
+    );
+
+    this.observeLayoutTargets([
+      grid,
+      title,
+      sidebar,
+      sidebarColumn,
+      detailContent,
+      ...sidebarExtraPanels,
+    ]);
   }
 
   private observeLayoutTargets(targets: Array<Element | null | undefined>): void {

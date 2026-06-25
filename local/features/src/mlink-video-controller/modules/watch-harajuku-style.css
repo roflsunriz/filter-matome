@@ -25,6 +25,8 @@
     --hy-detail-summary-height: 28px;
     --hy-detail-expanded-height: clamp(180px, 26vh, 260px);
     --hy-tag-strip-max-height: clamp(44px, 8vh, 64px);
+    --hy-sidebar-tag-search-height: clamp(152px, 22vh, 240px);
+    --hy-sidebar-recommend-height: clamp(196px, 30vh, 320px);
     --hy-title-to-detail-gap: 4px;
     --hy-detail-to-tags-gap: 4px;
     --hy-tags-to-player-gap: 12px;
@@ -768,6 +770,41 @@
     min-height: 0 !important;
   }
 
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--hy-gap) !important;
+    align-items: stretch !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) {
+    flex: 0 0 var(--watch-player-height) !important;
+    height: var(--watch-player-height) !important;
+    min-height: 0 !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section {
+    flex: 0 0 var(--hy-sidebar-tag-search-height) !important;
+    height: var(--hy-sidebar-tag-search-height) !important;
+    min-height: var(--hy-sidebar-tag-search-height) !important;
+    max-height: var(--hy-sidebar-tag-search-height) !important;
+    margin-top: 0 !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > :not(header) {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: auto !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > :not(header) > div {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
   div[class*="grid-area_"][class*="sidebar"] section::before {
     content: none !important;
   }
@@ -952,6 +989,47 @@
   div[class*="grid-area_"][class*="sidebar"] [data-scope="tabs"],
   div[class*="grid-area_"][class*="sidebar"] [role="tabpanel"] {
     display: none !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] {
+    display: flex !important;
+    flex: 0 0 var(--hy-sidebar-recommend-height) !important;
+    flex-direction: column !important;
+    height: var(--hy-sidebar-recommend-height) !important;
+    min-height: var(--hy-sidebar-recommend-height) !important;
+    max-height: var(--hy-sidebar-recommend-height) !important;
+    padding: 8px !important;
+    box-sizing: border-box !important;
+    border: 1px solid var(--hy-border) !important;
+    background: var(--hy-panel) !important;
+    overflow: hidden !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] > [data-scope="tabs"][data-part="list"] {
+    display: flex !important;
+    flex: 0 0 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    gap: 4px !important;
+    overflow: hidden !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] > [data-scope="tabs"][data-part="list"] > [data-scope="tabs"][data-part="trigger"] {
+    display: flex !important;
+    flex: 1 1 0 !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] > [data-scope="tabs"][data-part="content"][role="tabpanel"][data-selected] {
+    display: block !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    margin-top: 8px !important;
+    overflow: auto !important;
   }
 
   div[class*="grid-area_"][class*="sidebar"]::after {
