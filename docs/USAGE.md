@@ -173,6 +173,9 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 !!! note
     mp4ファイルを`scripts/convert-to-faststart.ps1`でfaststart変換すると、読み込みから再生開始までの待ち時間が短縮される。
 
+!!! note
+    動画ファイルを追加した後はNicoCache_nlに認識させるためにNicoCache_nlの再起動が必要。
+
 
 ### 105_premium_hide.txt
 
