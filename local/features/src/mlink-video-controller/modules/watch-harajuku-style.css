@@ -25,6 +25,7 @@
     --hy-detail-summary-height: 28px;
     --hy-detail-expanded-height: clamp(180px, 26vh, 260px);
     --hy-tag-strip-max-height: clamp(44px, 8vh, 64px);
+    --hy-sidebar-tag-search-header-height: 42px;
     --hy-sidebar-tag-search-height: clamp(152px, 22vh, 240px);
     --hy-sidebar-recommend-height: clamp(196px, 30vh, 320px);
     --hy-title-to-detail-gap: 4px;
@@ -791,6 +792,99 @@
     min-height: var(--hy-sidebar-tag-search-height) !important;
     max-height: var(--hy-sidebar-tag-search-height) !important;
     margin-top: 0 !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header {
+    display: flex !important;
+    align-items: center !important;
+    height: var(--hy-sidebar-tag-search-header-height) !important;
+    min-height: var(--hy-sidebar-tag-search-header-height) !important;
+    max-height: var(--hy-sidebar-tag-search-header-height) !important;
+    padding: 0 4px 0 8px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > [aria-label*="を開閉する"] {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 0 4px 0 0 !important;
+    gap: 4px !important;
+    overflow: hidden !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > [aria-label*="を開閉する"] > svg {
+    flex: 0 0 16px !important;
+    width: 16px !important;
+    min-width: 16px !important;
+    max-width: 16px !important;
+    height: 16px !important;
+    min-height: 16px !important;
+    max-height: 16px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > [aria-label*="を開閉する"] > div {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: auto !important;
+    overflow: hidden !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header h1,
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header p {
+    min-width: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header h1 {
+    height: 18px !important;
+    font-size: 12px !important;
+    line-height: 18px !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header p {
+    height: 16px !important;
+    font-size: 11px !important;
+    line-height: 16px !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > div:last-child {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    gap: 2px !important;
+    height: 100% !important;
+    max-width: 78px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > div:last-child > button {
+    flex: 0 0 24px !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    padding: 3px !important;
+    border-color: transparent !important;
+    background: transparent !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > div:last-child > button svg {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > :not(header) {
