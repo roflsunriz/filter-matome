@@ -509,12 +509,42 @@ export class WatchHarajukuModule implements ModuleInstance {
     );
 
     if (detailContent?.getAttribute("aria-hidden") === "false") {
-      const borderHeight =
-        detailContent.getBoundingClientRect().height - detailContent.clientHeight;
+      const previousHeight = detailContent.style.height;
+      const previousMinHeight = detailContent.style.minHeight;
+      const previousMaxHeight = detailContent.style.maxHeight;
+      const previousHeightPriority =
+        detailContent.style.getPropertyPriority("height");
+      const previousMinHeightPriority =
+        detailContent.style.getPropertyPriority("min-height");
+      const previousMaxHeightPriority =
+        detailContent.style.getPropertyPriority("max-height");
+      detailContent.style.setProperty("height", "auto", "important");
+      detailContent.style.setProperty("min-height", "0", "important");
+      detailContent.style.setProperty("max-height", "none", "important");
+
+      const detailRect = detailContent.getBoundingClientRect();
+      const borderHeight = detailRect.height - detailContent.clientHeight;
       const nextDetailHeight = Math.max(
         detailContent.scrollHeight + Math.max(0, borderHeight),
-        detailContent.getBoundingClientRect().height,
+        detailRect.height,
       );
+
+      detailContent.style.setProperty(
+        "height",
+        previousHeight,
+        previousHeightPriority,
+      );
+      detailContent.style.setProperty(
+        "min-height",
+        previousMinHeight,
+        previousMinHeightPriority,
+      );
+      detailContent.style.setProperty(
+        "max-height",
+        previousMaxHeight,
+        previousMaxHeightPriority,
+      );
+
       root.style.setProperty(
         "--hy-detail-expanded-height",
         this.px(nextDetailHeight),

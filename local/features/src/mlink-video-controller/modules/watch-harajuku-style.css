@@ -598,7 +598,9 @@
 
   [aria-label="動画プレーヤー設定"],
   [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"],
-  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] {
+  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
+  [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"],
+  [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] {
     position: absolute !important;
     left: calc(var(--hy-player-width) + var(--hy-gap)) !important;
     right: auto !important;
@@ -613,7 +615,9 @@
 
   #root [aria-label="動画プレーヤー設定"][aria-label="動画プレーヤー設定"] > section[class][class],
   #root [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section[class][class],
-  #root [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class][class] {
+  #root [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class][class],
+  #root [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] > section[class][class],
+  #root [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section[class][class] {
     width: 100% !important;
     height: 100% !important;
     max-height: 100% !important;
@@ -623,13 +627,17 @@
 
   [aria-label="動画プレーヤー設定"] > section > div,
   [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section > div,
-  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section > div {
+  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section > div,
+  [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] > section > div,
+  [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section > div {
     min-height: 0 !important;
   }
 
   [aria-label="動画プレーヤー設定"] > button[aria-label="Close"],
   [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] button[aria-label="Close"],
-  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] button[aria-label="Close"] {
+  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] button[aria-label="Close"],
+  [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] button[aria-label="Close"],
+  [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] button[aria-label="Close"] {
     position: absolute !important;
     top: 0.5lh !important;
     right: 0.5lh !important;
@@ -639,7 +647,9 @@
   }
 
   [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section > header,
-  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section > header {
+  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section > header,
+  [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] > section > header,
+  [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section > header {
     position: relative !important;
     z-index: 4 !important;
   }
@@ -1664,7 +1674,15 @@
   :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
   :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
   :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
-  :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
+  :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"],
+  :root[data-hy-theme] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"],
+  :root[data-hy-theme] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
     background: var(--hy-panel) !important;
     border-color: var(--hy-border) !important;
     color: var(--hy-text) !important;
@@ -1697,6 +1715,8 @@
   :root[data-hy-theme] button[data-element-area="video_action"] *,
   :root[data-hy-theme] [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] *,
   :root[data-hy-theme] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] *,
+  :root[data-hy-theme] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] *,
+  :root[data-hy-theme] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] *,
   :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) [class*="bg-c_layer"] *,
   :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) [class*="bg_layer"] * {
     color: var(--hy-text) !important;
@@ -1713,7 +1733,15 @@
   :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
   :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
   :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
-  :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
+  :root[data-hy-theme="light"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"],
+  :root[data-hy-theme="light"] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme="light"] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme="light"] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme="light"] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"],
+  :root[data-hy-theme="light"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme="light"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme="light"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme="light"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
     background: #fff !important;
     border-color: #999 !important;
     color: #111 !important;
@@ -1752,7 +1780,15 @@
   :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
   :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
   :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
-  :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
+  :root[data-hy-theme="dark"] [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"],
+  :root[data-hy-theme="dark"] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme="dark"] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme="dark"] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme="dark"] [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"],
+  :root[data-hy-theme="dark"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"],
+  :root[data-hy-theme="dark"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
+  :root[data-hy-theme="dark"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
+  :root[data-hy-theme="dark"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
     background: var(--hy-panel) !important;
     border-color: var(--hy-border) !important;
     color: var(--hy-text) !important;
