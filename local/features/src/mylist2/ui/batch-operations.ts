@@ -230,8 +230,14 @@ export class BatchOperations {
     if (!options) return;
 
     let processed = 0;
-    let unavailable = 0;
     let failed = 0;
+    const statusCounts = {
+      available: 0,
+      deleted: 0,
+      private: 0,
+      unavailable: 0,
+      unknown: 0,
+    };
 
     this.progressService.showProgress();
 
@@ -247,9 +253,7 @@ export class BatchOperations {
             result.checkedAt,
             result.reason,
           );
-          if (result.status !== "available") {
-            unavailable++;
-          }
+          statusCounts[result.status]++;
           processed++;
           this.progressService.updateProgress(processed + failed, total);
         } catch (error) {
@@ -264,7 +268,18 @@ export class BatchOperations {
 
       await this.loadVideos();
       await this.modalService.showCustomAlert(
-        `公開状態チェックが完了しました\nチェック成功: ${processed}件\n削除/非公開など: ${unavailable}件${failed > 0 ? `\n失敗: ${failed}件` : ""}`,
+        [
+          "公開状態チェックが完了しました",
+          `チェック成功: ${processed}件`,
+          `公開中: ${statusCounts.available}件`,
+          `削除: ${statusCounts.deleted}件`,
+          `非公開: ${statusCounts.private}件`,
+          `取得不可: ${statusCounts.unavailable}件`,
+          `状態不明: ${statusCounts.unknown}件`,
+          failed > 0 ? `失敗: ${failed}件` : "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
       );
     } catch (error) {
       const errorMessage =
