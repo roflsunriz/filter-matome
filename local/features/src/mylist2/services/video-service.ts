@@ -1,7 +1,11 @@
 import "@/types/global.d.ts";
 
 import { Mylist2DB } from "@/mylist2/components/database";
-import { VideoInfo, DBVideo } from "@/types/video-types";
+import {
+  VideoInfo,
+  DBVideo,
+  VideoAvailabilityStatus,
+} from "@/types/video-types";
 
 export class VideoService {
   private db: Mylist2DB;
@@ -48,6 +52,8 @@ export class VideoService {
             videoInfo.tags && videoInfo.tags.length > 0
               ? videoInfo.tags
               : undefined,
+          availabilityStatus: "available",
+          availabilityCheckedAt: Date.now(),
           // 任意: VideoInfoにmemoが渡ってくる場合は保持
           memo: (videoInfo as unknown as { memo?: string }).memo ?? undefined,
           addedAt: Date.now(),
@@ -181,6 +187,9 @@ export class VideoService {
                 ? newInfo.tags
                 : undefined
               : existingVideo.tags,
+          availabilityStatus: "available",
+          availabilityCheckedAt: Date.now(),
+          availabilityReason: undefined,
         };
 
         const updateRequest = store.put(updatedVideo);
@@ -243,6 +252,39 @@ export class VideoService {
         updateRequest.onsuccess = () => resolve();
         updateRequest.onerror = () =>
           reject(new Error("データベースの更新に失敗しました"));
+      };
+      request.onerror = () => reject(new Error("動画情報の取得に失敗しました"));
+    });
+  }
+
+  async updateVideoAvailabilityStatus(
+    compositeId: string,
+    status: VideoAvailabilityStatus,
+    checkedAt: number,
+    reason?: string,
+  ): Promise<void> {
+    const database = await this.db.initDB();
+    const transaction = database.transaction(["videos"], "readwrite");
+    const store = transaction.objectStore("videos");
+
+    return new Promise<void>((resolve, reject) => {
+      const request = store.get(compositeId);
+      request.onsuccess = () => {
+        const existingVideo = request.result as DBVideo | null;
+        if (!existingVideo) {
+          reject(new Error("動画が見つかりません"));
+          return;
+        }
+        const updated: DBVideo = {
+          ...existingVideo,
+          availabilityStatus: status,
+          availabilityCheckedAt: checkedAt,
+          availabilityReason: reason,
+        };
+        const updateRequest = store.put(updated);
+        updateRequest.onsuccess = () => resolve();
+        updateRequest.onerror = () =>
+          reject(new Error("公開状態の更新に失敗しました"));
       };
       request.onerror = () => reject(new Error("動画情報の取得に失敗しました"));
     });

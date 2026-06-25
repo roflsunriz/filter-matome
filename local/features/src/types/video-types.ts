@@ -59,6 +59,20 @@ export interface VideoInfo {
   tags?: string[];
 }
 
+export type VideoAvailabilityStatus =
+  | "available"
+  | "deleted"
+  | "private"
+  | "unavailable"
+  | "unknown";
+
+export interface VideoAvailabilityResult {
+  videoId: string;
+  status: VideoAvailabilityStatus;
+  reason?: string;
+  checkedAt: number;
+}
+
 /**
  * 動画URL情報の型定義
  */
@@ -91,6 +105,12 @@ export interface DBVideo extends VideoInfo {
   memo?: string;
   /** 説明文の取得元 ("thumb"=getthumbinfo, "watch"=視聴ページ) */
   descriptionSource?: "thumb" | "watch";
+  /** getthumbinfo による公開状態 */
+  availabilityStatus?: VideoAvailabilityStatus;
+  /** 公開状態の最終確認日時 */
+  availabilityCheckedAt?: number;
+  /** 公開状態判定時の理由・APIメッセージ */
+  availabilityReason?: string;
 }
 
 /**

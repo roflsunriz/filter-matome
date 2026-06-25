@@ -1,7 +1,7 @@
 import "@/types/global.d.ts";
 
 import { createMaterialIcon, ICONS } from "@/common/material-icons";
-import { MylistInfo } from "@/types/mylist-types";
+import { BatchApiOptions, MylistInfo } from "@/types/mylist-types";
 
 export class ModalService {
   // カスタムアラートの実装
@@ -469,6 +469,83 @@ export class ModalService {
       cancel.addEventListener("click", () => {
         cleanup(null);
       });
+      document.addEventListener("keydown", onKey);
+      modal.addEventListener("click", onBackdrop);
+    });
+  }
+
+  async showBatchApiOptionsModal(
+    title: string,
+    totalCount: number,
+    defaults: BatchApiOptions = { concurrency: 3, delayMs: 200 },
+  ): Promise<BatchApiOptions | null> {
+    return new Promise((resolve) => {
+      const html = `
+        <div class="cml2-modal" style="display:flex">
+          <div class="cml2-modal-content">
+            <h3 class="cml2-modal-title">${title}</h3>
+            <div class="cml2-modal-body">
+              <p class="cml2-batch-api-summary">対象: ${totalCount.toLocaleString()}件</p>
+              <label class="cml2-batch-api-field">
+                <span>並列数</span>
+                <input id="cml2BatchConcurrency" type="number" min="1" max="20" step="1" value="${defaults.concurrency}">
+              </label>
+              <label class="cml2-batch-api-field">
+                <span>開始ディレイ(ms)</span>
+                <input id="cml2BatchDelay" type="number" min="0" max="10000" step="50" value="${defaults.delayMs}">
+              </label>
+            </div>
+            <div class="cml2-modal-footer">
+              <button class="cml2-btn" id="cml2BatchCancel">${createMaterialIcon(ICONS.close, { color: "white" })}キャンセル</button>
+              <button class="cml2-btn" id="cml2BatchStart">${createMaterialIcon(ICONS.check, { color: "white" })}開始</button>
+            </div>
+          </div>
+        </div>`;
+
+      document.body.insertAdjacentHTML("beforeend", html);
+      const modal = document.querySelector<HTMLElement>(".cml2-modal");
+      const concurrencyInput = document.getElementById(
+        "cml2BatchConcurrency",
+      ) as HTMLInputElement | null;
+      const delayInput = document.getElementById(
+        "cml2BatchDelay",
+      ) as HTMLInputElement | null;
+      const startButton = document.getElementById("cml2BatchStart");
+      const cancelButton = document.getElementById("cml2BatchCancel");
+
+      if (
+        !modal ||
+        !concurrencyInput ||
+        !delayInput ||
+        !startButton ||
+        !cancelButton
+      ) {
+        resolve(null);
+        return;
+      }
+
+      const cleanup = (result: BatchApiOptions | null) => {
+        document.removeEventListener("keydown", onKey);
+        modal.removeEventListener("click", onBackdrop);
+        modal.remove();
+        resolve(result);
+      };
+      const parseOptions = (): BatchApiOptions => ({
+        concurrency: Math.max(
+          1,
+          Math.min(20, parseInt(concurrencyInput.value, 10) || 1),
+        ),
+        delayMs: Math.max(0, parseInt(delayInput.value, 10) || 0),
+      });
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Escape") cleanup(null);
+      };
+      const onBackdrop = (e: MouseEvent) => {
+        if (e.target === modal) cleanup(null);
+      };
+
+      startButton.addEventListener("click", () => cleanup(parseOptions()));
+      cancelButton.addEventListener("click", () => cleanup(null));
       document.addEventListener("keydown", onKey);
       modal.addEventListener("click", onBackdrop);
     });

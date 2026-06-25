@@ -1,8 +1,16 @@
 import "@/types/global.d.ts";
 
 import { Mylist2Manager } from "@/mylist2/components/manager-refactored";
-import type { MylistInfo, KeywordInfo, ExportData, VideoLinkTarget } from "@/types/mylist-types";
-import { DBVideo as VideoInfo } from "@/types/video-types";
+import type {
+  MylistInfo,
+  KeywordInfo,
+  ExportData,
+  VideoLinkTarget,
+} from "@/types/mylist-types";
+import {
+  DBVideo as VideoInfo,
+  VideoAvailabilityStatus,
+} from "@/types/video-types";
 import {
   hydrateMaterialIconImages,
 } from "@/common/material-icons";
@@ -631,6 +639,7 @@ export class Mylist2ManagerUI {
         <div class="video-info">
           <div class="video-title">
             <a href="${buildVideoUrl(video.originalId, linkCtx)}" target="_blank"${apiCheckAttrs}>${video.title}</a>
+            ${this.getAvailabilityBadgeHtml(video)}
           </div>
           <div class="video-stats">
             <span class="view-count">再生数: ${video.viewCount.toLocaleString()}</span>
@@ -705,6 +714,10 @@ export class Mylist2ManagerUI {
         titleLink.dataset.videoId = video.originalId;
       }
       titleElement.appendChild(titleLink);
+      const badge = this.createAvailabilityBadge(video);
+      if (badge) {
+        titleElement.appendChild(badge);
+      }
     }
 
     // 統計情報の設定
@@ -713,6 +726,49 @@ export class Mylist2ManagerUI {
     hydrateMaterialIconImages(item);
 
     return item;
+  }
+
+  private createAvailabilityBadge(video: VideoInfo): HTMLElement | null {
+    const label = this.getAvailabilityLabel(video.availabilityStatus);
+    if (!label) return null;
+
+    const badge = document.createElement("span");
+    badge.className = `cml2-availability-badge status-${video.availabilityStatus}`;
+    badge.textContent = label;
+    const checkedAt = video.availabilityCheckedAt
+      ? new Date(video.availabilityCheckedAt).toLocaleString()
+      : "未確認";
+    badge.title = [
+      `公開状態: ${label}`,
+      `確認日時: ${checkedAt}`,
+      video.availabilityReason ? `理由: ${video.availabilityReason}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+    return badge;
+  }
+
+  private getAvailabilityBadgeHtml(video: VideoInfo): string {
+    const label = this.getAvailabilityLabel(video.availabilityStatus);
+    if (!label) return "";
+    return `<span class="cml2-availability-badge status-${video.availabilityStatus}">${label}</span>`;
+  }
+
+  private getAvailabilityLabel(
+    status?: VideoAvailabilityStatus,
+  ): string | null {
+    switch (status) {
+      case "deleted":
+        return "削除";
+      case "private":
+        return "非公開";
+      case "unavailable":
+        return "取得不可";
+      case "unknown":
+        return "状態不明";
+      default:
+        return null;
+    }
   }
 
   private setVideoStats(item: HTMLElement, video: VideoInfo): void {
@@ -1069,6 +1125,19 @@ export class Mylist2ManagerUI {
                 }
                 if (selectedVideos.length > 0) {
                   await this.batchOperations.refreshSelectedVideosFromData(
+                    selectedVideos,
+                  );
+                }
+                break;
+              case "availability-check":
+                if (selectedKeywords.length > 0) {
+                  await this.showCustomAlert(
+                    "キーワードは公開状態チェックできません。動画のみ選択してください。",
+                  );
+                  return;
+                }
+                if (selectedVideos.length > 0) {
+                  await this.batchOperations.checkSelectedVideoAvailabilityFromData(
                     selectedVideos,
                   );
                 }

@@ -5,7 +5,7 @@ import { ModalService } from "@/mylist2/ui/modal-service";
 import { ProgressService } from "@/mylist2/ui/progress-service";
 import { EventHandlers } from "@/mylist2/ui/event-handlers";
 import type { DBVideo } from "@/types/video-types";
-import type { KeywordInfo } from "@/types/mylist-types";
+import type { BatchApiOptions, KeywordInfo } from "@/types/mylist-types";
 import type { VirtualScrollManager } from "@/mylist2/ui/virtual-scroll";
 
 export class BatchOperations {
@@ -35,6 +35,41 @@ export class BatchOperations {
   // =============================================
   // データベースの一括操作（仮想スクロール対応）
   // =============================================
+
+  private async getBatchApiOptions(
+    title: string,
+    total: number,
+  ): Promise<BatchApiOptions | null> {
+    return this.modalService.showBatchApiOptionsModal(title, total);
+  }
+
+  private async runParallelWithDelay<T>(
+    items: T[],
+    options: BatchApiOptions,
+    worker: (item: T, index: number) => Promise<void>,
+  ): Promise<void> {
+    let nextIndex = 0;
+
+    const runWorker = async (): Promise<void> => {
+      while (nextIndex < items.length) {
+        const index = nextIndex;
+        nextIndex++;
+        if (options.delayMs > 0 && index > 0) {
+          await new Promise((resolve) => setTimeout(resolve, options.delayMs));
+        }
+        const item = items[index];
+        if (item !== undefined) {
+          await worker(item, index);
+        }
+      }
+    };
+
+    const workers = Array.from(
+      { length: Math.min(options.concurrency, items.length) },
+      () => runWorker(),
+    );
+    await Promise.all(workers);
+  }
 
   /**
    * 一括移動の処理（データベース）
@@ -141,16 +176,16 @@ export class BatchOperations {
    */
   async refreshSelectedVideosFromData(videos: DBVideo[]): Promise<void> {
     const total = videos.length;
+    const options = await this.getBatchApiOptions("一括情報更新", total);
+    if (!options) return;
+
     let processed = 0;
-    const batchSize = 50;
+    let failed = 0;
 
     this.progressService.showProgress();
 
     try {
-      for (let i = 0; i < videos.length; i++) {
-        const video = videos[i];
-        if (!video) continue;
-
+      await this.runParallelWithDelay(videos, options, async (video) => {
         const videoId = video.originalId;
         const compositeId = video.id;
 
@@ -165,29 +200,78 @@ export class BatchOperations {
           processed++;
 
           // 進捗表示を更新
-          this.progressService.updateProgress(processed, total);
+          this.progressService.updateProgress(processed + failed, total);
         } catch (error) {
+          failed++;
+          this.progressService.updateProgress(processed + failed, total);
           window.logger.error(`動画ID ${videoId} の更新に失敗:`, error);
         }
-
-        // 200ミリ秒待機
-        await new Promise((resolve) => setTimeout(resolve, 200));
-
-        // 50件ごとに2秒待機
-        if (processed % batchSize === 0 && i < videos.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-        }
-      }
+      });
 
       // 完了後に一覧を再読み込み
       await this.loadVideos();
       await this.modalService.showCustomAlert(
-        `${processed}件の動画情報を更新しました`,
+        `${processed}件の動画情報を更新しました${failed > 0 ? `\n失敗: ${failed}件` : ""}`,
       );
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "動画情報の更新に失敗しました";
       throw new Error("動画情報の更新に失敗しました: " + errorMessage);
+    } finally {
+      this.progressService.hideProgress();
+    }
+  }
+
+  async checkSelectedVideoAvailabilityFromData(
+    videos: DBVideo[],
+  ): Promise<void> {
+    const total = videos.length;
+    const options = await this.getBatchApiOptions("公開状態チェック", total);
+    if (!options) return;
+
+    let processed = 0;
+    let unavailable = 0;
+    let failed = 0;
+
+    this.progressService.showProgress();
+
+    try {
+      await this.runParallelWithDelay(videos, options, async (video) => {
+        try {
+          const result = await this.manager.checkVideoAvailability(
+            video.originalId,
+          );
+          await this.manager.updateVideoAvailabilityStatus(
+            video.id,
+            result.status,
+            result.checkedAt,
+            result.reason,
+          );
+          if (result.status !== "available") {
+            unavailable++;
+          }
+          processed++;
+          this.progressService.updateProgress(processed + failed, total);
+        } catch (error) {
+          failed++;
+          this.progressService.updateProgress(processed + failed, total);
+          window.logger.error(
+            `動画ID ${video.originalId} の公開状態チェックに失敗:`,
+            error,
+          );
+        }
+      });
+
+      await this.loadVideos();
+      await this.modalService.showCustomAlert(
+        `公開状態チェックが完了しました\nチェック成功: ${processed}件\n削除/非公開など: ${unavailable}件${failed > 0 ? `\n失敗: ${failed}件` : ""}`,
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "公開状態チェックに失敗しました";
+      throw new Error("公開状態チェックに失敗しました: " + errorMessage);
     } finally {
       this.progressService.hideProgress();
     }

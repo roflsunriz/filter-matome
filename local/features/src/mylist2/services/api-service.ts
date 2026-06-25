@@ -1,6 +1,10 @@
 import "@/types/global.d.ts";
 
-import { VideoInfo } from "@/types/video-types";
+import {
+  VideoInfo,
+  VideoAvailabilityResult,
+  VideoAvailabilityStatus,
+} from "@/types/video-types";
 import { QueueItem } from "@/types/mylist-types";
 
 export class ApiService {
@@ -160,6 +164,48 @@ export class ApiService {
       throw new Error("無効な動画IDです");
     }
     return this.queueApiRequest(videoId);
+  }
+
+  async checkVideoAvailability(
+    videoId: string,
+  ): Promise<VideoAvailabilityResult> {
+    if (!videoId.match(/^(?:so|sm|nm|nx)\d+$/)) {
+      throw new Error("無効な動画IDです");
+    }
+
+    const checkedAt = Date.now();
+    const response = await fetch(
+      `https://ext.nicovideo.jp/api/getthumbinfo/${videoId}`,
+    );
+    const text = await response.text();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "text/xml");
+    const status = xml.documentElement.getAttribute("status");
+
+    if (status === "ok") {
+      return { videoId, status: "available", checkedAt };
+    }
+
+    const reason =
+      xml.querySelector("description")?.textContent?.trim() ||
+      "動画情報の取得に失敗しました";
+
+    return {
+      videoId,
+      status: this.classifyUnavailableStatus(reason),
+      reason,
+      checkedAt,
+    };
+  }
+
+  private classifyUnavailableStatus(reason: string): VideoAvailabilityStatus {
+    if (/非公開|private/i.test(reason)) {
+      return "private";
+    }
+    if (/削除|deleted|not\s*found|存在しません/i.test(reason)) {
+      return "deleted";
+    }
+    return "unavailable";
   }
 
   // 動画情報を取得する関数

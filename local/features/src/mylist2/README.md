@@ -172,7 +172,8 @@ ProgressService ─── 進捗表示
 
 #### `ui/batch-operations.ts` - 一括操作
 - **役割**: 複数選択アイテムの一括処理
-- **機能**: 一括移動・コピー・削除・情報更新
+- **機能**: 一括移動・コピー・削除・情報更新・公開状態チェック
+- **補足**: getthumbinfo を使う一括情報更新と公開状態チェックは、開始前に並列数と開始ディレイを指定できます。
 - **編集タイミング**: 一括操作機能追加・改善
 
 #### `ui/modal-service.ts` - モーダル管理
@@ -366,6 +367,7 @@ manager.setDatabaseMigrationProgressCallback((progress) => {
 - API 呼び出し頻度: `api-service.ts`のキューイング状況
 - データベース操作: IndexedDBの応答時間
 - UI描画: 大量データ表示時のパフォーマンス
+- 一括 getthumbinfo 操作: 開始前モーダルで並列数・開始ディレイを調整し、削除/非公開検知結果は動画レコードの `availabilityStatus` と一覧バッジに反映します。
 
 ## 🆕 新機能: データベース永続化昇格・自動マイグレーション機能
 

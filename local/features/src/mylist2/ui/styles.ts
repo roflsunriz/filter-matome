@@ -253,6 +253,45 @@ export const MYLIST_MANAGER_STYLES_PART1 = `
 .video-title {
   font-weight: bold;
   margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.video-title .video-title-link {
+  min-width: 0;
+}
+
+.cml2-availability-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.cml2-availability-badge.status-deleted {
+  color: #ffdddd;
+  background: rgba(231, 76, 60, 0.2);
+  border-color: rgba(231, 76, 60, 0.5);
+}
+
+.cml2-availability-badge.status-private {
+  color: #ffe8bd;
+  background: rgba(243, 156, 18, 0.2);
+  border-color: rgba(243, 156, 18, 0.5);
+}
+
+.cml2-availability-badge.status-unavailable,
+.cml2-availability-badge.status-unknown {
+  color: #d6eaff;
+  background: rgba(52, 152, 219, 0.18);
+  border-color: rgba(52, 152, 219, 0.45);
 }
 
 .video-author {
@@ -725,6 +764,27 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 
 .cml2-modal-body {
   margin-bottom: 20px;
+}
+
+.cml2-batch-api-summary {
+  margin: 0 0 12px;
+  color: var(--cml2-text-soft, #dddddd);
+}
+
+.cml2-batch-api-field {
+  display: grid;
+  grid-template-columns: 130px minmax(120px, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.cml2-batch-api-field input {
+  background: var(--cml2-panel, #2a2b2c);
+  border: 1px solid var(--cml2-border, #333333);
+  color: var(--cml2-text, #ffffff);
+  padding: 8px;
+  border-radius: 4px;
 }
 
 .cml2-modal-footer {

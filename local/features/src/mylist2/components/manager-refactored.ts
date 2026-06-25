@@ -10,6 +10,8 @@ import {
 import {
   DBVideo as VideoInfo,
   VideoInfo as BaseVideoInfo,
+  VideoAvailabilityResult,
+  VideoAvailabilityStatus,
 } from "@/types/video-types";
 
 import { ApiService } from "@/mylist2/services/api-service";
@@ -127,6 +129,26 @@ export class Mylist2Manager {
   // API関連のメソッド
   async fetchVideoInfo(videoId: string): Promise<BaseVideoInfo> {
     return this.apiService.fetchVideoInfo(videoId);
+  }
+
+  async checkVideoAvailability(
+    videoId: string,
+  ): Promise<VideoAvailabilityResult> {
+    return this.apiService.checkVideoAvailability(videoId);
+  }
+
+  async updateVideoAvailabilityStatus(
+    compositeId: string,
+    status: VideoAvailabilityStatus,
+    checkedAt: number,
+    reason?: string,
+  ): Promise<void> {
+    return this.videoService.updateVideoAvailabilityStatus(
+      compositeId,
+      status,
+      checkedAt,
+      reason,
+    );
   }
 
   extractVideoId(input: string): string {

@@ -2,7 +2,11 @@
  * マイリスト関連の型定義
  */
 
-import { VideoInfo, DBVideo } from "@/types/video-types";
+import {
+  VideoInfo,
+  DBVideo,
+  VideoAvailabilityResult,
+} from "@/types/video-types";
 
 /**
  * マイリスト情報の型定義
@@ -52,6 +56,11 @@ export interface ManagerSettings {
   videoLinkTarget?: VideoLinkTarget;
 }
 
+export interface BatchApiOptions {
+  concurrency: number;
+  delayMs: number;
+}
+
 /**
  * マイリストマネージャーのインターフェース
  */
@@ -71,6 +80,7 @@ export interface MylistManager {
   addVideo(targetMylistId: number, videoData: VideoInfo): Promise<string>;
   /** 特定の動画のAPIキャッシュを無効化（情報更新前に呼び出す） */
   invalidateVideoCache(videoId: string): void;
+  checkVideoAvailability(videoId: string): Promise<VideoAvailabilityResult>;
 }
 
 /**
