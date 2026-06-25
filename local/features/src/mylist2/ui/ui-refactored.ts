@@ -738,20 +738,51 @@ export class Mylist2ManagerUI {
     const checkedAt = video.availabilityCheckedAt
       ? new Date(video.availabilityCheckedAt).toLocaleString()
       : "未確認";
-    badge.title = [
-      `公開状態: ${label}`,
-      `確認日時: ${checkedAt}`,
-      video.availabilityReason ? `理由: ${video.availabilityReason}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const helpText = this.getAvailabilityBadgeHelpText(
+      label,
+      checkedAt,
+      video.availabilityReason,
+    );
+    badge.title = helpText;
+    badge.setAttribute("aria-label", helpText);
     return badge;
   }
 
   private getAvailabilityBadgeHtml(video: VideoInfo): string {
     const label = this.getAvailabilityLabel(video.availabilityStatus);
     if (!label) return "";
-    return `<span class="cml2-availability-badge status-${video.availabilityStatus}">${label}</span>`;
+    const checkedAt = video.availabilityCheckedAt
+      ? new Date(video.availabilityCheckedAt).toLocaleString()
+      : "未確認";
+    const helpText = this.escapeAttribute(
+      this.getAvailabilityBadgeHelpText(
+        label,
+        checkedAt,
+        video.availabilityReason,
+      ),
+    );
+    return `<span class="cml2-availability-badge status-${video.availabilityStatus}" title="${helpText}" aria-label="${helpText}">${label}</span>`;
+  }
+
+  private getAvailabilityBadgeHelpText(
+    label: string,
+    checkedAt: string,
+    reason?: string,
+  ): string {
+    return [
+      `公開状態: ${label}`,
+      `確認日時: ${checkedAt}`,
+      reason ? `理由: ${reason}` : "",
+      "キャッシュ済み動画がローカルにあり、かつ「動画リンク先」が「ローカルプレーヤー(video-player)」に設定されている場合のみ、video-playerにリダイレクトされてローカルで再生できます。",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  private escapeAttribute(value: string): string {
+    const div = document.createElement("div");
+    div.textContent = value;
+    return div.innerHTML.replace(/"/g, "&quot;");
   }
 
   private getAvailabilityLabel(
