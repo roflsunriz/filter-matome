@@ -14,6 +14,8 @@ export interface LazyImageConfig {
 export class LazyImageLoader {
   private observer: IntersectionObserver | null = null;
   private observedImages: WeakSet<HTMLImageElement> = new WeakSet();
+  private loadedSrcs: Set<string> = new Set();
+  private failedSrcs: Set<string> = new Set();
   private readonly config: LazyImageConfig;
 
   constructor(config: Partial<LazyImageConfig> = {}) {
@@ -61,6 +63,10 @@ export class LazyImageLoader {
       img.dataset.src = src;
     }
 
+    if (this.applyCachedState(img, src)) {
+      return;
+    }
+
     // プレースホルダー状態に設定
     if (!img.classList.contains(this.config.loadedClass)) {
       img.classList.add(this.config.placeholderClass);
@@ -71,6 +77,45 @@ export class LazyImageLoader {
 
     this.observedImages.add(img);
     this.observer.observe(img);
+  }
+
+  /**
+   * 画像URLを設定し、読み込み済みURLなら即時表示する
+   */
+  public setSource(img: HTMLImageElement, src: string): void {
+    img.dataset.src = src;
+    if (this.applyCachedState(img, src)) {
+      return;
+    }
+
+    img.classList.remove(this.config.loadedClass, this.config.errorClass);
+    img.classList.add(this.config.placeholderClass);
+    img.src =
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 130 100'%3E%3Crect fill='%23ddd' width='130' height='100'/%3E%3C/svg%3E";
+  }
+
+  private applyCachedState(img: HTMLImageElement, src: string): boolean {
+    if (!src) {
+      return false;
+    }
+
+    if (this.loadedSrcs.has(src)) {
+      img.src = src;
+      img.classList.remove(this.config.placeholderClass, this.config.errorClass);
+      img.classList.add(this.config.loadedClass);
+      img.removeAttribute("data-src");
+      return true;
+    }
+
+    if (this.failedSrcs.has(src)) {
+      img.src = this.config.fallbackSrc;
+      img.classList.remove(this.config.placeholderClass, this.config.loadedClass);
+      img.classList.add(this.config.errorClass);
+      img.removeAttribute("data-src");
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -99,6 +144,8 @@ export class LazyImageLoader {
     const tempImg = new Image();
 
     tempImg.onload = () => {
+      this.loadedSrcs.add(src);
+      if (img.dataset.src !== src) return;
       img.src = src;
       img.classList.remove(this.config.placeholderClass);
       img.classList.add(this.config.loadedClass);
@@ -106,6 +153,8 @@ export class LazyImageLoader {
     };
 
     tempImg.onerror = () => {
+      this.failedSrcs.add(src);
+      if (img.dataset.src !== src) return;
       img.src = this.config.fallbackSrc;
       img.classList.remove(this.config.placeholderClass);
       img.classList.add(this.config.errorClass);

@@ -129,10 +129,8 @@ export class UIBuilder {
     const thumbnailImg = card.querySelector(
       ".thumbnail-image",
     ) as HTMLImageElement;
-    thumbnailImg.dataset.src = safe.thumbnailUrl;
-    thumbnailImg.src =
-      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 130 100'%3E%3Crect fill='%23ddd' width='130' height='100'/%3E%3C/svg%3E";
-    thumbnailImg.classList.add("lazy-placeholder");
+    const lazyImageLoader = getLazyImageLoader();
+    lazyImageLoader.setSource(thumbnailImg, safe.thumbnailUrl);
 
     // エラーハンドリング追加
     thumbnailImg.onerror = () => {
@@ -147,10 +145,8 @@ export class UIBuilder {
     (card.querySelector(".temp-file") as HTMLElement).textContent =
       this.getTempOrCompleteString(safe.isTemp);
 
-    // カード追加後に遅延読み込み監視を設定
-    requestAnimationFrame(() => {
-      getLazyImageLoader().observe(thumbnailImg);
-    });
+    // 仮想スクロールで描画済みのカードだけを即時プリロードし、スクロール時のプレースホルダー再表示を避ける
+    lazyImageLoader.loadImmediate(thumbnailImg);
 
     return card;
   }
