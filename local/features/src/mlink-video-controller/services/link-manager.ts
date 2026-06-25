@@ -350,7 +350,7 @@ export class LinkManager {
       nicodb: "https://nicodb.net/",
       ikioi: "https://ikioi-ranking.com/v/nico",
       cytube: "https://cytube.mm428.net/r/cookie_tv",
-      yajuyaju: "https://yajuvideo.in/",
+      yajuyaju: "https://yajuvideo.st/",
       watchVideoFilter: () => {
         try {
           const globalThumbnailsFilter = (
