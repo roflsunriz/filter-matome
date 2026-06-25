@@ -75,6 +75,7 @@ export class SettingsUI {
 
     // イベントリスナーを設定
     this.setupEventListeners();
+    this.setupActionButtons();
 
     // 🔧 修正: ModuleManager のイベントを監視してUI更新
     if (!this.moduleEventListenerAttached) {
@@ -311,8 +312,17 @@ export class SettingsUI {
       }
     });
 
-    // アクションボタンイベント
-    this.setupActionButtons();
+  }
+
+  private bindButtonClick(
+    button: HTMLElement | null,
+    handler: () => void,
+  ): void {
+    if (!button || button.dataset.settingsClickBound === "true") {
+      return;
+    }
+    button.dataset.settingsClickBound = "true";
+    button.addEventListener("click", handler);
   }
 
   /**
@@ -412,62 +422,50 @@ export class SettingsUI {
 
     // 即時適用ボタン
     const applyBtn = this.shadowRoot.getElementById("apply-immediately");
-    if (applyBtn) {
-      applyBtn.addEventListener("click", () => {
-        void (async () => {
-          try {
-            await this.moduleManager.reloadAllModules();
-            this.renderModuleList();
+    this.bindButtonClick(applyBtn, () => {
+      void (async () => {
+        try {
+          await this.moduleManager.reloadAllModules();
+          this.renderModuleList();
 
-            window.toastr?.success("モジュールを再読み込みしました", "成功", {
-              timeOut: 3000,
-            });
-          } catch (error) {
-            window.logger.error(
-              "[SettingsUI] モジュール再読み込みに失敗:",
-              error,
-            );
-            window.toastr?.error(
-              "モジュール再読み込みに失敗しました",
-              "エラー",
-              { timeOut: 5000 },
-            );
-          }
-        })();
-      });
-    }
+          window.toastr?.success("モジュールを再読み込みしました", "成功", {
+            timeOut: 3000,
+          });
+        } catch (error) {
+          window.logger.error(
+            "[SettingsUI] モジュール再読み込みに失敗:",
+            error,
+          );
+          window.toastr?.error("モジュール再読み込みに失敗しました", "エラー", {
+            timeOut: 5000,
+          });
+        }
+      })();
+    });
 
     // 再読み込みして適用ボタン
     const reloadBtn = this.shadowRoot.getElementById("reload-and-apply");
-    if (reloadBtn) {
-      reloadBtn.addEventListener("click", () => {
-        window.location.reload();
-      });
-    }
+    this.bindButtonClick(reloadBtn, () => {
+      window.location.reload();
+    });
 
     // 設定エクスポートボタン
     const exportBtn = this.shadowRoot.getElementById("export-settings");
-    if (exportBtn) {
-      exportBtn.addEventListener("click", () => {
-        void this.exportSettings();
-      });
-    }
+    this.bindButtonClick(exportBtn, () => {
+      void this.exportSettings();
+    });
 
     // 設定インポートボタン
     const importBtn = this.shadowRoot.getElementById("import-settings");
-    if (importBtn) {
-      importBtn.addEventListener("click", () => {
-        void this.importSettings();
-      });
-    }
+    this.bindButtonClick(importBtn, () => {
+      void this.importSettings();
+    });
 
     // 設定リセットボタン
     const resetBtn = this.shadowRoot.getElementById("reset-settings");
-    if (resetBtn) {
-      resetBtn.addEventListener("click", () => {
-        void this.resetSettings();
-      });
-    }
+    this.bindButtonClick(resetBtn, () => {
+      void this.resetSettings();
+    });
   }
 
   /**

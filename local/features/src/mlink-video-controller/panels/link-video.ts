@@ -282,6 +282,7 @@ export class MlinkVideoController extends BasePanel {
       this.commentDataChangedUnsubscribe();
       this.commentDataChangedUnsubscribe = null;
     }
+    this.commentManager?.stopUrlWatching();
 
     window.logger?.debug("[MlinkVideoController] Cleanup completed");
   }

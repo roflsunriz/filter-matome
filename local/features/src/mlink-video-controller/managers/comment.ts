@@ -236,4 +236,23 @@ export class CommentManager {
       observer.disconnect();
     });
   }
+
+  public stopUrlWatching(): void {
+    if (!this.isWatchingUrl) {
+      return;
+    }
+
+    this.cleanupHandlers.forEach((cleanup) => {
+      try {
+        cleanup();
+      } catch (error) {
+        window.logger?.error(
+          "URL監視のクリーンアップ中にエラーが発生しました:",
+          error,
+        );
+      }
+    });
+    this.cleanupHandlers = [];
+    this.isWatchingUrl = false;
+  }
 }
