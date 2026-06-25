@@ -909,6 +909,24 @@ body {
     background: rgba(255, 107, 107, 0.5);
   }
 
+  .delete-temporary-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: rgba(255, 87, 34, 0.35);
+    border: 1px solid #ff5722;
+    border-radius: 10px;
+    padding: 0.4rem 0.8rem;
+    color: var(--text-primary);
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .delete-temporary-btn:hover {
+    background: rgba(255, 87, 34, 0.55);
+  }
+
   .result-count {
     color: var(--mint);
     font-size: 0.9em;

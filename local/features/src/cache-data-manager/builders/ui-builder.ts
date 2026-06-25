@@ -13,6 +13,8 @@ import { createHeaderTemplate } from "@/cache-data-manager/templates/header-temp
 import { createCardTemplate } from "@/cache-data-manager/templates/card-template.js";
 
 export class UIBuilder {
+  private static readonly TEMPORARY_DELETE_CONCURRENCY = 6;
+
   public dataLoader: LoadDataFromMemory;
   public eventManager: EventManager;
   public progressManager: ProgressManager;
@@ -222,6 +224,9 @@ export class UIBuilder {
       () => {
         void this.applyFiltersAndSort();
       },
+      () => {
+        void this.deleteTemporaryVideos();
+      },
     );
 
     const filterSortContainer = this.filterSortUI.createUI();
@@ -324,6 +329,114 @@ export class UIBuilder {
   public async refresh(): Promise<void> {
     this.allData = this.dataLoader.getAllEntries();
     await this.applyFiltersAndSort();
+  }
+
+  private async deleteTemporaryVideos(): Promise<void> {
+    const temporaryVideos = this.allData.filter((video) => video.isTemp);
+    const temporaryBaseIds = Array.from(
+      new Set(temporaryVideos.map((video) => video.baseId).filter(Boolean)),
+    );
+
+    if (temporaryBaseIds.length === 0) {
+      alert("削除対象のテンポラリ動画はありません。");
+      return;
+    }
+
+    const previewIds = temporaryBaseIds.slice(0, 10).join(", ");
+    const omittedCount = temporaryBaseIds.length - 10;
+    const previewText =
+      omittedCount > 0
+        ? `${previewIds} ほか ${omittedCount.toLocaleString()} 件`
+        : previewIds;
+
+    if (
+      !confirm(
+        `テンポラリ動画を一括削除しますか？\n対象: ${temporaryBaseIds.length.toLocaleString()} 件\n${previewText}`,
+      )
+    ) {
+      return;
+    }
+
+    const successfulBaseIds = new Set<string>();
+    const failedBaseIds: string[] = [];
+    this.progressManager.show("テンポラリ動画を削除中...");
+
+    try {
+      let completedCount = 0;
+      await this.runWithConcurrency(
+        temporaryBaseIds,
+        UIBuilder.TEMPORARY_DELETE_CONCURRENCY,
+        async (baseId) => {
+          try {
+            const response = await fetch(`./rm?${encodeURIComponent(baseId)}`, {
+              cache: "no-store",
+              credentials: "same-origin",
+            });
+
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+
+            successfulBaseIds.add(baseId);
+          } catch {
+            failedBaseIds.push(baseId);
+          } finally {
+            completedCount++;
+            this.progressManager.updateProgress(
+              completedCount,
+              temporaryBaseIds.length,
+            );
+          }
+        },
+      );
+
+      this.removeTemporaryEntriesFromMemory(successfulBaseIds);
+      await this.refresh();
+
+      if (failedBaseIds.length > 0) {
+        alert(
+          `テンポラリ動画の一括削除が一部失敗しました。\n成功: ${successfulBaseIds.size.toLocaleString()} 件\n失敗: ${failedBaseIds.length.toLocaleString()} 件\n失敗ID: ${failedBaseIds.slice(0, 20).join(", ")}`,
+        );
+      } else {
+        alert(
+          `テンポラリ動画を ${successfulBaseIds.size.toLocaleString()} 件削除しました。`,
+        );
+      }
+    } finally {
+      this.progressManager.hide();
+    }
+  }
+
+  private async runWithConcurrency<T>(
+    items: T[],
+    concurrency: number,
+    worker: (item: T) => Promise<void>,
+  ): Promise<void> {
+    let nextIndex = 0;
+    const workerCount = Math.min(concurrency, items.length);
+
+    await Promise.all(
+      Array.from({ length: workerCount }, async () => {
+        while (nextIndex < items.length) {
+          const item = items[nextIndex];
+          nextIndex++;
+          if (item !== undefined) {
+            await worker(item);
+          }
+        }
+      }),
+    );
+  }
+
+  private removeTemporaryEntriesFromMemory(baseIds: Set<string>): void {
+    if (baseIds.size === 0) return;
+
+    for (const id of Object.keys(window.tempList)) {
+      const baseId = id.match(/^[a-z]{2}\d+/)?.[0] || id;
+      if (baseIds.has(baseId)) {
+        delete window.tempList[id];
+      }
+    }
   }
 
   /**

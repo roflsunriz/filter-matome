@@ -20,15 +20,18 @@ export class FilterSortUI {
   private filterManager: FilterManager;
   private sortManager: SortManager;
   private onUpdate: () => void;
+  private onDeleteTemporary: (() => void) | null;
 
   constructor(
     filterManager: FilterManager,
     sortManager: SortManager,
     onUpdate: () => void,
+    onDeleteTemporary: (() => void) | null = null,
   ) {
     this.filterManager = filterManager;
     this.sortManager = sortManager;
     this.onUpdate = onUpdate;
+    this.onDeleteTemporary = onDeleteTemporary;
   }
 
   /**
@@ -96,6 +99,10 @@ export class FilterSortUI {
         <button id="resetFiltersBtn" class="reset-filters-btn" title="リセット">
           ${createMaterialIcon("refresh", { color: "white", size: "small" })}
           <span>リセット</span>
+        </button>
+        <button id="deleteTemporaryBtn" class="delete-temporary-btn" title="テンポラリ動画を一括削除">
+          ${createMaterialIcon("delete_sweep", { color: "white", size: "small" })}
+          <span>テンポラリ削除</span>
         </button>
       </div>
     `;
@@ -207,6 +214,15 @@ export class FilterSortUI {
         this.sortManager.resetSort();
         this.updateUI();
         this.onUpdate();
+      });
+    }
+
+    const deleteTemporaryBtn = this.container.querySelector(
+      "#deleteTemporaryBtn",
+    );
+    if (deleteTemporaryBtn instanceof HTMLButtonElement) {
+      deleteTemporaryBtn.addEventListener("click", () => {
+        this.onDeleteTemporary?.();
       });
     }
   }
