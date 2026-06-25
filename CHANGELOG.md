@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#226.1] - 2026-06-26
+
+### Changed
+- 【features】`package.json` の `version` を `226.1` に更新。
+- 【README】latest バッジを `#226.1` に更新。
+
+### Fixed
+- 【mlink-video-controller】Harajukuサブモジュールで、コメントリストの下端が動画プレイヤー操作バー分だけ上に切れていた問題を修正。
+- 【mlink-video-controller】Harajukuサブモジュールで、NG設定・タグ編集・動画プレイヤー設定・ギフト・マイリスト追加などのサイドバー重なりパネルが、おすすめ欄の下端ではなくコメントリスト下端を基準に開くよう修正。
+- 【mlink-video-controller】Harajukuサブモジュールで、サイドバー先頭に空要素が入るDOMでもコメントリストパネルを安定して検出するよう修正。
+
 ## [#226] - 2026-06-26
 
 ### Added
