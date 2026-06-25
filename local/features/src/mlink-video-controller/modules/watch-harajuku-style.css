@@ -795,8 +795,8 @@
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) {
-    flex: 0 0 var(--watch-player-height) !important;
-    height: var(--watch-player-height) !important;
+    flex: 0 0 calc(var(--watch-player-height) + 49px) !important;
+    height: calc(var(--watch-player-height) + 49px) !important;
     min-height: 0 !important;
   }
 
