@@ -451,12 +451,26 @@
   }
 
   #root > div > header form[role="search"] button[aria-label="検索"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     width: 36px !important;
     min-width: 36px !important;
     height: 31px !important;
+    box-sizing: border-box !important;
     padding: 0 !important;
     border-left: 1px solid #aaa !important;
     background: linear-gradient(#f9f9f9, #d8d8d8) !important;
+    line-height: 1 !important;
+    vertical-align: top !important;
+  }
+
+  #root > div > header form[role="search"] button[aria-label="検索"] svg {
+    display: block !important;
+    flex: 0 0 auto !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin: 0 !important;
   }
 
   #root > div > header > div:last-child {
