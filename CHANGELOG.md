@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#226] - 2026-06-26
+
+### Added
+- 【mylist2】getthumbinfo経由で削除/非公開などの公開状態を一括並列チェックし、検知結果をマイリスト一覧へバッジ表示する機能を追加。
+- 【mylist2】一括公開状態チェックと一括情報更新に、API送信前の並列数・ディレイ設定を追加。
+- 【mylist2】動画一覧ソートに「利用不可」を追加し、利用不可動画を先頭へ集められるように追加。
+- 【watch-history】シリーズタブの「最後に視聴」タイトル横に再生ボタンを追加。
+- 【cache-data-manager】テンポラリ動画を一括削除する操作を追加。
+- 【mlink-video-controller】yyya-nico.com とヤジュヤジュ動画へのリンクを追加・修正。
+
+### Changed
+- 【features】`package.json` の `version` を `226` に更新。
+- 【README】latest バッジを `#226` に更新。
+- 【common】各プロジェクトの Shadow DOM を open にし、デバッグしやすく変更。
+- 【common】共通ヘッダーを固定解像度前提の負オフセットから、上端・左右端に接地しつつ折り返せるレスポンシブ構成へ変更。
+- 【common】ログ出力を WARN・ERROR 中心に整理し、通常ログ出力を抑制。
+- 【mlink-video-controller】SPA遷移時のUIモデルを視聴ページベースに統一し、非視聴ページでは視聴ページ専用機能をdisabled表示へ変更。
+- 【mlink-video-controller】Harajukuのギフト・マイリスト追加パネル、おすすめ欄、動画詳細展開の高さ同期対象を整理。
+- 【build】全体ビルドの直列部分を解消し、並列ビルドを高速化。
+
+### Fixed
+- 【common】SPA直後に古い `NicoCache_nl.watch` 状態から一つ前の動画IDを掴む場合がある問題を修正。
+- 【mlink-video-controller】非視聴ページの外部リンクで前回動画IDを使わず、各サービスのトップページへフォールバックするよう修正。
+- 【mlink-video-controller】SPA再描画後に監視や設定UIのイベント接続が外れる問題を修正。
+- 【mlink-video-controller】Harajukuのタグ検索おすすめ欄ヘッダー崩れ、通常おすすめ欄タブ折り返し、追加パネル配置崩れを修正。
+- 【mylist2】公開状態チェック結果を「など」でまとめず、削除・非公開などの内訳件数を表示するよう修正。
+- 【mylist2】アラート本文の改行表示と、利用不可バッジのローカル再生条件説明を修正。
+- 【video-player】コメント取得やメタ取得が失敗してもキャッシュ動画再生を優先し、全プローブ失敗時はキャッシュ未検出モーダルを表示するよう修正。
+- 【cache-data-manager】スクロール時のサムネイルちらつきと、テンポラリ削除APIの呼び出し・生キー送信を修正。
+- 【harajuku】検索窓の虫めがねアイコンが中央に揃わない問題を修正。
+
 ## [#225.3] - 2026-06-24
 
 ### Changed
