@@ -11,6 +11,19 @@ site_dir: .mkdocs-build/site
 theme:
   name: material
   language: ja
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: ダークモードに切り替え
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: ライトモードに切り替え
   features:
     - navigation.sections
     - navigation.top
