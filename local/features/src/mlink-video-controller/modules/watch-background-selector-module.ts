@@ -163,7 +163,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       this.backgroundHost.style.cssText =
         "position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1;";
       this.backgroundRoot = this.backgroundHost.attachShadow({
-        mode: "closed",
+        mode: "open",
       });
       document.body.appendChild(this.backgroundHost);
     }
@@ -173,7 +173,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       this.shadowHost.id = "watch-background-selector-shadow-host";
       this.shadowHost.style.cssText =
         "position: fixed; right: 0; top: 50%; width: 20px; height: 0; transform: translateY(-50%); pointer-events: auto; z-index: 1000; overflow: visible;";
-      this.shadowRoot = this.shadowHost.attachShadow({ mode: "closed" });
+      this.shadowRoot = this.shadowHost.attachShadow({ mode: "open" });
       document.body.appendChild(this.shadowHost);
     }
   }

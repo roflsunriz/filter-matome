@@ -474,7 +474,7 @@ export class WatchTracker {
       currentTime < this.previousTime &&
       this.previousTime - currentTime > this.REPEAT_DETECTION_THRESHOLD
     ) {
-      console.log("[WatchTracker] 繰り返し再生を検出:", {
+      logger.debug("[WatchTracker] 繰り返し再生を検出:", {
         previousTime: this.previousTime,
         currentTime: currentTime,
         timeDiff: this.previousTime - currentTime,

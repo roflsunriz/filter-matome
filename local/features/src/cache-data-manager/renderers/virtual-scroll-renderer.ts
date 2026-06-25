@@ -18,7 +18,7 @@ function debugLog(...args: unknown[]): void {
     const now = performance.now();
     const delta = now - lastLogTime;
     lastLogTime = now;
-    console.log(`[VirtualScroll +${delta.toFixed(1)}ms]`, ...args);
+    window.logger?.debug(`[VirtualScroll +${delta.toFixed(1)}ms]`, ...args);
   }
 }
 

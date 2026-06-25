@@ -4,7 +4,11 @@ class Logger {
   private static instance: Logger;
   private enabledFiles: Set<string>;
   private disabledFiles: Set<string>;
-  private currentLevel: LogLevel = LogLevel.DEBUG;
+  private currentLevel: LogLevel = LogLevel.WARN;
+  private static readonly outputLevels = new Set<LogLevel>([
+    LogLevel.WARN,
+    LogLevel.ERROR,
+  ]);
 
   private constructor() {
     this.enabledFiles = new Set();
@@ -17,8 +21,8 @@ class Logger {
     //this.disableLogging("All");
     //this.enableLogging("watch-history");
     //this.enableLogging("database");
-    // ログレベルは最後に設定
-    this.setLevel(LogLevel.DEBUG);
+    // 通常出力は warn/error のみに絞る
+    this.setLevel(LogLevel.WARN);
   }
 
   public static getInstance(): Logger {
@@ -71,25 +75,21 @@ class Logger {
   }
 
   private _log(level: LogLevel, args: unknown[]): void {
-    if (this.currentLevel < level) return;
+    if (
+      this.currentLevel === LogLevel.NONE ||
+      !Logger.outputLevels.has(level)
+    ) {
+      return;
+    }
     const filename = this.getCallerInfo();
     if (!this.shouldLog(filename)) return;
     const prefix = `[${filename}]`;
     switch (level) {
-      case LogLevel.INFO:
-        console.info(prefix, ...args);
-        break;
-      case LogLevel.LOG:
-        console.log(prefix, ...args);
-        break;
       case LogLevel.WARN:
         console.warn(prefix, ...args);
         break;
       case LogLevel.ERROR:
         console.error(prefix, ...args);
-        break;
-      case LogLevel.DEBUG:
-        console.debug(prefix, ...args);
         break;
     }
   }

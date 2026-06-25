@@ -108,7 +108,7 @@ export class BasePanel extends HTMLElement {
 
   constructor() {
     super();
-    this.shadow = this.attachShadow({ mode: "closed" });
+    this.shadow = this.attachShadow({ mode: "open" });
 
     // 外クリック監視リスナーをバインド
     this.outsideClickListener = this.handleOutsideClick.bind(this);

@@ -38,7 +38,7 @@ export class PlayerControlsShadow extends HTMLElement {
     super();
 
     // シャドウDOMを作成
-    this.shadow = this.attachShadow({ mode: "closed" });
+    this.shadow = this.attachShadow({ mode: "open" });
     this.shadow.innerHTML = this.getTemplate();
 
     // 非同期で初期化（DOMReadyを待つ）

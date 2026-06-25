@@ -16,7 +16,7 @@ export class CommentList extends HTMLElement {
     super();
 
     // シャドウDOMを作成
-    this.shadow = this.attachShadow({ mode: "closed" });
+    this.shadow = this.attachShadow({ mode: "open" });
     this.shadow.innerHTML = this.getTemplate();
 
     this.setupEventListeners();

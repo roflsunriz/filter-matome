@@ -112,8 +112,8 @@ export class UIManager {
     shadowHost.id = "cf2-shadow-host";
     document.body.appendChild(shadowHost);
 
-    // シャドウルートを作成（closed mode でより安全に）
-    this.shadowRoot = shadowHost.attachShadow({ mode: "closed" });
+    // シャドウルートを作成（デバッグしやすいよう open mode にする）
+    this.shadowRoot = shadowHost.attachShadow({ mode: "open" });
 
     // スタイルをシャドウDOM内に注入
     this.injectShadowStyles();

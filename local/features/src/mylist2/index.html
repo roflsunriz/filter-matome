@@ -46,17 +46,13 @@
                 scope: "/local/features/dist/"
               }
             );
-            
-            console.log('Service Worker registered successfully:', registration);
-            
             // Service Workerの状態変化を監視
             registration.addEventListener('updatefound', () => {
-              console.log('Service Worker update found');
+              // 更新検知のみ行い、通常ログは出力しない
             });
             
           } catch (error) {
             console.error("ServiceWorker registration failed:", error);
-            console.info("This is normal if not running on HTTPS or localhost");
           }
         });
       } else {

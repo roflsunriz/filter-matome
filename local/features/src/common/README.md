@@ -97,7 +97,7 @@ index.ts ─── 自動初期化・スタイル適用
 #### `logger.ts` - ログ機能
 - **役割**: デバッグ・エラー追跡・パフォーマンス測定
 - **機能**: 
-  - ログレベル制御（DEBUG・INFO・WARN・ERROR）
+  - 出力対象制御（WARN・ERROR のみ出力、DEBUG・INFO・LOG は互換メソッドとして保持）
   - ファイル別ログ有効/無効制御
   - 呼び出し元ファイル自動検出
   - パフォーマンス測定ヘルパー
@@ -136,7 +136,7 @@ index.ts ─── 自動初期化・スタイル適用
 
 ### 🐛 **ログ出力を調整したい**
 - **特定ファイルのログ制御**: `logger.ts` の `initializeLoggerConfig()` メソッド
-- **ログレベル変更**: `logger.setLevel(LogLevel.DEBUG)` など
+- **ログ出力**: `logger.warn()` / `logger.error()` を使用
 - **新しいログタイプ追加**: `logger.ts` に新しいメソッド追加
 
 ### 💾 **型定義を更新したい**
@@ -180,8 +180,8 @@ window.commonHelper.fetchWatchPage('sm9')
 window.commonHelper.fetchNicoComments(apiData)
 
 // ログ機能
-window.logger.debug('デバッグメッセージ')
-window.logger.setLevel(LogLevel.DEBUG)
+window.logger.warn('警告メッセージ')
+window.logger.error('エラーメッセージ')
 
 // 通知システム
 window.toastr.success('成功メッセージ')
