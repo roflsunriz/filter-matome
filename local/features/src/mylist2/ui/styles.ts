@@ -1074,6 +1074,7 @@ export const MYLIST_MANAGER_STYLES_PART4 = `
 .cml2-alert-message {
   margin-bottom: 20px;
   line-height: 1.5;
+  white-space: pre-line;
 }
 
 .cml2-alert-buttons {
