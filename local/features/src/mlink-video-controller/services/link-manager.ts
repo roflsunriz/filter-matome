@@ -346,7 +346,7 @@ export class LinkManager {
         );
       },
       search: "https://gokulin.info/search/",
-      commentviewer: "https://yyya-nico.com/nv_comment_viewer/",
+      commentviewer: "https://yyya-nico.com/nv-comment-viewer/",
       nicodb: "https://nicodb.net/",
       ikioi: "https://ikioi-ranking.com/v/nico",
       cytube: "https://cytube.mm428.net/r/cookie_tv",
