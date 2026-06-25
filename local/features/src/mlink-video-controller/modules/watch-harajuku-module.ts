@@ -447,8 +447,33 @@ export class WatchHarajukuModule implements ModuleInstance {
     return chrome;
   }
 
+  private findCommentListSection(
+    root: Element | Document | null | undefined = document,
+  ): HTMLElement | null {
+    if (!root) {
+      return null;
+    }
+
+    return (
+      Array.from(root.querySelectorAll<HTMLElement>("section")).find(
+        (section) => {
+          const header = section.querySelector<HTMLElement>(":scope > header");
+          return header?.textContent?.includes("コメントリスト") ?? false;
+        },
+      ) ?? null
+    );
+  }
+
+  private findSidebarPanel(): HTMLElement | null {
+    const commentListSection = this.findCommentListSection();
+    return (
+      commentListSection?.parentElement ??
+      document.querySelector<HTMLElement>(SELECTORS.sidebarPanel)
+    );
+  }
+
   private ensureChrome(): HTMLDivElement | undefined {
-    const sidebar = document.querySelector(SELECTORS.sidebarPanel);
+    const sidebar = this.findSidebarPanel();
     if (!sidebar) {
       return undefined;
     }
@@ -503,8 +528,9 @@ export class WatchHarajukuModule implements ModuleInstance {
     const root = document.documentElement;
     const grid = document.querySelector<HTMLElement>(SELECTORS.grid);
     const title = document.querySelector<HTMLElement>(SELECTORS.title);
-    const sidebar = document.querySelector<HTMLElement>(SELECTORS.sidebarPanel);
+    const sidebar = this.findSidebarPanel();
     const sidebarColumn = sidebar?.parentElement;
+    const commentListSection = this.findCommentListSection(sidebarColumn);
     const detailContent = document.querySelector<HTMLElement>(
       SELECTORS.detailContent,
     );
@@ -554,12 +580,13 @@ export class WatchHarajukuModule implements ModuleInstance {
 
     if (title && sidebar) {
       const titleTop = title.getBoundingClientRect().top;
-      const sidebarBottom =
+      const panelBottom =
+        commentListSection?.getBoundingClientRect().bottom ??
         sidebarColumn?.getBoundingClientRect().bottom ??
         sidebar.getBoundingClientRect().bottom;
       root.style.setProperty(
         "--hy-watch-sidebar-panel-height",
-        this.px(sidebarBottom - titleTop),
+        this.px(panelBottom - titleTop),
       );
     }
 
@@ -575,6 +602,7 @@ export class WatchHarajukuModule implements ModuleInstance {
       sidebar,
       sidebarColumn,
       detailContent,
+      commentListSection,
       ...sidebarExtraPanels,
     ]);
   }
