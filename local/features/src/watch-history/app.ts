@@ -2424,7 +2424,11 @@ class WatchHistoryApp {
       item.addEventListener(
         "click",
         this.guardEvent((e) => {
-          if (!(e.target as HTMLElement).closest(".series-nav-btn")) {
+          if (
+            !(e.target as HTMLElement).closest(
+              ".series-nav-btn, .series-last-play-btn",
+            )
+          ) {
             void this.showSeriesDetail(this.filteredSeriesStats[index]);
           }
         }),
@@ -2433,6 +2437,21 @@ class WatchHistoryApp {
 
     // ナビゲーションボタンのイベントリスナーを設定
     seriesList.querySelectorAll(".series-nav-btn").forEach((btn) => {
+      btn.addEventListener(
+        "click",
+        this.guardEvent((e) => {
+          e.stopPropagation();
+          const videoId = (e.currentTarget as HTMLElement).getAttribute(
+            "data-video-id",
+          );
+          if (videoId) {
+            void this.openVideoFromSeries(videoId);
+          }
+        }),
+      );
+    });
+
+    seriesList.querySelectorAll(".series-last-play-btn").forEach((btn) => {
       btn.addEventListener(
         "click",
         this.guardEvent((e) => {
@@ -2524,6 +2543,9 @@ class WatchHistoryApp {
           </div>
           <div class="series-last-video">
             <span class="last-video-label">最後に視聴:</span>
+            <button class="series-last-play-btn" data-video-id="${this.escapeHtml(stats.lastVideoId)}" title="最後に視聴した動画を再生: ${this.escapeHtml(stats.lastVideoTitle)}" aria-label="最後に視聴した動画を再生">
+              ${createMaterialIcon("play_arrow", { color: "white", size: "small" })}
+            </button>
             <span class="last-video-title">${this.escapeHtml(stats.lastVideoTitle)}</span>
           </div>
           ${seriesInfo ? this.createSeriesNavigationHTML(seriesInfo) : ""}

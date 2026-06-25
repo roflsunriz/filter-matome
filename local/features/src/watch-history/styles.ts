@@ -1546,18 +1546,61 @@ const seriesStyles = `
   }
 
   .series-last-video {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 12px;
     color: #a0a0b0;
     line-height: 1.3;
+    min-width: 0;
   }
 
   .last-video-label {
+    flex: 0 0 auto;
     font-weight: 500;
-    margin-right: 4px;
   }
 
   .last-video-title {
+    min-width: 0;
     color: #e8e8f0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .series-last-play-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 50%;
+    background: #007bff;
+    color: #fff;
+    cursor: pointer;
+    transition:
+      background 0.2s ease,
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+  }
+
+  .series-last-play-btn:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+  }
+
+  .series-last-play-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+  }
+
+  .series-last-play-btn .material-icon {
+    width: 16px;
+    height: 16px;
   }
 
   /* シリーズアラートレイアウト */
