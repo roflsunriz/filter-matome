@@ -280,11 +280,11 @@ export class StandalonePlayer {
 
     const url = await this.playFirstAvailableSource(videoId, title);
     if (!url) {
+      this.showMissingCacheDialog(videoId, title);
       this.toastManager.showError(
         "動画ソースが見つかりません",
         "キャッシュまたはローカルソースを確認してください",
       );
-      this.showMissingCacheDialog(videoId, title);
       throw new Error("動画ソースが見つかりません");
     }
   }

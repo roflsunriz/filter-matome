@@ -448,6 +448,7 @@ const stats = await dbManager.getDatabaseStats();
 - 公式の視聴ページでは  が有料動画を判定し、スタンドアロンページ  へ遷移します。
 - 公式の視聴ページでは video-player.es.js が有料動画を判定し、スタンドアロンページ /local/features/dist/src/video-player/standalone/index.html へ遷移します。
 - スタンドアロンページは src/video-player/standalone 配下で構成され、standalone/main.ts が StandalonePlayer を初期化して動画・コメント・メタ情報を描画します。
+- メタ情報を取得できない動画では、タイトルを動画IDへフォールバックしてローカルキャッシュ再生を試行します。
 - ルーティングロジックは src/video-player/router/watch-page-router.ts に切り出されており、無料動画は公式プレイヤーをそのまま利用します。
 - レイアウトやスタイルを変更する場合は standalone/layout.ts と standalone/styles.ts を編集してください。
 - プレーヤー表示枠は動画メタデータの videoWidth/videoHeight から実動画比率へ更新し、全画面表示では画面内に収まる動画矩形を中央配置します。

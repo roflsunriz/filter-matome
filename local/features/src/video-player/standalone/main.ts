@@ -1113,9 +1113,44 @@ const main = async (): Promise<void> => {
     }
   } catch (error) {
     window.logger.error("Standalone player failed", error);
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (message === "ウォッチページの取得に失敗しました") {
+      const displayTitle = `Video (${videoId})`;
+      layout.title.textContent = displayTitle;
+      document.title = "video-player - " + displayTitle;
+      layout.metaList.style.display = "none";
+      layout.infoCard.style.display = "none";
+      layout.description.textContent =
+        "動画情報を取得できなかったため、ローカルキャッシュのみで再生を試みます。";
+
+      try {
+        await player.initialize(videoId, {
+          displayTitle,
+          enableComments: false,
+        });
+      } catch (playbackError) {
+        window.logger.error(
+          "Standalone fallback cache playback failed",
+          playbackError,
+        );
+        layout.description.textContent =
+          "動画情報の取得とキャッシュ再生に失敗しました: " +
+          (playbackError instanceof Error
+            ? playbackError.message
+            : String(playbackError));
+      }
+      return;
+    }
+
+    if (message === "動画ソースが見つかりません") {
+      layout.description.textContent =
+        "キャッシュ再生に失敗しました: " + message;
+      return;
+    }
+
     layout.title.textContent = "動画情報の取得に失敗しました";
-    layout.description.textContent =
-      "エラー: " + (error instanceof Error ? error.message : String(error));
+    layout.description.textContent = "エラー: " + message;
   }
 };
 
