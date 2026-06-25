@@ -92,13 +92,14 @@ export class StandalonePlayer {
     const displayTitle =
       options.displayTitle ?? options.apiData?.video.title ?? videoId;
 
-    // 動画再生とコメント取得を並列実行（コメントは再生状態に依存しない）
-    await Promise.all([
-      this.playWithCustomSource(videoId, displayTitle),
-      this.enableComments
-        ? this.loadComments(videoId)
-        : Promise.resolve(),
-    ]);
+    const playback = this.playWithCustomSource(videoId, displayTitle);
+
+    // コメント取得は再生可否に影響させない。コメントサーバが利用不可・低速でも動画再生を優先する。
+    if (this.enableComments) {
+      void this.loadComments(videoId);
+    }
+
+    await playback;
   }
 
   private preparePlayerShell(): void {
