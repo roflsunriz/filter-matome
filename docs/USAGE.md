@@ -120,11 +120,11 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 `ヘッダープライバシー`モジュールはニコニコ動画のコモンヘッダー（画面上部の黒いヘッダ）に表示されるユーザー名とアイコンを非表示にできる。スクリーンショットでユーザー名を共有したくない場合に便利。  
 
-`検索結果8列表示`モジュールは現在新検索に移行したため非対応（動作しない）  
-
 `デイリー福引ハイライト`モジュールはニコニコインフォで配布されているニコニ広告用のポイント福引で、特定のキーワードを含むものをハイライトすることで簡単に福引にアクセスできるように支援する補助機能。  
 
-`Watch Page統合`モジュールはタグカウンター（タグの個数を数える）の導入。ヘッダ一行化は問題が多いためオミット。`Watch Page サブモジュール`は`Watch Page統合`モジュールの詳細設定。  
+`Watch Page統合`モジュールはタグカウンター（タグの個数を数える）など、視聴ページ向けの補助機能をまとめて有効化する。`Watch Page サブモジュール`は`Watch Page統合`モジュールの詳細設定。  
+
+`原宿風Watch`モジュールはWatchページをニコニコ動画（原宿）風の表示に変更する。再生数・コメント数・マイリスト数・投稿日時の集約表示、ライト/ダークテーマ切り替え、カラースキームと背景画像の優先切り替えに対応する。  
 
 `マイリストセレクタ`モジュールはmylist2(旧カスタムマイリスト)への追加UI提供。関連リンクタブの`mylist2に追加`リンクの動作に影響する。  
 
@@ -161,12 +161,14 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 #### 再生方法
 - URLを直接指定する方法(https://www.nicovideo.jp/local/features/dist/src/video-player/standalone/index.html?videoId=<動画ID>)
-- mylist2に該当動画を登録して自動ルーティングさせる方法(https://www.nicovideo.jp/watch/soXXXXXXXX を登録するとキャッシュがあれば自動でリダイレクトする)
+- mylist2に該当動画を登録して自動ルーティングさせる方法(https://www.nicovideo.jp/watch/soXXXXXXXX などを登録するとキャッシュがあれば自動でリダイレクトする)
+
+動画IDは`soXXXXXXXX`に限らず、`smXXXXXXXX`、`nmXXXXXXXX`、`ssXXXXXXXX`などのニコニコ動画IDに対応する。
 
 #### 任意で用意した動画をコメントを被せて再生
 - [Hohoema](https://github.com/tor4kichi/Hohoema)を使用する方法
-- `C:\NicoCache_nl\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`し、該当動画IDのページを開く。 
-- `C:\NicoCache_nl\local\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`し、該当動画IDのページを開く。 
+- `C:\NicoCache_nl\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`、`smXXXXXXXX.mp4`、`nmXXXXXXXX.mp4`、`ssXXXXXXXX.mp4`などとし、該当動画IDのページを開く。 
+- `C:\NicoCache_nl\local\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`、`smXXXXXXXX.mp4`、`nmXXXXXXXX.mp4`、`ssXXXXXXXX.mp4`などとし、該当動画IDのページを開く。 
 
 !!! note
     mp4ファイルを`scripts/convert-to-faststart.ps1`でfaststart変換すると、読み込みから再生開始までの待ち時間が短縮される。
