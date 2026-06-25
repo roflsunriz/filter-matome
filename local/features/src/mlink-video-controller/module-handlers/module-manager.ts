@@ -580,6 +580,11 @@ export class ModuleManager {
    * モジュールの状態を取得
    */
   public getModuleStatus(moduleId: string): ModuleStatus {
+    const config = this.registry.getConfig(moduleId);
+    if (config && !this.pageDetector.isTargetPage(config.targetPages)) {
+      return ModuleStatus.UNAVAILABLE;
+    }
+
     const moduleInstance = this.modules.get(moduleId);
     if (moduleInstance) {
       return moduleInstance.getStatus();

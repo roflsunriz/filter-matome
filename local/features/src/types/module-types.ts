@@ -22,6 +22,7 @@ export enum ModuleStatus {
   LOADING = "loading",
   ACTIVE = "active",
   ERROR = "error",
+  UNAVAILABLE = "unavailable",
 }
 
 // 設定値として使用可能な型を定義

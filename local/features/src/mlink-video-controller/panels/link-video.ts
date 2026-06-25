@@ -53,6 +53,10 @@ export class MlinkVideoController extends BasePanel {
   private volumeHandler: VolumeHandler | null = null;
   private speedHandler: SpeedHandler | null = null;
   private timeUpdateInterval: TimerHandle | null = null;
+  private playStateInterval: TimerHandle | null = null;
+  private speedUpdateInterval: TimerHandle | null = null;
+  private volumeUpdateInterval: TimerHandle | null = null;
+  private videoEndedInterval: TimerHandle | null = null;
   private isLoopEnabled: boolean = false; // 繰り返し再生フラグ
 
   // SPAコメントデータ更新の購読解除用
@@ -90,12 +94,7 @@ export class MlinkVideoController extends BasePanel {
 
     // 視聴ページの場合のみ動画関連サービスを初期化
     if (this.isWatchPage) {
-      this.player = NicoVideoPlayer.getInstance();
-      this.commentManager = CommentManager.getInstance();
-      this.heatmapManager = HeatmapManager.getInstance();
-      this.playbackHandler = new PlaybackHandler();
-      this.volumeHandler = new VolumeHandler();
-      this.speedHandler = new SpeedHandler();
+      this.initializeVideoServices();
     }
   }
 
@@ -176,10 +175,10 @@ export class MlinkVideoController extends BasePanel {
         return;
       }
 
-      // ページタイプが変わった場合は完全再構築
+      // ページタイプが変わった場合は同じUIモデルのまま利用可能状態を更新
       this.isWatchPage = newIsWatchPage;
       window.logger?.info(
-        "[MlinkVideoController] Page type changed, rebuilding UI",
+        "[MlinkVideoController] Page type changed, updating watch-only availability",
       );
 
       // 既存のイベントリスナーやサービスをクリーンアップ
@@ -187,23 +186,12 @@ export class MlinkVideoController extends BasePanel {
 
       // 新しいページタイプに応じてサービスを初期化
       if (this.isWatchPage) {
-        this.player = NicoVideoPlayer.getInstance();
-        this.commentManager = CommentManager.getInstance();
-        this.heatmapManager = HeatmapManager.getInstance();
-        this.playbackHandler = new PlaybackHandler();
-        this.volumeHandler = new VolumeHandler();
-        this.speedHandler = new SpeedHandler();
+        this.initializeVideoServices();
       } else {
-        // watchページ以外では動画関連サービスをnullに
-        this.player = null;
-        this.commentManager = null;
-        this.heatmapManager = null;
-        this.playbackHandler = null;
-        this.volumeHandler = null;
-        this.speedHandler = null;
+        this.releaseVideoServices();
       }
 
-      // UIを再構築
+      // UIは常にWatchページベースで再描画し、非Watchでは動画専用機能を無効化
       await this.render();
 
       // watchページの場合のみ動画関連の初期化
@@ -245,6 +233,24 @@ export class MlinkVideoController extends BasePanel {
     }
   }
 
+  private initializeVideoServices(): void {
+    this.player = NicoVideoPlayer.getInstance();
+    this.commentManager = CommentManager.getInstance();
+    this.heatmapManager = HeatmapManager.getInstance();
+    this.playbackHandler = new PlaybackHandler();
+    this.volumeHandler = new VolumeHandler();
+    this.speedHandler = new SpeedHandler();
+  }
+
+  private releaseVideoServices(): void {
+    this.player = null;
+    this.commentManager = null;
+    this.heatmapManager = null;
+    this.playbackHandler = null;
+    this.volumeHandler = null;
+    this.speedHandler = null;
+  }
+
   /**
    * クリーンアップ処理（SPA遷移時やページタイプ変更時）
    */
@@ -253,6 +259,22 @@ export class MlinkVideoController extends BasePanel {
     if (this.timeUpdateInterval) {
       clearInterval(this.timeUpdateInterval);
       this.timeUpdateInterval = null;
+    }
+    if (this.playStateInterval) {
+      clearInterval(this.playStateInterval);
+      this.playStateInterval = null;
+    }
+    if (this.speedUpdateInterval) {
+      clearInterval(this.speedUpdateInterval);
+      this.speedUpdateInterval = null;
+    }
+    if (this.volumeUpdateInterval) {
+      clearInterval(this.volumeUpdateInterval);
+      this.volumeUpdateInterval = null;
+    }
+    if (this.videoEndedInterval) {
+      clearInterval(this.videoEndedInterval);
+      this.videoEndedInterval = null;
     }
 
     // コメントデータ変更の購読を解除
@@ -293,29 +315,7 @@ export class MlinkVideoController extends BasePanel {
    * ページタイプに応じたパネルテンプレートを生成
    */
   private generatePanelTemplate(): string {
-    if (this.isWatchPage) {
-      // 視聴ページでは全タブを表示
-      return panelTemplate();
-    } else {
-      // その他のページでは動画関連タブを非表示
-      return `
-<button id="fab"></button>
-<div class="panel">
-  <div id="links" class="tab active">
-    <!-- links.htmlの内容がここに挿入されます -->
-  </div>
-
-  <div id="settings" class="tab">
-    <!-- settings.htmlの内容がここに挿入されます -->
-  </div>
-
-  <nav>
-            <button data-tab="links" data-active>${createMaterialIcon("link", { style: "outlined", classes: "tab-icon", color: "white" })}</button>
-        <button data-tab="settings">${createMaterialIcon("settings", { style: "outlined", classes: "tab-icon", color: "white" })}</button>
-  </nav>
-</div>
-`;
-    }
+    return panelTemplate();
   }
 
   private async render() {
@@ -421,6 +421,9 @@ export class MlinkVideoController extends BasePanel {
       // 設定タブの初期化
       this.initializeSettingsTab();
 
+      // 非Watchページでは動画専用機能を無効化してグレーアウト
+      this.updateWatchOnlyAvailability();
+
       // キー伝搬停止処理を設定
       this.setupKeyPropagationPrevention();
 
@@ -470,24 +473,15 @@ export class MlinkVideoController extends BasePanel {
     const tabs = this.shadow.querySelectorAll("[data-tab]");
     tabs.forEach((tab) => {
       tab.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
+        if (!(e.target instanceof Element)) return;
+        const target = e.target.closest("[data-tab]");
+        if (!target || target.hasAttribute("disabled")) return;
+        if (!(target instanceof HTMLElement)) return;
         const tabId = target.dataset.tab;
 
         if (!tabId) return;
 
-        // アクティブタブの更新
-        tabs.forEach((t) => t.removeAttribute("data-active"));
-        target.setAttribute("data-active", "");
-
-        // タブコンテンツの表示/非表示を切り替え
-        const contents = this.shadow.querySelectorAll(".tab");
-        contents.forEach((content) => {
-          if (content.id === tabId) {
-            content.classList.add("active");
-          } else {
-            content.classList.remove("active");
-          }
-        });
+        this.activateTab(tabId);
       });
     });
 
@@ -556,6 +550,7 @@ export class MlinkVideoController extends BasePanel {
           if (
             actionCard instanceof HTMLElement &&
             actionCard.dataset.action &&
+            actionCard.dataset.disabled !== "true" &&
             this.linkManager
           ) {
             await this.linkManager.handleAction(actionCard.dataset.action);
@@ -563,6 +558,53 @@ export class MlinkVideoController extends BasePanel {
         })();
       });
     });
+  }
+
+  private activateTab(tabId: string): void {
+    const tabs = this.shadow.querySelectorAll("[data-tab]");
+    tabs.forEach((tab) => {
+      if ((tab as HTMLElement).dataset.tab === tabId) {
+        tab.setAttribute("data-active", "");
+      } else {
+        tab.removeAttribute("data-active");
+      }
+    });
+
+    const contents = this.shadow.querySelectorAll(".tab");
+    contents.forEach((content) => {
+      content.classList.toggle("active", content.id === tabId);
+    });
+  }
+
+  private updateWatchOnlyAvailability(): void {
+    const watchOnlyTabs = ["playback", "volume", "speed", "comments"];
+
+    watchOnlyTabs.forEach((tabId) => {
+      const tab = this.shadow.getElementById(tabId);
+      const navButton = this.shadow.querySelector<HTMLButtonElement>(
+        `[data-tab="${tabId}"]`,
+      );
+
+      tab?.classList.toggle("watch-only-disabled", !this.isWatchPage);
+      if (navButton) {
+        navButton.disabled = !this.isWatchPage;
+        navButton.classList.toggle("watch-only-disabled", !this.isWatchPage);
+        navButton.title = this.isWatchPage
+          ? ""
+          : "視聴ページでのみ利用できます";
+      }
+
+      tab
+        ?.querySelectorAll("button, input, select, textarea")
+        .forEach((element) => {
+          (element as HTMLButtonElement | HTMLInputElement).disabled =
+            !this.isWatchPage;
+        });
+    });
+
+    if (!this.isWatchPage) {
+      this.activateTab("links");
+    }
   }
 
   private setupPlaybackTemplateEvents() {
@@ -818,7 +860,7 @@ export class MlinkVideoController extends BasePanel {
     }
 
     // 外部変更を定期的にチェックして表示を更新
-    setInterval(() => {
+    this.speedUpdateInterval = setInterval(() => {
       this.updateSpeedDisplay();
     }, 1000);
   }
@@ -878,7 +920,7 @@ export class MlinkVideoController extends BasePanel {
     }
 
     // 外部変更を定期的にチェックして表示を更新
-    setInterval(() => {
+    this.volumeUpdateInterval = setInterval(() => {
       this.updateVolumeDisplay();
     }, 1000);
   }
@@ -1198,14 +1240,17 @@ export class MlinkVideoController extends BasePanel {
   private async renderLinkGroup(group: LinkGroup): Promise<string> {
     const links = (await this.linkManager?.getLinks(group)) || [];
     return links
-      .map(
-        (link: LinkData) => `
-      <div class="action-card" data-action="${link.action}">
+      .map((link: LinkData) => {
+        const disabledAttributes = link.disabled
+          ? ` data-disabled="true" aria-disabled="true" title="${link.disabledReason ?? "現在のページでは利用できません"}"`
+          : "";
+        return `
+      <div class="action-card${link.disabled ? " action-card-disabled" : ""}" data-action="${link.action}"${disabledAttributes}>
         <img src="${link.icon}" alt="${link.title}" />
         <span>${link.title}</span>
       </div>
-    `,
-      )
+    `;
+      })
       .join("");
   }
 
@@ -1443,7 +1488,7 @@ export class MlinkVideoController extends BasePanel {
     this.updatePlayPauseButton();
 
     // 定期的に再生状態をチェックしてアイコンを更新（ポーリング方式）
-    setInterval(() => {
+    this.playStateInterval = setInterval(() => {
       this.updatePlayPauseButton();
     }, 250); // 250msごとにチェック
   }
@@ -1590,8 +1635,11 @@ export class MlinkVideoController extends BasePanel {
   }
 
   private setupVideoEndedListener(): void {
+    if (this.videoEndedInterval) {
+      clearInterval(this.videoEndedInterval);
+    }
     // 動画終了を定期的にチェック
-    setInterval(() => {
+    this.videoEndedInterval = setInterval(() => {
       if (this.isLoopEnabled && this.player) {
         const currentTime = this.player.getCurrentTime();
         const duration = this.player.getDuration();

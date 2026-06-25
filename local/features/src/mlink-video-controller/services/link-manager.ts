@@ -13,6 +13,15 @@ export class LinkManager {
   private static instance: LinkManager;
   private nicoCache: ExtendedNicoCache_nl | null = null;
   private commentFilterReady: boolean = false;
+  private readonly WATCH_PAGE_ONLY_ACTIONS = new Set<string>([
+    "AddVideoToCustomMylist",
+    "commentFilter2",
+    "movieinfo",
+    "savemovie",
+    "saveaudio",
+    "savecomment",
+    "cache_remove",
+  ]);
 
   private readonly LINK_GROUPS = {
     favorites: [] as LinkData[],
@@ -185,61 +194,20 @@ export class LinkManager {
   }
 
   /**
-   * 視聴ページのコンテキスト（videoIdなど）が存在するかどうか
-   */
-  private async hasWatchContext(): Promise<boolean> {
-    try {
-      if (isWatchLikePage()) {
-        return true;
-      }
-      const videoId = await getActiveVideoId();
-      return videoId.length > 0;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * 視聴コンテキストが無い状態でもUIに表示してよいアクションかどうか
-   * - トップページ等へのフォールバックが可能、または文脈非依存のもののみ true
-   */
-  private canShowWithoutWatch(action: string): boolean {
-    const allowed = new Set<string>([
-      // custom
-      "customMylist",
-      "AddVideoToCustomMylist",
-      "watchVideoFilter",
-      "watch-history",
-      // services（トップページ等へフォールバック可能 or もとよりルート）
-      "nicochart",
-      "nicolog",
-      "nicoran",
-      "nicozon",
-      "search",
-      "commentviewer",
-      "nicodb",
-      "ikioi",
-      "cytube",
-      "yajuyaju",
-      // dataManagement
-      "cachelist",
-      "movieinfo",
-    ]);
-    return allowed.has(action);
-  }
-
-  /**
-   * 表示用リンク一覧を返す。非視聴ページでは無効なアクションを除外する。
+   * 表示用リンク一覧を返す。非視聴ページでは視聴ページ専用アクションをdisabledにする。
    */
   public async getLinks(
     group: keyof typeof this.LINK_GROUPS,
   ): Promise<LinkData[]> {
+    await Promise.resolve();
     const links = this.LINK_GROUPS[group];
-    if (!(await this.hasWatchContext())) {
-      // 視聴ページ以外では、フォールバック不可のアクションは非表示
-      return links.filter((link) => this.canShowWithoutWatch(link.action));
-    }
-    return links;
+    const shouldDisableWatchOnly = !isWatchLikePage();
+    return links.map((link) => ({
+      ...link,
+      disabled:
+        shouldDisableWatchOnly && this.WATCH_PAGE_ONLY_ACTIONS.has(link.action),
+      disabledReason: "視聴ページでのみ利用できます",
+    }));
   }
 
   private getThreadId(): string {
@@ -255,6 +223,15 @@ export class LinkManager {
   }
 
   public async handleAction(action: string): Promise<void> {
+    if (!isWatchLikePage() && this.WATCH_PAGE_ONLY_ACTIONS.has(action)) {
+      window.toastr?.info(
+        "このリンクは視聴ページでのみ利用できます",
+        "利用不可",
+        { timeOut: 3000 },
+      );
+      return;
+    }
+
     const videoId = await getActiveVideoId();
     const threadId = this.getThreadId();
     // const commentFilterUI = new CommentFilterUI();
@@ -368,7 +345,7 @@ export class LinkManager {
         window.open(`https://www.nicozon.net/watch/${videoId}`);
       },
       search: "https://gokulin.info/search/",
-      commentviewer: "https://yyya-nico.co/nv_comment_viewer/",
+      commentviewer: "https://yyya-nico.com/nv_comment_viewer/",
       nicodb: "https://nicodb.net/",
       ikioi: "https://ikioi-ranking.com/v/nico",
       cytube: "https://cytube.mm428.net/r/cookie_tv",

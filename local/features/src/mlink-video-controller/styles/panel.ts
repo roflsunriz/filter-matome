@@ -62,6 +62,18 @@ nav button[data-active]::before {
   opacity: 0;
 }
 
+nav button.watch-only-disabled,
+nav button:disabled {
+  opacity: 0.45;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+nav button.watch-only-disabled:hover::before,
+nav button:disabled:hover::before {
+  opacity: 0;
+}
+
 /* タブボタン内のアイコンのpointer-eventsを無効化 */
 nav button svg,
 nav button .tab-icon,
@@ -82,6 +94,12 @@ nav button .subtab-icon {
 .tab.active {
   display: block;
   animation: tabFadeIn 0.2s ease-out;
+}
+
+.tab.watch-only-disabled {
+  opacity: 0.55;
+  filter: grayscale(1);
+  pointer-events: none;
 }
 
 /* タブコンテンツのスクロールバーのスタイリング */
@@ -196,6 +214,23 @@ nav button .subtab-icon {
 
 .action-card:active {
   transform: translateY(-1px);
+}
+
+.action-card.action-card-disabled {
+  opacity: 0.45;
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+
+.action-card.action-card-disabled:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.action-card.action-card-disabled:hover::before {
+  opacity: 0;
 }
 
 .action-card img {

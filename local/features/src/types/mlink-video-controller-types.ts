@@ -71,6 +71,8 @@ export interface LinkData {
   icon: string;
   action: string;
   url?: string;
+  disabled?: boolean;
+  disabledReason?: string;
 }
 
 // ニコニコAPI関連の型定義

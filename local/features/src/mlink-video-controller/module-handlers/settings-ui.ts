@@ -5,6 +5,7 @@ import {
   ModuleConfig,
   ModuleCategory,
   ModuleStatus,
+  PageType,
 } from "@/types/module-types";
 import { WatchPageModule } from "@/mlink-video-controller/modules/watch-page-module";
 import { BackgroundImageSettings } from "@/mlink-video-controller/modules/background-image-settings";
@@ -26,6 +27,8 @@ export class SettingsUI {
   private backgroundSettings: BackgroundImageSettings;
   private isInitialized: boolean = false;
   private shadowRoot: ShadowRoot | null = null;
+  private moduleEventListenerAttached: boolean = false;
+  private eventListenerRoots: WeakSet<ShadowRoot> = new WeakSet();
 
   private constructor() {
     this.moduleManager = ModuleManager.getInstance();
@@ -59,8 +62,6 @@ export class SettingsUI {
    * 設定UIを初期化
    */
   public initialize(): void {
-    if (this.isInitialized) return;
-
     // Shadow DOMが設定されていない場合は警告
     if (!this.shadowRoot) {
       window.logger.warn(
@@ -76,23 +77,26 @@ export class SettingsUI {
     this.setupEventListeners();
 
     // 🔧 修正: ModuleManager のイベントを監視してUI更新
-    this.moduleManager.addEventListener((event) => {
-      // モジュールの読み込み/アンロード時にUIを更新
-      if (event.type === "loaded" || event.type === "unloaded") {
-        this.updateModuleStatus(event.moduleId);
+    if (!this.moduleEventListenerAttached) {
+      this.moduleManager.addEventListener((event) => {
+        // モジュールの読み込み/アンロード時にUIを更新
+        if (event.type === "loaded" || event.type === "unloaded") {
+          this.updateModuleStatus(event.moduleId);
 
-        // WatchPageModuleの場合、サブモジュールも更新
-        if (event.moduleId === "watch_page") {
-          this.refreshWatchPageSubModules();
+          // WatchPageModuleの場合、サブモジュールも更新
+          if (event.moduleId === "watch_page") {
+            this.refreshWatchPageSubModules();
+          }
         }
-      }
 
-      // 🆕 排他グループ対応: enabled/disabled イベント時にトグルスイッチを同期
-      if (event.type === "enabled" || event.type === "disabled") {
-        this.syncModuleToggle(event.moduleId, event.type === "enabled");
-        this.updateModuleStatus(event.moduleId);
-      }
-    });
+        // 🆕 排他グループ対応: enabled/disabled イベント時にトグルスイッチを同期
+        if (event.type === "enabled" || event.type === "disabled") {
+          this.syncModuleToggle(event.moduleId, event.type === "enabled");
+          this.updateModuleStatus(event.moduleId);
+        }
+      });
+      this.moduleEventListenerAttached = true;
+    }
 
     this.isInitialized = true;
   }
@@ -191,6 +195,11 @@ export class SettingsUI {
 
     // データ設定
     moduleItem.setAttribute("data-module-id", config.id);
+    const isAvailable = this.isModuleAvailableOnCurrentPage(config);
+    moduleItem.classList.toggle("module-item-unavailable", !isAvailable);
+    if (!isAvailable) {
+      moduleItem.title = "現在のページでは利用できません";
+    }
 
     // アイコン設定
     const icon = element.querySelector(".module-icon") as HTMLElement;
@@ -232,8 +241,17 @@ export class SettingsUI {
     // トグルスイッチ設定
     const toggle = element.querySelector(".module-toggle") as HTMLInputElement;
     toggle.checked = this.settingsManager.isModuleEnabled(config.id);
+    toggle.disabled = !isAvailable;
 
     return moduleItem;
+  }
+
+  private isModuleAvailableOnCurrentPage(config: ModuleConfig): boolean {
+    const currentPageType = this.moduleManager.getCurrentPageType();
+    return (
+      config.targetPages.includes(currentPageType) ||
+      config.targetPages.includes(PageType.ALL)
+    );
   }
 
   /**
@@ -277,6 +295,10 @@ export class SettingsUI {
       window.logger.error("[SettingsUI] Shadow DOMが設定されていません");
       return;
     }
+    if (this.eventListenerRoots.has(this.shadowRoot)) {
+      return;
+    }
+    this.eventListenerRoots.add(this.shadowRoot);
 
     // モジュールトグルイベント（Shadow DOM内でイベントを監視）
     this.shadowRoot.addEventListener("change", (event) => {
@@ -301,6 +323,17 @@ export class SettingsUI {
     const moduleId = moduleItem.getAttribute("data-module-id");
 
     if (!moduleId) return;
+
+    const config = this.moduleRegistry.getConfig(moduleId);
+    if (config && !this.isModuleAvailableOnCurrentPage(config)) {
+      toggle.checked = this.settingsManager.isModuleEnabled(moduleId);
+      window.toastr?.info(
+        "このモジュールは現在のページでは利用できません",
+        "利用不可",
+        { timeOut: 3000 },
+      );
+      return;
+    }
 
     try {
       await this.moduleManager.toggleModule(moduleId, toggle.checked);
@@ -447,6 +480,19 @@ export class SettingsUI {
       `[data-module-id="${moduleId}"]`,
     );
     if (moduleItem) {
+      const config = this.moduleRegistry.getConfig(moduleId);
+      const isAvailable = config
+        ? this.isModuleAvailableOnCurrentPage(config)
+        : true;
+      moduleItem.classList.toggle("module-item-unavailable", !isAvailable);
+
+      const toggle = moduleItem.querySelector(
+        ".module-toggle",
+      ) as HTMLInputElement;
+      if (toggle) {
+        toggle.disabled = !isAvailable;
+      }
+
       const status = moduleItem.querySelector(".module-status") as HTMLElement;
       const moduleStatus = this.moduleManager.getModuleStatus(moduleId);
       status.textContent = this.getStatusText(moduleStatus);
@@ -541,6 +587,8 @@ export class SettingsUI {
         return "🟡 読み込み中";
       case ModuleStatus.ERROR:
         return "🔴 エラー";
+      case ModuleStatus.UNAVAILABLE:
+        return "⚪ 利用不可";
       default:
         return "❓ 不明";
     }

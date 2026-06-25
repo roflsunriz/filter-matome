@@ -1,6 +1,7 @@
 import "@/mlink-video-controller/panels/link-video";
 import { CommentApiCache } from "@/mlink-video-controller/managers/comment-api-cache";
 import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
+import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
 
 CommentApiCache.getInstance().install();
 
@@ -32,7 +33,14 @@ class PanelManager {
    * URLからページタイプを判定
    */
   private detectPageType(url: string): "watch" | "other" {
-    return /\/watch\/[a-z]{2}\d+/i.test(url) ? "watch" : "other";
+    try {
+      const parsedUrl = new URL(url, window.location.href);
+      return isWatchLikePage(parsedUrl as unknown as Location)
+        ? "watch"
+        : "other";
+    } catch {
+      return /\/watch\/[a-z]{2}\d+/i.test(url) ? "watch" : "other";
+    }
   }
 
   private handleDOMChanges(mutations: MutationRecord[]) {
@@ -89,25 +97,6 @@ class PanelManager {
       this.panel = document.createElement("mlink-video-controller");
       document.body.appendChild(this.panel);
     }
-  }
-
-  /**
-   * パネルを完全に破棄
-   */
-  private destroyPanel(): void {
-    if (this.panel && this.panel.parentNode) {
-      // Web ComponentのdisconnectedCallbackが呼ばれてクリーンアップされる
-      this.panel.parentNode.removeChild(this.panel);
-      this.panel = null;
-    }
-  }
-
-  /**
-   * パネルを再作成
-   */
-  private recreatePanel(): void {
-    this.panel = document.createElement("mlink-video-controller");
-    document.body.appendChild(this.panel);
   }
 
   private async reinitialize(): Promise<void> {
@@ -226,37 +215,15 @@ class PanelManager {
       previousVideoId,
     });
 
-    // ページタイプが変更された場合 - 完全に破棄して再構築
+    // ページタイプが変更された場合もパネルは維持し、利用可能状態だけ更新
     if (pageTypeChanged) {
       window.logger?.info(
-        "[MlinkVideoController] Page type changed, destroying and recreating panel",
+        "[MlinkVideoController] Page type changed, reinitializing without panel recreation",
       );
       this.lastPageType = currentPageType;
 
-      // DOM更新を待ってから完全再構築
       setTimeout(() => {
-        if (this.isReinitializing) return;
-        this.isReinitializing = true;
-
-        try {
-          // 既存パネルを破棄
-          this.destroyPanel();
-
-          // 少し待ってから新しいパネルを作成
-          setTimeout(() => {
-            this.recreatePanel();
-            this.isReinitializing = false;
-            window.logger?.info(
-              "[MlinkVideoController] Panel recreation completed",
-            );
-          }, 100);
-        } catch (error) {
-          window.logger?.error(
-            "[MlinkVideoController] Panel recreation failed:",
-            error,
-          );
-          this.isReinitializing = false;
-        }
+        void this.reinitialize();
       }, 300);
       return;
     }

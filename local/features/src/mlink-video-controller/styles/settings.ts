@@ -94,6 +94,18 @@ export const settingsStyles = `
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.module-item.module-item-unavailable {
+  opacity: 0.55;
+  filter: grayscale(1);
+}
+
+.module-item.module-item-unavailable:hover {
+  background: var(--panel-bg);
+  border-color: var(--panel-border);
+  transform: none;
+  box-shadow: none;
+}
+
 .module-item:last-child {
   margin-bottom: 0;
 }
@@ -164,6 +176,11 @@ export const settingsStyles = `
 
 .module-status.error {
   background: #F44336 !important;
+  color: white !important;
+}
+
+.module-status.unavailable {
+  background: #607D8B !important;
   color: white !important;
 }
 
