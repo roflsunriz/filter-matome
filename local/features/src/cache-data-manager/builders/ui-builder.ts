@@ -333,17 +333,17 @@ export class UIBuilder {
 
   private async deleteTemporaryVideos(): Promise<void> {
     const temporaryVideos = this.allData.filter((video) => video.isTemp);
-    const temporaryBaseIds = Array.from(
-      new Set(temporaryVideos.map((video) => video.baseId).filter(Boolean)),
+    const temporaryCacheIds = Array.from(
+      new Set(temporaryVideos.map((video) => video.id).filter(Boolean)),
     );
 
-    if (temporaryBaseIds.length === 0) {
+    if (temporaryCacheIds.length === 0) {
       alert("削除対象のテンポラリ動画はありません。");
       return;
     }
 
-    const previewIds = temporaryBaseIds.slice(0, 10).join(", ");
-    const omittedCount = temporaryBaseIds.length - 10;
+    const previewIds = temporaryCacheIds.slice(0, 10).join(", ");
+    const omittedCount = temporaryCacheIds.length - 10;
     const previewText =
       omittedCount > 0
         ? `${previewIds} ほか ${omittedCount.toLocaleString()} 件`
@@ -351,55 +351,63 @@ export class UIBuilder {
 
     if (
       !confirm(
-        `テンポラリ動画を一括削除しますか？\n対象: ${temporaryBaseIds.length.toLocaleString()} 件\n${previewText}`,
+        `テンポラリ動画を一括削除しますか？\n対象: ${temporaryCacheIds.length.toLocaleString()} 件\n${previewText}`,
       )
     ) {
       return;
     }
 
-    const successfulBaseIds = new Set<string>();
-    const failedBaseIds: string[] = [];
+    const successfulCacheIds = new Set<string>();
+    const failedCacheIds: string[] = [];
     this.progressManager.show("テンポラリ動画を削除中...");
 
     try {
       let completedCount = 0;
       await this.runWithConcurrency(
-        temporaryBaseIds,
+        temporaryCacheIds,
         UIBuilder.TEMPORARY_DELETE_CONCURRENCY,
-        async (baseId) => {
+        async (cacheId) => {
           try {
-            const response = await fetch(`./rm?${encodeURIComponent(baseId)}`, {
-              cache: "no-store",
-              credentials: "same-origin",
-            });
+            const response = await fetch(
+              `./ajax_rmtmp?${encodeURIComponent(cacheId)}`,
+              {
+                cache: "no-store",
+                credentials: "same-origin",
+              },
+            );
 
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}`);
             }
 
-            successfulBaseIds.add(baseId);
+            const result = (await response.text()).trim();
+            if (result !== "OK") {
+              throw new Error(result || "empty response");
+            }
+
+            successfulCacheIds.add(cacheId);
           } catch {
-            failedBaseIds.push(baseId);
+            failedCacheIds.push(cacheId);
           } finally {
             completedCount++;
             this.progressManager.updateProgress(
               completedCount,
-              temporaryBaseIds.length,
+              temporaryCacheIds.length,
             );
           }
         },
       );
 
-      this.removeTemporaryEntriesFromMemory(successfulBaseIds);
+      this.removeTemporaryEntriesFromMemory(successfulCacheIds);
       await this.refresh();
 
-      if (failedBaseIds.length > 0) {
+      if (failedCacheIds.length > 0) {
         alert(
-          `テンポラリ動画の一括削除が一部失敗しました。\n成功: ${successfulBaseIds.size.toLocaleString()} 件\n失敗: ${failedBaseIds.length.toLocaleString()} 件\n失敗ID: ${failedBaseIds.slice(0, 20).join(", ")}`,
+          `テンポラリ動画の一括削除が一部失敗しました。\n成功: ${successfulCacheIds.size.toLocaleString()} 件\n失敗: ${failedCacheIds.length.toLocaleString()} 件\n失敗ID: ${failedCacheIds.slice(0, 20).join(", ")}`,
         );
       } else {
         alert(
-          `テンポラリ動画を ${successfulBaseIds.size.toLocaleString()} 件削除しました。`,
+          `テンポラリ動画を ${successfulCacheIds.size.toLocaleString()} 件削除しました。`,
         );
       }
     } finally {
@@ -428,12 +436,11 @@ export class UIBuilder {
     );
   }
 
-  private removeTemporaryEntriesFromMemory(baseIds: Set<string>): void {
-    if (baseIds.size === 0) return;
+  private removeTemporaryEntriesFromMemory(cacheIds: Set<string>): void {
+    if (cacheIds.size === 0) return;
 
     for (const id of Object.keys(window.tempList)) {
-      const baseId = id.match(/^[a-z]{2}\d+/)?.[0] || id;
-      if (baseIds.has(baseId)) {
+      if (cacheIds.has(id)) {
         delete window.tempList[id];
       }
     }
