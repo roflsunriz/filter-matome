@@ -369,7 +369,7 @@ export class UIBuilder {
         async (cacheId) => {
           try {
             const response = await fetch(
-              `./ajax_rmtmp?${encodeURIComponent(cacheId)}`,
+              `./ajax_rmtmp?${cacheId}`,
               {
                 cache: "no-store",
                 credentials: "same-origin",
