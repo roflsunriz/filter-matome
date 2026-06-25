@@ -1111,11 +1111,29 @@
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] > [data-scope="tabs"][data-part="list"] > [data-scope="tabs"][data-part="trigger"] {
     display: flex !important;
     flex: 1 1 0 !important;
+    align-items: center !important;
     height: 26px !important;
     min-height: 26px !important;
     max-height: 26px !important;
+    min-width: 0 !important;
+    padding: 0 6px !important;
     justify-content: center !important;
     overflow: hidden !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+    line-height: 24px !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] > [data-scope="tabs"][data-part="list"] > [data-scope="tabs"][data-part="trigger"] * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] > [data-scope="tabs"][data-part="content"][role="tabpanel"][data-selected] {
