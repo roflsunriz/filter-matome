@@ -128,7 +128,12 @@ export class FilterSortUI {
   }
 
   private buildStatusOptions(selected: StatusFilter): string {
-    const options: StatusFilter[] = ["all", "complete", "temporary"];
+    const options: StatusFilter[] = [
+      "all",
+      "complete",
+      "temporary",
+      "unavailable",
+    ];
     return options
       .map(
         (opt) =>
@@ -140,7 +145,7 @@ export class FilterSortUI {
   }
 
   private buildSortOptions(selected: SortOption): string {
-    const options: SortOption[] = ["id", "title", "quality"];
+    const options: SortOption[] = ["id", "title", "quality", "availability"];
     return options
       .map(
         (opt) =>

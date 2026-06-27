@@ -56,7 +56,7 @@ CacheMetadataDB ─── getthumbinfo取得済みのタイトル・サムネイ
     ↓
 FilterManager ─── 画質・ステータスでフィルタリング [NEW]
     ↓
-SortManager ─── ID順/タイトル順/画質順でソート [NEW]
+SortManager ─── ID順/タイトル順/画質順/利用不可順でソート [NEW]
     ↓
 VirtualScrollRenderer ─── 可視範囲のみDOM生成 [NEW]
     ↓
@@ -135,7 +135,7 @@ EventCoordinator ─── ユーザー操作待機
 - **役割**: 画質・ステータスによるデータフィルタリング
 - **機能**: 
   - 画質フィルター (HD/SD/Low/Unknown)
-  - ステータスフィルター (Complete/Temporary)
+  - ステータスフィルター (Complete/Temporary/利用不可)
   - フィルター変更イベント通知
 - **編集タイミング**: 新しいフィルターオプション追加
 
@@ -145,6 +145,7 @@ EventCoordinator ─── ユーザー操作待機
   - ID順 (nm → sm → so)
   - タイトル順 (あいうえお順)
   - 画質順 (高→低)
+  - 利用不可順 (利用不可→未確認→利用可能)
   - 昇順/降順切り替え
 - **編集タイミング**: 新しいソートオプション追加
 

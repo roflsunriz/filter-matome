@@ -8,7 +8,7 @@ export type QualityFilter = "all" | "hd" | "sd" | "low" | "unknown";
 /**
  * ステータスフィルターオプション
  */
-export type StatusFilter = "all" | "complete" | "temporary";
+export type StatusFilter = "all" | "complete" | "temporary" | "unavailable";
 
 /**
  * フィルター設定
@@ -73,7 +73,7 @@ export class FilterManager {
   public resetFilters(): void {
     const changed =
       this.config.quality !== "all" || this.config.status !== "all";
-    
+
     this.config = {
       quality: "all",
       status: "all",
@@ -155,6 +155,8 @@ export class FilterManager {
         return !item.isTemp;
       case "temporary":
         return item.isTemp;
+      case "unavailable":
+        return item.availabilityStatus === "unavailable";
       default:
         return true;
     }
@@ -202,6 +204,7 @@ export class FilterManager {
       all: data.length,
       complete: 0,
       temporary: 0,
+      unavailable: 0,
     };
 
     for (const item of data) {
@@ -222,6 +225,10 @@ export class FilterManager {
         statusCounts.temporary++;
       } else {
         statusCounts.complete++;
+      }
+
+      if (item.availabilityStatus === "unavailable") {
+        statusCounts.unavailable++;
       }
     }
 
@@ -250,5 +257,5 @@ export const STATUS_FILTER_LABELS: Record<StatusFilter, string> = {
   all: "すべてのステータス",
   complete: "完了",
   temporary: "一時ファイル",
+  unavailable: "利用不可",
 };
-

@@ -3,7 +3,7 @@ import type { VideoData } from "@/types";
 /**
  * ソートオプション
  */
-export type SortOption = "id" | "title" | "quality";
+export type SortOption = "id" | "title" | "quality" | "availability";
 
 /**
  * ソート方向
@@ -81,7 +81,7 @@ export class SortManager {
   public resetSort(): void {
     const changed =
       this.config.option !== "id" || this.config.direction !== "asc";
-    
+
     this.config = {
       option: "id",
       direction: "asc",
@@ -126,6 +126,8 @@ export class SortManager {
         return this.sortByTitle(sorted, multiplier);
       case "quality":
         return this.sortByQuality(sorted, multiplier);
+      case "availability":
+        return this.sortByAvailability(sorted, multiplier);
       default:
         return sorted;
     }
@@ -170,6 +172,40 @@ export class SortManager {
     });
   }
 
+  private sortByAvailability(
+    data: VideoData[],
+    multiplier: number,
+  ): VideoData[] {
+    return data.sort((a, b) => {
+      const availabilityDiff =
+        this.getAvailabilityPriority(a) - this.getAvailabilityPriority(b);
+      if (availabilityDiff !== 0) {
+        return availabilityDiff * multiplier;
+      }
+      return this.compareById(a, b) * multiplier;
+    });
+  }
+
+  private getAvailabilityPriority(item: VideoData): number {
+    if (item.availabilityStatus === "unavailable") return 0;
+    if (item.availabilityStatus === "unknown") return 1;
+    return 2;
+  }
+
+  private compareById(a: VideoData, b: VideoData): number {
+    const typePriority: Record<string, number> = { nm: 1, sm: 2, so: 3 };
+    const aType = a.id.slice(0, 2);
+    const bType = b.id.slice(0, 2);
+    const aPriority = typePriority[aType] ?? 4;
+    const bPriority = typePriority[bType] ?? 4;
+
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+
+    return this.extractNumber(a.id) - this.extractNumber(b.id);
+  }
+
   private extractNumber(id: string): number {
     const match = id.match(/\d+/);
     return match ? parseInt(match[0], 10) : 0;
@@ -196,6 +232,7 @@ export const SORT_OPTION_LABELS: Record<SortOption, string> = {
   id: "ID順",
   title: "タイトル順",
   quality: "画質順",
+  availability: "利用不可",
 };
 
 /**
@@ -213,5 +250,5 @@ export const SORT_OPTION_DESCRIPTIONS: Record<SortOption, string> = {
   id: "nm → sm → so の順、同タイプは番号順",
   title: "あいうえお順（五十音順）",
   quality: "高画質から低画質の順",
+  availability: "利用不可、未確認、利用可能の順",
 };
-
