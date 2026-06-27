@@ -21,17 +21,20 @@ export class FilterSortUI {
   private sortManager: SortManager;
   private onUpdate: () => void;
   private onDeleteTemporary: (() => void) | null;
+  private onCheckAvailability: (() => void) | null;
 
   constructor(
     filterManager: FilterManager,
     sortManager: SortManager,
     onUpdate: () => void,
     onDeleteTemporary: (() => void) | null = null,
+    onCheckAvailability: (() => void) | null = null,
   ) {
     this.filterManager = filterManager;
     this.sortManager = sortManager;
     this.onUpdate = onUpdate;
     this.onDeleteTemporary = onDeleteTemporary;
+    this.onCheckAvailability = onCheckAvailability;
   }
 
   /**
@@ -104,6 +107,10 @@ export class FilterSortUI {
           ${createMaterialIcon("delete_sweep", { color: "white", size: "small" })}
           <span>テンポラリ削除</span>
         </button>
+        <button id="checkAvailabilityBtn" class="check-availability-btn" title="getthumbinfoで公開状態を一括確認">
+          ${createMaterialIcon(ICONS.check, { color: "white", size: "small" })}
+          <span>公開状態チェック</span>
+        </button>
       </div>
     `;
   }
@@ -148,9 +155,7 @@ export class FilterSortUI {
     if (!this.container) return;
 
     // 画質フィルター
-    const qualitySelect = this.container.querySelector(
-      "#qualityFilter",
-    );
+    const qualitySelect = this.container.querySelector("#qualityFilter");
     if (qualitySelect instanceof HTMLSelectElement) {
       qualitySelect.addEventListener("change", (e) => {
         const target = e.target;
@@ -163,9 +168,7 @@ export class FilterSortUI {
     }
 
     // ステータスフィルター
-    const statusSelect = this.container.querySelector(
-      "#statusFilter",
-    );
+    const statusSelect = this.container.querySelector("#statusFilter");
     if (statusSelect instanceof HTMLSelectElement) {
       statusSelect.addEventListener("change", (e) => {
         const target = e.target;
@@ -178,9 +181,7 @@ export class FilterSortUI {
     }
 
     // ソートオプション
-    const sortSelect = this.container.querySelector(
-      "#sortOption",
-    );
+    const sortSelect = this.container.querySelector("#sortOption");
     if (sortSelect instanceof HTMLSelectElement) {
       sortSelect.addEventListener("change", (e) => {
         const target = e.target;
@@ -193,9 +194,7 @@ export class FilterSortUI {
     }
 
     // ソート方向
-    const directionBtn = this.container.querySelector(
-      "#sortDirectionBtn",
-    );
+    const directionBtn = this.container.querySelector("#sortDirectionBtn");
     if (directionBtn instanceof HTMLButtonElement) {
       directionBtn.addEventListener("click", () => {
         this.sortManager.toggleDirection();
@@ -205,9 +204,7 @@ export class FilterSortUI {
     }
 
     // リセットボタン
-    const resetBtn = this.container.querySelector(
-      "#resetFiltersBtn",
-    );
+    const resetBtn = this.container.querySelector("#resetFiltersBtn");
     if (resetBtn instanceof HTMLButtonElement) {
       resetBtn.addEventListener("click", () => {
         this.filterManager.resetFilters();
@@ -225,16 +222,23 @@ export class FilterSortUI {
         this.onDeleteTemporary?.();
       });
     }
+
+    const checkAvailabilityBtn = this.container.querySelector(
+      "#checkAvailabilityBtn",
+    );
+    if (checkAvailabilityBtn instanceof HTMLButtonElement) {
+      checkAvailabilityBtn.addEventListener("click", () => {
+        this.onCheckAvailability?.();
+      });
+    }
   }
 
   private updateDirectionButton(): void {
     if (!this.container) return;
 
     const sortConfig = this.sortManager.getConfig();
-    const btn = this.container.querySelector(
-      "#sortDirectionBtn",
-    );
-    
+    const btn = this.container.querySelector("#sortDirectionBtn");
+
     if (btn instanceof HTMLButtonElement) {
       btn.innerHTML = createMaterialIcon(
         sortConfig.direction === "asc" ? "arrow_upward" : "arrow_downward",
@@ -258,23 +262,17 @@ export class FilterSortUI {
     const sortConfig = this.sortManager.getConfig();
 
     // 各選択要素を更新
-    const qualitySelect = this.container.querySelector(
-      "#qualityFilter",
-    );
+    const qualitySelect = this.container.querySelector("#qualityFilter");
     if (qualitySelect instanceof HTMLSelectElement) {
       qualitySelect.value = filterConfig.quality;
     }
 
-    const statusSelect = this.container.querySelector(
-      "#statusFilter",
-    );
+    const statusSelect = this.container.querySelector("#statusFilter");
     if (statusSelect instanceof HTMLSelectElement) {
       statusSelect.value = filterConfig.status;
     }
 
-    const sortSelect = this.container.querySelector(
-      "#sortOption",
-    );
+    const sortSelect = this.container.querySelector("#sortOption");
     if (sortSelect instanceof HTMLSelectElement) {
       sortSelect.value = sortConfig.option;
     }
@@ -288,9 +286,7 @@ export class FilterSortUI {
   public updateResultCount(total: number, filtered: number): void {
     if (!this.container) return;
 
-    let countDisplay = this.container.querySelector(
-      ".result-count",
-    );
+    let countDisplay = this.container.querySelector(".result-count");
 
     if (!(countDisplay instanceof HTMLElement)) {
       countDisplay = document.createElement("span");
@@ -322,4 +318,3 @@ export class FilterSortUI {
     }
   }
 }
-

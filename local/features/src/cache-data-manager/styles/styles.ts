@@ -311,6 +311,22 @@ body {
     font-size: 0.68em;
     white-space: nowrap;
   }
+
+  .metadata > span[hidden] {
+    display: none;
+  }
+
+  .availability-badge {
+    background: #d50000 !important;
+    border-color: #ff8a80 !important;
+    color: #ffffff !important;
+    font-weight: bold;
+  }
+
+  .unavailable-video .thumbnail-image {
+    filter: grayscale(100%);
+    opacity: 0.65;
+  }
   
   .hd-quality {
     background: #4caf50 !important;
@@ -932,6 +948,24 @@ body {
 
   .delete-temporary-btn:hover {
     background: rgba(255, 87, 34, 0.55);
+  }
+
+  .check-availability-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: rgba(0, 150, 136, 0.35);
+    border: 1px solid #00bfa5;
+    border-radius: 10px;
+    padding: 0.4rem 0.8rem;
+    color: var(--text-primary);
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .check-availability-btn:hover {
+    background: rgba(0, 150, 136, 0.55);
   }
 
   .result-count {

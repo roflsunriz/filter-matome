@@ -5,10 +5,13 @@ import type { APIResponse } from "@/types";
 export class LazyAPIClient {
   private client: APIClient | null = null;
 
-  public async fetchVideoInfo(id: string): Promise<APIResponse> {
+  public async fetchVideoInfo(
+    id: string,
+    options: { forceRefresh?: boolean } = {},
+  ): Promise<APIResponse> {
     if (!this.client) {
       this.client = new APIClient();
     }
-    return this.client.fetchVideoInfo(id);
+    return this.client.fetchVideoInfo(id, options);
   }
 }

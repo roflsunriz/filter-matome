@@ -1,7 +1,9 @@
-import type { VideoData } from "@/types";
+import type { APIResponse, CachedVideoMetadata, VideoData } from "@/types";
 import type { LoadDataFromMemory } from "@/cache-data-manager/loaders/load-data-from-memory.js";
 import type { EventManager } from "@/cache-data-manager/managers/event-manager.js";
 import type { ProgressManager } from "@/cache-data-manager/managers/progress-manager.js";
+import { APIClient } from "@/cache-data-manager/clients/api-client.js";
+import { CacheMetadataDB } from "@/cache-data-manager/storage/cache-metadata-db.js";
 import { VirtualScrollRenderer } from "@/cache-data-manager/renderers/virtual-scroll-renderer.js";
 import { SearchEngine } from "@/cache-data-manager/engines/search-engine.js";
 import { FilterManager } from "@/cache-data-manager/managers/filter-manager.js";
@@ -14,6 +16,7 @@ import { createCardTemplate } from "@/cache-data-manager/templates/card-template
 
 export class UIBuilder {
   private static readonly TEMPORARY_DELETE_CONCURRENCY = 6;
+  private static readonly THUMB_INFO_CONCURRENCY = 8;
 
   public dataLoader: LoadDataFromMemory;
   public eventManager: EventManager;
@@ -27,6 +30,8 @@ export class UIBuilder {
 
   private templates: Map<string, HTMLElement> = new Map();
   private allData: VideoData[] = [];
+  private metadataDB = new CacheMetadataDB();
+  private apiClient = new APIClient();
 
   // ヘッダー/サイドバー/検索UIなどの構築
   constructor(
@@ -147,6 +152,16 @@ export class UIBuilder {
       `quality-badge ${this.getQualityClass(safe.quality)}`;
     (card.querySelector(".temp-file") as HTMLElement).textContent =
       this.getTempOrCompleteString(safe.isTemp);
+    const availabilityBadge = card.querySelector(
+      ".availability-badge",
+    ) as HTMLElement;
+    const isUnavailable = safe.availabilityStatus === "unavailable";
+    availabilityBadge.hidden = !isUnavailable;
+    availabilityBadge.title =
+      safe.availabilityErrorCode !== undefined
+        ? `利用不可: ${safe.availabilityErrorCode}`
+        : "利用不可";
+    card.classList.toggle("unavailable-video", isUnavailable);
 
     // 仮想スクロールで描画済みのカードだけを即時プリロードし、スクロール時のプレースホルダー再表示を避ける
     lazyImageLoader.loadImmediate(thumbnailImg);
@@ -191,6 +206,8 @@ export class UIBuilder {
     thumbnailUrl: string;
     quality: string;
     isTemp: boolean;
+    availabilityStatus: string;
+    availabilityErrorCode?: string;
   } {
     if (this.isRecord(input)) {
       const baseId = typeof input.baseId === "string" ? input.baseId : "";
@@ -200,7 +217,23 @@ export class UIBuilder {
       const quality =
         typeof input.quality === "string" ? input.quality : "unknown";
       const isTemp = typeof input.isTemp === "boolean" ? input.isTemp : false;
-      return { baseId, title, thumbnailUrl, quality, isTemp };
+      const availabilityStatus =
+        typeof input.availabilityStatus === "string"
+          ? input.availabilityStatus
+          : "unknown";
+      const availabilityErrorCode =
+        typeof input.availabilityErrorCode === "string"
+          ? input.availabilityErrorCode
+          : undefined;
+      return {
+        baseId,
+        title,
+        thumbnailUrl,
+        quality,
+        isTemp,
+        availabilityStatus,
+        availabilityErrorCode,
+      };
     }
     return {
       baseId: "",
@@ -208,6 +241,7 @@ export class UIBuilder {
       thumbnailUrl: "",
       quality: "unknown",
       isTemp: false,
+      availabilityStatus: "unknown",
     };
   }
 
@@ -228,6 +262,9 @@ export class UIBuilder {
       () => {
         void this.deleteTemporaryVideos();
       },
+      () => {
+        void this.checkAvailabilityForAllVideos();
+      },
     );
 
     const filterSortContainer = this.filterSortUI.createUI();
@@ -246,7 +283,8 @@ export class UIBuilder {
   public async renderAllEntries(): Promise<void> {
     this.progressManager.show("動画データ読み込み中");
     try {
-      this.allData = this.dataLoader.getAllEntries();
+      this.allData = await this.loadEntriesWithMetadata();
+      await this.fetchMissingMetadata();
       await this.applyFiltersAndSort();
     } finally {
       this.progressManager.hide();
@@ -254,6 +292,8 @@ export class UIBuilder {
   }
 
   private async applyFiltersAndSort(): Promise<void> {
+    this.searchEngine.setEntries(this.allData);
+
     // フィルター適用
     let processedData = this.filterManager.filterData(this.allData);
 
@@ -328,8 +368,212 @@ export class UIBuilder {
    * 全データを再読み込み
    */
   public async refresh(): Promise<void> {
-    this.allData = this.dataLoader.getAllEntries();
+    this.allData = await this.loadEntriesWithMetadata();
+    await this.fetchMissingMetadata();
     await this.applyFiltersAndSort();
+  }
+
+  private async loadEntriesWithMetadata(): Promise<VideoData[]> {
+    const entries = this.dataLoader.getAllEntries();
+    const metadataMap = await this.metadataDB.getMetadataMap(
+      entries.map((entry) => entry.baseId),
+    );
+
+    return entries.map((entry) => this.applyCachedMetadata(entry, metadataMap));
+  }
+
+  private applyCachedMetadata(
+    entry: VideoData,
+    metadataMap: Map<string, CachedVideoMetadata>,
+  ): VideoData {
+    const metadata = metadataMap.get(entry.baseId);
+    if (!metadata) {
+      return {
+        ...entry,
+        availabilityStatus: entry.availabilityStatus ?? "unknown",
+      };
+    }
+
+    return {
+      ...entry,
+      title: metadata.title || entry.title,
+      thumbnailUrl: metadata.thumbnailUrl || entry.thumbnailUrl,
+      metadataSource: "getthumbinfo",
+      availabilityStatus: metadata.availabilityStatus,
+      availabilityCheckedAt: metadata.availabilityCheckedAt,
+      availabilityErrorCode: metadata.availabilityErrorCode,
+    };
+  }
+
+  private async fetchMissingMetadata(): Promise<void> {
+    const targets = this.allData.filter((entry) =>
+      this.needsThumbInfoFallback(entry),
+    );
+    if (targets.length === 0) return;
+
+    let completedCount = 0;
+    this.progressManager.show("不足している動画情報を取得中...");
+    await this.runWithConcurrency(
+      targets,
+      UIBuilder.THUMB_INFO_CONCURRENCY,
+      async (entry) => {
+        try {
+          const response = await this.apiClient.fetchVideoInfo(entry.baseId);
+          this.updateEntryFromApiResponse(entry, response);
+          await this.metadataDB.saveMetadata(
+            this.createMetadata(entry, response),
+          );
+        } catch {
+          entry.availabilityStatus = "unknown";
+        } finally {
+          completedCount++;
+          this.progressManager.updateProgress(completedCount, targets.length);
+        }
+      },
+    );
+  }
+
+  private needsThumbInfoFallback(entry: VideoData): boolean {
+    if (entry.metadataSource === "getthumbinfo") return false;
+    return (
+      this.isUnknownTitle(entry.title) ||
+      entry.thumbnailUrl.trim().length === 0 ||
+      this.isGeneratedThumbnailUrl(entry.thumbnailUrl, entry.baseId)
+    );
+  }
+
+  private isUnknownTitle(title: string): boolean {
+    const normalized = title.trim();
+    return (
+      normalized.length === 0 ||
+      normalized === "null" ||
+      normalized === "タイトル不明" ||
+      normalized === "タイトルを取得できません"
+    );
+  }
+
+  private isGeneratedThumbnailUrl(
+    thumbnailUrl: string,
+    videoId: string,
+  ): boolean {
+    const match = videoId.match(/[a-z]{2}(\d+)/);
+    if (!match?.[1]) return false;
+    const generated = `https://nicovideo.cdn.nimg.jp/thumbnails/${match[1]}/${match[1]}`;
+    return thumbnailUrl === generated;
+  }
+
+  private updateEntryFromApiResponse(
+    entry: VideoData,
+    response: APIResponse,
+  ): void {
+    if (response.status === "ok") {
+      if (response.title) {
+        entry.title = response.title;
+      }
+      if (response.thumbnailUrl) {
+        entry.thumbnailUrl = response.thumbnailUrl;
+      }
+      entry.metadataSource = "getthumbinfo";
+      entry.availabilityStatus = "available";
+      entry.availabilityCheckedAt = Date.now();
+      entry.availabilityErrorCode = undefined;
+      return;
+    }
+
+    entry.availabilityStatus = "unavailable";
+    entry.availabilityCheckedAt = Date.now();
+    entry.availabilityErrorCode = response.errorCode;
+  }
+
+  private createMetadata(
+    entry: VideoData,
+    response: APIResponse,
+  ): CachedVideoMetadata {
+    const now = Date.now();
+    const status =
+      response.status === "ok" ? "available" : ("unavailable" as const);
+    return {
+      id: entry.baseId,
+      title:
+        response.status === "ok" && response.title
+          ? response.title
+          : entry.title,
+      thumbnailUrl:
+        response.status === "ok" && response.thumbnailUrl
+          ? response.thumbnailUrl
+          : entry.thumbnailUrl,
+      availabilityStatus: status,
+      availabilityCheckedAt: now,
+      availabilityErrorCode:
+        response.status === "error" ? response.errorCode : undefined,
+      updatedAt: now,
+      schemaVersion: 1,
+    };
+  }
+
+  private async checkAvailabilityForAllVideos(): Promise<void> {
+    const targets = Array.from(
+      new Map(this.allData.map((entry) => [entry.baseId, entry])).values(),
+    );
+
+    if (targets.length === 0) {
+      alert("公開状態チェック対象の動画はありません。");
+      return;
+    }
+
+    if (
+      !confirm(
+        `getthumbinfoで公開状態を一括確認しますか？\n対象: ${targets.length.toLocaleString()} 件`,
+      )
+    ) {
+      return;
+    }
+
+    let completedCount = 0;
+    let unavailableCount = 0;
+    const failedIds: string[] = [];
+    const metadataList: CachedVideoMetadata[] = [];
+    this.progressManager.show("公開状態を確認中...");
+
+    try {
+      await this.runWithConcurrency(
+        targets,
+        UIBuilder.THUMB_INFO_CONCURRENCY,
+        async (entry) => {
+          try {
+            const response = await this.apiClient.fetchVideoInfo(entry.baseId, {
+              forceRefresh: true,
+            });
+            this.updateEntryFromApiResponse(entry, response);
+            const metadata = this.createMetadata(entry, response);
+            metadataList.push(metadata);
+            if (metadata.availabilityStatus === "unavailable") {
+              unavailableCount++;
+            }
+          } catch {
+            failedIds.push(entry.baseId);
+          } finally {
+            completedCount++;
+            this.progressManager.updateProgress(completedCount, targets.length);
+          }
+        },
+      );
+
+      await this.metadataDB.saveMetadataList(metadataList);
+      await this.applyFiltersAndSort();
+
+      if (failedIds.length > 0) {
+        alert(
+          `公開状態チェックが一部失敗しました。\n確認済み: ${metadataList.length.toLocaleString()} 件\n利用不可: ${unavailableCount.toLocaleString()} 件\n失敗: ${failedIds.length.toLocaleString()} 件\n失敗ID: ${failedIds.slice(0, 20).join(", ")}`,
+        );
+      } else {
+        alert(
+          `公開状態チェックが完了しました。\n確認済み: ${metadataList.length.toLocaleString()} 件\n利用不可: ${unavailableCount.toLocaleString()} 件`,
+        );
+      }
+    } finally {
+      this.progressManager.hide();
+    }
   }
 
   private async deleteTemporaryVideos(): Promise<void> {

@@ -1,3 +1,5 @@
+import type { VideoAvailabilityStatus } from "@/types/video-types";
+
 // 動画データの型定義
 export interface VideoData {
   id: string;
@@ -7,6 +9,21 @@ export interface VideoData {
   quality: string;
   isTemp: boolean;
   lastUpdated: number;
+  metadataSource?: "memory" | "getthumbinfo";
+  availabilityStatus?: VideoAvailabilityStatus;
+  availabilityCheckedAt?: number;
+  availabilityErrorCode?: string;
+}
+
+export interface CachedVideoMetadata {
+  id: string;
+  title: string;
+  thumbnailUrl: string;
+  availabilityStatus: VideoAvailabilityStatus;
+  availabilityCheckedAt: number;
+  availabilityErrorCode?: string;
+  updatedAt: number;
+  schemaVersion: 1;
 }
 
 // APIレスポンスの型定義
@@ -24,6 +41,7 @@ export interface APIResponse {
   tags?: string[];
   fileSize?: string;
   errorCode?: string;
+  availabilityStatus?: VideoAvailabilityStatus;
 }
 
 // 検索結果の型定義

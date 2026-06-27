@@ -33,6 +33,7 @@ export function createCardTemplate(): string {
       <div class="metadata" style="display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; height: 30px; flex-shrink: 0; margin-top: auto;">
         <span class="quality-badge"></span>
         <span class="temp-file"></span>
+        <span class="availability-badge" hidden>利用不可</span>
       </div>
     </div>
     <div class="card-actions" style="flex-shrink: 0; height: 44px; display: flex; gap: 6px; padding: 0.45rem 0.55rem; background: rgba(0,0,0,0.15); align-items: center; justify-content: space-between;">

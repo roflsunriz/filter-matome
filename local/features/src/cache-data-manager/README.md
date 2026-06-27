@@ -17,6 +17,8 @@ src/
 ├── clients/
 │   ├── api-client.ts                    # API通信クライアント (1.7KB)
 │   └── lazy-api-client.ts               # 遅延API読み込み (348B)
+├── storage/
+│   └── cache-metadata-db.ts             # タイトル・サムネイル・公開状態のIndexedDBキャッシュ
 ├── engines/
 │   └── search-engine.ts                 # 検索エンジン (1.8KB)
 ├── renderers/
@@ -50,6 +52,8 @@ src/
     ↓
 LoadDataFromMemory ─── メモリからデータ統合・正規化
     ↓
+CacheMetadataDB ─── getthumbinfo取得済みのタイトル・サムネイル・公開状態を優先反映
+    ↓
 FilterManager ─── 画質・ステータスでフィルタリング [NEW]
     ↓
 SortManager ─── ID順/タイトル順/画質順でソート [NEW]
@@ -78,13 +82,13 @@ SearchResultsModal ─── モーダルで結果表示 [NEW]
 ```
 UIBuilder ─── ヘッダー・コンテナ構築
     ↓
-FilterSortUI ─── フィルター・ソートUI [NEW]
+FilterSortUI ─── フィルター・ソートUI・公開状態一括チェック [NEW]
     ↓
 EventCoordinator ─── ユーザー操作処理
-    ↓ (検索・再生・保存・削除・テンポラリ一括削除)
+    ↓ (検索・再生・保存・削除・テンポラリ一括削除・公開状態確認)
 EventManager ─── イベント通知・調整
     ↓
-APIClient ─── 詳細情報取得 (遅延読み込み)
+APIClient ─── 詳細情報取得・getthumbinfoフォールバック・公開状態確認
     ↓
 モーダル表示 & アクション実行
 ```
@@ -148,7 +152,7 @@ EventCoordinator ─── ユーザー操作待機
 
 #### `builders/ui-builder.ts` - UI構築 (中核ファイル)
 - **役割**: UIの構築・テンプレート管理・初期レンダリング
-- **機能**: ヘッダー構築、動画カード生成、フォント読み込み、品質バッジ、`/cache/ajax_rmtmp` を使ったテンポラリ動画の一括削除
+- **機能**: ヘッダー構築、動画カード生成、フォント読み込み、品質バッジ、利用不可バッジ、`/cache/ajax_rmtmp` を使ったテンポラリ動画の一括削除、getthumbinfo による不足メタデータ取得
 - **編集タイミング**: UI構造変更、新しいカード要素追加、テンプレート修正
 
 #### `renderers/virtual-scroll-renderer.ts` - 仮想スクロール [NEW]
@@ -173,6 +177,7 @@ EventCoordinator ─── ユーザー操作待機
   - 画質・ステータスフィルター選択UI
   - ソートオプション・方向選択UI
   - テンポラリ動画の一括削除ボタン
+  - getthumbinfo による公開状態の一括並列チェックボタン
   - 結果件数表示
   - リセットボタン
 - **編集タイミング**: UI改善、新しいフィルター追加
@@ -222,8 +227,13 @@ EventCoordinator ─── ユーザー操作待機
 
 #### `clients/api-client.ts` - API通信クライアント
 - **役割**: ニコニコ動画APIとの通信
-- **機能**: API呼び出し、XMLレスポンス解析、キャッシュ管理
+- **機能**: API呼び出し、XMLレスポンス解析、キャッシュ管理、getthumbinfo の公開状態判定
 - **編集タイミング**: API仕様変更対応、新しいデータフィールド追加
+
+#### `storage/cache-metadata-db.ts` - メタデータキャッシュ
+- **役割**: getthumbinfo で取得したタイトル・サムネイルURL・公開状態のIndexedDB保存
+- **機能**: `id` キーでの保存・一括取得、スキーマバージョン管理、破損時の再作成
+- **編集タイミング**: 保存項目追加、IndexedDBスキーマ変更
 
 #### `clients/lazy-api-client.ts` - 遅延API読み込み
 - **役割**: APIクライアントの遅延初期化

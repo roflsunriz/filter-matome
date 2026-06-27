@@ -4,9 +4,12 @@ export class APIClient {
   private baseUrl: string = "https://ext.nicovideo.jp/api/getthumbinfo/";
   private cache: Map<string, APIResponse> = new Map();
 
-  public async fetchVideoInfo(videoId: string): Promise<APIResponse> {
+  public async fetchVideoInfo(
+    videoId: string,
+    options: { forceRefresh?: boolean } = {},
+  ): Promise<APIResponse> {
     // キャッシュチェック（30分間有効）
-    if (this.cache.has(videoId)) {
+    if (!options.forceRefresh && this.cache.has(videoId)) {
       return this.cache.get(videoId)!;
     }
 
@@ -32,6 +35,7 @@ export class APIClient {
       return {
         status: "error",
         errorCode: errorCode,
+        availabilityStatus: "unavailable",
         description:
           doc.querySelector("error description")?.textContent || "不明なエラー",
       };
@@ -40,6 +44,7 @@ export class APIClient {
     const thumb = doc.querySelector("thumb");
     return {
       status: "ok",
+      availabilityStatus: "available",
       title: thumb?.querySelector("title")?.textContent || "タイトル不明",
       description:
         thumb?.querySelector("description")?.textContent ||

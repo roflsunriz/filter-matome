@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- 【cache-data-manager】getthumbinfo由来のタイトル・サムネイルURL・公開状態をIndexedDBに保存し、表示時にキャッシュを優先利用する仕組みを追加。
+- 【cache-data-manager】getthumbinfoによる公開状態の一括並列チェックボタンと、利用不可動画のバッジ表示を追加。
+
 ### Changed
 - 【cache-data-manager】動画カードをコンパクト化し、横幅に余裕がある画面でより多くのカードを一列に表示できるように変更。
 

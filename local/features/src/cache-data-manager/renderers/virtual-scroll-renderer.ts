@@ -408,10 +408,18 @@ export class VirtualScrollRenderer {
 
     const firstCard = this.container.querySelector(".video-card");
     if (firstCard instanceof HTMLElement) {
-      // レイアウト完了を待つ
-      await new Promise<void>((resolve) =>
-        requestAnimationFrame(() => resolve()),
-      );
+      // 非表示ウィンドウでは requestAnimationFrame が進まない場合があるため、
+      // 短いタイムアウトで測定へ進める。
+      await new Promise<void>((resolve) => {
+        let resolved = false;
+        const finish = () => {
+          if (resolved) return;
+          resolved = true;
+          resolve();
+        };
+        requestAnimationFrame(finish);
+        setTimeout(finish, 100);
+      });
       const rect = firstCard.getBoundingClientRect();
       if (rect.height > 0) {
         // CSSで300pxを指定しているため、異常に大きい値は無視
