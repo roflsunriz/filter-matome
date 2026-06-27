@@ -87,9 +87,9 @@ export class UIBuilder {
     const cardTemplate = document.createElement("div");
     cardTemplate.className = "video-card";
     // インラインスタイルで固定高さを保証
-    cardTemplate.style.height = "420px";
-    cardTemplate.style.maxHeight = "420px";
-    cardTemplate.style.minHeight = "420px";
+    cardTemplate.style.height = "300px";
+    cardTemplate.style.maxHeight = "300px";
+    cardTemplate.style.minHeight = "300px";
     cardTemplate.style.display = "flex";
     cardTemplate.style.flexDirection = "column";
     cardTemplate.style.overflow = "hidden";
@@ -118,12 +118,13 @@ export class UIBuilder {
 
     // 基本情報設定
     (card.querySelector(".video-id") as HTMLElement).textContent = safe.baseId;
-    
+
     // タイトル設定（ツールチップで全文表示）
     const titleElement = card.querySelector(".video-title") as HTMLElement;
-    const displayTitle = safe.title === "null"
-      ? "タイトルを取得できません"
-      : safe.title || "タイトルを取得できません";
+    const displayTitle =
+      safe.title === "null"
+        ? "タイトルを取得できません"
+        : safe.title || "タイトルを取得できません";
     titleElement.textContent = displayTitle;
     titleElement.title = displayTitle; // ホバー時にツールチップで全文表示
 
@@ -276,7 +277,7 @@ export class UIBuilder {
         if (!data) return;
         const { query } = data;
         this.progressManager.show("検索中...");
-        
+
         void (async () => {
           try {
             const resultIds = await this.searchEngine.search(query);
@@ -368,13 +369,10 @@ export class UIBuilder {
         UIBuilder.TEMPORARY_DELETE_CONCURRENCY,
         async (cacheId) => {
           try {
-            const response = await fetch(
-              `./ajax_rmtmp?${cacheId}`,
-              {
-                cache: "no-store",
-                credentials: "same-origin",
-              },
-            );
+            const response = await fetch(`./ajax_rmtmp?${cacheId}`, {
+              cache: "no-store",
+              credentials: "same-origin",
+            });
 
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}`);

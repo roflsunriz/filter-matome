@@ -228,9 +228,9 @@ body {
 
   .virtual-scroll-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    padding: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
     position: relative;
     overflow-anchor: none;
   }
@@ -250,9 +250,9 @@ body {
   /* 基本グリッドレイアウト（フォールバック） */
   .cache-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    padding: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
     position: relative;
     margin-top: 4px;
     background: linear-gradient(180deg, #fff6e3, #bfecff);
@@ -261,27 +261,32 @@ body {
   /* 動画カードスタイル - 固定高さレイアウト */
   .video-card {
     background: var(--dark-surface);
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
     transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 420px !important; /* 固定高さ */
-    max-height: 420px !important;
-    min-height: 420px !important;
+    height: 300px !important; /* 固定高さ */
+    max-height: 300px !important;
+    min-height: 300px !important;
+  }
+
+  .video-card,
+  .video-card * {
+    box-sizing: border-box;
   }
   
   .video-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
   }
 
   /* カードヘッダー（動画ID） */
   .card-header {
-    padding: 0.5rem 1rem;
+    padding: 0.35rem 0.65rem;
     background: rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
-    height: 32px;
+    height: 28px;
     display: flex;
     align-items: center;
   }
@@ -290,20 +295,20 @@ body {
   .metadata {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem;
+    gap: 0.25rem;
     align-items: center;
-    height: 36px; /* 固定高さ */
+    height: 30px; /* 固定高さ */
     flex-shrink: 0;
     margin-top: auto; /* タイトルの下に押し下げ */
   }
   
   .metadata > span {
     background: rgba(255, 159, 243, 0.1);
-    padding: 0.3rem 0.6rem;
-    border-radius: 20px;
+    padding: 0.2rem 0.45rem;
+    border-radius: 14px;
     border: 1px solid var(--pink);
     color: var(--text-primary);
-    font-size: 0.75em;
+    font-size: 0.68em;
     white-space: nowrap;
   }
   
@@ -383,7 +388,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 0.8rem 1rem;
+    padding: 0.55rem 0.65rem;
     min-height: 0; /* flexboxでオーバーフローを有効にするため */
   }
 
@@ -392,8 +397,8 @@ body {
     font-family: "Comic Sans MS", cursive;
     color: var(--mint);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    font-size: 1.1rem;
-    margin: 0 0 0.5rem 0;
+    font-size: 0.88rem;
+    margin: 0 0 0.35rem 0;
     background: linear-gradient(45deg, var(--pink), var(--mint));
     -webkit-background-clip: text;
     background-clip: text;
@@ -405,8 +410,8 @@ body {
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 1.4;
-    height: 3.08em; /* line-height * 2行 + margin */
+    line-height: 1.3;
+    height: 2.6em; /* line-height * 2行 */
     flex-shrink: 0;
   }
   
@@ -452,11 +457,11 @@ body {
   /* 動画カード内アクションボタン - 固定位置 */
   .video-card .card-actions {
     display: flex;
-    gap: 8px;
-    padding: 0.8rem 1rem;
+    gap: 6px;
+    padding: 0.45rem 0.55rem;
     background: rgba(0, 0, 0, 0.15);
     flex-shrink: 0;
-    height: 56px; /* 固定高さ */
+    height: 44px; /* 固定高さ */
     align-items: center;
     justify-content: space-between;
   }
@@ -518,8 +523,8 @@ body {
   
   /* ボタンアイコン */
   .card-action-icon {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
   
   /* ホバーエフェクト統一 */
@@ -537,8 +542,8 @@ body {
   
   /* アイコンボタンのサイズ調整 */
   .card-actions button {
-    min-width: 40px;
-    padding: 8px;
+    min-width: 34px;
+    padding: 6px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -587,11 +592,13 @@ body {
     }
   
     .video-card {
-      height: 380px; /* モバイル向け固定高さ */
+      height: 280px !important; /* モバイル向け固定高さ */
+      max-height: 280px !important;
+      min-height: 280px !important;
     }
   
     .thumbnail-container {
-      height: 140px; /* モバイル向けサムネイル高さ */
+      height: 96px !important; /* モバイル向けサムネイル高さ */
     }
 
     .filter-sort-container {
@@ -611,7 +618,7 @@ body {
   
   .thumbnail-container {
     flex-shrink: 0;
-    height: 180px; /* 固定高さ */
+    height: 112px; /* 固定高さ */
     position: relative;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.3);
@@ -1045,8 +1052,8 @@ body {
 
   .search-results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
     overflow-anchor: none;
   }
 
@@ -1054,9 +1061,9 @@ body {
   .search-result-card {
     margin: 0;
     max-width: none;
-    height: 420px !important;
-    max-height: 420px !important;
-    min-height: 420px !important;
+    height: 300px !important;
+    max-height: 300px !important;
+    min-height: 300px !important;
   }
 
   .search-no-results {

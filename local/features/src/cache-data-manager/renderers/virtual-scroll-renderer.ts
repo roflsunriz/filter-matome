@@ -57,9 +57,7 @@ export class VirtualScrollRenderer {
     this.measuredItemHeight = this.config.itemHeight;
   }
 
-  public initialize(
-    createVideoCard: (data: VideoData) => HTMLElement,
-  ): void {
+  public initialize(createVideoCard: (data: VideoData) => HTMLElement): void {
     this.createVideoCard = createVideoCard;
     this.setupDOM();
     this.setupObservers();
@@ -70,7 +68,7 @@ export class VirtualScrollRenderer {
     const existingContainer = document.querySelector(
       this.config.containerSelector,
     );
-    
+
     if (!(existingContainer instanceof HTMLElement)) {
       console.error("Virtual scroll container not found");
       return;
@@ -79,14 +77,15 @@ export class VirtualScrollRenderer {
     // スクロールコンテナをラップ
     this.scrollContainer = document.createElement("div");
     this.scrollContainer.className = "virtual-scroll-container";
-    
+
     // コンテンツコンテナ
     this.contentContainer = document.createElement("div");
     this.contentContainer.className = "virtual-scroll-content";
 
     // 上部スペーサー
     this.topSpacer = document.createElement("div");
-    this.topSpacer.className = "virtual-scroll-spacer virtual-scroll-spacer-top";
+    this.topSpacer.className =
+      "virtual-scroll-spacer virtual-scroll-spacer-top";
     this.topSpacer.style.height = "0px";
 
     // グリッドコンテナ（実際のカードが入る）
@@ -95,7 +94,8 @@ export class VirtualScrollRenderer {
 
     // 下部スペーサー
     this.bottomSpacer = document.createElement("div");
-    this.bottomSpacer.className = "virtual-scroll-spacer virtual-scroll-spacer-bottom";
+    this.bottomSpacer.className =
+      "virtual-scroll-spacer virtual-scroll-spacer-bottom";
     this.bottomSpacer.style.height = "0px";
 
     // DOM構造を組み立て
@@ -137,7 +137,11 @@ export class VirtualScrollRenderer {
     this.keydownHandler = (e: KeyboardEvent) => {
       // 入力フィールドでは無視
       const target = e.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
         return;
       }
 
@@ -178,7 +182,7 @@ export class VirtualScrollRenderer {
     // 現在のスクロール位置から1ページ分進める
     const pageHeight = window.innerHeight * 0.9;
     const newScrollTop = window.scrollY + pageHeight;
-    
+
     // スクロール前に表示範囲を事前計算
     this.preloadForScroll(newScrollTop);
   }
@@ -187,7 +191,7 @@ export class VirtualScrollRenderer {
     // 現在のスクロール位置から1ページ分戻る
     const pageHeight = window.innerHeight * 0.9;
     const newScrollTop = Math.max(0, window.scrollY - pageHeight);
-    
+
     // スクロール前に表示範囲を事前計算
     this.preloadForScroll(newScrollTop);
   }
@@ -200,10 +204,11 @@ export class VirtualScrollRenderer {
       end: this.allData.length,
     };
     this.scheduleRender();
-    
+
     // スクロール位置も最下部へ
     const totalRows = Math.ceil(this.allData.length / this.columnsCount);
-    const totalHeight = totalRows * this.measuredItemHeight + this.containerOffsetTop;
+    const totalHeight =
+      totalRows * this.measuredItemHeight + this.containerOffsetTop;
     window.scrollTo({ top: totalHeight, behavior: "instant" });
   }
 
@@ -216,8 +221,11 @@ export class VirtualScrollRenderer {
     if (this.allData.length === 0) return;
 
     const viewportHeight = window.innerHeight;
-    const effectiveScrollTop = Math.max(0, targetScrollTop - this.containerOffsetTop);
-    
+    const effectiveScrollTop = Math.max(
+      0,
+      targetScrollTop - this.containerOffsetTop,
+    );
+
     // バッファを適用
     const bufferPixels = this.measuredItemHeight * this.config.bufferSize;
     const startPixel = Math.max(0, effectiveScrollTop - bufferPixels);
@@ -242,10 +250,10 @@ export class VirtualScrollRenderer {
 
     const scrollTop = window.scrollY;
     const viewportHeight = window.innerHeight;
-    
+
     // キャッシュされたオフセットを使用（getBoundingClientRectを避ける）
     const effectiveScrollTop = Math.max(0, scrollTop - this.containerOffsetTop);
-    
+
     // バッファを適用
     const bufferPixels = this.measuredItemHeight * this.config.bufferSize;
     const startPixel = Math.max(0, effectiveScrollTop - bufferPixels);
@@ -262,11 +270,14 @@ export class VirtualScrollRenderer {
     const threshold = this.columnsCount * 2;
     const startDiff = Math.abs(newStart - this.visibleRange.start);
     const endDiff = Math.abs(newEnd - this.visibleRange.end);
-    
+
     if (startDiff >= threshold || endDiff >= threshold) {
       debugLog("recalc TRIGGER:", {
         scrollY: scrollTop,
-        range: { from: this.visibleRange, to: { start: newStart, end: newEnd } },
+        range: {
+          from: this.visibleRange,
+          to: { start: newStart, end: newEnd },
+        },
         diffs: { start: startDiff, end: endDiff },
       });
       this.visibleRange = { start: newStart, end: newEnd };
@@ -276,11 +287,11 @@ export class VirtualScrollRenderer {
 
   private updateColumnsCount(): void {
     if (!this.scrollContainer) return;
-    
+
     const containerWidth = this.scrollContainer.clientWidth;
-    const minCardWidth = 300; // styles.ts の minmax(300px, 1fr) に合わせる
-    const gap = 32; // 2rem
-    
+    const minCardWidth = 180; // styles.ts の minmax(180px, 1fr) に合わせる
+    const gap = 16; // 1rem
+
     this.columnsCount = Math.max(
       1,
       Math.floor((containerWidth + gap) / (minCardWidth + gap)),
@@ -289,7 +300,10 @@ export class VirtualScrollRenderer {
 
   private getVisibleRowCount(): number {
     const viewportHeight = window.innerHeight;
-    return Math.ceil(viewportHeight / this.measuredItemHeight) + this.config.bufferSize * 2;
+    return (
+      Math.ceil(viewportHeight / this.measuredItemHeight) +
+      this.config.bufferSize * 2
+    );
   }
 
   private getVisibleItemCount(): number {
@@ -300,7 +314,7 @@ export class VirtualScrollRenderer {
     debugLog("setData:", { dataLength: data.length });
     this.allData = data;
     this.updateColumnsCount();
-    
+
     // 初期表示範囲を設定
     const initialCount = this.getVisibleItemCount();
     this.visibleRange = {
@@ -310,7 +324,7 @@ export class VirtualScrollRenderer {
 
     await this.render();
     this.updateSpacers();
-    
+
     // データ設定後にオフセットを再計算
     requestAnimationFrame(() => {
       this.cacheContainerOffset();
@@ -338,9 +352,12 @@ export class VirtualScrollRenderer {
       debugLog("render skipped: no container or createVideoCard");
       return;
     }
-    
+
     const scrollBefore = window.scrollY;
-    debugLog("render START:", { range: this.visibleRange, scrollY: scrollBefore });
+    debugLog("render START:", {
+      range: this.visibleRange,
+      scrollY: scrollBefore,
+    });
     this.isRendering = true;
 
     const fragment = document.createDocumentFragment();
@@ -362,17 +379,17 @@ export class VirtualScrollRenderer {
     await this.measureItemHeight();
 
     this.updateSpacers();
-    
-    debugLog("render DONE:", { 
-      items: visibleData.length, 
-      scrollY: window.scrollY
+
+    debugLog("render DONE:", {
+      items: visibleData.length,
+      scrollY: window.scrollY,
     });
 
     // レンダリング完了後、少し遅延してからisRenderingをfalseにする
     // これにより、スクロール補正によるイベントが落ち着くまで待つ
     setTimeout(() => {
       this.isRendering = false;
-      
+
       if (this.pendingRender) {
         this.pendingRender = false;
         debugLog("render: scheduling pending render");
@@ -388,24 +405,29 @@ export class VirtualScrollRenderer {
     // 一度測定したら再測定しない（高さの変動を防ぐ）
     if (this.heightMeasured) return;
     if (!this.container) return;
-    
+
     const firstCard = this.container.querySelector(".video-card");
     if (firstCard instanceof HTMLElement) {
       // レイアウト完了を待つ
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve()),
+      );
       const rect = firstCard.getBoundingClientRect();
       if (rect.height > 0) {
-        // CSSで420pxを指定しているため、異常に大きい値は無視
-        const expectedHeight = 420 + 32; // カード高さ + gap
-        const measuredWithGap = rect.height + 32;
-        
+        // CSSで300pxを指定しているため、異常に大きい値は無視
+        const expectedHeight = 300 + 16; // カード高さ + gap
+        const measuredWithGap = rect.height + 16;
+
         // 測定値が期待値の1.5倍以上なら、CSSの値を使用
         if (measuredWithGap > expectedHeight * 1.5) {
           this.measuredItemHeight = expectedHeight;
-          debugLog("measureItemHeight: using CSS default (measured too large):", {
-            measured: measuredWithGap,
-            using: expectedHeight,
-          });
+          debugLog(
+            "measureItemHeight: using CSS default (measured too large):",
+            {
+              measured: measuredWithGap,
+              using: expectedHeight,
+            },
+          );
         } else {
           this.measuredItemHeight = measuredWithGap;
           debugLog("measureItemHeight FIXED:", this.measuredItemHeight);
@@ -430,13 +452,16 @@ export class VirtualScrollRenderer {
 
     this.topSpacer.style.height = `${Math.max(0, topHeight)}px`;
     this.bottomSpacer.style.height = `${Math.max(0, bottomHeight)}px`;
-    
+
     // デバッグログ（高さが変わった場合のみ）
     if (topHeight !== prevTopHeight || bottomHeight !== prevBottomHeight) {
       debugLog("updateSpacers:", {
         topSpacer: { prev: prevTopHeight, new: topHeight },
         bottomSpacer: { prev: prevBottomHeight, new: bottomHeight },
-        totalHeight: topHeight + bottomHeight + (endRow - startRow) * this.measuredItemHeight,
+        totalHeight:
+          topHeight +
+          bottomHeight +
+          (endRow - startRow) * this.measuredItemHeight,
         range: this.visibleRange,
       });
     }
@@ -485,7 +510,7 @@ export class VirtualScrollRenderer {
       end: Math.min(this.getVisibleItemCount(), this.allData.length),
     };
     void this.render();
-    
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 }

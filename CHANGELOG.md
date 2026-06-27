@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+- 【cache-data-manager】動画カードをコンパクト化し、横幅に余裕がある画面でより多くのカードを一列に表示できるように変更。
+
 ## [#226.1] - 2026-06-26
 
 ### Changed
