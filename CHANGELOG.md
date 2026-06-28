@@ -6,14 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#226.2] - 2026-06-28
+
 ### Added
 - 【cache-data-manager】getthumbinfo由来のタイトル・サムネイルURL・公開状態をIndexedDBに保存し、表示時にキャッシュを優先利用する仕組みを追加。
 - 【cache-data-manager】getthumbinfoによる公開状態の一括並列チェックボタンと、利用不可動画のバッジ表示を追加。
 - 【cache-data-manager】動画一覧ソートに「利用不可」を追加し、利用不可動画を先頭へ集められるように追加。
 - 【cache-data-manager】ステータスフィルターに「利用不可」を追加し、利用不可動画だけに絞り込めるように追加。
+- 【docs】MkDocs にダークモード切り替えを追加。
 
 ### Changed
+- 【features】`package.json` の `version` を `226.2` に更新。
+- 【README】latest バッジを `#226.2` に更新。
 - 【cache-data-manager】動画カードをコンパクト化し、横幅に余裕がある画面でより多くのカードを一列に表示できるように変更。
+- 【docs】USAGE の動画ID対応説明と、動画ファイル追加後の NicoCache_nl 再起動案内を更新。
+- 【docs】mylist2 の公開状態チェック説明を更新。
+- 【docs】共通 AGENTS 導線を整理。
 
 ## [#226.1] - 2026-06-26
 
