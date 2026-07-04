@@ -48,6 +48,7 @@ async function buildControllerBundle(): Promise<string> {
         export { VolumeTabController } from "./src/mlink-video-controller/tab-controllers/volume-tab";
         export { LinksTabController } from "./src/mlink-video-controller/tab-controllers/links-tab";
         export { CommentsTabController } from "./src/mlink-video-controller/tab-controllers/comments-tab";
+        export { normalizeModuleSettingsForRegistry } from "./src/mlink-video-controller/module-handlers/settings-normalizer";
       `,
     },
   });
@@ -514,4 +515,46 @@ test("mlink-video-controller tab controllers handle every tab operation", async 
         ),
     )
     .toContain("コメントを検索してください");
+});
+
+test("module settings import/export normalization drops legacy and unknown module ids", async ({
+  page,
+}) => {
+  await page.setContent("<main></main>");
+  await page.addScriptTag({ content: await buildControllerBundle() });
+
+  const normalized = await page.evaluate(() => {
+    const { normalizeModuleSettingsForRegistry } = (
+      window as unknown as {
+        MlinkTabControllers: {
+          normalizeModuleSettingsForRegistry: (
+            settings: unknown,
+            validModuleIds: string[],
+          ) => Record<string, unknown>;
+        };
+      }
+    ).MlinkTabControllers;
+
+    return normalizeModuleSettingsForRegistry(
+      {
+        nico_info_highlight: { enabled: true, config: { migrated: true } },
+        daily_lottery_highlight: { enabled: false },
+        removed_legacy_module: { enabled: true },
+        heatmap: { enabled: true, config: { displayMode: "overlay" } },
+        malformed_module: { enabled: "yes" },
+      },
+      ["daily_lottery_highlight", "heatmap"],
+    );
+  });
+
+  expect(normalized).toEqual({
+    daily_lottery_highlight: {
+      enabled: true,
+      config: { migrated: true },
+    },
+    heatmap: {
+      enabled: true,
+      config: { displayMode: "overlay" },
+    },
+  });
 });

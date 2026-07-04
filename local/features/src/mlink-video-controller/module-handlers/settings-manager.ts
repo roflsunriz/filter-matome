@@ -1,4 +1,6 @@
 import { ModuleSettings, ModuleConfigData } from "@/types/module-types";
+import { ModuleRegistry } from "@/mlink-video-controller/module-handlers/module-registry";
+import { normalizeModuleSettingsForRegistry } from "@/mlink-video-controller/module-handlers/settings-normalizer";
 
 /**
  * モジュール設定の保存・読み込みを管理するクラス
@@ -29,8 +31,8 @@ export class SettingsManager {
       if (stored) {
         const parsed: unknown = JSON.parse(stored);
         if (parsed && typeof parsed === "object") {
-          this.settings = parsed as ModuleSettings;
-          if (this.migrateLegacyModuleSettings()) {
+          this.settings = this.normalizeSettings(parsed);
+          if (JSON.stringify(parsed) !== JSON.stringify(this.settings)) {
             this.saveSettings();
           }
         }
@@ -44,24 +46,11 @@ export class SettingsManager {
     }
   }
 
-  /**
-   * 誤って使われていたモジュールIDの設定を現行IDへ移行
-   */
-  private migrateLegacyModuleSettings(): boolean {
-    const legacyId = "nico_info_highlight";
-    const currentId = "daily_lottery_highlight";
-    const legacySettings = this.settings[legacyId];
-
-    if (!legacySettings) {
-      return false;
-    }
-
-    if (!this.settings[currentId]) {
-      this.settings[currentId] = legacySettings;
-    }
-
-    delete this.settings[legacyId];
-    return true;
+  private normalizeSettings(settings: unknown): ModuleSettings {
+    const validModuleIds = ModuleRegistry.getInstance()
+      .getAllConfigs()
+      .map((config) => config.id);
+    return normalizeModuleSettingsForRegistry(settings, validModuleIds);
   }
 
   /**
@@ -123,7 +112,7 @@ export class SettingsManager {
    * 全設定を取得
    */
   public getAllSettings(): ModuleSettings {
-    return { ...this.settings };
+    return { ...this.normalizeSettings(this.settings) };
   }
 
   /**
@@ -180,6 +169,7 @@ export class SettingsManager {
    * 設定のエクスポート（デバッグ用）
    */
   public exportSettings(): string {
+    this.settings = this.normalizeSettings(this.settings);
     return JSON.stringify(this.settings, null, 2);
   }
 
@@ -189,9 +179,7 @@ export class SettingsManager {
   public importSettings(settingsJson: string): boolean {
     try {
       const imported: unknown = JSON.parse(settingsJson);
-      if (imported && typeof imported === "object") {
-        this.settings = imported as ModuleSettings;
-      }
+      this.settings = this.normalizeSettings(imported);
       this.saveSettings();
 
       return true;

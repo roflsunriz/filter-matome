@@ -419,7 +419,7 @@ export class SettingsUI {
   private exportSettings(): void {
     try {
       const settings = this.settingsManager.exportSettings();
-      const blob = new Blob([JSON.stringify(settings, null, 2)], {
+      const blob = new Blob([settings], {
         type: "application/json",
       });
       const url = URL.createObjectURL(blob);
