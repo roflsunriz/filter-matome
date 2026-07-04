@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 - 【mlink-video-controller】Watch Page統合のタグカウンターが、Firefoxで初期挿入に失敗する場合や公式DOMの再描画で削除された後に復帰しない場合がある問題を修正。
+- 【mlink-video-controller】コメント検索入力欄でEnterキーを押しても検索が開始されない問題を修正。
 
 ## [#226.2] - 2026-06-28
 

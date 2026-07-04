@@ -997,7 +997,7 @@ export class MlinkVideoController extends BasePanel {
               `[MlinkVideoController] Input field key event: ${keyEvent.key} in ${input.tagName}`,
             );
 
-            // イベント伝搬を停止（これが重要！）
+            // 入力欄自身のハンドラを動かした後、外側への伝搬だけを止める
             keyEvent.stopPropagation();
 
             // 特殊キーのみ無効化、文字キーは完全に自由
@@ -1009,8 +1009,8 @@ export class MlinkVideoController extends BasePanel {
             }
             // 文字キー（f, j, k, l, m など）は完全にそのまま通す
           },
-          true,
-        ); // useCapture = true で早期にキャッチ
+          false,
+        );
       });
     };
 

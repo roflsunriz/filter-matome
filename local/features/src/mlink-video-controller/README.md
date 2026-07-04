@@ -319,7 +319,7 @@ UI更新
 ### 🔍 **コメント機能を拡張したい**
 1. `managers/nico-api-fetcher.ts` - データ取得・処理
 2. `managers/comment.ts` - コメント管理機能
-3. `tab-controllers/comments-tab.ts` - コメント検索タブのUI操作
+3. `tab-controllers/comments-tab.ts` - コメント検索タブのUI操作。検索入力欄は検索ボタンのクリックとEnterキーで検索を実行する
 
 ### 🖼️ **背景機能を拡張したい**
 1. `modules/background-image-settings.ts` - 画像データ管理

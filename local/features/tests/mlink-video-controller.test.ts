@@ -85,4 +85,13 @@ describe("mlink-video-controller structure", () => {
 
     expect(hasInlineHeatmap || hasModuleHeatmap).toBe(true);
   });
+
+  test("keeps panel input key protection out of the capture phase", () => {
+    const panelSource = readControllerFile("panels/link-video.ts");
+
+    expect(panelSource).toContain(
+      "入力欄自身のハンドラを動かした後、外側への伝搬だけを止める",
+    );
+    expect(panelSource).not.toContain("useCapture = true で早期にキャッチ");
+  });
 });
