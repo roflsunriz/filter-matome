@@ -26,6 +26,7 @@ export class HeatmapManager {
   private commentData: { time: number; count: number }[] = [];
   private displayMode: HeatmapDisplayMode = "off";
   private updateInterval: number | null = null;
+  private isActive: boolean = false;
 
   // SPA遷移検知用
   private videoPlayerObserver: MutationObserver | null = null;
@@ -50,10 +51,6 @@ export class HeatmapManager {
     this.apiFetcher = NicoApiFetcher.getInstance();
     // 初期化時に保存された設定を復元
     this.restoreSettings();
-    // SPA遷移検知を開始
-    this.startVideoPlayerObserver();
-    // フルスクリーン状態監視を開始
-    this.startFullscreenObserver();
   }
 
   public static getInstance(): HeatmapManager {
@@ -64,9 +61,14 @@ export class HeatmapManager {
   }
 
   public initialize(canvas: HTMLCanvasElement, tooltip: HTMLElement): void {
+    this.isActive = true;
     this.fabCanvas = canvas;
     this.fabTooltip = tooltip;
     this.fabContext = canvas.getContext("2d");
+
+    // SPA遷移検知とフルスクリーン監視はモジュール有効時だけ動かす
+    this.startVideoPlayerObserver();
+    this.startFullscreenObserver();
 
     if (this.fabContext) {
       this.fabContext.imageSmoothingEnabled = this.smoothing;
@@ -81,6 +83,11 @@ export class HeatmapManager {
 
   public setDisplayMode(mode: HeatmapDisplayMode): void {
     this.displayMode = mode;
+
+    if (!this.isActive) {
+      this.saveSettings();
+      return;
+    }
 
     // 既存の表示をクリア
     this.clearAllDisplays();
@@ -601,12 +608,16 @@ export class HeatmapManager {
 
   // コメントデータが更新された時に呼び出される
   public updateComments(): void {
+    if (!this.isActive) return;
+
     this.updateCommentData();
     this.updateDisplay();
   }
 
   // 表示を更新（現在の表示モードに応じて適切な描画を実行）
   public updateDisplay(): void {
+    if (!this.isActive) return;
+
     switch (this.displayMode) {
       case "fab":
         this.render();
@@ -622,6 +633,8 @@ export class HeatmapManager {
 
   // 定期的な更新を開始（再生位置の更新のため）
   public startPeriodicUpdate(): void {
+    if (!this.isActive) return;
+
     // 既存のインターバルをクリア
     this.stopPeriodicUpdate();
 
@@ -702,6 +715,10 @@ export class HeatmapManager {
 
   // SPA遷移検知用のMutationObserverを開始
   private startVideoPlayerObserver(): void {
+    if (this.videoPlayerObserver) {
+      return;
+    }
+
     this.videoPlayerObserver = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.type === "childList") {
@@ -722,7 +739,7 @@ export class HeatmapManager {
                 this.currentVideoElement = videoElement;
 
                 // オーバーレイモードの場合は再作成
-                if (this.displayMode === "overlay") {
+                if (this.isActive && this.displayMode === "overlay") {
                   // 少し遅延を入れて動画プレイヤーの準備完了を待つ
                   setTimeout(() => {
                     this.clearAllDisplays();
@@ -779,6 +796,10 @@ export class HeatmapManager {
 
   // フルスクリーン状態監視を開始
   private startFullscreenObserver(): void {
+    if (this.fullscreenChangeHandler) {
+      return;
+    }
+
     this.fullscreenChangeHandler = () => {
       const wasFullscreen = this.isFullscreen;
       this.isFullscreen = this.checkFullscreenState();
@@ -1024,6 +1045,7 @@ export class HeatmapManager {
 
   // インスタンス破棄時の処理
   public destroy(): void {
+    this.isActive = false;
     this.stopPeriodicUpdate();
     this.stopVideoPlayerObserver();
     this.stopFullscreenObserver();

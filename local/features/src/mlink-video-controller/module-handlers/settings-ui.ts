@@ -11,9 +11,28 @@ import { BackgroundImageSettings } from "@/mlink-video-controller/modules/backgr
 // import { ToastrInstance } from '@/types/toastr-types';
 import { createMaterialIcon } from "@/common/material-icons";
 import { BackgroundImageItem } from "@/types/background-image-types";
+import type { HeatmapModule } from "@/mlink-video-controller/modules/heatmap-module";
+import type {
+  HeatmapColorScheme,
+  HeatmapDisplayMode,
+} from "@/mlink-video-controller/managers/heatmap";
 
 const DEFAULT_BACKGROUND_IMAGE_URL_PREFIX =
   "https://www.nicovideo.jp/local/background-images/";
+
+const HEATMAP_STORAGE_KEYS = {
+  DISPLAY_MODE: "heatmapDisplayMode",
+  COLOR_SCHEME: "heatmapColorScheme",
+  SMOOTHING: "heatmapSmoothing",
+} as const;
+
+const HEATMAP_DISPLAY_MODES: HeatmapDisplayMode[] = ["off", "fab", "overlay"];
+const HEATMAP_COLOR_SCHEMES: HeatmapColorScheme[] = [
+  "default",
+  "rainbow",
+  "fire",
+  "cool",
+];
 
 /**
  * 設定UIを管理するクラス
@@ -197,6 +216,10 @@ export class SettingsUI {
     const toggle = element.querySelector(".module-toggle") as HTMLInputElement;
     toggle.checked = this.settingsManager.isModuleEnabled(config.id);
     toggle.disabled = !isAvailable;
+
+    if (config.id === "heatmap") {
+      this.addHeatmapSettingsButton(moduleItem);
+    }
 
     return moduleItem;
   }
@@ -391,6 +414,212 @@ export class SettingsUI {
         toggle.checked = enabled;
       }
     }
+  }
+
+  private addHeatmapSettingsButton(moduleItem: HTMLElement): void {
+    const toggle = moduleItem.querySelector(".toggle-switch");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "settings-btn module-settings-btn";
+    button.id = "open-heatmap-settings";
+    button.innerHTML = `${createMaterialIcon("settings", { style: "outlined", color: "white" })} 設定`;
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.createHeatmapSettingsModal();
+    });
+
+    moduleItem.insertBefore(button, toggle);
+  }
+
+  private getLoadedHeatmapModule(): HeatmapModule | null {
+    return this.moduleManager.getLoadedModule<HeatmapModule>("heatmap");
+  }
+
+  private getStoredHeatmapDisplayMode(): HeatmapDisplayMode {
+    const value = localStorage.getItem(HEATMAP_STORAGE_KEYS.DISPLAY_MODE);
+    return value && HEATMAP_DISPLAY_MODES.includes(value as HeatmapDisplayMode)
+      ? (value as HeatmapDisplayMode)
+      : "off";
+  }
+
+  private getStoredHeatmapColorScheme(): HeatmapColorScheme {
+    const value = localStorage.getItem(HEATMAP_STORAGE_KEYS.COLOR_SCHEME);
+    return value && HEATMAP_COLOR_SCHEMES.includes(value as HeatmapColorScheme)
+      ? (value as HeatmapColorScheme)
+      : "default";
+  }
+
+  private getStoredHeatmapSmoothing(): boolean {
+    return localStorage.getItem(HEATMAP_STORAGE_KEYS.SMOOTHING) === "true";
+  }
+
+  private saveHeatmapSettings(
+    displayMode: HeatmapDisplayMode,
+    colorScheme: HeatmapColorScheme,
+    smoothing: boolean,
+  ): void {
+    localStorage.setItem(HEATMAP_STORAGE_KEYS.DISPLAY_MODE, displayMode);
+    localStorage.setItem(HEATMAP_STORAGE_KEYS.COLOR_SCHEME, colorScheme);
+    localStorage.setItem(HEATMAP_STORAGE_KEYS.SMOOTHING, smoothing.toString());
+  }
+
+  private createHeatmapSettingsModal(): void {
+    if (!this.shadowRoot) return;
+
+    const existingModal = this.shadowRoot.getElementById(
+      "heatmap-settings-modal",
+    );
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    const heatmapModule = this.getLoadedHeatmapModule();
+    const displayMode =
+      heatmapModule?.getDisplayMode() ?? this.getStoredHeatmapDisplayMode();
+    const colorScheme =
+      heatmapModule?.getColorScheme() ?? this.getStoredHeatmapColorScheme();
+    const smoothing =
+      heatmapModule?.getSmoothing() ?? this.getStoredHeatmapSmoothing();
+
+    const modal = document.createElement("div");
+    modal.id = "heatmap-settings-modal";
+    modal.className = "modal-overlay";
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>${createMaterialIcon("analytics", { style: "outlined", color: "white" })} ヒートマップ設定</h3>
+          <button class="close-modal-btn">×</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="settings-section">
+            <h4>表示モード</h4>
+            <div class="heatmap-mode-buttons">
+              <button class="heatmap-mode-btn" data-mode="off">OFF</button>
+              <button class="heatmap-mode-btn" data-mode="fab">FAB内</button>
+              <button class="heatmap-mode-btn" data-mode="overlay">動画上</button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h4>詳細設定</h4>
+            <div class="heatmap-setting-group">
+              <label for="heatmap-color-scheme">カラースキーム:</label>
+              <select class="heatmap-color-scheme" id="heatmap-color-scheme">
+                <option value="default">デフォルト</option>
+                <option value="rainbow">レインボー</option>
+                <option value="fire">ファイア</option>
+                <option value="cool">クール</option>
+              </select>
+            </div>
+            <div class="heatmap-setting-group">
+              <input type="checkbox" class="heatmap-smooth-toggle" id="heatmap-smooth-toggle">
+              <label for="heatmap-smooth-toggle">スムージング</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="modal-btn secondary" id="close-heatmap-modal">閉じる</button>
+        </div>
+      </div>
+    `;
+
+    this.shadowRoot.appendChild(modal);
+    this.setupHeatmapModalEventListeners(modal, {
+      displayMode,
+      colorScheme,
+      smoothing,
+    });
+  }
+
+  private setupHeatmapModalEventListeners(
+    modal: HTMLElement,
+    initialSettings: {
+      displayMode: HeatmapDisplayMode;
+      colorScheme: HeatmapColorScheme;
+      smoothing: boolean;
+    },
+  ): void {
+    const closeModal = () => {
+      modal.remove();
+    };
+
+    modal
+      .querySelectorAll(".close-modal-btn, #close-heatmap-modal")
+      .forEach((button) => {
+        button.addEventListener("click", closeModal);
+      });
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        closeModal();
+      }
+    });
+
+    modal.addEventListener("keydown", (event) => {
+      event.stopPropagation();
+    });
+
+    modal.addEventListener("keyup", (event) => {
+      event.stopPropagation();
+    });
+
+    const modeButtons =
+      modal.querySelectorAll<HTMLElement>(".heatmap-mode-btn");
+    const colorSchemeSelect = modal.querySelector<HTMLSelectElement>(
+      ".heatmap-color-scheme",
+    );
+    const smoothToggle = modal.querySelector<HTMLInputElement>(
+      ".heatmap-smooth-toggle",
+    );
+
+    const updateActiveMode = (mode: HeatmapDisplayMode) => {
+      modeButtons.forEach((button) => {
+        button.toggleAttribute("data-active", button.dataset.mode === mode);
+      });
+    };
+
+    const applySettings = () => {
+      const activeMode =
+        modal.querySelector<HTMLElement>(".heatmap-mode-btn[data-active]")
+          ?.dataset.mode ?? initialSettings.displayMode;
+      const displayMode = activeMode as HeatmapDisplayMode;
+      const colorScheme =
+        (colorSchemeSelect?.value as HeatmapColorScheme | undefined) ??
+        initialSettings.colorScheme;
+      const smoothing = smoothToggle?.checked ?? initialSettings.smoothing;
+      const heatmapModule = this.getLoadedHeatmapModule();
+
+      if (heatmapModule) {
+        heatmapModule.setColorScheme(colorScheme);
+        heatmapModule.setSmoothing(smoothing);
+        heatmapModule.setDisplayMode(displayMode);
+        return;
+      }
+
+      this.saveHeatmapSettings(displayMode, colorScheme, smoothing);
+    };
+
+    updateActiveMode(initialSettings.displayMode);
+    if (colorSchemeSelect) {
+      colorSchemeSelect.value = initialSettings.colorScheme;
+      colorSchemeSelect.addEventListener("change", applySettings);
+    }
+
+    if (smoothToggle) {
+      smoothToggle.checked = initialSettings.smoothing;
+      smoothToggle.addEventListener("change", applySettings);
+    }
+
+    modeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const mode = button.dataset.mode as HeatmapDisplayMode | undefined;
+        if (!mode) return;
+        updateActiveMode(mode);
+        applySettings();
+      });
+    });
   }
 
   /**

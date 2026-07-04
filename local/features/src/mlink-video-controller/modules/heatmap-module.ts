@@ -51,7 +51,7 @@ export class HeatmapModule implements ModuleInstance {
 
   destroy(): void {
     this.detachFromPanel();
-    this.manager.stopPeriodicUpdate();
+    this.manager.destroy();
     this.active = false;
   }
 
@@ -107,6 +107,26 @@ export class HeatmapModule implements ModuleInstance {
 
   getDisplayMode(): HeatmapDisplayMode {
     return this.manager.getDisplayMode();
+  }
+
+  setDisplayMode(mode: HeatmapDisplayMode): void {
+    this.manager.setDisplayMode(mode);
+  }
+
+  getColorScheme(): HeatmapColorScheme {
+    return this.manager.getColorScheme();
+  }
+
+  setColorScheme(scheme: HeatmapColorScheme): void {
+    this.manager.setColorScheme(scheme);
+  }
+
+  getSmoothing(): boolean {
+    return this.manager.getSmoothing();
+  }
+
+  setSmoothing(enabled: boolean): void {
+    this.manager.setSmoothing(enabled);
   }
 
   private setupModeButtons(): void {

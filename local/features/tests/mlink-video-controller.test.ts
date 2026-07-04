@@ -68,22 +68,24 @@ describe("mlink-video-controller structure", () => {
     }
   });
 
-  test("keeps heatmap available either in playback UI or as a module", () => {
+  test("keeps heatmap controls in module settings", () => {
     const playbackTemplate = readControllerFile("templates/playback.ts");
     const registry = readControllerFile("module-handlers/module-registry.ts");
+    const settingsUi = readControllerFile("module-handlers/settings-ui.ts");
     const heatmapModuleExists = existsSync(
       join(controllerRoot, "modules", "heatmap-module.ts"),
     );
 
-    const hasInlineHeatmap =
-      playbackTemplate.includes("heatmap-canvas") &&
-      playbackTemplate.includes("heatmap-mode-btn");
     const hasModuleHeatmap =
       heatmapModuleExists &&
       registry.includes("heatmapModuleConfig") &&
       registry.includes("heatmap");
 
-    expect(hasInlineHeatmap || hasModuleHeatmap).toBe(true);
+    expect(playbackTemplate).toContain("heatmap-canvas");
+    expect(playbackTemplate).not.toContain("heatmap-mode-btn");
+    expect(settingsUi).toContain("open-heatmap-settings");
+    expect(settingsUi).toContain("heatmap-settings-modal");
+    expect(hasModuleHeatmap).toBe(true);
   });
 
   test("keeps panel input key protection out of the capture phase", () => {

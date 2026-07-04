@@ -16,33 +16,6 @@ export const playbackTemplate = `
     <div class="heatmap-tooltip">00:00 - 0 コメント</div>
   </div>
 
-  <!-- ヒートマップ表示モード切り替え -->
-  <div class="heatmap-mode-control">
-    <label>ヒートマップ表示:</label>
-    <div class="heatmap-mode-buttons">
-      <button class="heatmap-mode-btn" data-mode="off" data-active>OFF</button>
-      <button class="heatmap-mode-btn" data-mode="fab">FAB内</button>
-      <button class="heatmap-mode-btn" data-mode="overlay">動画上</button>
-    </div>
-  </div>
-
-  <!-- ヒートマップ詳細設定 -->
-  <div class="heatmap-settings">
-    <div class="heatmap-setting-group">
-      <label for="heatmap-color-scheme">カラースキーム:</label>
-      <select class="heatmap-color-scheme" id="heatmap-color-scheme">
-        <option value="default">デフォルト</option>
-        <option value="rainbow">レインボー</option>
-        <option value="fire">ファイア</option>
-        <option value="cool">クール</option>
-      </select>
-    </div>
-    <div class="heatmap-setting-group">
-      <input type="checkbox" class="heatmap-smooth-toggle" id="heatmap-smooth-toggle">
-      <label for="heatmap-smooth-toggle">スムージング</label>
-    </div>
-  </div>
-
 <div class="control-grid">
       <button class="control-btn">${createMaterialIcon("skip_previous", { style: "outlined", color: "white" })}</button>
     <button class="control-btn play-pause-btn" data-playing="false">${createMaterialIcon("play_arrow", { style: "outlined", color: "white" })}</button>

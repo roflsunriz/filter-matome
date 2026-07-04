@@ -643,4 +643,11 @@ export class ModuleManager {
   public getLoadedModulesMap(): Map<string, ModuleInstance> {
     return this.modules;
   }
+
+  /**
+   * 読み込み済みモジュールのインスタンスを取得
+   */
+  public getLoadedModule<T extends ModuleInstance>(moduleId: string): T | null {
+    return (this.modules.get(moduleId) as T | undefined) ?? null;
+  }
 }

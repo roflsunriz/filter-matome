@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- 【mlink-video-controller】ヒートマップの表示モード・詳細設定を、プレイバックタブからモジュール設定内の「コメントヒートマップ」設定ボタンへ移動。
+
+### Fixed
+- 【mlink-video-controller】コメントヒートマップがモジュールOFF中でも監視・表示更新を実行する問題を修正。
+
 ## [#227] - 2026-07-05
 
 ### Added

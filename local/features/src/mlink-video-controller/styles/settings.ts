@@ -223,6 +223,16 @@ export const settingsStyles = `
   box-shadow: 0 2px 10px rgba(33, 150, 243, 0.3);
 }
 
+.module-settings-btn {
+  flex-shrink: 0;
+  margin-left: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 76px;
+}
+
 /* モーダルオーバーレイ */
 .modal-overlay {
   position: fixed;
@@ -769,6 +779,11 @@ input:disabled + .slider {
   }
   
   .toggle-switch {
+    margin-left: 0;
+    align-self: flex-end;
+  }
+
+  .module-settings-btn {
     margin-left: 0;
     align-self: flex-end;
   }

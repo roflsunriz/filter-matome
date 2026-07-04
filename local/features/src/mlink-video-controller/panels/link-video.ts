@@ -3,7 +3,7 @@ import { basePanelStyles } from "@/mlink-video-controller/panels/base";
 import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
 import { LinkManager } from "@/mlink-video-controller/services/link-manager";
 import { CommentManager } from "@/mlink-video-controller/managers/comment";
-import { HeatmapModule } from "@/mlink-video-controller/modules/heatmap-module";
+import type { HeatmapModule } from "@/mlink-video-controller/modules/heatmap-module";
 import { PlaybackHandler } from "@/mlink-video-controller/handlers/playback";
 import { VolumeHandler } from "@/mlink-video-controller/handlers/volume";
 import { SpeedHandler } from "@/mlink-video-controller/handlers/speed";
@@ -23,6 +23,7 @@ import { VolumeTabController } from "@/mlink-video-controller/tab-controllers/vo
 
 // 型定義のインポート
 import { LinkGroup } from "@/types/mlink-video-controller-types";
+import type { ModuleEventListener } from "@/types/module-types";
 import { TimerHandle } from "@/types/util-types";
 
 // テンプレートの静的インポート
@@ -76,6 +77,7 @@ export class MlinkVideoController extends BasePanel {
   private moduleRegistry: ModuleRegistry;
   private settingsManager: SettingsManager;
   private settingsUI: SettingsUI;
+  private moduleEventListener: ModuleEventListener | null = null;
   private isWatchPage: boolean = false;
   private isHandlingSPANavigation: boolean = false; // SPA遷移処理中フラグ
 
@@ -90,6 +92,7 @@ export class MlinkVideoController extends BasePanel {
     this.moduleRegistry = ModuleRegistry.getInstance();
     this.settingsManager = SettingsManager.getInstance();
     this.settingsUI = SettingsUI.getInstance();
+    this.bindModuleEvents();
 
     // LinkManagerは全ページで利用（リンク定義と実行を一元化）
     this.linkManager = LinkManager.getInstance();
@@ -237,7 +240,7 @@ export class MlinkVideoController extends BasePanel {
   private initializeVideoServices(): void {
     this.player = NicoVideoPlayer.getInstance();
     this.commentManager = CommentManager.getInstance();
-    this.heatmapModule = new HeatmapModule();
+    this.heatmapModule = null;
     this.playbackHandler = new PlaybackHandler();
     this.volumeHandler = new VolumeHandler();
     this.speedHandler = new SpeedHandler();
@@ -246,7 +249,7 @@ export class MlinkVideoController extends BasePanel {
   private releaseVideoServices(): void {
     this.player = null;
     this.commentManager = null;
-    this.heatmapModule?.destroy();
+    this.heatmapModule?.detachFromPanel();
     this.heatmapModule = null;
     this.playbackHandler = null;
     this.volumeHandler = null;
@@ -416,16 +419,14 @@ export class MlinkVideoController extends BasePanel {
         );
       }
 
-      // 視聴ページの場合のみヒートマップを初期化
-      if (this.isWatchPage) {
-        this.initializeHeatmap();
-      }
-
       // 設定タブの初期化
       this.initializeSettingsTab();
 
       // 非Watchページでは動画専用機能を無効化してグレーアウト
       this.updateWatchOnlyAvailability();
+
+      // モジュール管理下で読み込まれている場合のみヒートマップをパネルへ接続
+      this.initializeHeatmap();
 
       // キー伝搬停止処理を設定
       this.setupKeyPropagationPrevention();
@@ -618,14 +619,26 @@ export class MlinkVideoController extends BasePanel {
   }
 
   private initializeHeatmap(): void {
-    if (!this.heatmapModule || !this.commentManager || !this.player) {
-      window.logger.warn(
-        "[MlinkVideoController] ヒートマップ、コメント、またはプレイヤーが初期化されていません",
+    if (!this.isWatchPage) {
+      this.heatmapModule?.detachFromPanel();
+      this.heatmapModule = null;
+      return;
+    }
+
+    const heatmapModule =
+      this.moduleManager.getLoadedModule<HeatmapModule>("heatmap");
+
+    if (!heatmapModule || !this.commentManager || !this.player) {
+      this.heatmapModule?.detachFromPanel();
+      this.heatmapModule = null;
+      window.logger?.debug(
+        "[MlinkVideoController] ヒートマップモジュールは未読み込み、または動画サービス未初期化です",
       );
       return;
     }
 
-    this.heatmapModule.attachToPanel({
+    this.heatmapModule = heatmapModule;
+    heatmapModule.attachToPanel({
       shadowRoot: this.shadow,
       player: this.player,
       commentManager: this.commentManager,
@@ -756,6 +769,7 @@ export class MlinkVideoController extends BasePanel {
     try {
       // モジュールマネージャーを初期化
       await this.moduleManager.initialize();
+      this.initializeHeatmap();
 
       // 🔧 修正: ModuleManager の初期化完了後に SettingsUI のモジュールリストを更新
       if (this.settingsUI && this.settingsUI.getInitializationStatus()) {
@@ -767,6 +781,30 @@ export class MlinkVideoController extends BasePanel {
         error,
       );
     }
+  }
+
+  private bindModuleEvents(): void {
+    if (this.moduleEventListener) {
+      return;
+    }
+
+    this.moduleEventListener = (event) => {
+      if (event.moduleId !== "heatmap") {
+        return;
+      }
+
+      if (event.type === "loaded" || event.type === "enabled") {
+        this.initializeHeatmap();
+        return;
+      }
+
+      if (event.type === "unloaded" || event.type === "disabled") {
+        this.heatmapModule?.detachFromPanel();
+        this.heatmapModule = null;
+      }
+    };
+
+    this.moduleManager.addEventListener(this.moduleEventListener);
   }
 
   /**
@@ -1092,6 +1130,11 @@ export class MlinkVideoController extends BasePanel {
     // クリーンアップ処理
     this.cleanup();
 
+    if (this.moduleEventListener) {
+      this.moduleManager.removeEventListener(this.moduleEventListener);
+      this.moduleEventListener = null;
+    }
+
     // 動画関連サービスのクリーンアップ
     if (this.player) {
       // プレイヤーのクリーンアップ（必要に応じて）
@@ -1104,6 +1147,7 @@ export class MlinkVideoController extends BasePanel {
     if (this.heatmapModule) {
       // ヒートマップモジュールのクリーンアップ
       this.heatmapModule.stopPeriodicUpdate();
+      this.heatmapModule.detachFromPanel();
       this.heatmapModule = null;
     }
 

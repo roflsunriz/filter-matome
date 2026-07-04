@@ -35,6 +35,25 @@ async function buildControllerBundle(): Promise<string> {
     loader: {
       ".svg": "text",
     },
+    plugins: [
+      {
+        name: "inline-css-query",
+        setup(build) {
+          build.onResolve({ filter: /\.css\?inline$/ }, (args) => ({
+            path: join(args.resolveDir, args.path.replace("?inline", "")),
+            namespace: "inline-css-query",
+          }));
+
+          build.onLoad(
+            { filter: /.*/, namespace: "inline-css-query" },
+            (args) => ({
+              contents: readFileSync(args.path, "utf8"),
+              loader: "text",
+            }),
+          );
+        },
+      },
+    ],
     alias: {
       "@": join(projectRoot, "src"),
     },
@@ -48,6 +67,8 @@ async function buildControllerBundle(): Promise<string> {
         export { VolumeTabController } from "./src/mlink-video-controller/tab-controllers/volume-tab";
         export { LinksTabController } from "./src/mlink-video-controller/tab-controllers/links-tab";
         export { CommentsTabController } from "./src/mlink-video-controller/tab-controllers/comments-tab";
+        export { ModuleManager } from "./src/mlink-video-controller/module-handlers/module-manager";
+        export { SettingsUI } from "./src/mlink-video-controller/module-handlers/settings-ui";
         export { normalizeModuleSettingsForRegistry } from "./src/mlink-video-controller/module-handlers/settings-normalizer";
       `,
     },
@@ -538,6 +559,159 @@ test("mlink-video-controller tab controllers handle every tab operation", async 
         ),
     )
     .toContain("コメントを検索してください");
+});
+
+test("heatmap settings modal opens from module settings and applies values", async ({
+  page,
+}) => {
+  await page.route("https://www.nicovideo.jp/watch/sm9", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: '<!doctype html><main><div id="host"></div></main>',
+    }),
+  );
+  await page.goto("https://www.nicovideo.jp/watch/sm9");
+  await page.addScriptTag({ content: await buildControllerBundle() });
+
+  const settingsHtml = extractTemplateBody(
+    readControllerFile("templates/settings.ts"),
+    "settingsTemplate",
+  );
+
+  await page.evaluate((html) => {
+    window.localStorage.clear();
+    window.logger = {
+      warn: () => {},
+      error: () => {},
+      info: () => {},
+      debug: () => {},
+    };
+    window.toastr = {
+      success: () => {},
+      error: () => {},
+      warning: () => {},
+      info: () => {},
+      clear: () => {},
+      remove: () => {},
+    };
+
+    const host = document.getElementById("host");
+    if (!host) throw new Error("host was not found");
+
+    const shadow = host.attachShadow({ mode: "open" });
+    shadow.innerHTML = html;
+
+    const { SettingsUI } = (
+      window as unknown as {
+        MlinkTabControllers: {
+          SettingsUI: {
+            getInstance: () => {
+              setShadowRoot: (shadowRoot: ShadowRoot) => void;
+              initialize: () => void;
+            };
+          };
+        };
+      }
+    ).MlinkTabControllers;
+
+    const settingsUi = SettingsUI.getInstance();
+    settingsUi.setShadowRoot(shadow);
+    settingsUi.initialize();
+  }, settingsHtml);
+
+  await page.locator("#host").evaluate((host) => {
+    host.shadowRoot
+      ?.querySelector<HTMLButtonElement>("#open-heatmap-settings")
+      ?.click();
+  });
+
+  await expect
+    .poll(() =>
+      page
+        .locator("#host")
+        .evaluate(
+          (host) =>
+            host.shadowRoot?.querySelector("#heatmap-settings-modal") !== null,
+        ),
+    )
+    .toBe(true);
+
+  await page.locator("#host").evaluate((host) => {
+    const root = host.shadowRoot;
+    root
+      ?.querySelector<HTMLButtonElement>(
+        '#heatmap-settings-modal .heatmap-mode-btn[data-mode="overlay"]',
+      )
+      ?.click();
+
+    const colorScheme = root?.querySelector<HTMLSelectElement>(
+      "#heatmap-settings-modal .heatmap-color-scheme",
+    );
+    if (colorScheme) {
+      colorScheme.value = "cool";
+      colorScheme.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    const smoothToggle = root?.querySelector<HTMLInputElement>(
+      "#heatmap-settings-modal .heatmap-smooth-toggle",
+    );
+    if (smoothToggle) {
+      smoothToggle.checked = true;
+      smoothToggle.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  });
+
+  expect(
+    await page.evaluate(() => localStorage.getItem("heatmapDisplayMode")),
+  ).toBe("overlay");
+  expect(
+    await page.evaluate(() => localStorage.getItem("heatmapColorScheme")),
+  ).toBe("cool");
+  expect(await page.evaluate(() => localStorage.getItem("heatmapSmoothing"))).toBe(
+    "true",
+  );
+
+  const moduleCalls = await page.locator("#host").evaluate((host) => {
+    const calls: string[] = [];
+    const { ModuleManager } = (
+      window as unknown as {
+        MlinkTabControllers: {
+          ModuleManager: {
+            getInstance: () => {
+              getLoadedModule: (moduleId: string) => unknown;
+            };
+          };
+        };
+      }
+    ).MlinkTabControllers;
+
+    const moduleManager = ModuleManager.getInstance();
+    moduleManager.getLoadedModule = (moduleId: string) => {
+      if (moduleId !== "heatmap") return null;
+      return {
+        getDisplayMode: () => "off",
+        getColorScheme: () => "default",
+        getSmoothing: () => false,
+        setColorScheme: (value: string) => calls.push(`color:${value}`),
+        setSmoothing: (value: boolean) => calls.push(`smooth:${value}`),
+        setDisplayMode: (value: string) => calls.push(`mode:${value}`),
+      };
+    };
+
+    host.shadowRoot?.querySelector("#heatmap-settings-modal")?.remove();
+    host.shadowRoot
+      ?.querySelector<HTMLButtonElement>("#open-heatmap-settings")
+      ?.click();
+    host.shadowRoot
+      ?.querySelector<HTMLButtonElement>(
+        '#heatmap-settings-modal .heatmap-mode-btn[data-mode="fab"]',
+      )
+      ?.click();
+
+    return calls;
+  });
+
+  expect(moduleCalls).toEqual(["color:default", "smooth:false", "mode:fab"]);
 });
 
 test("module settings import/export normalization drops legacy and unknown module ids", async ({
