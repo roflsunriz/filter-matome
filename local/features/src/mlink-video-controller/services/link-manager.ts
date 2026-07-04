@@ -1,6 +1,5 @@
 import { ExtendedNicoCache_nl } from "@/types/global-types";
 import { LinkData, ActionMap } from "@/types/mlink-video-controller-types";
-import { ThumbnailsFilterGlobal } from "@/types/thumbnails-filter-types";
 import { Mylist2Handler } from "@/mlink-video-controller/handlers/mylist2";
 import {
   handleVideoOperation,
@@ -43,12 +42,6 @@ export class LinkManager {
         title: "comment-filter2",
         icon: getIconPath("filter_list", "outlined"),
         action: "commentFilter2",
-      },
-      {
-        id: "watchVideoFilter",
-        title: "動画非表示設定",
-        icon: getIconPath("filter_list", "outlined"),
-        action: "watchVideoFilter",
       },
       {
         id: "watch-history",
@@ -351,28 +344,6 @@ export class LinkManager {
       ikioi: "https://ikioi-ranking.com/v/nico",
       cytube: "https://cytube.mm428.net/r/cookie_tv",
       yajuyaju: "https://yajuvideo.st/",
-      watchVideoFilter: () => {
-        try {
-          const globalThumbnailsFilter = (
-            window as Window & { ThumbnailsFilter?: ThumbnailsFilterGlobal }
-          ).ThumbnailsFilter;
-          if (
-            globalThumbnailsFilter &&
-            globalThumbnailsFilter.openSettingsPanel
-          ) {
-            globalThumbnailsFilter.openSettingsPanel();
-          } else {
-            window.logger.warn(
-              "ThumbnailsFilterが利用できません。先にThumbnailsFilterを読み込んでください。",
-            );
-          }
-        } catch (error) {
-          window.logger.error(
-            "ThumbnailsFilterの呼び出しに失敗しました:",
-            error,
-          );
-        }
-      },
       "watch-history": () => {
         window.open(
           `https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html`,

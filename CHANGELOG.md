@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【mlink-video-controller】サムネイルフィルターのキーワード追加・削除・一時停止を現在表示中の動画一覧へリアルタイム反映するよう変更。
 - 【mlink-video-controller】サムネイルフィルター設定パネルの検索欄と追加欄をラベル・背景色・プレースホルダーで区別しやすく変更。
 - 【mlink-video-controller】サムネイルフィルター設定パネル右側に、クリックして追加欄へ入力できるキーワード例を追加。
+- 【mlink-video-controller】`動画非表示設定`を関連リンクタブからサムネイルフィルターのモジュール設定ボタンへ移動。
 
 ### Removed
 - 【mlink-video-controller】`マイリストセレクタ`モジュールを廃止し、モジュール一覧と遅延読み込み対象から削除。

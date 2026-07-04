@@ -736,6 +736,17 @@ test("heatmap settings modal opens from module settings and applies values", asy
     ),
   ).toBe(true);
 
+  const settingsButtons = await page.locator("#host").evaluate((host) => ({
+    heatmap: host.shadowRoot?.querySelector("#open-heatmap-settings") !== null,
+    thumbnailsFilter:
+      host.shadowRoot?.querySelector("#open-thumbnails-filter-settings") !==
+      null,
+  }));
+  expect(settingsButtons).toEqual({
+    heatmap: true,
+    thumbnailsFilter: true,
+  });
+
   const metadataColumnLefts = await page.locator("#host").evaluate((host) => {
     const items = Array.from(
       host.shadowRoot?.querySelectorAll(".module-item") ?? [],

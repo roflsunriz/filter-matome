@@ -213,6 +213,10 @@ export class SettingsUI {
       this.addHeatmapSettingsButton(moduleItem);
     }
 
+    if (config.id === "thumbnails_filter") {
+      this.addThumbnailsFilterSettingsButton(moduleItem);
+    }
+
     return moduleItem;
   }
 
@@ -438,6 +442,43 @@ export class SettingsUI {
     });
 
     settingsSlot?.appendChild(button);
+  }
+
+  private addThumbnailsFilterSettingsButton(moduleItem: HTMLElement): void {
+    const settingsSlot = moduleItem.querySelector(".module-settings-slot");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "settings-btn module-settings-btn";
+    button.id = "open-thumbnails-filter-settings";
+    button.innerHTML = `${createMaterialIcon("settings", { style: "outlined", color: "white" })} 設定`;
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      void this.openThumbnailsFilterSettingsPanel();
+    });
+
+    settingsSlot?.appendChild(button);
+  }
+
+  private async openThumbnailsFilterSettingsPanel(): Promise<void> {
+    try {
+      if (!this.settingsManager.isModuleEnabled("thumbnails_filter")) {
+        await this.moduleManager.toggleModule("thumbnails_filter", true);
+      } else if (!this.moduleManager.getLoadedModule("thumbnails_filter")) {
+        await this.moduleManager.loadModule("thumbnails_filter");
+      }
+
+      window.ThumbnailsFilter?.openSettingsPanel();
+    } catch (error) {
+      window.logger.error(
+        "[SettingsUI] サムネイルフィルター設定を開けませんでした:",
+        error,
+      );
+      window.toastr?.error(
+        "サムネイルフィルター設定を開けませんでした",
+        "エラー",
+        { timeOut: 5000 },
+      );
+    }
   }
 
   private getLoadedHeatmapModule(): HeatmapModule | null {

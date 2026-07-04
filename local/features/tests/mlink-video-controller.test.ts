@@ -56,6 +56,10 @@ describe("mlink-video-controller structure", () => {
       expect(linksTemplate).toContain(`id="${subtab}"`);
     }
 
+    const linkManager = readControllerFile("services/link-manager.ts");
+    expect(linkManager).not.toContain("watchVideoFilter");
+    expect(linkManager).not.toContain("動画非表示設定");
+
     for (const selector of [
       "comment-search-input",
       "regex-toggle",
@@ -85,6 +89,7 @@ describe("mlink-video-controller structure", () => {
     expect(playbackTemplate).not.toContain("heatmap-mode-btn");
     expect(settingsUi).toContain("open-heatmap-settings");
     expect(settingsUi).toContain("heatmap-settings-modal");
+    expect(settingsUi).toContain("open-thumbnails-filter-settings");
     expect(hasModuleHeatmap).toBe(true);
   });
 
