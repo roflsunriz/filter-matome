@@ -6,8 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#228] - 2026-07-05
+
 ### Changed
+- 【features】`package.json` の `version` を `228` に更新。
+- 【README】latest バッジを `#228` に更新。
 - 【mlink-video-controller】ヒートマップの表示モード・詳細設定を、プレイバックタブからモジュール設定内の「コメントヒートマップ」設定ボタンへ移動。
+- 【mlink-video-controller】モジュール設定の各行を、左側のタイトル・説明・メタ情報と右端の設定ボタン・切り替えノブ列に整理。
+- 【mlink-video-controller】排他グループの表示を文字チップから行のアクセント表示へ変更し、レイアウトを圧迫しないように変更。
 
 ### Fixed
 - 【mlink-video-controller】コメントヒートマップがモジュールOFF中でも監視・表示更新を実行する問題を修正。
