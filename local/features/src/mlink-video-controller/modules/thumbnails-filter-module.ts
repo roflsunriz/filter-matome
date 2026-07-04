@@ -32,11 +32,13 @@ export const thumbnailsFilterModuleConfig: ModuleConfig = {
 // 設定管理クラス
 class HideVideoSettings {
   private storageKey: string;
+  private listeners: Set<() => void>;
   public tempDisabled: boolean;
   public keywords: Keyword[];
 
   constructor() {
     this.storageKey = "hideVideoKeywords";
+    this.listeners = new Set();
     this.tempDisabled = false;
     this.keywords = this.loadKeywords();
   }
@@ -61,6 +63,7 @@ class HideVideoSettings {
   saveKeywords(keywords: Keyword[]): void {
     this.keywords = [...keywords];
     localStorage.setItem(this.storageKey, JSON.stringify(this.keywords));
+    this.notifyChange();
   }
 
   addKeyword(keyword: Keyword): void {
@@ -75,6 +78,25 @@ class HideVideoSettings {
     const currentKeywords = this.loadKeywords();
     const newKeywords = currentKeywords.filter((k) => k !== keyword);
     this.saveKeywords(newKeywords);
+  }
+
+  reloadKeywords(): void {
+    this.keywords = this.loadKeywords();
+    this.notifyChange();
+  }
+
+  addChangeListener(listener: () => void): void {
+    this.listeners.add(listener);
+  }
+
+  removeChangeListener(listener: () => void): void {
+    this.listeners.delete(listener);
+  }
+
+  private notifyChange(): void {
+    this.listeners.forEach((listener) => {
+      listener();
+    });
   }
 
   isRegExp(keyword: Keyword): boolean {
@@ -147,6 +169,19 @@ class HideVideoUI {
   private pageType: PageType;
   private modalElement: HTMLElement | null = null;
   private styleElement: HTMLStyleElement | null = null;
+  private pendingCheckTimer: number | null = null;
+  private readonly keywordListUpdateHandler = (): void => {
+    this.settings.reloadKeywords();
+  };
+  private readonly settingsChangeHandler = (): void => {
+    this.updateKeywordList();
+    this.scheduleCheckVideos();
+  };
+  private readonly storageHandler = (event: StorageEvent): void => {
+    if (event.key === "hideVideoKeywords") {
+      this.settings.reloadKeywords();
+    }
+  };
 
   constructor(settings: HideVideoSettings) {
     this.settings = settings;
@@ -156,6 +191,8 @@ class HideVideoUI {
   }
 
   initialize(): void {
+    this.settings.addChangeListener(this.settingsChangeHandler);
+    window.addEventListener("storage", this.storageHandler);
     this.setupModal();
     this.updateKeywordList();
     this.setupObserver();
@@ -165,14 +202,20 @@ class HideVideoUI {
       this.setupSettingsButton();
     }, 100);
 
-    document.addEventListener("updateKeywordList", () => {
-      this.updateKeywordList();
-    });
+    document.addEventListener(
+      "updateKeywordList",
+      this.keywordListUpdateHandler,
+    );
 
     this.checkVideos(true);
   }
 
   destroy(): void {
+    if (this.pendingCheckTimer !== null) {
+      window.clearTimeout(this.pendingCheckTimer);
+      this.pendingCheckTimer = null;
+    }
+
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
@@ -192,9 +235,12 @@ class HideVideoUI {
     this.restoreAllVideos();
 
     // イベントリスナーを削除
-    document.removeEventListener("updateKeywordList", () => {
-      this.updateKeywordList();
-    });
+    document.removeEventListener(
+      "updateKeywordList",
+      this.keywordListUpdateHandler,
+    );
+    window.removeEventListener("storage", this.storageHandler);
+    this.settings.removeChangeListener(this.settingsChangeHandler);
   }
 
   private restoreAllVideos(): void {
@@ -219,13 +265,32 @@ class HideVideoUI {
               <span class="nvf-slider">フィルター一時停止</span>
             </label>
           </div>
-          <div class="nvf-search-box">
-            <input type="text" id="nvfKeywordSearch" placeholder="キーワードを検索">
-          </div>
-          <div id="nvfKeywordList" class="nvf-keyword-list"></div>
-          <div class="nvf-add-keyword-box">
-            <input type="text" id="nvfNewKeyword" placeholder="新しいキーワード（正規表現は /pattern/ 形式）">
-            <button id="nvfAddKeyword">追加</button>
+          <div class="nvf-settings-grid">
+            <div class="nvf-settings-main">
+              <div class="nvf-section nvf-search-section">
+                <label for="nvfKeywordSearch" class="nvf-field-label">登録済みキーワードを絞り込み</label>
+                <input type="search" id="nvfKeywordSearch" placeholder="一覧内を検索">
+              </div>
+              <div id="nvfKeywordList" class="nvf-keyword-list"></div>
+              <div class="nvf-section nvf-add-section">
+                <label for="nvfNewKeyword" class="nvf-field-label">非表示キーワードを追加</label>
+                <div class="nvf-add-keyword-box">
+                  <input type="text" id="nvfNewKeyword" placeholder="動画タイトルに含まれる語句、または /pattern/">
+                  <button id="nvfAddKeyword">追加</button>
+                </div>
+              </div>
+            </div>
+            <aside class="nvf-examples-panel" aria-label="追加例">
+              <h3>追加例</h3>
+              <div class="nvf-example-grid">
+                <button type="button" class="nvf-example-chip" data-keyword="切り抜き">切り抜き</button>
+                <button type="button" class="nvf-example-chip" data-keyword="転載">転載</button>
+                <button type="button" class="nvf-example-chip" data-keyword="ゆっくり解説">ゆっくり解説</button>
+                <button type="button" class="nvf-example-chip" data-keyword="/(shorts|ショート)/">/(shorts|ショート)/</button>
+                <button type="button" class="nvf-example-chip" data-keyword="/(ネタバレ|ラスボス)/">/(ネタバレ|ラスボス)/</button>
+                <button type="button" class="nvf-example-chip" data-keyword="/^PR[:：]/">/^PR[:：]/</button>
+              </div>
+            </aside>
           </div>
           <button id="nvfCloseModal">閉じる</button>
         </div>
@@ -251,10 +316,9 @@ class HideVideoUI {
         position: relative;
         background: rgba(32, 34, 37, 0.95);
         color: #ffffff;
-        margin: 15% auto;
+        margin: 10vh auto;
         padding: 20px;
-        width: 70%;
-        max-width: 500px;
+        width: min(92vw, 820px);
         border-radius: 8px;
         box-shadow: 0 0 20px rgba(0,0,0,0.5);
         border: 1px solid rgba(255,255,255,0.1);
@@ -278,10 +342,32 @@ class HideVideoUI {
         align-items: center;
         gap: 8px;
       }
-      .nvf-search-box {
+      .nvf-settings-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+        gap: 14px;
+        align-items: start;
+      }
+      .nvf-settings-main {
+        min-width: 0;
+      }
+      .nvf-section {
         margin-bottom: 15px;
       }
-      .nvf-search-box input {
+      .nvf-field-label {
+        display: block;
+        margin-bottom: 6px;
+        color: #d7dde8;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .nvf-search-section {
+        padding: 10px;
+        background: rgba(33, 150, 243, 0.08);
+        border: 1px solid rgba(33, 150, 243, 0.25);
+        border-radius: 5px;
+      }
+      .nvf-search-section input {
         width: 100%;
         padding: 8px;
         border: 1px solid rgba(255,255,255,0.3);
@@ -289,6 +375,44 @@ class HideVideoUI {
         background: rgba(255,255,255,0.1);
         color: white;
         box-sizing: border-box;
+      }
+      .nvf-add-section {
+        padding: 10px;
+        background: rgba(76, 175, 80, 0.08);
+        border: 1px solid rgba(76, 175, 80, 0.28);
+        border-radius: 5px;
+      }
+      .nvf-examples-panel {
+        padding: 10px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.16);
+        border-radius: 5px;
+      }
+      .nvf-examples-panel h3 {
+        margin: 0 0 10px 0;
+        color: #d7dde8;
+        font-size: 14px;
+      }
+      .nvf-example-grid {
+        display: grid;
+        gap: 8px;
+      }
+      .nvf-example-chip {
+        width: 100%;
+        min-height: 32px;
+        padding: 6px 8px;
+        background: rgba(255,255,255,0.08);
+        color: #ffffff;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 4px;
+        cursor: pointer;
+        text-align: left;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+      .nvf-example-chip:hover {
+        background: rgba(76, 175, 80, 0.18);
+        border-color: rgba(76, 175, 80, 0.45);
       }
       .nvf-keyword-list {
         max-height: 200px;
@@ -365,6 +489,19 @@ class HideVideoUI {
       [data-nvf-hidden="true"] {
         display: none !important;
       }
+      @media (max-width: 720px) {
+        .nvf-modal-content {
+          margin: 5vh auto;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+        .nvf-status-info,
+        .nvf-settings-grid,
+        .nvf-add-keyword-box {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+      }
     `;
     document.head.appendChild(this.styleElement);
 
@@ -384,6 +521,13 @@ class HideVideoUI {
   getVideoElements(): NodeListOf<Element> {
     const selector = NICOVIDEO_SELECTORS.VIDEO_ELEMENTS[this.pageType];
     return document.querySelectorAll(selector);
+  }
+
+  private getTargetElement(element: Element): Element {
+    const parentSelector = NICOVIDEO_SELECTORS.PARENT_ELEMENTS[this.pageType];
+    return parentSelector
+      ? element.closest(parentSelector) || element
+      : element;
   }
 
   getTitleFromElement(element: Element): string {
@@ -410,10 +554,7 @@ class HideVideoUI {
   }
 
   hideElement(element: Element): void {
-    const parentSelector = NICOVIDEO_SELECTORS.PARENT_ELEMENTS[this.pageType];
-    const targetElement = parentSelector
-      ? element.closest(parentSelector) || element
-      : element;
+    const targetElement = this.getTargetElement(element);
 
     targetElement.setAttribute("data-nvf-hidden", "true");
 
@@ -430,10 +571,7 @@ class HideVideoUI {
   }
 
   showElement(element: Element): void {
-    const parentSelector = NICOVIDEO_SELECTORS.PARENT_ELEMENTS[this.pageType];
-    const targetElement = parentSelector
-      ? element.closest(parentSelector) || element
-      : element;
+    const targetElement = this.getTargetElement(element);
 
     targetElement.removeAttribute("data-nvf-hidden");
 
@@ -476,7 +614,7 @@ class HideVideoUI {
       });
 
       if (shouldCheck) {
-        setTimeout(() => this.checkVideos(), 100);
+        this.scheduleCheckVideos(100);
       }
     });
 
@@ -512,7 +650,7 @@ class HideVideoUI {
       button.addEventListener("click", () => {
         this.settings.tempDisabled = !this.settings.tempDisabled;
         button.style.opacity = this.settings.tempDisabled ? "0.5" : "1";
-        this.checkVideos();
+        this.checkVideos(false, { notify: false });
       });
 
       toggleContainer.appendChild(button);
@@ -526,7 +664,21 @@ class HideVideoUI {
     }
   }
 
-  checkVideos(isInitial = false): void {
+  private scheduleCheckVideos(delay = 0): void {
+    if (this.pendingCheckTimer !== null) {
+      window.clearTimeout(this.pendingCheckTimer);
+    }
+
+    this.pendingCheckTimer = window.setTimeout(() => {
+      this.pendingCheckTimer = null;
+      this.checkVideos();
+    }, delay);
+  }
+
+  checkVideos(isInitial = false, options: { notify?: boolean } = {}): void {
+    const shouldNotify = options.notify ?? true;
+    this.pageType = this.detectPageType();
+
     if (this.settings.tempDisabled) {
       document
         .querySelectorAll('[data-nvf-hidden="true"]')
@@ -543,68 +695,62 @@ class HideVideoUI {
     const previousCount = this.hiddenCount;
 
     if (keywords.length === 0) {
+      this.restoreAllVideos();
       this.hiddenCount = 0;
       this.updateHiddenCount();
       return;
     }
 
-    setTimeout(() => {
-      const updates: UpdateItem[] = [];
-      let newHiddenCount = 0;
+    const updates: UpdateItem[] = [];
+    let newHiddenCount = 0;
 
-      videos.forEach((video) => {
-        const title = this.getTitleFromElement(video);
-        const shouldHide = this.shouldHideVideo(title);
-        const isCurrentlyHidden = video.hasAttribute("data-nvf-hidden");
+    videos.forEach((video) => {
+      const title = this.getTitleFromElement(video);
+      const shouldHide = this.shouldHideVideo(title);
+      const isCurrentlyHidden =
+        this.getTargetElement(video).hasAttribute("data-nvf-hidden");
 
+      if (shouldHide || isCurrentlyHidden) {
         updates.push({ video, hide: shouldHide });
-
-        if (shouldHide && !isCurrentlyHidden) {
-          newHiddenCount++;
-        } else if (shouldHide && isCurrentlyHidden) {
-          newHiddenCount++;
-        }
-      });
-
-      this.hiddenCount = newHiddenCount;
-
-      updates.forEach(({ video, hide }) => {
-        if (hide) {
-          this.hideElement(video);
-        } else {
-          this.showElement(video);
-        }
-      });
-      this.updateHiddenCount();
-
-      if (!isInitial && this.hiddenCount !== previousCount) {
-        const matchedKeywords = keywords.filter((keyword) =>
-          Array.from(videos).some((video) =>
-            this.settings.matchKeyword(
-              this.getTitleFromElement(video),
-              keyword,
-            ),
-          ),
-        );
-
-        const message = `${this.hiddenCount}件の動画を非表示にしました！`;
-
-        const subtitle =
-          matchedKeywords.length > 0
-            ? `マッチしたキーワード: ${matchedKeywords.slice(0, 3).join(", ")}${
-                matchedKeywords.length > 3 ? " など" : ""
-              }`
-            : "";
-
-        if (typeof window !== "undefined" && "toastr" in window) {
-          const toastr = window.toastr;
-          toastr.info(message, "動画フィルター", {
-            timeOut: 3000,
-            extendedTimeOut: subtitle ? 1000 : 0,
-          });
-        }
+        newHiddenCount += shouldHide ? 1 : 0;
       }
     });
+
+    this.hiddenCount = newHiddenCount;
+
+    updates.forEach(({ video, hide }) => {
+      if (hide) {
+        this.hideElement(video);
+      } else {
+        this.showElement(video);
+      }
+    });
+    this.updateHiddenCount();
+
+    if (!isInitial && shouldNotify && this.hiddenCount !== previousCount) {
+      const matchedKeywords = keywords.filter((keyword) =>
+        Array.from(videos).some((video) =>
+          this.settings.matchKeyword(this.getTitleFromElement(video), keyword),
+        ),
+      );
+
+      const message = `${this.hiddenCount}件の動画を非表示にしました！`;
+
+      const subtitle =
+        matchedKeywords.length > 0
+          ? `マッチしたキーワード: ${matchedKeywords.slice(0, 3).join(", ")}${
+              matchedKeywords.length > 3 ? " など" : ""
+            }`
+          : "";
+
+      if (typeof window !== "undefined" && "toastr" in window) {
+        const toastr = window.toastr;
+        toastr.info(message, "動画フィルター", {
+          timeOut: 3000,
+          extendedTimeOut: subtitle ? 1000 : 0,
+        });
+      }
+    }
   }
 
   shouldHideVideo(title: string): boolean {
@@ -649,19 +795,42 @@ class HideVideoUI {
           if (keyword) {
             this.settings.addKeyword(keyword);
             input.value = "";
-            this.updateKeywordList();
-            this.checkVideos();
           }
         }
       });
     }
+
+    const newKeywordInput = document.getElementById(
+      "nvfNewKeyword",
+    ) as HTMLInputElement | null;
+    if (newKeywordInput) {
+      newKeywordInput.addEventListener("keydown", (event) => {
+        event.stopPropagation();
+        if (event.key === "Enter") {
+          event.preventDefault();
+          addKeywordButton?.dispatchEvent(new MouseEvent("click"));
+        }
+      });
+    }
+
+    document.querySelectorAll(".nvf-example-chip").forEach((button) => {
+      button.addEventListener("click", () => {
+        const input = document.getElementById(
+          "nvfNewKeyword",
+        ) as HTMLInputElement | null;
+        if (input && button instanceof HTMLElement) {
+          input.value = button.dataset.keyword || "";
+          input.focus();
+        }
+      });
+    });
 
     const toggleFilterInput = document.getElementById("nvfToggleFilter");
     if (toggleFilterInput) {
       toggleFilterInput.addEventListener("change", (e) => {
         if (e.target instanceof HTMLInputElement) {
           this.settings.tempDisabled = e.target.checked;
-          this.checkVideos();
+          this.checkVideos(false, { notify: false });
         }
       });
     }
@@ -694,10 +863,9 @@ class HideVideoUI {
     if (settingsButton) {
       settingsButton.addEventListener("click", () => {
         const modal = document.getElementById("nvfHideVideoModal");
-        this.settings.keywords = this.settings.loadKeywords();
+        this.settings.reloadKeywords();
         if (modal) {
           modal.style.display = "block";
-          this.updateKeywordList();
         }
       });
     }
@@ -729,8 +897,6 @@ class HideVideoUI {
       if (deleteButton) {
         deleteButton.addEventListener("click", () => {
           this.settings.removeKeyword(keyword);
-          this.updateKeywordList();
-          this.checkVideos();
         });
       }
 
@@ -745,10 +911,16 @@ class HideVideoUI {
   public openSettingsPanel(): void {
     const modal = document.getElementById("nvfHideVideoModal");
     if (modal) {
-      this.settings.keywords = this.settings.loadKeywords();
+      this.settings.reloadKeywords();
       modal.style.display = "block";
-      this.updateKeywordList();
     }
+  }
+
+  public handleSPANavigate(): void {
+    this.pageType = this.detectPageType();
+    this.restoreAllVideos();
+    this.setupToggleButton();
+    this.scheduleCheckVideos();
   }
 }
 
@@ -807,6 +979,11 @@ export class ThumbnailsFilterModule implements ModuleInstance {
     }
 
     this._isActive = false;
+  }
+
+  async onSPANavigate(): Promise<void> {
+    await Promise.resolve();
+    this.ui?.handleSPANavigate();
   }
 
   isActive(): boolean {

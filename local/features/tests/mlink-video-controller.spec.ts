@@ -70,6 +70,7 @@ async function buildControllerBundle(): Promise<string> {
         export { ModuleManager } from "./src/mlink-video-controller/module-handlers/module-manager";
         export { SettingsUI } from "./src/mlink-video-controller/module-handlers/settings-ui";
         export { normalizeModuleSettingsForRegistry } from "./src/mlink-video-controller/module-handlers/settings-normalizer";
+        export { ThumbnailsFilterModule, thumbnailsFilterModuleConfig } from "./src/mlink-video-controller/modules/thumbnails-filter-module";
       `,
     },
   });
@@ -559,6 +560,76 @@ test("mlink-video-controller tab controllers handle every tab operation", async 
         ),
     )
     .toContain("コメントを検索してください");
+});
+
+test("thumbnails filter applies keyword changes immediately", async ({
+  page,
+}) => {
+  await page.route("**/*", async (route) => {
+    await route.fulfill({
+      contentType: "text/html",
+      body: `
+        <html>
+          <body>
+            <div class="item" data-video-item>
+              <div class="itemTitle"><a>normal video</a></div>
+            </div>
+            <div class="item" data-video-item>
+              <div class="itemTitle"><a>hide-target video</a></div>
+            </div>
+          </body>
+        </html>
+      `,
+    });
+  });
+  await page.goto("https://www.nicovideo.jp/search/test");
+  await page.addScriptTag({ content: await buildControllerBundle() });
+
+  await page.evaluate(async () => {
+    window.logger = {
+      warn: () => {},
+      error: () => {},
+      info: () => {},
+      debug: () => {},
+    };
+    window.toastr = {
+      info: () => {},
+      success: () => {},
+      warning: () => {},
+      error: () => {},
+    };
+    localStorage.setItem("hideVideoKeywords", JSON.stringify([]));
+
+    const exports = (
+      window as unknown as {
+        MlinkTabControllers: {
+          ThumbnailsFilterModule: new (config: unknown) => {
+            initialize(): Promise<void>;
+          };
+          thumbnailsFilterModuleConfig: unknown;
+        };
+      }
+    ).MlinkTabControllers;
+    const module = new exports.ThumbnailsFilterModule(
+      exports.thumbnailsFilterModuleConfig,
+    );
+    await module.initialize();
+    window.ThumbnailsFilter?.openSettingsPanel();
+  });
+
+  const hiddenItem = page
+    .locator(".item[data-video-item]")
+    .filter({ hasText: "hide-target video" });
+
+  await expect(hiddenItem).not.toHaveAttribute("data-nvf-hidden", "true");
+  await expect(page.locator("#nvfHideVideoModal")).toBeVisible();
+
+  await page.locator("#nvfNewKeyword").fill("hide-target");
+  await page.locator("#nvfAddKeyword").click();
+  await expect(hiddenItem).toHaveAttribute("data-nvf-hidden", "true");
+
+  await page.locator('.delete-keyword[data-keyword="hide-target"]').click();
+  await expect(hiddenItem).not.toHaveAttribute("data-nvf-hidden", "true");
 });
 
 test("heatmap settings modal opens from module settings and applies values", async ({
