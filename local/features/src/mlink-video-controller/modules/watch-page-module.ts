@@ -32,6 +32,8 @@ export class WatchPageModule implements ModuleInstance {
   // タグカウンター用のMutationObserver
   private tagObserver: MutationObserver | null = null;
   private updateTagCounterDebounced: (() => void) | null = null;
+  private readonly tagLinkSelector =
+    'a[data-anchor-area="tags"][data-anchor-href^="/tag/"], a[data-anchor-area="tags"][href*="/tag/"], a[href^="/tag/"], a[href^="https://www.nicovideo.jp/tag/"]';
 
   // ページ遷移監視用
   private pageObserver: MutationObserver | null = null;
@@ -305,11 +307,18 @@ export class WatchPageModule implements ModuleInstance {
 
     const videoID = videoIDMatch[0];
 
-    // 再試行機能付きでタグカウンター設置（タグ数は動的に取得）
-    await this.retryTagCounter({ videoID });
-
-    // タグの変更を監視するObserverを設定
+    // FirefoxではタグDOM構築が初期リトライ範囲を外れる場合があるため、
+    // 先に監視を開始して後続のDOM変化でも挿入できるようにする。
     this.setupTagObserver();
+
+    try {
+      await this.retryTagCounter({ videoID });
+    } catch (error) {
+      window.logger.warn(
+        "[WatchPageModule] タグカウンター初期挿入は遅延復帰待ちに切り替えます:",
+        error,
+      );
+    }
   }
 
   /**
@@ -351,11 +360,8 @@ export class WatchPageModule implements ModuleInstance {
       const retryInterval = 700;
 
       const attempt = (): void => {
-        const element = document.getElementsByClassName(
-          "pos_relative d_flex flex-wrap_wrap gap_base",
-        )[0];
+        const element = this.findTagContainer();
 
-        // タグ数を動的に取得（より具体的なセレクターを使用）
         const tagLength = this.getTagCount();
 
         if (
@@ -381,34 +387,95 @@ export class WatchPageModule implements ModuleInstance {
    * タグ数を取得する
    */
   private getTagCount(): number {
-    // 方法1: APIデータから取得（最も確実）
+    const tagContainer = this.findTagContainer();
+    if (tagContainer) {
+      const tagElements = this.getTagLinks(tagContainer);
+      if (tagElements.length > 0) {
+        return tagElements.length;
+      }
+    }
+
+    // DOM構築前はAPIデータをフォールバックにする
     const tagItems = window.NicoCache_nl?.watch?.apiData?.tag?.items;
     if (Array.isArray(tagItems)) {
       return tagItems.length;
     }
 
-    // 方法2: DOM解析（フォールバック）
-    // タグ要素は <a data-anchor-area="tags" data-anchor-href="/tag/..."> という構造
-    const tagContainer = document.querySelector(
-      ".pos_relative.d_flex.flex-wrap_wrap.gap_base",
-    );
-    if (!tagContainer) {
-      return 0;
+    return 0;
+  }
+
+  /**
+   * タグ一覧コンテナを取得する
+   */
+  private findTagContainer(): Element | null {
+    const existingCounter = document.getElementById("TagItemsCounter");
+    if (existingCounter?.parentElement) {
+      return existingCounter.parentElement;
     }
 
-    // タグへのリンク要素を取得（data-anchor-href が /tag/ で始まる要素）
-    const tagElements = tagContainer.querySelectorAll(
-      'a[data-anchor-area="tags"][data-anchor-href^="/tag/"]',
+    const tagLinks = Array.from(
+      document.querySelectorAll(this.tagLinkSelector),
     );
+    const candidates = new Map<Element, number>();
 
-    return tagElements.length;
+    tagLinks.forEach((tagLink) => {
+      let current = tagLink.parentElement;
+      for (let depth = 0; current && depth < 5; depth++) {
+        const count = this.getTagLinks(current).length;
+        if (count > 0 && count <= 11) {
+          candidates.set(
+            current,
+            Math.max(candidates.get(current) ?? 0, count),
+          );
+        }
+        current = current.parentElement;
+      }
+    });
+
+    let bestCandidate: Element | null = null;
+    let bestCount = 0;
+    candidates.forEach((count, candidate) => {
+      if (count > bestCount) {
+        bestCandidate = candidate;
+        bestCount = count;
+      }
+    });
+
+    return bestCandidate;
+  }
+
+  /**
+   * タグリンクだけを取得する
+   */
+  private getTagLinks(container: ParentNode): HTMLAnchorElement[] {
+    return Array.from(container.querySelectorAll(this.tagLinkSelector)).filter(
+      (element): element is HTMLAnchorElement =>
+        element instanceof HTMLAnchorElement &&
+        element.id !== "TagItemsCounter" &&
+        element.id !== "TagItemsShareButton" &&
+        this.isWatchTagLink(element),
+    );
+  }
+
+  /**
+   * 視聴ページのタグリンクかどうか判定する
+   */
+  private isWatchTagLink(element: HTMLAnchorElement): boolean {
+    const dataHref = element.getAttribute("data-anchor-href") ?? "";
+    const href = element.getAttribute("href") ?? "";
+    const absoluteTagPrefix = "https://www.nicovideo.jp/tag/";
+    return (
+      dataHref.startsWith("/tag/") ||
+      href.startsWith("/tag/") ||
+      href.startsWith(absoluteTagPrefix)
+    );
   }
 
   /**
    * タグカウンター挿入
    */
   private insertTagCounter(option: {
-    element?: Element;
+    element: Element | null;
     videoID: string;
     tagLength: number;
   }): boolean {
@@ -546,14 +613,16 @@ export class WatchPageModule implements ModuleInstance {
           const addedNodes = Array.from(mutation.addedNodes);
           const removedNodes = Array.from(mutation.removedNodes);
 
-          // タグ要素（d_inline-flexクラス）の変更をチェック
           const hasTagChanges = [...addedNodes, ...removedNodes].some(
             (node) => {
               if (node.nodeType === Node.ELEMENT_NODE) {
                 const element = node as Element;
                 return (
-                  element.classList?.contains("d_inline-flex") ||
-                  element.querySelector?.(".d_inline-flex")
+                  this.isTagCounterMutationTarget(element) ||
+                  element.querySelector?.(this.tagLinkSelector) !== null ||
+                  element.querySelector?.(
+                    "#TagItemsCounter, #TagItemsShareButton",
+                  ) !== null
                 );
               }
               return false;
@@ -572,9 +641,7 @@ export class WatchPageModule implements ModuleInstance {
     });
 
     // タグコンテナを監視対象に設定
-    const tagContainer = document.querySelector(
-      ".pos_relative.d_flex.flex-wrap_wrap.gap_base",
-    );
+    const tagContainer = this.findTagContainer();
     if (tagContainer) {
       this.tagObserver.observe(tagContainer, {
         childList: true,
@@ -593,8 +660,21 @@ export class WatchPageModule implements ModuleInstance {
    * タグカウンター表示を更新
    */
   private updateTagCounterDisplay(): void {
+    if (!this.isWatchPage()) return;
+
     const tagCounter = document.getElementById("TagItemsCounter");
-    if (!tagCounter) return;
+    const shareButton = document.getElementById("TagItemsShareButton");
+    if (!tagCounter || !shareButton) {
+      const videoId = this.getCurrentVideoId();
+      if (!videoId) return;
+
+      this.insertTagCounter({
+        element: this.findTagContainer(),
+        videoID: videoId,
+        tagLength: this.getTagCount(),
+      });
+      return;
+    }
 
     const currentTagCount = this.getTagCount();
     const tagCounterLabel = tagCounter.querySelector("span");
@@ -605,6 +685,17 @@ export class WatchPageModule implements ModuleInstance {
 
     // 共有ボタンの情報も更新（動画情報が変わった場合に備えて）
     this.updateShareButtonInfo();
+  }
+
+  /**
+   * タグカウンター更新対象のDOM変更かどうか判定する
+   */
+  private isTagCounterMutationTarget(element: Element): boolean {
+    return (
+      element.matches(this.tagLinkSelector) ||
+      element.id === "TagItemsCounter" ||
+      element.id === "TagItemsShareButton"
+    );
   }
 
   /**
