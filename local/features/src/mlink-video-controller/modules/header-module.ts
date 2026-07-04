@@ -7,6 +7,11 @@ import {
 } from "@/types/module-types";
 import { createMaterialIcon } from "@/common/material-icons";
 
+export interface HeaderPrivacySettings {
+  hideIcon: boolean;
+  hideName: boolean;
+}
+
 export const headerModuleConfig: ModuleConfig = {
   id: "header_privacy",
   name: "ヘッダープライバシー",
@@ -28,7 +33,9 @@ export class HeaderModule implements ModuleInstance {
   private observer: MutationObserver | null = null;
   private pendingFrameId: number | null = null;
   private active: boolean = false;
+  private settings: HeaderPrivacySettings = HeaderModule.loadSettings();
 
+  private static readonly storageKey = "headerPrivacySettings";
   private static readonly hiddenAttribute = "data-header-module-hidden";
   private static readonly commonHeaderClassPrefix = "common-header-";
   private static readonly headerSelector =
@@ -50,8 +57,9 @@ export class HeaderModule implements ModuleInstance {
   async initialize(): Promise<void> {
     try {
       await Promise.resolve();
+      this.settings = HeaderModule.loadSettings();
       this.active = true;
-      this.hideUserElements(document);
+      this.applySettings();
       this.startObserver();
     } catch (error) {
       window.logger.error("[HeaderModule] 初期化に失敗しました:", error);
@@ -151,8 +159,57 @@ export class HeaderModule implements ModuleInstance {
 
     this.pendingFrameId = window.requestAnimationFrame(() => {
       this.pendingFrameId = null;
-      this.hideUserElements(document);
+      this.applySettings();
     });
+  }
+
+  public getSettings(): HeaderPrivacySettings {
+    return { ...this.settings };
+  }
+
+  public updateSettings(settings: HeaderPrivacySettings): void {
+    this.settings = { ...settings };
+    HeaderModule.saveSettings(this.settings);
+    if (this.active) {
+      this.applySettings();
+    }
+  }
+
+  public static loadSettings(): HeaderPrivacySettings {
+    try {
+      const saved = localStorage.getItem(HeaderModule.storageKey);
+      if (!saved) {
+        return { hideIcon: true, hideName: true };
+      }
+
+      const parsed = JSON.parse(saved) as unknown;
+      if (!parsed || typeof parsed !== "object") {
+        return { hideIcon: true, hideName: true };
+      }
+
+      const values = parsed as Partial<HeaderPrivacySettings>;
+      return {
+        hideIcon: typeof values.hideIcon === "boolean" ? values.hideIcon : true,
+        hideName: typeof values.hideName === "boolean" ? values.hideName : true,
+      };
+    } catch (error) {
+      window.logger?.error(
+        "[HeaderModule] 設定の読み込みに失敗しました:",
+        error,
+      );
+      return { hideIcon: true, hideName: true };
+    }
+  }
+
+  public static saveSettings(settings: HeaderPrivacySettings): void {
+    localStorage.setItem(HeaderModule.storageKey, JSON.stringify(settings));
+  }
+
+  private applySettings(): void {
+    this.restoreUserElements();
+    if (this.settings.hideIcon || this.settings.hideName) {
+      this.hideUserElements(document);
+    }
   }
 
   /**
@@ -237,6 +294,13 @@ export class HeaderModule implements ModuleInstance {
    * 非表示対象のユーザーアイコン・ユーザー名要素か判定
    */
   private matchesUserElement(element: Element): boolean {
+    return (
+      this.matchesUserIconElement(element) ||
+      this.matchesUserNameElement(element)
+    );
+  }
+
+  private matchesUserIconElement(element: Element): boolean {
     if (!(element instanceof HTMLElement)) {
       return false;
     }
@@ -254,12 +318,29 @@ export class HeaderModule implements ModuleInstance {
 
     return (
       element.classList.contains("common-header-w2sn95") ||
-      element.classList.contains("common-header-n0qa7l") ||
       this.hasClassNamePart(element, "userIcon") ||
-      this.hasClassNamePart(element, "UserIcon") ||
+      this.hasClassNamePart(element, "UserIcon")
+    );
+  }
+
+  private matchesUserNameElement(element: Element): boolean {
+    if (!(element instanceof HTMLElement)) {
+      return false;
+    }
+
+    if (!this.isInHeader(element) && !this.hasCommonHeaderClass(element)) {
+      return false;
+    }
+
+    return (
+      element.classList.contains("common-header-n0qa7l") ||
       this.hasClassNamePart(element, "userName") ||
       this.hasClassNamePart(element, "UserName") ||
-      element.classList.contains("UserDetailsContainer_name")
+      element.classList.contains("UserDetailsContainer_name") ||
+      (this.hasCommonHeaderClass(element) &&
+        element.textContent !== null &&
+        element.textContent.trim().length > 0 &&
+        element.querySelector("img") === null)
     );
   }
 
@@ -295,6 +376,14 @@ export class HeaderModule implements ModuleInstance {
    * 要素を非表示にする
    */
   private hideElement(element: HTMLElement): void {
+    const shouldHide =
+      (this.settings.hideIcon && this.matchesUserIconElement(element)) ||
+      (this.settings.hideName && this.matchesUserNameElement(element));
+
+    if (!shouldHide) {
+      return;
+    }
+
     if (element.style.display === "none") {
       return;
     }

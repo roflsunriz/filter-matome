@@ -13,6 +13,10 @@ import { createMaterialIcon } from "@/common/material-icons";
 import { BackgroundImageItem } from "@/types/background-image-types";
 import type { HeatmapModule } from "@/mlink-video-controller/modules/heatmap-module";
 import type {
+  HeaderModule,
+  HeaderPrivacySettings,
+} from "@/mlink-video-controller/modules/header-module";
+import type {
   HeatmapColorScheme,
   HeatmapDisplayMode,
 } from "@/mlink-video-controller/managers/heatmap";
@@ -33,6 +37,7 @@ const HEATMAP_COLOR_SCHEMES: HeatmapColorScheme[] = [
   "fire",
   "cool",
 ];
+const HEADER_PRIVACY_STORAGE_KEY = "headerPrivacySettings";
 
 /**
  * 設定UIを管理するクラス
@@ -211,6 +216,10 @@ export class SettingsUI {
 
     if (config.id === "heatmap") {
       this.addHeatmapSettingsButton(moduleItem);
+    }
+
+    if (config.id === "header_privacy") {
+      this.addHeaderPrivacySettingsButton(moduleItem);
     }
 
     if (config.id === "thumbnails_filter") {
@@ -442,6 +451,171 @@ export class SettingsUI {
     });
 
     settingsSlot?.appendChild(button);
+  }
+
+  private addHeaderPrivacySettingsButton(moduleItem: HTMLElement): void {
+    const settingsSlot = moduleItem.querySelector(".module-settings-slot");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "settings-btn module-settings-btn";
+    button.id = "open-header-privacy-settings";
+    button.innerHTML = `${createMaterialIcon("settings", { style: "outlined", color: "white" })} 設定`;
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      void this.openHeaderPrivacySettingsPanel();
+    });
+
+    settingsSlot?.appendChild(button);
+  }
+
+  private async openHeaderPrivacySettingsPanel(): Promise<void> {
+    try {
+      if (!this.settingsManager.isModuleEnabled("header_privacy")) {
+        await this.moduleManager.toggleModule("header_privacy", true);
+      } else if (!this.moduleManager.getLoadedModule("header_privacy")) {
+        await this.moduleManager.loadModule("header_privacy");
+      }
+
+      this.createHeaderPrivacySettingsModal();
+    } catch (error) {
+      window.logger.error(
+        "[SettingsUI] ヘッダープライバシー設定を開けませんでした:",
+        error,
+      );
+      window.toastr?.error(
+        "ヘッダープライバシー設定を開けませんでした",
+        "エラー",
+        { timeOut: 5000 },
+      );
+    }
+  }
+
+  private getLoadedHeaderModule(): HeaderModule | null {
+    return this.moduleManager.getLoadedModule<HeaderModule>("header_privacy");
+  }
+
+  private getStoredHeaderPrivacySettings(): HeaderPrivacySettings {
+    try {
+      const saved = localStorage.getItem(HEADER_PRIVACY_STORAGE_KEY);
+      if (!saved) {
+        return { hideIcon: true, hideName: true };
+      }
+
+      const parsed = JSON.parse(saved) as Partial<HeaderPrivacySettings>;
+      return {
+        hideIcon: typeof parsed.hideIcon === "boolean" ? parsed.hideIcon : true,
+        hideName: typeof parsed.hideName === "boolean" ? parsed.hideName : true,
+      };
+    } catch (error) {
+      window.logger.error(
+        "[SettingsUI] ヘッダープライバシー設定の読み込みに失敗:",
+        error,
+      );
+      return { hideIcon: true, hideName: true };
+    }
+  }
+
+  private saveHeaderPrivacySettings(settings: HeaderPrivacySettings): void {
+    localStorage.setItem(HEADER_PRIVACY_STORAGE_KEY, JSON.stringify(settings));
+  }
+
+  private createHeaderPrivacySettingsModal(): void {
+    if (!this.shadowRoot) return;
+
+    const existingModal = this.shadowRoot.getElementById(
+      "header-privacy-settings-modal",
+    );
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    const headerModule = this.getLoadedHeaderModule();
+    const settings =
+      headerModule?.getSettings() ?? this.getStoredHeaderPrivacySettings();
+
+    const modal = document.createElement("div");
+    modal.id = "header-privacy-settings-modal";
+    modal.className = "modal-overlay";
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>${createMaterialIcon("lock", { style: "outlined", color: "white" })} ヘッダープライバシー設定</h3>
+          <button class="close-modal-btn">×</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="settings-section">
+            <h4>非表示にする項目</h4>
+            <div class="heatmap-setting-group">
+              <input type="checkbox" class="header-privacy-toggle" id="header-privacy-hide-icon" data-setting="hideIcon">
+              <label for="header-privacy-hide-icon">ユーザーアイコン</label>
+            </div>
+            <div class="heatmap-setting-group">
+              <input type="checkbox" class="header-privacy-toggle" id="header-privacy-hide-name" data-setting="hideName">
+              <label for="header-privacy-hide-name">ユーザー名</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="modal-btn secondary" id="close-header-privacy-modal">閉じる</button>
+        </div>
+      </div>
+    `;
+
+    this.shadowRoot.appendChild(modal);
+    this.setupHeaderPrivacyModalEventListeners(modal, settings);
+  }
+
+  private setupHeaderPrivacyModalEventListeners(
+    modal: HTMLElement,
+    initialSettings: HeaderPrivacySettings,
+  ): void {
+    const closeModal = () => {
+      modal.remove();
+    };
+
+    modal
+      .querySelectorAll(".close-modal-btn, #close-header-privacy-modal")
+      .forEach((button) => {
+        button.addEventListener("click", closeModal);
+      });
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        closeModal();
+      }
+    });
+
+    modal.addEventListener("keydown", (event) => {
+      event.stopPropagation();
+    });
+
+    const iconToggle = modal.querySelector<HTMLInputElement>(
+      "#header-privacy-hide-icon",
+    );
+    const nameToggle = modal.querySelector<HTMLInputElement>(
+      "#header-privacy-hide-name",
+    );
+
+    if (!iconToggle || !nameToggle) {
+      return;
+    }
+
+    iconToggle.checked = initialSettings.hideIcon;
+    nameToggle.checked = initialSettings.hideName;
+
+    const applySettings = () => {
+      const settings: HeaderPrivacySettings = {
+        hideIcon: iconToggle.checked,
+        hideName: nameToggle.checked,
+      };
+      this.saveHeaderPrivacySettings(settings);
+      this.getLoadedHeaderModule()?.updateSettings(settings);
+    };
+
+    iconToggle.addEventListener("change", applySettings);
+    nameToggle.addEventListener("change", applySettings);
   }
 
   private addThumbnailsFilterSettingsButton(moduleItem: HTMLElement): void {

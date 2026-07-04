@@ -209,7 +209,7 @@ UI更新
 - **編集タイミング**: フィルタポリシー調整、対象キー変更、互換性検証が必要なとき
 
 #### その他モジュール
-- `header-module.ts` - ヘッダープライバシー機能。ヘッダーDOMの変化を `MutationObserver` で監視し、常時ポーリングせずにユーザーアイコン・ユーザー名を非表示化
+- `header-module.ts` - ヘッダープライバシー機能。ヘッダーDOMの変化を `MutationObserver` で監視し、常時ポーリングせずにユーザーアイコン・ユーザー名を個別に非表示化。モジュール設定の設定ボタンからアイコン・名前の非表示をリアルタイムに切り替え可能
 - `nico-info-page-module.ts` - ニコニ広告お知らせページ機能
 - `watch-matrix-background-module.ts` - マトリックス背景
 - `watch-tab-sessions-module.ts` - タブセッション読み取りフィルタ

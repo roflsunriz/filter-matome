@@ -88,6 +88,7 @@ describe("mlink-video-controller structure", () => {
     expect(playbackTemplate).toContain("heatmap-canvas");
     expect(playbackTemplate).not.toContain("heatmap-mode-btn");
     expect(settingsUi).toContain("open-heatmap-settings");
+    expect(settingsUi).toContain("open-header-privacy-settings");
     expect(settingsUi).toContain("heatmap-settings-modal");
     expect(settingsUi).toContain("open-thumbnails-filter-settings");
     expect(hasModuleHeatmap).toBe(true);

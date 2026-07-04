@@ -71,6 +71,7 @@ async function buildControllerBundle(): Promise<string> {
         export { SettingsUI } from "./src/mlink-video-controller/module-handlers/settings-ui";
         export { normalizeModuleSettingsForRegistry } from "./src/mlink-video-controller/module-handlers/settings-normalizer";
         export { ThumbnailsFilterModule, thumbnailsFilterModuleConfig } from "./src/mlink-video-controller/modules/thumbnails-filter-module";
+        export { HeaderModule, headerModuleConfig } from "./src/mlink-video-controller/modules/header-module";
       `,
     },
   });
@@ -632,6 +633,84 @@ test("thumbnails filter applies keyword changes immediately", async ({
   await expect(hiddenItem).not.toHaveAttribute("data-nvf-hidden", "true");
 });
 
+test("header privacy toggles icon and name immediately", async ({ page }) => {
+  await page.route("https://www.nicovideo.jp/header-privacy-test", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `
+        <header id="CommonHeader">
+          <img class="UserIcon" src="https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/123/123.jpg" alt="ユーザーアイコン">
+          <span class="UserName">account-name</span>
+        </header>
+      `,
+    }),
+  );
+  await page.goto("https://www.nicovideo.jp/header-privacy-test");
+  await page.addScriptTag({ content: await buildControllerBundle() });
+
+  await page.evaluate(async () => {
+    window.logger = {
+      warn: () => {},
+      error: () => {},
+      info: () => {},
+      debug: () => {},
+    };
+    localStorage.removeItem("headerPrivacySettings");
+
+    const exports = (
+      window as unknown as {
+        MlinkTabControllers: {
+          HeaderModule: new (config: unknown) => {
+            initialize(): Promise<void>;
+            updateSettings(settings: {
+              hideIcon: boolean;
+              hideName: boolean;
+            }): void;
+          };
+          headerModuleConfig: unknown;
+        };
+      }
+    ).MlinkTabControllers;
+    const module = new exports.HeaderModule(exports.headerModuleConfig);
+    await module.initialize();
+    (window as unknown as { headerModule: typeof module }).headerModule =
+      module;
+  });
+
+  await expect(page.locator(".UserIcon")).toHaveCSS("display", "none");
+  await expect(page.locator(".UserName")).toHaveCSS("display", "none");
+
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        headerModule: {
+          updateSettings(settings: {
+            hideIcon: boolean;
+            hideName: boolean;
+          }): void;
+        };
+      }
+    ).headerModule.updateSettings({ hideIcon: false, hideName: true });
+  });
+  await expect(page.locator(".UserIcon")).not.toHaveCSS("display", "none");
+  await expect(page.locator(".UserName")).toHaveCSS("display", "none");
+
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        headerModule: {
+          updateSettings(settings: {
+            hideIcon: boolean;
+            hideName: boolean;
+          }): void;
+        };
+      }
+    ).headerModule.updateSettings({ hideIcon: false, hideName: false });
+  });
+  await expect(page.locator(".UserIcon")).not.toHaveCSS("display", "none");
+  await expect(page.locator(".UserName")).not.toHaveCSS("display", "none");
+});
+
 test("heatmap settings modal opens from module settings and applies values", async ({
   page,
 }) => {
@@ -737,12 +816,15 @@ test("heatmap settings modal opens from module settings and applies values", asy
   ).toBe(true);
 
   const settingsButtons = await page.locator("#host").evaluate((host) => ({
+    headerPrivacy:
+      host.shadowRoot?.querySelector("#open-header-privacy-settings") !== null,
     heatmap: host.shadowRoot?.querySelector("#open-heatmap-settings") !== null,
     thumbnailsFilter:
       host.shadowRoot?.querySelector("#open-thumbnails-filter-settings") !==
       null,
   }));
   expect(settingsButtons).toEqual({
+    headerPrivacy: true,
     heatmap: true,
     thumbnailsFilter: true,
   });
