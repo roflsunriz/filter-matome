@@ -118,7 +118,6 @@ export class CommentsTabController {
       e.stopPropagation();
 
       const preventDefaultKeys = [
-        " ",
         "ArrowLeft",
         "ArrowRight",
         "ArrowUp",

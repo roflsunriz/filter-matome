@@ -956,7 +956,6 @@ export class MlinkVideoController extends BasePanel {
 
     // 特殊キー（常に無効化すべきキー）
     const specialKeys = [
-      " ",
       "ArrowLeft",
       "ArrowRight",
       "ArrowUp",

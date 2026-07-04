@@ -426,6 +426,29 @@ test("mlink-video-controller tab controllers handle every tab operation", async 
   });
 
   await page.locator("#host").evaluate((host) => {
+    const input = host.shadowRoot?.querySelector<HTMLInputElement>(
+      ".comment-search-input",
+    );
+    if (input) {
+      input.value = "";
+      input.focus();
+    }
+  });
+  await page.keyboard.press("Space");
+  await expect
+    .poll(() =>
+      page
+        .locator("#host")
+        .evaluate(
+          (host) =>
+            host.shadowRoot?.querySelector<HTMLInputElement>(
+              ".comment-search-input",
+            )?.value,
+        ),
+    )
+    .toBe(" ");
+
+  await page.locator("#host").evaluate((host) => {
     const root = host.shadowRoot;
     const input = root?.querySelector<HTMLInputElement>(
       ".comment-search-input",
