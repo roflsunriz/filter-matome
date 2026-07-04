@@ -5,7 +5,6 @@ import { watchPageModuleConfig } from "@/mlink-video-controller/modules/watch-pa
 import { watchBackgroundSelectorModuleConfig } from "@/mlink-video-controller/modules/watch-background-selector-module";
 import { watchMatrixBackgroundModuleConfig } from "@/mlink-video-controller/modules/watch-matrix-background-module";
 import { watchHarajukuModuleConfig } from "@/mlink-video-controller/modules/watch-harajuku-module";
-import { watchMylistSelectorModuleConfig } from "@/mlink-video-controller/modules/watch-mylist-selector-module";
 import { watchTabSessionsModuleConfig } from "@/mlink-video-controller/modules/watch-tab-sessions-module";
 import { thumbnailsFilterModuleConfig } from "@/mlink-video-controller/modules/thumbnails-filter-module";
 import { heatmapModuleConfig } from "@/mlink-video-controller/modules/heatmap-module";
@@ -39,7 +38,6 @@ export class ModuleRegistry {
       watchBackgroundSelectorModuleConfig,
       watchMatrixBackgroundModuleConfig,
       watchHarajukuModuleConfig,
-      watchMylistSelectorModuleConfig,
       watchTabSessionsModuleConfig,
       thumbnailsFilterModuleConfig,
       heatmapModuleConfig,

@@ -31,7 +31,6 @@ features/src/mlink-video-controller/
 │   ├── watch-harajuku-module.ts          # 原宿風Watch表示 (新規)
 │   ├── watch-harajuku-style.css          # 原宿風Watch表示CSS (新規)
 │   ├── watch-matrix-background-module.ts # マトリックス背景 (7.2KB)
-│   ├── watch-mylist-selector-module.ts   # マイリストセレクタ (6.1KB)
 │   ├── watch-tab-sessions-module.ts      # タブセッション拡張 (12KB)
 │   └── watch-page-module.ts              # Watchページ統合 (26KB)
 ├── panels/
@@ -213,7 +212,6 @@ UI更新
 - `header-module.ts` - ヘッダープライバシー機能。ヘッダーDOMの変化を `MutationObserver` で監視し、常時ポーリングせずにユーザーアイコン・ユーザー名を非表示化
 - `nico-info-page-module.ts` - ニコニ広告お知らせページ機能
 - `watch-matrix-background-module.ts` - マトリックス背景
-- `watch-mylist-selector-module.ts` - マイリストセレクタ
 - `watch-tab-sessions-module.ts` - タブセッション読み取りフィルタ
 
 ### 🔌 **サービス層**

@@ -501,13 +501,6 @@ export class ModuleManager {
           break;
         }
 
-        case "watch_mylist_selector": {
-          const { WatchMylistSelectorModule } =
-            await import("../modules/watch-mylist-selector-module");
-          instance = new WatchMylistSelectorModule(config);
-          break;
-        }
-
         case "watch_tab_sessions": {
           const { WatchTabSessionsModule } =
             await import("../modules/watch-tab-sessions-module");
