@@ -56,9 +56,8 @@ export class ModuleRegistry {
     this.registerModule({
       id: "watch_page",
       name: "Watch Page統合",
-      description:
-        "Watch Pageの各種機能を統合管理（タグカウンター、ヘッダー一行化）",
-      version: "1.2.0",
+      description: "Watch Pageにタグカウンターを表示します",
+      version: "2.0.0",
       enabled: false,
       targetPages: [PageType.WATCH],
       dependencies: [],

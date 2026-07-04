@@ -4,13 +4,12 @@ import {
   PageType,
   ModuleCategory,
   ModuleStatus,
-  WatchPageSubModule,
 } from "@/types/module-types";
 import { createMaterialIcon } from "@/common/material-icons";
 
 /**
  * Watch Page統合モジュール
- * 複数のサブモジュールを管理する親モジュール
+ * タグカウンターを管理するモジュール
  */
 export class WatchPageModule implements ModuleInstance {
   public readonly config: ModuleConfig = {
@@ -25,9 +24,8 @@ export class WatchPageModule implements ModuleInstance {
     icon: createMaterialIcon("movie", { style: "outlined", color: "white" }),
   };
 
-  private subModules: Map<string, WatchPageSubModule> = new Map();
   private isInitialized: boolean = false;
-  private readonly SETTINGS_KEY = "watch_page_module_settings";
+  private readonly LEGACY_SETTINGS_KEY = "watch_page_module_settings";
 
   // タグカウンター用のMutationObserver
   private tagObserver: MutationObserver | null = null;
@@ -40,45 +38,15 @@ export class WatchPageModule implements ModuleInstance {
   private currentVideoId: string | null = null;
   private pageTransitionDebounced: (() => void) | null = null;
 
-  // デフォルト設定
-  private readonly defaultSettings = {
-    tag_counter: true,
-  };
-
   constructor() {
-    this.initializeSubModules();
+    localStorage.removeItem(this.LEGACY_SETTINGS_KEY);
+
     // グローバルからアクセス可能にする（デバッグ用）
     (
       window as Window & {
         watchPageModule?: WatchPageModule;
-        watchPageControls?: ReturnType<WatchPageModule["getHelperFunctions"]>;
       }
     ).watchPageModule = this;
-    (
-      window as Window & {
-        watchPageModule?: WatchPageModule;
-        watchPageControls?: ReturnType<WatchPageModule["getHelperFunctions"]>;
-      }
-    ).watchPageControls = this.getHelperFunctions();
-  }
-
-  /**
-   * サブモジュールの初期化
-   */
-  private initializeSubModules(): void {
-    // 保存された設定を読み込む
-    const savedSettings = this.loadSettings();
-
-    // タグカウンターサブモジュール
-    this.subModules.set("tag_counter", {
-      id: "tag_counter",
-      name: "タグカウンター",
-      description: "タグ個数表示と共有機能",
-      enabled: savedSettings.tag_counter,
-      initialize: this.initializeTagCounter.bind(this),
-      destroy: this.destroyTagCounter.bind(this),
-      isActive: () => !!document.getElementById("TagItemsCounter"),
-    });
   }
 
   /**
@@ -96,19 +64,7 @@ export class WatchPageModule implements ModuleInstance {
       // ページ遷移監視を開始
       this.setupPageObserver();
 
-      // 有効なサブモジュールを順次初期化
-      for (const [, subModule] of this.subModules) {
-        if (subModule.enabled) {
-          try {
-            await subModule.initialize();
-          } catch (error) {
-            window.logger.error(
-              `[WatchPageModule] ${subModule.name} 初期化失敗:`,
-              error,
-            );
-          }
-        }
-      }
+      await this.initializeTagCounter();
 
       this.isInitialized = true;
     } catch (error) {
@@ -132,19 +88,7 @@ export class WatchPageModule implements ModuleInstance {
     // デバウンス関数をクリア
     this.pageTransitionDebounced = null;
 
-    // 全サブモジュールを破棄
-    for (const [, subModule] of this.subModules) {
-      try {
-        if (subModule.isActive()) {
-          subModule.destroy();
-        }
-      } catch (error) {
-        window.logger.error(
-          `[WatchPageModule] ${subModule.name} 破棄失敗:`,
-          error,
-        );
-      }
-    }
+    this.destroyTagCounter();
 
     this.isInitialized = false;
   }
@@ -168,41 +112,9 @@ export class WatchPageModule implements ModuleInstance {
       return ModuleStatus.INACTIVE;
     }
 
-    const hasActiveSubModules = Array.from(this.subModules.values()).some(
-      (sub) => sub.enabled && sub.isActive(),
-    );
-
-    return hasActiveSubModules ? ModuleStatus.ACTIVE : ModuleStatus.INACTIVE;
-  }
-
-  /**
-   * サブモジュールの有効/無効切り替え
-   */
-  async toggleSubModule(subModuleId: string, enabled: boolean): Promise<void> {
-    const subModule = this.subModules.get(subModuleId);
-    if (!subModule) {
-      throw new Error(`サブモジュール '${subModuleId}' が見つかりません`);
-    }
-
-    subModule.enabled = enabled;
-
-    // 設定を保存
-    this.saveSettings();
-
-    if (this.isInitialized && this.isWatchPage()) {
-      if (enabled && !subModule.isActive()) {
-        await subModule.initialize();
-      } else if (!enabled && subModule.isActive()) {
-        subModule.destroy();
-      }
-    }
-  }
-
-  /**
-   * サブモジュール一覧取得
-   */
-  getSubModules(): WatchPageSubModule[] {
-    return Array.from(this.subModules.values());
+    return document.getElementById("TagItemsCounter")
+      ? ModuleStatus.ACTIVE
+      : ModuleStatus.INACTIVE;
   }
 
   /**
@@ -211,85 +123,6 @@ export class WatchPageModule implements ModuleInstance {
   private isWatchPage(): boolean {
     return /\/watch\//.test(window.location.pathname);
   }
-
-  // ===== 設定管理 =====
-
-  /**
-   * 設定を読み込む
-   */
-  private loadSettings(): typeof this.defaultSettings {
-    try {
-      const savedSettings = localStorage.getItem(this.SETTINGS_KEY);
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings) as Partial<
-          typeof this.defaultSettings
-        >;
-        // デフォルト設定とマージして、新しい設定項目に対応
-        return { ...this.defaultSettings, ...parsed };
-      }
-    } catch (error) {
-      window.logger.error("[WatchPageModule] 設定読み込みエラー:", error);
-    }
-    return { ...this.defaultSettings };
-  }
-
-  /**
-   * 設定を保存する
-   */
-  private saveSettings(): void {
-    try {
-      const settings: Record<string, boolean> = {};
-      for (const [id, subModule] of this.subModules) {
-        settings[id] = subModule.enabled;
-      }
-      localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(settings));
-    } catch (error) {
-      window.logger.error("[WatchPageModule] 設定保存エラー:", error);
-    }
-  }
-
-  /**
-   * 設定をリセットする
-   */
-  public resetSettings(): void {
-    localStorage.removeItem(this.SETTINGS_KEY);
-
-    // サブモジュールの設定をデフォルトに戻す
-    for (const [id, subModule] of this.subModules) {
-      const defaultEnabled =
-        this.defaultSettings[id as keyof typeof this.defaultSettings] ?? true;
-      subModule.enabled = defaultEnabled;
-    }
-  }
-
-  /**
-   * コンソールから使用するヘルパー関数群
-   */
-  public getHelperFunctions() {
-    return {
-      // サブモジュールを無効化
-      disable: async (subModuleId: string) => {
-        await this.toggleSubModule(subModuleId, false);
-      },
-
-      // サブモジュールを有効化
-      enable: async (subModuleId: string) => {
-        await this.toggleSubModule(subModuleId, true);
-      },
-
-      // 設定をリセット
-      reset: () => this.resetSettings(),
-
-      // 利用可能なサブモジュール一覧
-      list: () => {
-        this.getSubModules().forEach((sub) => {
-          window.logger.info(`${sub.id}: ${sub.enabled ? "有効" : "無効"}`);
-        });
-      },
-    };
-  }
-
-  // ===== サブモジュール実装 =====
 
   /**
    * タグカウンター初期化
@@ -346,9 +179,6 @@ export class WatchPageModule implements ModuleInstance {
     // デバウンス関数をクリア
     this.updateTagCounterDebounced = null;
   }
-
-  // 背景セレクター機能は独立モジュールに移行済み
-  // ヘッダー一行化機能は削除されました（SPA遷移時のエラーのため）
 
   /**
    * タグカウンター再試行機能
@@ -779,26 +609,22 @@ export class WatchPageModule implements ModuleInstance {
   private handlePageTransition(): void {
     window.logger.info("[WatchPageModule] ページ遷移を検知しました");
 
-    // タグカウンターサブモジュールが有効な場合は再初期化
-    const tagCounterModule = this.subModules.get("tag_counter");
-    if (tagCounterModule?.enabled) {
-      // 即座に古い要素を削除
-      this.destroyTagCounter();
+    // 即座に古い要素を削除
+    this.destroyTagCounter();
 
-      setTimeout(async () => {
-        try {
-          // 念のため再度削除を実行
-          this.destroyTagCounter();
-          // 新しいページで再初期化
-          await this.initializeTagCounter();
-        } catch (error) {
-          window.logger.error(
-            "[WatchPageModule] ページ遷移時のタグカウンター再初期化失敗:",
-            error,
-          );
-        }
-      }, 500); // 少し遅延させてDOMの更新を待つ
-    }
+    setTimeout(async () => {
+      try {
+        // 念のため再度削除を実行
+        this.destroyTagCounter();
+        // 新しいページで再初期化
+        await this.initializeTagCounter();
+      } catch (error) {
+        window.logger.error(
+          "[WatchPageModule] ページ遷移時のタグカウンター再初期化失敗:",
+          error,
+        );
+      }
+    }, 500); // 少し遅延させてDOMの更新を待つ
   }
 
   /**

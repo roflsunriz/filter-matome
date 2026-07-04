@@ -108,16 +108,3 @@ export interface ModuleListItemProps {
   status: ModuleStatus;
   onToggle: (enabled: boolean) => void;
 }
-
-/**
- * Watch Page サブモジュールの型定義
- */
-export interface WatchPageSubModule {
-  id: string;
-  name: string;
-  description: string;
-  enabled: boolean;
-  initialize(): Promise<void>;
-  destroy(): void;
-  isActive(): boolean;
-}

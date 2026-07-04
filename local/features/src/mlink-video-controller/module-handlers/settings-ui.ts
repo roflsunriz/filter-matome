@@ -7,7 +7,6 @@ import {
   ModuleStatus,
   PageType,
 } from "@/types/module-types";
-import { WatchPageModule } from "@/mlink-video-controller/modules/watch-page-module";
 import { BackgroundImageSettings } from "@/mlink-video-controller/modules/background-image-settings";
 // import { ToastrInstance } from '@/types/toastr-types';
 import { createMaterialIcon } from "@/common/material-icons";
@@ -83,11 +82,6 @@ export class SettingsUI {
         // モジュールの読み込み/アンロード時にUIを更新
         if (event.type === "loaded" || event.type === "unloaded") {
           this.updateModuleStatus(event.moduleId);
-
-          // WatchPageModuleの場合、サブモジュールも更新
-          if (event.moduleId === "watch_page") {
-            this.refreshWatchPageSubModules();
-          }
         }
 
         // 🆕 排他グループ対応: enabled/disabled イベント時にトグルスイッチを同期
@@ -122,11 +116,6 @@ export class SettingsUI {
         modules.forEach((config) => {
           const moduleElement = this.createModuleElement(config);
           container.appendChild(moduleElement);
-
-          // WatchPageModuleの場合、サブモジュールも追加
-          if (config.id === "watch_page") {
-            this.renderWatchPageSubModules(container);
-          }
         });
 
         // ビジュアルカテゴリに背景画像設定ボタンを追加
@@ -139,41 +128,6 @@ export class SettingsUI {
         );
       }
     });
-  }
-
-  /**
-   * WatchPageModuleのサブモジュールをレンダリング
-   */
-  private renderWatchPageSubModules(container: HTMLElement): void {
-    const watchPageModule = this.moduleManager
-      .getLoadedModulesMap()
-      .get("watch_page") as WatchPageModule;
-
-    if (watchPageModule) {
-      const subModules = watchPageModule.getSubModules();
-
-      // サブモジュールコンテナを作成
-      const subContainer = document.createElement("div");
-      subContainer.className = "sub-modules-container";
-      subContainer.innerHTML = `
-        <div class="sub-modules-header">
-          <h6>${createMaterialIcon("movie", { style: "outlined", color: "white" })} Watch Page サブモジュール</h6>
-          <span class="sub-modules-description">個別に有効/無効を切り替えできます</span>
-        </div>
-        <div class="sub-modules-list"></div>
-      `;
-
-      const subList = subContainer.querySelector(
-        ".sub-modules-list",
-      ) as HTMLElement;
-
-      subModules.forEach((subModule) => {
-        const subElement = this.createSubModuleElement(subModule);
-        subList.appendChild(subElement);
-      });
-
-      container.appendChild(subContainer);
-    }
   }
 
   /**
@@ -256,39 +210,6 @@ export class SettingsUI {
   }
 
   /**
-   * サブモジュール要素を作成
-   */
-  private createSubModuleElement(subModule: {
-    id: string;
-    name: string;
-    description: string;
-    enabled: boolean;
-    isActive: () => boolean;
-  }): HTMLElement {
-    const element = document.createElement("div");
-    element.className = "sub-module-item";
-    element.setAttribute("data-sub-module-id", subModule.id);
-
-    element.innerHTML = `
-      <div class="sub-module-info">
-        <div class="sub-module-details">
-          <h6 class="sub-module-name">${subModule.name}</h6>
-          <p class="sub-module-description">${subModule.description}</p>
-          <div class="sub-module-status ${subModule.isActive() ? "active" : "inactive"}">
-            ${subModule.isActive() ? "🟢 アクティブ" : "🔴 非アクティブ"}
-          </div>
-        </div>
-      </div>
-      <label class="toggle-switch sub-toggle">
-        <input type="checkbox" class="sub-module-toggle" ${subModule.enabled ? "checked" : ""}>
-        <span class="slider"></span>
-      </label>
-    `;
-
-    return element;
-  }
-
-  /**
    * イベントリスナーを設定
    */
   private setupEventListeners(): void {
@@ -307,11 +228,8 @@ export class SettingsUI {
 
       if (target.classList.contains("module-toggle")) {
         void this.handleModuleToggle(target);
-      } else if (target.classList.contains("sub-module-toggle")) {
-        void this.handleSubModuleToggle(target);
       }
     });
-
   }
 
   private bindButtonClick(
@@ -350,11 +268,6 @@ export class SettingsUI {
 
       // ステータス更新
       this.updateModuleStatus(moduleId);
-
-      // WatchPageModuleの場合、サブモジュール表示を更新
-      if (moduleId === "watch_page") {
-        this.refreshWatchPageSubModules();
-      }
     } catch (error) {
       window.logger.error(
         `[SettingsUI] モジュール ${moduleId} の切り替えに失敗:`,
@@ -367,44 +280,6 @@ export class SettingsUI {
       // エラー通知
       window.toastr?.error(
         `モジュール ${moduleId} の切り替えに失敗しました`,
-        "エラー",
-        { timeOut: 5000 },
-      );
-    }
-  }
-
-  /**
-   * サブモジュールトグルを処理
-   */
-  private async handleSubModuleToggle(toggle: HTMLInputElement): Promise<void> {
-    const subModuleItem = toggle.closest(".sub-module-item") as HTMLElement;
-    const subModuleId = subModuleItem.getAttribute("data-sub-module-id");
-
-    if (!subModuleId) return;
-
-    try {
-      const watchPageModule = this.moduleManager
-        .getLoadedModulesMap()
-        .get("watch_page") as WatchPageModule;
-
-      if (watchPageModule) {
-        await watchPageModule.toggleSubModule(subModuleId, toggle.checked);
-
-        // ステータス更新
-        this.updateSubModuleStatus(subModuleId);
-      }
-    } catch (error) {
-      window.logger.error(
-        `[SettingsUI] サブモジュール ${subModuleId} の切り替えに失敗:`,
-        error,
-      );
-
-      // エラー時はトグルを元に戻す
-      toggle.checked = !toggle.checked;
-
-      // エラー通知
-      window.toastr?.error(
-        `サブモジュール ${subModuleId} の切り替えに失敗しました`,
         "エラー",
         { timeOut: 5000 },
       );
@@ -514,60 +389,6 @@ export class SettingsUI {
       ) as HTMLInputElement;
       if (toggle && toggle.checked !== enabled) {
         toggle.checked = enabled;
-      }
-    }
-  }
-
-  /**
-   * サブモジュールステータスを更新
-   */
-  private updateSubModuleStatus(subModuleId: string): void {
-    if (!this.shadowRoot) return;
-
-    const subModuleItem = this.shadowRoot.querySelector(
-      `[data-sub-module-id="${subModuleId}"]`,
-    );
-    if (subModuleItem) {
-      const watchPageModule = this.moduleManager
-        .getLoadedModulesMap()
-        .get("watch_page") as WatchPageModule;
-      if (watchPageModule) {
-        const subModule = watchPageModule
-          .getSubModules()
-          .find((sub) => sub.id === subModuleId);
-        if (subModule) {
-          const status = subModuleItem.querySelector(
-            ".sub-module-status",
-          ) as HTMLElement;
-          const isActive = subModule.isActive();
-          status.textContent = isActive ? "🟢 アクティブ" : "🔴 非アクティブ";
-          status.className = `sub-module-status ${isActive ? "active" : "inactive"}`;
-        }
-      }
-    }
-  }
-
-  /**
-   * WatchPageサブモジュール表示を更新
-   */
-  private refreshWatchPageSubModules(): void {
-    if (!this.shadowRoot) return;
-
-    const functionalityContainer = this.shadowRoot.getElementById(
-      "functionality-modules",
-    );
-    if (functionalityContainer) {
-      // 既存のサブモジュールコンテナを削除
-      const existingSubContainer = functionalityContainer.querySelector(
-        ".sub-modules-container",
-      );
-      if (existingSubContainer) {
-        existingSubContainer.remove();
-      }
-
-      // WatchPageModuleが有効な場合のみサブモジュールを表示
-      if (this.settingsManager.isModuleEnabled("watch_page")) {
-        this.renderWatchPageSubModules(functionalityContainer);
       }
     }
   }

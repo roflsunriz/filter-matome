@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- 【mlink-video-controller】Watch Page統合をタグカウンター単機能として扱うよう整理し、説明文を更新。
+
+### Removed
+- 【mlink-video-controller】Watch Page統合のサブモジュール設定UIと個別有効/無効設定を削除。
+
 ### Fixed
 - 【mlink-video-controller】Watch Page統合のタグカウンターが、Firefoxで初期挿入に失敗する場合や公式DOMの再描画で削除された後に復帰しない場合がある問題を修正。
 
