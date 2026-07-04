@@ -101,7 +101,10 @@ export class LazyImageLoader {
 
     if (this.loadedSrcs.has(src)) {
       img.src = src;
-      img.classList.remove(this.config.placeholderClass, this.config.errorClass);
+      img.classList.remove(
+        this.config.placeholderClass,
+        this.config.errorClass,
+      );
       img.classList.add(this.config.loadedClass);
       img.removeAttribute("data-src");
       return true;
@@ -109,7 +112,10 @@ export class LazyImageLoader {
 
     if (this.failedSrcs.has(src)) {
       img.src = this.config.fallbackSrc;
-      img.classList.remove(this.config.placeholderClass, this.config.loadedClass);
+      img.classList.remove(
+        this.config.placeholderClass,
+        this.config.loadedClass,
+      );
       img.classList.add(this.config.errorClass);
       img.removeAttribute("data-src");
       return true;
@@ -125,7 +131,7 @@ export class LazyImageLoader {
     const images = container.querySelectorAll(
       "img[data-src], img.thumbnail-image:not(.lazy-loaded)",
     );
-    
+
     for (const element of Array.from(images)) {
       if (element instanceof HTMLImageElement) {
         this.observe(element);
@@ -195,10 +201,8 @@ export class LazyImageLoader {
    * コンテナ内の全画像を即座に読み込む
    */
   public loadAllInContainer(container: HTMLElement): void {
-    const images = container.querySelectorAll(
-      "img[data-src]",
-    );
-    
+    const images = container.querySelectorAll("img[data-src]");
+
     for (const element of Array.from(images)) {
       if (element instanceof HTMLImageElement) {
         this.loadImmediate(element);
@@ -223,4 +227,3 @@ export function destroyLazyImageLoader(): void {
     lazyImageLoaderInstance = null;
   }
 }
-

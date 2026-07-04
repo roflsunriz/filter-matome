@@ -162,7 +162,10 @@ export class GoogleDriveService {
               const expiresInSec =
                 typeof resp.expires_in === "number" ? resp.expires_in : 3600;
               this.accessTokenExpireAt = Date.now() + expiresInSec * 1000;
-              this.persistAccessToken(this.accessToken, this.accessTokenExpireAt);
+              this.persistAccessToken(
+                this.accessToken,
+                this.accessTokenExpireAt,
+              );
               resolve(resp.access_token);
               return;
             }

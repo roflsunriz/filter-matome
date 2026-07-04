@@ -86,4 +86,3 @@ export interface RegexAnalysisOptions {
   /** 警告を生成するワイルドカードの連続数（デフォルト: 3） */
   wildcardThreshold?: number;
 }
-

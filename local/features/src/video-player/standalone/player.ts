@@ -485,7 +485,9 @@ export class StandalonePlayer {
         settleError(
           error instanceof Error
             ? error
-            : new Error(`動画ソースの実再生プローブに失敗しました: ${String(error)}`),
+            : new Error(
+                `動画ソースの実再生プローブに失敗しました: ${String(error)}`,
+              ),
         );
       });
 
@@ -928,22 +930,14 @@ export class StandalonePlayer {
     // play イベントハンドラー
 
     this.playEventHandler = (): void => {
-
       if (this.hasEnded && this.enableComments) {
-
         window.logger.info(
-
           "再生終了後の再生再開時は comment-overlay の自動ハードリセット機構に委譲します",
-
         );
 
         this.hasEnded = false;
-
       }
-
     };
-
-
 
     this.videoElement.addEventListener("ended", this.endedEventHandler);
     this.videoElement.addEventListener("play", this.playEventHandler);
@@ -962,10 +956,7 @@ export class StandalonePlayer {
       this.handleFullscreenChange();
     };
 
-    document.addEventListener(
-      "fullscreenchange",
-      this.fullscreenChangeHandler,
-    );
+    document.addEventListener("fullscreenchange", this.fullscreenChangeHandler);
     document.addEventListener(
       "webkitfullscreenchange",
       this.fullscreenChangeHandler,
@@ -992,8 +983,6 @@ export class StandalonePlayer {
     }
   }
 
-
-
   /**
    * 全画面切り替え時の処理
    */
@@ -1008,9 +997,7 @@ export class StandalonePlayer {
         .msFullscreenElement
     );
 
-    window.logger.info(
-      `全画面モード: ${isFullscreen ? "有効" : "無効"}`,
-    );
+    window.logger.info(`全画面モード: ${isFullscreen ? "有効" : "無効"}`);
 
     this.scheduleFullscreenLayoutRefresh();
 
@@ -1040,9 +1027,8 @@ export class StandalonePlayer {
     }
 
     // コメントコンテナの高さをvideoコンテナに合わせる
-    const commentContainer = this.standaloneWrapper.querySelector(
-      ".comment-container",
-    );
+    const commentContainer =
+      this.standaloneWrapper.querySelector(".comment-container");
     if (commentContainer instanceof HTMLElement && this.videoContainer) {
       const videoHeight = this.videoContainer.offsetHeight;
       if (videoHeight > 0) {
@@ -1106,7 +1092,6 @@ export class StandalonePlayer {
     // 外部コールバックのクリーンアップ
     this.externalEndedCallback = null;
   }
-
 
   private setupGlobalInterface(): void {
     if (!window.NicoCache_nl) {

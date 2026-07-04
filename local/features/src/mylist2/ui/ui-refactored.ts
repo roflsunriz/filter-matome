@@ -11,9 +11,7 @@ import {
   DBVideo as VideoInfo,
   VideoAvailabilityStatus,
 } from "@/types/video-types";
-import {
-  hydrateMaterialIconImages,
-} from "@/common/material-icons";
+import { hydrateMaterialIconImages } from "@/common/material-icons";
 
 import { ModalService } from "@/mylist2/ui/modal-service";
 import { ValidationService } from "@/mylist2/ui/validation-service";
@@ -567,7 +565,9 @@ export class Mylist2ManagerUI {
    * アクショントリガークリック時の処理
    */
   private handleActionTriggerClick(trigger: HTMLElement): void {
-    const itemElement = trigger.closest(".video-item, .keyword-item") as HTMLElement;
+    const itemElement = trigger.closest(
+      ".video-item, .keyword-item",
+    ) as HTMLElement;
     if (!itemElement) return;
 
     const actionMenu = getActionMenuManager();
@@ -1120,7 +1120,8 @@ export class Mylist2ManagerUI {
 
           // 仮想スクロールマネージャーから選択されたアイテムを取得
           const selectedVideos = this.virtualScrollManager.getSelectedVideos();
-          const selectedKeywords = this.virtualScrollManager.getSelectedKeywords();
+          const selectedKeywords =
+            this.virtualScrollManager.getSelectedKeywords();
 
           if (selectedVideos.length === 0 && selectedKeywords.length === 0) {
             await this.showCustomAlert("項目を選択してください");
@@ -1459,7 +1460,9 @@ export class Mylist2ManagerUI {
             try {
               data = JSON.parse(text) as unknown;
             } catch {
-              throw new Error("無効なJSONファイルです: JSONの解析に失敗しました");
+              throw new Error(
+                "無効なJSONファイルです: JSONの解析に失敗しました",
+              );
             }
 
             // 既存データの存在チェック
@@ -1532,8 +1535,7 @@ export class Mylist2ManagerUI {
                 if (typeof v !== "object" || v === null) return false;
                 const r = v as Record<string, unknown>;
                 return (
-                  typeof r.name === "string" &&
-                  typeof r.createdAt === "number"
+                  typeof r.name === "string" && typeof r.createdAt === "number"
                 );
               };
               const isDBVideo = (v: unknown): v is VideoInfo => {
@@ -1549,8 +1551,7 @@ export class Mylist2ManagerUI {
                 if (typeof v !== "object" || v === null) return false;
                 const r = v as Record<string, unknown>;
                 return (
-                  typeof r.keyword === "string" &&
-                  typeof r.addedAt === "number"
+                  typeof r.keyword === "string" && typeof r.addedAt === "number"
                 );
               };
               const exportData: ExportData = {

@@ -77,9 +77,7 @@ export class FilterStorage {
           );
 
           // Rulesストアの作成/更新
-          if (
-            !db.objectStoreNames.contains(CONSTANTS.DB_CONFIG.STORES.RULES)
-          ) {
+          if (!db.objectStoreNames.contains(CONSTANTS.DB_CONFIG.STORES.RULES)) {
             const rulesStore = db.createObjectStore(
               CONSTANTS.DB_CONFIG.STORES.RULES,
               {

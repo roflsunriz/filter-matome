@@ -339,7 +339,9 @@ export class BackgroundImageSettings {
   /**
    * IndexedDBを初期化
    */
-  private async initializeDB(repairAttempted: boolean = false): Promise<IDBDatabase> {
+  private async initializeDB(
+    repairAttempted: boolean = false,
+  ): Promise<IDBDatabase> {
     if (this.db) {
       return this.db;
     }

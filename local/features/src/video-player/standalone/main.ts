@@ -629,7 +629,9 @@ const extractNextVideoIdFromDescription = (
   // 現在の動画IDが見つからない、または末尾の場合は最後のIDを返す
   // ただし自分自身は除外する
   const candidates = ids.filter((id) => id !== currentVideoId);
-  return candidates.length > 0 ? (candidates[candidates.length - 1] ?? null) : null;
+  return candidates.length > 0
+    ? (candidates[candidates.length - 1] ?? null)
+    : null;
 };
 
 type ResolvedNextVideo = {
@@ -647,9 +649,7 @@ const isNumericOnlyVideoId = (id: string): boolean => /^\d+$/.test(id);
  * 数値のみ動画IDをプレフィックス付きID（sm/so）に正規化する
  * fetchWatchPage でウォッチページを取得し、apiData.video.id から正規IDを得る
  */
-const resolveNumericVideoId = async (
-  numericId: string,
-): Promise<string> => {
+const resolveNumericVideoId = async (numericId: string): Promise<string> => {
   try {
     const result = await window.commonHelper.fetchWatchPage(numericId);
     if (!result) {
@@ -709,8 +709,7 @@ const renderStats = (
 
   const resolved = resolveNextVideoId(apiData, currentVideoId);
   const hasNextVideo = resolved !== null;
-  const savedPref =
-    localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true";
+  const savedPref = localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true";
 
   container.append(
     createStatItem("再生数", formatNumber(apiData.video.count.view)),
@@ -1094,8 +1093,7 @@ const main = async (): Promise<void> => {
         : Promise.resolve(resolved.id);
 
       player.onVideoEnded(() => {
-        const autoNext =
-          localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true";
+        const autoNext = localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true";
         if (!autoNext) {
           return;
         }

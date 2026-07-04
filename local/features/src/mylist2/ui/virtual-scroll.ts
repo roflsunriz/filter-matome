@@ -94,7 +94,10 @@ export class VirtualScrollManager {
     });
 
     // イベント委譲でチェックボックスの変更を監視
-    this.container.addEventListener("change", this.handleCheckboxChange.bind(this));
+    this.container.addEventListener(
+      "change",
+      this.handleCheckboxChange.bind(this),
+    );
 
     this.isInitialized = true;
     window.logger?.info("仮想スクロールマネージャーを初期化しました");
@@ -172,7 +175,9 @@ export class VirtualScrollManager {
     const target = event.target as HTMLInputElement;
     if (!target.classList.contains("video-select")) return;
 
-    const itemElement = target.closest(".video-item, .keyword-item") as HTMLElement;
+    const itemElement = target.closest(
+      ".video-item, .keyword-item",
+    ) as HTMLElement;
     if (!itemElement) return;
 
     const itemId = this.getItemId(itemElement);
@@ -401,7 +406,10 @@ export class VirtualScrollManager {
       cancelAnimationFrame(this.scrollRAF);
     }
     this.container?.removeEventListener("scroll", this.handleScroll.bind(this));
-    this.container?.removeEventListener("change", this.handleCheckboxChange.bind(this));
+    this.container?.removeEventListener(
+      "change",
+      this.handleCheckboxChange.bind(this),
+    );
     this.items = [];
     this.filteredItems = [];
     this.selectedIds.clear();

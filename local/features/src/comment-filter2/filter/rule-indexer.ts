@@ -211,8 +211,8 @@ export class SubstringMatcher {
   hasPatterns(): boolean {
     return Boolean(
       (this.caseSensitiveMachine && this.caseSensitiveMachine.hasPatterns()) ||
-        (this.caseInsensitiveMachine &&
-          this.caseInsensitiveMachine.hasPatterns()),
+      (this.caseInsensitiveMachine &&
+        this.caseInsensitiveMachine.hasPatterns()),
     );
   }
 

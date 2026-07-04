@@ -341,10 +341,7 @@ export class ApiService {
       );
       return null;
     } catch (error) {
-      window.logger.error(
-        `[fetchRichDescription] エラー: ${videoId}`,
-        error,
-      );
+      window.logger.error(`[fetchRichDescription] エラー: ${videoId}`, error);
       return null;
     }
   }

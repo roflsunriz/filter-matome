@@ -41,7 +41,7 @@ export class Mylist2Handler {
 
       // 型ガード: apiDataが確実に存在することを保証
       const { apiData } = watchPageResult;
-      
+
       // video情報の型安全な取得
       const video = apiData.video as {
         id: string;
@@ -59,14 +59,8 @@ export class Mylist2Handler {
         };
       };
 
-      const owner = apiData.owner as
-        | { nickname?: string }
-        | null
-        | undefined;
-      const channel = apiData.channel as
-        | { name?: string }
-        | null
-        | undefined;
+      const owner = apiData.owner as { nickname?: string } | null | undefined;
+      const channel = apiData.channel as { name?: string } | null | undefined;
 
       if (!video.id || !video.title || !video.registeredAt) {
         throw new Error("必須の動画情報が不足しています");

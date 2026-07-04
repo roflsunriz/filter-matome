@@ -68,7 +68,7 @@ export class SearchResultsModal {
   public close(): void {
     if (this.modal) {
       this.modal.classList.add("closing");
-      
+
       // アニメーション後に削除
       setTimeout(() => {
         this.modal?.remove();
@@ -226,9 +226,7 @@ export class SearchResultsModal {
   }
 
   private scrollToTop(): void {
-    const body = this.modal?.querySelector(
-      ".search-results-modal-body",
-    );
+    const body = this.modal?.querySelector(".search-results-modal-body");
     if (body instanceof HTMLElement) {
       body.scrollTop = 0;
     }
@@ -263,7 +261,7 @@ export class SearchResultsModal {
     this.modal.addEventListener("click", (e) => {
       const target = e.target;
       if (!(target instanceof HTMLElement)) return;
-      
+
       const card = target.closest(".video-card");
       if (card instanceof HTMLElement && this.onCardClick) {
         const id = card.dataset.id;
@@ -277,7 +275,7 @@ export class SearchResultsModal {
     this.modal.addEventListener("click", (e) => {
       const target = e.target;
       if (!(target instanceof HTMLElement)) return;
-      
+
       const button = target.closest("button");
       if (!(button instanceof HTMLButtonElement)) return;
 
@@ -298,12 +296,9 @@ export class SearchResultsModal {
         window.open(`./ffmpeg?audio=${baseId}`, "_blank");
         e.stopPropagation();
       } else if (button.classList.contains("delete-btn")) {
-        const title =
-          card.querySelector(".video-title")?.textContent ?? "";
+        const title = card.querySelector(".video-title")?.textContent ?? "";
         if (
-          confirm(
-            `本当に削除しますか？\nID : ${baseId}\nタイトル : ${title}`,
-          )
+          confirm(`本当に削除しますか？\nID : ${baseId}\nタイトル : ${title}`)
         ) {
           window.open(`./rm?${baseId}`, "_blank");
         }
@@ -339,4 +334,3 @@ export class SearchResultsModal {
     return this.results.length;
   }
 }
-

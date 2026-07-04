@@ -44,9 +44,7 @@ declare global {
       ) => Promise<ExtendedFetchWatchPageResult | void>;
 
       // 新しい関数
-      fetchNicoComments: (
-        apiData: NicoApiData,
-      ) => Promise<{
+      fetchNicoComments: (apiData: NicoApiData) => Promise<{
         comments: CommentData[];
         mainThread: CommentThread;
       } | void>;

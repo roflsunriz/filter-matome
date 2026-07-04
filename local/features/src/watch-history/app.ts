@@ -312,13 +312,11 @@ class WatchHistoryApp {
       "click",
       this.guardEvent(() => this.handleConditionalDelete()),
     );
-    this.elements["delete-use-watch-count"]?.addEventListener(
-      "change",
-      () => this.updateDeleteConditionUI(),
+    this.elements["delete-use-watch-count"]?.addEventListener("change", () =>
+      this.updateDeleteConditionUI(),
     );
-    this.elements["delete-use-progress-rate"]?.addEventListener(
-      "change",
-      () => this.updateDeleteConditionUI(),
+    this.elements["delete-use-progress-rate"]?.addEventListener("change", () =>
+      this.updateDeleteConditionUI(),
     );
 
     // タブ切り替え
@@ -3129,7 +3127,7 @@ class WatchHistoryApp {
     const conditionText =
       conditionParts.length === 2
         ? conditionParts.join("かつ")
-        : conditionParts[0] ?? "";
+        : (conditionParts[0] ?? "");
 
     if (
       !confirm(
@@ -3180,10 +3178,10 @@ class WatchHistoryApp {
     }
 
     const maxWatchCount = useWatchCount
-      ? (parseInt(watchCountInput.value) || 0)
+      ? parseInt(watchCountInput.value) || 0
       : null;
     const maxProgressRate = useProgressRate
-      ? (parseInt(progressRateInput.value) || 0)
+      ? parseInt(progressRateInput.value) || 0
       : null;
 
     void this.deleteHistoryEntriesByCondition(maxWatchCount, maxProgressRate);
@@ -3194,18 +3192,23 @@ class WatchHistoryApp {
    * チェックボックスのON/OFFに応じて入力欄のdisabled状態とヒントテキストを切り替える
    */
   private updateDeleteConditionUI(): void {
-    const useWatchCount = (
-      this.elements["delete-use-watch-count"] as HTMLInputElement | undefined
-    )?.checked ?? true;
-    const useProgressRate = (
-      this.elements["delete-use-progress-rate"] as HTMLInputElement | undefined
-    )?.checked ?? true;
+    const useWatchCount =
+      (this.elements["delete-use-watch-count"] as HTMLInputElement | undefined)
+        ?.checked ?? true;
+    const useProgressRate =
+      (
+        this.elements["delete-use-progress-rate"] as
+          | HTMLInputElement
+          | undefined
+      )?.checked ?? true;
 
     // 入力欄の親要素にdisabledクラスを切り替え
-    const watchCountItem = this.elements["delete-use-watch-count"]
-      ?.closest(".delete-condition-item");
-    const progressRateItem = this.elements["delete-use-progress-rate"]
-      ?.closest(".delete-condition-item");
+    const watchCountItem = this.elements["delete-use-watch-count"]?.closest(
+      ".delete-condition-item",
+    );
+    const progressRateItem = this.elements["delete-use-progress-rate"]?.closest(
+      ".delete-condition-item",
+    );
 
     if (watchCountItem) {
       watchCountItem.classList.toggle("disabled", !useWatchCount);
@@ -3229,9 +3232,9 @@ class WatchHistoryApp {
     }
 
     // ボタンの有効/無効切り替え
-    const deleteBtn = this.elements[
-      "delete-by-condition-btn"
-    ] as HTMLButtonElement | undefined;
+    const deleteBtn = this.elements["delete-by-condition-btn"] as
+      | HTMLButtonElement
+      | undefined;
     if (deleteBtn) {
       deleteBtn.disabled = !useWatchCount && !useProgressRate;
     }

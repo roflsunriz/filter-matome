@@ -187,10 +187,7 @@ export class WatchHistoryDatabase {
             throw error;
           }
 
-          logger.warn(
-            "IndexedDBの破損を検出したため再作成します:",
-            error,
-          );
+          logger.warn("IndexedDBの破損を検出したため再作成します:", error);
           this.db.close();
           this.db = null;
           await this.deleteDatabase();

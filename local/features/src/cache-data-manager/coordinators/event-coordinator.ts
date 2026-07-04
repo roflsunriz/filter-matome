@@ -305,9 +305,7 @@ export class EventCoordinator {
     document.body.appendChild(modal);
   }
 
-  private normalizeApiResponse(
-    input: unknown,
-  ):
+  private normalizeApiResponse(input: unknown):
     | {
         status: "ok";
         title?: string;

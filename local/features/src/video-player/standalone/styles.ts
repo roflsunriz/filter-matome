@@ -12,16 +12,16 @@ export const STANDALONE_PAGE_STYLES = [
   ".nc-header__meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: #9ca6c3; }",
   ".nc-main { display: flex; flex-direction: column; gap: 28px; }",
   ".nc-player-surface { background: rgba(14, 16, 25, 0.9); border-radius: 18px; padding: 20px; box-shadow: 0 28px 60px rgba(0, 0, 0, 0.35); box-sizing: border-box; }",
-  
+
   /* プレイヤーとコメントのレスポンシブレイアウト */
   ".standalone-player-wrapper { display: flex; flex-direction: row; width: 100%; max-width: 100%; gap: 16px; box-sizing: border-box; position: relative; }",
   ".standalone-player-wrapper .custom-player { flex: 1 1 auto; min-width: 0; position: relative; }",
   ".standalone-player-wrapper .comment-container { flex: 0 0 auto; width: clamp(280px, 25vw, 400px); min-width: 280px; max-width: 400px; background: rgba(23, 26, 38, 0.92); border-radius: 12px; padding: 12px; box-shadow: inset 0 0 0 1px rgba(127, 158, 255, 0.16); box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; max-height: calc(100vh - 200px); }",
-  
+
   /* videoとvideo-containerのレスポンシブ対応（通常表示時のみ） */
   ".standalone-player-wrapper .custom-player:not(:fullscreen):not(.nc-fullscreen-player) { width: 100%; height: auto; }",
   ".standalone-player-wrapper .custom-player:not(:fullscreen):not(.nc-fullscreen-player) .video-container { position: relative; width: 100%; aspect-ratio: var(--video-aspect-ratio, 16 / 9); max-height: calc(100vh - 200px); }",
-  
+
   ".nc-info-card { background: rgba(20, 24, 36, 0.88); border-radius: 16px; padding: 20px; box-shadow: inset 0 0 0 1px rgba(112, 138, 210, 0.22); display: flex; flex-direction: column; gap: 22px; }",
   ".nc-stat-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }",
   ".nc-stat-item { background: rgba(34, 40, 64, 0.82); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; box-shadow: inset 0 0 0 1px rgba(142, 170, 255, 0.18); }",
@@ -56,10 +56,10 @@ export const STANDALONE_PAGE_STYLES = [
   ".nc-stat-item--disabled:hover { box-shadow: inset 0 0 0 1px rgba(142, 170, 255, 0.18); }",
   ".nc-stat-item__auto-next-label { display: flex; align-items: center; gap: 8px; cursor: inherit; }",
   ".nc-stat-item__auto-next-checkbox { width: 16px; height: 16px; accent-color: #7aa2ff; cursor: inherit; margin: 0; flex-shrink: 0; }",
-  
+
   /* レスポンシブ対応 - タブレット */
   "@media (max-width: 1024px) { .nc-main { gap: 20px; } .standalone-player-wrapper { flex-direction: column; } .standalone-player-wrapper .comment-container { width: 100%; max-width: 100%; min-width: 100%; max-height: 400px; } .video-container { max-height: 60vh; } }",
-  
+
   /* レスポンシブ対応 - モバイル */
   "@media (max-width: 768px) { .nc-standalone-page { padding-bottom: 32px; gap: 16px; } .nc-header, .nc-main, .nc-description { width: calc(100vw - 24px); } .nc-header__title { font-size: 20px; } .nc-player-surface { padding: 12px; border-radius: 12px; } .standalone-player-wrapper .comment-container { max-height: 300px; padding: 8px; } .nc-stat-list { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); } }",
 ].join("\n");

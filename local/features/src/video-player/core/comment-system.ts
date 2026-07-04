@@ -34,10 +34,7 @@ export class CommentSystem {
   /**
    * コメントシステムの初期化
    */
-  initialize(
-    videoElement: HTMLVideoElement,
-    container: HTMLElement,
-  ): void {
+  initialize(videoElement: HTMLVideoElement, container: HTMLElement): void {
     try {
       window.logger.info("コメントシステムの初期化を開始します！");
 

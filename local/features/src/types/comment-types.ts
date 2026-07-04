@@ -8,7 +8,6 @@ import type {
   CompatibleCommentFilter2GlobalData,
 } from "./filter-types";
 
-
 /**
  * コメントデータの型定義
  */

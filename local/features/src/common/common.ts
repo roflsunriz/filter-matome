@@ -288,8 +288,7 @@ window.commonHelper = {
         typeof result.apiData.video?.id === "string"
           ? result.apiData.video.id
           : null;
-      const resolvedCacheKey =
-        normalizeVideoId(resolvedVideoId) ?? cacheKey;
+      const resolvedCacheKey = normalizeVideoId(resolvedVideoId) ?? cacheKey;
       setTimedCache(watchPageCache, cacheKey, result, WATCH_PAGE_CACHE_TTL_MS);
       setTimedCache(
         watchPageCache,

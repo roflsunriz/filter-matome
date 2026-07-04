@@ -97,7 +97,8 @@ export function analyzeRegexPattern(
       message: `パターンが長すぎます（${String(pattern.length)}文字）。${String(opts.maxPatternLength)}文字以下を推奨します`,
     });
     suggestions.push({
-      message: "パターンを短くするか、複数のルールに分割することを検討してください",
+      message:
+        "パターンを短くするか、複数のルールに分割することを検討してください",
     });
     score += 20;
   }
@@ -137,7 +138,10 @@ export function analyzeRegexPattern(
   }
 
   // 過剰なワイルドカードの検出
-  const wildcardResult = detectExcessiveWildcards(pattern, opts.wildcardThreshold);
+  const wildcardResult = detectExcessiveWildcards(
+    pattern,
+    opts.wildcardThreshold,
+  );
   if (wildcardResult.detected) {
     warnings.push({
       type: "excessive_wildcards",
@@ -161,7 +165,8 @@ export function analyzeRegexPattern(
       problematicPart: catastrophicResult.match,
     });
     suggestions.push({
-      message: "パターンを見直し、より具体的な文字クラスを使用することを検討してください",
+      message:
+        "パターンを見直し、より具体的な文字クラスを使用することを検討してください",
     });
     score += 60;
   }
@@ -172,11 +177,13 @@ export function analyzeRegexPattern(
     warnings.push({
       type: "greedy_quantifier_chain",
       severity: "warning",
-      message: "貪欲な量指定子が連続しています。非貪欲（?）修飾子の使用を検討してください",
+      message:
+        "貪欲な量指定子が連続しています。非貪欲（?）修飾子の使用を検討してください",
       problematicPart: greedyChainResult.match,
     });
     suggestions.push({
-      message: ".*? や .+? などの非貪欲量指定子を使用すると効率が改善される場合があります",
+      message:
+        ".*? や .+? などの非貪欲量指定子を使用すると効率が改善される場合があります",
     });
     score += 15;
   }
@@ -235,9 +242,10 @@ function isPlainLiteralPattern(pattern: string): boolean {
  * ネストされた量指定子を検出
  * 例: (a+)+, (a*)+, (a+)*, (a+){2,} など
  */
-function detectNestedQuantifiers(
-  pattern: string,
-): { detected: boolean; match?: string } {
+function detectNestedQuantifiers(pattern: string): {
+  detected: boolean;
+  match?: string;
+} {
   // グループの後に量指定子があり、グループ内にも量指定子がある場合を検出
   // (...)+ や (...)* などのパターンで、グループ内に +, *, {n,m} がある
   const nestedPattern =
@@ -262,9 +270,10 @@ function detectNestedQuantifiers(
  * オーバーラップするアルタネーションを検出
  * 例: (a|ab)+, (x|xy|xyz)+ など
  */
-function detectOverlappingAlternation(
-  pattern: string,
-): { detected: boolean; match?: string } {
+function detectOverlappingAlternation(pattern: string): {
+  detected: boolean;
+  match?: string;
+} {
   // アルタネーションを含むグループの後に量指定子がある場合
   const alternationWithQuantifier = /\([^)]*\|[^)]*\)[+*]/;
   const match = pattern.match(alternationWithQuantifier);
@@ -313,9 +322,10 @@ function detectExcessiveWildcards(
 /**
  * 破滅的なバックトラッキングパターンを検出
  */
-function detectCatastrophicBacktracking(
-  pattern: string,
-): { detected: boolean; match?: string } {
+function detectCatastrophicBacktracking(pattern: string): {
+  detected: boolean;
+  match?: string;
+} {
   // 典型的な危険パターン
   const dangerousPatterns = [
     // (a+)+ スタイル
@@ -342,9 +352,10 @@ function detectCatastrophicBacktracking(
  * 貪欲な量指定子の連鎖を検出
  * 例: .*.+, a+b*, etc.
  */
-function detectGreedyQuantifierChain(
-  pattern: string,
-): { detected: boolean; match?: string } {
+function detectGreedyQuantifierChain(pattern: string): {
+  detected: boolean;
+  match?: string;
+} {
   // 量指定子の後にすぐ別の量指定子付きパターンが続く場合
   const chainPattern = /[+*]\s*[^+*?\s]+[+*]/;
   const match = pattern.match(chainPattern);
@@ -359,9 +370,10 @@ function detectGreedyQuantifierChain(
 /**
  * 複雑な先読み/後読みを検出
  */
-function detectComplexLookahead(
-  pattern: string,
-): { detected: boolean; match?: string } {
+function detectComplexLookahead(pattern: string): {
+  detected: boolean;
+  match?: string;
+} {
   // 先読み/後読み内に量指定子がある場合
   const lookaheadPattern = /\(\?[=!<][^)]*[+*][^)]*\)/;
   const match = pattern.match(lookaheadPattern);
@@ -452,4 +464,3 @@ export type {
   RegexWarningType,
   RegexWarningSeverity,
 };
-

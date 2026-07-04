@@ -97,8 +97,7 @@ export const createAutoNextStatItem = (
     statusEl.textContent = "リンクなし";
   } else {
     const suffix = sourceHint ? ` (${sourceHint})` : "";
-    const formatStatus = (on: boolean): string =>
-      (on ? "ON" : "OFF") + suffix;
+    const formatStatus = (on: boolean): string => (on ? "ON" : "OFF") + suffix;
     statusEl.textContent = formatStatus(checked);
     checkbox.addEventListener("change", () => {
       statusEl.textContent = formatStatus(checkbox.checked);

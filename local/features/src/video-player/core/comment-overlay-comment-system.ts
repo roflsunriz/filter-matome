@@ -41,7 +41,10 @@ interface CommentOverlayMeta {
 }
 
 interface CommentOverlayRenderer {
-  initialize(options: { video: HTMLVideoElement; container: HTMLElement }): void;
+  initialize(options: {
+    video: HTMLVideoElement;
+    container: HTMLElement;
+  }): void;
   destroy(): void;
   resize(): void;
   clearComments(): void;
@@ -69,10 +72,7 @@ export class CommentOverlayCommentSystem {
   private userColor = DEFAULT_COLOR;
   private isVisible = true;
 
-  initialize(
-    videoElement: HTMLVideoElement,
-    container: HTMLElement,
-  ): void {
+  initialize(videoElement: HTMLVideoElement, container: HTMLElement): void {
     this.destroy();
 
     this.videoElement = videoElement;

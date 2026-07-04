@@ -4,7 +4,10 @@
  */
 
 import "@/types/global.d.ts";
-import { createMaterialIcon, hydrateMaterialIconImages } from "@/common/material-icons";
+import {
+  createMaterialIcon,
+  hydrateMaterialIconImages,
+} from "@/common/material-icons";
 import type { DBVideo } from "@/types/video-types";
 import type { KeywordInfo } from "@/types/mylist-types";
 
@@ -158,7 +161,9 @@ export class ActionMenuManager {
       button.setAttribute("role", "menuitem");
       button.dataset.actionId = item.id;
 
-      const iconHtml = createMaterialIcon(item.icon, { color: item.danger ? "red" : "white" });
+      const iconHtml = createMaterialIcon(item.icon, {
+        color: item.danger ? "red" : "white",
+      });
       button.innerHTML = `${iconHtml}<span class="cml2-action-popover-label">${item.label}</span>`;
 
       button.addEventListener("click", (e) => {

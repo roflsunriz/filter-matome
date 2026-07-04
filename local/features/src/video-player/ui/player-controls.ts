@@ -1325,7 +1325,6 @@ export class PlayerControlsShadow extends HTMLElement {
     // 手動でのhardReset呼び出しは不要
   }
 
-
   /**
    * 動画長表示の更新
    */
@@ -1900,7 +1899,7 @@ export class PlayerControlsShadow extends HTMLElement {
 
     // 設定メニューの表示モードを更新
     this.updateSettingsMenuMode(isFullScreen);
-    
+
     // 全画面時のビデオ要素強制調整
     if (isFullScreen) {
       // 全画面時のスタイルはCSSで管理

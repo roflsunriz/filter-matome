@@ -13,8 +13,7 @@ interface CachedCommentApiData {
 
 type CacheListener = (data: CachedCommentApiData) => void;
 
-const COMMENT_API_ENDPOINT =
-  "https://public.nvcomment.nicovideo.jp/v1/threads";
+const COMMENT_API_ENDPOINT = "https://public.nvcomment.nicovideo.jp/v1/threads";
 const VIDEO_ID_PATTERN = /(?:\/watch\/|[?&]videoId=)([a-z]{2}\d+)/i;
 const MAX_CACHE_ENTRIES = 8;
 const DEFAULT_WAIT_TIMEOUT_MS = 1200;
@@ -157,11 +156,14 @@ export class CommentApiCache {
       this.pruneCache();
       this.notifyCaptured(cachedData);
 
-      window.logger?.debug("[CommentApiCache] コメントAPIをキャッシュしました", {
-        videoId: normalizedVideoId,
-        threads: dataRaw.data.threads.length,
-        sourceUrl,
-      });
+      window.logger?.debug(
+        "[CommentApiCache] コメントAPIをキャッシュしました",
+        {
+          videoId: normalizedVideoId,
+          threads: dataRaw.data.threads.length,
+          sourceUrl,
+        },
+      );
     } catch (error) {
       window.logger?.debug(
         "[CommentApiCache] コメントAPIレスポンスのclone解析に失敗しました",

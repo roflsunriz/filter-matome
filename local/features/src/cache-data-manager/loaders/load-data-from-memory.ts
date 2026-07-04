@@ -105,7 +105,7 @@ export class LoadDataFromMemory {
 
   public getEntriesByIds(ids: string[]): VideoData[] {
     const allEntries = this.getAllEntries();
-    
+
     // baseIdでフィルタリング（検索エンジンはbaseIdを返す）
     const getBaseId = (e: unknown): string | undefined => {
       if (typeof e === "object" && e !== null) {

@@ -128,8 +128,7 @@ export class VideoService {
           const aUnavailable = this.isUnavailableVideo(a) ? 1 : 0;
           const bUnavailable = this.isUnavailableVideo(b) ? 1 : 0;
           comparison =
-            aUnavailable - bUnavailable ||
-            (a.addedAt || 0) - (b.addedAt || 0);
+            aUnavailable - bUnavailable || (a.addedAt || 0) - (b.addedAt || 0);
           break;
         }
 

@@ -128,9 +128,8 @@ class PanelManager {
       }
 
       // モジュールマネージャーも再初期化（動的インポートでモジュール取得）
-      const { ModuleManager } = await import(
-        "@/mlink-video-controller/module-handlers/module-manager"
-      );
+      const { ModuleManager } =
+        await import("@/mlink-video-controller/module-handlers/module-manager");
       const moduleManager = ModuleManager.getInstance();
       await moduleManager.reinitializeForSPA();
 

@@ -150,7 +150,10 @@ export class BatchOperations {
 
     const confirmMessage =
       `以下の${titles.length}件の項目を削除しますか？\n\n` +
-      titles.slice(0, 10).map((title) => `・${title}`).join("\n") +
+      titles
+        .slice(0, 10)
+        .map((title) => `・${title}`)
+        .join("\n") +
       (titles.length > 10 ? `\n...他${titles.length - 10}件` : "");
 
     if (!(await this.modalService.showCustomConfirm(confirmMessage))) return;
