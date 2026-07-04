@@ -450,25 +450,22 @@ export class ModuleManager {
 
         switch (config.id) {
           case "watch_background_selector": {
-            const { WatchBackgroundSelectorModule } = await import(
-              "../modules/watch-background-selector-module"
-            );
+            const { WatchBackgroundSelectorModule } =
+              await import("../modules/watch-background-selector-module");
             instance = new WatchBackgroundSelectorModule(config);
             break;
           }
 
           case "watch_matrix_background": {
-            const { WatchMatrixBackgroundModule } = await import(
-              "../modules/watch-matrix-background-module"
-            );
+            const { WatchMatrixBackgroundModule } =
+              await import("../modules/watch-matrix-background-module");
             instance = new WatchMatrixBackgroundModule(config);
             break;
           }
 
           case "watch_harajuku": {
-            const { WatchHarajukuModule } = await import(
-              "../modules/watch-harajuku-module"
-            );
+            const { WatchHarajukuModule } =
+              await import("../modules/watch-harajuku-module");
             instance = new WatchHarajukuModule(config);
             break;
           }
@@ -491,50 +488,37 @@ export class ModuleManager {
         }
 
         case "daily_lottery_highlight": {
-          const { NicoInfoPageModule } = await import(
-            "../modules/nico-info-page-module"
-          );
+          const { NicoInfoPageModule } =
+            await import("../modules/nico-info-page-module");
           instance = new NicoInfoPageModule(config);
           break;
         }
 
         case "watch_page": {
-          const { WatchPageModule } = await import(
-            "../modules/watch-page-module"
-          );
+          const { WatchPageModule } =
+            await import("../modules/watch-page-module");
           instance = new WatchPageModule();
           break;
         }
 
         case "watch_mylist_selector": {
-          const { WatchMylistSelectorModule } = await import(
-            "../modules/watch-mylist-selector-module"
-          );
+          const { WatchMylistSelectorModule } =
+            await import("../modules/watch-mylist-selector-module");
           instance = new WatchMylistSelectorModule(config);
           break;
         }
 
         case "watch_tab_sessions": {
-          const { WatchTabSessionsModule } = await import(
-            "../modules/watch-tab-sessions-module"
-          );
+          const { WatchTabSessionsModule } =
+            await import("../modules/watch-tab-sessions-module");
           instance = new WatchTabSessionsModule(config);
           break;
         }
 
         case "thumbnails_filter": {
-          const { ThumbnailsFilterModule } = await import(
-            "../modules/thumbnails-filter-module"
-          );
+          const { ThumbnailsFilterModule } =
+            await import("../modules/thumbnails-filter-module");
           instance = new ThumbnailsFilterModule(config);
-          break;
-        }
-
-        case "deleted_video_detector": {
-          const { DeletedVideoDetectorModule } = await import(
-            "../modules/deleted-video-detector-module"
-          );
-          instance = new DeletedVideoDetectorModule(config);
           break;
         }
 

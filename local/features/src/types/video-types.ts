@@ -312,11 +312,3 @@ export interface CacheUrlResult {
   isHLS: boolean;
   title: string;
 }
-
-/**
- * 削除動画検出器の状態型定義
- */
-export interface DeletedVideoDetectorStatus {
-  enabled: boolean;
-  initialized: boolean;
-}

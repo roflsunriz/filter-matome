@@ -18,6 +18,7 @@ interface PlayerChoiceSettings {
 const WATCH_HOST_PATTERN = /\.nicovideo\.jp$/;
 const CACHE_INFO_ENDPOINT = "https://www.nicovideo.jp/cache/info/v2?";
 const PLAYER_CHOICE_KEY = "nicocache-player-choice";
+const UNAVAILABLE_MESSAGE = "お探しの動画は視聴できません";
 
 const hasCompletedCache = (
   entry: CacheInfoEntry,
@@ -235,6 +236,116 @@ const isWatchPage = (): boolean => {
   );
 };
 
+const getCurrentWatchVideoId = (): string | null => {
+  const match = window.location.pathname.match(/\/watch\/([a-z]{2}\d+)/i);
+  return match ? match[1] : null;
+};
+
+const getCurrentDocumentTitle = (): string | undefined => {
+  const apiTitle = window.NicoCache_nl?.watch?.apiData?.video?.title;
+  if (apiTitle && apiTitle.trim()) {
+    return apiTitle;
+  }
+
+  const ogTitle = document.querySelector<HTMLMetaElement>(
+    "meta[property='og:title']",
+  )?.content;
+  if (ogTitle && ogTitle.trim()) {
+    return ogTitle;
+  }
+
+  const title = document.title.replace(/\s*-\s*ニコニコ動画$/, "").trim();
+  return title || undefined;
+};
+
+const detectUnavailableWatchPage = (): boolean => {
+  const errorMessage = document.querySelector(".fs_xl.fw_bold");
+  if (errorMessage?.textContent?.includes(UNAVAILABLE_MESSAGE)) {
+    return true;
+  }
+
+  if (!document.body) {
+    return false;
+  }
+
+  const walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode(node) {
+        return typeof node.nodeValue === "string" &&
+          node.nodeValue.includes(UNAVAILABLE_MESSAGE)
+          ? NodeFilter.FILTER_ACCEPT
+          : NodeFilter.FILTER_SKIP;
+      },
+    },
+  );
+
+  let currentNode = walker.nextNode();
+  while (currentNode) {
+    if (currentNode.nodeValue?.includes(UNAVAILABLE_MESSAGE)) {
+      return true;
+    }
+    currentNode = walker.nextNode();
+  }
+
+  return false;
+};
+
+const checkDeletedByThumbInfo = async (videoId: string): Promise<boolean> => {
+  try {
+    const response = await fetch(
+      `https://ext.nicovideo.jp/api/getthumbinfo/${encodeURIComponent(videoId)}`,
+    );
+    const text = await response.text();
+    const xmlDoc = new DOMParser().parseFromString(text, "text/xml");
+    const status = xmlDoc
+      .querySelector("nicovideo_thumb_response")
+      ?.getAttribute("status");
+    if (status !== "fail") {
+      return false;
+    }
+
+    return xmlDoc.querySelector("code")?.textContent === "DELETED";
+  } catch (error) {
+    window.logger.warn("getthumbinfo による削除動画判定に失敗しました", error);
+    return false;
+  }
+};
+
+const routeDeletedVideo = (
+  videoId: string,
+  detection: { isUnavailable: boolean; isDeleted: boolean },
+): boolean => {
+  if (
+    window.location.pathname ===
+    "/local/features/dist/src/video-player/standalone/index.html"
+  ) {
+    return false;
+  }
+
+  if (!detection.isUnavailable && !detection.isDeleted) {
+    return false;
+  }
+
+  const deletedVideoPlayer = window.NicoCache_nl?.deletedVideoPlayer;
+  if (!deletedVideoPlayer) {
+    window.logger.warn(
+      "削除動画プレーヤーのインターフェースが見つかりません",
+      videoId,
+    );
+    return false;
+  }
+
+  window.logger.info("削除動画プレーヤーを起動します", {
+    videoId,
+    isUnavailable: detection.isUnavailable,
+    isDeleted: detection.isDeleted,
+  });
+  deletedVideoPlayer.play(videoId, getCurrentDocumentTitle());
+  return true;
+};
+
 let spaNavigationListenerInstalled = false;
 let isRoutingInProgress = false;
 let rerunRoutingRequested = false;
@@ -252,9 +363,7 @@ const installSpaNavigationListener = (onChange: () => void): void => {
     onChange();
   };
 
-  const wrapHistoryMethod = (
-    method: "pushState" | "replaceState",
-  ): void => {
+  const wrapHistoryMethod = (method: "pushState" | "replaceState"): void => {
     const original = history[method];
     history[method] = function (
       this: History,
@@ -272,7 +381,9 @@ const installSpaNavigationListener = (onChange: () => void): void => {
   window.addEventListener("popstate", trigger);
 };
 
-const requestWatchPageRouting = (executor: () => Promise<void>): Promise<void> => {
+const requestWatchPageRouting = (
+  executor: () => Promise<void>,
+): Promise<void> => {
   if (isRoutingInProgress) {
     rerunRoutingRequested = true;
     return currentRoutingPromise ?? Promise.resolve();
@@ -431,18 +542,48 @@ const showPlayerChoice = (
 
 const routeWatchPageIfNeeded = async (): Promise<void> => {
   try {
+    const currentVideoId = getCurrentWatchVideoId();
+    if (!currentVideoId) {
+      return;
+    }
+
+    if (
+      routeDeletedVideo(currentVideoId, {
+        isUnavailable: detectUnavailableWatchPage(),
+        isDeleted: false,
+      })
+    ) {
+      return;
+    }
+
     const result = await window.commonHelper.fetchWatchPage();
     if (!result) {
+      if (
+        routeDeletedVideo(currentVideoId, {
+          isUnavailable: false,
+          isDeleted: await checkDeletedByThumbInfo(currentVideoId),
+        })
+      ) {
+        return;
+      }
       return;
     }
 
     const apiData = result.apiData as Record<string, unknown>;
     const video = apiData.video as Record<string, unknown> | undefined;
     if (!video) {
+      if (
+        routeDeletedVideo(currentVideoId, {
+          isUnavailable: false,
+          isDeleted: await checkDeletedByThumbInfo(currentVideoId),
+        })
+      ) {
+        return;
+      }
       return;
     }
 
-    const videoId = typeof video.id === "string" ? video.id : null;
+    const videoId = typeof video.id === "string" ? video.id : currentVideoId;
     const watchable =
       typeof video.watchableUserTypeForPayment === "string"
         ? video.watchableUserTypeForPayment

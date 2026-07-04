@@ -9,9 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 - 【mlink-video-controller】Watch Page統合をタグカウンター単機能として扱うよう整理し、説明文を更新。
 - 【mlink-video-controller】モジュール設定の定義元を各 module ファイルに寄せ、`module-registry` は module 側の `ModuleConfig` を登録する構成へ変更。
+- 【video-player】削除・視聴不可動画の検出と deleted モード起動を Watch ページ router に統合。
 
 ### Removed
 - 【mlink-video-controller】Watch Page統合のサブモジュール設定UIと個別有効/無効設定を削除。
+- 【mlink-video-controller】`deleted_video_detector` モジュールと専用サービスを削除。
 
 ### Fixed
 - 【mlink-video-controller】Watch Page統合のタグカウンターが、Firefoxで初期挿入に失敗する場合や公式DOMの再描画で削除された後に復帰しない場合がある問題を修正。

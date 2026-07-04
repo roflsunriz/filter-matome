@@ -213,6 +213,7 @@ database-manager.ts ─── データベース統合管理
 - **UI応答**: `ui/player-controls.ts`
 
 ### 🎬 **削除済み動画機能を拡張したい**
+- **検出・起動**: `router/watch-page-router.ts`
 - **メイン**: `standalone/player.ts`
 - **統合**: `index.ts` (グローバルインターフェース)
 - **UI**: `standalone/main.ts`（deletedモード）, `ui/templates.ts`
@@ -449,6 +450,6 @@ const stats = await dbManager.getDatabaseStats();
 - 公式の視聴ページでは video-player.es.js が有料動画を判定し、スタンドアロンページ /local/features/dist/src/video-player/standalone/index.html へ遷移します。
 - スタンドアロンページは src/video-player/standalone 配下で構成され、standalone/main.ts が StandalonePlayer を初期化して動画・コメント・メタ情報を描画します。
 - メタ情報を取得できない動画では、タイトルを動画IDへフォールバックしてローカルキャッシュ再生を試行します。
-- ルーティングロジックは src/video-player/router/watch-page-router.ts に切り出されており、無料動画は公式プレイヤーをそのまま利用します。
+- ルーティングロジックは src/video-player/router/watch-page-router.ts に切り出されており、無料動画は公式プレイヤーをそのまま利用します。削除・視聴不可動画を検出した場合は既存の deletedVideoPlayer インターフェース経由でスタンドアロン deleted モードを開きます。
 - レイアウトやスタイルを変更する場合は standalone/layout.ts と standalone/styles.ts を編集してください。
 - プレーヤー表示枠は動画メタデータの videoWidth/videoHeight から実動画比率へ更新し、全画面表示では画面内に収まる動画矩形を中央配置します。

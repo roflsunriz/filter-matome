@@ -23,7 +23,6 @@ features/src/mlink-video-controller/
 │   └── settings-ui.ts                    # 設定UI管理 (39KB)
 ├── modules/                              # 個別機能モジュール
 │   ├── background-image-settings.ts      # 背景画像設定 (19KB)
-│   ├── deleted-video-detector-module.ts  # 削除動画検出モジュール (2.9KB)
 │   ├── header-module.ts                  # ヘッダーモジュール (4.9KB)
 │   ├── nico-info-page-module.ts          # ニコインフォページ (5.3KB)
 │   ├── thumbnails-filter-module.ts       # サムネイルフィルター (23KB)
@@ -38,7 +37,6 @@ features/src/mlink-video-controller/
 │   ├── base.ts                           # ベースパネル (6.1KB)
 │   └── link-video.ts                     # メインUIパネル (55KB)
 ├── services/
-│   ├── deleted-video-detector.ts         # 削除動画検出サービス (5.5KB)
 │   ├── link-manager.ts                   # リンク管理サービス (8.8KB)
 │   └── nico-video-player.ts              # 動画プレイヤー連携 (13KB)
 ├── styles/                               # CSSスタイル
@@ -195,7 +193,6 @@ UI更新
 - `watch-matrix-background-module.ts` - マトリックス背景
 - `watch-mylist-selector-module.ts` - マイリストセレクタ
 - `watch-tab-sessions-module.ts` - タブセッション読み取りフィルタ
-- `deleted-video-detector-module.ts` - 削除動画検出
 
 ### 🔌 **サービス層**
 
@@ -209,11 +206,6 @@ UI更新
 - **機能**: スレッドID取得、アクション処理、動的リンク生成、非視聴ページでの視聴ページ専用リンク無効化
 - **SPA注意**: 非視聴ページでは前回視聴動画IDを使わず、ニコチャート等の外部サービスリンクは各トップページへ遷移
 - **編集タイミング**: 新しいリンク追加、アクション機能拡張
-
-#### `services/deleted-video-detector.ts` - 削除動画検出（5.5KB）
-- **役割**: 削除動画の検出・リダイレクト
-- **機能**: URL監視、動画可用性チェック、自動リダイレクト
-- **編集タイミング**: 検出ロジック改善、新しいリダイレクト先追加
 
 ### 💾 **データ・状態管理**
 
