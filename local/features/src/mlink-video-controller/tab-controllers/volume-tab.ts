@@ -15,7 +15,7 @@ export class VolumeTabController {
   bind(): void {
     this.root.querySelectorAll("#volume .volume-preset").forEach((button) => {
       button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
+        const target = e.currentTarget as HTMLElement;
         const volume = parseFloat(target.dataset.volume || "0.5");
         this.volumeHandler?.setVolume({ value: volume });
         this.updateVolumeDisplay();

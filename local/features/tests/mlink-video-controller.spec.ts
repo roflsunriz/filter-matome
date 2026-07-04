@@ -156,6 +156,16 @@ test("mlink-video-controller tab controllers handle every tab operation", async 
 
     const shadow = host.attachShadow({ mode: "open" });
     shadow.innerHTML = panelHtml;
+    shadow
+      .querySelectorAll(
+        "[data-tab], [data-subtab], [data-seek], [data-jump-seconds], #playback .control-btn, #speed .speed-preset, #speed .speed-adjust, #volume .volume-preset, #volume .control-btn",
+      )
+      .forEach((button) => {
+        const iconClickTarget = document.createElement("span");
+        iconClickTarget.className = "test-inner-click-target";
+        iconClickTarget.textContent = "inner";
+        button.appendChild(iconClickTarget);
+      });
 
     const customContainer = shadow.querySelector("#custom .card-container");
     const servicesContainer = shadow.querySelector("#services .card-container");
@@ -355,7 +365,28 @@ test("mlink-video-controller tab controllers handle every tab operation", async 
     root?.querySelector<HTMLElement>('[data-jump-seconds="60"]')?.click();
     root?.querySelector<HTMLElement>('[data-jump-seconds="-30"]')?.click();
     root
+      ?.querySelector<HTMLElement>('[data-seek="+1"] .test-inner-click-target')
+      ?.click();
+    root
+      ?.querySelector<HTMLElement>('[data-seek="-1"] .test-inner-click-target')
+      ?.click();
+    root
+      ?.querySelector<HTMLElement>(
+        '[data-jump-seconds="60"] .test-inner-click-target',
+      )
+      ?.click();
+    root
+      ?.querySelector<HTMLElement>(
+        '[data-jump-seconds="-30"] .test-inner-click-target',
+      )
+      ?.click();
+    root
       ?.querySelectorAll<HTMLElement>("#playback .control-btn")
+      .forEach((button) => button.click());
+    root
+      ?.querySelectorAll<HTMLElement>(
+        "#playback .control-btn .test-inner-click-target",
+      )
       .forEach((button) => button.click());
   });
 
@@ -437,11 +468,17 @@ test("mlink-video-controller tab controllers handle every tab operation", async 
     { seconds: 10, direction: "backward" },
     { seconds: 60, direction: "forward" },
     { seconds: 30, direction: "backward" },
+    { seconds: 10, direction: "forward" },
+    { seconds: 10, direction: "backward" },
+    { seconds: 60, direction: "forward" },
+    { seconds: 30, direction: "backward" },
+    { seconds: 10, direction: "backward" },
+    { seconds: 10, direction: "forward" },
     { seconds: 10, direction: "backward" },
     { seconds: 10, direction: "forward" },
   ]);
-  expect(calls.togglePlayPause).toHaveLength(1);
-  expect(calls.toggleLoop).toHaveLength(1);
+  expect(calls.togglePlayPause).toHaveLength(2);
+  expect(calls.toggleLoop).toHaveLength(2);
   expect(calls.setPlaybackRate).toEqual([{ value: 1.5 }, { value: 2 }]);
   expect(calls.adjustPlaybackRate).toEqual([-0.1]);
   expect(calls.setVolume).toEqual([

@@ -41,7 +41,7 @@ export class PlaybackTabController {
   private bindSeekButtons(): void {
     this.root.querySelectorAll("[data-seek]").forEach((button) => {
       button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
+        const target = e.currentTarget as HTMLElement;
         const seekDirection = target.dataset.seek;
         const seekInput =
           this.root.querySelector<HTMLInputElement>(".seek-value");
@@ -65,7 +65,7 @@ export class PlaybackTabController {
   private bindJumpButtons(): void {
     this.root.querySelectorAll("[data-jump-seconds]").forEach((button) => {
       button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
+        const target = e.currentTarget as HTMLElement;
         const jumpSeconds = parseInt(target.dataset.jumpSeconds || "0");
 
         if (jumpSeconds > 0) {

@@ -16,7 +16,7 @@ export class SpeedTabController {
   bind(): void {
     this.root.querySelectorAll("#speed .speed-preset").forEach((button) => {
       button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
+        const target = e.currentTarget as HTMLElement;
         const speed = parseFloat(target.dataset.speed || "1.0");
         this.speedHandler?.setPlaybackRate({ value: speed });
         this.updateSpeedDisplay();
@@ -25,7 +25,7 @@ export class SpeedTabController {
 
     this.root.querySelectorAll("#speed .speed-adjust").forEach((button) => {
       button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
+        const target = e.currentTarget as HTMLElement;
         const adjust = parseFloat(target.dataset.adjust || "0");
         this.speedHandler?.adjustPlaybackRate(adjust);
         this.updateSpeedDisplay();

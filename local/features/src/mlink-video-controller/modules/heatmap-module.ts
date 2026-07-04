@@ -117,7 +117,7 @@ export class HeatmapModule implements ModuleInstance {
       context.shadowRoot.querySelectorAll(".heatmap-mode-btn");
     heatmapModeButtons.forEach((button) => {
       button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
+        const target = e.currentTarget as HTMLElement;
         const mode = target.dataset.mode as HeatmapDisplayMode | undefined;
 
         if (!mode) return;
