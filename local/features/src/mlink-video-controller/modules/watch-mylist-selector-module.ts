@@ -2,7 +2,22 @@ import {
   ModuleInstance,
   ModuleConfig,
   ModuleStatus,
+  PageType,
+  ModuleCategory,
 } from "@/types/module-types";
+import { createMaterialIcon } from "@/common/material-icons";
+
+export const watchMylistSelectorModuleConfig: ModuleConfig = {
+  id: "watch_mylist_selector",
+  name: "マイリストセレクタ",
+  description: "カスタムマイリストへの動画追加UIを提供します",
+  version: "1.0.0",
+  enabled: false,
+  targetPages: [PageType.WATCH, PageType.SEARCH],
+  dependencies: [],
+  category: ModuleCategory.FUNCTIONALITY,
+  icon: createMaterialIcon("edit", { style: "outlined", color: "white" }),
+};
 
 /**
  * マイリストセレクターモジュール

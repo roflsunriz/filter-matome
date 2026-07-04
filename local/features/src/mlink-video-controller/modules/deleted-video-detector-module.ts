@@ -2,9 +2,24 @@ import {
   ModuleInstance,
   ModuleConfig,
   ModuleStatus,
+  PageType,
+  ModuleCategory,
 } from "@/types/module-types";
 import { DeletedVideoDetectorStatus } from "@/types/video-types";
 import { DeletedVideoDetector } from "@/mlink-video-controller/services/deleted-video-detector";
+import { createMaterialIcon } from "@/common/material-icons";
+
+export const deletedVideoDetectorModuleConfig: ModuleConfig = {
+  id: "deleted_video_detector",
+  name: "削除動画検出器",
+  description: "削除された動画を検出してローカルプレイヤーにリダイレクトします",
+  version: "1.0.0",
+  enabled: false,
+  targetPages: [PageType.WATCH],
+  dependencies: [],
+  category: ModuleCategory.FUNCTIONALITY,
+  icon: createMaterialIcon("link", { style: "outlined", color: "white" }),
+};
 
 /**
  * 削除動画検出モジュールのラッパークラス

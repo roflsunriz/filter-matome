@@ -2,6 +2,8 @@ import {
   ModuleInstance,
   ModuleConfig,
   ModuleStatus,
+  PageType as ModulePageType,
+  ModuleCategory,
 } from "@/types/module-types";
 import {
   Keyword,
@@ -14,6 +16,18 @@ import {
 // import { ToastrInstance } from '@/types/toastr-types';
 import { createMaterialIcon } from "../../common/material-icons";
 import { isWatchLikePage } from "../utils/page-detect";
+
+export const thumbnailsFilterModuleConfig: ModuleConfig = {
+  id: "thumbnails_filter",
+  name: "サムネイルフィルター",
+  description: "キーワードに基づいて動画サムネイルを非表示にします",
+  version: "1.0.0",
+  enabled: false,
+  targetPages: [ModulePageType.ALL],
+  dependencies: ["window.toastr"],
+  category: ModuleCategory.FUNCTIONALITY,
+  icon: createMaterialIcon("block", { style: "outlined", color: "white" }),
+};
 
 // 設定管理クラス
 class HideVideoSettings {

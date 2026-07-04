@@ -2,9 +2,27 @@ import {
   ModuleConfig,
   ModuleInstance,
   ModuleStatus,
+  PageType,
+  ModuleCategory,
 } from "@/types/module-types";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
+import { createMaterialIcon } from "@/common/material-icons";
 import harajukuStyle from "./watch-harajuku-style.css?inline";
+
+export const watchHarajukuModuleConfig: ModuleConfig = {
+  id: "watch_harajuku",
+  name: "原宿風Watch",
+  description: "Watchページをニコニコ動画（原宿）風の表示に変更します",
+  version: "1.0.0",
+  enabled: false,
+  targetPages: [PageType.WATCH],
+  dependencies: [],
+  category: ModuleCategory.VISUAL,
+  icon: createMaterialIcon("palette", {
+    style: "outlined",
+    color: "white",
+  }),
+};
 
 type ThemeName = "light" | "dark";
 type BackgroundPriority = "color-scheme" | "background-image";
@@ -110,8 +128,12 @@ export class WatchHarajukuModule implements ModuleInstance {
 
     document.documentElement.removeAttribute("data-hy-theme");
     document.documentElement.removeAttribute("data-hy-background-priority");
-    document.documentElement.style.removeProperty("--hy-detail-expanded-height");
-    document.documentElement.style.removeProperty("--hy-watch-sidebar-panel-height");
+    document.documentElement.style.removeProperty(
+      "--hy-detail-expanded-height",
+    );
+    document.documentElement.style.removeProperty(
+      "--hy-watch-sidebar-panel-height",
+    );
     document.documentElement.style.colorScheme = "";
 
     this.scheduled = false;
@@ -182,7 +204,10 @@ export class WatchHarajukuModule implements ModuleInstance {
       "aria-label",
       `${nextTheme === "dark" ? "Light" : "Dark"} theme`,
     );
-    button.setAttribute("aria-pressed", nextTheme === "dark" ? "true" : "false");
+    button.setAttribute(
+      "aria-pressed",
+      nextTheme === "dark" ? "true" : "false",
+    );
     button.dataset.hyThemeButton = nextTheme;
   }
 
@@ -208,7 +233,10 @@ export class WatchHarajukuModule implements ModuleInstance {
       "aria-label",
       isBackgroundPriority ? "カラースキーム優先に切替" : "背景画像優先に切替",
     );
-    button.setAttribute("aria-pressed", isBackgroundPriority ? "true" : "false");
+    button.setAttribute(
+      "aria-pressed",
+      isBackgroundPriority ? "true" : "false",
+    );
     button.dataset.hyBackgroundPriorityButton = nextPriority;
   }
 
@@ -249,7 +277,10 @@ export class WatchHarajukuModule implements ModuleInstance {
       ),
     )
       .map((script) => this.parseStructuredVideoData(script.textContent))
-      .find((data): data is StructuredVideoData => data?.["@type"] === "VideoObject");
+      .find(
+        (data): data is StructuredVideoData =>
+          data?.["@type"] === "VideoObject",
+      );
 
     if (!video) {
       return {};
@@ -334,7 +365,12 @@ export class WatchHarajukuModule implements ModuleInstance {
   }
 
   private isMetaSourceLabel(value: string): value is MetaSourceLabel {
-    return value === "再生" || value === "コメント" || value === "マイリスト" || value === "投稿日時";
+    return (
+      value === "再生" ||
+      value === "コメント" ||
+      value === "マイリスト" ||
+      value === "投稿日時"
+    );
   }
 
   private formatNumber(value: number | undefined): string | undefined {
@@ -414,7 +450,8 @@ export class WatchHarajukuModule implements ModuleInstance {
 
   private makeStatItem(label: string, key: string): HTMLDivElement {
     const node = document.createElement("div");
-    node.className = key === "postedAt" ? "HarajukuStats-date" : "HarajukuStats-row";
+    node.className =
+      key === "postedAt" ? "HarajukuStats-date" : "HarajukuStats-row";
     node.dataset.hyKey = key;
 
     const labelNode = document.createElement("span");
@@ -478,7 +515,9 @@ export class WatchHarajukuModule implements ModuleInstance {
       return undefined;
     }
 
-    let chrome = sidebar.querySelector<HTMLDivElement>(`:scope > .${CHROME_CLASS}`);
+    let chrome = sidebar.querySelector<HTMLDivElement>(
+      `:scope > .${CHROME_CLASS}`,
+    );
     if (!chrome) {
       chrome = this.createChrome();
       sidebar.prepend(chrome);
@@ -607,7 +646,9 @@ export class WatchHarajukuModule implements ModuleInstance {
     ]);
   }
 
-  private observeLayoutTargets(targets: Array<Element | null | undefined>): void {
+  private observeLayoutTargets(
+    targets: Array<Element | null | undefined>,
+  ): void {
     if (!("ResizeObserver" in window)) {
       return;
     }
@@ -647,7 +688,10 @@ export class WatchHarajukuModule implements ModuleInstance {
       const meta = this.currentMeta();
       if (
         retryCount >= 40 ||
-        (meta["再生"] && meta["コメント"] && meta["マイリスト"] && meta["投稿日時"])
+        (meta["再生"] &&
+          meta["コメント"] &&
+          meta["マイリスト"] &&
+          meta["投稿日時"])
       ) {
         if (this.retryTimer !== null) {
           window.clearInterval(this.retryTimer);

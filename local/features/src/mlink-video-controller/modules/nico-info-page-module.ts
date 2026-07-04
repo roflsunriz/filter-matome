@@ -2,7 +2,25 @@ import {
   ModuleInstance,
   ModuleConfig,
   ModuleStatus,
+  PageType,
+  ModuleCategory,
 } from "@/types/module-types";
+import { createMaterialIcon } from "@/common/material-icons";
+
+export const nicoInfoPageModuleConfig: ModuleConfig = {
+  id: "daily_lottery_highlight",
+  name: "デイリー福引ハイライト",
+  description: "ニコニ広告のお知らせ内でデイリー福引をハイライト表示します",
+  version: "1.0.0",
+  enabled: false,
+  targetPages: [PageType.NICO_INFO],
+  dependencies: ["window.toastr"],
+  category: ModuleCategory.UI_ENHANCEMENT,
+  icon: createMaterialIcon("card_giftcard", {
+    style: "outlined",
+    color: "white",
+  }),
+};
 
 /**
  * ニコニコインフォページモジュール

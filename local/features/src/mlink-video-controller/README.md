@@ -132,8 +132,8 @@ UI更新
 
 #### `module-handlers/module-registry.ts` - モジュール登録
 - **役割**: 利用可能モジュールの定義・管理
-- **機能**: モジュール設定登録、カテゴリ分類、ページ対応管理
-- **編集タイミング**: 新しいモジュール追加、モジュール設定変更
+- **機能**: 各 `modules/*.ts` が export する `ModuleConfig` の登録、カテゴリ分類、ページ対応管理
+- **編集タイミング**: 新しいモジュール追加、登録順序変更
 
 #### `module-handlers/settings-manager.ts` - 設定管理
 - **役割**: モジュール設定の永続化
@@ -275,8 +275,8 @@ UI更新
 ## 🎯 目的別編集ガイド
 
 ### 💡 **新しいモジュールを追加したい**
-1. `modules/新しいモジュール.ts` - モジュール実装
-2. `module-handlers/module-registry.ts` - モジュール登録
+1. `modules/新しいモジュール.ts` - モジュール実装と `ModuleConfig` の export
+2. `module-handlers/module-registry.ts` - module ファイルから config を import して登録
 3. `module-handlers/module-manager.ts` - 読み込み処理追加
 4. `src/types/module-types.ts` - 型定義追加（必要に応じて）
 
@@ -291,10 +291,10 @@ UI更新
 3. `managers/control.ts` - 統合管理に追加
 
 ### 💾 **新しい設定項目を追加したい**
-1. `src/types/module-types.ts` - 型定義追加
-2. `module-handlers/settings-manager.ts` - 保存/読み込み処理
-3. `module-handlers/settings-ui.ts` - 設定UI追加
-4. `modules/対象モジュール.ts` - モジュール側で設定利用
+1. `modules/対象モジュール.ts` - `ModuleConfig` とモジュール側の設定利用を更新
+2. `src/types/module-types.ts` - 型定義追加（必要に応じて）
+3. `module-handlers/settings-manager.ts` - 保存/読み込み処理
+4. `module-handlers/settings-ui.ts` - 設定UI追加
 
 ### 🎯 **ヒートマップ機能を拡張したい**
 - **メイン対象**: `managers/heatmap.ts`
@@ -333,8 +333,8 @@ UI更新
 ## ⚠️ 重要な注意点
 
 ### 🔥 **必ず確認すべきファイル**
-- **モジュール追加時**: `module-handlers/module-registry.ts` (登録)
-- **設定変更時**: `src/types/module-types.ts` (型定義)
+- **モジュール追加時**: `modules/対象モジュール.ts` (ModuleConfig定義) と `module-handlers/module-registry.ts` (登録)
+- **設定変更時**: `modules/対象モジュール.ts` (ModuleConfig定義) と `src/types/module-types.ts` (型定義)
 - **UI変更時**: Shadow DOM対応確認 (`panels/base.ts`)
 
 ### 🚨 **変更時の影響範囲**

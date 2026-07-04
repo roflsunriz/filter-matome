@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 - 【mlink-video-controller】Watch Page統合をタグカウンター単機能として扱うよう整理し、説明文を更新。
+- 【mlink-video-controller】モジュール設定の定義元を各 module ファイルに寄せ、`module-registry` は module 側の `ModuleConfig` を登録する構成へ変更。
 
 ### Removed
 - 【mlink-video-controller】Watch Page統合のサブモジュール設定UIと個別有効/無効設定を削除。

@@ -2,8 +2,23 @@ import {
   ModuleInstance,
   ModuleConfig,
   ModuleStatus,
+  PageType,
+  ModuleCategory,
 } from "@/types/module-types";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
+import { createMaterialIcon } from "@/common/material-icons";
+
+export const watchTabSessionsModuleConfig: ModuleConfig = {
+  id: "watch_tab_sessions",
+  name: "タブセッション拡張",
+  description: "Watchページのタブセッション制限を緩和します",
+  version: "1.0.0",
+  enabled: false,
+  targetPages: [PageType.WATCH],
+  dependencies: [],
+  category: ModuleCategory.FUNCTIONALITY,
+  icon: createMaterialIcon("tab", { style: "outlined", color: "white" }),
+};
 
 type StoragePrototype = Storage & {
   getItem: Storage["getItem"];

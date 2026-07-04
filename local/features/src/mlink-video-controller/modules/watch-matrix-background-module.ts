@@ -2,8 +2,24 @@ import {
   ModuleInstance,
   ModuleConfig,
   ModuleStatus,
+  PageType,
+  ModuleCategory,
 } from "@/types/module-types";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
+import { createMaterialIcon } from "@/common/material-icons";
+
+export const watchMatrixBackgroundModuleConfig: ModuleConfig = {
+  id: "watch_matrix_background",
+  name: "マトリックス背景",
+  description: "マトリックス風のアニメーション背景を表示します",
+  version: "1.0.0",
+  enabled: false,
+  targetPages: [PageType.WATCH],
+  dependencies: [],
+  category: ModuleCategory.VISUAL,
+  icon: createMaterialIcon("cloud", { style: "outlined", color: "white" }),
+  exclusiveGroup: "watch_background",
+};
 
 /**
  * マトリックス背景モジュール

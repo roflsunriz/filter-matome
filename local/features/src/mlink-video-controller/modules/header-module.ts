@@ -2,7 +2,22 @@ import {
   ModuleInstance,
   ModuleConfig,
   ModuleStatus,
+  PageType,
+  ModuleCategory,
 } from "@/types/module-types";
+import { createMaterialIcon } from "@/common/material-icons";
+
+export const headerModuleConfig: ModuleConfig = {
+  id: "header_privacy",
+  name: "ヘッダープライバシー",
+  description: "ユーザーアイコンとユーザー名を非表示にします",
+  version: "1.0.0",
+  enabled: false,
+  targetPages: [PageType.ALL],
+  dependencies: ["window.logger"],
+  category: ModuleCategory.PRIVACY,
+  icon: createMaterialIcon("lock", { style: "outlined", color: "white" }),
+};
 
 /**
  * ヘッダープライバシーモジュール
@@ -24,8 +39,8 @@ export class HeaderModule implements ModuleInstance {
     'img[alt*="ユーザーアイコン"], ' +
     ".common-header-w2sn95, " +
     ".common-header-n0qa7l, " +
-    ".UserIcon, .user-icon, [class*=\"userIcon\"], [class*=\"UserIcon\"], " +
-    ".UserName, .user-name, [class*=\"userName\"], [class*=\"UserName\"], " +
+    '.UserIcon, .user-icon, [class*="userIcon"], [class*="UserIcon"], ' +
+    '.UserName, .user-name, [class*="userName"], [class*="UserName"], ' +
     ".UserDetailsContainer_name";
 
   constructor(config: ModuleConfig) {
@@ -207,7 +222,10 @@ export class HeaderModule implements ModuleInstance {
     root
       .querySelectorAll(HeaderModule.userElementSelector)
       .forEach((element) => {
-        if (element instanceof HTMLElement && this.matchesUserElement(element)) {
+        if (
+          element instanceof HTMLElement &&
+          this.matchesUserElement(element)
+        ) {
           elements.add(element);
         }
       });

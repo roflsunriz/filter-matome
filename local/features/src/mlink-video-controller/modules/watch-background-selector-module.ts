@@ -2,11 +2,26 @@ import {
   ModuleInstance,
   ModuleConfig,
   ModuleStatus,
+  PageType,
+  ModuleCategory,
 } from "@/types/module-types";
 import { BackgroundImageSettings } from "@/mlink-video-controller/modules/background-image-settings";
 import { BackgroundImageItem } from "@/types/background-image-types";
 import { createMaterialIcon } from "@/common/material-icons";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
+
+export const watchBackgroundSelectorModuleConfig: ModuleConfig = {
+  id: "watch_background_selector",
+  name: "背景セレクター",
+  description: "ラジアル背景選択UIを提供します",
+  version: "1.0.0",
+  enabled: false,
+  targetPages: [PageType.WATCH],
+  dependencies: [],
+  category: ModuleCategory.VISUAL,
+  icon: createMaterialIcon("image", { style: "outlined", color: "white" }),
+  exclusiveGroup: "watch_background",
+};
 
 /**
  * 背景セレクターモジュール

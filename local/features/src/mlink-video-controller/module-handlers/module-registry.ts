@@ -1,5 +1,14 @@
 import { ModuleConfig, ModuleCategory, PageType } from "@/types/module-types";
-import { createMaterialIcon } from "@/common/material-icons";
+import { headerModuleConfig } from "@/mlink-video-controller/modules/header-module";
+import { nicoInfoPageModuleConfig } from "@/mlink-video-controller/modules/nico-info-page-module";
+import { watchPageModuleConfig } from "@/mlink-video-controller/modules/watch-page-module";
+import { watchBackgroundSelectorModuleConfig } from "@/mlink-video-controller/modules/watch-background-selector-module";
+import { watchMatrixBackgroundModuleConfig } from "@/mlink-video-controller/modules/watch-matrix-background-module";
+import { watchHarajukuModuleConfig } from "@/mlink-video-controller/modules/watch-harajuku-module";
+import { watchMylistSelectorModuleConfig } from "@/mlink-video-controller/modules/watch-mylist-selector-module";
+import { watchTabSessionsModuleConfig } from "@/mlink-video-controller/modules/watch-tab-sessions-module";
+import { thumbnailsFilterModuleConfig } from "@/mlink-video-controller/modules/thumbnails-filter-module";
+import { deletedVideoDetectorModuleConfig } from "@/mlink-video-controller/modules/deleted-video-detector-module";
 
 /**
  * 利用可能なモジュールの登録・管理を行うクラス
@@ -23,139 +32,19 @@ export class ModuleRegistry {
    * デフォルトモジュールを登録
    */
   private registerDefaultModules(): void {
-    // Header モジュール
-    this.registerModule({
-      id: "header_privacy",
-      name: "ヘッダープライバシー",
-      description: "ユーザーアイコンとユーザー名を非表示にします",
-      version: "1.0.0",
-      enabled: false,
-      targetPages: [PageType.ALL],
-      dependencies: ["window.logger"],
-      category: ModuleCategory.PRIVACY,
-      icon: createMaterialIcon("lock", { style: "outlined", color: "white" }),
-    });
-
-    // Nico Info Page モジュール
-    this.registerModule({
-      id: "daily_lottery_highlight",
-      name: "デイリー福引ハイライト",
-      description: "ニコニ広告のお知らせ内でデイリー福引をハイライト表示します",
-      version: "1.0.0",
-      enabled: false,
-      targetPages: [PageType.NICO_INFO],
-      dependencies: ["window.toastr"],
-      category: ModuleCategory.UI_ENHANCEMENT,
-      icon: createMaterialIcon("card_giftcard", {
-        style: "outlined",
-        color: "white",
-      }),
-    });
-
-    // Watch Page 統合モジュール
-    this.registerModule({
-      id: "watch_page",
-      name: "Watch Page統合",
-      description: "Watch Pageにタグカウンターを表示します",
-      version: "2.0.0",
-      enabled: false,
-      targetPages: [PageType.WATCH],
-      dependencies: [],
-      category: ModuleCategory.FUNCTIONALITY,
-      icon: createMaterialIcon("movie", { style: "outlined", color: "white" }),
-    });
-
-    // その他のWatch Pageモジュール
-    this.registerModule({
-      id: "watch_background_selector",
-      name: "背景セレクター",
-      description: "ラジアル背景選択UIを提供します",
-      version: "1.0.0",
-      enabled: false,
-      targetPages: [PageType.WATCH],
-      dependencies: [],
-      category: ModuleCategory.VISUAL,
-      icon: createMaterialIcon("image", { style: "outlined", color: "white" }),
-      exclusiveGroup: "watch_background",
-    });
-
-    this.registerModule({
-      id: "watch_matrix_background",
-      name: "マトリックス背景",
-      description: "マトリックス風のアニメーション背景を表示します",
-      version: "1.0.0",
-      enabled: false,
-      targetPages: [PageType.WATCH],
-      dependencies: [],
-      category: ModuleCategory.VISUAL,
-      icon: createMaterialIcon("cloud", { style: "outlined", color: "white" }),
-      exclusiveGroup: "watch_background",
-    });
-
-    this.registerModule({
-      id: "watch_harajuku",
-      name: "原宿風Watch",
-      description: "Watchページをニコニコ動画（原宿）風の表示に変更します",
-      version: "1.0.0",
-      enabled: false,
-      targetPages: [PageType.WATCH],
-      dependencies: [],
-      category: ModuleCategory.VISUAL,
-      icon: createMaterialIcon("palette", {
-        style: "outlined",
-        color: "white",
-      }),
-    });
-
-    this.registerModule({
-      id: "watch_mylist_selector",
-      name: "マイリストセレクタ",
-      description: "カスタムマイリストへの動画追加UIを提供します",
-      version: "1.0.0",
-      enabled: false,
-      targetPages: [PageType.WATCH, PageType.SEARCH],
-      dependencies: [],
-      category: ModuleCategory.FUNCTIONALITY,
-      icon: createMaterialIcon("edit", { style: "outlined", color: "white" }),
-    });
-
-    this.registerModule({
-      id: "watch_tab_sessions",
-      name: "タブセッション拡張",
-      description: "Watchページのタブセッション制限を緩和します",
-      version: "1.0.0",
-      enabled: false,
-      targetPages: [PageType.WATCH],
-      dependencies: [],
-      category: ModuleCategory.FUNCTIONALITY,
-      icon: createMaterialIcon("tab", { style: "outlined", color: "white" }),
-    });
-
-    // Thumbnails Filter モジュール
-    this.registerModule({
-      id: "thumbnails_filter",
-      name: "サムネイルフィルター",
-      description: "キーワードに基づいて動画サムネイルを非表示にします",
-      version: "1.0.0",
-      enabled: false,
-      targetPages: [PageType.ALL],
-      dependencies: ["window.toastr"],
-      category: ModuleCategory.FUNCTIONALITY,
-      icon: createMaterialIcon("block", { style: "outlined", color: "white" }),
-    });
-
-    // Deleted Video Detector モジュール
-    this.registerModule({
-      id: "deleted_video_detector",
-      name: "削除動画検出器",
-      description:
-        "削除された動画を検出してローカルプレイヤーにリダイレクトします",
-      version: "1.0.0",
-      enabled: false,
-      targetPages: [PageType.WATCH],
-      dependencies: [],
-      category: ModuleCategory.FUNCTIONALITY,
-      icon: createMaterialIcon("link", { style: "outlined", color: "white" }),
+    [
+      headerModuleConfig,
+      nicoInfoPageModuleConfig,
+      watchPageModuleConfig,
+      watchBackgroundSelectorModuleConfig,
+      watchMatrixBackgroundModuleConfig,
+      watchHarajukuModuleConfig,
+      watchMylistSelectorModuleConfig,
+      watchTabSessionsModuleConfig,
+      thumbnailsFilterModuleConfig,
+      deletedVideoDetectorModuleConfig,
+    ].forEach((config) => {
+      this.registerModule(config);
     });
   }
 

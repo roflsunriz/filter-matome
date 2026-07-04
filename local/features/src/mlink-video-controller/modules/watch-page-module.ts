@@ -7,22 +7,24 @@ import {
 } from "@/types/module-types";
 import { createMaterialIcon } from "@/common/material-icons";
 
+export const watchPageModuleConfig: ModuleConfig = {
+  id: "watch_page",
+  name: "Watch Page統合",
+  description: "Watch Pageにタグカウンターを表示します",
+  version: "2.0.0",
+  enabled: false,
+  targetPages: [PageType.WATCH],
+  dependencies: [],
+  category: ModuleCategory.FUNCTIONALITY,
+  icon: createMaterialIcon("movie", { style: "outlined", color: "white" }),
+};
+
 /**
  * Watch Page統合モジュール
  * タグカウンターを管理するモジュール
  */
 export class WatchPageModule implements ModuleInstance {
-  public readonly config: ModuleConfig = {
-    id: "watch_page",
-    name: "Watch Page統合",
-    description: "Watch Pageの各種機能を統合管理（タグカウンター）",
-    version: "2.0.0",
-    enabled: true,
-    targetPages: [PageType.WATCH],
-    dependencies: [],
-    category: ModuleCategory.FUNCTIONALITY,
-    icon: createMaterialIcon("movie", { style: "outlined", color: "white" }),
-  };
+  public readonly config: ModuleConfig = watchPageModuleConfig;
 
   private isInitialized: boolean = false;
   private readonly LEGACY_SETTINGS_KEY = "watch_page_module_settings";
