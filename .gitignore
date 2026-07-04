@@ -1,17 +1,17 @@
 # Node
 node_modules/
-.vscode/
 *.log
 
-# テストや一時ファイル
-tests/
-tests-examples/
+# 一時ファイル
+local/features/test-results/
 .playwright-mcp/
 playwright.config.ts
 *.bak
 .mp4_cache
 
 # コードスペース
+.vscode/
+.cursor/
 *.code-workspace
 
 # 型チェック
@@ -38,7 +38,5 @@ local/features/dist/
 .sandbox-tmp/
 .sandbox.home/
 CLAUDE.md
-
-COMMON-AGENTS.md
 
 COMMON-AGENTS.md

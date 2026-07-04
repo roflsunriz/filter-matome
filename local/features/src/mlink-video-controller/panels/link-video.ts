@@ -3,7 +3,7 @@ import { basePanelStyles } from "@/mlink-video-controller/panels/base";
 import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
 import { LinkManager } from "@/mlink-video-controller/services/link-manager";
 import { CommentManager } from "@/mlink-video-controller/managers/comment";
-import { HeatmapManager } from "@/mlink-video-controller/managers/heatmap";
+import { HeatmapModule } from "@/mlink-video-controller/modules/heatmap-module";
 import { PlaybackHandler } from "@/mlink-video-controller/handlers/playback";
 import { VolumeHandler } from "@/mlink-video-controller/handlers/volume";
 import { SpeedHandler } from "@/mlink-video-controller/handlers/speed";
@@ -14,13 +14,15 @@ import { ModuleManager } from "@/mlink-video-controller/module-handlers/module-m
 import { ModuleRegistry } from "@/mlink-video-controller/module-handlers/module-registry";
 import { SettingsManager } from "@/mlink-video-controller/module-handlers/settings-manager";
 import { SettingsUI } from "@/mlink-video-controller/module-handlers/settings-ui";
+import { CommentsTabController } from "@/mlink-video-controller/tab-controllers/comments-tab";
+import { LinksTabController } from "@/mlink-video-controller/tab-controllers/links-tab";
+import { PanelNavigationController } from "@/mlink-video-controller/tab-controllers/navigation";
+import { PlaybackTabController } from "@/mlink-video-controller/tab-controllers/playback-tab";
+import { SpeedTabController } from "@/mlink-video-controller/tab-controllers/speed-tab";
+import { VolumeTabController } from "@/mlink-video-controller/tab-controllers/volume-tab";
 
 // 型定義のインポート
-import {
-  LinkGroup,
-  LinkData,
-  MlinkVideoComment,
-} from "@/types/mlink-video-controller-types";
+import { LinkGroup } from "@/types/mlink-video-controller-types";
 import { TimerHandle } from "@/types/util-types";
 
 // テンプレートの静的インポート
@@ -48,7 +50,7 @@ export class MlinkVideoController extends BasePanel {
   private player: NicoVideoPlayer | null = null;
   private linkManager: LinkManager | null = null;
   private commentManager: CommentManager | null = null;
-  private heatmapManager: HeatmapManager | null = null;
+  private heatmapModule: HeatmapModule | null = null;
   private playbackHandler: PlaybackHandler | null = null;
   private volumeHandler: VolumeHandler | null = null;
   private speedHandler: SpeedHandler | null = null;
@@ -118,7 +120,9 @@ export class MlinkVideoController extends BasePanel {
         // モジュールシステムの初期化
         await this.initializeModuleSystem();
 
-        window.logger?.debug("[MlinkVideoController] connectedCallback initialization completed");
+        window.logger?.debug(
+          "[MlinkVideoController] connectedCallback initialization completed",
+        );
       } catch (error) {
         window.logger?.error(
           "[MlinkVideoController] connectedCallback initialization failed:",
@@ -155,14 +159,11 @@ export class MlinkVideoController extends BasePanel {
       const newIsWatchPage = this.detectWatchPage();
       const pageTypeChanged = newIsWatchPage !== this.isWatchPage;
 
-      window.logger?.info(
-        "[MlinkVideoController] Handling SPA navigation:",
-        {
-          previousPageType: this.isWatchPage ? "watch" : "other",
-          currentPageType: newIsWatchPage ? "watch" : "other",
-          pageTypeChanged,
-        },
-      );
+      window.logger?.info("[MlinkVideoController] Handling SPA navigation:", {
+        previousPageType: this.isWatchPage ? "watch" : "other",
+        currentPageType: newIsWatchPage ? "watch" : "other",
+        pageTypeChanged,
+      });
 
       if (!pageTypeChanged) {
         // ページタイプが変わっていない場合でも、watchページ内での動画切り替えは処理
@@ -228,7 +229,7 @@ export class MlinkVideoController extends BasePanel {
     }
 
     // ヒートマップを再初期化
-    if (this.heatmapManager) {
+    if (this.heatmapModule) {
       // ヒートマップの再描画は自動的に行われる
     }
   }
@@ -236,7 +237,7 @@ export class MlinkVideoController extends BasePanel {
   private initializeVideoServices(): void {
     this.player = NicoVideoPlayer.getInstance();
     this.commentManager = CommentManager.getInstance();
-    this.heatmapManager = HeatmapManager.getInstance();
+    this.heatmapModule = new HeatmapModule();
     this.playbackHandler = new PlaybackHandler();
     this.volumeHandler = new VolumeHandler();
     this.speedHandler = new SpeedHandler();
@@ -245,7 +246,8 @@ export class MlinkVideoController extends BasePanel {
   private releaseVideoServices(): void {
     this.player = null;
     this.commentManager = null;
-    this.heatmapManager = null;
+    this.heatmapModule?.destroy();
+    this.heatmapModule = null;
     this.playbackHandler = null;
     this.volumeHandler = null;
     this.speedHandler = null;
@@ -428,7 +430,9 @@ export class MlinkVideoController extends BasePanel {
       // キー伝搬停止処理を設定
       this.setupKeyPropagationPrevention();
 
-      window.logger?.debug("[MlinkVideoController] Render completed successfully");
+      window.logger?.debug(
+        "[MlinkVideoController] Render completed successfully",
+      );
     } catch (error) {
       window.logger.error("パネルのレンダリングエラー:", error);
       throw error;
@@ -470,60 +474,51 @@ export class MlinkVideoController extends BasePanel {
   }
 
   private setupEventListeners() {
-    // メインタブの切り替え
-    const tabs = this.shadow.querySelectorAll("[data-tab]");
-    tabs.forEach((tab) => {
-      tab.addEventListener("click", (e) => {
-        if (!(e.target instanceof Element)) return;
-        const target = e.target.closest("[data-tab]");
-        if (!target || target.hasAttribute("disabled")) return;
-        if (!(target instanceof HTMLElement)) return;
-        const tabId = target.dataset.tab;
-
-        if (!tabId) return;
-
-        this.activateTab(tabId);
-      });
-    });
-
-    // サブタブの切り替え（リンクタブ内）
-    const subtabs = this.shadow.querySelectorAll("[data-subtab]");
-    subtabs.forEach((subtab) => {
-      subtab.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
-        const subtabId = target.dataset.subtab;
-
-        if (!subtabId) return;
-
-        // アクティブサブタブの更新
-        subtabs.forEach((t) => t.removeAttribute("data-active"));
-        target.setAttribute("data-active", "");
-
-        // サブタブコンテンツの表示/非表示を切り替え
-        const subtabContents = this.shadow.querySelectorAll(".subtab");
-        subtabContents.forEach((content) => {
-          if (content.id === subtabId) {
-            content.classList.add("active");
-          } else {
-            content.classList.remove("active");
-          }
-        });
-      });
-    });
+    new PanelNavigationController(this.shadow).bind();
 
     // 視聴ページでのみ動画関連イベントを設定
     if (this.isWatchPage) {
-      // プレイバックテンプレートのボタンイベント
-      this.setupPlaybackTemplateEvents();
+      new PlaybackTabController(this.shadow, this.playbackHandler, {
+        startTimeUpdateInterval: () => this.startTimeUpdateInterval(),
+        setupPlayStateListener: () => this.setupPlayStateListener(),
+        updatePlayPauseButton: () => this.updatePlayPauseButton(),
+        toggleLoop: () => this.toggleLoop(),
+        updateLoopButtonAppearance: (button) =>
+          this.updateLoopButtonAppearance(button),
+      }).bind();
 
-      // スピードテンプレートのボタンイベント
-      this.setupSpeedTemplateEvents();
+      new SpeedTabController(
+        this.shadow,
+        this.speedHandler,
+        () => this.updateSpeedDisplay(),
+        (interval) => {
+          this.speedUpdateInterval = interval;
+        },
+      ).bind();
 
-      // ボリュームテンプレートのボタンイベント
-      this.setupVolumeTemplateEvents();
+      new VolumeTabController(
+        this.shadow,
+        this.volumeHandler,
+        () => this.updateVolumeDisplay(),
+        (interval) => {
+          this.volumeUpdateInterval = interval;
+        },
+      ).bind();
 
-      // コメントテンプレートのイベント
-      this.setupCommentTemplateEvents();
+      this.commentDataChangedUnsubscribe = new CommentsTabController(
+        this.shadow,
+        this.commentManager,
+        this.player,
+        {
+          updateHeatmap: () => this.heatmapModule?.updateComments(),
+          onFetchError: (error) => {
+            window.logger.error(
+              "コメント取得処理で予期しないエラーが発生しました (初期化時):",
+              error,
+            );
+          },
+        },
+      ).bind();
     }
 
     // コメントシークイベント（テンプレートベースのため直接処理）
@@ -541,24 +536,7 @@ export class MlinkVideoController extends BasePanel {
     //   }
     // }) as EventListener);
 
-    // アクションカードのクリックイベント
-    const actionCards = this.shadow.querySelectorAll(".action-card");
-    actionCards.forEach((card) => {
-      card.addEventListener("click", (e) => {
-        void (async () => {
-          const target = e.target as HTMLElement;
-          const actionCard = target.closest(".action-card");
-          if (
-            actionCard instanceof HTMLElement &&
-            actionCard.dataset.action &&
-            actionCard.dataset.disabled !== "true" &&
-            this.linkManager
-          ) {
-            await this.linkManager.handleAction(actionCard.dataset.action);
-          }
-        })();
-      });
-    });
+    new LinksTabController(this.shadow, this.linkManager).bind();
   }
 
   private activateTab(tabId: string): void {
@@ -608,651 +586,11 @@ export class MlinkVideoController extends BasePanel {
     }
   }
 
-  private setupPlaybackTemplateEvents() {
-    // トラッカーレンジ
-    const trackerRange = this.shadow.querySelector(
-      "#playback .tracker-range",
-    ) as HTMLInputElement;
-    if (trackerRange) {
-      trackerRange.addEventListener("input", (e) => {
-        const position = parseFloat((e.target as HTMLInputElement).value) / 100;
-        this.playbackHandler?.seekToPosition(position);
-      });
-    }
-
-    // 時間表示の定期更新を開始
-    this.startTimeUpdateInterval();
-
-    // シークボタン
-    const seekButtons = this.shadow.querySelectorAll("[data-seek]");
-    seekButtons.forEach((button) => {
-      button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
-        const seekDirection = target.dataset.seek;
-        const seekInput = this.shadow.querySelector(
-          ".seek-value",
-        ) as HTMLInputElement;
-        const seekValue = seekInput ? parseInt(seekInput.value) : 10;
-
-        if (seekDirection === "+1" && this.playbackHandler) {
-          this.playbackHandler.seek({
-            seconds: seekValue,
-            direction: "forward",
-          });
-        } else if (seekDirection === "-1" && this.playbackHandler) {
-          this.playbackHandler.seek({
-            seconds: seekValue,
-            direction: "backward",
-          });
-        }
-      });
-    });
-
-    // X秒ジャンプボタン
-    const jumpButtons = this.shadow.querySelectorAll("[data-jump-seconds]");
-    jumpButtons.forEach((button) => {
-      button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
-        const jumpSeconds = parseInt(target.dataset.jumpSeconds || "0");
-
-        if (jumpSeconds > 0 && this.playbackHandler) {
-          this.playbackHandler.seek({
-            seconds: jumpSeconds,
-            direction: "forward",
-          });
-        } else if (this.playbackHandler) {
-          this.playbackHandler.seek({
-            seconds: Math.abs(jumpSeconds),
-            direction: "backward",
-          });
-        }
-      });
-    });
-
-    // ヒートマップモード切り替えボタン
-    const heatmapModeButtons =
-      this.shadow.querySelectorAll(".heatmap-mode-btn");
-    heatmapModeButtons.forEach((button) => {
-      button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
-        const mode = target.dataset.mode as "fab" | "overlay" | "off";
-
-        if (mode && this.heatmapManager) {
-          // アクティブボタンの更新
-          heatmapModeButtons.forEach((btn) =>
-            btn.removeAttribute("data-active"),
-          );
-          target.setAttribute("data-active", "");
-
-          // ヒートマップの表示モードを変更
-          this.heatmapManager.setDisplayMode(mode);
-        }
-      });
-    });
-
-    // ヒートマップ詳細設定のイベントリスナー
-    this.setupHeatmapSettingsEvents();
-
-    // ヒートマップクリックでシーク
-    const heatmapCanvas = this.shadow.querySelector(
-      "#playback .heatmap-canvas",
-    ) as HTMLCanvasElement;
-    const heatmapTooltip = this.shadow.querySelector(
-      "#playback .heatmap-tooltip",
-    ) as HTMLElement;
-
-    if (heatmapCanvas && heatmapTooltip) {
-      // マウスオーバー時のツールチップ表示
-      heatmapCanvas.addEventListener("mousemove", (e) => {
-        const rect = heatmapCanvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const position = x / rect.width;
-
-        this.heatmapManager?.showTooltip(position, heatmapTooltip);
-      });
-
-      heatmapCanvas.addEventListener("mouseleave", () => {
-        this.heatmapManager?.hideTooltip(heatmapTooltip);
-      });
-
-      // クリックでシーク
-      heatmapCanvas.addEventListener("click", (e) => {
-        const rect = heatmapCanvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const position = x / rect.width;
-        const duration = this.player?.getDuration();
-
-        if (this.player && duration) {
-          this.player.seek(position * duration);
-        }
-      });
-    }
-
-    // コントロールボタン（プレイバックテンプレート内）
-    const controlButtons = this.shadow.querySelectorAll(
-      "#playback .control-btn",
-    );
-    controlButtons.forEach((button, index) => {
-      button.addEventListener("click", () => {
-        switch (index) {
-          case 0: // ⏮ (前の動画)
-            // 前の動画への移動は実装されていないため、10秒戻る
-            this.playbackHandler?.seek({ seconds: 10, direction: "backward" });
-            break;
-          case 1: // ⏸/▶ (再生/一時停止)
-            this.playbackHandler?.togglePlayPause();
-            // 再生状態変更後にアイコンを更新
-            setTimeout(() => this.updatePlayPauseButton(), 100);
-            break;
-          case 2: // ⏭ (次の動画)
-            // 次の動画への移動は実装されていないため、10秒進む
-            this.playbackHandler?.seek({ seconds: 10, direction: "forward" });
-            break;
-          case 3: // 🔁 (リピート)
-            this.toggleLoop();
-            this.updateLoopButtonAppearance(button as HTMLElement);
-            break;
-        }
-      });
-
-      // 初期化時に繰り返し再生ボタンの見た目を設定
-      if (index === 3) {
-        this.updateLoopButtonAppearance(button as HTMLElement);
-      }
-    });
-
-    // 動画の再生状態変更を監視してアイコンを更新
-    this.setupPlayStateListener();
-  }
-
-  // ヒートマップ詳細設定のイベントリスナーを設定
-  private setupHeatmapSettingsEvents(): void {
-    if (!this.heatmapManager) return;
-
-    // カラースキーム選択
-    const colorSchemeSelect = this.shadow.querySelector(
-      ".heatmap-color-scheme",
-    ) as HTMLSelectElement;
-    if (colorSchemeSelect) {
-      // 保存された設定をUIに反映
-      colorSchemeSelect.value = this.heatmapManager.getColorScheme();
-
-      // select要素とその親要素のクリックイベントでイベント伝播を停止
-      const preventPanelClose = (e: Event) => {
-        e.stopPropagation();
-      };
-
-      // select要素でのクリック、マウスダウン、マウスアップイベントの伝播を防ぐ
-      colorSchemeSelect.addEventListener("click", preventPanelClose);
-      colorSchemeSelect.addEventListener("mousedown", preventPanelClose);
-      colorSchemeSelect.addEventListener("mouseup", preventPanelClose);
-
-      colorSchemeSelect.addEventListener("change", (e) => {
-        // イベント伝播を停止
-        e.stopPropagation();
-
-        if (this.heatmapManager) {
-          this.heatmapManager.setColorScheme(
-            colorSchemeSelect.value as "default" | "rainbow" | "fire" | "cool",
-          );
-        }
-      });
-    }
-
-    // スムージングトグル
-    const smoothToggle = this.shadow.querySelector(
-      ".heatmap-smooth-toggle",
-    ) as HTMLInputElement;
-    if (smoothToggle) {
-      // 保存された設定をUIに反映
-      smoothToggle.checked = this.heatmapManager.getSmoothing();
-
-      smoothToggle.addEventListener("change", (e) => {
-        // イベント伝播を停止
-        e.stopPropagation();
-
-        if (this.heatmapManager) {
-          this.heatmapManager.setSmoothing(smoothToggle.checked);
-        }
-      });
-    }
-  }
-
-  private setupSpeedTemplateEvents() {
-    // スピードプリセットボタン
-    const speedPresets = this.shadow.querySelectorAll("#speed .speed-preset");
-    speedPresets.forEach((button) => {
-      button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
-        const speed = parseFloat(target.dataset.speed || "1.0");
-        this.speedHandler?.setPlaybackRate({ value: speed });
-
-        // スピードラベルとレンジを更新
-        this.updateSpeedDisplay();
-      });
-    });
-
-    // スピード調整ボタン
-    const speedAdjustButtons = this.shadow.querySelectorAll(
-      "#speed .speed-adjust",
-    );
-    speedAdjustButtons.forEach((button) => {
-      button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
-        const adjust = parseFloat(target.dataset.adjust || "0");
-        this.speedHandler?.adjustPlaybackRate(adjust);
-
-        // スピードラベルとレンジを更新
-        this.updateSpeedDisplay();
-      });
-    });
-
-    // スピードレンジスライダー
-    const speedRange = this.shadow.querySelector(
-      "#speed .speed-range",
-    ) as HTMLInputElement;
-    if (speedRange) {
-      speedRange.addEventListener("input", (e) => {
-        const speed = parseFloat((e.target as HTMLInputElement).value);
-        this.speedHandler?.setPlaybackRate({ value: speed });
-
-        this.updateSpeedDisplay();
-      });
-    }
-
-    // 外部変更を定期的にチェックして表示を更新
-    this.speedUpdateInterval = setInterval(() => {
-      this.updateSpeedDisplay();
-    }, 1000);
-  }
-
-  private setupVolumeTemplateEvents() {
-    // ボリュームプリセットボタン
-    const volumePresets = this.shadow.querySelectorAll(
-      "#volume .volume-preset",
-    );
-
-    volumePresets.forEach((button) => {
-      button.addEventListener("click", (e) => {
-        const target = e.target as HTMLElement;
-        const volume = parseFloat(target.dataset.volume || "0.5");
-        this.volumeHandler?.setVolume({ value: volume });
-
-        // ボリュームラベルとレンジを更新
-        this.updateVolumeDisplay();
-      });
-    });
-
-    // ボリュームコントロールボタン
-    const volumeControlButtons = this.shadow.querySelectorAll(
-      "#volume .control-btn",
-    );
-
-    volumeControlButtons.forEach((button, index) => {
-      button.addEventListener("click", () => {
-        switch (index) {
-          case 0: // 🔇 (ミュート)
-            this.volumeHandler?.setVolume({ value: 0 }); // 0%に設定
-            break;
-          case 1: // 🔉 (小音量)
-            this.volumeHandler?.setVolume({ value: 0.01 });
-            break;
-          case 2: // 🔊 (音量上げる)
-            this.volumeHandler?.setVolume({ value: 0.5 });
-            break;
-        }
-
-        // ボリュームラベルとレンジを更新
-        this.updateVolumeDisplay();
-      });
-    });
-
-    // ボリュームレンジスライダー
-    const volumeRange = this.shadow.querySelector(
-      "#volume .volume-range",
-    ) as HTMLInputElement;
-    if (volumeRange) {
-      volumeRange.addEventListener("input", (e) => {
-        const value = parseFloat((e.target as HTMLInputElement).value);
-        this.volumeHandler?.setVolume({ value, isLogarithmic: true });
-
-        this.updateVolumeDisplay();
-      });
-    }
-
-    // 外部変更を定期的にチェックして表示を更新
-    this.volumeUpdateInterval = setInterval(() => {
-      this.updateVolumeDisplay();
-    }, 1000);
-  }
-
-  private setupCommentTemplateEvents() {
-    const searchInput = this.shadow.querySelector(
-      "#comments .comment-search-input",
-    ) as HTMLInputElement;
-    const regexToggle = this.shadow.querySelector(
-      "#comments .regex-toggle",
-    ) as HTMLInputElement;
-    const extendedToggle = this.shadow.querySelector(
-      "#comments .extended-toggle",
-    ) as HTMLInputElement;
-    const searchBtn = this.shadow.querySelector(
-      "#comments .search-btn",
-    ) as HTMLButtonElement;
-    const clearBtn = this.shadow.querySelector(
-      "#comments .clear-btn",
-    ) as HTMLButtonElement;
-    const searchResults = this.shadow.querySelector(
-      "#comments .search-results",
-    ) as HTMLElement;
-
-    if (
-      searchInput &&
-      regexToggle &&
-      extendedToggle &&
-      searchBtn &&
-      clearBtn &&
-      searchResults
-    ) {
-      // 検索入力フィールドでのキーボードイベント処理を強化
-      searchInput.addEventListener("keydown", (e) => {
-        // イベントの伝播を停止してプレイヤーのショートカットを防ぐ
-        e.stopPropagation();
-
-        // 特定のキーのデフォルト動作を防ぐ
-        const preventDefaultKeys = [
-          " ", // スペースキー（再生/一時停止）
-          "ArrowLeft", // 左矢印（巻き戻し）
-          "ArrowRight", // 右矢印（早送り）
-          "ArrowUp", // 上矢印（音量アップ）
-          "ArrowDown", // 下矢印（音量ダウン）
-          "f", // フルスクリーン
-          "F", // フルスクリーン
-          "m", // ミュート
-          "M", // ミュート
-          "k", // 再生/一時停止
-          "K", // 再生/一時停止
-          "j", // 動画を10秒戻す
-          "J", // 動画を10秒戻す
-          "l", // 動画を10秒進める
-          "L", // 動画を10秒進める
-        ];
-
-        if (preventDefaultKeys.includes(e.key)) {
-          e.preventDefault();
-        }
-
-        // Enterキーで検索実行（IME入力中は除外）
-        if (e.key === "Enter" && !e.isComposing) {
-          e.preventDefault(); // デフォルト動作を防ぐ
-          const searchText = searchInput.value.trim();
-          if (searchText) {
-            this.performCommentSearch(searchText, searchResults);
-          }
-        }
-      });
-
-      // 検索入力フィールドでのキーアップイベントも処理
-      searchInput.addEventListener("keyup", (e) => {
-        e.stopPropagation();
-      });
-
-      // 検索入力フィールドでのキープレスイベントも処理
-      searchInput.addEventListener("keypress", (e) => {
-        e.stopPropagation();
-        // フォーム送信も念のため防ぐ
-        if (e.key === "Enter") {
-          e.preventDefault();
-        }
-      });
-
-      // フォーカス時とブラー時のイベント処理
-      searchInput.addEventListener("focus", () => {
-        // 必要に応じて追加の処理
-      });
-
-      searchInput.addEventListener("blur", () => {
-        // 必要に応じて追加の処理
-      });
-
-      // 正規表現トグル
-      if (regexToggle) {
-        regexToggle.addEventListener("change", () => {
-          this.commentManager?.setSearchOptions({
-            enableRegexp: regexToggle.checked,
-            enableExtended: extendedToggle.checked,
-          });
-        });
-      }
-
-      // 詳細表示トグル
-      if (extendedToggle) {
-        extendedToggle.addEventListener("change", () => {
-          this.commentManager?.setSearchOptions({
-            enableRegexp: regexToggle.checked,
-            enableExtended: extendedToggle.checked,
-          });
-          if (searchInput.value) {
-            this.performCommentSearch(searchInput.value, searchResults);
-          }
-        });
-      }
-
-      // 検索実行
-      if (searchBtn) {
-        searchBtn.addEventListener("click", () => {
-          this.performCommentSearch(searchInput.value, searchResults);
-        });
-      }
-
-      // 検索クリア
-      if (clearBtn) {
-        clearBtn.addEventListener("click", () => {
-          searchInput.value = "";
-          searchResults.innerHTML =
-            '<div class="no-results">コメントを検索してください</div>';
-        });
-      }
-    }
-
-    // コメントデータの初期取得
-    this.commentManager
-      ?.fetchComments()
-      .then((success) => {
-        if (success) {
-          // コメントデータ取得後にヒートマップを更新
-          this.heatmapManager?.updateComments();
-        } else {
-          window.logger.warn("コメントの取得に失敗しました (初期化時)");
-        }
-      })
-      .catch((error) => {
-        window.logger.error(
-          "コメント取得処理で予期しないエラーが発生しました (初期化時):",
-          error,
-        );
-      });
-
-    // ===============================
-    // 🚀 SPA対応処理を追加
-    // ===============================
-    // URL変更を監視してコメントを自動更新
-    this.commentManager?.startUrlWatching();
-
-    // コメントデータが更新されたら検索結果をクリア
-    this.commentDataChangedUnsubscribe =
-      this.commentManager?.onDataChanged(() => {
-        // 入力と結果をリセット
-        if (searchInput) {
-          searchInput.value = "";
-        }
-        if (searchResults) {
-          searchResults.innerHTML =
-            '<div class="no-results">コメントを検索してください</div>';
-        }
-        // ヒートマップも更新
-        this.heatmapManager?.updateComments();
-      }) || null;
-  }
-
-  private performCommentSearch(searchText: string, searchResults: HTMLElement) {
-    const result = this.commentManager?.searchComments(searchText);
-
-    if (!result?.success) {
-      searchResults.innerHTML = `<div class="error-message">${result?.error}</div>`;
-      return;
-    }
-
-    if (!result.results || result.results.length === 0) {
-      searchResults.innerHTML =
-        '<div class="no-results">一致するコメントが見つかりませんでした</div>';
-      return;
-    }
-
-    searchResults.innerHTML = "";
-    const fragment = document.createDocumentFragment();
-
-    result.results.forEach((comment) => {
-      const resultElement = this.createCommentElement(comment);
-      fragment.appendChild(resultElement);
-    });
-
-    searchResults.appendChild(fragment);
-
-    // コメント検索後にヒートマップを更新
-    this.heatmapManager?.updateComments();
-  }
-
-  private createCommentElement(comment: MlinkVideoComment): HTMLElement {
-    const container = document.createElement("div");
-    container.className = "comment-result";
-
-    // 時間表示
-    const timeElement = document.createElement("div");
-    timeElement.className = "comment-time";
-    timeElement.textContent = `⏰ ${this.formatVpos(comment.vposMs || 0)}`;
-
-    // コメント本文
-    const bodyElement = document.createElement("div");
-    bodyElement.className = "comment-body";
-    bodyElement.textContent = comment.body;
-
-    // コピーボタン
-    const copyButton = document.createElement("button");
-    copyButton.className = "copy-button";
-    copyButton.innerHTML = createMaterialIcon("content_copy", {
-      style: "outlined",
-      color: "white",
-    });
-    copyButton.title = "コメントをコピー";
-    copyButton.onclick = (e) => {
-      e.stopPropagation();
-      navigator.clipboard
-        .writeText(comment.body)
-        .then(() => this.showCopySuccess(copyButton))
-        .catch(() => this.showCopyError(copyButton));
-    };
-
-    // ユーザー情報
-    const userElement = document.createElement("div");
-    userElement.className = "comment-user";
-    userElement.textContent = `👤 ${comment.userId || "不明"}`;
-
-    // 基本的な情報を追加
-    container.appendChild(timeElement);
-    container.appendChild(bodyElement);
-    container.appendChild(copyButton);
-    container.appendChild(userElement);
-
-    // 詳細情報（拡張モード時のみ）
-    const searchOptions = this.commentManager?.getSearchOptions();
-    if (searchOptions?.enableExtended && comment) {
-      const detailsElement = document.createElement("div");
-      detailsElement.className = "comment-details";
-
-      // フォーマットされた日時
-      const postedDate = comment.postedAt
-        ? new Date(comment.postedAt).toLocaleString("ja-JP")
-        : "不明";
-
-      const details = [
-        `ID: ${comment.id || "-"}`,
-        `No: ${comment.no || "-"}`,
-        `投稿日時: ${postedDate}`,
-        `コマンド: ${comment.commands ? comment.commands.join(" ") : "-"}`,
-        `プレミアム: ${comment.isPremium ? createMaterialIcon("star", { style: "outlined", color: "white" }) : "-"}`,
-        `スコア: ${comment.score || "-"}`,
-      ];
-
-      detailsElement.innerHTML = details.join(" | ");
-      container.appendChild(detailsElement);
-    }
-
-    // クリックで該当時間にシーク
-    container.addEventListener("click", () => {
-      if (comment.vposMs && this.player) {
-        this.player.seek(comment.vposMs / 1000);
-      }
-    });
-
-    return container;
-  }
-
-  private formatVpos(vposMs: number): string {
-    const seconds = vposMs / 1000;
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${minutes}:${secs.toString().padStart(2, "0")}`;
-  }
-
-  private showCopySuccess(button: HTMLElement): void {
-    const tooltip = document.createElement("div");
-    tooltip.className = "copy-tooltip";
-    tooltip.textContent = "コピーしました";
-    tooltip.style.position = "absolute";
-    tooltip.style.top = "-20px";
-    tooltip.style.left = "0";
-
-    button.style.position = "relative";
-    button.appendChild(tooltip);
-
-    setTimeout(() => {
-      tooltip.remove();
-    }, 2000);
-  }
-
-  private showCopyError(button: HTMLElement): void {
-    const tooltip = document.createElement("div");
-    tooltip.className = "copy-tooltip";
-    tooltip.textContent = "コピーに失敗しました";
-    tooltip.style.position = "absolute";
-    tooltip.style.top = "-20px";
-    tooltip.style.left = "0";
-    tooltip.style.color = "#ff6b6b";
-
-    button.style.position = "relative";
-    button.appendChild(tooltip);
-
-    setTimeout(() => {
-      tooltip.remove();
-    }, 2000);
-  }
-
   private async renderLinkGroup(group: LinkGroup): Promise<string> {
-    const links = (await this.linkManager?.getLinks(group)) || [];
-    return links
-      .map((link: LinkData) => {
-        const disabledAttributes = link.disabled
-          ? ` data-disabled="true" aria-disabled="true" title="${link.disabledReason ?? "現在のページでは利用できません"}"`
-          : "";
-        return `
-      <div class="action-card${link.disabled ? " action-card-disabled" : ""}" data-action="${link.action}"${disabledAttributes}>
-        <img src="${link.icon}" alt="${link.title}" />
-        <span>${link.title}</span>
-      </div>
-    `;
-      })
-      .join("");
+    return new LinksTabController(
+      this.shadow,
+      this.linkManager,
+    ).renderLinkGroup(group);
   }
 
   // パネルが閉じられたときにインターバルをクリアする
@@ -1261,8 +599,8 @@ export class MlinkVideoController extends BasePanel {
     if (this.isWatchPage) {
       this.stopTimeUpdateInterval();
       // ヒートマップの定期更新も停止
-      if (this.heatmapManager) {
-        this.heatmapManager.stopPeriodicUpdate();
+      if (this.heatmapModule) {
+        this.heatmapModule.stopPeriodicUpdate();
       }
     }
   }
@@ -1273,108 +611,25 @@ export class MlinkVideoController extends BasePanel {
     if (this.isWatchPage) {
       this.startTimeUpdateInterval();
       // ヒートマップの定期更新も再開（表示モードがoffでなければ）
-      if (
-        this.heatmapManager &&
-        this.heatmapManager.getDisplayMode() !== "off"
-      ) {
-        this.heatmapManager.startPeriodicUpdate();
+      if (this.heatmapModule && this.heatmapModule.getDisplayMode() !== "off") {
+        this.heatmapModule.startPeriodicUpdate();
       }
     }
   }
 
   private initializeHeatmap(): void {
-    if (!this.heatmapManager || !this.commentManager) {
+    if (!this.heatmapModule || !this.commentManager || !this.player) {
       window.logger.warn(
-        "[MlinkVideoController] ヒートマップまたはコメントマネージャーが初期化されていません",
+        "[MlinkVideoController] ヒートマップ、コメント、またはプレイヤーが初期化されていません",
       );
       return;
     }
 
-    // FAB内のヒートマップキャンバスとツールチップを取得
-    const heatmapCanvas = this.shadow.querySelector(
-      ".heatmap-canvas",
-    ) as HTMLCanvasElement;
-    const heatmapTooltip = this.shadow.querySelector(
-      ".heatmap-tooltip",
-    ) as HTMLElement;
-
-    if (heatmapCanvas && heatmapTooltip) {
-      this.heatmapManager.initialize(heatmapCanvas, heatmapTooltip);
-
-      // 保存された設定をUIに反映
-      this.applySavedHeatmapSettings();
-
-      // ヒートマップ詳細設定の初期化
-      this.initializeHeatmapDetailSettings();
-
-      // コメントデータを取得してヒートマップに反映
-      this.commentManager
-        .fetchComments()
-        .then((success) => {
-          if (!success) {
-            window.logger.warn(
-              "[MlinkVideoController] コメントデータの取得に失敗しました (ヒートマップ更新)",
-            );
-            return;
-          }
-
-          if (this.heatmapManager) {
-            this.heatmapManager.updateComments();
-          }
-        })
-        .catch((error) => {
-          window.logger.error(
-            "[MlinkVideoController] コメント取得処理で予期しないエラーが発生しました (ヒートマップ更新):",
-            error,
-          );
-        });
-    } else {
-      window.logger.warn(
-        "[MlinkVideoController] ヒートマップ要素が見つかりません",
-      );
-    }
-  }
-
-  private applySavedHeatmapSettings(): void {
-    // 保存された表示モードをUIに反映
-    const currentMode = this.heatmapManager?.getDisplayMode();
-    const heatmapModeButtons =
-      this.shadow.querySelectorAll(".heatmap-mode-btn");
-
-    heatmapModeButtons.forEach((button) => {
-      const buttonMode = (button as HTMLElement).dataset.mode;
-      if (buttonMode === currentMode) {
-        button.setAttribute("data-active", "");
-      } else {
-        button.removeAttribute("data-active");
-      }
+    this.heatmapModule.attachToPanel({
+      shadowRoot: this.shadow,
+      player: this.player,
+      commentManager: this.commentManager,
     });
-
-    // 保存された設定で表示モードを適用
-    if (this.heatmapManager && currentMode) {
-      this.heatmapManager.setDisplayMode(currentMode);
-    }
-  }
-
-  // ヒートマップ詳細設定の初期化
-  private initializeHeatmapDetailSettings(): void {
-    if (!this.heatmapManager) return;
-
-    // カラースキーム選択の初期値設定
-    const colorSchemeSelect = this.shadow.querySelector(
-      ".heatmap-color-scheme",
-    ) as HTMLSelectElement;
-    if (colorSchemeSelect) {
-      colorSchemeSelect.value = this.heatmapManager.getColorScheme();
-    }
-
-    // スムージングトグルの初期値設定
-    const smoothToggle = this.shadow.querySelector(
-      ".heatmap-smooth-toggle",
-    ) as HTMLInputElement;
-    if (smoothToggle) {
-      smoothToggle.checked = this.heatmapManager.getSmoothing();
-    }
   }
 
   // 音量表示を更新するヘルパーメソッド
@@ -1416,8 +671,8 @@ export class MlinkVideoController extends BasePanel {
     }
     this.timeUpdateInterval = setInterval(() => {
       this.updateTimeDisplay();
-      // ヒートマップ更新はHeatmapManagerに直接委譲
-      this.heatmapManager?.render();
+      // ヒートマップ更新はモジュールに委譲
+      this.heatmapModule?.render();
     }, 1000);
   }
 
@@ -1847,10 +1102,10 @@ export class MlinkVideoController extends BasePanel {
       // コメントマネージャーのクリーンアップ（必要に応じて）
       this.commentManager = null;
     }
-    if (this.heatmapManager) {
-      // ヒートマップマネージャーのクリーンアップ
-      this.heatmapManager.stopPeriodicUpdate();
-      this.heatmapManager = null;
+    if (this.heatmapModule) {
+      // ヒートマップモジュールのクリーンアップ
+      this.heatmapModule.stopPeriodicUpdate();
+      this.heatmapModule = null;
     }
 
     // ハンドラーのクリーンアップ
@@ -1861,7 +1116,9 @@ export class MlinkVideoController extends BasePanel {
     // リンクマネージャーのクリーンアップ
     this.linkManager = null;
 
-    window.logger?.debug("[MlinkVideoController] Cleanup completed in disconnectedCallback");
+    window.logger?.debug(
+      "[MlinkVideoController] Cleanup completed in disconnectedCallback",
+    );
 
     // 親クラスのクリーンアップを実行
     super.disconnectedCallback();

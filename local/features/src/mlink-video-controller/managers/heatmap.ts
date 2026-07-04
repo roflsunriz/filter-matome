@@ -2,8 +2,8 @@ import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-pl
 import { TimeFormatter } from "@/mlink-video-controller/utils/time-formatter";
 import { NicoApiFetcher } from "@/mlink-video-controller/managers/nico-api-fetcher";
 
-type ColorScheme = "default" | "rainbow" | "fire" | "cool";
-type DisplayMode = "fab" | "overlay" | "off";
+export type HeatmapColorScheme = "default" | "rainbow" | "fire" | "cool";
+export type HeatmapDisplayMode = "fab" | "overlay" | "off";
 
 export class HeatmapManager {
   private static instance: HeatmapManager;
@@ -21,10 +21,10 @@ export class HeatmapManager {
   private overlayContext: CanvasRenderingContext2D | null = null;
   private overlayContainer: HTMLElement | null = null;
 
-  private colorScheme: ColorScheme = "default";
+  private colorScheme: HeatmapColorScheme = "default";
   private smoothing: boolean = false;
   private commentData: { time: number; count: number }[] = [];
-  private displayMode: DisplayMode = "off";
+  private displayMode: HeatmapDisplayMode = "off";
   private updateInterval: number | null = null;
 
   // SPA遷移検知用
@@ -79,7 +79,7 @@ export class HeatmapManager {
     this.updateCommentData();
   }
 
-  public setDisplayMode(mode: DisplayMode): void {
+  public setDisplayMode(mode: HeatmapDisplayMode): void {
     this.displayMode = mode;
 
     // 既存の表示をクリア
@@ -106,7 +106,7 @@ export class HeatmapManager {
     this.saveSettings();
   }
 
-  public getDisplayMode(): DisplayMode {
+  public getDisplayMode(): HeatmapDisplayMode {
     return this.displayMode;
   }
 
@@ -408,7 +408,7 @@ export class HeatmapManager {
     this.commentData = this.apiFetcher.getCommentDensityData();
   }
 
-  public setColorScheme(scheme: ColorScheme): void {
+  public setColorScheme(scheme: HeatmapColorScheme): void {
     this.colorScheme = scheme;
     this.render();
     this.renderOverlay();
@@ -669,14 +669,14 @@ export class HeatmapManager {
         storedDisplayMode &&
         ["fab", "overlay", "off"].includes(storedDisplayMode)
       ) {
-        this.displayMode = storedDisplayMode as DisplayMode;
+        this.displayMode = storedDisplayMode as HeatmapDisplayMode;
       }
 
       if (
         storedColorScheme &&
         ["default", "rainbow", "fire", "cool"].includes(storedColorScheme)
       ) {
-        this.colorScheme = storedColorScheme as ColorScheme;
+        this.colorScheme = storedColorScheme as HeatmapColorScheme;
       }
 
       if (storedSmoothing !== null) {
@@ -1051,7 +1051,7 @@ export class HeatmapManager {
   }
 
   // 現在の設定を取得するメソッドを追加
-  public getColorScheme(): ColorScheme {
+  public getColorScheme(): HeatmapColorScheme {
     return this.colorScheme;
   }
 

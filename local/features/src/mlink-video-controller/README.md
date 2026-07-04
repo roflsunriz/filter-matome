@@ -24,6 +24,7 @@ features/src/mlink-video-controller/
 ├── modules/                              # 個別機能モジュール
 │   ├── background-image-settings.ts      # 背景画像設定 (19KB)
 │   ├── header-module.ts                  # ヘッダーモジュール (4.9KB)
+│   ├── heatmap-module.ts                 # コメントヒートマップモジュール
 │   ├── nico-info-page-module.ts          # ニコインフォページ (5.3KB)
 │   ├── thumbnails-filter-module.ts       # サムネイルフィルター (23KB)
 │   ├── watch-background-selector-module.ts # 背景セレクター (28KB)
@@ -35,7 +36,14 @@ features/src/mlink-video-controller/
 │   └── watch-page-module.ts              # Watchページ統合 (26KB)
 ├── panels/
 │   ├── base.ts                           # ベースパネル (6.1KB)
-│   └── link-video.ts                     # メインUIパネル (55KB)
+│   └── link-video.ts                     # メインUIパネル、SPA/Shadow DOM統合
+├── tab-controllers/                      # 各タブのDOMイベント制御
+│   ├── comments-tab.ts                   # コメント検索タブ
+│   ├── links-tab.ts                      # リンクタブ
+│   ├── navigation.ts                     # メインタブ/サブタブ切替
+│   ├── playback-tab.ts                   # 再生タブ
+│   ├── speed-tab.ts                      # 速度タブ
+│   └── volume-tab.ts                     # 音量タブ
 ├── services/
 │   ├── link-manager.ts                   # リンク管理サービス (8.8KB)
 │   └── nico-video-player.ts              # 動画プレイヤー連携 (13KB)
@@ -82,9 +90,9 @@ nico-api-fetcher.ts ─── APIデータ取得・前処理
     ↓
 各managers/*.ts ─── データ管理・状態管理
     ↓
-panels/link-video.ts ─── メインUI統合
+panels/link-video.ts ─── メインUI統合、SPA/Shadow DOM管理
     ↓
-各ui/*.ts ─── 個別UIコンポーネント
+tab-controllers/*.ts ─── タブごとのイベント処理
     ↓
 ユーザーインターフェース
 ```
@@ -110,10 +118,10 @@ UI更新
 - **SPA方針**: 視聴ページと非視聴ページの移動ではパネルを破棄せず、視聴ページベースのUIを維持して動画専用機能だけを無効化・グレーアウト
 - **編集タイミング**: システム全体の初期化ロジック変更、新しいパネル追加
 
-#### `panels/link-video.ts` - メインUIパネル（最大ファイル：55KB）
-- **役割**: 全UI要素の統合・管理
-- **機能**: FAB、各種制御UI、設定UI、モジュール管理UI
-- **編集タイミング**: UI全体の変更、新しいタブ追加、レイアウト変更
+#### `panels/link-video.ts` - メインUIパネル
+- **役割**: Shadow DOM、SPA遷移、サービス初期化、各タブcontrollerの接続
+- **機能**: FAB、パネル描画、watch/non-watchページ切替、モジュール管理UI接続
+- **編集タイミング**: UI全体の描画順、SPA遷移、タブ追加時の統合処理変更
 
 #### `panels/base.ts` - ベースパネル
 - **役割**: 共通パネル機能の提供
@@ -145,6 +153,14 @@ UI更新
 - **背景URL入力**: 背景画像追加モーダルのURL欄は `/local/background-images/` 配下をすぐ指定できるよう既定URLをプリ入力
 - **編集タイミング**: 設定UIの変更、新しい設定画面追加
 
+### 🧭 **タブcontroller**
+
+#### `tab-controllers/*.ts` - パネル内タブ操作
+- **役割**: 各タブのDOMイベント、入力、ボタン操作をタブ単位で管理
+- **対象**: メイン/サブタブ切替、再生、音量、速度、コメント検索、リンク操作
+- **編集タイミング**: タブ内ボタンや入力欄の動作変更
+- **テスト方針**: `tests/mlink-video-controller.spec.ts` で各ボタンのクリック、input/change、検索、コピー、シーク、リンク無効状態を実ブラウザDOMで検証する
+
 ### 🎨 **個別機能モジュール**
 
 #### `modules/watch-background-selector-module.ts` - 背景セレクター（最大モジュール：28KB）
@@ -170,6 +186,12 @@ UI更新
 - **役割**: 動画サムネイル非表示機能
 - **機能**: キーワードフィルタリング、正規表現対応、設定UI
 - **編集タイミング**: フィルター機能拡張、新しいフィルター条件追加
+
+#### `modules/heatmap-module.ts` - コメントヒートマップ
+- **役割**: ヒートマップUIをパネルへ接続するモジュール境界
+- **機能**: 表示モード、カラースキーム、スムージング、Canvasシーク、コメント更新通知
+- **実装分担**: 描画エンジンは `managers/heatmap.ts` に残し、Shadow DOM上のイベント接続はこのモジュールで管理
+- **編集タイミング**: ヒートマップをモジュール設定やパネルUIへ接続する処理の変更
 
 #### `modules/background-image-settings.ts` - 背景画像設定（19KB → 拡張済み）
 - **役割**: 背景画像データ管理・永続化
@@ -275,7 +297,8 @@ UI更新
 ### 🎨 **UIを変更・追加したい**
 1. `templates/対象テンプレート.ts` - HTML構造変更
 2. `styles/対象スタイル.ts` - CSS・デザイン変更
-3. `panels/link-video.ts` - イベント処理・動作変更
+3. `tab-controllers/対象タブ.ts` - タブ内イベント処理・動作変更
+4. `panels/link-video.ts` - タブ追加や全体統合が必要な場合のみ変更
 
 ### 🔄 **動画プレイヤー連携を拡張したい**
 1. `services/nico-video-player.ts` - 基本機能追加
@@ -289,12 +312,14 @@ UI更新
 4. `module-handlers/settings-ui.ts` - 設定UI追加
 
 ### 🎯 **ヒートマップ機能を拡張したい**
-- **メイン対象**: `managers/heatmap.ts`
+- **モジュール接続**: `modules/heatmap-module.ts`
+- **描画エンジン**: `managers/heatmap.ts`
 - **スタイル**: `styles/heatmap.ts`
 
 ### 🔍 **コメント機能を拡張したい**
 1. `managers/nico-api-fetcher.ts` - データ取得・処理
 2. `managers/comment.ts` - コメント管理機能
+3. `tab-controllers/comments-tab.ts` - コメント検索タブのUI操作
 
 ### 🖼️ **背景機能を拡張したい**
 1. `modules/background-image-settings.ts` - 画像データ管理
@@ -315,6 +340,7 @@ UI更新
 ### 🚀 **パフォーマンスを改善したい**
 - **モジュール読み込み**: `module-handlers/module-manager.ts`
 - **UI描画**: `panels/link-video.ts`
+- **タブ操作**: `tab-controllers/*.ts`
 - **データ処理**: 各`managers/*.ts`
 
 ### 🔌 **外部サービス連携を追加したい**
@@ -331,9 +357,11 @@ UI更新
 
 ### 🚨 **変更時の影響範囲**
 - `module-handlers/module-manager.ts` 変更 → 全モジュールに影響
-- `panels/link-video.ts` 変更 → UI全体に影響
+- `panels/link-video.ts` 変更 → UI全体とSPA遷移に影響
+- `tab-controllers/*.ts` 変更 → 対象タブの操作に影響
 - `services/nico-video-player.ts` 変更 → 動画制御全体に影響
-- `managers/heatmap.ts` 変更 → ヒートマップ機能全体に影響
+- `modules/heatmap-module.ts` 変更 → ヒートマップのパネル接続に影響
+- `managers/heatmap.ts` 変更 → ヒートマップ描画全体に影響
 
 ### 📝 **コーディング規約**
 - デバッグログは`window.logger?.debug/info/warn/error`を使用

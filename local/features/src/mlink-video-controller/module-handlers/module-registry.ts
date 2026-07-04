@@ -8,6 +8,7 @@ import { watchHarajukuModuleConfig } from "@/mlink-video-controller/modules/watc
 import { watchMylistSelectorModuleConfig } from "@/mlink-video-controller/modules/watch-mylist-selector-module";
 import { watchTabSessionsModuleConfig } from "@/mlink-video-controller/modules/watch-tab-sessions-module";
 import { thumbnailsFilterModuleConfig } from "@/mlink-video-controller/modules/thumbnails-filter-module";
+import { heatmapModuleConfig } from "@/mlink-video-controller/modules/heatmap-module";
 
 /**
  * 利用可能なモジュールの登録・管理を行うクラス
@@ -41,6 +42,7 @@ export class ModuleRegistry {
       watchMylistSelectorModuleConfig,
       watchTabSessionsModuleConfig,
       thumbnailsFilterModuleConfig,
+      heatmapModuleConfig,
     ].forEach((config) => {
       this.registerModule(config);
     });

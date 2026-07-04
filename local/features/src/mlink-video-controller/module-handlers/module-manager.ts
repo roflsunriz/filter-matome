@@ -522,6 +522,12 @@ export class ModuleManager {
           break;
         }
 
+        case "heatmap": {
+          const { HeatmapModule } = await import("../modules/heatmap-module");
+          instance = new HeatmapModule(config);
+          break;
+        }
+
         default:
           throw new Error(`未知のモジュールID: ${config.id}`);
       }
