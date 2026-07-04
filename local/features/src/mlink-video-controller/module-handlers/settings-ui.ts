@@ -171,9 +171,11 @@ export class SettingsUI {
     moduleItem.setAttribute("data-module-id", config.id);
     const isAvailable = this.isModuleAvailableOnCurrentPage(config);
     moduleItem.classList.toggle("module-item-unavailable", !isAvailable);
-    if (!isAvailable) {
-      moduleItem.title = "現在のページでは利用できません";
-    }
+    moduleItem.classList.toggle(
+      "module-item-exclusive",
+      Boolean(config.exclusiveGroup),
+    );
+    moduleItem.title = this.getModuleItemTitle(config, isAvailable);
 
     // アイコン設定
     const icon = element.querySelector(".module-icon") as HTMLElement;
@@ -194,17 +196,7 @@ export class SettingsUI {
     version.textContent = `v${config.version}`;
 
     const pages = element.querySelector(".module-pages") as HTMLElement;
-    pages.textContent = config.targetPages.join(", ");
-
-    const exclusiveGroup = element.querySelector(
-      ".module-exclusive-group",
-    ) as HTMLElement;
-    if (config.exclusiveGroup) {
-      exclusiveGroup.textContent = `排他: ${config.exclusiveGroup}`;
-      exclusiveGroup.style.display = "inline";
-    } else {
-      exclusiveGroup.style.display = "none";
-    }
+    pages.textContent = this.formatTargetPages(config.targetPages);
 
     // ステータス設定
     const status = element.querySelector(".module-status") as HTMLElement;
@@ -230,6 +222,23 @@ export class SettingsUI {
       config.targetPages.includes(currentPageType) ||
       config.targetPages.includes(PageType.ALL)
     );
+  }
+
+  private getModuleItemTitle(
+    config: ModuleConfig,
+    isAvailable: boolean,
+  ): string {
+    const titleParts: string[] = [];
+
+    if (!isAvailable) {
+      titleParts.push("現在のページでは利用できません");
+    }
+
+    if (config.exclusiveGroup) {
+      titleParts.push(`排他グループ: ${config.exclusiveGroup}`);
+    }
+
+    return titleParts.join("\n");
   }
 
   /**
@@ -417,7 +426,7 @@ export class SettingsUI {
   }
 
   private addHeatmapSettingsButton(moduleItem: HTMLElement): void {
-    const toggle = moduleItem.querySelector(".toggle-switch");
+    const settingsSlot = moduleItem.querySelector(".module-settings-slot");
     const button = document.createElement("button");
     button.type = "button";
     button.className = "settings-btn module-settings-btn";
@@ -428,7 +437,7 @@ export class SettingsUI {
       this.createHeatmapSettingsModal();
     });
 
-    moduleItem.insertBefore(button, toggle);
+    settingsSlot?.appendChild(button);
   }
 
   private getLoadedHeatmapModule(): HeatmapModule | null {
@@ -628,18 +637,30 @@ export class SettingsUI {
   private getStatusText(status: ModuleStatus): string {
     switch (status) {
       case ModuleStatus.ACTIVE:
-        return "🟢 アクティブ";
+        return "アクティブ";
       case ModuleStatus.INACTIVE:
-        return "🔴 非アクティブ";
+        return "非アクティブ";
       case ModuleStatus.LOADING:
-        return "🟡 読み込み中";
+        return "読み込み中";
       case ModuleStatus.ERROR:
-        return "🔴 エラー";
+        return "エラー";
       case ModuleStatus.UNAVAILABLE:
-        return "⚪ 利用不可";
+        return "利用不可";
       default:
-        return "❓ 不明";
+        return "不明";
     }
+  }
+
+  private formatTargetPages(pages: PageType[]): string {
+    const labels: Record<PageType, string> = {
+      [PageType.ALL]: "All",
+      [PageType.WATCH]: "Watch",
+      [PageType.SEARCH]: "Search",
+      [PageType.RANKING]: "Ranking",
+      [PageType.NICO_INFO]: "Nico Info",
+    };
+
+    return pages.map((page) => labels[page] ?? page).join(", ");
   }
 
   /**
@@ -750,25 +771,22 @@ export class SettingsUI {
    */
   private addBackgroundImageSettingsButton(container: HTMLElement): void {
     const settingsButton = document.createElement("div");
-    settingsButton.className = "module-item";
+    settingsButton.className = "module-item module-item-config";
     settingsButton.innerHTML = `
-      <div class="module-header">
-        <div class="module-info">
-          <div class="module-icon">${createMaterialIcon("image", { style: "outlined", color: "white" })}</div>
-          <div class="module-details">
-            <h3 class="module-name">背景画像設定</h3>
-            <p class="module-description">動画の背景画像を設定します</p>
-          </div>
-        </div>
-        <div class="module-meta">
-          <div class="module-metadata">
-            <span class="module-version">v1.0.0</span>
-            <span class="module-pages">Watch Page</span>
-            <span class="module-status">${createMaterialIcon("build", { style: "outlined", color: "white" })} 設定</span>
-          </div>
-        </div>
+      <div class="module-icon">${createMaterialIcon("image", { style: "outlined", color: "white" })}</div>
+      <h3 class="module-name">背景画像設定</h3>
+      <p class="module-description">動画の背景画像を設定します</p>
+      <div class="module-meta">
+        <span class="module-version">v1.0.0</span>
+        <span class="module-pages">${this.formatTargetPages([PageType.WATCH])}</span>
+        <span class="module-status settings">設定</span>
       </div>
-      <button class="settings-btn" id="open-background-settings">${createMaterialIcon("settings", { style: "outlined", color: "white" })} 設定</button>
+      <div class="module-actions">
+        <div class="module-settings-slot">
+          <button class="settings-btn module-settings-btn" id="open-background-settings">${createMaterialIcon("settings", { style: "outlined", color: "white" })} 設定</button>
+        </div>
+        <div class="module-toggle-slot"></div>
+      </div>
     `;
 
     container.appendChild(settingsButton);

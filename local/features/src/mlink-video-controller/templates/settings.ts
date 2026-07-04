@@ -66,23 +66,23 @@ export const settingsTemplate = `
 <!-- モジュール項目のテンプレート -->
 <template id="module-item-template">
   <div class="module-item" data-module-id="">
-    <div class="module-info">
-      <span class="module-icon"></span>
-      <div class="module-details">
-        <h5 class="module-name"></h5>
-        <p class="module-description"></p>
-        <div class="module-meta">
-          <span class="module-version"></span>
-          <span class="module-pages"></span>
-          <span class="module-exclusive-group"></span>
-          <span class="module-status"></span>
-        </div>
+    <span class="module-icon"></span>
+    <h5 class="module-name"></h5>
+    <p class="module-description"></p>
+    <div class="module-meta">
+      <span class="module-version"></span>
+      <span class="module-pages"></span>
+      <span class="module-status"></span>
+    </div>
+    <div class="module-actions">
+      <div class="module-settings-slot"></div>
+      <div class="module-toggle-slot">
+        <label class="toggle-switch">
+          <input type="checkbox" class="module-toggle">
+          <span class="slider"></span>
+        </label>
       </div>
     </div>
-    <label class="toggle-switch">
-      <input type="checkbox" class="module-toggle">
-      <span class="slider"></span>
-    </label>
   </div>
 </template>
 `;

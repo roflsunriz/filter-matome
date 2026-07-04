@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 - 【mlink-video-controller】コメントヒートマップがモジュールOFF中でも監視・表示更新を実行する問題を修正。
+- 【mlink-video-controller】モジュール設定のバージョン・対象ページ・状態表示が、行ごとの構造差で崩れる問題を修正。
 
 ## [#227] - 2026-07-05
 

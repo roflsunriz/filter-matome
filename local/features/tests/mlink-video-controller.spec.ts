@@ -577,47 +577,136 @@ test("heatmap settings modal opens from module settings and applies values", asy
     readControllerFile("templates/settings.ts"),
     "settingsTemplate",
   );
+  const settingsCss = extractTemplateBody(
+    readControllerFile("styles/settings.ts"),
+    "settingsStyles",
+  );
 
-  await page.evaluate((html) => {
-    window.localStorage.clear();
-    window.logger = {
-      warn: () => {},
-      error: () => {},
-      info: () => {},
-      debug: () => {},
-    };
-    window.toastr = {
-      success: () => {},
-      error: () => {},
-      warning: () => {},
-      info: () => {},
-      clear: () => {},
-      remove: () => {},
-    };
+  await page.evaluate(
+    ({ html, css }) => {
+      window.localStorage.clear();
+      window.logger = {
+        warn: () => {},
+        error: () => {},
+        info: () => {},
+        debug: () => {},
+      };
+      window.toastr = {
+        success: () => {},
+        error: () => {},
+        warning: () => {},
+        info: () => {},
+        clear: () => {},
+        remove: () => {},
+      };
 
-    const host = document.getElementById("host");
-    if (!host) throw new Error("host was not found");
+      const host = document.getElementById("host");
+      if (!host) throw new Error("host was not found");
+      host.style.width = "760px";
 
-    const shadow = host.attachShadow({ mode: "open" });
-    shadow.innerHTML = html;
+      const shadow = host.attachShadow({ mode: "open" });
+      shadow.innerHTML = `<style>${css}</style>${html}`;
 
-    const { SettingsUI } = (
-      window as unknown as {
-        MlinkTabControllers: {
-          SettingsUI: {
-            getInstance: () => {
-              setShadowRoot: (shadowRoot: ShadowRoot) => void;
-              initialize: () => void;
+      const { SettingsUI } = (
+        window as unknown as {
+          MlinkTabControllers: {
+            SettingsUI: {
+              getInstance: () => {
+                setShadowRoot: (shadowRoot: ShadowRoot) => void;
+                initialize: () => void;
+              };
             };
           };
-        };
-      }
-    ).MlinkTabControllers;
+        }
+      ).MlinkTabControllers;
 
-    const settingsUi = SettingsUI.getInstance();
-    settingsUi.setShadowRoot(shadow);
-    settingsUi.initialize();
-  }, settingsHtml);
+      const settingsUi = SettingsUI.getInstance();
+      settingsUi.setShadowRoot(shadow);
+      settingsUi.initialize();
+    },
+    { html: settingsHtml, css: settingsCss },
+  );
+
+  const moduleItemShape = await page.locator("#host").evaluate((host) =>
+    Array.from(host.shadowRoot?.querySelectorAll(".module-item") ?? []).map(
+      (item) => ({
+        hasIcon: item.querySelector(":scope > .module-icon") !== null,
+        hasName: item.querySelector(":scope > .module-name") !== null,
+        hasDescription:
+          item.querySelector(":scope > .module-description") !== null,
+        hasActions: item.querySelector(":scope > .module-actions") !== null,
+        hasSettingsSlot:
+          item.querySelector(
+            ":scope > .module-actions > .module-settings-slot",
+          ) !== null,
+        hasToggleSlot:
+          item.querySelector(
+            ":scope > .module-actions > .module-toggle-slot",
+          ) !== null,
+        metaCount: item.querySelectorAll(".module-meta > span").length,
+        actionControlCount: item.querySelectorAll(
+          ":scope > .module-actions .settings-btn, :scope > .module-actions .toggle-switch",
+        ).length,
+      }),
+    ),
+  );
+  expect(moduleItemShape.length).toBeGreaterThan(0);
+  expect(
+    moduleItemShape.every(
+      (item) =>
+        item.hasIcon &&
+        item.hasName &&
+        item.hasDescription &&
+        item.hasActions &&
+        item.hasSettingsSlot &&
+        item.hasToggleSlot &&
+        item.metaCount >= 3 &&
+        item.actionControlCount >= 1,
+    ),
+  ).toBe(true);
+
+  const metadataColumnLefts = await page.locator("#host").evaluate((host) => {
+    const items = Array.from(
+      host.shadowRoot?.querySelectorAll(".module-item") ?? [],
+    );
+    return {
+      version: items.map((item) =>
+        Math.round(
+          item.querySelector(".module-version")?.getBoundingClientRect().left ??
+            0,
+        ),
+      ),
+      pages: items.map((item) =>
+        Math.round(
+          item.querySelector(".module-pages")?.getBoundingClientRect().left ??
+            0,
+        ),
+      ),
+      status: items.map((item) =>
+        Math.round(
+          item.querySelector(".module-status")?.getBoundingClientRect().left ??
+            0,
+        ),
+      ),
+      settingsSlot: items.map((item) =>
+        Math.round(
+          item.querySelector(".module-settings-slot")?.getBoundingClientRect()
+            .left ?? 0,
+        ),
+      ),
+      toggleSlot: items.map((item) =>
+        Math.round(
+          item.querySelector(".module-toggle-slot")?.getBoundingClientRect()
+            .left ?? 0,
+        ),
+      ),
+    };
+  });
+  expect(new Set(metadataColumnLefts.version).size).toBe(1);
+  expect(new Set(metadataColumnLefts.pages).size).toBe(1);
+  expect(new Set(metadataColumnLefts.status).size).toBe(1);
+  expect(new Set(metadataColumnLefts.settingsSlot).size).toBe(1);
+  expect(new Set(metadataColumnLefts.toggleSlot).size).toBe(1);
 
   await page.locator("#host").evaluate((host) => {
     host.shadowRoot
@@ -667,9 +756,9 @@ test("heatmap settings modal opens from module settings and applies values", asy
   expect(
     await page.evaluate(() => localStorage.getItem("heatmapColorScheme")),
   ).toBe("cool");
-  expect(await page.evaluate(() => localStorage.getItem("heatmapSmoothing"))).toBe(
-    "true",
-  );
+  expect(
+    await page.evaluate(() => localStorage.getItem("heatmapSmoothing")),
+  ).toBe("true");
 
   const moduleCalls = await page.locator("#host").evaluate((host) => {
     const calls: string[] = [];
