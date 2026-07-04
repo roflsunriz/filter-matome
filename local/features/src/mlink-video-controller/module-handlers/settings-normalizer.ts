@@ -9,7 +9,7 @@ function isModuleSettingValue(value: unknown): value is ModuleSettings[string] {
     !!value &&
     typeof value === "object" &&
     "enabled" in value &&
-    typeof (value as { enabled: unknown }).enabled === "boolean"
+    typeof value.enabled === "boolean"
   );
 }
 

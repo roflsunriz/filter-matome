@@ -5,6 +5,7 @@ import type {
   MylistInfo,
   KeywordInfo,
   ExportData,
+  ManagerSettings,
   VideoLinkTarget,
 } from "@/types/mylist-types";
 import {
@@ -1963,14 +1964,21 @@ export class Mylist2ManagerUI {
       videoLinkTargetSelect.value = videoLinkTargetValue;
     this.applyVideoLinkTarget(videoLinkTargetValue);
 
+    const normalizeVideoLinkTarget = (value: string): VideoLinkTarget =>
+      value === "local" ? "local" : "official";
+    type CurrentManagerSettings = ManagerSettings & {
+      theme: string;
+      videoLinkTarget: VideoLinkTarget;
+    };
+
     /** 現在のUI上の全設定値を収集する */
-    const collectCurrentSettings = () => ({
+    const collectCurrentSettings = (): CurrentManagerSettings => ({
       mylistSortType: mylistSort.value,
       videoSortType: videoSort.value,
       theme: themeSelect ? themeSelect.value : themeValue,
-      videoLinkTarget: (videoLinkTargetSelect?.value === "local"
-        ? "local"
-        : "official") as VideoLinkTarget,
+      videoLinkTarget: normalizeVideoLinkTarget(
+        videoLinkTargetSelect?.value ?? "official",
+      ),
     });
 
     // 初期表示時に並び替えを実行

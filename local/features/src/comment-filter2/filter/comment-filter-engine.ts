@@ -190,7 +190,7 @@ export function filterThread({
         originalComment: comment,
         preparedRules,
         threadContext,
-        threadFork: thread.fork as ForkType,
+        threadFork: thread.fork,
         settings,
         regexCache,
         debugMode: Boolean(debugMode),

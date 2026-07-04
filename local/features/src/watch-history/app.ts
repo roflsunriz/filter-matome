@@ -2666,10 +2666,7 @@ class WatchHistoryApp {
     ] as HTMLSelectElement;
     this.seriesFilter.progressFilter =
       (progressFilter?.value as
-        | "all"
-        | "watching"
-        | "completed"
-        | "not_started") || "all";
+        "all" | "watching" | "completed" | "not_started") || "all";
     this.filterSeriesStats();
     await this.updateSeriesList();
     this.updateSeriesCount();
@@ -3198,8 +3195,7 @@ class WatchHistoryApp {
     const useProgressRate =
       (
         this.elements["delete-use-progress-rate"] as
-          | HTMLInputElement
-          | undefined
+          HTMLInputElement | undefined
       )?.checked ?? true;
 
     // 入力欄の親要素にdisabledクラスを切り替え
@@ -3233,8 +3229,7 @@ class WatchHistoryApp {
 
     // ボタンの有効/無効切り替え
     const deleteBtn = this.elements["delete-by-condition-btn"] as
-      | HTMLButtonElement
-      | undefined;
+      HTMLButtonElement | undefined;
     if (deleteBtn) {
       deleteBtn.disabled = !useWatchCount && !useProgressRate;
     }

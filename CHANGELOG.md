@@ -6,19 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#227] - 2026-07-05
+
+### Added
+- 【mlink-video-controller】モジュール設定の正規化機能を追加し、旧モジュールIDを現在のIDへ移行できるように追加。
+- 【mlink-video-controller】Watch ページ操作パネルをタブ別コントローラーへ分割し、コメント・リンク・再生・速度・音量タブごとのテストを追加。
+
 ### Changed
+- 【features】`package.json` の `version` を `227` に更新。
+- 【README】latest バッジを `#227` に更新。
+- 【features】Bun 依存関係を更新し、Playwright・Vite・ESLint・DOMPurify などを脆弱性修正版へ追従。
 - 【mlink-video-controller】Watch Page統合をタグカウンター単機能として扱うよう整理し、説明文を更新。
 - 【mlink-video-controller】モジュール設定の定義元を各 module ファイルに寄せ、`module-registry` は module 側の `ModuleConfig` を登録する構成へ変更。
+- 【mlink-video-controller】設定 UI とモジュール管理のイベント対象取得を整理し、タブごとの処理責務を分割。
 - 【video-player】削除・視聴不可動画の検出と deleted モード起動を Watch ページ router に統合。
 
 ### Removed
 - 【mlink-video-controller】Watch Page統合のサブモジュール設定UIと個別有効/無効設定を削除。
 - 【mlink-video-controller】`deleted_video_detector` モジュールと専用サービスを削除。
+- 【mlink-video-controller】レガシーなモジュール設定 ID と未使用の設定スタイル定義を削除。
 
 ### Fixed
+- 【features】依存更新後の `typescript-eslint` で不要な型アサーションとして検出される既存コードを整理。
 - 【mlink-video-controller】Watch Page統合のタグカウンターが、Firefoxで初期挿入に失敗する場合や公式DOMの再描画で削除された後に復帰しない場合がある問題を修正。
 - 【mlink-video-controller】コメント検索入力欄でEnterキーを押しても検索が開始されない問題を修正。
 - 【mlink-video-controller】コメント検索入力欄でスペースを入力できない問題を修正。
+
+### Security
+- 【features】`bun audit` で検出された DOMPurify、Vite、Rollup、flatted、minimatch などの脆弱性を依存更新と overrides で解消。
 
 ## [#226.2] - 2026-06-28
 

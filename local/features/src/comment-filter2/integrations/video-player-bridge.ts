@@ -471,7 +471,7 @@ export class VideoPlayerBridge implements IVideoPlayerBridge {
         data: {
           threads: [],
         },
-      } as VideoPlayerResponse;
+      };
     }
   }
 

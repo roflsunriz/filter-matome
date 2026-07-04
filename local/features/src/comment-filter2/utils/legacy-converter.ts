@@ -5,8 +5,6 @@ import {
   Settings,
   CommandSettings,
   UnknownData,
-  Action,
-  NicoruCond,
 } from "@/types/filter-types";
 
 /**
@@ -237,7 +235,7 @@ export class LegacyConverter {
         rules.push({
           pattern: escapedWord, // 部分一致（文中に含まれればマッチ）
           flags: "gi",
-          action: { type: "hide" } as Action,
+          action: { type: "hide" },
           smid: ["ALL"],
           enabled: true,
           description: `NGワード: ${trimmedWord}`,
@@ -265,7 +263,7 @@ export class LegacyConverter {
           rules.push({
             pattern: trimmedRegex,
             flags: "gi",
-            action: { type: "hide" } as Action,
+            action: { type: "hide" },
             smid: ["ALL"],
             enabled: true,
             description: `NG正規表現: ${trimmedRegex}`,
@@ -299,9 +297,9 @@ export class LegacyConverter {
         rules.push({
           pattern: escapedWord, // 部分一致（文中に含まれればマッチ）
           flags: "gi",
-          action: { type: "hide" } as Action,
+          action: { type: "hide" },
           smid: ["ALL"],
-          nicoru_cond: { op: ">=", value: 0, mode: "exclude" } as NicoruCond, // SuperNGはニコる数に関係なく適用
+          nicoru_cond: { op: ">=", value: 0, mode: "exclude" }, // SuperNGはニコる数に関係なく適用
           enabled: true,
           description: `SuperNGワード: ${trimmedWord}`,
         });
@@ -332,9 +330,9 @@ export class LegacyConverter {
           rules.push({
             pattern: trimmedRegex,
             flags: "gi",
-            action: { type: "hide" } as Action,
+            action: { type: "hide" },
             smid: ["ALL"],
-            nicoru_cond: { op: ">=", value: 0, mode: "exclude" } as NicoruCond,
+            nicoru_cond: { op: ">=", value: 0, mode: "exclude" },
             enabled: true,
             description: `SuperNG正規表現: ${trimmedRegex}`,
           });
@@ -372,7 +370,7 @@ export class LegacyConverter {
               action: {
                 type: "replace",
                 replacement: replace.trim(),
-              } as Action,
+              },
               smid: ["ALL"],
               enabled: true,
               description: `置換ルール: ${regex.trim()} => ${replace.trim()}`,
@@ -406,7 +404,7 @@ export class LegacyConverter {
       if (trimmedUserId) {
         rules.push({
           userId: trimmedUserId,
-          action: { type: "hide" } as Action,
+          action: { type: "hide" },
           smid: ["ALL"],
           enabled: true,
           description: `ユーザーID除外: ${trimmedUserId}`,

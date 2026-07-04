@@ -2,7 +2,7 @@
  * グローバル型定義
  */
 
-import { ApiData, ExtendedApiData } from "@/types/video-types";
+import { ExtendedApiData } from "@/types/video-types";
 import { Mylist2DB } from "@/mylist2/components/database";
 import { Mylist2Manager } from "@/mylist2/components/manager-refactored";
 import { Mylist2ManagerUI } from "@/mylist2/ui/ui-refactored";
@@ -35,7 +35,7 @@ export interface DeletedVideoPlayerInterface {
 export interface NicoCache_nlInterface {
   watch: {
     getVideoID: () => string;
-    apiData: ApiData;
+    apiData: ExtendedApiData;
     addEventListener: (
       event: string,
       listener: () => Promise<void> | void,

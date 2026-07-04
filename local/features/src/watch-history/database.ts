@@ -293,8 +293,7 @@ export class WatchHistoryDatabase {
 
         getRequest.onsuccess = () => {
           const existingEntry = getRequest.result as
-            | WatchHistoryEntry
-            | undefined;
+            WatchHistoryEntry | undefined;
 
           if (existingEntry) {
             // 既存エントリがある場合は更新

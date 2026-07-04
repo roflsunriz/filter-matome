@@ -4,7 +4,6 @@ import "@/types/global.d.ts";
 import {
   VideoOperation,
   SimpleVideoInfo,
-  ExtendedApiData,
   CacheInfoResponse,
 } from "@/types/video-types";
 import { NicoCache_nlInterface } from "@/types/global-types";
@@ -38,9 +37,8 @@ export const getVideoInfo = async (): Promise<SimpleVideoInfo> => {
   return {
     videoId,
     threadId: nicoCache?.watch
-      ? (nicoCache?.watch?.apiData as ExtendedApiData)?.comment?.threads?.find(
-          (v: { isDefaultPostTarget?: boolean }) =>
-            v.isDefaultPostTarget === true,
+      ? nicoCache?.watch?.apiData?.comment?.threads?.find(
+          (thread) => thread.isDefaultPostTarget === true,
         )?.id || ""
       : "",
     title: videoTitle,
@@ -69,7 +67,7 @@ export const handleCacheRemove = (videoId: string): void => {
       unknownCache &&
       typeof unknownCache === "object" &&
       "get" in unknownCache &&
-      typeof (unknownCache as { get: unknown }).get === "function"
+      typeof unknownCache.get === "function"
     ) {
       const getFn = (unknownCache as { get: (path: string) => void }).get;
       const path = "/cache/ajax_rmall?" + encodeURIComponent(videoId);

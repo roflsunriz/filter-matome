@@ -253,7 +253,7 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
     // アニメーション開始
     this.animationId = setInterval(() => {
       this.drawMatrix(ctx, drops, japanese, fontSize, this.canvas!.height);
-    }, 33) as unknown as number;
+    }, 33);
   }
 
   /**

@@ -3,7 +3,6 @@ import type { IntegratedNicoData, NicoApiData } from "@/types/common-types";
 import type {
   CacheEntry,
   CacheInfoResponse,
-  MediaInfoItem,
   MediaInfoResponse,
   ThumbInfo,
   ThumbOwnerInfo,
@@ -187,9 +186,9 @@ export const fetchMediaInfo = async (
     }
     const data = JSON.parse(trimmed) as MediaInfoResponse;
     if (Array.isArray(data)) {
-      return data.map((item) => ({ ...item })) as MediaInfoItem[];
+      return data.map((item) => ({ ...item }));
     }
-    return { ...data } as MediaInfoItem;
+    return { ...data };
   } catch (error: unknown) {
     const message = toErrorMessage(error);
     window.logger?.error?.("[movie-info] MediaInfo fetch failed", message);

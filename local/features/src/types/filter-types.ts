@@ -9,11 +9,7 @@ import type { CommentData } from "@/types/comment-types";
  * 設定値の型定義
  */
 export type SettingValue =
-  | string
-  | number
-  | boolean
-  | object
-  | (string | number | boolean | object)[];
+  string | number | boolean | object | (string | number | boolean | object)[];
 
 /**
  * フィルター設定値の型定義

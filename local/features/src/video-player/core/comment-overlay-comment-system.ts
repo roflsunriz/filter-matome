@@ -109,7 +109,7 @@ export class CommentOverlayCommentSystem {
     const rendererInstance = new CommentRenderer(this.settings, {
       loggerNamespace: "StandaloneCommentOverlay",
     });
-    this.renderer = rendererInstance as unknown as CommentOverlayRenderer;
+    this.renderer = rendererInstance;
     this.renderer.initialize({
       video: videoElement,
       container: overlayLayer,

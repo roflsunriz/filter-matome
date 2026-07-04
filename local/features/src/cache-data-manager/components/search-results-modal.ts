@@ -127,9 +127,7 @@ export class SearchResultsModal {
       </div>
     `;
 
-    this.contentContainer = this.modal.querySelector(
-      ".search-results-grid",
-    ) as HTMLElement;
+    this.contentContainer = this.modal.querySelector(".search-results-grid");
 
     document.body.appendChild(this.modal);
 

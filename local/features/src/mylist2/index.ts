@@ -3,8 +3,6 @@ import { headerAdjustments } from "@/mylist2/header-adjustments";
 import { Mylist2DB as db } from "@/mylist2/components/database";
 import { Mylist2Manager as managerRefactored } from "@/mylist2/components/manager-refactored";
 import { Mylist2ManagerUI as uiRefactored } from "@/mylist2/ui/ui-refactored";
-// 型定義のみのインポート（ランタイム影響なし）
-import type { HeaderConfig } from "@/types/common-types";
 import { hydrateMaterialIconImages } from "@/common/material-icons";
 
 // スタイルを適用
@@ -32,7 +30,7 @@ window.addEventListener("load", () => {
     showSearch: true,
     showMoreLinks: true,
     enableFixedMode: false,
-  } as HeaderConfig);
+  });
 
   // メインUIを初期化（リンク化・タグ処理は ui-refactored 側で実施）
   new uiRefactored();

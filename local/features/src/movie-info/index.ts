@@ -225,14 +225,11 @@ const buildApiSummary = (apiData: NicoApiData): HTMLElement => {
   const container = document.createElement("div");
   container.className = "summary-container";
   const video = (apiData as Record<string, unknown>).video as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
   const owner = (apiData as Record<string, unknown>).owner as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
   const channel = (apiData as Record<string, unknown>).channel as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
   const count = video?.count as Record<string, unknown> | undefined;
 
   const primary = createSummaryGrid([

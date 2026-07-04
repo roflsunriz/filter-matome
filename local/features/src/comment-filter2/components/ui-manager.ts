@@ -2060,8 +2060,7 @@ export class UIManager {
     if (rule.action.type === "hide") {
       actionText = "非表示";
     } else if (rule.action.type === "replace") {
-      const repl = (rule.action as { type: "replace"; replacement: string })
-        .replacement;
+      const repl = rule.action.replacement;
       actionText = `置換: ${this.escapeHtml(repl)}`;
     } else {
       actionText = "除外のみ";

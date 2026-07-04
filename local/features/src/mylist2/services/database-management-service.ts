@@ -263,24 +263,21 @@ export class DatabaseManagementService {
   // 健全性問題の通知
   private notifyHealthIssues(health: DatabaseHealth): void {
     const issues = health.issues.map((i) => String(i)).join(", ");
+    const uiWithNotification: unknown =
+      typeof window !== "undefined" ? window.Mylist2ManagerUI : undefined;
 
     // UI通知（存在する場合）
     if (
-      typeof window !== "undefined" &&
-      (
-        window as typeof window & {
-          Mylist2ManagerUI?: {
-            showNotification?: (message: string, type: string) => void;
-          };
-        }
-      ).Mylist2ManagerUI?.showNotification
+      uiWithNotification &&
+      typeof uiWithNotification === "object" &&
+      "showNotification" in uiWithNotification &&
+      typeof uiWithNotification.showNotification === "function"
     ) {
-      const windowWithUI = window as typeof window & {
-        Mylist2ManagerUI: {
-          showNotification: (message: string, type: string) => void;
-        };
-      };
-      windowWithUI.Mylist2ManagerUI.showNotification(
+      const showNotification = uiWithNotification.showNotification as (
+        message: string,
+        type: string,
+      ) => void;
+      showNotification(
         `データベース健全性の問題が検出されました: ${issues}`,
         "warning",
       );

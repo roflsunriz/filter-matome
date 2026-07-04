@@ -60,11 +60,7 @@ export interface VideoInfo {
 }
 
 export type VideoAvailabilityStatus =
-  | "available"
-  | "deleted"
-  | "private"
-  | "unavailable"
-  | "unknown";
+  "available" | "deleted" | "private" | "unavailable" | "unknown";
 
 export interface VideoAvailabilityResult {
   videoId: string;

@@ -9,8 +9,7 @@ import type { KeywordInfo } from "@/types/mylist-types";
 
 /** 仮想スクロールで扱うアイテムの共通型 */
 export type VirtualScrollItem =
-  | { type: "video"; data: DBVideo }
-  | { type: "keyword"; data: KeywordInfo };
+  { type: "video"; data: DBVideo } | { type: "keyword"; data: KeywordInfo };
 
 /** 仮想スクロールの設定 */
 export interface VirtualScrollConfig {

@@ -158,7 +158,7 @@ export function filterJsonThread({
         originalComment: comment,
         preparedRules,
         threadContext,
-        threadFork: thread.fork as ForkType,
+        threadFork: thread.fork,
         commandSettings: settings?.commandSettings ?? null,
         regexCache,
         logCollector: logs,

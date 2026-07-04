@@ -195,9 +195,8 @@ export class StandalonePlayer {
     this.customPlayerContainer = container.firstElementChild as HTMLElement;
     this.mount.append(this.customPlayerContainer);
 
-    this.videoContainer = this.customPlayerContainer.querySelector(
-      ".video-container",
-    ) as HTMLElement;
+    this.videoContainer =
+      this.customPlayerContainer.querySelector(".video-container");
 
     // 新しいラッパーを作成し、プレイヤーとコメントリストを配置
     const wrapper = document.createElement("div");
@@ -208,15 +207,12 @@ export class StandalonePlayer {
     wrapper.appendChild(this.customPlayerContainer);
     this.mount.appendChild(wrapper);
 
-    this.videoContainer = wrapper.querySelector(
-      ".video-container",
-    ) as HTMLElement;
-    this.videoElement = this.customPlayerContainer.querySelector(
-      "#video-element",
-    ) as HTMLVideoElement;
+    this.videoContainer = wrapper.querySelector(".video-container");
+    this.videoElement =
+      this.customPlayerContainer.querySelector("#video-element");
     this.playerControls = this.customPlayerContainer.querySelector(
       "player-controls-shadow",
-    ) as PlayerControlsShadow;
+    );
 
     if (!this.videoElement) {
       throw new Error("動画要素が生成できませんでした");

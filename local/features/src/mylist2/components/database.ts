@@ -474,8 +474,7 @@ export class Mylist2DB {
               const getRequest = metadataStore.get("migration_history");
               getRequest.onsuccess = () => {
                 const historyRaw = getRequest.result as
-                  | { value?: unknown }
-                  | undefined;
+                  { value?: unknown } | undefined;
                 const current =
                   historyRaw && "value" in historyRaw ? historyRaw.value : [];
                 const history: unknown[] = Array.isArray(current)

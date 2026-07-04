@@ -296,7 +296,7 @@ export class DatabaseManager {
             typeof result === "object" &&
             "value" in result &&
             result.value !== undefined
-            ? (result.value as T)
+            ? result.value
             : defaultValue,
         );
       };

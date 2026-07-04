@@ -48,7 +48,7 @@ export class CommentFetcher {
         fork: res.mainThread.fork,
         comments: normalizedComments,
       };
-      return { data: { threads: [thread] } } as CommentApiResponse;
+      return { data: { threads: [thread] } };
     } catch (error) {
       window.logger.error(
         "fetchNicoDataWithCommentsでの取得に失敗しました...",

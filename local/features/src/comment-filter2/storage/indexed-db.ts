@@ -377,7 +377,7 @@ export class FilterStorage {
             // idフィールドを除去してクリーンなルールオブジェクトを返す
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { id, ...rule } = item;
-            return rule as NgRuleJson;
+            return rule;
           },
         );
         resolve(rules);
@@ -713,9 +713,7 @@ export class FilterStorage {
         const convertedRules: NgRuleJson[] = [];
 
         for (const rule of legacyData.rules) {
-          const jsonRule = this.convertLegacyRuleToJson(
-            rule as IndexedDBRuleItem,
-          );
+          const jsonRule = this.convertLegacyRuleToJson(rule);
           if (jsonRule) {
             convertedRules.push(jsonRule);
           }

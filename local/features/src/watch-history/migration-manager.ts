@@ -428,11 +428,7 @@ export class MigrationManager {
         )
         .sort((a, b) => b.timestamp - a.timestamp);
 
-      return backups as Array<{
-        key: string;
-        timestamp: number;
-        version: number;
-      }>;
+      return backups;
     } catch (error) {
       logger.error("[MigrationManager] バックアップ一覧取得エラー:", error);
       return [];

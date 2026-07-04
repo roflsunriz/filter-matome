@@ -506,7 +506,7 @@ class Toastr {
         if (options.timeOut > 0) {
           (toastElement as ExtendedHTMLElement).timeoutId = setTimeout(() => {
             this.removeToast(toastElement);
-          }, options.extendedTimeOut) as unknown as number;
+          }, options.extendedTimeOut);
 
           const progressElement = toastElement.querySelector(
             `.${options.progressClass}`,
