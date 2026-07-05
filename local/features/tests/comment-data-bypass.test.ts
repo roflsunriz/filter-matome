@@ -15,10 +15,10 @@ describe("comment data downloads bypass comment-filter2", () => {
     );
 
     expect(common).toContain("bypassCommentFilter");
-    expect(common).toContain("x-comment-filter2-bypass");
+    expect(common).toContain("__commentFilter2Bypass");
     expect(common).toContain('? "|raw" : "|filtered"');
     expect(interceptor).toContain("shouldBypassCommentFiltering");
-    expect(interceptor).toContain("stripBypassHeader");
+    expect(interceptor).toContain("stripBypassFlag");
   });
 
   test("download and movie-info comment fetches request raw comments", () => {

@@ -31,7 +31,7 @@ const GENERIC_VIDEO_ID_PATTERN = /([a-z]{2}\d+)/i;
 const WATCH_PAGE_CACHE_TTL_MS = 5 * 60 * 1000;
 const COMMENT_CACHE_TTL_MS = 30 * 1000;
 const MAX_COMMON_CACHE_ENTRIES = 16;
-const COMMENT_FILTER_BYPASS_HEADER = "x-comment-filter2-bypass";
+const COMMENT_FILTER_BYPASS_FLAG = "__commentFilter2Bypass";
 
 type TimedCacheEntry<T> = {
   value: T;
@@ -196,11 +196,9 @@ window.commonHelper = {
     const { bypassCommentFilter, headers, ...requestOptions } = options;
     const defaultOptions: FetchOptions = {
       method: "GET",
-      headers: {
-        ...(headers ?? {}),
-        ...(bypassCommentFilter ? { [COMMENT_FILTER_BYPASS_HEADER]: "1" } : {}),
-      },
+      headers: headers ?? {},
       ...requestOptions,
+      ...(bypassCommentFilter ? { [COMMENT_FILTER_BYPASS_FLAG]: true } : {}),
     };
 
     return fetch(url, defaultOptions);

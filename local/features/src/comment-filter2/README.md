@@ -70,7 +70,7 @@ comment-filter2/
 
 - `index.ts`: 初期化・キーボードショートカット設定・イベント購読・デバッグ用 API (`window.CommentFilter2Instance`) を提供。
 - `proxy/data-interceptor.ts`: SMID 判定 (SPA 対応)、グローバルデータ初期化、`selectMainThread` によるメインスレッド選択、フィルタ済み `Response` の生成を担当。
-  - `x-comment-filter2-bypass` ヘッダー付きの内部リクエストはフィルタ済み `Response` に差し替えず、movie-info やコメントJSON保存がフィルタ前データを取得できるようにする。
+  - `bypassCommentFilter` 由来の内部フラグ付きリクエストはフィルタ済み `Response` に差し替えず、movie-info やコメントJSON保存がフィルタ前データを取得できるようにする。
 - `components/ui-manager.ts`: Shadow DOM UI の生成、設定/ルール CRUD、ファイル入出力、フィルタ実行、バックアップ操作を一元化。
 - `filter/json-comment-filter.ts`: ルール前処理 (`prepareJsonRules`)、Web Worker 分散 (`json-comment-filter-worker.ts`)、nicoru 条件やコマンド制限の適用、フィルタログ記録を実装。
 - `filter/comment-filter.ts`: 旧 NGWord 形式 (正規表現+ユーザー ID) の互換実装。UI のレガシーインポートや既存データ移行用に保持。

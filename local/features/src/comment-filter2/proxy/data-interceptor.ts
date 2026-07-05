@@ -9,7 +9,7 @@ import {
 } from "@/types/filter-types";
 
 // グローバル型定義は types/global.d.ts で管理されています
-const COMMENT_FILTER_BYPASS_HEADER = "x-comment-filter2-bypass";
+const COMMENT_FILTER_BYPASS_FLAG = "__commentFilter2Bypass";
 
 export class DataInterceptor {
   private originalFetch: typeof fetch;
@@ -155,7 +155,7 @@ export class DataInterceptor {
       }
 
       if (this.shouldBypassCommentFiltering(input, init)) {
-        return this.originalFetch(input, this.stripBypassHeader(init));
+        return this.originalFetch(input, this.stripBypassFlag(init));
       }
 
       // 対象エンドポイントをチェック
@@ -198,32 +198,23 @@ export class DataInterceptor {
     input: RequestInfo | URL,
     init?: RequestInit,
   ): boolean {
-    if (this.hasBypassHeader(init?.headers)) {
-      return true;
-    }
-    if (input instanceof Request) {
-      return this.hasBypassHeader(input.headers);
-    }
-    return false;
+    void input;
+    return (
+      (init as RequestInit & { [COMMENT_FILTER_BYPASS_FLAG]?: boolean })?.[
+        COMMENT_FILTER_BYPASS_FLAG
+      ] === true
+    );
   }
 
-  private hasBypassHeader(headers?: HeadersInit): boolean {
-    if (!headers) {
-      return false;
-    }
-    return new Headers(headers).has(COMMENT_FILTER_BYPASS_HEADER);
-  }
-
-  private stripBypassHeader(init?: RequestInit): RequestInit | undefined {
-    if (!init?.headers) {
+  private stripBypassFlag(init?: RequestInit): RequestInit | undefined {
+    if (!init) {
       return init;
     }
-    const headers = new Headers(init.headers);
-    headers.delete(COMMENT_FILTER_BYPASS_HEADER);
-    return {
+    const cleanInit = {
       ...init,
-      headers,
-    };
+    } as RequestInit & { [COMMENT_FILTER_BYPASS_FLAG]?: boolean };
+    delete cleanInit[COMMENT_FILTER_BYPASS_FLAG];
+    return cleanInit;
   }
 
   /**

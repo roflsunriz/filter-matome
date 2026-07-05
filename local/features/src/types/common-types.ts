@@ -113,6 +113,7 @@ export interface FetchOptions {
   headers?: Record<string, string>;
   body?: string;
   bypassCommentFilter?: boolean;
+  __commentFilter2Bypass?: boolean;
 }
 
 export interface FetchNicoCommentsOptions {
