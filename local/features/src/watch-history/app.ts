@@ -37,6 +37,44 @@ import type {
 } from "@/types/watch-history-types";
 import { watchHistoryDB } from "@/watch-history/database";
 
+type DeleteMetadataKey =
+  | "watchCount"
+  | "progressRate"
+  | "lastPosition"
+  | "lengthSec"
+  | "viewCount"
+  | "commentCount"
+  | "mylistCount"
+  | "likeCount";
+
+type DeleteOperator = "gte" | "lte" | "lt" | "gt" | "range";
+
+interface DeleteCondition {
+  metadata: DeleteMetadataKey;
+  operator: DeleteOperator;
+  value: number;
+  maxValue?: number;
+}
+
+const DELETE_METADATA_LABELS: Record<DeleteMetadataKey, string> = {
+  watchCount: "視聴回数",
+  progressRate: "進捗率",
+  lastPosition: "最終再生位置",
+  lengthSec: "動画時間",
+  viewCount: "再生数",
+  commentCount: "コメント数",
+  mylistCount: "マイリスト数",
+  likeCount: "いいね数",
+};
+
+const DELETE_OPERATOR_LABELS: Record<DeleteOperator, string> = {
+  gte: "以上",
+  lte: "以下",
+  lt: "未満",
+  gt: "超過",
+  range: "レンジ",
+};
+
 /**
  * 視聴履歴アプリケーションクラス
  */
@@ -136,13 +174,18 @@ class WatchHistoryApp {
       "filter-uploaded-date-start",
       "filter-uploaded-date-end",
       "clear-uploaded-date-range",
+      "open-history-delete-modal-btn",
+      "history-delete-modal",
+      "history-delete-modal-close",
       "delete-all-btn",
       "delete-by-condition-btn",
-      "delete-watch-count",
-      "delete-progress-rate",
-      "delete-use-watch-count",
-      "delete-use-progress-rate",
-      "delete-condition-hint",
+      "delete-metadata-select",
+      "delete-operator-select",
+      "delete-value-input",
+      "delete-range-max-input",
+      "delete-range-max-field",
+      "delete-value-label",
+      "delete-dry-run-console",
       "stats-total-videos",
       "stats-total-time",
       "stats-completion-rate",
@@ -340,6 +383,25 @@ class WatchHistoryApp {
     );
 
     // 削除機能
+    this.elements["open-history-delete-modal-btn"]?.addEventListener(
+      "click",
+      this.guardEvent(() => this.openHistoryDeleteModal()),
+    );
+    this.elements["history-delete-modal-close"]?.addEventListener(
+      "click",
+      this.guardEvent(() => this.closeHistoryDeleteModal()),
+    );
+    this.elements["history-delete-modal"]?.addEventListener(
+      "click",
+      this.guardEvent((e) => {
+        if (
+          e.target === this.elements["history-delete-modal"] ||
+          (e.target as HTMLElement).classList.contains("modal-overlay")
+        ) {
+          this.closeHistoryDeleteModal();
+        }
+      }),
+    );
     this.elements["delete-all-btn"]?.addEventListener(
       "click",
       this.guardEvent(() => this.deleteAllHistoryEntries()),
@@ -348,12 +410,21 @@ class WatchHistoryApp {
       "click",
       this.guardEvent(() => this.handleConditionalDelete()),
     );
-    this.elements["delete-use-watch-count"]?.addEventListener("change", () =>
-      this.updateDeleteConditionUI(),
-    );
-    this.elements["delete-use-progress-rate"]?.addEventListener("change", () =>
-      this.updateDeleteConditionUI(),
-    );
+    for (const id of [
+      "delete-metadata-select",
+      "delete-operator-select",
+      "delete-value-input",
+      "delete-range-max-input",
+    ]) {
+      this.elements[id]?.addEventListener(
+        "input",
+        this.guardEvent(() => this.updateDeleteDryRun()),
+      );
+      this.elements[id]?.addEventListener(
+        "change",
+        this.guardEvent(() => this.updateDeleteDryRun()),
+      );
+    }
 
     // タブ切り替え
     this.elements["history-tab"]?.addEventListener(
@@ -3039,7 +3110,12 @@ class WatchHistoryApp {
    * 個別の視聴履歴エントリを削除する
    */
   private async deleteHistoryEntry(entry: WatchHistoryEntry): Promise<void> {
-    if (!confirm(`「${entry.title}」の視聴履歴を削除しますか？`)) {
+    const confirmed = await this.showHistoryDeleteConfirmDialog(
+      "履歴削除の最終確認",
+      "この視聴履歴を削除します。",
+      [entry],
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -3071,11 +3147,12 @@ class WatchHistoryApp {
       return;
     }
 
-    if (
-      !confirm(
-        `全ての視聴履歴（${totalCount}件）を削除しますか？\n\nこの操作は取り消せません。`,
-      )
-    ) {
+    const confirmed = await this.showHistoryDeleteConfirmDialog(
+      "全削除の最終確認",
+      `全ての視聴履歴 ${totalCount.toLocaleString()} 件を削除します。`,
+      this.entries,
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -3087,6 +3164,7 @@ class WatchHistoryApp {
         this.filteredEntries = [];
         this.updateHistoryList();
         this.updateContentCount();
+        this.updateDeleteDryRun();
         this.showToast(`${result.data}件の履歴を削除しました`, "success");
       } else {
         this.showToast("一括削除に失敗しました", "error");
@@ -3098,166 +3176,381 @@ class WatchHistoryApp {
   }
 
   /**
-   * 条件に一致する視聴履歴を削除する
-   * @param maxWatchCount 視聴回数上限（nullの場合は条件無効）
-   * @param maxProgressRate 進捗率上限（nullの場合は条件無効）
+   * 履歴削除モーダルを開く
    */
-  private async deleteHistoryEntriesByCondition(
-    maxWatchCount: number | null,
-    maxProgressRate: number | null,
-  ): Promise<void> {
-    if (maxWatchCount === null && maxProgressRate === null) {
-      this.showToast("少なくとも1つの条件を有効にしてください", "error");
-      return;
-    }
+  private openHistoryDeleteModal(): void {
+    this.elements["history-delete-modal"]?.classList.remove("hidden");
+    this.updateDeleteDryRun();
+  }
 
-    if (
-      (maxWatchCount !== null && maxWatchCount < 0) ||
-      (maxProgressRate !== null &&
-        (maxProgressRate < 0 || maxProgressRate > 100))
-    ) {
-      this.showToast("無効な条件値です", "error");
-      return;
-    }
-
-    // 条件に一致する件数を事前計算
-    const matchingEntries = this.entries.filter((entry) => {
-      const progressRate =
-        entry.lengthSec > 0
-          ? Math.round((entry.lastPosition / entry.lengthSec) * 100)
-          : 0;
-      const watchCountMatch =
-        maxWatchCount === null || entry.watchCount <= maxWatchCount;
-      const progressRateMatch =
-        maxProgressRate === null || progressRate <= maxProgressRate;
-      return watchCountMatch && progressRateMatch;
-    });
-
-    if (matchingEntries.length === 0) {
-      this.showToast("条件に一致する履歴がありません", "info");
-      return;
-    }
-
-    // 確認メッセージを条件に応じて生成
-    const conditionParts: string[] = [];
-    if (maxWatchCount !== null) {
-      conditionParts.push(`${maxWatchCount}回以下視聴`);
-    }
-    if (maxProgressRate !== null) {
-      conditionParts.push(`${maxProgressRate}%以下進捗`);
-    }
-    const conditionText =
-      conditionParts.length === 2
-        ? conditionParts.join("かつ")
-        : (conditionParts[0] ?? "");
-
-    if (
-      !confirm(
-        `${conditionText}の履歴（${matchingEntries.length}件）を削除しますか？\n\nこの操作は取り消せません。`,
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const result = await watchHistoryDB.deleteEntriesByCondition(
-        maxWatchCount,
-        maxProgressRate,
-      );
-      if (result.success && typeof result.data === "number") {
-        // データを更新
-        await this.refreshData();
-        this.showToast(`${result.data}件の履歴を削除しました`, "success");
-      } else {
-        this.showToast("条件付き削除に失敗しました", "error");
-      }
-    } catch (error) {
-      logger.error("条件付き削除エラー:", error);
-      this.showToast("条件付き削除に失敗しました", "error");
-    }
+  /**
+   * 履歴削除モーダルを閉じる
+   */
+  private closeHistoryDeleteModal(): void {
+    this.elements["history-delete-modal"]?.classList.add("hidden");
   }
 
   /**
    * 条件付き削除のハンドラー
    */
   private handleConditionalDelete(): void {
-    const useWatchCount = (
-      this.elements["delete-use-watch-count"] as HTMLInputElement | undefined
-    )?.checked;
-    const useProgressRate = (
-      this.elements["delete-use-progress-rate"] as HTMLInputElement | undefined
-    )?.checked;
-    const watchCountInput = this.elements[
-      "delete-watch-count"
-    ] as HTMLInputElement;
-    const progressRateInput = this.elements[
-      "delete-progress-rate"
-    ] as HTMLInputElement;
-
-    if (!watchCountInput || !progressRateInput) {
-      this.showToast("削除条件の入力フィールドが見つかりません", "error");
+    const condition = this.readDeleteCondition();
+    if (!condition) {
+      this.showToast("削除条件が無効です", "error");
       return;
     }
 
-    const maxWatchCount = useWatchCount
-      ? parseInt(watchCountInput.value) || 0
-      : null;
-    const maxProgressRate = useProgressRate
-      ? parseInt(progressRateInput.value) || 0
-      : null;
-
-    void this.deleteHistoryEntriesByCondition(maxWatchCount, maxProgressRate);
+    void this.deleteHistoryEntriesByCondition(condition);
   }
 
   /**
-   * 条件付き削除UIの状態を更新する
-   * チェックボックスのON/OFFに応じて入力欄のdisabled状態とヒントテキストを切り替える
+   * 条件に一致する視聴履歴を削除する
    */
-  private updateDeleteConditionUI(): void {
-    const useWatchCount =
-      (this.elements["delete-use-watch-count"] as HTMLInputElement | undefined)
-        ?.checked ?? true;
-    const useProgressRate =
-      (
-        this.elements["delete-use-progress-rate"] as
-          HTMLInputElement | undefined
-      )?.checked ?? true;
-
-    // 入力欄の親要素にdisabledクラスを切り替え
-    const watchCountItem = this.elements["delete-use-watch-count"]?.closest(
-      ".delete-condition-item",
-    );
-    const progressRateItem = this.elements["delete-use-progress-rate"]?.closest(
-      ".delete-condition-item",
-    );
-
-    if (watchCountItem) {
-      watchCountItem.classList.toggle("disabled", !useWatchCount);
-    }
-    if (progressRateItem) {
-      progressRateItem.classList.toggle("disabled", !useProgressRate);
+  private async deleteHistoryEntriesByCondition(
+    condition: DeleteCondition,
+  ): Promise<void> {
+    const matchingEntries = this.getDeleteDryRunEntries(condition);
+    if (matchingEntries.length === 0) {
+      this.showToast("条件に一致する履歴がありません", "info");
+      return;
     }
 
-    // ヒントテキストを更新
-    const hint = this.elements["delete-condition-hint"];
-    if (hint) {
-      if (useWatchCount && useProgressRate) {
-        hint.textContent = "両方有効時はAND条件で削除します";
-      } else if (useWatchCount) {
-        hint.textContent = "視聴回数の条件のみで削除します";
-      } else if (useProgressRate) {
-        hint.textContent = "進捗率の条件のみで削除します";
-      } else {
-        hint.textContent = "少なくとも1つの条件を有効にしてください";
+    const confirmed = await this.showHistoryDeleteConfirmDialog(
+      "条件削除の最終確認",
+      `${this.describeDeleteCondition(condition)} に一致する履歴 ${matchingEntries.length.toLocaleString()} 件を削除します。`,
+      matchingEntries,
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      let deleted = 0;
+      for (const entry of matchingEntries) {
+        const result = await watchHistoryDB.deleteEntry(entry.videoId);
+        if (result.success) {
+          deleted++;
+        } else {
+          logger.warn("条件付き削除で履歴削除に失敗:", {
+            videoId: entry.videoId,
+            error: result.error,
+          });
+        }
       }
+
+      await this.refreshData();
+      this.updateDeleteDryRun();
+      this.showToast(`${deleted}件の履歴を削除しました`, "success");
+    } catch (error) {
+      logger.error("条件付き削除エラー:", error);
+      this.showToast("条件付き削除に失敗しました", "error");
+    }
+  }
+
+  private updateDeleteDryRun(): void {
+    this.updateDeleteOperatorUI();
+
+    const consoleElement = this.elements["delete-dry-run-console"];
+    const deleteButton = this.elements["delete-by-condition-btn"] as
+      HTMLButtonElement | undefined;
+    const condition = this.readDeleteCondition();
+
+    if (!consoleElement) return;
+
+    if (!condition) {
+      consoleElement.textContent = "条件が無効です。数値を確認してください。";
+      if (deleteButton) {
+        deleteButton.disabled = true;
+      }
+      return;
     }
 
-    // ボタンの有効/無効切り替え
-    const deleteBtn = this.elements["delete-by-condition-btn"] as
-      HTMLButtonElement | undefined;
-    if (deleteBtn) {
-      deleteBtn.disabled = !useWatchCount && !useProgressRate;
+    const matchingEntries = this.getDeleteDryRunEntries(condition);
+    if (deleteButton) {
+      deleteButton.disabled = matchingEntries.length === 0;
     }
+
+    const samples = matchingEntries.slice(0, 10).map((entry, index) => {
+      const value = this.getDeleteMetric(entry, condition.metadata);
+      const metricText =
+        value === null ? "値なし" : this.formatDeleteMetric(condition, value);
+      return `${index + 1}. ${entry.title} (${entry.videoId}) - ${metricText}`;
+    });
+
+    consoleElement.textContent = [
+      `条件: ${this.describeDeleteCondition(condition)}`,
+      `対象: ${matchingEntries.length.toLocaleString()} / ${this.entries.length.toLocaleString()} 件`,
+      "",
+      samples.length > 0 ? "サンプル:" : "条件に一致する履歴はありません。",
+      ...samples,
+      matchingEntries.length > samples.length
+        ? `...他 ${(matchingEntries.length - samples.length).toLocaleString()} 件`
+        : "",
+    ]
+      .filter((line) => line !== "")
+      .join("\n");
+  }
+
+  private showHistoryDeleteConfirmDialog(
+    title: string,
+    message: string,
+    entries: WatchHistoryEntry[],
+  ): Promise<boolean> {
+    const existing = document.getElementById("history-delete-confirm-modal");
+    existing?.remove();
+
+    return new Promise((resolve) => {
+      const modal = document.createElement("div");
+      modal.id = "history-delete-confirm-modal";
+      modal.className = "modal history-delete-confirm-modal";
+
+      const overlay = document.createElement("div");
+      overlay.className = "modal-overlay";
+
+      const content = document.createElement("div");
+      content.className = "modal-content large history-delete-confirm-content";
+
+      const header = document.createElement("div");
+      header.className = "modal-header";
+
+      const heading = document.createElement("h3");
+      heading.className = "modal-title";
+      heading.textContent = title;
+
+      const closeButton = document.createElement("button");
+      closeButton.className = "modal-close";
+      closeButton.type = "button";
+      closeButton.setAttribute("aria-label", "閉じる");
+      closeButton.textContent = "×";
+
+      header.append(heading, closeButton);
+
+      const body = document.createElement("div");
+      body.className = "modal-body";
+
+      const warning = document.createElement("p");
+      warning.className = "history-delete-confirm-warning";
+      warning.textContent = `${message} この操作は取り消せません。`;
+
+      const count = document.createElement("p");
+      count.className = "history-delete-confirm-count";
+      count.textContent = `削除対象: ${entries.length.toLocaleString()} 件`;
+
+      const list = document.createElement("div");
+      list.className = "history-delete-confirm-list";
+
+      for (const entry of entries) {
+        list.appendChild(this.createHistoryDeleteConfirmRow(entry));
+      }
+
+      const actions = document.createElement("div");
+      actions.className = "modal-actions";
+
+      const cancelButton = document.createElement("button");
+      cancelButton.className = "btn btn-secondary";
+      cancelButton.type = "button";
+      cancelButton.textContent = "キャンセル";
+
+      const confirmButton = document.createElement("button");
+      confirmButton.className = "btn btn-danger";
+      confirmButton.type = "button";
+      confirmButton.textContent = "表示された対象を削除";
+
+      actions.append(cancelButton, confirmButton);
+      body.append(warning, count, list, actions);
+      content.append(header, body);
+      modal.append(overlay, content);
+
+      const cleanup = (result: boolean) => {
+        document.removeEventListener("keydown", onKey);
+        modal.remove();
+        resolve(result);
+      };
+      const onKey = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
+          cleanup(false);
+        }
+      };
+
+      closeButton.addEventListener("click", () => cleanup(false));
+      cancelButton.addEventListener("click", () => cleanup(false));
+      confirmButton.addEventListener("click", () => cleanup(true));
+      overlay.addEventListener("click", () => cleanup(false));
+      document.addEventListener("keydown", onKey);
+
+      document.body.appendChild(modal);
+      cancelButton.focus();
+    });
+  }
+
+  private createHistoryDeleteConfirmRow(entry: WatchHistoryEntry): HTMLElement {
+    const row = document.createElement("div");
+    row.className = "history-delete-confirm-row";
+
+    const title = document.createElement("div");
+    title.className = "history-delete-confirm-title";
+    title.textContent = entry.title;
+
+    const details = document.createElement("div");
+    details.className = "history-delete-confirm-details";
+
+    const watchedAt = new Date(entry.watchedAt);
+    const uploadedAt = entry.stats?.uploadedAt
+      ? new Date(entry.stats.uploadedAt).toLocaleString("ja-JP")
+      : "不明";
+    const progressRate =
+      entry.lengthSec > 0
+        ? Math.round((entry.lastPosition / entry.lengthSec) * 100)
+        : 0;
+
+    const detailItems = [
+      `動画ID: ${entry.videoId}`,
+      `投稿者: ${entry.ownerName}`,
+      `視聴日時: ${watchedAt.toLocaleString("ja-JP")}`,
+      `投稿日時: ${uploadedAt}`,
+      `視聴回数: ${entry.watchCount}`,
+      `進捗率: ${progressRate}%`,
+    ];
+
+    for (const detailText of detailItems) {
+      const item = document.createElement("span");
+      item.textContent = detailText;
+      details.appendChild(item);
+    }
+
+    row.append(title, details);
+    return row;
+  }
+
+  private updateDeleteOperatorUI(): void {
+    const operator = (
+      this.elements["delete-operator-select"] as HTMLSelectElement | undefined
+    )?.value as DeleteOperator | undefined;
+    const rangeMaxField = this.elements["delete-range-max-field"];
+    const valueLabel = this.elements["delete-value-label"];
+
+    if (rangeMaxField) {
+      rangeMaxField.classList.toggle("hidden", operator !== "range");
+    }
+    if (valueLabel) {
+      valueLabel.textContent = operator === "range" ? "下限" : "指定数";
+    }
+  }
+
+  private readDeleteCondition(): DeleteCondition | null {
+    const metadata = (
+      this.elements["delete-metadata-select"] as HTMLSelectElement | undefined
+    )?.value as DeleteMetadataKey | undefined;
+    const operator = (
+      this.elements["delete-operator-select"] as HTMLSelectElement | undefined
+    )?.value as DeleteOperator | undefined;
+    const valueInput = this.elements["delete-value-input"] as
+      HTMLInputElement | undefined;
+    const maxInput = this.elements["delete-range-max-input"] as
+      HTMLInputElement | undefined;
+
+    if (!metadata || !operator || !valueInput) {
+      return null;
+    }
+
+    const value = Number(valueInput.value);
+    if (!Number.isFinite(value)) {
+      return null;
+    }
+
+    if (operator !== "range") {
+      return { metadata, operator, value };
+    }
+
+    const maxValue = Number(maxInput?.value);
+    if (!Number.isFinite(maxValue)) {
+      return null;
+    }
+
+    return {
+      metadata,
+      operator,
+      value: Math.min(value, maxValue),
+      maxValue: Math.max(value, maxValue),
+    };
+  }
+
+  private getDeleteDryRunEntries(
+    condition: DeleteCondition,
+  ): WatchHistoryEntry[] {
+    return this.entries.filter((entry) =>
+      this.matchesDeleteCondition(entry, condition),
+    );
+  }
+
+  private matchesDeleteCondition(
+    entry: WatchHistoryEntry,
+    condition: DeleteCondition,
+  ): boolean {
+    const value = this.getDeleteMetric(entry, condition.metadata);
+    if (value === null) {
+      return false;
+    }
+
+    switch (condition.operator) {
+      case "gte":
+        return value >= condition.value;
+      case "lte":
+        return value <= condition.value;
+      case "lt":
+        return value < condition.value;
+      case "gt":
+        return value > condition.value;
+      case "range":
+        return (
+          condition.maxValue !== undefined &&
+          value >= condition.value &&
+          value <= condition.maxValue
+        );
+    }
+  }
+
+  private getDeleteMetric(
+    entry: WatchHistoryEntry,
+    metadata: DeleteMetadataKey,
+  ): number | null {
+    switch (metadata) {
+      case "watchCount":
+        return entry.watchCount;
+      case "progressRate":
+        return entry.lengthSec > 0
+          ? Math.round((entry.lastPosition / entry.lengthSec) * 100)
+          : 0;
+      case "lastPosition":
+        return entry.lastPosition;
+      case "lengthSec":
+        return entry.lengthSec;
+      case "viewCount":
+        return entry.stats?.viewCount ?? null;
+      case "commentCount":
+        return entry.stats?.commentCount ?? null;
+      case "mylistCount":
+        return entry.stats?.mylistCount ?? null;
+      case "likeCount":
+        return entry.stats?.likeCount ?? null;
+    }
+  }
+
+  private describeDeleteCondition(condition: DeleteCondition): string {
+    const metadata = DELETE_METADATA_LABELS[condition.metadata];
+    const operator = DELETE_OPERATOR_LABELS[condition.operator];
+    if (condition.operator === "range") {
+      return `${metadata} が ${condition.value} 〜 ${condition.maxValue} の範囲`;
+    }
+    return `${metadata} が ${condition.value} ${operator}`;
+  }
+
+  private formatDeleteMetric(
+    condition: DeleteCondition,
+    value: number,
+  ): string {
+    const suffix = condition.metadata === "progressRate" ? "%" : "";
+    return `${DELETE_METADATA_LABELS[condition.metadata]}=${value}${suffix}`;
   }
 
   /**

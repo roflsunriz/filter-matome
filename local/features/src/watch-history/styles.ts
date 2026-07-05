@@ -1151,6 +1151,14 @@ ${materialIconsStyles}
   .modal-content {
     width: 95%;
   }
+
+  .history-delete-condition-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .history-delete-confirm-details {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 視聴ログアコーディオン */
@@ -1902,6 +1910,126 @@ const seriesStyles = `
     font-size: 12px;
     color: #a0a0b0;
     font-weight: 500;
+  }
+
+  .history-delete-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .history-delete-panel {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .history-delete-heading {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    color: #ffffff;
+  }
+
+  .history-delete-note {
+    margin: 0 0 12px;
+    color: #a0a0b0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .history-delete-condition-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    align-items: end;
+  }
+
+  .history-delete-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #d0d0dc;
+    font-size: 0.9rem;
+  }
+
+  .history-delete-select,
+  .history-delete-field .delete-condition-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .history-delete-dry-run {
+    min-height: 180px;
+  }
+
+  .delete-dry-run-console {
+    margin: 0;
+    min-height: 150px;
+    max-height: 300px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #11131a;
+    color: #d8e2ff;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .history-delete-confirm-content {
+    max-height: 90vh;
+  }
+
+  .history-delete-confirm-warning {
+    margin: 0 0 8px;
+    color: #ffb4b4;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .history-delete-confirm-count {
+    margin: 0 0 12px;
+    color: #e8e8f0;
+    font-weight: 600;
+  }
+
+  .history-delete-confirm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 52vh;
+    overflow: auto;
+    padding: 8px;
+    background: #101018;
+    border: 1px solid #2a2a38;
+    border-radius: 8px;
+  }
+
+  .history-delete-confirm-row {
+    padding: 10px;
+    background: #181824;
+    border: 1px solid #2a2a38;
+    border-radius: 6px;
+  }
+
+  .history-delete-confirm-title {
+    margin-bottom: 6px;
+    color: #ffffff;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .history-delete-confirm-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 12px;
+    color: #b8b8c8;
+    font-size: 0.85rem;
+    line-height: 1.4;
   }
 
   /* 履歴項目の削除ボタン */

@@ -434,7 +434,10 @@
               <div class="delete-section">
                 <h3 class="section-title">削除機能</h3>
                 <div class="delete-controls">
-                  <button id="delete-all-btn" class="btn btn-danger btn-full">
+                  <button
+                    id="open-history-delete-modal-btn"
+                    class="btn btn-danger btn-full"
+                  >
                     <img
                       class="material-icon icon-white"
                       data-style="outlined"
@@ -442,72 +445,8 @@
                       alt="delete_forever"
                       loading="lazy"
                     />
-                    全削除
+                    履歴削除メニュー
                   </button>
-                  <div class="delete-condition-group">
-                    <h4 class="delete-condition-title">条件付き削除</h4>
-                    <div class="delete-condition-inputs">
-                      <div class="delete-condition-item">
-                        <label class="delete-condition-toggle">
-                          <input
-                            type="checkbox"
-                            id="delete-use-watch-count"
-                            class="delete-condition-checkbox"
-                            checked
-                          />
-                          <span class="delete-condition-label">視聴回数</span>
-                        </label>
-                        <div class="delete-condition-input-group">
-                          <input
-                            type="number"
-                            id="delete-watch-count"
-                            class="delete-condition-input"
-                            min="0"
-                            value="3"
-                          />
-                          <span class="delete-condition-suffix">回以下</span>
-                        </div>
-                      </div>
-                      <div class="delete-condition-item">
-                        <label class="delete-condition-toggle">
-                          <input
-                            type="checkbox"
-                            id="delete-use-progress-rate"
-                            class="delete-condition-checkbox"
-                            checked
-                          />
-                          <span class="delete-condition-label">進捗率</span>
-                        </label>
-                        <div class="delete-condition-input-group">
-                          <input
-                            type="number"
-                            id="delete-progress-rate"
-                            class="delete-condition-input"
-                            min="0"
-                            max="100"
-                            value="50"
-                          />
-                          <span class="delete-condition-suffix">%以下</span>
-                        </div>
-                      </div>
-                    </div>
-                    <p class="delete-condition-hint" id="delete-condition-hint">
-                      両方有効時はAND条件で削除します
-                    </p>
-                    <button
-                      id="delete-by-condition-btn"
-                      class="btn btn-warning btn-full"
-                    >
-                      <img
-                        class="material-icon icon-white"
-                        data-style="outlined"
-                        data-icon="delete_sweep"
-                        alt="delete_sweep"
-                        loading="lazy"
-                      />
-                      条件付き削除
-                    </button>
-                  </div>
                 </div>
               </div>
 
@@ -903,6 +842,122 @@
       </main>
 
       <!-- モーダル -->
+      <div id="history-delete-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content large">
+          <div class="modal-header">
+            <h3 class="modal-title">履歴削除メニュー</h3>
+            <button id="history-delete-modal-close" class="modal-close">
+              <img
+                class="material-icon icon-dark"
+                data-style="outlined"
+                data-icon="close"
+                alt="close"
+                loading="lazy"
+              />
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="history-delete-layout">
+              <section class="history-delete-panel">
+                <h4 class="history-delete-heading">全削除</h4>
+                <p class="history-delete-note">
+                  現在保存されている視聴履歴をすべて削除します。
+                </p>
+                <button id="delete-all-btn" class="btn btn-danger">
+                  <img
+                    class="material-icon icon-white"
+                    data-style="outlined"
+                    data-icon="delete_forever"
+                    alt="delete_forever"
+                    loading="lazy"
+                  />
+                  全削除
+                </button>
+              </section>
+
+              <section class="history-delete-panel">
+                <h4 class="history-delete-heading">条件削除</h4>
+                <div class="history-delete-condition-grid">
+                  <label class="history-delete-field">
+                    <span>メタデータ</span>
+                    <select
+                      id="delete-metadata-select"
+                      class="filter-select history-delete-select"
+                    >
+                      <option value="watchCount">視聴回数</option>
+                      <option value="progressRate">進捗率 (%)</option>
+                      <option value="lastPosition">最終再生位置 (秒)</option>
+                      <option value="lengthSec">動画時間 (秒)</option>
+                      <option value="viewCount">再生数</option>
+                      <option value="commentCount">コメント数</option>
+                      <option value="mylistCount">マイリスト数</option>
+                      <option value="likeCount">いいね数</option>
+                    </select>
+                  </label>
+                  <label class="history-delete-field">
+                    <span>演算子</span>
+                    <select
+                      id="delete-operator-select"
+                      class="filter-select history-delete-select"
+                    >
+                      <option value="lte">以下</option>
+                      <option value="gte">以上</option>
+                      <option value="lt">未満</option>
+                      <option value="gt">超過</option>
+                      <option value="range">レンジ</option>
+                    </select>
+                  </label>
+                  <label class="history-delete-field">
+                    <span id="delete-value-label">指定数</span>
+                    <input
+                      type="number"
+                      id="delete-value-input"
+                      class="delete-condition-input"
+                      min="0"
+                      step="1"
+                      value="3"
+                    />
+                  </label>
+                  <label
+                    class="history-delete-field"
+                    id="delete-range-max-field"
+                  >
+                    <span>上限</span>
+                    <input
+                      type="number"
+                      id="delete-range-max-input"
+                      class="delete-condition-input"
+                      min="0"
+                      step="1"
+                      value="50"
+                    />
+                  </label>
+                </div>
+                <div class="modal-actions">
+                  <button id="delete-by-condition-btn" class="btn btn-warning">
+                    <img
+                      class="material-icon icon-white"
+                      data-style="outlined"
+                      data-icon="delete_sweep"
+                      alt="delete_sweep"
+                      loading="lazy"
+                    />
+                    条件に一致する履歴を削除
+                  </button>
+                </div>
+              </section>
+
+              <section class="history-delete-panel history-delete-dry-run">
+                <h4 class="history-delete-heading">ドライランコンソール</h4>
+                <pre id="delete-dry-run-console" class="delete-dry-run-console">
+条件を選択してください</pre>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="video-detail-modal" class="modal hidden">
         <div class="modal-overlay"></div>
         <div class="modal-content">
