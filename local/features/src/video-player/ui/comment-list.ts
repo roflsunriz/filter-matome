@@ -1,5 +1,8 @@
 import { Comment } from "@/types/index.js";
 
+const ACTIVE_COMMENT_WINDOW_MS = 5000;
+const COMMENT_CANVAS_CENTER_OFFSET_MS = ACTIVE_COMMENT_WINDOW_MS / 2;
+
 /**
  * シャドウDOM版コメントリスト表示クラス
  * Web Componentsとして実装してスタイル分離を実現
@@ -8,7 +11,10 @@ export class CommentList extends HTMLElement {
   private shadow: ShadowRoot;
   private list: HTMLElement | null = null;
   private comments: Comment[] = [];
+  private commentItems: HTMLElement[] = [];
   private currentTime = 0;
+  private activeStartIndex = 0;
+  private activeEndIndex = 0;
   private autoScroll = true;
   private resizeObserver: ResizeObserver | null = null;
 
@@ -172,6 +178,7 @@ export class CommentList extends HTMLElement {
    */
   connectedCallback(): void {
     this.list = this.shadow.querySelector(".comment-list");
+    this.setupEventListeners();
     this.setupResizeObserver();
   }
 
@@ -244,7 +251,9 @@ export class CommentList extends HTMLElement {
    * コメントの追加
    */
   addComments(comments: Comment[]): void {
-    this.comments = comments.sort((a, b) => a.vposMs - b.vposMs);
+    this.comments = [...comments].sort((a, b) => a.vposMs - b.vposMs);
+    this.activeStartIndex = 0;
+    this.activeEndIndex = 0;
     this.renderComments();
   }
 
@@ -259,6 +268,7 @@ export class CommentList extends HTMLElement {
     if (!this.list) return;
 
     this.list.innerHTML = "";
+    this.commentItems = [];
     this.comments.forEach((comment) => {
       const item = document.createElement("div");
       item.className = "comment-item";
@@ -282,6 +292,7 @@ export class CommentList extends HTMLElement {
 
       if (this.list) {
         this.list.appendChild(item);
+        this.commentItems.push(item);
       }
     });
   }
@@ -302,37 +313,104 @@ export class CommentList extends HTMLElement {
     this.currentTime = currentTimeMs;
     if (!this.list) return;
 
-    // アクティブなコメントの更新
-    const items = this.list.querySelectorAll<HTMLElement>(".comment-item");
-    items.forEach((item) => {
-      const vpos = parseInt(item.dataset.vpos || "0");
-      item.classList.toggle(
-        "active",
-        vpos <= currentTimeMs && vpos > currentTimeMs - 5000,
-      );
-    });
+    const nextStartIndex = this.findFirstCommentAfter(
+      currentTimeMs - ACTIVE_COMMENT_WINDOW_MS,
+    );
+    const nextEndIndex = this.findFirstCommentAfter(currentTimeMs);
+
+    this.updateActiveRange(nextStartIndex, nextEndIndex);
 
     // 自動スクロール（scrollIntoView を使わずリスト内のみをスクロール）
-    if (this.autoScroll) {
-      const activeItems = this.list.querySelectorAll<HTMLElement>(
-        ".comment-item.active",
+    if (this.autoScroll && nextEndIndex > nextStartIndex) {
+      const centerIndex = this.findCommentIndexAtCanvasCenter(
+        currentTimeMs,
+        nextStartIndex,
+        nextEndIndex,
       );
-      if (activeItems.length > 0) {
-        const lastActive = activeItems[activeItems.length - 1];
-        const list = this.list;
-        const itemTop = lastActive.offsetTop;
-        const itemBottom = itemTop + lastActive.offsetHeight;
+      this.scrollToCenteredItem(centerIndex);
+    }
+  }
 
-        // 要素が下方向に見切れる場合
-        if (itemBottom > list.scrollTop + list.clientHeight) {
-          list.scrollTop = itemBottom - list.clientHeight;
-        }
-        // 要素が上方向に見切れる場合
-        else if (itemTop < list.scrollTop) {
-          list.scrollTop = itemTop;
-        }
+  private findCommentIndexAtCanvasCenter(
+    currentTimeMs: number,
+    activeStartIndex: number,
+    activeEndIndex: number,
+  ): number {
+    const centerTimeMs = currentTimeMs - COMMENT_CANVAS_CENTER_OFFSET_MS;
+    const centerIndex = this.findFirstCommentAfter(centerTimeMs) - 1;
+    if (centerIndex < activeStartIndex) {
+      return activeStartIndex;
+    }
+    if (centerIndex >= activeEndIndex) {
+      return activeEndIndex - 1;
+    }
+    return centerIndex;
+  }
+
+  private findFirstCommentAfter(timeMs: number): number {
+    let low = 0;
+    let high = this.comments.length;
+    while (low < high) {
+      const mid = Math.floor((low + high) / 2);
+      if (this.comments[mid].vposMs <= timeMs) {
+        low = mid + 1;
+      } else {
+        high = mid;
       }
     }
+    return low;
+  }
+
+  private updateActiveRange(
+    nextStartIndex: number,
+    nextEndIndex: number,
+  ): void {
+    if (
+      nextStartIndex === this.activeStartIndex &&
+      nextEndIndex === this.activeEndIndex
+    ) {
+      return;
+    }
+
+    this.updateItemActiveState(
+      this.activeStartIndex,
+      this.activeEndIndex,
+      false,
+      nextStartIndex,
+      nextEndIndex,
+    );
+    this.updateItemActiveState(nextStartIndex, nextEndIndex, true);
+
+    this.activeStartIndex = nextStartIndex;
+    this.activeEndIndex = nextEndIndex;
+  }
+
+  private updateItemActiveState(
+    startIndex: number,
+    endIndex: number,
+    active: boolean,
+    skipStartIndex = -1,
+    skipEndIndex = -1,
+  ): void {
+    for (let index = startIndex; index < endIndex; index++) {
+      if (index >= skipStartIndex && index < skipEndIndex) {
+        continue;
+      }
+      this.commentItems[index]?.classList.toggle("active", active);
+    }
+  }
+
+  private scrollToCenteredItem(index: number): void {
+    if (!this.list) return;
+    const activeItem = this.commentItems[index];
+    if (!activeItem) return;
+
+    const list = this.list;
+    const itemCenter = activeItem.offsetTop + activeItem.offsetHeight / 2;
+    const nextScrollTop = itemCenter - list.clientHeight / 2;
+    const maxScrollTop = list.scrollHeight - list.clientHeight;
+
+    list.scrollTop = Math.max(0, Math.min(nextScrollTop, maxScrollTop));
   }
 
   /**
@@ -356,6 +434,9 @@ export class CommentList extends HTMLElement {
    */
   clearComments(): void {
     this.comments = [];
+    this.commentItems = [];
+    this.activeStartIndex = 0;
+    this.activeEndIndex = 0;
     if (this.list) {
       this.list.innerHTML = "";
     }
