@@ -276,7 +276,15 @@ class WatchHistoryApp {
       this.guardEvent(() => this.handleFilter()),
     );
     this.elements["filter-date-start"]?.addEventListener(
+      "input",
+      this.guardEvent(() => this.handleFilter()),
+    );
+    this.elements["filter-date-start"]?.addEventListener(
       "change",
+      this.guardEvent(() => this.handleFilter()),
+    );
+    this.elements["filter-date-end"]?.addEventListener(
+      "input",
       this.guardEvent(() => this.handleFilter()),
     );
     this.elements["filter-date-end"]?.addEventListener(
@@ -708,7 +716,6 @@ class WatchHistoryApp {
       const entriesResult = await watchHistoryDB.getAllEntries(
         this.config.sortBy,
         this.config.sortOrder,
-        sanitizedFilter,
       );
 
       logger.debug("履歴データ取得結果:", {
@@ -1316,6 +1323,37 @@ class WatchHistoryApp {
    * フィルタを更新する
    */
   private updateFilters(): void {
+    const completedFilter = this.elements[
+      "filter-completed"
+    ] as HTMLInputElement;
+    if (completedFilter) {
+      completedFilter.checked = this.config.filter.completedOnly === true;
+    }
+
+    const dateStartFilter = this.elements[
+      "filter-date-start"
+    ] as HTMLInputElement;
+    const dateEndFilter = this.elements["filter-date-end"] as HTMLInputElement;
+    if (this.config.filter.dateRange) {
+      if (dateStartFilter) {
+        dateStartFilter.value = this.toDateInputValue(
+          this.config.filter.dateRange.start,
+        );
+      }
+      if (dateEndFilter) {
+        dateEndFilter.value = this.toDateInputValue(
+          this.config.filter.dateRange.end,
+        );
+      }
+    } else {
+      if (dateStartFilter) {
+        dateStartFilter.value = "";
+      }
+      if (dateEndFilter) {
+        dateEndFilter.value = "";
+      }
+    }
+
     // 投稿者フィルタのオプションを更新
     const ownerSelect = this.elements["filter-owner"] as HTMLSelectElement;
     if (ownerSelect) {
@@ -1333,7 +1371,7 @@ class WatchHistoryApp {
 
       logger.debug("投稿者マップ作成完了:", { ownersCount: ownersMap.size });
 
-      const currentValue = ownerSelect.value;
+      const currentValue = this.config.filter.ownerId ?? ownerSelect.value;
 
       ownerSelect.innerHTML = '<option value="">すべて</option>';
 
@@ -2084,6 +2122,21 @@ class WatchHistoryApp {
       return `${Math.floor(num / 1000)}k`;
     }
     return num.toLocaleString();
+  }
+
+  /**
+   * タイムスタンプを date input の値 (YYYY-MM-DD) に変換する
+   */
+  private toDateInputValue(timestamp: number): string {
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   /**
