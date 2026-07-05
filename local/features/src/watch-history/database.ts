@@ -703,6 +703,17 @@ export class WatchHistoryDatabase {
         }
       }
 
+      if (filter.uploadedDateRange) {
+        const uploadedAt = entry.stats?.uploadedAt;
+        if (
+          uploadedAt === undefined ||
+          uploadedAt < filter.uploadedDateRange.start ||
+          uploadedAt > filter.uploadedDateRange.end
+        ) {
+          return false;
+        }
+      }
+
       return true;
     });
   }

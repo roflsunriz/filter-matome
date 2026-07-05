@@ -7,6 +7,10 @@ const appSource = readFileSync(
   join(projectRoot, "src", "watch-history", "app.ts"),
   "utf8",
 );
+const indexSource = readFileSync(
+  join(projectRoot, "src", "watch-history", "index.html"),
+  "utf8",
+);
 
 function listenerCount(elementId: string, eventName: string): number {
   const escapedId = elementId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -20,7 +24,12 @@ function listenerCount(elementId: string, eventName: string): number {
 
 describe("watch-history filters", () => {
   test("date range filters update on input and change", () => {
-    for (const elementId of ["filter-date-start", "filter-date-end"]) {
+    for (const elementId of [
+      "filter-date-start",
+      "filter-date-end",
+      "filter-uploaded-date-start",
+      "filter-uploaded-date-end",
+    ]) {
       expect(listenerCount(elementId, "input")).toBe(1);
       expect(listenerCount(elementId, "change")).toBe(1);
     }
@@ -41,8 +50,19 @@ describe("watch-history filters", () => {
     expect(appSource).toContain("this.toDateInputValue(");
     expect(appSource).toContain('this.elements["filter-date-start"]');
     expect(appSource).toContain('this.elements["filter-date-end"]');
+    expect(appSource).toContain('this.elements["filter-uploaded-date-start"]');
+    expect(appSource).toContain('this.elements["filter-uploaded-date-end"]');
     expect(appSource).toContain(
       "completedFilter.checked = this.config.filter.completedOnly === true",
     );
+  });
+
+  test("watch and upload date ranges are separate filters", () => {
+    expect(indexSource).toContain("視聴期間");
+    expect(indexSource).toContain("投稿期間");
+    expect(appSource).toContain("this.config.filter.dateRange");
+    expect(appSource).toContain("this.config.filter.uploadedDateRange");
+    expect(appSource).toContain("entry.stats?.uploadedAt");
+    expect(appSource).toContain("clearUploadedDateRange");
   });
 });

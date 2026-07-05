@@ -215,8 +215,13 @@ export interface FilterCondition {
   ownerId?: string;
   /** 完走済みのみ表示 */
   completedOnly?: boolean;
-  /** 日付範囲フィルタ */
+  /** 視聴日時範囲フィルタ */
   dateRange?: {
+    start: number;
+    end: number;
+  };
+  /** 投稿日時範囲フィルタ */
+  uploadedDateRange?: {
     start: number;
     end: number;
   };

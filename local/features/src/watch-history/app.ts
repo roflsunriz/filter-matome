@@ -133,6 +133,9 @@ class WatchHistoryApp {
       "filter-date-start",
       "filter-date-end",
       "clear-date-range",
+      "filter-uploaded-date-start",
+      "filter-uploaded-date-end",
+      "clear-uploaded-date-range",
       "delete-all-btn",
       "delete-by-condition-btn",
       "delete-watch-count",
@@ -294,6 +297,26 @@ class WatchHistoryApp {
     this.elements["clear-date-range"]?.addEventListener(
       "click",
       this.guardEvent(() => this.clearDateRange()),
+    );
+    this.elements["filter-uploaded-date-start"]?.addEventListener(
+      "input",
+      this.guardEvent(() => this.handleFilter()),
+    );
+    this.elements["filter-uploaded-date-start"]?.addEventListener(
+      "change",
+      this.guardEvent(() => this.handleFilter()),
+    );
+    this.elements["filter-uploaded-date-end"]?.addEventListener(
+      "input",
+      this.guardEvent(() => this.handleFilter()),
+    );
+    this.elements["filter-uploaded-date-end"]?.addEventListener(
+      "change",
+      this.guardEvent(() => this.handleFilter()),
+    );
+    this.elements["clear-uploaded-date-range"]?.addEventListener(
+      "click",
+      this.guardEvent(() => this.clearUploadedDateRange()),
     );
 
     // リフレッシュ
@@ -691,6 +714,13 @@ class WatchHistoryApp {
       }
     }
 
+    if (cleaned.uploadedDateRange) {
+      const { start, end } = cleaned.uploadedDateRange;
+      if (!start && !end) {
+        delete cleaned.uploadedDateRange;
+      }
+    }
+
     // completedOnly : leave as is (boolean)
     return cleaned;
   }
@@ -802,6 +832,18 @@ class WatchHistoryApp {
         if (
           watchedAt < filter.dateRange.start ||
           watchedAt > filter.dateRange.end
+        ) {
+          return false;
+        }
+      }
+
+      // 投稿日時範囲フィルタ
+      if (filter.uploadedDateRange) {
+        const uploadedAt = entry.stats?.uploadedAt;
+        if (
+          uploadedAt === undefined ||
+          uploadedAt < filter.uploadedDateRange.start ||
+          uploadedAt > filter.uploadedDateRange.end
         ) {
           return false;
         }
@@ -1354,6 +1396,32 @@ class WatchHistoryApp {
       }
     }
 
+    const uploadedDateStartFilter = this.elements[
+      "filter-uploaded-date-start"
+    ] as HTMLInputElement;
+    const uploadedDateEndFilter = this.elements[
+      "filter-uploaded-date-end"
+    ] as HTMLInputElement;
+    if (this.config.filter.uploadedDateRange) {
+      if (uploadedDateStartFilter) {
+        uploadedDateStartFilter.value = this.toDateInputValue(
+          this.config.filter.uploadedDateRange.start,
+        );
+      }
+      if (uploadedDateEndFilter) {
+        uploadedDateEndFilter.value = this.toDateInputValue(
+          this.config.filter.uploadedDateRange.end,
+        );
+      }
+    } else {
+      if (uploadedDateStartFilter) {
+        uploadedDateStartFilter.value = "";
+      }
+      if (uploadedDateEndFilter) {
+        uploadedDateEndFilter.value = "";
+      }
+    }
+
     // 投稿者フィルタのオプションを更新
     const ownerSelect = this.elements["filter-owner"] as HTMLSelectElement;
     if (ownerSelect) {
@@ -1608,7 +1676,35 @@ class WatchHistoryApp {
     this.saveConfig();
 
     // 成功メッセージを表示
-    this.showToast("期間フィルタをクリアしました", "success");
+    this.showToast("視聴期間フィルタをクリアしました", "success");
+  }
+
+  /**
+   * 投稿期間フィルタを一括クリアする
+   */
+  private clearUploadedDateRange(): void {
+    const startDateInput = this.elements[
+      "filter-uploaded-date-start"
+    ] as HTMLInputElement;
+    const endDateInput = this.elements[
+      "filter-uploaded-date-end"
+    ] as HTMLInputElement;
+
+    if (startDateInput) {
+      startDateInput.value = "";
+    }
+    if (endDateInput) {
+      endDateInput.value = "";
+    }
+
+    this.config.filter.uploadedDateRange = undefined;
+
+    this.filterEntries();
+    this.updateHistoryList();
+    this.updateContentCount();
+    this.saveConfig();
+
+    this.showToast("投稿期間フィルタをクリアしました", "success");
   }
 
   /**
@@ -1674,6 +1770,12 @@ class WatchHistoryApp {
       "filter-date-start"
     ] as HTMLInputElement;
     const dateEndFilter = this.elements["filter-date-end"] as HTMLInputElement;
+    const uploadedDateStartFilter = this.elements[
+      "filter-uploaded-date-start"
+    ] as HTMLInputElement;
+    const uploadedDateEndFilter = this.elements[
+      "filter-uploaded-date-end"
+    ] as HTMLInputElement;
 
     this.config.filter.completedOnly = completedFilter?.checked
       ? true
@@ -1686,14 +1788,14 @@ class WatchHistoryApp {
       ownerName: ownerFilter?.selectedOptions[0]?.textContent,
     });
 
-    if (dateStartFilter?.value && dateEndFilter?.value) {
-      this.config.filter.dateRange = {
-        start: new Date(dateStartFilter.value).getTime(),
-        end: new Date(dateEndFilter.value).getTime() + 24 * 60 * 60 * 1000 - 1,
-      };
-    } else {
-      this.config.filter.dateRange = undefined;
-    }
+    this.config.filter.dateRange = this.readDateRange(
+      dateStartFilter,
+      dateEndFilter,
+    );
+    this.config.filter.uploadedDateRange = this.readDateRange(
+      uploadedDateStartFilter,
+      uploadedDateEndFilter,
+    );
 
     this.filterEntries();
     this.updateHistoryList();
@@ -2137,6 +2239,23 @@ class WatchHistoryApp {
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const day = date.getDate().toString().padStart(2, "0");
     return `${year}-${month}-${day}`;
+  }
+
+  private readDateRange(
+    startInput: HTMLInputElement | null | undefined,
+    endInput: HTMLInputElement | null | undefined,
+  ): { start: number; end: number } | undefined {
+    if (!startInput?.value || !endInput?.value) {
+      return undefined;
+    }
+
+    const start = new Date(startInput.value).getTime();
+    const end = new Date(endInput.value).getTime() + 24 * 60 * 60 * 1000 - 1;
+    if (Number.isNaN(start) || Number.isNaN(end)) {
+      return undefined;
+    }
+
+    return { start, end };
   }
 
   /**
