@@ -1428,12 +1428,27 @@ export class UIManager {
     const replaceInputGroup = this.container.querySelector(
       "#cf2-replace-input-group",
     );
+    const nicoruModeSelect = this.container.querySelector<HTMLSelectElement>(
+      `#${UI_ELEMENTS.NICORU_MODE}`,
+    );
+    const nicoruModeNote = this.container.querySelector(
+      "#cf2-nicoru-mode-note",
+    );
 
     if (selectedAction.value === "replace") {
       replaceInputGroup?.classList.remove(CSS_CLASSES.HIDDEN);
     } else {
       replaceInputGroup?.classList.add(CSS_CLASSES.HIDDEN);
     }
+
+    const isExemptionAction = selectedAction.value === "unspecified";
+    if (nicoruModeSelect) {
+      if (isExemptionAction) {
+        nicoruModeSelect.value = "exclude";
+      }
+      nicoruModeSelect.disabled = isExemptionAction;
+    }
+    nicoruModeNote?.classList.toggle(CSS_CLASSES.HIDDEN, !isExemptionAction);
   }
 
   /**
@@ -1777,7 +1792,7 @@ export class UIManager {
       )?.value?.trim();
       rule.action = { type: "replace", replacement: replacement || "" };
     } else {
-      // unspecified: 本文変更なし・除外のみ
+      // unspecified: 本文変更なし・後続フィルタから免除
       rule.action = { type: "unspecified" };
     }
 
@@ -1808,11 +1823,14 @@ export class UIManager {
         )?.value || "0",
         10,
       );
-      const mode = (
+      let mode = (
         this.container.querySelector(
           `#${UI_ELEMENTS.NICORU_MODE}`,
         ) as HTMLSelectElement
       )?.value as "include" | "exclude";
+      if (actionType === "unspecified") {
+        mode = "exclude";
+      }
 
       if (op) {
         rule.nicoru_cond = {
@@ -2063,7 +2081,7 @@ export class UIManager {
       const repl = rule.action.replacement;
       actionText = `置換: ${this.escapeHtml(repl)}`;
     } else {
-      actionText = "除外のみ";
+      actionText = "フィルタ免除";
     }
     const smidText = rule.smid.join(", ");
     const nicoruText = rule.nicoru_cond

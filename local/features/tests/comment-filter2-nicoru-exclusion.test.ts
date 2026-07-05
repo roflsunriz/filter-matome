@@ -74,4 +74,46 @@ describe("comment-filter2 nicoru exclusion", () => {
     expect(result.comments[1].body).toBe("");
     expect(result.comments[1].commands).toContain("invisible");
   });
+
+  test("unspecified action treats include mode as a matching exemption", () => {
+    const rules: NgRuleJson[] = [
+      {
+        pattern: ".*?",
+        flags: "gi",
+        action: { type: "unspecified" },
+        smid: ["ALL"],
+        nicoru_cond: { op: ">=", value: 3, mode: "include" },
+        description:
+          "古いJSONや直接編集でincludeになっていても一致コメントは免除",
+      },
+      {
+        pattern: ".*?",
+        flags: "gi",
+        action: { type: "hide" },
+        smid: ["ALL"],
+        description: "全コメント非表示",
+      },
+    ];
+    const thread: CF2Thread = {
+      id: "thread-include",
+      fork: "main",
+      commentCount: 2,
+      comments: [
+        createComment("1", "protected", 3),
+        createComment("2", "hidden", 0),
+      ],
+    };
+
+    const result = filterJsonThread({
+      thread,
+      preparedRules: prepareJsonRules(rules, "sm9", new Map()),
+      settings: null,
+      regexCache: new Map(),
+    });
+
+    expect(result.comments[0].body).toBe("protected");
+    expect(result.comments[0].commands).not.toContain("invisible");
+    expect(result.comments[1].body).toBe("");
+    expect(result.comments[1].commands).toContain("invisible");
+  });
 });

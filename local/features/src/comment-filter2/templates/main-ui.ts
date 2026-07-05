@@ -200,11 +200,11 @@ export const mainUITemplate = `
               </label>
               <label class="cf2-radio-label">
                 <input type="radio" name="cf2-action-type" value="unspecified">
-                <span>除外のみ</span>
+                <span>フィルタ免除</span>
               </label>
             </div>
             <div class="cf2-help-text" id="cf2-userid-action-note" style="display: none;">
-              <strong>注意:</strong> ユーザーIDルールでは「非表示」と「除外のみ」のみ利用可能です。「除外のみ」はニコる数条件と組み合わせて使用します。
+              <strong>注意:</strong> ユーザーIDルールでは「非表示」と「フィルタ免除」のみ利用可能です。「フィルタ免除」はニコる数条件と組み合わせて使用します。
             </div>
           </div>
 
@@ -249,6 +249,9 @@ export const mainUITemplate = `
                 <option value="exclude">条件に合致したら除外</option>
                 <option value="include">条件に合致したら対象</option>
               </select>
+            </div>
+            <div class="cf2-help-text cf2-hidden" id="cf2-nicoru-mode-note">
+              フィルタ免除アクションでは、条件に合致したコメントを後続の非表示/置換から免除します。
             </div>
           </div>
 

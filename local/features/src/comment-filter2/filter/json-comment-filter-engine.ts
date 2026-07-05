@@ -239,11 +239,7 @@ function applyRulesToComment({
       ? doesNicoruConditionMatch(normalizedCond, numericNicoruCount)
       : true;
 
-    if (
-      rule.action.type === "unspecified" &&
-      normalizedCond?.mode === "exclude" &&
-      nicoruMatches
-    ) {
+    if (rule.action.type === "unspecified" && normalizedCond && nicoruMatches) {
       logCollector.push({
         comment: originalComment,
         rule,

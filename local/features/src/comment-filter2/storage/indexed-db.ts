@@ -1525,7 +1525,7 @@ export class FilterStorage {
       // アクションの検証
       if (
         !rule.action.type ||
-        !["hide", "replace"].includes(rule.action.type)
+        !["hide", "replace", "unspecified"].includes(rule.action.type)
       ) {
         return false;
       }

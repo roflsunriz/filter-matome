@@ -96,9 +96,9 @@ comment-filter2/
 - ルール種別
   - 正規表現 (`pattern` + `flags`)
   - ユーザー ID (`userId`)
-  - `action.type` は `hide` または `replace` または `unspecified` (置換文字列付き)。
+  - `action.type` は `hide` または `replace` または `unspecified` (フィルタ免除)。
 - 対象 SMID 条件: `smid` が `['ALL']` または具体的な SMID 配列で指定可能。
-- ニコる条件 (`nicoru_cond`): `op` (gte/lte/range など) と `mode` (include/exclude) をサポートし、スレッド統計から判定。`action.type: "unspecified"` かつ `mode: "exclude"` が一致したコメントは、後続の非表示/置換ルールを含むフィルタ動作から免除されます。
+- ニコる条件 (`nicoru_cond`): `op` (gte/lte/range など) と `mode` (include/exclude) をサポートし、スレッド統計から判定。`hide`/`replace` では `include` が「条件に合致したら対象」、`exclude` が「条件に合致したら除外」を表します。`action.type: "unspecified"` はフィルタ免除専用のため `mode` に関係なく条件に一致したコメントを後続の非表示/置換ルールから免除し、フォーム入力では `exclude` に固定します。
 - コメントコマンド制御:
   - `commandSettings` によりフォーク別 (`owner`/`main`/`easy`) に許可・強制コマンドを設定。
   - `sanitizeCommentCommands()` と `enforceCommandSettings()` が未許可コマンドを除外し、指定コマンドを付与。

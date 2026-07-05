@@ -25,9 +25,9 @@ CommentFilter2 は、ニコニコ動画のコメントを **強力にフィル�
 }
 ```
 
-実際の指定例  
+実際の指定例
 
-niconicoをhogehogeに置換（無効）  
+niconicoをhogehogeに置換（無効）
 
 ```json
 {
@@ -39,7 +39,7 @@ niconicoをhogehogeに置換（無効）
 }
 ```
 
-niconicoを非表示（有効）  
+niconicoを非表示（有効）
 
 ```json
 {
@@ -51,7 +51,7 @@ niconicoを非表示（有効）
 }
 ```
 
-改行を含むあらゆる文字列がニコる数5以上のときcomment-filter2の動作から除外  
+改行を含むあらゆる文字列がニコる数5以上のとき、後続の非表示・置換ルールから免除
 
 ```json
 {
@@ -59,7 +59,7 @@ niconicoを非表示（有効）
   "flags": "gi",
   "action": { "type": "unspecified" },
   "smid": ["sm123", "sm456", "so123"],
-  "nicoru_cond": {"op": ">=", "value": 5, "mode": "exclude"},
+  "nicoru_cond": { "op": ">=", "value": 5, "mode": "exclude" },
   "enabled": true
 }
 ```
@@ -67,13 +67,22 @@ niconicoを非表示（有効）
 ### パターンマッチングルール
 
 ```json
-{"pattern":"バカ|アホ","flags":"gi","action":{"type":"replace","replacement":"***"},"smid":["ALL"]}
+{
+  "pattern": "バカ|アホ",
+  "flags": "gi",
+  "action": { "type": "replace", "replacement": "***" },
+  "smid": ["ALL"]
+}
 ```
 
 ### ユーザーIDルール
 
 ```json
-{"userId":"TKAF1N8IB3c8D0WJ3l8xixNrwyQ","action":{"type":"hide"},"smid":["ALL"]}
+{
+  "userId": "TKAF1N8IB3c8D0WJ3l8xixNrwyQ",
+  "action": { "type": "hide" },
+  "smid": ["ALL"]
+}
 ```
 
 ### アクションタイプ
@@ -81,26 +90,27 @@ niconicoを非表示（有効）
 - **hide**: コメントを非表示にする
 
 ```json
-{"action":{"type":"hide"}}
+{ "action": { "type": "hide" } }
 ```
 
 - **replace**: コメントを置換する（正規表現ルールのみ対応）
 
 ```json
-{"action":{"type":"replace","replacement":"置換後文字列"}}
+{ "action": { "type": "replace", "replacement": "置換後文字列" } }
 ```
 
-- **unspecified**: ニコる数条件との組み合わせ専用、フィルターの動作からコメントを完全に除外する
+- **unspecified**: ニコる数条件との組み合わせ専用、条件に一致したコメントを後続の非表示・置換ルールから免除する
 
 ```json
-{"action":{"type":"unspecified"}}
+{ "action": { "type": "unspecified" } }
 ```
 
 ### 重要な制限事項
 
-- **ユーザーIDルール**は `hide`（非表示）と `unspecified`（除外のみ）にのみ対応
+- **ユーザーIDルール**は `hide`（非表示）と `unspecified`（フィルタ免除）にのみ対応
 - **replace**（置換）は正規表現ルールでのみ利用可能
-- **unspecified**（除外のみ）は **ニコる数条件と同時設定を前提** としており、単独では意味がない
+- **unspecified**（フィルタ免除）は **ニコる数条件と同時設定を前提** としており、単独では意味がない
+- **unspecified** では `nicoru_cond.mode` の値に関係なく、ニコる条件に一致したコメントが免除対象になる。フォーム入力では矛盾を避けるため `exclude` に固定される
 
 ### SMID指定
 
@@ -125,7 +135,9 @@ niconicoを非表示（有効）
   - `>=`: 以上
   - `<=`: 以下
   - `range`: 範囲指定
-- **モード**: `include`（条件に合致するもののみ） / `exclude`（条件に合致するものを除外）
+- **モード**:
+  - `hide` / `replace`: `include` は条件に合致したコメントだけを処理対象にし、`exclude` は条件に合致したコメントをそのルールの処理対象から外す
+  - `unspecified`: `mode` に関係なく、条件に合致したコメントを後続の非表示・置換ルールから免除する
 
 ### その他のオプション
 
@@ -181,7 +193,7 @@ niconicoを非表示（有効）
 ### エクスポート・インポート
 
 - **エクスポート**: 現在のルールを JSON Lines 形式でダウンロード
-- **インポート**: JSON Lines / JSON 形式のファイルを読み込み  
+- **インポート**: JSON Lines / JSON 形式のファイルを読み込み
 
 ## 参考リンク
 
@@ -189,4 +201,3 @@ niconicoを非表示（有効）
 - [Rubular（正規表現テスト）](https://rubular.com/)
 - [Regulex（正規表現の視覚化）](https://jex.im/regulex/)
 - [NicoCache_nl Usage Guide（regex）](https://roflsunriz.github.io/setup-nicocache-nl/regex/)
-
