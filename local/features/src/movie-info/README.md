@@ -10,7 +10,7 @@
 - `window.commonHelper.fetchWatchPage` が返す `apiData`
 - ユーザー操作時にのみ取得する `window.commonHelper.fetchNicoDataWithComments` のコメント統合データ
 
-コメントデータは件数が多く処理コストも高いため、専用ボタンを押した時だけ取得します。取得後はプレビュー (先頭 200 件) 表示とフル JSON ダウンロードを切り替えられます。
+コメントデータは件数が多く処理コストも高いため、専用ボタンを押した時だけ取得します。取得後は全フォークを統合したプレビュー (先頭 200 件) 表示と、フォーク別 `threads` を含むフル JSON ダウンロードを切り替えられます。
 
 ## 🏗 フォルダ構成
 
@@ -35,6 +35,7 @@ movie-info/
    - MediaInfo JSON
 3. 結果ごとに `PanelController` がステータス/サマリー/Raw JSON を更新
 4. コメントは「コメントを取得」ボタン押下時だけ `fetchNicoDataWithComments` を利用
+   - 取得可能な全フォークを統合してプレビュー表示
    - プレビュー用 JSON は先頭 200 件のみ格納
    - フルデータはボタンからダウンロード可能
 

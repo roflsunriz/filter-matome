@@ -45,6 +45,7 @@ declare global {
 
       // 新しい関数
       fetchNicoComments: (apiData: NicoApiData) => Promise<{
+        threads: CommentThread[];
         comments: CommentData[];
         mainThread: CommentThread;
       } | void>;

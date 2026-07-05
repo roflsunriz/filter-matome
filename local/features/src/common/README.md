@@ -49,8 +49,8 @@ index.ts ─── 自動初期化・スタイル適用
   - `fetchRequest` - 共通fetch関数
   - `checkCache404` - キャッシュ存在確認
   - `fetchWatchPage` - 動画情報取得
-  - `fetchNicoComments` - コメントデータ取得
-  - `fetchNicoDataWithComments` - 統合データ取得
+  - `fetchNicoComments` - 取得可能な全フォークのコメントデータ取得
+  - `fetchNicoDataWithComments` - 全フォークの `threads` と統合済み `comments` を含む統合データ取得
   - `getVideoIdWithFallback` - SPA直後の古い `NicoCache_nl.watch` 状態より現在URL/入力URLの動画IDを優先して取得
   - `fetchWatchPage`/`fetchNicoComments` の短期メモリキャッシュ・同時リクエスト共有
 - **編集タイミング**: API仕様変更対応、新しいエンドポイント追加

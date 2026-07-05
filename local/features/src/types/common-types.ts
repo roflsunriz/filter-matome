@@ -88,6 +88,8 @@ export interface CommentData {
   nicoruId: string;
   source: string;
   isMyPost: boolean;
+  fork?: string;
+  threadId?: string;
 }
 
 // コメントAPIレスポンス
@@ -100,6 +102,7 @@ export interface CommentApiResponse {
 // 統合データ（APIデータ + コメントデータ）
 export interface IntegratedNicoData {
   apiData: NicoApiData;
+  threads: CommentThread[];
   comments: CommentData[];
   mainThread: CommentThread;
 }

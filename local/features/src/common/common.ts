@@ -37,6 +37,7 @@ type TimedCacheEntry<T> = {
 };
 
 type NicoCommentResult = {
+  threads: CommentThread[];
   comments: CommentData[];
   mainThread: CommentThread;
 };
@@ -155,6 +156,34 @@ const createCommentCacheKey = (apiData: NicoApiData): string => {
     threadKey: nvComment.threadKey,
   });
 };
+
+const selectRepresentativeMainThread = (
+  threads: CommentThread[],
+): CommentThread => {
+  const mainThreads = threads.filter((thread) => thread.fork === "main");
+  const candidates = mainThreads.length > 0 ? mainThreads : threads;
+  const selected = candidates.reduce((max, current) =>
+    current.commentCount > max.commentCount ? current : max,
+  );
+  return selected;
+};
+
+const mergeThreadComments = (threads: CommentThread[]): CommentData[] =>
+  threads
+    .flatMap((thread) =>
+      thread.comments.map((comment) => ({
+        ...comment,
+        fork: comment.fork ?? thread.fork,
+        threadId: comment.threadId ?? thread.id,
+      })),
+    )
+    .sort((a, b) => {
+      const vposDiff = (a.vposMs ?? 0) - (b.vposMs ?? 0);
+      if (vposDiff !== 0) {
+        return vposDiff;
+      }
+      return (a.no ?? 0) - (b.no ?? 0);
+    });
 
 window.commonHelper = {
   // 共通のfetch関数
@@ -303,7 +332,7 @@ window.commonHelper = {
   // ニコニコ動画のコメントデータを取得する関数
   fetchNicoComments: async (
     apiData: NicoApiData,
-  ): Promise<{ comments: CommentData[]; mainThread: CommentThread } | void> => {
+  ): Promise<NicoCommentResult | void> => {
     try {
       const commentServer = apiData.comment.nvComment.server + "/v1/threads";
       const cacheKey = createCommentCacheKey(apiData);
@@ -341,24 +370,21 @@ window.commonHelper = {
 
         const commentData = (await response.json()) as CommentApiResponse;
 
-        // メインスレッドを選択（fork === "main"かつcommentCountが最多）
-        const mainThread = commentData.data.threads
-          .filter((thread) => thread.fork === "main")
-          .reduce((prev, current) => {
-            return prev.commentCount > current.commentCount ? prev : current;
-          });
-
-        if (!mainThread) {
-          console.error("メインスレッドが見つかりません");
+        const threads = commentData.data.threads;
+        if (threads.length === 0) {
+          console.error("取得可能なコメントスレッドが見つかりません");
           return {
+            threads: [],
             comments: [],
             mainThread: { id: "", fork: "main", commentCount: 0, comments: [] },
           };
         }
 
+        const mainThread = selectRepresentativeMainThread(threads);
         return {
-          comments: mainThread.comments,
-          mainThread: mainThread,
+          threads,
+          comments: mergeThreadComments(threads),
+          mainThread,
         };
       })();
 
@@ -496,7 +522,7 @@ window.commonHelper = {
         return;
       }
 
-      // 2. コメントデータを取得（mainThreadも含む）
+      // 2. コメントデータを取得（全フォークのスレッドと統合コメントを含む）
       const commentResult = await window.commonHelper.fetchNicoComments(
         watchPageResult.apiData,
       );
@@ -507,6 +533,7 @@ window.commonHelper = {
 
       return {
         apiData: watchPageResult.apiData,
+        threads: commentResult.threads,
         comments: commentResult.comments,
         mainThread: commentResult.mainThread,
       };

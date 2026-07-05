@@ -329,10 +329,7 @@ const buildCommentSummary = (preview: CommentPreview): HTMLElement => {
   container.className = "summary-container";
   const primary = createSummaryGrid([
     { label: "コメント総数", value: String(preview.totalCount) },
-    {
-      label: "メインスレッド",
-      value: preview.mainThread ? preview.mainThread.id : "-",
-    },
+    { label: "取得フォーク", value: String(preview.threadCount) },
     { label: "表示件数", value: String(preview.sampleComments.length) },
   ]);
   container.appendChild(primary);
@@ -340,6 +337,11 @@ const buildCommentSummary = (preview: CommentPreview): HTMLElement => {
   const meta = document.createElement("div");
   meta.className = "video-meta";
   meta.appendChild(document.createTextNode(preview.note));
+  if (preview.forks.length > 0) {
+    const forks = document.createElement("div");
+    forks.textContent = "fork: " + preview.forks.join(", ");
+    meta.appendChild(forks);
+  }
   if (preview.sampleComments.length > 0) {
     const first = preview.sampleComments[0];
     const sample = document.createElement("div");
@@ -358,7 +360,8 @@ const createCommentPreview = (data: IntegratedNicoData): CommentPreview => {
       String(sample.length) +
       "件です。完全なデータはJSONダウンロードを使用してください。",
     totalCount: data.comments.length,
-    mainThread: data.mainThread,
+    threadCount: data.threads.length,
+    forks: Array.from(new Set(data.threads.map((thread) => thread.fork))),
     sampleComments: sample,
   };
 };

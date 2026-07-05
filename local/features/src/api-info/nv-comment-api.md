@@ -19,8 +19,8 @@
 
 ## 作戦（Plan）
 1. `POST {server}/v1/threads` に対して JSON ボディを送信する。
-2. レスポンス JSON の `data.threads` 配列から `fork === "main"` のスレッドを抽出し、`commentCount` が最大のものをメインスレッドとする。
-3. メインスレッドの `comments` を呼び出し元で利用できる形で返す（`common.ts` の挙動に準拠）。
+2. レスポンス JSON の `data.threads` 配列を取得可能な全フォークとして保持する。
+3. 全スレッドの `comments` を `fork` / `threadId` メタ情報付きで統合し、呼び出し元で利用できる形で返す（`common.ts` の挙動に準拠）。
 
 ## 変更差分（作成ファイル）
 - 作成: `local/features/src/api-info/nv-comment-api.md`（本ファイル）
@@ -88,10 +88,11 @@
 ```
 - 備考: 実装は `data.threads` 配列に依存し、各スレッドは `fork`, `commentCount`, `comments`（配列）を含む必要がある。
 
-## メインスレッド選択ロジック（`common.ts` の挙動）
-- `threads` の中から `thread.fork === "main"` を抽出する。
-- 抽出後、`commentCount` が最大のスレッドを選ぶ（reduce による最大値比較）。
-- メインスレッドが未検出の場合は空スレッド（`{ id: "", fork: "main", commentCount: 0, comments: [] }`）を返す実装にフォールバックする。
+## 全フォーク統合ロジック（`common.ts` の挙動）
+- `threads` はレスポンスの `data.threads` 配列をそのまま保持する。
+- `comments` は全スレッドの `comments` を平坦化し、各コメントに `fork` と `threadId` を付与してから `vposMs`、`no` の順でソートする。
+- 互換用の `mainThread` は、`fork === "main"` のうち `commentCount` が最大のスレッドを代表値として選ぶ。main がない場合は全スレッドから最大のものを選ぶ。
+- スレッドが1件もない場合は空スレッド（`{ id: "", fork: "main", commentCount: 0, comments: [] }`）を返す実装にフォールバックする。
 
 ## エラーハンドリング
 - HTTP ステータスが `ok` でない場合、`common.ts` はコンソールにエラーログを出力し `Error` を投げる／例外処理を行う。
@@ -107,7 +108,7 @@
 ## 検証手順（Runbook）
 1. 開発環境で再生ページから取得される `apiData.comment.nvComment` をコンソールで出力して `server`, `params`, `threadKey` が存在することを確認する。
 2. `fetchNicoComments` を実行して `POST {server}/v1/threads` が発生することをネットワークタブで確認する。
-3. レスポンスの `data.threads` が上記スキーマに合致し、`main` スレッドが選ばれて `comments` が返ることを確認する。
+3. レスポンスの `data.threads` が上記スキーマに合致し、全フォークの `threads` と統合済み `comments` が返ることを確認する。
 4. 異常系（404/500/ネットワーク断）でエラーハンドリングが動作し、過度に例外を投げないことを確認する。
 
 ## ロールバック手順

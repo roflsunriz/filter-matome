@@ -8,6 +8,7 @@ interface CommentJsonExport {
     id: string;
     title?: string;
   };
+  threads: IntegratedNicoData["threads"];
   mainThread: IntegratedNicoData["mainThread"];
   comments: IntegratedNicoData["comments"];
 }
@@ -66,6 +67,7 @@ export const buildCommentJsonExport = (
       id: apiVideoId,
       ...(title ? { title } : {}),
     },
+    threads: data.threads,
     mainThread: data.mainThread,
     comments: data.comments,
   };

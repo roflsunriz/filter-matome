@@ -1,6 +1,6 @@
 import {
   CommentApiCache,
-  normalizeCachedComments,
+  mergeCachedThreadComments,
 } from "@/mlink-video-controller/managers/comment-api-cache";
 import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
 import { MlinkVideoComment } from "@/types/mlink-video-controller-types";
@@ -26,15 +26,16 @@ export class NicoApiFetcher {
 
   public async fetchAll(videoId: string): Promise<boolean> {
     try {
-      const cachedMainThread =
-        this.commentApiCache.getMainThread(videoId) ??
-        (await this.commentApiCache.waitForMainThread(videoId));
-      if (cachedMainThread && cachedMainThread.comments.length > 0) {
-        this.comments = normalizeCachedComments(cachedMainThread.comments);
+      const cachedThreads =
+        this.commentApiCache.getThreads(videoId) ??
+        (await this.commentApiCache.waitForThreads(videoId));
+      if (cachedThreads && cachedThreads.length > 0) {
+        this.comments = mergeCachedThreadComments(cachedThreads);
         window.logger?.debug(
           "[NicoApiFetcher] コメントAPIキャッシュからコメントを取得しました",
           {
             videoId,
+            threads: cachedThreads.length,
             comments: this.comments.length,
           },
         );

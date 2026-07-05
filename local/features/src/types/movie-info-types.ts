@@ -1,8 +1,4 @@
-import type {
-  CommentData,
-  CommentThread,
-  NicoApiData,
-} from "@/types/common-types";
+import type { CommentData, NicoApiData } from "@/types/common-types";
 
 export type PanelStatus = "idle" | "loading" | "success" | "error";
 
@@ -110,7 +106,8 @@ export type MediaInfoResponse = MediaInfoItem | MediaInfoItem[];
 export interface CommentPreview {
   note: string;
   totalCount: number;
-  mainThread: CommentThread;
+  threadCount: number;
+  forks: string[];
   sampleComments: CommentData[];
 }
 

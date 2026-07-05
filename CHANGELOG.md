@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- 【common】コメント取得ヘルパーをmainフォーク単独処理から、取得可能な全フォークの `threads` と統合済み `comments` を返す処理へ変更。
+- 【video-player/movie-info/mlink-video-controller】共通ヘルパー由来のコメントを全フォーク統合データとして利用するよう変更。
 - 【mlink-video-controller】ヘッダープライバシーに設定ボタンを追加し、ユーザーアイコンとユーザー名の非表示を個別トグルでリアルタイム反映できるよう変更。
 - 【mlink-video-controller】コメント保存ボタンをXMLスレッドURLの表示から、共通ヘルパーで取得したコメントJSONのダウンロードに変更。
 - 【mlink-video-controller】サムネイルフィルターのキーワード追加・削除・一時停止を現在表示中の動画一覧へリアルタイム反映するよう変更。

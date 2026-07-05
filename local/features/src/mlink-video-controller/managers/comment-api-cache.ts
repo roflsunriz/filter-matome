@@ -60,21 +60,21 @@ export class CommentApiCache {
     return this.cache.get(videoId.toLowerCase()) ?? null;
   }
 
-  public getMainThread(videoId: string): CommentThread | null {
+  public getThreads(videoId: string): CommentThread[] | null {
     const cached = this.get(videoId);
     if (!cached) {
       return null;
     }
 
-    return this.selectMainThread(cached.response);
+    return cached.response.data.threads;
   }
 
-  public async waitForMainThread(
+  public async waitForThreads(
     videoId: string,
     timeoutMs: number = DEFAULT_WAIT_TIMEOUT_MS,
-  ): Promise<CommentThread | null> {
-    const cached = this.getMainThread(videoId);
-    if (cached) {
+  ): Promise<CommentThread[] | null> {
+    const cached = this.getThreads(videoId);
+    if (cached && cached.length > 0) {
       return cached;
     }
 
@@ -89,14 +89,14 @@ export class CommentApiCache {
           return;
         }
 
-        const mainThread = this.selectMainThread(data.response);
-        if (!mainThread) {
+        const threads = data.response.data.threads;
+        if (threads.length === 0) {
           return;
         }
 
         window.clearTimeout(timeoutId);
         unsubscribe();
-        resolve(mainThread);
+        resolve(threads);
       });
     });
   }
@@ -198,19 +198,6 @@ export class CommentApiCache {
     }
   }
 
-  private selectMainThread(response: CommentApiResponse): CommentThread | null {
-    const mainThreads = response.data.threads.filter(
-      (thread) => thread.fork === "main",
-    );
-    if (mainThreads.length === 0) {
-      return null;
-    }
-
-    return mainThreads.reduce((max, current) =>
-      current.commentCount > max.commentCount ? current : max,
-    );
-  }
-
   private resolveRequestUrl(input: RequestInfo | URL): string {
     if (input instanceof Request) {
       return input.url;
@@ -249,3 +236,24 @@ export const normalizeCachedComments = (
     vposMs: comment.vposMs ?? 0,
     postedAt: comment.postedAt ? String(comment.postedAt) : "",
   }));
+
+export const mergeCachedThreadComments = (
+  threads: CommentThread[],
+): CommentData[] =>
+  normalizeCachedComments(
+    threads
+      .flatMap((thread) =>
+        thread.comments.map((comment) => ({
+          ...comment,
+          fork: comment.fork ?? thread.fork,
+          threadId: comment.threadId ?? thread.id,
+        })),
+      )
+      .sort((a, b) => {
+        const vposDiff = (a.vposMs ?? 0) - (b.vposMs ?? 0);
+        if (vposDiff !== 0) {
+          return vposDiff;
+        }
+        return (a.no ?? 0) - (b.no ?? 0);
+      }),
+  );
