@@ -57,8 +57,20 @@ describe("mlink-video-controller structure", () => {
     }
 
     const linkManager = readControllerFile("services/link-manager.ts");
+    const commentJsonDownload = readControllerFile(
+      "utils/comment-json-download.ts",
+    );
     expect(linkManager).not.toContain("watchVideoFilter");
     expect(linkManager).not.toContain("動画非表示設定");
+    expect(linkManager).toContain("保存:コメントJSON");
+    expect(linkManager).toContain("downloadCommentsJson(videoId)");
+    expect(linkManager).not.toContain("/cache/${threadId}.xml");
+    expect(commentJsonDownload).toContain(
+      "window.commonHelper.fetchNicoDataWithComments(videoId)",
+    );
+    expect(commentJsonDownload).toContain(
+      "JSON.stringify(exportData, null, 2)",
+    );
 
     for (const selector of [
       "comment-search-input",

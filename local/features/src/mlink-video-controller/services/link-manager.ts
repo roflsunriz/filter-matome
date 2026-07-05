@@ -1,16 +1,15 @@
-import { ExtendedNicoCache_nl } from "@/types/global-types";
 import { LinkData, ActionMap } from "@/types/mlink-video-controller-types";
 import { Mylist2Handler } from "@/mlink-video-controller/handlers/mylist2";
 import {
   handleVideoOperation,
   getActiveVideoId,
 } from "@/mlink-video-controller/utils/video-util";
+import { downloadCommentsJson } from "@/mlink-video-controller/utils/comment-json-download";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
 import { getIconPath } from "@/common/material-icons";
 
 export class LinkManager {
   private static instance: LinkManager;
-  private nicoCache: ExtendedNicoCache_nl | null = null;
   private commentFilterReady: boolean = false;
   private readonly WATCH_PAGE_ONLY_ACTIONS = new Set<string>([
     "AddVideoToCustomMylist",
@@ -139,7 +138,7 @@ export class LinkManager {
       },
       {
         id: "savecomment",
-        title: "保存:コメント",
+        title: "保存:コメントJSON",
         icon: getIconPath("comment", "outlined"),
         action: "savecomment",
       },
@@ -153,8 +152,6 @@ export class LinkManager {
   };
 
   private constructor() {
-    this.nicoCache = this.resolveNicoCache();
-
     // CommentFilter2の初期化完了を監視
     window.addEventListener("CommentFilter2Ready", () => {
       this.commentFilterReady = true;
@@ -164,19 +161,6 @@ export class LinkManager {
     if (window.CommentFilter2Instance) {
       this.commentFilterReady = true;
     }
-  }
-
-  private resolveNicoCache(): ExtendedNicoCache_nl | null {
-    const global = (window as Window & { NicoCache_nl?: ExtendedNicoCache_nl })
-      .NicoCache_nl;
-    return global ?? null;
-  }
-
-  private getNicoCache(): ExtendedNicoCache_nl | null {
-    if (!this.nicoCache) {
-      this.nicoCache = this.resolveNicoCache();
-    }
-    return this.nicoCache;
   }
 
   public static getInstance(): LinkManager {
@@ -203,18 +187,6 @@ export class LinkManager {
     }));
   }
 
-  private getThreadId(): string {
-    const nicoCache = this.getNicoCache();
-    if (nicoCache?.watch && nicoCache.watch.apiData) {
-      const defaultThread = nicoCache.watch.apiData.comment?.threads?.find(
-        (v: { isDefaultPostTarget?: boolean | undefined }) =>
-          v.isDefaultPostTarget === true,
-      );
-      return defaultThread?.id || "";
-    }
-    return "";
-  }
-
   private openServiceLink(topUrl: string, videoUrl: string): void {
     window.open(videoUrl || topUrl);
   }
@@ -231,7 +203,6 @@ export class LinkManager {
     }
 
     const videoId = isWatchPage ? await getActiveVideoId() : "";
-    const threadId = isWatchPage ? this.getThreadId() : "";
     // const commentFilterUI = new CommentFilterUI();
 
     const actionMap: ActionMap = {
@@ -296,14 +267,29 @@ export class LinkManager {
         }
         window.open(`https://www.nicovideo.jp/cache/ffmpeg?audio=${videoId}`);
       },
-      savecomment: () => {
-        if (!threadId) {
+      savecomment: async () => {
+        if (!videoId) {
           window.logger?.warn(
-            "コメントスレッド情報がありません。視聴ページで実行してください。",
+            "動画情報がありません。視聴ページで実行してください。",
           );
           return;
         }
-        window.open(`https://www.nicovideo.jp/cache/${threadId}.xml`);
+        try {
+          await downloadCommentsJson(videoId);
+          window.toastr?.success(
+            "コメントJSONをダウンロードしました",
+            "保存完了",
+          );
+        } catch (error) {
+          window.logger?.error(
+            "コメントJSONのダウンロードに失敗しました:",
+            error,
+          );
+          window.toastr?.error(
+            "コメントJSONのダウンロードに失敗しました",
+            "保存失敗",
+          );
+        }
       },
       cache_remove: () => {
         if (!videoId) {
