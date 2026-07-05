@@ -18,12 +18,50 @@ export const heatmapStyles = `
   background: transparent;
   display: block;
   cursor: pointer;
+  pointer-events: none;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.heatmap-container[data-heatmap-mode="fab"] .heatmap-canvas {
+  pointer-events: auto;
 }
 
 .heatmap-canvas:hover {
   transform: scale(1.02);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.heatmap-placeholder {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  line-height: 1.2;
+  pointer-events: none;
+  text-align: center;
+}
+
+.heatmap-container[data-heatmap-mode="off"] .heatmap-placeholder-off,
+.heatmap-container[data-heatmap-mode="overlay"] .heatmap-placeholder-overlay {
+  display: flex;
+}
+
+.heatmap-placeholder-title {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.heatmap-placeholder-text {
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.heatmap-container[data-heatmap-mode="fab"] .heatmap-placeholder {
+  display: none;
 }
 
 .heatmap-tooltip {

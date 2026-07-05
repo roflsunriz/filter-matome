@@ -83,6 +83,7 @@ export class HeatmapManager {
 
   public setDisplayMode(mode: HeatmapDisplayMode): void {
     this.displayMode = mode;
+    this.updateFabDisplayState();
 
     if (!this.isActive) {
       this.saveSettings();
@@ -157,6 +158,13 @@ export class HeatmapManager {
 
     // 定期更新も停止
     this.stopPeriodicUpdate();
+  }
+
+  private updateFabDisplayState(): void {
+    const container = this.fabCanvas?.parentElement;
+    if (!container) return;
+
+    container.dataset.heatmapMode = this.isActive ? this.displayMode : "off";
   }
 
   private showFabHeatmap(): void {
@@ -666,6 +674,8 @@ export class HeatmapManager {
       this.fabCanvas.style.width = "100%";
       this.fabCanvas.style.height = "30px";
     }
+
+    this.updateFabDisplayState();
   }
 
   private restoreSettings(): void {
@@ -1046,6 +1056,7 @@ export class HeatmapManager {
   // インスタンス破棄時の処理
   public destroy(): void {
     this.isActive = false;
+    this.updateFabDisplayState();
     this.stopPeriodicUpdate();
     this.stopVideoPlayerObserver();
     this.stopFullscreenObserver();

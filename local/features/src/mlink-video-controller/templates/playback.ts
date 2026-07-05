@@ -11,8 +11,16 @@ export const playbackTemplate = `
   </div>
 
   <!-- コメントヒートマップ -->
-  <div class="heatmap-container">
+  <div class="heatmap-container" data-heatmap-mode="off">
     <canvas class="heatmap-canvas"></canvas>
+    <div class="heatmap-placeholder heatmap-placeholder-off">
+      <span class="heatmap-placeholder-title">コメントヒートマップ</span>
+      <span class="heatmap-placeholder-text">OFF: モジュール設定から表示できます</span>
+    </div>
+    <div class="heatmap-placeholder heatmap-placeholder-overlay">
+      <span class="heatmap-placeholder-title">コメントヒートマップ</span>
+      <span class="heatmap-placeholder-text">動画上にオーバーレイ表示中です</span>
+    </div>
     <div class="heatmap-tooltip">00:00 - 0 コメント</div>
   </div>
 
