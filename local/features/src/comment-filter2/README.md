@@ -1,12 +1,14 @@
 # comment-filter2 プロジェクトガイド
 
 ## プロジェクト概要
+
 - ニコニコ動画のコメント API (`https://public.nvcomment.nicovideo.jp/v1/threads`) を横取りし、NG ルールや置換ルールを適用したデータを video_player に渡すブラウザ拡張モジュールです。
 - ルールと設定は IndexedDB に保存され、Shadow DOM 上の専用 UI から編集・インポート・エクスポートが可能です。
 - JSON 形式のルールを中心に運用しつつ、従来形式 (CSV/レガシー JSONL) の読み込み・変換機構も保持しています。
 - 複数スレッドや大量コメントに対しても Web Worker とニコる統計を使った最適化で高速にフィルタリングします。
 
 ## ディレクトリ構成
+
 ```
 comment-filter2/
 ├─ index.ts                              // エントリーポイント
@@ -42,7 +44,9 @@ comment-filter2/
 ```
 
 ## 主要フロー
+
 ### コメント取得とフィルタリング
+
 1. `proxy/data-interceptor.ts` が `window.fetch` と History API を差し替え、コメント API 応答を捕捉します。
 2. 元データと SMID を `window.CommentFilter2Data` (エイリアス `window.commentFilter2GlobalData`) に保存し、`cf2:data-updated`/`cf2:smid-changed` を発火します。
 3. `index.ts` がこれらのイベントを監視し、`UIManager.applyFilter()` を呼び出してフィルタリングを実行します。
@@ -50,17 +54,20 @@ comment-filter2/
 5. フィルタ済みデータは再びグローバルストアに書き戻され、video_player 連携や UI から参照できます。
 
 ### UI と設定フロー
+
 - Ctrl+Shift+F もしくは `window.CommentFilter2Instance.toggleUI()` で Shadow DOM 内に UI を生成します。
 - UI ではフォーム編集と JSON エディタを切り替えられ、`FilterStorage` を通じて即時保存されます。
 - JSON/CSV のインポート時は `jsonl-parser.ts` と `legacy-converter.ts` が形式を自動判定し最新形式へ変換します。
 - 設定変更後は再読込や即時フィルタリングを行い、必要に応じてログ (`FilterLogger`) を収集します。
 
 ### video_player 連携
+
 - `integrations/video-player-bridge.ts` が DOM 監視とバックオフ制御で video_player の存在を検知。
 - `notifyVideoPlayerWithDiffCheck()` で差分を確認しつつフィルタ済みデータを送信し、同期後は `hasSuccessfullyNotified` を立てて過剰通知を防ぎます。
 - `forceSync()` は UI からの再同期要求や SMID 変更時に呼び出され、デバウンス処理で video_player への負荷を抑えます。
 
 ## コアモジュール解説
+
 - `index.ts`: 初期化・キーボードショートカット設定・イベント購読・デバッグ用 API (`window.CommentFilter2Instance`) を提供。
 - `proxy/data-interceptor.ts`: SMID 判定 (SPA 対応)、グローバルデータ初期化、`selectMainThread` によるメインスレッド選択、フィルタ済み `Response` の生成を担当。
 - `components/ui-manager.ts`: Shadow DOM UI の生成、設定/ルール CRUD、ファイル入出力、フィルタ実行、バックアップ操作を一元化。
@@ -73,6 +80,7 @@ comment-filter2/
 - `filter/thread-nicoru-stats.ts`: 各スレッドのニコる統計を算出し、`nicoru_cond` 付きルールの発火条件に利用。
 
 ## IndexedDB とデータ形式
+
 - データベース名は `CommentFilter2DB`、実装クラス `FilterStorage` が実際にはバージョン `3` を使用します。
 - 主なオブジェクトストア
   - `rules`: 旧 NGWord 形式 (互換用)
@@ -84,12 +92,13 @@ comment-filter2/
   - `getMigrationHistory()` は過去のバージョンアップログを返却。
 
 ## フィルタリング機能の詳細
+
 - ルール種別
   - 正規表現 (`pattern` + `flags`)
   - ユーザー ID (`userId`)
   - `action.type` は `hide` または `replace` または `unspecified` (置換文字列付き)。
 - 対象 SMID 条件: `smid` が `['ALL']` または具体的な SMID 配列で指定可能。
-- ニコる条件 (`nicoru_cond`): `op` (gte/lte/range など) と `mode` (include/exclude) をサポートし、スレッド統計から判定。
+- ニコる条件 (`nicoru_cond`): `op` (gte/lte/range など) と `mode` (include/exclude) をサポートし、スレッド統計から判定。`action.type: "unspecified"` かつ `mode: "exclude"` が一致したコメントは、後続の非表示/置換ルールを含むフィルタ動作から免除されます。
 - コメントコマンド制御:
   - `commandSettings` によりフォーク別 (`owner`/`main`/`easy`) に許可・強制コマンドを設定。
   - `sanitizeCommentCommands()` と `enforceCommandSettings()` が未許可コマンドを除外し、指定コマンドを付与。
@@ -102,6 +111,7 @@ comment-filter2/
   - `FilterLogger` が `CF2FilterLogEntry` を蓄積し、UI から送信状態を確認可能。
 
 ## UI 機能
+
 - Shadow DOM (`closed`) 上に HTML テンプレートとスタイルを注入し、本体ページと干渉しない独立 UI を構築。
 - キーボードショートカット保護やフォーカス制御でニコニコ本体のショートカットと競合しないよう調整。
 - 主な機能
@@ -113,11 +123,13 @@ comment-filter2/
 - UI 生成は初回表示時のみ実行され、`destroy()` で Shadow DOM とスタイルをクリーンアップします。
 
 ## video_player との橋渡し
+
 - `VideoPlayerBridge` は MutationObserver で `#video-element` を監視し、存在確認後に `notifyVideoPlayerWithDiffCheck()` で差分送信します。
 - 連携状態は `getStatus()` (検出状況・最終同期時間・SMID など) で取得可能。
 - バックオフとデバウンスにより API 再送を制御し、`forceSync()` や `startDataMonitoring()` が再同期サイクルを管理します。
 
 ## デバッグ / 開発 Tips
+
 - グローバル API
   - `window.CommentFilter2Instance`: エントリインスタンスへの参照。
     - `getDebugInfo()` で初期化状態・SMID・video_player 連携状況・定数を確認。
@@ -135,6 +147,7 @@ comment-filter2/
   - 旧形式からのインポートは `legacy-converter.ts` が JSON 形式へ変換した上で保存します。
 
 ## 編集時の注意
+
 - フィルタ処理のエントリ (`filter-helper.ts` → `JsonCommentFilter`) と UI (`ui-manager.ts`) は密接に連携しているため、片側を変更した際はもう一方の挙動も必ず確認してください。
 - IndexedDB スキーマを変更する場合は `FilterStorage` のマイグレーション関数と README の該当記述を更新してください。
 - video_player との通信仕様を変更する場合は `mlink-video-controller` 側との互換性も要確認です。

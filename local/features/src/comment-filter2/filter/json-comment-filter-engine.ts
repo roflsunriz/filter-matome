@@ -222,33 +222,53 @@ function applyRulesToComment({
       continue;
     }
 
-    if (preparedRule.isUserRule) {
-      if (!activeUserRuleIndexes.has(preparedRule.index)) {
-        continue;
-      }
-    } else if (rule.pattern) {
-      if (
-        preparedRule.hasLiteralPrefilter &&
-        !literalCandidateIndexes.has(preparedRule.index)
-      ) {
-        continue;
-      }
+    if (
+      !doesPreparedRuleTargetComment({
+        preparedRule,
+        originalBody,
+        activeUserRuleIndexes,
+        literalCandidateIndexes,
+        regexCache,
+      })
+    ) {
+      continue;
+    }
 
-      const reusableRegex =
-        preparedRule.compiledRegex ??
-        getRegex(regexCache, rule.pattern, rule.flags || "gi");
-      if (reusableRegex.global) {
-        reusableRegex.lastIndex = 0;
-      }
+    const normalizedCond = preparedRule.normalizedNicoruCond;
+    const nicoruMatches = normalizedCond
+      ? doesNicoruConditionMatch(normalizedCond, numericNicoruCount)
+      : true;
 
-      if (!reusableRegex.test(originalBody)) {
-        continue;
-      }
+    if (
+      rule.action.type === "unspecified" &&
+      normalizedCond?.mode === "exclude" &&
+      nicoruMatches
+    ) {
+      logCollector.push({
+        comment: originalComment,
+        rule,
+        hidden: false,
+      });
+      return processedComment;
+    }
+  }
 
-      if (reusableRegex.global) {
-        reusableRegex.lastIndex = 0;
-      }
-    } else {
+  for (const preparedRule of preparedRules.rules) {
+    const rule = preparedRule.rule;
+
+    if (threadContext.nicoruIneligibleRuleIndexes.has(preparedRule.index)) {
+      continue;
+    }
+
+    if (
+      !doesPreparedRuleTargetComment({
+        preparedRule,
+        originalBody,
+        activeUserRuleIndexes,
+        literalCandidateIndexes,
+        regexCache,
+      })
+    ) {
       continue;
     }
 
@@ -343,6 +363,53 @@ function applyRulesToComment({
   }
 
   return processedComment;
+}
+
+interface PreparedRuleTargetOptions {
+  preparedRule: PreparedJsonRule;
+  originalBody: string;
+  activeUserRuleIndexes: Set<number>;
+  literalCandidateIndexes: Set<number>;
+  regexCache: Map<string, RegExp>;
+}
+
+function doesPreparedRuleTargetComment({
+  preparedRule,
+  originalBody,
+  activeUserRuleIndexes,
+  literalCandidateIndexes,
+  regexCache,
+}: PreparedRuleTargetOptions): boolean {
+  const rule = preparedRule.rule;
+
+  if (preparedRule.isUserRule) {
+    return activeUserRuleIndexes.has(preparedRule.index);
+  }
+
+  if (!rule.pattern) {
+    return false;
+  }
+
+  if (
+    preparedRule.hasLiteralPrefilter &&
+    !literalCandidateIndexes.has(preparedRule.index)
+  ) {
+    return false;
+  }
+
+  const reusableRegex =
+    preparedRule.compiledRegex ??
+    getRegex(regexCache, rule.pattern, rule.flags || "gi");
+  if (reusableRegex.global) {
+    reusableRegex.lastIndex = 0;
+  }
+
+  const matched = reusableRegex.test(originalBody);
+  if (reusableRegex.global) {
+    reusableRegex.lastIndex = 0;
+  }
+
+  return matched;
 }
 
 function normalizeNicoruCondition(
