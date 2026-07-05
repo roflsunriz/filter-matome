@@ -7,6 +7,9 @@ import {
   VideoAvailabilityStatus,
 } from "@/types/video-types";
 
+const VIDEO_ID_PATTERN = /^(?:so|sm|nm|nx)\d+$/;
+const COMPOSITE_VIDEO_ID_PATTERN = /(?:^|_)((?:so|sm|nm|nx)\d+)$/;
+
 export class VideoService {
   private db: Mylist2DB;
   private readonly unavailableStatuses = new Set<VideoAvailabilityStatus>([
@@ -28,22 +31,21 @@ export class VideoService {
     const database = await this.db.initDB();
     const transaction = database.transaction(["videos"], "readwrite");
     const store = transaction.objectStore("videos");
-    const index = store.index("mylistId");
+    const videoId = this.normalizeVideoId(videoInfo);
+    const compositeId = `${mylistId}_${videoId}`;
 
     return new Promise<string>((resolve, reject) => {
-      const request = index.get(IDBKeyRange.only(mylistId));
+      const request = store.get(compositeId);
 
       request.onsuccess = () => {
-        const existingVideos = request.result as unknown;
-        const existing = existingVideos as { id?: string } | null;
-        if (existing && existing.id === videoInfo.id) {
+        if (request.result) {
           reject(new Error("このマイリストには既に登録されています"));
           return;
         }
 
         const video: DBVideo = {
-          id: `${mylistId}_${videoInfo.id}`,
-          originalId: videoInfo.id,
+          id: compositeId,
+          originalId: videoId,
           mylistId: mylistId,
           title: videoInfo.title,
           viewCount: parseInt(String(videoInfo.viewCount)) || 0,
@@ -73,6 +75,36 @@ export class VideoService {
 
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
     });
+  }
+
+  private normalizeVideoId(videoInfo: VideoInfo): string {
+    const originalId =
+      "originalId" in videoInfo &&
+      typeof (videoInfo as Partial<DBVideo>).originalId === "string"
+        ? (videoInfo as Partial<DBVideo>).originalId
+        : undefined;
+
+    for (const candidate of [originalId, videoInfo.id]) {
+      if (candidate && VIDEO_ID_PATTERN.test(candidate)) {
+        return candidate;
+      }
+    }
+
+    const compositeMatch = videoInfo.id.match(COMPOSITE_VIDEO_ID_PATTERN);
+    if (compositeMatch?.[1]) {
+      return compositeMatch[1];
+    }
+
+    if (originalId) {
+      const originalCompositeMatch = originalId.match(
+        COMPOSITE_VIDEO_ID_PATTERN,
+      );
+      if (originalCompositeMatch?.[1]) {
+        return originalCompositeMatch[1];
+      }
+    }
+
+    return videoInfo.id;
   }
 
   async getVideos(mylistId: number): Promise<DBVideo[]> {
