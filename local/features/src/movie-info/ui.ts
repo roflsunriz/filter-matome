@@ -1,4 +1,8 @@
-import type { DownloadDescriptor, PanelStatus } from "@/types/movie-info-types";
+import type {
+  DownloadDescriptor,
+  ErrorModalDetails,
+  PanelStatus,
+} from "@/types/movie-info-types";
 
 const STATUS_MESSAGES: Record<PanelStatus, string> = {
   idle: "idle",
@@ -94,6 +98,152 @@ class JsonModalManager {
     document.body.style.overflow = "";
   }
 }
+
+class ErrorModalManager {
+  private static instance: ErrorModalManager | null = null;
+  private overlay: HTMLDivElement | null = null;
+  private titleEl: HTMLHeadingElement | null = null;
+  private leadEl: HTMLParagraphElement | null = null;
+  private videoIdEl: HTMLDivElement | null = null;
+  private listEl: HTMLDivElement | null = null;
+
+  private constructor() {
+    this.createModal();
+  }
+
+  public static getInstance(): ErrorModalManager {
+    if (!ErrorModalManager.instance) {
+      ErrorModalManager.instance = new ErrorModalManager();
+    }
+    return ErrorModalManager.instance;
+  }
+
+  private createModal(): void {
+    this.overlay = document.createElement("div");
+    this.overlay.className = "error-modal-overlay";
+    this.overlay.addEventListener("click", (event) => {
+      if (event.target === this.overlay) {
+        this.close();
+      }
+    });
+
+    const modal = document.createElement("div");
+    modal.className = "error-modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+
+    const header = document.createElement("div");
+    header.className = "error-modal-header";
+
+    this.titleEl = document.createElement("h3");
+    this.titleEl.textContent = "処理を完了できませんでした";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "error-modal-close";
+    closeBtn.textContent = "×";
+    closeBtn.setAttribute("aria-label", "閉じる");
+    closeBtn.addEventListener("click", () => this.close());
+
+    header.appendChild(this.titleEl);
+    header.appendChild(closeBtn);
+
+    const body = document.createElement("div");
+    body.className = "error-modal-body";
+
+    this.leadEl = document.createElement("p");
+    this.leadEl.className = "error-modal-lead";
+    body.appendChild(this.leadEl);
+
+    this.videoIdEl = document.createElement("div");
+    this.videoIdEl.className = "error-modal-video-id";
+    body.appendChild(this.videoIdEl);
+
+    this.listEl = document.createElement("div");
+    this.listEl.className = "error-modal-list";
+    body.appendChild(this.listEl);
+
+    const footer = document.createElement("div");
+    footer.className = "error-modal-footer";
+    const okButton = document.createElement("button");
+    okButton.className = "error-modal-primary";
+    okButton.textContent = "閉じる";
+    okButton.addEventListener("click", () => this.close());
+    footer.appendChild(okButton);
+
+    modal.appendChild(header);
+    modal.appendChild(body);
+    modal.appendChild(footer);
+    this.overlay.appendChild(modal);
+    document.body.appendChild(this.overlay);
+
+    document.addEventListener("keydown", (event) => {
+      if (
+        event.key === "Escape" &&
+        this.overlay?.classList.contains("visible")
+      ) {
+        this.close();
+      }
+    });
+  }
+
+  public open(details: ErrorModalDetails): void {
+    if (
+      !this.overlay ||
+      !this.titleEl ||
+      !this.leadEl ||
+      !this.videoIdEl ||
+      !this.listEl
+    ) {
+      return;
+    }
+
+    this.titleEl.textContent = details.title;
+    this.leadEl.textContent = details.lead;
+    this.videoIdEl.textContent = details.videoId
+      ? "対象動画ID: " + details.videoId
+      : "";
+    this.videoIdEl.hidden = !details.videoId;
+    this.listEl.innerHTML = "";
+
+    details.items.forEach((item) => {
+      const entry = document.createElement("section");
+      entry.className = "error-modal-item";
+
+      const title = document.createElement("h4");
+      title.textContent = item.label;
+      entry.appendChild(title);
+
+      const message = document.createElement("p");
+      message.className = "error-modal-message";
+      message.textContent = item.message;
+      entry.appendChild(message);
+
+      if (item.action) {
+        const action = document.createElement("p");
+        action.className = "error-modal-action";
+        action.textContent = "確認ポイント: " + item.action;
+        entry.appendChild(action);
+      }
+
+      this.listEl?.appendChild(entry);
+    });
+
+    this.overlay.classList.add("visible");
+    document.body.style.overflow = "hidden";
+  }
+
+  public close(): void {
+    if (!this.overlay) {
+      return;
+    }
+    this.overlay.classList.remove("visible");
+    document.body.style.overflow = "";
+  }
+}
+
+export const showMovieInfoErrorModal = (details: ErrorModalDetails): void => {
+  ErrorModalManager.getInstance().open(details);
+};
 
 export class PanelController {
   private readonly root: HTMLElement;

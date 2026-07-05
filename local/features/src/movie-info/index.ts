@@ -9,10 +9,11 @@ import {
 } from "@/movie-info/api-clients";
 import { headerAdjustments } from "@/movie-info/header-adjustments";
 import { applyMovieInfoDashboardStyles } from "@/movie-info/styles";
-import { PanelController } from "@/movie-info/ui";
+import { PanelController, showMovieInfoErrorModal } from "@/movie-info/ui";
 import type {
   CacheEntry,
   CommentPreview,
+  ErrorModalItem,
   MediaInfoResponse,
   ThumbInfo,
   ThumbTagInfo,
@@ -380,6 +381,25 @@ const setStatusText = (element: HTMLElement | null, text: string): void => {
   }
 };
 
+const toFailureMessage = (error: unknown): string => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return String(error);
+};
+
+const showDataLoadErrorModal = (
+  videoId: string,
+  failures: ErrorModalItem[],
+): void => {
+  showMovieInfoErrorModal({
+    title: "データ取得を完了できませんでした",
+    lead: "一部の取得元でエラーが発生したため、movie-info の処理は完遂されませんでした。失敗した取得元と原因を確認してください。",
+    videoId,
+    items: failures,
+  });
+};
+
 type PanelMap = {
   watch: PanelController;
   cache: PanelController;
@@ -487,14 +507,21 @@ document.addEventListener(
         panels.thumb.setDownloadDescriptor(null);
         panels.media.setDownloadDescriptor(null);
 
-        try {
-          const [apiData, cacheInfo, thumbInfo, mediaInfo] = await Promise.all([
-            fetchWatchApiData(videoId),
-            fetchCacheInfo(videoId),
-            fetchThumbInfo(videoId),
-            fetchMediaInfo(videoId),
-          ]);
+        const failures: ErrorModalItem[] = [];
+        const [
+          apiDataResult,
+          cacheInfoResult,
+          thumbInfoResult,
+          mediaInfoResult,
+        ] = await Promise.allSettled([
+          fetchWatchApiData(videoId),
+          fetchCacheInfo(videoId),
+          fetchThumbInfo(videoId),
+          fetchMediaInfo(videoId),
+        ]);
 
+        if (apiDataResult.status === "fulfilled") {
+          const apiData = apiDataResult.value;
           panels.watch.setStatus("success", "apiDataを取得しました");
           panels.watch.setSummaryContent(buildApiSummary(apiData));
           panels.watch.setJsonData(apiData);
@@ -505,7 +532,19 @@ document.addEventListener(
               () => apiData,
             ),
           );
+        } else {
+          const message = toFailureMessage(apiDataResult.reason);
+          panels.watch.setStatus("error", "apiData取得失敗: " + message);
+          failures.push({
+            label: "ウォッチページ apiData",
+            message,
+            action:
+              "動画IDが正しいか、ウォッチページへアクセスできるか、NicoCache_nl の取得処理が応答しているかを確認してください。",
+          });
+        }
 
+        if (cacheInfoResult.status === "fulfilled") {
+          const cacheInfo = cacheInfoResult.value;
           panels.cache.setStatus("success", "キャッシュ情報を取得しました");
           panels.cache.setSummaryContent(buildCacheSummary(cacheInfo));
           panels.cache.setJsonData(cacheInfo);
@@ -516,7 +555,19 @@ document.addEventListener(
               () => cacheInfo,
             ),
           );
+        } else {
+          const message = toFailureMessage(cacheInfoResult.reason);
+          panels.cache.setStatus("error", "キャッシュ情報取得失敗: " + message);
+          failures.push({
+            label: "cache/info/v2",
+            message,
+            action:
+              "NicoCache_nl が起動しているか、対象動画のキャッシュ情報が存在するかを確認してください。",
+          });
+        }
 
+        if (thumbInfoResult.status === "fulfilled") {
+          const thumbInfo = thumbInfoResult.value;
           panels.thumb.setStatus("success", "サムネイル情報を取得しました");
           panels.thumb.setSummaryContent(buildThumbSummary(thumbInfo));
           panels.thumb.setJsonData(thumbInfo);
@@ -527,7 +578,19 @@ document.addEventListener(
               () => thumbInfo,
             ),
           );
+        } else {
+          const message = toFailureMessage(thumbInfoResult.reason);
+          panels.thumb.setStatus("error", "サムネイル情報取得失敗: " + message);
+          failures.push({
+            label: "getthumbinfo",
+            message,
+            action:
+              "動画が削除済み・非公開でないか、外部サムネイルAPIへ接続できるかを確認してください。",
+          });
+        }
 
+        if (mediaInfoResult.status === "fulfilled") {
+          const mediaInfo = mediaInfoResult.value;
           panels.media.setStatus("success", "MediaInfoを取得しました");
           panels.media.setSummaryContent(buildMediaSummary(mediaInfo));
           panels.media.setJsonData(mediaInfo);
@@ -538,21 +601,26 @@ document.addEventListener(
               () => mediaInfo,
             ),
           );
+        } else {
+          const message = toFailureMessage(mediaInfoResult.reason);
+          panels.media.setStatus("error", "MediaInfo取得失敗: " + message);
+          failures.push({
+            label: "cache/mediainfo",
+            message,
+            action:
+              "対象動画のメディア情報が生成済みか、NicoCache_nl の mediainfo エンドポイントが応答しているかを確認してください。",
+          });
+        }
 
+        if (failures.length > 0) {
+          window.logger?.error?.("[movie-info] data load incomplete", failures);
+          setStatusText(
+            globalStatus,
+            "データ取得が一部失敗しました: " + String(failures.length) + "件",
+          );
+          showDataLoadErrorModal(videoId, failures);
+        } else {
           setStatusText(globalStatus, "データ取得が完了しました");
-        } catch (error) {
-          const message =
-            error instanceof Error ? error.message : String(error);
-          window.logger?.error?.("[movie-info] data load failed", message);
-          setStatusText(globalStatus, "データ取得に失敗しました: " + message);
-
-          if (!panels.watch) {
-            return;
-          }
-          panels.watch.setStatus("error", message);
-          panels.cache.setStatus("error", message);
-          panels.thumb.setStatus("error", message);
-          panels.media.setStatus("error", message);
         }
       };
 
@@ -579,13 +647,25 @@ document.addEventListener(
             ),
           );
         } catch (error) {
-          const message =
-            error instanceof Error ? error.message : String(error);
+          const message = toFailureMessage(error);
           panels.comments.setStatus(
             "error",
             "コメント取得に失敗しました: " + message,
           );
           panels.comments.setDownloadDescriptor(null);
+          showMovieInfoErrorModal({
+            title: "コメント取得を完了できませんでした",
+            lead: "コメント統合データの取得中にエラーが発生したため、コメント処理は完遂されませんでした。",
+            videoId: currentVideoId,
+            items: [
+              {
+                label: "fetchNicoDataWithComments",
+                message,
+                action:
+                  "動画ID、ログイン状態、コメントAPIへの接続、NicoCache_nl の共通ヘルパー処理を確認してください。",
+              },
+            ],
+          });
         }
         setCommentButtonIdle();
       };

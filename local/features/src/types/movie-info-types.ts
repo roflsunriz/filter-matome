@@ -125,6 +125,19 @@ export interface DownloadDescriptor {
   payloadSupplier: () => string;
 }
 
+export interface ErrorModalItem {
+  label: string;
+  message: string;
+  action?: string;
+}
+
+export interface ErrorModalDetails {
+  title: string;
+  lead: string;
+  videoId?: string | null;
+  items: ErrorModalItem[];
+}
+
 export interface PanelSummaryBuilder<T> {
   (data: T): HTMLElement;
 }

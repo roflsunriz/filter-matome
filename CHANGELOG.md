@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- 【movie-info】データ取得またはコメント取得が完遂しなかった場合に、失敗した取得元・原因・確認ポイントを表示するエラーモーダルを追加。
+
 ### Changed
 - 【common】コメント取得ヘルパーをmainフォーク単独処理から、取得可能な全フォークの `threads` と統合済み `comments` を返す処理へ変更。
 - 【video-player/movie-info/mlink-video-controller】共通ヘルパー由来のコメントを全フォーク統合データとして利用するよう変更。
