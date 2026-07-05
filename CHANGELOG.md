@@ -6,12 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#229] - 2026-07-05
+
 ### Added
+- 【features】`package.json` の `version` を `229` に更新。
+- 【README】latest バッジを `#229` に更新。
 - 【movie-info】データ取得またはコメント取得が完遂しなかった場合に、失敗した取得元・原因・確認ポイントを表示するエラーモーダルを追加。
+- 【watch-history】履歴削除機能を専用モーダルへ分離し、全削除、メタデータ条件、比較演算子、数値指定、レンジ指定、リアルタイムのドライラン表示、詳細な最終確認を追加。
+- 【watch-history】投稿日時の日付範囲フィルタを追加し、既存の日付範囲フィルタを視聴期間として明確化。
+- 【comment-filter2】ニコる数条件と除外ルールを組み合わせた場合の再発防止テストを追加。
+- 【mlink-video-controller】キャッシュ削除URL生成のユニットテストを追加し、完了済みHLSとテンポラリHLSの削除形式を検証。
+- 【features/tests】raw CDPで採取したニコニコ動画コモンヘッダーと検索カードのfixtureを追加し、テスト入力を実環境由来DOMへ近付けた。
+- 【features/tests】テストfixtureの採取・匿名化・必要十分な実環境再現方針を `tests/README.md` に追加。
 
 ### Changed
 - 【common】コメント取得ヘルパーをmainフォーク単独処理から、取得可能な全フォークの `threads` と統合済み `comments` を返す処理へ変更。
-- 【video-player/movie-info/mlink-video-controller】共通ヘルパー由来のコメントを全フォーク統合データとして利用するよう変更。
+- 【common/video-player/movie-info/mlink-video-controller】コメント取得ヘルパーに表示用フィルタを通さない保存用途のバイパス経路を追加し、コメントJSONダウンロードやmovie-infoのコメント取得では元コメントを利用するよう変更。
 - 【mlink-video-controller】ヘッダープライバシーに設定ボタンを追加し、ユーザーアイコンとユーザー名の非表示を個別トグルでリアルタイム反映できるよう変更。
 - 【mlink-video-controller】コメント保存ボタンをXMLスレッドURLの表示から、共通ヘルパーで取得したコメントJSONのダウンロードに変更。
 - 【mlink-video-controller】サムネイルフィルターのキーワード追加・削除・一時停止を現在表示中の動画一覧へリアルタイム反映するよう変更。
@@ -20,12 +30,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【mlink-video-controller】`動画非表示設定`を関連リンクタブからサムネイルフィルターのモジュール設定ボタンへ移動。
 - 【mlink-video-controller】背景画像設定モーダル右側に、USAGE の背景画像設定手順を補助表示するよう変更。
 - 【mlink-video-controller】プレイバックタブのヒートマップ領域に、OFF時と動画上オーバーレイ表示中の状態が分かるプレースホルダーを表示するよう変更。
+- 【mlink-video-controller】キャッシュ削除をNicoCache_nlの `ajax_rm` / `ajax_rmtmp` に統一し、`OK/NG` 本文で成否を判定するよう変更。
+- 【mlink-video-controller】完了済みHLSキャッシュ削除でも裸の動画IDではなく `sm9[720p,256].hls` のような `cacheId` を指定するよう変更。
+- 【mlink-video-controller】サムネイルフィルターを現行検索ページの `data-decoration-video-id` / `data-anchor-page="search"` 構造へ対応。
+- 【video-player】コメントリストの時刻同期を全DOM走査から、ソート済みコメント配列の二分探索とactive範囲の差分更新へ変更。
+- 【video-player】コメントリストの自動スクロールを、キャンバス中央付近に描画される想定のコメントがリスト中央へ来るよう調整。
+- 【video-player】音量バーのドラッグ中にスライダー値を書き戻さず、localStorage保存をデバウンスし、音量アイコンDOMの不要な再生成を避けるよう変更。
+- 【watch-history】視聴期間・投稿日時フィルタの入力変更を即時反映し、Ctrl+F5後でもフィルタ・ソート状態を元データから再適用するよう変更。
+- 【mylist2】一括コピー・一括移動でDB由来の複合IDではなく元動画IDを優先して扱うよう変更。
+- 【cache-data-manager】利用不可バッジと公開状態メタデータの扱いを整理し、モーダルサービスをリファクタリング。
+- 【cache-data-manager】IndexedDB再作成時の緊急バックアップ処理を追加し、データ消失リスクを下げるよう変更。
 
 ### Removed
 - 【mlink-video-controller】`マイリストセレクタ`モジュールを廃止し、モジュール一覧と遅延読み込み対象から削除。
 
 ### Fixed
 - 【mlink-video-controller】プレイバックタブの再生/一時停止ボタンが、状態確認のたびにアイコンを再生成してちらつく問題を修正。
+- 【comment-filter2】ニコる数条件に一致したコメントが除外ルールにより後続の非表示ルールから免除されない問題を修正。
+- 【comment-filter2】アクション指定の「除外のみ」とニコる数指定の「マッチしたら対象」の組み合わせで、除外対象の扱いが矛盾する問題を修正。
+- 【movie-info】視聴ページ外で動画IDやURLを変更した場合にコメント取得が `NetworkError when attempting to fetch resource.` で失敗する問題を修正。
+- 【mlink-video-controller】NicoCache_nlキャッシュ削除で通常APIのリダイレクト応答とajax APIの `OK/NG` 応答を取り違えていた問題を修正。
+- 【mlink-video-controller】完了済みHLSキャッシュを `/cache/ajax_rm?sm9` で削除しようとして `NG` になる問題を修正。
+- 【watch-history】日付範囲フィルタがリアルタイムに反映されない問題を修正。
+- 【watch-history】期間フィルタ適用後にソートやボタン操作でフィルタ・ソートが解除されない問題を修正。
+- 【mylist2】一括コピー・一括移動時に動画IDへ不要な文字列が混入する問題を修正。
 
 ## [#228] - 2026-07-05
 
