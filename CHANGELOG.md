@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- 【README】`local/features/src` の現行プロジェクト構成、ビルドターゲット、Vite バージョン、nlFilter ファイル名、機能説明に合わせて更新。
+
 ## [#229] - 2026-07-05
 
 ### Added

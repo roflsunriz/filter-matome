@@ -8,7 +8,7 @@
 
 ## 機能プレビュー
 
-### watch-hisotry
+### watch-history
 ![watch-history](./cover-images/watch-history.jpg)
 ### mylist2
 ![mylist2](./cover-images/mylist2.jpg)
@@ -25,13 +25,15 @@
 - **視聴履歴**: ブラウザ容量の許す限り無制限で履歴を保存・統計表示、シリーズ追跡、検索・フィルタ
 - **マイリスト2**: 複数マイリスト作成、検索、ソート、一括操作、検索ワード保存
 - **コメントフィルター2**: 公式NGワードを遥かに凌ぐ強力なフィルタリング機能、NGユーザー・ニコる数設定、コメントコマンド設定、フィルターログ送信
-- **動画プレイヤー拡張**: 有料動画キャッシュ再生、削除済み動画検知・再生、HLS対応、同期機能
-- **マルチリンクビデオコントローラー**: 再生速度調整、フレーム単位シーク、音量微調整、コメントヒートマップ、モジュール管理
+- **動画プレイヤー拡張**: 有料動画キャッシュ再生、削除済み・視聴不可動画のローカル再生、HLS対応、コメント描画・同期機能
+- **マルチリンクビデオコントローラー**: 再生速度調整、フレーム単位シーク、音量微調整、コメントヒートマップ、サムネイルフィルター、原宿風Watch表示、モジュール管理
 
 ### 🛠️ 拡張機能
 - **背景画像設定**: 視聴ページの背景をカスタマイズ
 - **プレミアム勧誘非表示**: 煩わしい勧誘要素を完全除去
 - **コメントヒートマップ**: 盛り上がり箇所を視覚化
+- **キャッシュ一覧管理**: NicoCache_nlのキャッシュ一覧を検索・フィルタ・ソート・削除
+- **動画/API情報ダッシュボード**: 動画IDから複数APIの情報を横断表示
 
 ## 📦 導入方法
 
@@ -46,7 +48,7 @@ winget install EclipseAdoptium.Temurin.17.JDK
 winget install EclipseAdoptium.Temurin.21.JDK
 ```
 - [Apache Ant](https://ant.apache.org/bindownload.cgi)
-- [Boucy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest) (PKIX/CMS/EAC/PKCS/OCSP/TSP/OPENSSL(bcpkix), Provider(bcprov), ASN.1 Utility Classes(bcutil))
+- [Bouncy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest) (PKIX/CMS/EAC/PKCS/OCSP/TSP/OPENSSL(bcpkix), Provider(bcprov), ASN.1 Utility Classes(bcutil))
 - 対応ブラウザ: [Firefox](https://www.firefox.com/ja/download/all/desktop-release/)(推奨)
 ```powershell
 winget install Mozilla.Firefox.ja
@@ -117,6 +119,7 @@ winget install Google.Chrome
 ### 動画プレイヤー拡張 (video-player)
 - **期限切れ動画再生**: キャッシュを活用した視聴継続
 - **削除済み動画対応**: キャッシュが存在するが削除されてしまった動画の視聴
+- **視聴不可動画対応**: ローカルキャッシュがある動画はスタンドアロンプレイヤーで再生
 - **HLS対応**: 最新のニコニコ動画仕様の対応
 - **同期機能**: コメントと動画の完全同期
 - **NGワード・NG正規表現**: コメントのNGワード・NG正規表現
@@ -129,14 +132,27 @@ winget install Google.Chrome
 - **フレーム単位シーク**: フレーム単位でのシーク
 - **音量微調整**: 音量の微調整
 - **コメントヒートマップ**: コメントの盛り上がり箇所を視覚化
-- **モジュール管理**: プライバシーモジュール、UI強化モジュール、視聴ページ機能強化モジュール、背景セレクタ/背景画像設定モジュール、マトリックス風背景モジュール
+- **サムネイルフィルター**: キーワード・正規表現で動画サムネイルを非表示
+- **原宿風Watch表示**: 視聴ページの表示を原宿風レイアウトへ変更
+- **モジュール管理**: ヘッダープライバシー、UI強化、視聴ページ機能強化、背景セレクター/背景画像設定、マトリックス背景、タブセッション拡張などを管理
+
+### キャッシュ一覧管理 (cache-data-manager)
+- **仮想スクロール**: 大量キャッシュでも可視範囲のみ描画
+- **検索・フィルタ・ソート**: 動画ID、タイトル、画質、ステータス、利用不可状態で絞り込み
+- **公開状態チェック**: getthumbinfoで削除・非公開などを確認し、メタデータをIndexedDBへ保存
+- **キャッシュ操作**: テンポラリ動画の一括削除や個別操作を提供
+
+### 動画/API情報ダッシュボード (movie-info)
+- **横断取得**: cache/info、getthumbinfo、MediaInfo、watch apiDataを並列取得
+- **コメント取得**: 必要時だけ全フォークコメントを取得し、プレビューとフルJSON保存を提供
+- **エラー表示**: 一部API取得失敗時も成功したパネルを表示し、失敗元と確認ポイントを整理
 
 
 ## 🔧 開発者向け情報
 
 ### 技術スタック
 - **言語**: TypeScript 5.9.3
-- **ビルドツール**: Vite 7.2.6
+- **ビルドツール**: Vite 7.3.6
 - **ストレージ**: IndexedDB
 - **UI**: Material Design Icons
 - **フィルター言語**: nlFilter (NicoCache_nl独自DSL)
@@ -145,15 +161,26 @@ winget install Google.Chrome
 ```
 local/
 ├─ background-images/    # 視聴ページ用の背景画像
-├──images/               # ドキュメント用画像、フォールバックサムネイル
+├─ images/               # comment-filter2ドキュメント用画像、フォールバックサムネイル
 └─┬── features/          # メイン機能群
   ├── src/               # TypeScriptソースコード
+  │   ├── api-info/             # ニコニコ動画/API仕様メモ
+  │   ├── cache-data-manager/   # NicoCache_nlキャッシュ一覧UI
+  │   ├── comment-filter2/      # コメントフィルター
+  │   ├── common/               # 共通ヘルパー、共通ヘッダー、ロガー、トースト
+  │   ├── docs/                 # 機能ドキュメント補助
+  │   ├── mlink-video-controller/ # 視聴ページ操作パネルとモジュール
+  │   ├── movie-info/           # 動画/API情報ダッシュボード
+  │   ├── mylist2/              # マイリスト2
+  │   ├── types/                # 共通型定義
+  │   ├── video-player/         # ローカル動画プレイヤー
+  │   └── watch-history/        # 視聴履歴SPAと視聴追跡
   ├── dist/              # ビルド済みファイル
   └── config/            # Vite設定ファイル群
 
 nlFilters/
 ├── 100_common.txt                  # 共通ライブラリ(トースト通知、ロギング、共通ヘッダ、マテリアルアイコンヘルパなどを提供する共通ライブラリ)
-├── 101_disable_official.txt        # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
+├── 101_disable_official_function.txt # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
 ├── 102_mlink_video_controller.txt  # マルチリンクビデオコントローラー(視聴ページにマルチリンクビデオコントローラーを追加)
 ├── 103_comment_filter2.txt         # コメントフィルター(視聴ページにコメントフィルターを追加)
 ├── 104_video_player.txt            # 動画プレイヤー(視聴ページに動画プレイヤーを追加)
@@ -171,6 +198,11 @@ bun run build
 
 # 個別ビルド(詳細はpackage.jsonを参照)
 bun run build:comment-filter2
+bun run build:cache-data-manager
+bun run build:movie-info
+bun run build:video-player
+bun run build:mlink-video-controller
+bun run build:watch-history
 ```
 
 ### nlFilter文法
