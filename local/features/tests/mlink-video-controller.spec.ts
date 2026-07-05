@@ -1,13 +1,38 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Route } from "@playwright/test";
 import * as esbuild from "esbuild";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const projectRoot = join(import.meta.dirname, "..");
 const controllerRoot = join(projectRoot, "src", "mlink-video-controller");
+const fixturesRoot = join(import.meta.dirname, "fixtures");
 
 function readControllerFile(path: string): string {
   return readFileSync(join(controllerRoot, path), "utf8");
+}
+
+function readFixture(path: string): string {
+  return readFileSync(join(fixturesRoot, path), "utf8");
+}
+
+function buildTestDocument(body: string): string {
+  return `<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>NicoCache test fixture</title>
+  </head>
+  <body>
+    ${body}
+  </body>
+</html>`;
+}
+
+async function fulfillTestDocument(route: Route, body: string): Promise<void> {
+  await route.fulfill({
+    contentType: "text/html; charset=utf-8",
+    body: buildTestDocument(body),
+  });
 }
 
 function extractTemplateBody(source: string, exportName: string): string {
@@ -140,7 +165,7 @@ test("mlink-video-controller panel exposes expected tabs and controls", async ({
 }) => {
   const html = buildPanelHtml();
 
-  await page.setContent(html);
+  await page.setContent(buildTestDocument(html));
 
   await expect(page.locator("[data-tab]")).toHaveCount(6);
   await expect(page.locator("#playback .tracker-range")).toHaveCount(1);
@@ -154,7 +179,7 @@ test("mlink-video-controller panel exposes expected tabs and controls", async ({
 test("mlink-video-controller tab controllers handle every tab operation", async ({
   page,
 }) => {
-  await page.setContent('<div id="host"></div>');
+  await page.setContent(buildTestDocument('<div id="host"></div>'));
   await page.addScriptTag({ content: await buildControllerBundle() });
 
   const html = buildPanelHtml();
@@ -567,21 +592,10 @@ test("thumbnails filter applies keyword changes immediately", async ({
   page,
 }) => {
   await page.route("**/*", async (route) => {
-    await route.fulfill({
-      contentType: "text/html",
-      body: `
-        <html>
-          <body>
-            <div class="item" data-video-item>
-              <div class="itemTitle"><a>normal video</a></div>
-            </div>
-            <div class="item" data-video-item>
-              <div class="itemTitle"><a>hide-target video</a></div>
-            </div>
-          </body>
-        </html>
-      `,
-    });
+    await fulfillTestDocument(
+      route,
+      readFixture("nicovideo-search-cards.html"),
+    );
   });
   await page.goto("https://www.nicovideo.jp/search/test");
   await page.addScriptTag({ content: await buildControllerBundle() });
@@ -618,32 +632,25 @@ test("thumbnails filter applies keyword changes immediately", async ({
     window.ThumbnailsFilter?.openSettingsPanel();
   });
 
-  const hiddenItem = page
-    .locator(".item[data-video-item]")
-    .filter({ hasText: "hide-target video" });
+  const hiddenItem = page.locator('[data-decoration-video-id="sm46509988"]');
 
   await expect(hiddenItem).not.toHaveAttribute("data-nvf-hidden", "true");
   await expect(page.locator("#nvfHideVideoModal")).toBeVisible();
 
-  await page.locator("#nvfNewKeyword").fill("hide-target");
+  await page.locator("#nvfNewKeyword").fill("ゆれないVRoid");
   await page.locator("#nvfAddKeyword").click();
   await expect(hiddenItem).toHaveAttribute("data-nvf-hidden", "true");
 
-  await page.locator('.delete-keyword[data-keyword="hide-target"]').click();
+  await page.locator('.delete-keyword[data-keyword="ゆれないVRoid"]').click();
   await expect(hiddenItem).not.toHaveAttribute("data-nvf-hidden", "true");
 });
 
 test("header privacy toggles icon and name immediately", async ({ page }) => {
   await page.route("https://www.nicovideo.jp/header-privacy-test", (route) =>
-    route.fulfill({
-      contentType: "text/html",
-      body: `
-        <header id="CommonHeader">
-          <img class="UserIcon" src="https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/123/123.jpg" alt="ユーザーアイコン">
-          <span class="UserName">account-name</span>
-        </header>
-      `,
-    }),
+    fulfillTestDocument(
+      route,
+      readFixture("nicovideo-common-header-account.html"),
+    ),
   );
   await page.goto("https://www.nicovideo.jp/header-privacy-test");
   await page.addScriptTag({ content: await buildControllerBundle() });
@@ -677,8 +684,14 @@ test("header privacy toggles icon and name immediately", async ({ page }) => {
       module;
   });
 
-  await expect(page.locator(".UserIcon")).toHaveCSS("display", "none");
-  await expect(page.locator(".UserName")).toHaveCSS("display", "none");
+  await expect(page.locator(".common-header-1h5huqo")).toHaveCSS(
+    "display",
+    "none",
+  );
+  await expect(page.locator(".common-header-w2sn95")).toHaveCSS(
+    "display",
+    "none",
+  );
 
   await page.evaluate(() => {
     (
@@ -692,8 +705,14 @@ test("header privacy toggles icon and name immediately", async ({ page }) => {
       }
     ).headerModule.updateSettings({ hideIcon: false, hideName: true });
   });
-  await expect(page.locator(".UserIcon")).not.toHaveCSS("display", "none");
-  await expect(page.locator(".UserName")).toHaveCSS("display", "none");
+  await expect(page.locator(".common-header-1h5huqo")).not.toHaveCSS(
+    "display",
+    "none",
+  );
+  await expect(page.locator(".common-header-w2sn95")).toHaveCSS(
+    "display",
+    "none",
+  );
 
   await page.evaluate(() => {
     (
@@ -707,18 +726,21 @@ test("header privacy toggles icon and name immediately", async ({ page }) => {
       }
     ).headerModule.updateSettings({ hideIcon: false, hideName: false });
   });
-  await expect(page.locator(".UserIcon")).not.toHaveCSS("display", "none");
-  await expect(page.locator(".UserName")).not.toHaveCSS("display", "none");
+  await expect(page.locator(".common-header-1h5huqo")).not.toHaveCSS(
+    "display",
+    "none",
+  );
+  await expect(page.locator(".common-header-w2sn95")).not.toHaveCSS(
+    "display",
+    "none",
+  );
 });
 
 test("heatmap settings modal opens from module settings and applies values", async ({
   page,
 }) => {
   await page.route("https://www.nicovideo.jp/watch/sm9", (route) =>
-    route.fulfill({
-      contentType: "text/html",
-      body: '<!doctype html><main><div id="host"></div></main>',
-    }),
+    fulfillTestDocument(route, '<main><div id="host"></div></main>'),
   );
   await page.goto("https://www.nicovideo.jp/watch/sm9");
   await page.addScriptTag({ content: await buildControllerBundle() });
@@ -970,7 +992,7 @@ test("heatmap settings modal opens from module settings and applies values", asy
 test("module settings import/export normalization drops legacy and unknown module ids", async ({
   page,
 }) => {
-  await page.setContent("<main></main>");
+  await page.setContent(buildTestDocument("<main></main>"));
   await page.addScriptTag({ content: await buildControllerBundle() });
 
   const normalized = await page.evaluate(() => {

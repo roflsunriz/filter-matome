@@ -128,7 +128,8 @@ const NICOVIDEO_SELECTORS: NicovideoSelectors = {
     top: ".NC-VideoCard",
     ranking: ".NC-Card",
     tag: ".item[data-video-item]",
-    search: ".item[data-video-item]",
+    search:
+      '.item[data-video-item], [data-decoration-video-id][data-anchor-page="search"]',
     other: "",
   },
   TITLE_ELEMENTS: {
@@ -140,7 +141,8 @@ const NICOVIDEO_SELECTORS: NicovideoSelectors = {
     top: ".NC-CardTitle",
     ranking: ".NC-CardTitle",
     tag: ".itemTitle a",
-    search: ".itemTitle a",
+    search:
+      '.itemTitle a, a[data-anchor-page="search"][href*="/watch/"].fw_bold',
     other: "",
   },
   PARENT_ELEMENTS: {
@@ -148,7 +150,7 @@ const NICOVIDEO_SELECTORS: NicovideoSelectors = {
     top: ".NC-Card",
     ranking: ".NC-Card",
     tag: ".item",
-    search: ".item",
+    search: '.item, [data-decoration-video-id][data-anchor-page="search"]',
     other: "",
   },
 };
