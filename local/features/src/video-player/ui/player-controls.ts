@@ -24,6 +24,9 @@ export class PlayerControlsShadow extends HTMLElement {
   private commentSystem: CommentSystem | null = null;
   private userPaused: boolean = false;
   private isSettingsOpen: boolean = false;
+  private isVolumeDragging: boolean = false;
+  private volumeSaveTimer: number | null = null;
+  private lastMutedIconState: boolean | null = null;
 
   // コメント設定関連
   private commentOpacity: number = PLAYER_SETTINGS.COMMENT.OPACITY.DEFAULT;
@@ -421,16 +424,11 @@ export class PlayerControlsShadow extends HTMLElement {
 
       #volume {
         width: 80px;
-        height: 4px;
+        height: 16px;
         -webkit-appearance: none;
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 2px;
+        background: transparent;
         cursor: pointer;
-        transition: height 0.2s;
-      }
-
-      #volume:hover {
-        height: 6px;
+        border-radius: 2px;
       }
 
       #volume::-webkit-slider-thumb {
@@ -446,13 +444,13 @@ export class PlayerControlsShadow extends HTMLElement {
       }
 
       #volume::-webkit-slider-runnable-track {
-        height: 100%;
+        height: 4px;
         background: linear-gradient(to right, #007bff var(--volume), rgba(255, 255, 255, 0.3) var(--volume));
         border-radius: 2px;
       }
 
       #volume::-moz-range-track {
-        height: 100%;
+        height: 4px;
         background: linear-gradient(to right, #007bff var(--volume), rgba(255, 255, 255, 0.3) var(--volume));
         border-radius: 2px;
       }
@@ -943,6 +941,26 @@ export class PlayerControlsShadow extends HTMLElement {
     const initialPercent = Math.round(PLAYER_SETTINGS.VOLUME.DEFAULT * 100);
     volumeBar.style.setProperty("--volume", `${initialPercent}%`);
 
+    volumeBar.addEventListener("pointerdown", (event) => {
+      this.isVolumeDragging = true;
+      volumeBar.setPointerCapture(event.pointerId);
+    });
+
+    const finishVolumeDrag = (): void => {
+      if (!this.isVolumeDragging) return;
+      this.isVolumeDragging = false;
+      const video = this.getVideo();
+      if (!video) return;
+      const volumeValue = this.clampVolume(Number(volumeBar.value) / 100);
+      saveVolume(volumeValue);
+      this.updateVolumeSlider(video.volume);
+      this.updateVolumeIcon();
+    };
+
+    volumeBar.addEventListener("pointerup", finishVolumeDrag);
+    volumeBar.addEventListener("pointercancel", finishVolumeDrag);
+    volumeBar.addEventListener("change", finishVolumeDrag);
+
     // 音量スライダーの更新
     volumeBar.addEventListener("input", () => {
       const video = this.getVideo();
@@ -955,8 +973,8 @@ export class PlayerControlsShadow extends HTMLElement {
         video.muted = false;
       }
 
-      this.updateVolumeSlider(volumeValue);
-      saveVolume(volumeValue);
+      this.updateVolumeSlider(volumeValue, { syncValue: false });
+      this.queueVolumeSave(volumeValue);
       this.updateVolumeIcon();
     });
 
@@ -984,13 +1002,28 @@ export class PlayerControlsShadow extends HTMLElement {
   /**
    * 音量スライダーのUI更新
    */
-  private updateVolumeSlider(volume: number): void {
+  private queueVolumeSave(volume: number): void {
+    if (this.volumeSaveTimer !== null) {
+      window.clearTimeout(this.volumeSaveTimer);
+    }
+    this.volumeSaveTimer = window.setTimeout(() => {
+      saveVolume(volume);
+      this.volumeSaveTimer = null;
+    }, 150);
+  }
+
+  private updateVolumeSlider(
+    volume: number,
+    options: { syncValue?: boolean } = {},
+  ): void {
     const volumeBar = this.shadow.querySelector<HTMLInputElement>("#volume");
     if (!volumeBar) return;
 
     const clamped = this.clampVolume(volume);
     const percent = Math.round(clamped * 100);
-    volumeBar.value = percent.toString();
+    if (options.syncValue !== false) {
+      volumeBar.value = percent.toString();
+    }
     volumeBar.style.setProperty("--volume", `${percent}%`);
   }
 
@@ -1000,6 +1033,7 @@ export class PlayerControlsShadow extends HTMLElement {
   private syncVolumeFromVideo(): void {
     const video = this.getVideo();
     if (!video) return;
+    if (this.isVolumeDragging) return;
 
     this.updateVolumeSlider(video.volume);
     this.updateVolumeIcon();
@@ -1370,7 +1404,13 @@ export class PlayerControlsShadow extends HTMLElement {
     const video = this.getVideo();
     if (!button || !video) return;
 
-    if (video.muted || video.volume === 0) {
+    const isMuted = video.muted || video.volume === 0;
+    if (this.lastMutedIconState === isMuted) {
+      return;
+    }
+    this.lastMutedIconState = isMuted;
+
+    if (isMuted) {
       button.classList.add("muted");
       button.innerHTML = PLAYER_ICONS.muted;
     } else {
@@ -2023,6 +2063,10 @@ export class PlayerControlsShadow extends HTMLElement {
     // タイマーのクリア
     this.clearHideTimer();
     this.clearCursorTimer();
+    if (this.volumeSaveTimer !== null) {
+      window.clearTimeout(this.volumeSaveTimer);
+      this.volumeSaveTimer = null;
+    }
 
     // カーソルを必ず元に戻す
     this.showCursor();
