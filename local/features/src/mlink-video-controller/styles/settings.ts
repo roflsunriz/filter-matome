@@ -310,7 +310,7 @@ export const settingsStyles = `
   border: 2px solid var(--panel-border);
   border-radius: 12px;
   width: 90%;
-  max-width: 600px;
+  max-width: 980px;
   max-height: 90vh;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -370,6 +370,82 @@ export const settingsStyles = `
   padding: 20px;
   max-height: calc(90vh - 240px);
   overflow-y: auto;
+}
+
+.background-settings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 16px;
+  align-items: start;
+}
+
+.background-settings-main {
+  min-width: 0;
+}
+
+.background-settings-help {
+  position: sticky;
+  top: 0;
+  padding: 18px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--panel-bg-secondary);
+  color: var(--panel-text);
+}
+
+.background-settings-help h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px 0;
+  color: var(--panel-text);
+  font-size: 16px;
+}
+
+.background-settings-help-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 14px 0;
+  padding-left: 22px;
+  color: var(--panel-text);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.background-settings-help code {
+  overflow-wrap: anywhere;
+  color: var(--panel-accent);
+  font-size: 12px;
+}
+
+.background-settings-help-note {
+  padding: 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--panel-bg);
+}
+
+.background-settings-help-note + .background-settings-help-note {
+  margin-top: 10px;
+}
+
+.background-settings-help-note strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--panel-text);
+  font-size: 13px;
+}
+
+.background-settings-help-note p {
+  margin: 0;
+  color: var(--panel-text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.background-settings-help-note.warning {
+  border-color: rgba(255, 152, 0, 0.45);
+  background: rgba(255, 152, 0, 0.08);
 }
 
 .modal-footer {
@@ -861,6 +937,18 @@ input:disabled + .slider {
   .modal-content {
     width: 95%;
     max-height: 90vh;
+  }
+
+  .modal-body {
+    padding: 14px;
+  }
+
+  .background-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .background-settings-help {
+    position: static;
   }
 
   .image-list-item {

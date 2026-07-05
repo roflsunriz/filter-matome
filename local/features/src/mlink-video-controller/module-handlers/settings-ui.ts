@@ -1058,37 +1058,62 @@ export class SettingsUI {
         </div>
         
         <div class="modal-body">
-          <div class="settings-section">
-            <h4>${createMaterialIcon("edit", { style: "outlined", color: "white" })} 方法1: URL入力</h4>
-            <div class="url-input-section">
-              <input type="text" id="modal-image-url-input" value="${DEFAULT_BACKGROUND_IMAGE_URL_PREFIX}" placeholder="画像URLを入力してください" />
-              <input type="text" id="modal-image-name-input" placeholder="画像名を入力してください" />
-              <button id="modal-add-url-image" class="add-btn">URL画像を追加</button>
-            </div>
-          </div>
-          
-          <div class="settings-section">
-            <h4>${createMaterialIcon("folder", { style: "outlined", color: "white" })} 方法2: ファイル選択</h4>
-            <div class="file-input-section">
-              <input type="file" id="modal-image-file-input" accept="image/*" />
-              <input type="text" id="modal-file-name-input" placeholder="画像名を入力してください" />
-              <button id="modal-add-file-image" class="add-btn">ファイル画像を追加</button>
-            </div>
-          </div>
-          
-          <div class="settings-section">
-            <h4>${createMaterialIcon("list", { style: "outlined", color: "white" })} 登録済み画像一覧</h4>
-            <div id="modal-image-list" class="image-list"></div>
-          </div>
+          <div class="background-settings-grid">
+            <div class="background-settings-main">
+              <div class="settings-section">
+                <h4>${createMaterialIcon("edit", { style: "outlined", color: "white" })} 方法1: URL入力</h4>
+                <div class="url-input-section">
+                  <input type="text" id="modal-image-url-input" value="${DEFAULT_BACKGROUND_IMAGE_URL_PREFIX}" placeholder="画像URLを入力してください" />
+                  <input type="text" id="modal-image-name-input" placeholder="画像名を入力してください" />
+                  <button id="modal-add-url-image" class="add-btn">URL画像を追加</button>
+                </div>
+              </div>
 
-          <div class="settings-section">
-            <h4>${createMaterialIcon("build", { style: "outlined", color: "white" })} 設定管理</h4>
-            <div class="settings-management">
-              <button id="modal-export-settings" class="management-btn export">${createMaterialIcon("upload", { style: "outlined", color: "white" })} 設定をエクスポート</button>
-              <button id="modal-import-settings" class="management-btn import">${createMaterialIcon("download", { style: "outlined", color: "white" })} 設定をインポート</button>
-              <button id="modal-reset-settings" class="management-btn reset">${createMaterialIcon("refresh", { style: "filled", color: "white" })} デフォルトに戻す</button>
-              <input type="file" id="modal-import-file-input" accept=".json" style="display: none;" />
+              <div class="settings-section">
+                <h4>${createMaterialIcon("folder", { style: "outlined", color: "white" })} 方法2: ファイル選択</h4>
+                <div class="file-input-section">
+                  <input type="file" id="modal-image-file-input" accept="image/*" />
+                  <input type="text" id="modal-file-name-input" placeholder="画像名を入力してください" />
+                  <button id="modal-add-file-image" class="add-btn">ファイル画像を追加</button>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h4>${createMaterialIcon("list", { style: "outlined", color: "white" })} 登録済み画像一覧</h4>
+                <div id="modal-image-list" class="image-list"></div>
+              </div>
+
+              <div class="settings-section">
+                <h4>${createMaterialIcon("build", { style: "outlined", color: "white" })} 設定管理</h4>
+                <div class="settings-management">
+                  <button id="modal-export-settings" class="management-btn export">${createMaterialIcon("upload", { style: "outlined", color: "white" })} 設定をエクスポート</button>
+                  <button id="modal-import-settings" class="management-btn import">${createMaterialIcon("download", { style: "outlined", color: "white" })} 設定をインポート</button>
+                  <button id="modal-reset-settings" class="management-btn reset">${createMaterialIcon("refresh", { style: "filled", color: "white" })} デフォルトに戻す</button>
+                  <input type="file" id="modal-import-file-input" accept=".json" style="display: none;" />
+                </div>
+              </div>
             </div>
+
+            <aside class="background-settings-help" aria-label="背景画像設定の使い方">
+              <h4>${createMaterialIcon("help", { style: "outlined", color: "white" })} 使い方の目安</h4>
+              <ol class="background-settings-help-steps">
+                <li>画像を Squoosh などでブラウザが扱える形式に変換します。変換は必須ではありません。</li>
+                <li>NicoCache_nl の <code>local/background-images/favorites</code> など、<code>local</code> 配下へ画像を置きます。</li>
+                <li>URL入力では <code>https://www.nicovideo.jp/local/background-images/favorites/background1.avif</code> のように指定します。</li>
+              </ol>
+              <div class="background-settings-help-note">
+                <strong>ファイル選択の場合</strong>
+                <p>選択した画像は IndexedDB に base64 形式で保存されます。ブラウザのサイトデータ削除で消えるため、必要に応じて設定をエクスポートしてください。</p>
+              </div>
+              <div class="background-settings-help-note warning">
+                <strong>外部 URL は非推奨</strong>
+                <p><code>https://www.nicovideo.jp/local/</code> 以外の URL も指定できますが、外部サーバーへ負荷をかける可能性があります。</p>
+              </div>
+              <div class="background-settings-help-note">
+                <strong>nico_wallpaperG 併用時</strong>
+                <p>表示が衝突する場合は、背景セレクターとマトリックス背景のどちらを優先するかに合わせて無効化してください。</p>
+              </div>
+            </aside>
           </div>
         </div>
         
