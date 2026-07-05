@@ -737,14 +737,19 @@ export class MlinkVideoController extends BasePanel {
     if (!playPauseBtn || !this.player) return;
 
     const isPlaying = this.player.isPlaying();
+    const nextPlayingValue = isPlaying.toString();
+
+    if (playPauseBtn.getAttribute("data-playing") === nextPlayingValue) {
+      return;
+    }
+
     const iconName = isPlaying ? "pause" : "play_arrow";
 
-    // アイコンを更新
     playPauseBtn.innerHTML = createMaterialIcon(iconName, {
       style: "outlined",
       color: "white",
     });
-    playPauseBtn.setAttribute("data-playing", isPlaying.toString());
+    playPauseBtn.setAttribute("data-playing", nextPlayingValue);
   }
 
   /**

@@ -21,6 +21,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Removed
 - 【mlink-video-controller】`マイリストセレクタ`モジュールを廃止し、モジュール一覧と遅延読み込み対象から削除。
 
+### Fixed
+- 【mlink-video-controller】プレイバックタブの再生/一時停止ボタンが、状態確認のたびにアイコンを再生成してちらつく問題を修正。
+
 ## [#228] - 2026-07-05
 
 ### Changed
