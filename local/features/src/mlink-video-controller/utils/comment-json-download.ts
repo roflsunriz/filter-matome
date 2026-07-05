@@ -80,7 +80,9 @@ export const generateCommentJsonFilename = (
   `comments-${videoId}-${createTimestampForFilename(exportedAt)}.json`;
 
 export const downloadCommentsJson = async (videoId: string): Promise<void> => {
-  const data = await window.commonHelper.fetchNicoDataWithComments(videoId);
+  const data = await window.commonHelper.fetchNicoDataWithComments(videoId, {
+    bypassCommentFilter: true,
+  });
   if (!data) {
     throw new Error("コメントデータを取得できませんでした");
   }

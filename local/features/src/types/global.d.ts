@@ -9,6 +9,7 @@ import {
   IntegratedNicoData,
   ExtendedFetchWatchPageResult,
   FetchOptions,
+  FetchNicoCommentsOptions,
   CommentThread,
 } from "@/types/common-types";
 
@@ -44,13 +45,17 @@ declare global {
       ) => Promise<ExtendedFetchWatchPageResult | void>;
 
       // 新しい関数
-      fetchNicoComments: (apiData: NicoApiData) => Promise<{
+      fetchNicoComments: (
+        apiData: NicoApiData,
+        options?: FetchNicoCommentsOptions,
+      ) => Promise<{
         threads: CommentThread[];
         comments: CommentData[];
         mainThread: CommentThread;
       } | void>;
       fetchNicoDataWithComments: (
         SMID?: string,
+        options?: FetchNicoCommentsOptions,
       ) => Promise<IntegratedNicoData | void>;
 
       // 共通fetch関数（内部使用）

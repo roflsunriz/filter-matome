@@ -9,6 +9,7 @@ import {
 } from "@/types/filter-types";
 
 // グローバル型定義は types/global.d.ts で管理されています
+const COMMENT_FILTER_BYPASS_HEADER = "x-comment-filter2-bypass";
 
 export class DataInterceptor {
   private originalFetch: typeof fetch;
@@ -153,6 +154,10 @@ export class DataInterceptor {
         url = "";
       }
 
+      if (this.shouldBypassCommentFiltering(input, init)) {
+        return this.originalFetch(input, this.stripBypassHeader(init));
+      }
+
       // 対象エンドポイントをチェック
       if (url.includes(CONSTANTS.API_ENDPOINT)) {
         try {
@@ -186,6 +191,38 @@ export class DataInterceptor {
       }
 
       return this.originalFetch(input, init);
+    };
+  }
+
+  private shouldBypassCommentFiltering(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): boolean {
+    if (this.hasBypassHeader(init?.headers)) {
+      return true;
+    }
+    if (input instanceof Request) {
+      return this.hasBypassHeader(input.headers);
+    }
+    return false;
+  }
+
+  private hasBypassHeader(headers?: HeadersInit): boolean {
+    if (!headers) {
+      return false;
+    }
+    return new Headers(headers).has(COMMENT_FILTER_BYPASS_HEADER);
+  }
+
+  private stripBypassHeader(init?: RequestInit): RequestInit | undefined {
+    if (!init?.headers) {
+      return init;
+    }
+    const headers = new Headers(init.headers);
+    headers.delete(COMMENT_FILTER_BYPASS_HEADER);
+    return {
+      ...init,
+      headers,
     };
   }
 

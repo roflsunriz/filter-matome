@@ -8,6 +8,7 @@ import {
   IntegratedNicoData,
   ExtendedFetchWatchPageResult,
   FetchOptions,
+  FetchNicoCommentsOptions,
   CommentApiResponse,
   NicoApiServerResponse,
   CommentThread,
@@ -30,6 +31,7 @@ const GENERIC_VIDEO_ID_PATTERN = /([a-z]{2}\d+)/i;
 const WATCH_PAGE_CACHE_TTL_MS = 5 * 60 * 1000;
 const COMMENT_CACHE_TTL_MS = 30 * 1000;
 const MAX_COMMON_CACHE_ENTRIES = 16;
+const COMMENT_FILTER_BYPASS_HEADER = "x-comment-filter2-bypass";
 
 type TimedCacheEntry<T> = {
   value: T;
@@ -191,10 +193,14 @@ window.commonHelper = {
     url: string,
     options: FetchOptions = {},
   ): Promise<Response> => {
+    const { bypassCommentFilter, headers, ...requestOptions } = options;
     const defaultOptions: FetchOptions = {
       method: "GET",
-      headers: {},
-      ...options,
+      headers: {
+        ...(headers ?? {}),
+        ...(bypassCommentFilter ? { [COMMENT_FILTER_BYPASS_HEADER]: "1" } : {}),
+      },
+      ...requestOptions,
     };
 
     return fetch(url, defaultOptions);
@@ -332,10 +338,13 @@ window.commonHelper = {
   // ニコニコ動画のコメントデータを取得する関数
   fetchNicoComments: async (
     apiData: NicoApiData,
+    options: FetchNicoCommentsOptions = {},
   ): Promise<NicoCommentResult | void> => {
     try {
       const commentServer = apiData.comment.nvComment.server + "/v1/threads";
-      const cacheKey = createCommentCacheKey(apiData);
+      const cacheKey =
+        createCommentCacheKey(apiData) +
+        (options.bypassCommentFilter ? "|raw" : "|filtered");
       const cachedResult = getTimedCache(commentCache, cacheKey);
       if (cachedResult) {
         return cachedResult;
@@ -354,6 +363,7 @@ window.commonHelper = {
       const request = (async (): Promise<NicoCommentResult | void> => {
         const response = await window.commonHelper.fetchRequest(commentServer, {
           method: "POST",
+          bypassCommentFilter: options.bypassCommentFilter,
           headers: {
             "x-client-os-type": "others",
             "X-Frontend-Id": "6",
@@ -397,11 +407,10 @@ window.commonHelper = {
     } catch (error) {
       console.error("コメントデータ取得エラー:", error);
     } finally {
-      try {
-        commentInflight.delete(createCommentCacheKey(apiData));
-      } catch {
-        // apiDataが不正な場合は削除不要
-      }
+      const cacheKey =
+        createCommentCacheKey(apiData) +
+        (options.bypassCommentFilter ? "|raw" : "|filtered");
+      commentInflight.delete(cacheKey);
     }
   },
 
@@ -513,6 +522,7 @@ window.commonHelper = {
   // ニコニコ動画のAPIデータとコメントデータを一度に取得するヘルパー関数
   fetchNicoDataWithComments: async (
     SMID?: string,
+    options: FetchNicoCommentsOptions = {},
   ): Promise<IntegratedNicoData | void> => {
     try {
       // 1. まずAPIデータを取得
@@ -525,6 +535,7 @@ window.commonHelper = {
       // 2. コメントデータを取得（全フォークのスレッドと統合コメントを含む）
       const commentResult = await window.commonHelper.fetchNicoComments(
         watchPageResult.apiData,
+        options,
       );
       if (!commentResult) {
         console.error("コメントデータが取得できませんでした");

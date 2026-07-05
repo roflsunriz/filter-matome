@@ -216,7 +216,9 @@ export const fetchCommentsWithApi = async (
   videoId: string,
 ): Promise<IntegratedNicoData> => {
   try {
-    const data = await window.commonHelper.fetchNicoDataWithComments(videoId);
+    const data = await window.commonHelper.fetchNicoDataWithComments(videoId, {
+      bypassCommentFilter: true,
+    });
     if (!data) {
       throw new Error("コメントデータが取得できませんでした");
     }

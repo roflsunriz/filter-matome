@@ -66,8 +66,9 @@ describe("mlink-video-controller structure", () => {
     expect(linkManager).toContain("downloadCommentsJson(videoId)");
     expect(linkManager).not.toContain("/cache/${threadId}.xml");
     expect(commentJsonDownload).toContain(
-      "window.commonHelper.fetchNicoDataWithComments(videoId)",
+      "window.commonHelper.fetchNicoDataWithComments(videoId,",
     );
+    expect(commentJsonDownload).toContain("bypassCommentFilter: true");
     expect(commentJsonDownload).toContain("threads: data.threads");
     expect(commentJsonDownload).toContain(
       "JSON.stringify(exportData, null, 2)",
