@@ -18,6 +18,7 @@ features/src/video-player/
 │   └── url-manager.ts                    # URL・キャッシュ管理 (5KB)
 ├── ui/
 │   ├── comment-list.ts                   # コメントリスト表示 (16KB)
+│   ├── player-control-storage.ts         # プレイヤー操作設定のlocalStorage永続化
 │   ├── player-controls.ts                # プレーヤーコントロール (77KB)
 │   └── templates.ts                      # HTMLテンプレート (推定20KB)
 ├── utils/
@@ -188,6 +189,11 @@ database-manager.ts ─── データベース統合管理
 2. `ui/player-controls.ts` - イベントハンドラー・動作変更
 3. `config/icons.ts` - アイコン変更
 4. `config/constants.ts` - UI設定調整
+
+### 💾 **プレーヤー操作設定の保存を変更したい**
+- **メイン対象**: `ui/player-control-storage.ts`
+- **利用側**: `ui/player-controls.ts`
+- **対象**: 音量、コメント表示、コントロール表示モードなどの `localStorage` 保存
 
 ### 💾 **新しい設定項目を追加したい**
 1. `config/constants.ts` - 設定定数定義

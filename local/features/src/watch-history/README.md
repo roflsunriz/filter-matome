@@ -8,6 +8,7 @@ features/src/watch-history/
 ├── watch-tracker.ts                      # 視聴追跡・メタデータ収集 (29KB)
 ├── database.ts                           # IndexedDB操作・統計計算 (32KB)
 ├── migration-manager.ts                  # データベースマイグレーション (17KB)
+├── tag-cloud-renderer.ts                 # タグ統計計算・タグクラウド描画
 ├── video-detail-renderer.ts              # 動画詳細モーダルのHTML生成
 ├── styles.ts                             # 動的CSS・マテリアルデザイン (37KB)
 ├── index.html                            # SPAページ・UI構造定義 (36KB)
@@ -106,6 +107,11 @@ migration-manager.ts ─── 自動データベース昇格
 - **役割**: 動画詳細モーダル内の表示HTMLを生成し、`app.ts` のUI制御責務から分離
 - **機能**: 表示値のHTML/属性エスケープ、サムネイルURL正規化、視聴進捗・タグ・メモ表示
 - **編集タイミング**: 動画詳細モーダルの表示項目追加、表示サニタイズ方針変更
+
+#### `tag-cloud-renderer.ts` - タグクラウド描画
+- **役割**: タグ統計計算とタグクラウドDOM生成を `app.ts` から分離
+- **機能**: タグ集計、表示サイズ分類、空表示、タグクリックイベント付与
+- **編集タイミング**: タグクラウドの集計基準、表示件数、見た目、クリック挙動を変更する場合
 
 ### 📚 **ドキュメンテーション**
 

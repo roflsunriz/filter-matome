@@ -13,6 +13,10 @@ import {
 import { CommonHeader } from "@/common/header";
 import { logger } from "@/common/logger";
 import { createVideoDetailHTML } from "@/watch-history/video-detail-renderer";
+import {
+  calculateTagStats,
+  renderTagCloud,
+} from "@/watch-history/tag-cloud-renderer";
 import type {
   WatchHistoryEntry,
   SortBy,
@@ -1408,96 +1412,14 @@ class WatchHistoryApp {
   }
 
   /**
-   * タグ統計を計算する
-   */
-  private calculateTagStats(): { tag: string; count: number; size: string }[] {
-    const tagCounts = new Map<string, number>();
-
-    // 全てのエントリからタグを収集
-    this.entries.forEach((entry) => {
-      if (entry.tags && Array.isArray(entry.tags)) {
-        entry.tags.forEach((tag) => {
-          if (tag && tag.trim()) {
-            const normalizedTag = tag.trim();
-            tagCounts.set(
-              normalizedTag,
-              (tagCounts.get(normalizedTag) || 0) + 1,
-            );
-          }
-        });
-      }
-    });
-
-    // タグをソートし、上位50個を取得
-    const sortedTags = Array.from(tagCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 50);
-
-    if (sortedTags.length === 0) {
-      return [];
-    }
-
-    // 最大・最小カウントを取得
-    const maxCount = Math.max(...sortedTags.map(([, count]) => count));
-    const minCount = Math.min(...sortedTags.map(([, count]) => count));
-
-    // サイズを決定
-    return sortedTags.map(([tag, count]) => {
-      let size = "md";
-      if (maxCount > minCount) {
-        const ratio = (count - minCount) / (maxCount - minCount);
-        if (ratio >= 0.8) size = "xl";
-        else if (ratio >= 0.6) size = "lg";
-        else if (ratio >= 0.4) size = "md";
-        else if (ratio >= 0.2) size = "sm";
-        else size = "xs";
-      }
-      return { tag, count, size };
-    });
-  }
-
-  /**
    * タグクラウドを更新する
    */
   private updateTagCloud(): void {
     const tagCloudElement = this.elements["tag-cloud"];
     if (!tagCloudElement) return;
 
-    const tagStats = this.calculateTagStats();
-
-    if (tagStats.length === 0) {
-      tagCloudElement.innerHTML = `
-        <div class="tag-cloud-empty">
-          ${createMaterialIcon("label", { color: "dark", size: "large" })}
-          <span>タグがありません</span>
-        </div>
-      `;
-      return;
-    }
-
-    const html = tagStats
-      .map(
-        ({ tag, count, size }) => `
-      <span class="tag-cloud-item size-${size}" 
-            data-tag="${this.escapeHtml(tag)}" 
-            data-count="${count}"
-            title="${this.escapeHtml(tag)}: ${count}回">
-        ${this.escapeHtml(tag)}
-      </span>
-    `,
-      )
-      .join("");
-
-    tagCloudElement.innerHTML = html;
-
-    // タグクリックイベントを追加
-    tagCloudElement.querySelectorAll(".tag-cloud-item").forEach((item) => {
-      item.addEventListener("click", () => {
-        const tag = item.getAttribute("data-tag");
-        if (tag) {
-          this.searchByTag(tag);
-        }
-      });
+    renderTagCloud(tagCloudElement, calculateTagStats(this.entries), (tag) => {
+      this.searchByTag(tag);
     });
   }
 

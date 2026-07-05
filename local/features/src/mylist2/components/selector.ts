@@ -218,55 +218,22 @@ export async function showMylistSelector(): Promise<number> {
           });
         }
 
-        // Suggested Mylistsの表示
-        const suggestedHTML =
-          suggestedMylists.length > 0
-            ? `
-                <div class="suggested-mylists">
-                    <h4>おすすめマイリスト</h4>
-                    ${suggestedMylists
-                      .map(
-                        (mylist: MylistInfo) => `
-                        <div class="mylist-item suggested" data-id="${mylist.id}">
-                            <span class="mylist-name">${mylist.name}</span>
-                            <div class="match-info">
-                                マッチしたタグ: ${matchDetails.get(mylist.id!)?.join(", ") || ""}
-                            </div>
-                        </div>
-                    `,
-                      )
-                      .join("")}
-                </div>
-            `
-            : "";
-
-        // 通常のマイリスト一覧
-        const regularHTML = mylists
-          .map(
-            (mylist: MylistInfo) => `
-                <div class="mylist-item" data-id="${mylist.id}">
-                    <span>${mylist.name}</span>
-                </div>
-            `,
-          )
-          .join("");
-
         if (mylistList) {
-          mylistList.innerHTML = suggestedHTML + regularHTML;
+          renderMylistList(
+            mylistList,
+            mylists,
+            suggestedMylists,
+            matchDetails,
+            (mylistId) => {
+              if (modal) {
+                modal.remove();
+              }
+              // スタイルシートも削除
+              styleElement.remove();
+              resolve(mylistId);
+            },
+          );
         }
-
-        // イベントリスナーの設定
-        document.querySelectorAll(".mylist-item").forEach((item) => {
-          item.addEventListener("click", () => {
-            const mylistId = parseInt((item as HTMLElement).dataset.id || "0");
-            if (modal) {
-              modal.remove();
-            }
-            // スタイルシートも削除
-            styleElement.remove();
-            resolve(mylistId);
-          });
-        });
       };
     }
 
@@ -332,4 +299,74 @@ function normalizeText(text: string): string {
     .replace(/[（）]/g, function (s: string) {
       return s === "（" ? "(" : ")";
     });
+}
+
+function renderMylistList(
+  container: HTMLElement,
+  mylists: MylistInfo[],
+  suggestedMylists: MylistInfo[],
+  matchDetails: Map<number, string[]>,
+  onSelect: (mylistId: number) => void,
+): void {
+  const elements: HTMLElement[] = [];
+
+  if (suggestedMylists.length > 0) {
+    const suggestedSection = document.createElement("div");
+    suggestedSection.className = "suggested-mylists";
+
+    const heading = document.createElement("h4");
+    heading.textContent = "おすすめマイリスト";
+    suggestedSection.appendChild(heading);
+
+    for (const mylist of suggestedMylists) {
+      suggestedSection.appendChild(
+        createMylistItem(mylist, onSelect, {
+          suggested: true,
+          matchedTags: matchDetails.get(mylist.id ?? -1) ?? [],
+        }),
+      );
+    }
+
+    elements.push(suggestedSection);
+  }
+
+  for (const mylist of mylists) {
+    elements.push(createMylistItem(mylist, onSelect));
+  }
+
+  container.replaceChildren(...elements);
+}
+
+function createMylistItem(
+  mylist: MylistInfo,
+  onSelect: (mylistId: number) => void,
+  options: { suggested?: boolean; matchedTags?: string[] } = {},
+): HTMLElement {
+  const item = document.createElement("div");
+  item.className = options.suggested ? "mylist-item suggested" : "mylist-item";
+
+  if (typeof mylist.id === "number") {
+    item.dataset.id = String(mylist.id);
+  }
+
+  const name = document.createElement("span");
+  name.className = "mylist-name";
+  name.textContent = mylist.name;
+  item.appendChild(name);
+
+  if (options.suggested) {
+    const matchInfo = document.createElement("div");
+    matchInfo.className = "match-info";
+    matchInfo.textContent = `マッチしたタグ: ${(options.matchedTags ?? []).join(", ")}`;
+    item.appendChild(matchInfo);
+  }
+
+  item.addEventListener("click", () => {
+    if (typeof mylist.id !== "number") {
+      return;
+    }
+    onSelect(mylist.id);
+  });
+
+  return item;
 }

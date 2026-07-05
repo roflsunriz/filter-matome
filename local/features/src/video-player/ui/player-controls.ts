@@ -4,8 +4,13 @@ import { materialIconsStyles } from "@/common/material-icons";
 import { CommentSystem } from "@/video-player/core/comment-system";
 import * as IndexedDBUtils from "@/video-player/utils/indexed-db-utils";
 import { ExtendedDocument, ExtendedHTMLElement } from "@/types/index";
-
-const PLAYER_VOLUME_STORAGE_KEY = "playerVolume";
+import {
+  getSavedControlsMode,
+  getSavedVolume,
+  saveCommentVisibility,
+  saveControlsMode,
+  saveVolume,
+} from "@/video-player/ui/player-control-storage";
 
 /**
  * シャドウDOM版のプレイヤーコントロール
@@ -78,9 +83,9 @@ export class PlayerControlsShadow extends HTMLElement {
     this.initialized = true;
 
     // 初期のコントロール表示状態を設定
-    const savedControlsMode =
-      localStorage.getItem("controlsMode") ||
-      PLAYER_SETTINGS.CONTROLS_MODE.HOVER;
+    const savedControlsMode = getSavedControlsMode(
+      PLAYER_SETTINGS.CONTROLS_MODE.HOVER,
+    );
     this.applyControlsMode(savedControlsMode);
 
     window.logger.info("PlayerControlsShadowの初期化が完了しました！");
@@ -951,7 +956,7 @@ export class PlayerControlsShadow extends HTMLElement {
       }
 
       this.updateVolumeSlider(volumeValue);
-      localStorage.setItem(PLAYER_VOLUME_STORAGE_KEY, volumeValue.toString());
+      saveVolume(volumeValue);
       this.updateVolumeIcon();
     });
 
@@ -1007,15 +1012,9 @@ export class PlayerControlsShadow extends HTMLElement {
     const video = this.getVideo();
     if (!video) return;
 
-    const savedVolumeRaw = localStorage.getItem(PLAYER_VOLUME_STORAGE_KEY);
-    let volume = PLAYER_SETTINGS.VOLUME.DEFAULT;
-
-    if (savedVolumeRaw !== null) {
-      const parsed = Number(savedVolumeRaw);
-      if (!Number.isNaN(parsed)) {
-        volume = parsed;
-      }
-    } else {
+    const savedVolume = getSavedVolume(PLAYER_SETTINGS.VOLUME.DEFAULT);
+    let volume = savedVolume.volume;
+    if (!savedVolume.hasSavedValue) {
       const currentVolume = this.clampVolume(video.volume);
       if (currentVolume !== 1) {
         volume = currentVolume;
@@ -1074,7 +1073,7 @@ export class PlayerControlsShadow extends HTMLElement {
         : PLAYER_ICONS.commentOff;
 
       // ローカルストレージに設定を保存
-      localStorage.setItem("commentVisible", isVisible.toString());
+      saveCommentVisibility(isVisible);
     });
 
     // コメント設定の各種イベント
@@ -1218,9 +1217,9 @@ export class PlayerControlsShadow extends HTMLElement {
     await this.loadCommentSettings();
 
     // コントロールモード設定
-    const controlsMode =
-      localStorage.getItem("controlsMode") ||
-      PLAYER_SETTINGS.CONTROLS_MODE.HOVER;
+    const controlsMode = getSavedControlsMode(
+      PLAYER_SETTINGS.CONTROLS_MODE.HOVER,
+    );
     this.applyControlsMode(controlsMode);
 
     const controlsModeSelect = this.shadow.querySelector(
@@ -1511,7 +1510,7 @@ export class PlayerControlsShadow extends HTMLElement {
   private handleControlsModeChange = (e: Event): void => {
     const select = e.target as HTMLSelectElement;
     const mode = select.value;
-    localStorage.setItem("controlsMode", mode);
+    saveControlsMode(mode);
     this.applyControlsMode(mode);
   };
 

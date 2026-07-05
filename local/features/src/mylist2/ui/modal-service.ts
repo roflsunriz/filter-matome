@@ -168,18 +168,21 @@ export class ModalService {
       }
 
       // モーダルの作成（タイトル表示を条件分岐）
+      const modalTitle = title
+        ? `「${title}」を${action}`
+        : `選択した項目を${action}`;
       const modalHTML = `
         <div class="cml2-modal">
           <div class="cml2-modal-content">
             <h3 class="cml2-modal-title">
-              ${title ? `「${title}」を${action}` : `選択した項目を${action}`}
+              ${escapeHtml(modalTitle)}
             </h3>
             <div class="cml2-modal-body">
               <select class="cml2-select" id="targetMylist">
                 ${availableMylists
                   .map(
                     (mylist) =>
-                      `<option value="${mylist.id}">${mylist.name}</option>`,
+                      `<option value="${escapeHtml(String(mylist.id ?? ""))}">${escapeHtml(mylist.name)}</option>`,
                   )
                   .join("")}
               </select>
@@ -550,4 +553,10 @@ export class ModalService {
       modal.addEventListener("click", onBackdrop);
     });
   }
+}
+
+function escapeHtml(text: string): string {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
 }

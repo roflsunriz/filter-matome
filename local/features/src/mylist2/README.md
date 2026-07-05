@@ -11,7 +11,7 @@ features/src/mylist2/
 ├── components/
 │   ├── database.ts                       # IndexedDB管理 (81行)
 │   ├── manager-refactored.ts             # メインマネージャー (136行)
-│   └── selector.ts                       # マイリスト選択モーダル (323行)
+│   └── selector.ts                       # マイリスト選択モーダル
 ├── services/
 │   ├── api-service.ts                    # API関連サービス (239行)
 │   ├── database-management-service.ts    # データベース管理・永続化昇格 (350行)
@@ -25,9 +25,12 @@ features/src/mylist2/
 │   ├── styles.ts                         # CSSスタイル (仮想スクロール・アクションメニュー含む)
 │   ├── virtual-scroll.ts                 # 仮想スクロールマネージャー (NEW)
 │   ├── action-menu.ts                    # アクションメニューマネージャー (NEW)
+│   ├── availability-badge.ts             # 動画公開状態バッジ生成
 │   ├── batch-operations.ts               # 一括操作 (データベース対応)
 │   ├── event-handlers.ts                 # イベントハンドラー (394行)
+│   ├── mylist-list-renderer.ts           # マイリスト一覧DOM生成
 │   ├── modal-service.ts                  # モーダル関連 (201行)
+│   ├── video-details-modal.ts            # 動画詳細モーダルのDOM生成・タグ描画
 │   ├── progress-service.ts               # プログレス表示 (85行)
 │   ├── file-helper-service.ts            # ファイル操作ヘルパー (65行)
 │   └── validation-service.ts             # バリデーション (6行)
@@ -38,6 +41,7 @@ features/src/mylist2/
 ## 🏗️ アーキテクチャ概要
 
 ### データフロー
+
 ```
 ユーザー操作 (UI)
     ↓
@@ -51,6 +55,7 @@ Mylist2DB ─── IndexedDBへのデータ永続化
 ```
 
 ### API連携フロー
+
 ```
 ニコニコ動画API
     ↓ (動画情報取得)
@@ -64,6 +69,7 @@ UI更新 ─── 最新情報表示
 ```
 
 ### UI・操作フロー
+
 ```
 UI操作 (ui-refactored.ts)
     ↓
@@ -81,16 +87,19 @@ ProgressService ─── 進捗表示
 ### 🎯 **コア機能**
 
 #### `index.ts` - メインエントリーポイント
+
 - **役割**: システム全体の初期化・統合
 - **機能**: グローバル変数設定、共通ヘッダー初期化、メインUI起動
 - **編集タイミング**: システム全体の初期化ロジック変更、新モジュール統合
 
 #### `components/manager-refactored.ts` - メインマネージャー
+
 - **役割**: 全サービスの統合・ビジネスロジック管理
 - **機能**: 各サービスの統合、公開API提供、データベースアクセス管理
 - **編集タイミング**: 新機能追加、サービス間連携変更、APIインターフェース変更
 
 #### `components/database.ts` - データベース管理
+
 - **役割**: IndexedDBのスキーマ・マイグレーション管理・永続化昇格
 - **注意**: 初期化後に必須ストアとインデックスを検証し、作成失敗の残骸がある場合は読めるストアを `localStorage` の `mylist2-emergency-backup-*` に退避してから、一度だけDBを削除・再作成します。
 - **機能**: DB初期化、バージョン管理、ストア作成、高度な自動マイグレーション、永続化要求、健全性チェック、バックアップ・復元
@@ -99,21 +108,43 @@ ProgressService ─── 進捗表示
 ### 🎨 **UI・インターフェース**
 
 #### `ui/ui-refactored.ts` - メインUI (最も大きなファイル)
+
 - **役割**: 全UI操作・表示制御・イベント統合
 - **機能**: 画面レンダリング、イベントリスナー、検索機能、設定管理
 - **編集タイミング**: UI機能追加、表示変更、新しい操作機能追加
 
+#### `ui/video-details-modal.ts` - 動画詳細モーダル
+
+- **役割**: 動画詳細モーダルのDOM生成とタグリンク描画を `ui-refactored.ts` から分離
+- **機能**: モーダル要素の作成/取得、タグの辞書リンク化、HTML文字列への外部データ混入防止
+- **編集タイミング**: 動画詳細モーダルの構造変更、タグ表示変更
+
+#### `ui/availability-badge.ts` - 公開状態バッジ
+
+- **役割**: 動画の削除・非公開・取得不可などの公開状態バッジ生成を分離
+- **機能**: バッジDOM生成、説明ツールチップ/ARIAラベル生成
+- **編集タイミング**: 公開状態表示やヘルプ文言を変更する場合
+
+#### `ui/mylist-list-renderer.ts` - マイリスト一覧描画
+
+- **役割**: マイリスト一覧のDOM生成と選択イベント付与を `ui-refactored.ts` から分離
+- **機能**: マイリスト名・作成日・件数表示、現在選択中のアクティブ表示
+- **編集タイミング**: マイリスト一覧の見た目やクリック挙動を変更する場合
+
 #### `ui/styles.ts` - CSSスタイル
+
 - **役割**: 全画面のスタイル・レイアウト定義
 - **機能**: CSS定義、レスポンシブ対応、ダークテーマ、アニメーション
 - **編集タイミング**: デザイン変更、新UI要素追加、レイアウト調整
 
 #### `index.html` - メインHTML
+
 - **役割**: 基本HTML構造・テンプレート定義
 - **機能**: DOM構造、テンプレート、モーダル、プログレスバー
 - **編集タイミング**: HTML構造変更、新しいモーダル追加、テンプレート修正
 
 #### `header-adjustments.ts` - ヘッダー調整
+
 - **役割**: mylist2環境専用のヘッダー位置調整
 - **機能**: CSS Custom Properties調整、位置補正
 - **編集タイミング**: ヘッダーデザイン変更対応、レイアウト調整
@@ -121,28 +152,33 @@ ProgressService ─── 進捗表示
 ### 💾 **データ・サービス**
 
 #### `services/mylist-service.ts` - マイリスト管理
+
 - **役割**: マイリストCRUD操作
 - **機能**: マイリスト作成・削除・更新・ソート
 - **編集タイミング**: マイリスト機能追加・修正
 
 #### `services/video-service.ts` - 動画管理
+
 - **役割**: 動画データCRUD操作
 - **機能**: 動画追加・削除・更新・ソート・重複チェック
 - **編集タイミング**: 動画管理機能追加・修正
 
 #### `services/keyword-service.ts` - キーワード管理
+
 - **役割**: キーワードCRUD操作
 - **機能**: キーワード追加・削除・移動・編集・重複チェック
 - **編集タイミング**: キーワード機能追加・修正
 
 #### `services/api-service.ts` - API関連
+
 - **役割**: ニコニコ動画API操作・レート制限管理
 - **機能**: 動画情報取得、キューイング、キャッシュ、レート制限
 - **編集タイミング**: API仕様変更対応、パフォーマンス改善
 
 #### `services/database-management-service.ts` - データベース管理・永続化昇格
+
 - **役割**: データベースの高度な管理・永続化昇格・健全性監視
-- **機能**: 
+- **機能**:
   - 永続化昇格要求・状態監視
   - 自動データベース健全性チェック
   - バックアップ・復元機能
@@ -154,11 +190,13 @@ ProgressService ─── 進捗表示
 - **編集タイミング**: データベース監視機能追加、バックアップ戦略変更、永続化要求ロジック調整
 
 #### `services/import-export-service.ts` - インポート・エクスポート
+
 - **役割**: データのインポート・エクスポート処理
 - **機能**: JSONエクスポート、レガシーデータインポート、プログレス管理
 - **編集タイミング**: データ形式変更、インポート機能追加
 
 #### `services/settings-service.ts` - 設定管理
+
 - **役割**: アプリケーション設定の永続化
 - **機能**: 設定保存・読み込み、デフォルト値管理
 - **編集タイミング**: 新設定項目追加、設定形式変更
@@ -166,34 +204,42 @@ ProgressService ─── 進捗表示
 ### 🎭 **UI補助・操作**
 
 #### `ui/event-handlers.ts` - イベントハンドラー
+
 - **役割**: 個別操作のイベント処理
 - **機能**: 動画・キーワードの移動・コピー・削除・編集処理
 - **編集タイミング**: 新操作追加、イベント処理ロジック変更
 
 #### `ui/batch-operations.ts` - 一括操作
+
 - **役割**: 複数選択アイテムの一括処理
 - **機能**: 一括移動・コピー・削除・情報更新・公開状態チェック
 - **補足**: getthumbinfo を使う一括情報更新と公開状態チェックは、開始前に並列数と開始ディレイを指定できます。
 - **編集タイミング**: 一括操作機能追加・改善
 
 #### `ui/modal-service.ts` - モーダル管理
+
 - **役割**: 各種ダイアログ・モーダル表示
 - **機能**: アラート・確認・選択・編集モーダル
+- **注意**: 選択肢やタイトルに外部データを含める場合は HTML エスケープまたは DOM API で描画する
 - **編集タイミング**: 新モーダル追加、UI改善
 
 #### `ui/progress-service.ts` - プログレス表示
+
 - **役割**: 長時間処理の進捗表示
 - **機能**: 円形プログレスバー、進捗計算、表示制御
 - **編集タイミング**: プログレス表示改善、新進捗タイプ追加
 
 #### `components/selector.ts` - マイリスト選択
+
 - **役割**: マイリスト選択用の専用モーダル
 - **機能**: おすすめマイリスト表示、検索、新規作成
+- **描画方針**: マイリスト名やタグ一致情報は `textContent` と `dataset` で描画し、ユーザー由来文字列を HTML 連結に入れない
 - **編集タイミング**: 選択機能改善、おすすめロジック変更
 
 ### 🛠️ **ユーティリティ**
 
 #### `utils/linkify.ts` - URLリンク変換・video-playerルーティング判定
+
 - **役割**: テキスト内の URL / 動画ID / mylist をリンクへ変換、動画リンク先の判定
 - **機能**: HTMLエスケープ、DOMPurifyサニタイズ、video-playerルーティング判定
 - **ルーティング条件**: 設定が `local` のとき、以下に該当する動画のみ video-player standalone へルーティングする:
@@ -203,16 +249,19 @@ ProgressService ─── 進捗表示
 - **編集タイミング**: リンク変換ロジック変更、ルーティング条件追加
 
 #### `ui/file-helper-service.ts` - ファイル操作ヘルパー
+
 - **役割**: ファイル操作・データ変換支援
 - **機能**: ダウンロード、ファイル読み込み、日時フォーマット、長さ解析
 - **編集タイミング**: 新ファイル形式対応、変換ロジック追加
 
 #### `ui/validation-service.ts` - バリデーション
+
 - **役割**: 入力データの検証・サニタイズ
 - **機能**: 入力値検証、HTML エスケープ
 - **編集タイミング**: セキュリティ強化、新検証ルール追加
 
 #### `service-worker.ts` - Service Worker
+
 - **役割**: オフライン対応・キャッシュ管理
 - **機能**: 静的リソースキャッシュ、サムネイルキャッシュ、オフライン対応
 - **編集タイミング**: キャッシュ戦略変更、オフライン機能強化
@@ -220,12 +269,14 @@ ProgressService ─── 進捗表示
 ## 🎯 目的別編集ガイド
 
 ### 💡 **mlink-video-controllerからmylist2へ動画追加**
+
 - 動画視聴ページからmylist2へ動画追加する
 - `features/src/mlink-video-controller/handlers/mylist2.ts` の `handleAddVideo` メソッドを編集
 - その他のページからmylist2へキーワード追加する
 - `features/src/mlink-video-controller/handlers/mylist2.ts` の `handleAddKeyword` メソッドを編集
 
 ### 💡 **新しいマイリスト機能を追加したい**
+
 1. `services/mylist-service.ts` - サービスロジック実装
 2. `components/manager-refactored.ts` - 公開API追加
 3. `ui/ui-refactored.ts` - UI操作・表示追加
@@ -233,6 +284,7 @@ ProgressService ─── 進捗表示
 5. `components/database.ts` - データ構造変更が必要な場合
 
 ### 🎬 **動画管理機能を強化したい**
+
 1. `services/video-service.ts` - 動画操作ロジック変更
 2. `services/api-service.ts` - API連携が必要な場合
 3. `ui/event-handlers.ts` - 個別操作イベント
@@ -240,42 +292,49 @@ ProgressService ─── 進捗表示
 5. `ui/ui-refactored.ts` - UI表示更新
 
 ### 🔍 **キーワード機能を拡張したい**
+
 1. `services/keyword-service.ts` - キーワード管理ロジック
 2. `ui/event-handlers.ts` - キーワード操作イベント
 3. `ui/ui-refactored.ts` - キーワード表示・検索機能
 4. `components/selector.ts` - おすすめ機能が関連する場合
 
 ### 🎨 **UIデザインを変更したい**
+
 1. `ui/styles.ts` - CSS・デザイン変更
 2. `index.html` - HTML構造変更
 3. `ui/ui-refactored.ts` - 動的スタイル・レンダリング変更
 4. `ui/modal-service.ts` - モーダルデザイン変更
 
 ### 💾 **データ構造を変更したい**
+
 1. `components/database.ts` - スキーマ変更・マイグレーション
 2. `src/types/mylist-types.ts` - 型定義更新
 3. `services/*-service.ts` - 対応するサービス更新
 4. `ui/ui-refactored.ts` - UI表示調整
 
 ### 🔄 **インポート・エクスポート機能を追加したい**
+
 1. `services/import-export-service.ts` - 処理ロジック実装
 2. `ui/file-helper-service.ts` - ファイル操作支援
 3. `ui/ui-refactored.ts` - UI操作追加
 4. `ui/progress-service.ts` - 進捗表示が必要な場合
 
 ### 🚀 **パフォーマンスを改善したい**
+
 - **API処理**: `services/api-service.ts` - キューイング・キャッシュ最適化
 - **データベース**: `services/*-service.ts` - クエリ最適化
 - **UI描画**: `ui/ui-refactored.ts` - 仮想化・遅延読み込み
 - **一括処理**: `ui/batch-operations.ts` - バッチサイズ・並列処理調整
 
 ### 🔌 **外部連携を追加したい**
+
 1. 新しいサービスファイルを`services/`に作成
 2. `components/manager-refactored.ts`で統合
 3. `ui/ui-refactored.ts`でUI追加
 4. 必要に応じて`index.ts`で初期化
 
 ### 🛡️ **データベース管理機能を活用したい**
+
 1. `components/database.ts` - データベース層の高度機能
 2. `services/database-management-service.ts` - 管理サービス層
 3. `components/manager-refactored.ts` - 統合API提供
@@ -284,17 +343,20 @@ ProgressService ─── 進捗表示
 ## ⚠️ 重要な注意点
 
 ### 🔥 **必ず確認すべきファイル**
+
 - **データ変更時**: `src/types/mylist-types.ts`, `src/types/video-types.ts` (型定義)
 - **新機能追加時**: `components/manager-refactored.ts` (統合)
 - **UI変更時**: `ui/styles.ts` (スタイル統合)
 
 ### 🚨 **変更時の影響範囲**
+
 - `components/database.ts` 変更 → データマイグレーション必要
 - `components/manager-refactored.ts` 変更 → 全UI機能に影響
 - `ui/ui-refactored.ts` 変更 → 画面表示全体に影響
 - `services/*-service.ts` 変更 → 対応する機能全体に影響
 
 ### 📝 **コーディング規約**
+
 - デバッグログは`window.logger?.debug/info/warn/error`を使用
 - エラーハンドリングは必須（try-catch）
 - 大量ログ回避のため、高頻度処理のログは条件付きで出力
@@ -302,6 +364,7 @@ ProgressService ─── 進捗表示
 - UI分離: UIロジックとビジネスロジックを分離
 
 ### 🔧 **アーキテクチャ原則**
+
 - **サービス指向**: 機能別にサービスクラスで分離
 - **レイヤー分離**: UI ← Manager ← Service ← Database
 - **依存性注入**: コンストラクターでサービス注入
@@ -310,11 +373,12 @@ ProgressService ─── 進捗表示
 ## 🔍 デバッグ・テスト
 
 ### コンソールからのアクセス
+
 ```javascript
 // メインインスタンスにアクセス
-window.Mylist2Manager
-window.Mylist2ManagerUI
-window.Mylist2DB
+window.Mylist2Manager;
+window.Mylist2ManagerUI;
+window.Mylist2DB;
 
 // データベース直接操作（開発用）
 const db = new window.Mylist2DB();
@@ -327,22 +391,22 @@ const mylists = await manager.getAllMylists();
 // 新しいデータベース管理機能の使用例
 // 永続化昇格要求
 const persistResult = await manager.requestDatabasePersistence();
-console.log('永続化要求結果:', persistResult);
+console.log("永続化要求結果:", persistResult);
 
 // データベース健全性チェック
 const health = await manager.performDatabaseHealthCheck();
-console.log('データベース健全性:', health);
+console.log("データベース健全性:", health);
 
 // バックアップ作成
 const backupResult = await manager.createDatabaseBackup();
 if (backupResult.success) {
-  console.log('バックアップ作成成功');
+  console.log("バックアップ作成成功");
   // バックアップデータをファイルに保存することも可能
 }
 
 // ストレージ使用量監視
 const storageUsage = await manager.monitorDatabaseStorageUsage();
-console.log('ストレージ使用量:', storageUsage);
+console.log("ストレージ使用量:", storageUsage);
 
 // 自動健全性チェック開始
 manager.startAutoDatabaseHealthCheck();
@@ -352,11 +416,12 @@ await manager.scheduleAutoDatabaseBackup(24);
 
 // マイグレーション進捗監視
 manager.setDatabaseMigrationProgressCallback((progress) => {
-  console.log('マイグレーション進捗:', progress);
+  console.log("マイグレーション進捗:", progress);
 });
 ```
 
 ### 主要なイベント・状態
+
 - IndexedDBマイグレーション: `database.ts`の`onupgradeneeded`
 - API レート制限: `api-service.ts`の`API_RATE_LIMIT`
 - UI状態管理: `ui-refactored.ts`の`currentMylistId`
@@ -364,6 +429,7 @@ manager.setDatabaseMigrationProgressCallback((progress) => {
 - 永続化状態監視: `database-management-service.ts`の永続化要求・状態確認
 
 ### パフォーマンス確認ポイント
+
 - API 呼び出し頻度: `api-service.ts`のキューイング状況
 - データベース操作: IndexedDBの応答時間
 - UI描画: 大量データ表示時のパフォーマンス
@@ -375,23 +441,27 @@ manager.setDatabaseMigrationProgressCallback((progress) => {
 ### 🛡️ 追加された機能
 
 #### **データベース永続化昇格機能**
+
 - **ブラウザ永続化要求**: ユーザー同意の下でデータベースを永続化
 - **ストレージ容量監視**: 使用量・残量・警告表示
 - **永続化状態確認**: 現在の永続化状態を確認
 
 #### **高度な自動マイグレーション機能**
+
 - **段階的マイグレーション**: バージョン毎の詳細制御
 - **進捗監視**: マイグレーション進捗のリアルタイム表示
 - **失敗時回復**: エラー時の自動回復機能
 - **履歴管理**: マイグレーション履歴の記録・追跡
 
 #### **データベース健全性チェック機能**
+
 - **自動健全性チェック**: 定期的な整合性検証
 - **孤立データ検出**: 参照整合性の確認・修復
 - **メタデータ管理**: データベース状態の詳細記録
 - **警告通知**: 問題発生時の自動通知
 
 #### **バックアップ・復元機能**
+
 - **完全バックアップ**: 全データの JSON 形式バックアップ
 - **自動バックアップ**: スケジュール化された定期バックアップ
 - **復元機能**: バックアップからの完全復元
@@ -418,12 +488,13 @@ await manager.scheduleAutoDatabaseBackup(24);
 ```
 
 ### 📈 効果
+
 - **データ保護**: ブラウザによる自動削除を防止
 - **信頼性向上**: 定期的な健全性チェックでデータ整合性確保
 - **災害復旧**: 自動バックアップによる安全なデータ復旧
 - **運用効率**: 自動監視によるメンテナンス負荷軽減
 
-この文書を参考に、効率的にmylist2プロジェクトを編集できます！ 
+この文書を参考に、効率的にmylist2プロジェクトを編集できます！
 
 ## ☁️ クラウドバックアップ対応（Google Drive）
 
@@ -432,15 +503,18 @@ await manager.scheduleAutoDatabaseBackup(24);
   - ログイン状態を保持するため、取得したアクセストークンは `localStorage` に保存されます（期限切れ時は再認証）。
 
 保存先フォルダとファイル名
+
 - Google Drive: `Mylist2 Backups/Mylist2_YYYYMMDD_HHMMSS.zip`
 - ZIP 内には `Mylist2_*.json` が格納され、復元時に自動解凍・読み込みします。
 
 ## 🚀 パフォーマンス最適化（仮想スクロール・アクションメニュー）
 
 ### 概要
+
 大量の動画（1,000〜10,000件以上）でも快適に動作するよう、以下のパフォーマンス最適化を実装しています。
 
 ### 仮想スクロール（Virtual Scrolling）
+
 - **実装ファイル**: `ui/virtual-scroll.ts`
 - **主要クラス**: `VirtualScrollManager`
 - 表示領域に見えているアイテムのみをDOMにレンダリング
@@ -450,13 +524,14 @@ await manager.scheduleAutoDatabaseBackup(24);
 ```javascript
 // 仮想スクロールの設定
 const virtualScrollManager = new VirtualScrollManager({
-  itemHeight: 92,    // アイテムの高さ（px）
-  bufferSize: 5,     // 上下に追加表示するバッファ件数
-  containerSelector: "#videoList"
+  itemHeight: 92, // アイテムの高さ（px）
+  bufferSize: 5, // 上下に追加表示するバッファ件数
+  containerSelector: "#videoList",
 });
 ```
 
 ### アクションメニュー（ポップオーバー方式）
+
 - **実装ファイル**: `ui/action-menu.ts`
 - **主要クラス**: `ActionMenuManager`
 - 各動画に個別のボタンを配置せず、「⋮」ボタン1つのみ配置
@@ -464,19 +539,22 @@ const virtualScrollManager = new VirtualScrollManager({
 - メニューDOM要素は1つだけ（シングルトン）で使い回し
 
 ### ホバー時遅延表示
+
 - 通常時は「⋮」ボタンも非表示（`opacity: 0`）
 - ホバー時またはフォーカス時に表示（`opacity: 1`）
 - タッチデバイスでは常時表示
 
 ### パフォーマンス効果
-| 指標 | 最適化前 | 最適化後 |
-|------|----------|----------|
-| DOM要素数（10,000件） | 50,000+ | 50〜100 |
-| イベントリスナー数 | 50,000+ | 10未満 |
-| 初期表示時間 | 数秒〜十数秒 | 100ms以下 |
-| スクロール時FPS | 10〜30 | 60 |
+
+| 指標                  | 最適化前     | 最適化後  |
+| --------------------- | ------------ | --------- |
+| DOM要素数（10,000件） | 50,000+      | 50〜100   |
+| イベントリスナー数    | 50,000+      | 10未満    |
+| 初期表示時間          | 数秒〜十数秒 | 100ms以下 |
+| スクロール時FPS       | 10〜30       | 60        |
 
 ### 関連ファイル
+
 - `ui/virtual-scroll.ts` - 仮想スクロールマネージャー
 - `ui/action-menu.ts` - アクションメニューマネージャー
 - `ui/styles.ts` - 新スタイル（`VIRTUAL_SCROLL_ACTION_MENU_STYLES`）
@@ -484,6 +562,7 @@ const virtualScrollManager = new VirtualScrollManager({
 - `ui/batch-operations.ts` - 一括操作（データベース）
 
 ### 制約事項
+
 - ブラウザの検索機能（Ctrl+F）は仮想スクロール外の要素には効かない
 - アイテムの高さは固定（92px）
 - 検索フィルターはデータ配列側でフィルター適用

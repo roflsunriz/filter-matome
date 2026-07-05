@@ -8,10 +8,7 @@ import type {
   ManagerSettings,
   VideoLinkTarget,
 } from "@/types/mylist-types";
-import {
-  DBVideo as VideoInfo,
-  VideoAvailabilityStatus,
-} from "@/types/video-types";
+import { DBVideo as VideoInfo } from "@/types/video-types";
 import { hydrateMaterialIconImages } from "@/common/material-icons";
 
 import { ModalService } from "@/mylist2/ui/modal-service";
@@ -35,6 +32,13 @@ import {
   getActionMenuManager,
   type ActionMenuContext,
 } from "@/mylist2/ui/action-menu";
+import {
+  getOrCreateVideoDetailsModal,
+  openVideoDetailsModal,
+  renderVideoTags,
+} from "@/mylist2/ui/video-details-modal";
+import { createAvailabilityBadge } from "@/mylist2/ui/availability-badge";
+import { renderMylistListItems } from "@/mylist2/ui/mylist-list-renderer";
 
 export class Mylist2ManagerUI {
   private manager: Mylist2Manager;
@@ -229,39 +233,14 @@ export class Mylist2ManagerUI {
       }),
     );
 
-    mylistList.innerHTML = mylistsWithCount
-      .map((mylist) => {
-        // idがundefinedの場合のチェック
-        if (mylist.id === undefined) {
-          return "";
-        }
-        return `
-            <div class="mylist-item ${this.currentMylistId === mylist.id ? "active" : ""}" data-id="${
-              mylist.id
-            }">
-                <div class="mylist-info">
-                    <div class="mylist-details">
-                        <span class="mylist-name">${this.escapeAttribute(mylist.name)}</span>
-                        <span class="mylist-date">${new Date(
-                          mylist.createdAt,
-                        ).toLocaleDateString()}</span>
-                    </div>
-                    <span class="mylist-count-mylist-tab">${mylist.videoCount}件</span>
-                </div>
-            </div>
-          `;
-      })
-      .join("");
-
-    // マイリストクリックイベントの追加
-    mylistList.querySelectorAll(".mylist-item").forEach((item) => {
-      item.addEventListener("click", () => {
-        const id = item.getAttribute("data-id");
-        if (id) {
-          void this.selectMylist(parseInt(id));
-        }
-      });
-    });
+    renderMylistListItems(
+      mylistList,
+      mylistsWithCount,
+      this.currentMylistId,
+      (id) => {
+        void this.selectMylist(id);
+      },
+    );
   }
 
   async selectMylist(mylistId: number): Promise<void> {
@@ -632,30 +611,66 @@ export class Mylist2ManagerUI {
       const fallbackElement = document.createElement("div");
       fallbackElement.className = "video-item";
       const linkCtx = { authorName: video.authorName, title: video.title };
-      const apiCheckAttrs = needsAvailabilityCheck(video.originalId, linkCtx)
-        ? ` data-needs-api-check="true" data-video-id="${video.originalId}"`
-        : "";
-      fallbackElement.innerHTML = `
-        <input type="checkbox" class="video-select" />
-        <img class="video-thumbnail" src="${video.thumbnailUrl}" alt="サムネイル" />
-        <div class="video-info">
-          <div class="video-title">
-            <a href="${buildVideoUrl(video.originalId, linkCtx)}" target="_blank"${apiCheckAttrs}>${video.title}</a>
-            ${this.getAvailabilityBadgeHtml(video)}
-          </div>
-          <div class="video-stats">
-            <span class="view-count">再生数: ${video.viewCount.toLocaleString()}</span>
-            <span class="comment-count">コメント数: ${video.commentCount.toLocaleString()}</span>
-            <span class="mylist-count">マイリスト数: ${video.mylistCount.toLocaleString()}</span>
-            <span class="video-length">${Math.floor(video.length / 60)}分${video.length % 60}秒</span>
-          </div>
-          <div class="video-meta">
-            <span class="video-author">投稿者: ${video.authorName}</span>
-            <span class="video-upload-date">投稿日: ${new Date(video.uploadedAt).toLocaleDateString()}</span>
-          </div>
-        </div>
-        <button class="action-trigger" aria-label="アクションメニュー" title="アクション">⋮</button>
-      `;
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "video-select";
+      const thumbnail = document.createElement("img");
+      thumbnail.className = "video-thumbnail";
+      thumbnail.src = video.thumbnailUrl;
+      thumbnail.alt = "サムネイル";
+      const info = document.createElement("div");
+      info.className = "video-info";
+      const title = document.createElement("div");
+      title.className = "video-title";
+      const titleLink = document.createElement("a");
+      titleLink.href = buildVideoUrl(video.originalId, linkCtx);
+      titleLink.target = "_blank";
+      titleLink.textContent = video.title;
+      if (needsAvailabilityCheck(video.originalId, linkCtx)) {
+        titleLink.dataset.needsApiCheck = "true";
+        titleLink.dataset.videoId = video.originalId;
+      }
+      title.appendChild(titleLink);
+      const badge = createAvailabilityBadge(video);
+      if (badge) title.appendChild(badge);
+      const stats = document.createElement("div");
+      stats.className = "video-stats";
+      const meta = document.createElement("div");
+      meta.className = "video-meta";
+      [
+        ["view-count", `再生数: ${video.viewCount.toLocaleString()}`],
+        ["comment-count", `コメント数: ${video.commentCount.toLocaleString()}`],
+        ["mylist-count", `マイリスト数: ${video.mylistCount.toLocaleString()}`],
+        [
+          "video-length",
+          `${Math.floor(video.length / 60)}分${video.length % 60}秒`,
+        ],
+      ].forEach(([className, text]) => {
+        const span = document.createElement("span");
+        span.className = className;
+        span.textContent = text;
+        stats.appendChild(span);
+      });
+      [
+        ["video-author", `投稿者: ${video.authorName}`],
+        [
+          "video-upload-date",
+          `投稿日: ${new Date(video.uploadedAt).toLocaleDateString()}`,
+        ],
+      ].forEach(([className, text]) => {
+        const span = document.createElement("span");
+        span.className = className;
+        span.textContent = text;
+        meta.appendChild(span);
+      });
+      const actionButton = document.createElement("button");
+      actionButton.className = "action-trigger";
+      actionButton.type = "button";
+      actionButton.setAttribute("aria-label", "アクションメニュー");
+      actionButton.title = "アクション";
+      actionButton.textContent = "⋮";
+      info.append(title, stats, meta);
+      fallbackElement.append(checkbox, thumbnail, info, actionButton);
       fallbackElement.dataset.id = video.originalId;
       fallbackElement.dataset.compositeId = video.id;
       return fallbackElement;
@@ -716,7 +731,7 @@ export class Mylist2ManagerUI {
         titleLink.dataset.videoId = video.originalId;
       }
       titleElement.appendChild(titleLink);
-      const badge = this.createAvailabilityBadge(video);
+      const badge = createAvailabilityBadge(video);
       if (badge) {
         titleElement.appendChild(badge);
       }
@@ -728,80 +743,6 @@ export class Mylist2ManagerUI {
     hydrateMaterialIconImages(item);
 
     return item;
-  }
-
-  private createAvailabilityBadge(video: VideoInfo): HTMLElement | null {
-    const label = this.getAvailabilityLabel(video.availabilityStatus);
-    if (!label) return null;
-
-    const badge = document.createElement("span");
-    badge.className = `cml2-availability-badge status-${video.availabilityStatus}`;
-    badge.textContent = label;
-    const checkedAt = video.availabilityCheckedAt
-      ? new Date(video.availabilityCheckedAt).toLocaleString()
-      : "未確認";
-    const helpText = this.getAvailabilityBadgeHelpText(
-      label,
-      checkedAt,
-      video.availabilityReason,
-    );
-    badge.title = helpText;
-    badge.setAttribute("aria-label", helpText);
-    return badge;
-  }
-
-  private getAvailabilityBadgeHtml(video: VideoInfo): string {
-    const label = this.getAvailabilityLabel(video.availabilityStatus);
-    if (!label) return "";
-    const checkedAt = video.availabilityCheckedAt
-      ? new Date(video.availabilityCheckedAt).toLocaleString()
-      : "未確認";
-    const helpText = this.escapeAttribute(
-      this.getAvailabilityBadgeHelpText(
-        label,
-        checkedAt,
-        video.availabilityReason,
-      ),
-    );
-    return `<span class="cml2-availability-badge status-${video.availabilityStatus}" title="${helpText}" aria-label="${helpText}">${label}</span>`;
-  }
-
-  private getAvailabilityBadgeHelpText(
-    label: string,
-    checkedAt: string,
-    reason?: string,
-  ): string {
-    return [
-      `公開状態: ${label}`,
-      `確認日時: ${checkedAt}`,
-      reason ? `理由: ${reason}` : "",
-      "キャッシュ済み動画がローカルにあり、かつ「動画リンク先」が「ローカルプレーヤー(video-player)」に設定されている場合のみ、video-playerにリダイレクトされてローカルで再生できます。",
-    ]
-      .filter(Boolean)
-      .join("\n");
-  }
-
-  private escapeAttribute(value: string): string {
-    const div = document.createElement("div");
-    div.textContent = value;
-    return div.innerHTML.replace(/"/g, "&quot;");
-  }
-
-  private getAvailabilityLabel(
-    status?: VideoAvailabilityStatus,
-  ): string | null {
-    switch (status) {
-      case "deleted":
-        return "削除";
-      case "private":
-        return "非公開";
-      case "unavailable":
-        return "取得不可";
-      case "unknown":
-        return "状態不明";
-      default:
-        return null;
-    }
   }
 
   private setVideoStats(item: HTMLElement, video: VideoInfo): void {
@@ -845,24 +786,66 @@ export class Mylist2ManagerUI {
       const fallbackElement = document.createElement("div");
       fallbackElement.className = "video-item keyword-item";
       const encodedKeyword = encodeURIComponent(keyword.keyword);
-      fallbackElement.innerHTML = `
-        <input type="checkbox" class="video-select" />
-        <div class="keyword-icon"><img class="material-icon icon-dark" data-style="outlined" data-icon="search" alt="search" loading="lazy"/></div>
-        <div class="video-info">
-          <div class="video-title">
-            <span class="keyword-text">${keyword.keyword}</span>
-          </div>
-          <div class="keyword-meta">
-            <span class="keyword-added-date">追加日時: ${new Date(keyword.addedAt).toLocaleString()}</span>
-          </div>
-          <div class="keyword-links">
-            <a href="https://www.nicovideo.jp/search/${encodedKeyword}" class="keyword-search" target="_blank">キーワード検索</a>
-            <a href="https://www.nicovideo.jp/tag/${encodedKeyword}" class="tag-search" target="_blank">タグ検索</a>
-            <a href="https://www.nicovideo.jp/mylist_search/${encodedKeyword}" class="mylist-search" target="_blank">マイリスト検索</a>
-          </div>
-        </div>
-        <button class="action-trigger" aria-label="アクションメニュー" title="アクション">⋮</button>
-      `;
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "video-select";
+      const icon = document.createElement("div");
+      icon.className = "keyword-icon";
+      const iconImg = document.createElement("img");
+      iconImg.className = "material-icon icon-dark";
+      iconImg.dataset.style = "outlined";
+      iconImg.dataset.icon = "search";
+      iconImg.alt = "search";
+      iconImg.loading = "lazy";
+      icon.appendChild(iconImg);
+      const info = document.createElement("div");
+      info.className = "video-info";
+      const title = document.createElement("div");
+      title.className = "video-title";
+      const keywordText = document.createElement("span");
+      keywordText.className = "keyword-text";
+      keywordText.textContent = keyword.keyword;
+      title.appendChild(keywordText);
+      const meta = document.createElement("div");
+      meta.className = "keyword-meta";
+      const addedDate = document.createElement("span");
+      addedDate.className = "keyword-added-date";
+      addedDate.textContent = `追加日時: ${new Date(keyword.addedAt).toLocaleString()}`;
+      meta.appendChild(addedDate);
+      const links = document.createElement("div");
+      links.className = "keyword-links";
+      [
+        [
+          "keyword-search",
+          `https://www.nicovideo.jp/search/${encodedKeyword}`,
+          "キーワード検索",
+        ],
+        [
+          "tag-search",
+          `https://www.nicovideo.jp/tag/${encodedKeyword}`,
+          "タグ検索",
+        ],
+        [
+          "mylist-search",
+          `https://www.nicovideo.jp/mylist_search/${encodedKeyword}`,
+          "マイリスト検索",
+        ],
+      ].forEach(([className, href, text]) => {
+        const anchor = document.createElement("a");
+        anchor.className = className;
+        anchor.href = href;
+        anchor.target = "_blank";
+        anchor.textContent = text;
+        links.appendChild(anchor);
+      });
+      const actionButton = document.createElement("button");
+      actionButton.className = "action-trigger";
+      actionButton.type = "button";
+      actionButton.setAttribute("aria-label", "アクションメニュー");
+      actionButton.title = "アクション";
+      actionButton.textContent = "⋮";
+      info.append(title, meta, links);
+      fallbackElement.append(checkbox, icon, info, actionButton);
       if (keyword.id !== undefined) {
         fallbackElement.dataset.id = keyword.id.toString();
       }
@@ -1618,139 +1601,51 @@ export class Mylist2ManagerUI {
     memoText: string = "",
   ): Promise<void> {
     await Promise.resolve();
-    const modalId = "videoDetailsModal";
-    let modal = document.getElementById(modalId);
-    if (!modal) {
-      const html = `
-        <div id="${modalId}" class="cml2-modal" style="display:none">
-          <div class="cml2-modal-content" role="dialog" aria-modal="true">
-            <h2 class="cml2-modal-title">動画詳細</h2>
-            <div class="cml2-modal-body video-details-body">
-              <div class="video-details-section">
-                <strong>説明</strong>
-                <div class="video-description" style="white-space:pre-wrap"></div>
-              </div>
-              <div class="video-details-section" style="margin-top:12px">
-                <strong>タグ</strong>
-                <div class="video-tags"></div>
-              </div>
-              <div class="video-details-section" style="margin-top:12px">
-                <strong>メモ</strong>
-                <textarea class="video-memo" rows="4" style="width:100%" placeholder="メモを入力..."></textarea>
-              </div>
-            </div>
-            <div class="cml2-modal-footer">
-              <button type="button" class="cml2-btn save-memo-button">メモを保存</button>
-              <button type="button" class="cml2-btn close-button">閉じる</button>
-            </div>
-          </div>
-        </div>`;
-      document.body.insertAdjacentHTML("beforeend", html);
-      const found = document.getElementById(modalId);
-      if (found) {
-        modal = found;
-      }
-    }
-    if (!modal) return;
-    const descEl = modal.querySelector(".video-description");
-    const tagsEl = modal.querySelector(".video-tags");
-    const memoEl = modal.querySelector<HTMLTextAreaElement>(".video-memo");
-    if (descEl instanceof HTMLElement) {
-      const text = video.description || "(説明なし)";
-      descEl.innerHTML = sanitizeDescriptionHtml(text);
+    const modalElements = getOrCreateVideoDetailsModal();
+    if (!modalElements) return;
+    const { description, tags, memo } = modalElements;
+    const text = video.description || "(説明なし)";
+    description.innerHTML = sanitizeDescriptionHtml(text);
 
-      // 視聴ページからのリッチ説明文をまだ取得していない場合、遅延エンリッチメント
-      if (video.descriptionSource !== "watch" && compositeId) {
-        const loadingEl = document.createElement("div");
-        loadingEl.style.cssText =
-          "color:#888;font-size:12px;margin-top:6px;font-style:italic";
-        loadingEl.textContent = "完全な説明文を取得中…";
-        descEl.after(loadingEl);
+    // 視聴ページからのリッチ説明文をまだ取得していない場合、遅延エンリッチメント
+    if (video.descriptionSource !== "watch" && compositeId) {
+      const loadingEl = document.createElement("div");
+      loadingEl.style.cssText =
+        "color:#888;font-size:12px;margin-top:6px;font-style:italic";
+      loadingEl.textContent = "完全な説明文を取得中…";
+      description.after(loadingEl);
 
-        void this.enrichDescription(
-          video.originalId,
-          compositeId,
-          descEl,
-          loadingEl,
-        );
-      }
-    }
-    if (tagsEl) {
-      tagsEl.textContent = "(タグなし)";
-    }
-    if (memoEl) {
-      memoEl.value = memoText || "";
-    }
-    // 表示とクローズ処理
-    // タグを辞書リンクに差し替え（上書き）
-    if (tagsEl instanceof HTMLElement) {
-      const tags = video.tags && video.tags.length > 0 ? video.tags : [];
-      if (tags.length > 0) {
-        tagsEl.replaceChildren(
-          ...tags.map((t) => {
-            const a = document.createElement("a");
-            a.className = "cml2-tag";
-            a.href = `https://dic.nicovideo.jp/a/${encodeURIComponent(t)}`;
-            a.target = "_blank";
-            a.rel = "noopener noreferrer";
-            a.textContent = t;
-            return a;
-          }),
-        );
-      } else {
-        tagsEl.textContent = "(タグなし)";
-      }
-    }
-
-    modal.style.display = "flex";
-    const closeBtn = modal.querySelector(".close-button");
-    const saveBtn = modal.querySelector(".save-memo-button");
-    const content = modal.querySelector(".cml2-modal-content");
-    const handleClose = () => {
-      modal.style.display = "none";
-      document.removeEventListener("keydown", onKeydown);
-      modal.removeEventListener("click", onBackdrop);
-    };
-    const onKeydown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
-    };
-    const onBackdrop = (e: MouseEvent) => {
-      if (!content) return;
-      if (!content.contains(e.target as Node)) handleClose();
-    };
-    if (closeBtn)
-      closeBtn.addEventListener("click", handleClose, { once: true });
-    if (saveBtn && memoEl) {
-      saveBtn.addEventListener(
-        "click",
-        () => {
-          void (async () => {
-            const text = memoEl.value || "";
-            if (compositeId) {
-              try {
-                await this.manager.updateVideoMemo(compositeId, text);
-                const item = document.querySelector(
-                  `.video-item[data-composite-id="${compositeId}"]`,
-                );
-                if (item) {
-                  (item as HTMLElement).setAttribute("data-memo", text);
-                }
-                await this.showCustomAlert("メモを保存しました");
-              } catch {
-                await this.showCustomAlert("メモの保存に失敗しました");
-              }
-            } else {
-              await this.showCustomAlert(
-                "メモの保存対象が特定できませんでした",
-              );
-            }
-          })();
-        },
-        { once: true },
+      void this.enrichDescription(
+        video.originalId,
+        compositeId,
+        description,
+        loadingEl,
       );
     }
-    document.addEventListener("keydown", onKeydown);
-    modal.addEventListener("click", onBackdrop);
+    memo.value = memoText || "";
+    renderVideoTags(
+      tags,
+      video.tags && video.tags.length > 0 ? video.tags : [],
+    );
+    openVideoDetailsModal(modalElements, async (text) => {
+      if (!compositeId) {
+        await this.showCustomAlert("メモの保存対象が特定できませんでした");
+        return;
+      }
+
+      try {
+        await this.manager.updateVideoMemo(compositeId, text);
+        const item = document.querySelector(
+          `.video-item[data-composite-id="${compositeId}"]`,
+        );
+        if (item) {
+          (item as HTMLElement).setAttribute("data-memo", text);
+        }
+        await this.showCustomAlert("メモを保存しました");
+      } catch {
+        await this.showCustomAlert("メモの保存に失敗しました");
+      }
+    });
   }
 
   /**
