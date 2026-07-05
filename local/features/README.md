@@ -104,7 +104,7 @@ dist/*.es.js ─── 本番ファイル出力
 
 #### `src/video-player/` - 動画プレイヤー
 - **役割**: ニコニコ動画プレイヤーの機能拡張・制御
-- **主要ファイル**: `index.ts` (29KB), `ui/player-controls.ts` (77KB), `core/comment-renderer.ts` (36KB)
+- **主要ファイル**: `index.ts`, `ui/player-controls.ts`, `core/comment-overlay-comment-system.ts`, `core/comment-system.ts`
 - **編集対象**: プレイヤー機能追加、コメント描画改善、UI拡張
 - **📚 詳細**: `src/video-player/README.md`
 
@@ -215,10 +215,10 @@ dist/*.es.js ─── 本番ファイル出力
 ### 🚀 **パフォーマンスを改善したい**
 
 #### 🎯 **対象別最適化**
-1. **コメント描画**: `src/video-player/core/comment-renderer.ts`
+1. **コメント描画**: `src/video-player/core/comment-overlay-comment-system.ts`
 2. **フィルタリング**: `src/comment-filter2/filter/json-comment-filter.ts`
 3. **UI応答**: 各プロジェクトのUI関連ファイル
-4. **メモリ**: `src/video-player/core/cache-manager.ts`
+4. **メモリ/永続化**: `src/video-player/core/database-manager.ts`
 
 ## ⚠️ 重要な注意点
 

@@ -241,7 +241,7 @@ export class Mylist2ManagerUI {
             }">
                 <div class="mylist-info">
                     <div class="mylist-details">
-                        <span class="mylist-name">${mylist.name}</span>
+                        <span class="mylist-name">${this.escapeAttribute(mylist.name)}</span>
                         <span class="mylist-date">${new Date(
                           mylist.createdAt,
                         ).toLocaleDateString()}</span>
@@ -448,9 +448,10 @@ export class Mylist2ManagerUI {
       void (async () => {
         try {
           const available = await checkVideoAvailability(videoId);
-          const url = available
-            ? `https://www.nicovideo.jp/watch/${videoId}`
-            : `/local/features/dist/src/video-player/standalone/index.html?videoId=${encodeURIComponent(videoId)}`;
+          const url =
+            available === false
+              ? `/local/features/dist/src/video-player/standalone/index.html?videoId=${encodeURIComponent(videoId)}`
+              : `https://www.nicovideo.jp/watch/${videoId}`;
           window.open(url, "_blank");
         } finally {
           el.textContent = originalText;
@@ -1675,16 +1676,7 @@ export class Mylist2ManagerUI {
       }
     }
     if (tagsEl) {
-      const tags = video.tags && video.tags.length > 0 ? video.tags : [];
-      tagsEl.innerHTML =
-        tags.length > 0
-          ? tags
-              .map(
-                (t) =>
-                  `<span class="tag" style="display:inline-block;background:#2a2b2c;border:1px solid #444;border-radius:12px;padding:2px 8px;margin:2px 6px 0 0;">${t}</span>`,
-              )
-              .join("")
-          : "(タグなし)";
+      tagsEl.textContent = "(タグなし)";
     }
     if (memoEl) {
       memoEl.value = memoText || "";
@@ -1694,20 +1686,19 @@ export class Mylist2ManagerUI {
     if (tagsEl instanceof HTMLElement) {
       const tags = video.tags && video.tags.length > 0 ? video.tags : [];
       if (tags.length > 0) {
-        const anchors = tags
-          .map((t) => {
+        tagsEl.replaceChildren(
+          ...tags.map((t) => {
             const a = document.createElement("a");
             a.className = "cml2-tag";
             a.href = `https://dic.nicovideo.jp/a/${encodeURIComponent(t)}`;
             a.target = "_blank";
             a.rel = "noopener noreferrer";
             a.textContent = t;
-            return a.outerHTML;
-          })
-          .join("");
-        tagsEl.innerHTML = anchors;
+            return a;
+          }),
+        );
       } else {
-        tagsEl.innerHTML = "(タグなし)";
+        tagsEl.textContent = "(タグなし)";
       }
     }
 

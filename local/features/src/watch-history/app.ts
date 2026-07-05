@@ -12,6 +12,7 @@ import {
 } from "@/common/material-icons";
 import { CommonHeader } from "@/common/header";
 import { logger } from "@/common/logger";
+import { createVideoDetailHTML } from "@/watch-history/video-detail-renderer";
 import type {
   WatchHistoryEntry,
   SortBy,
@@ -1884,82 +1885,12 @@ class WatchHistoryApp {
 
     const modalVideoInfo = this.elements["modal-video-info"];
     if (modalVideoInfo) {
-      modalVideoInfo.innerHTML = this.createVideoDetailHTML(entry);
+      modalVideoInfo.innerHTML = createVideoDetailHTML(entry, {
+        formatDuration: this.formatDuration.bind(this),
+      });
     }
 
     this.elements["video-detail-modal"]?.classList.remove("hidden");
-  }
-
-  /**
-   * 動画詳細HTMLを作成する
-   */
-  private createVideoDetailHTML(entry: WatchHistoryEntry): string {
-    const watchedAtDate = new Date(entry.watchedAt);
-    const firstWatchedAtDate = new Date(entry.firstWatchedAt);
-    let progressPercent = 0;
-    if (entry.lengthSec > 0) {
-      const rawPercent = (entry.lastPosition / entry.lengthSec) * 100;
-      progressPercent =
-        rawPercent >= 95 ? 100 : Math.min(Math.round(rawPercent), 100);
-    }
-
-    return `
-      <div class="video-detail-grid">
-        <div class="video-detail-thumbnail">
-          <img src="${entry.thumbnailUrl}" alt="${entry.title}" onerror="this.src='/default-thumbnail.jpg'">
-        </div>
-        <div class="video-detail-info">
-          <div class="info-row">
-            <span class="info-label">動画ID:</span>
-            <span class="info-value">${entry.videoId}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">投稿者:</span>
-            <span class="info-value">${this.escapeHtml(entry.ownerName)}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">再生時間:</span>
-            <span class="info-value">${this.formatDuration(entry.lengthSec)}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">視聴進捗:</span>
-            <span class="info-value">${progressPercent}% (${this.formatDuration(entry.lastPosition)})</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">視聴回数:</span>
-            <span class="info-value">${entry.watchCount}回</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">初回視聴:</span>
-            <span class="info-value">${firstWatchedAtDate.toLocaleString("ja-JP")}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">最終視聴:</span>
-            <span class="info-value">${watchedAtDate.toLocaleString("ja-JP")}</span>
-          </div>
-          ${
-            (entry.tags ?? []).length > 0
-              ? `
-            <div class="info-row">
-              <span class="info-label">タグ:</span>
-              <span class="info-value">${(entry.tags ?? []).map((tag) => `<span class="tag">${this.escapeHtml(tag)}</span>`).join(" ")}</span>
-            </div>
-          `
-              : ""
-          }
-          ${
-            entry.memo
-              ? `
-            <div class="info-row">
-              <span class="info-label">メモ:</span>
-              <span class="info-value">${this.escapeHtml(entry.memo)}</span>
-            </div>
-          `
-              : ""
-          }
-        </div>
-      </div>
-    `;
   }
 
   /**

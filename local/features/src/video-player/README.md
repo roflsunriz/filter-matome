@@ -24,7 +24,6 @@ features/src/video-player/
 │   ├── dom-utils.ts                      # DOM操作ユーティリティ (5KB)
 │   ├── indexed-db-utils.ts               # IndexedDB操作 (永続化昇格機能対応) (7KB)
 │   └── toast.ts                          # トースト通知 (9KB)
-└── integration-test.ts                   # 🆕 統合テスト・動作検証 (12KB)
 ```
 
 ## 🏗️ アーキテクチャ概要
@@ -166,11 +165,6 @@ database-manager.ts ─── データベース統合管理
 - **機能**: 昇格機能統合、フォールバック機能、新旧API橋渡し
 - **編集タイミング**: 昇格機能統合、互換性問題解決、新API追加
 
-#### 🆕 `integration-test.ts` - 統合テスト・動作検証
-- **役割**: システム全体の動作検証・品質保証
-- **機能**: 基本機能テスト、後方互換性テスト、マイグレーションテスト、新機能テスト
-- **編集タイミング**: 新機能追加時、バグ修正時、品質向上時
-
 #### `utils/toast.ts` - トースト通知
 - **役割**: ユーザー通知・フィードバック表示
 - **機能**: 情報・成功・警告・エラー通知
@@ -185,8 +179,8 @@ database-manager.ts ─── データベース統合管理
 4. `index.ts` - 機能統合・初期化処理
 
 ### 🎨 **コメント描画を改善したい**
-- **メイン対象**: `core/comment-renderer.ts`
-- **補助対象**: `core/comment-system.ts`, `config/constants.ts`
+- **メイン対象**: `core/comment-overlay-comment-system.ts`
+- **補助対象**: `core/comment-system.ts`, `ui/comment-list.ts`, `config/constants.ts`
 - **設定UI**: `ui/player-controls.ts`
 
 ### 🔧 **プレーヤーUIをカスタマイズしたい**
@@ -221,21 +215,21 @@ database-manager.ts ─── データベース統合管理
 ### 🆕 **永続化機能を拡張したい**
 - **メイン**: `core/database-manager.ts`
 - **設定**: `config/database-config.ts`
-- **型定義**: `types/database-types.ts`
-- **テスト**: `integration-test.ts`
+- **型定義**: `src/types/database-types.ts`, `src/types/video-types.ts`
+- **テスト**: 追加する場合は `local/features/tests/` 配下に配置
 
 ### 🆕 **マイグレーション機能を変更したい**
 - **メイン**: `core/migration-manager.ts`
 - **設定**: `config/database-config.ts` (MIGRATION_CONFIGS)
-- **テスト**: `integration-test.ts`
+- **テスト**: 追加する場合は `local/features/tests/` 配下に配置
 - **統合**: `core/database-manager.ts`
 
 ### 🆕 **新しいデータ種類を追加したい**
 1. `config/database-config.ts` - ストア定義・データ型追加
 2. `core/migration-manager.ts` - マイグレーション戦略
 3. `core/database-manager.ts` - CRUD操作追加
-4. `types/database-types.ts` - 型定義
-5. `integration-test.ts` - テスト追加
+4. `src/types/database-types.ts` / `src/types/video-types.ts` - 型定義
+5. `local/features/tests/` - テスト追加
 
 ## ⚠️ 重要な注意点
 

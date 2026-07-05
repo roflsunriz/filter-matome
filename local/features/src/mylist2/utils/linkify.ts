@@ -57,11 +57,11 @@ const availabilityCache = new Map<string, boolean>();
 
 /**
  * ext.nicovideo.jp/api/getthumbinfo で動画の公開状態を確認する。
- * @returns true = 公開中（公式プレーヤーで再生可能）, false = 削除済みまたは非公開
+ * @returns true = 公開中（公式プレーヤーで再生可能）, false = 削除済みまたは非公開, null = 通信失敗などで判定不能
  */
 export const checkVideoAvailability = async (
   videoId: string,
-): Promise<boolean> => {
+): Promise<boolean | null> => {
   const cached = availabilityCache.get(videoId);
   if (cached !== undefined) return cached;
 
@@ -76,9 +76,9 @@ export const checkVideoAvailability = async (
     const available = status === "ok";
     availabilityCache.set(videoId, available);
     return available;
-  } catch {
-    availabilityCache.set(videoId, false);
-    return false;
+  } catch (error) {
+    window.logger?.warn("[mylist2] 動画公開状態の確認に失敗しました:", error);
+    return null;
   }
 };
 

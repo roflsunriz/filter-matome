@@ -8,6 +8,7 @@ features/src/common/
 ├── common.ts                             # API通信・データ取得ヘルパー (5.0KB)
 ├── header.ts                             # 共通ヘッダーコンポーネント (Shadow DOM版) (19KB)
 ├── logger.ts                             # ログ機能・デバッグ支援 (4.5KB)
+├── indexed-db-emergency-backup.ts        # IndexedDB再作成前の緊急バックアップ
 ├── material-icons.ts                     # マテリアルアイコン統合ヘルパー (9KB)
 ├── toastr.ts                             # 通知システム・トースト表示 (19KB)
 └── css-constants.ts                      # 共通CSS定数・スタイル定義 (1.7KB)
@@ -31,6 +32,7 @@ index.ts ─── 自動初期化・スタイル適用
     ├── common.ts ─── API通信・データ取得
     ├── toastr.ts ─── ユーザー通知
     ├── logger.ts ─── デバッグ情報出力
+    ├── indexed-db-emergency-backup.ts ─── IndexedDB緊急退避
     └── material-icons.ts ─── アイコン表示
 ```
 

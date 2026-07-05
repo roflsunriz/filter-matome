@@ -1,6 +1,7 @@
 // データベース永続化昇格機能・自動マイグレーション機能付きMylist2DB
 import { MylistInfo, KeywordInfo } from "@/types/mylist-types";
 import { DBVideo } from "@/types/video-types";
+import { saveIndexedDBEmergencyBackup } from "@/common/indexed-db-emergency-backup";
 
 export interface MigrationStep {
   version: number;
@@ -394,7 +395,10 @@ export class Mylist2DB {
       this.validateSchema(db);
       return db;
     } catch (error) {
-      db?.close();
+      if (db) {
+        await this.createEmergencyBackup(db, "recreate-before-delete");
+        db.close();
+      }
       window.logger?.warn(
         "[Mylist2DB] IndexedDBの破損を検出したため再作成します:",
         error,
@@ -577,6 +581,17 @@ export class Mylist2DB {
       request.onerror = () => reject(new Error(this.toMessage(request.error)));
       request.onblocked = () =>
         reject(new Error("IndexedDB deletion was blocked"));
+    });
+  }
+
+  private async createEmergencyBackup(
+    db: IDBDatabase,
+    reason: string,
+  ): Promise<void> {
+    await saveIndexedDBEmergencyBackup(db, {
+      storageKeyPrefix: "mylist2-emergency-backup",
+      reason,
+      logLabel: "Mylist2DB",
     });
   }
 

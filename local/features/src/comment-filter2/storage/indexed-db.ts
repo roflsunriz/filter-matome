@@ -25,6 +25,7 @@ import {
   LegacyConverter,
   LegacyCommentFilterSettings,
 } from "@/comment-filter2/utils/legacy-converter";
+import { saveIndexedDBEmergencyBackup } from "@/common/indexed-db-emergency-backup";
 
 export class FilterStorage {
   private db: IDBDatabase | null = null;
@@ -129,6 +130,7 @@ export class FilterStorage {
         "[CommentFilter2] IndexedDBの破損を検出したため再作成します:",
         error,
       );
+      await this.createEmergencyBackup("recreate-before-delete");
       await this.deleteDatabase();
       await this.initialize(true);
     }
@@ -171,6 +173,35 @@ export class FilterStorage {
       request.onblocked = () =>
         reject(new Error("IndexedDB deletion was blocked"));
     });
+  }
+
+  private async createEmergencyBackup(reason: string): Promise<void> {
+    let db: IDBDatabase | null = null;
+    try {
+      db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open(this.dbName);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () =>
+          reject(
+            request.error instanceof Error
+              ? request.error
+              : new Error(String(request.error)),
+          );
+      });
+
+      await saveIndexedDBEmergencyBackup(db, {
+        storageKeyPrefix: "comment-filter2-emergency-backup",
+        reason,
+        logLabel: "CommentFilter2",
+      });
+    } catch (backupError) {
+      window.logger?.error(
+        "[CommentFilter2] IndexedDB再作成前の緊急バックアップに失敗しました:",
+        backupError,
+      );
+    } finally {
+      db?.close();
+    }
   }
 
   /**

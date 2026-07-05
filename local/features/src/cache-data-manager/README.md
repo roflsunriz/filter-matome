@@ -253,7 +253,7 @@ EventCoordinator ─── ユーザー操作待機
 - **機能**: プログレスバー表示、エラー表示、進行率更新
 - **編集タイミング**: UI改善、新しい進行状況表示
 
-#### `types/index.ts` - 型定義
+#### `src/types/cache-data-manager-types.ts` - 型定義
 - **役割**: TypeScript型定義の統合管理
 - **機能**: VideoData、APIResponse、EventCallback等の型定義
 - **編集タイミング**: 新しいデータ構造追加、型安全性向上
@@ -261,7 +261,7 @@ EventCoordinator ─── ユーザー操作待機
 ## 🎯 目的別編集ガイド
 
 ### 💡 **新しい動画メタデータを追加したい**
-1. `types/index.ts` - VideoData型に新しいフィールド追加
+1. `src/types/cache-data-manager-types.ts` - VideoData型に新しいフィールド追加
 2. `loaders/load-data-from-memory.ts` - データ正規化ロジック更新
 3. `templates/card-template.ts` - 表示要素追加
 4. `builders/ui-builder.ts` - カード生成ロジック更新
@@ -298,11 +298,11 @@ EventCoordinator ─── ユーザー操作待機
 1. `templates/card-template.ts` - ボタンHTML追加
 2. `coordinators/event-coordinator.ts` - クリックイベント処理追加
 3. `styles/styles.ts` - ボタンスタイル追加
-4. `types/index.ts` - 必要に応じて新しいイベント型追加
+4. `src/types/cache-data-manager-types.ts` - 必要に応じて新しいイベント型追加
 
 ### 🌐 **APIレスポンス形式が変更された場合**
 1. `clients/api-client.ts` - 解析ロジック更新
-2. `types/index.ts` - APIResponse型更新
+2. `src/types/cache-data-manager-types.ts` - APIResponse型更新
 3. `coordinators/event-coordinator.ts` - モーダル表示ロジック更新
 
 ### 📱 **レスポンシブ対応を改善したい**
@@ -313,12 +313,12 @@ EventCoordinator ─── ユーザー操作待機
 ## ⚠️ 重要な注意点
 
 ### 🔥 **必ず確認すべきファイル**
-- **型変更時**: `types/index.ts` (全ファイルに影響)
+- **型変更時**: `src/types/cache-data-manager-types.ts` (cache-data-manager全体に影響)
 - **データ形式変更時**: `loaders/load-data-from-memory.ts` (データフロー全体に影響)
 - **UI変更時**: `styles/styles.ts` (全体デザインに影響)
 
 ### 🚨 **変更時の影響範囲**
-- `types/index.ts` 変更 → 全TypeScriptファイルに影響
+- `src/types/cache-data-manager-types.ts` 変更 → cache-data-manager全体に影響
 - `loaders/load-data-from-memory.ts` 変更 → 検索・レンダリング全体に影響
 - `builders/ui-builder.ts` 変更 → UI表示全体に影響
 - `styles/styles.ts` 変更 → 全体のデザイン・レイアウトに影響
@@ -334,10 +334,10 @@ EventCoordinator ─── ユーザー操作待機
 
 ### 🎛️ **ビルド・開発環境**
 - **開発サーバー**: `bun dev` (Vite HMR対応)
-- **本番ビルド**: `bun run build` → `dist/list.js`
+- **本番ビルド**: `bun run build:cache-data-manager` → `dist/cacheDataManager.iife.js`
 - **個別ビルド**: `bun run build:cache-data-manager`
 - **型チェック**: `bun run type-check`
-- **設定ファイル**: `config/vite.config.ts`
+- **設定ファイル**: `config/vite.cache-data-manager.config.js`
 
 ## 🔍 デバッグ・テスト
 
@@ -389,7 +389,7 @@ document.querySelector('.filter-sort-container');
 ## 🚀 開発Tips
 
 ### 効率的な開発フロー
-1. **TypeScript型定義から開始** - `types/index.ts`で新機能の型を定義
+1. **TypeScript型定義から開始** - `src/types/cache-data-manager-types.ts`で新機能の型を定義
 2. **データフロー確認** - `loaders/load-data-from-memory.ts`でデータ処理確認
 3. **フィルター・ソート拡張** - `managers/`で新しいオプション追加
 4. **UI要素作成** - `templates/`でHTML、`styles/`でCSS追加
@@ -402,7 +402,7 @@ document.querySelector('.filter-sort-container');
 - **サムネイルが遅い** → `lazy-image-loader.ts`のrootMargin拡大
 - **検索が遅い** → `search-engine.ts`のインデックス設定見直し
 - **スタイルが崩れる** → `styles/styles.ts`のCSS競合確認
-- **型エラー** → `types/index.ts`の型定義更新
+- **型エラー** → `src/types/cache-data-manager-types.ts`の型定義更新
 - **フィルターが効かない** → `filter-manager.ts`のロジック確認
 
 この文書を参考に、効率的にCache Data Managerプロジェクトを編集できます！

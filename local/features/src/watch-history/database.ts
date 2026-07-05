@@ -172,7 +172,12 @@ export class WatchHistoryDatabase {
                 );
               } catch (error) {
                 logger.error("マイグレーション実行エラー:", error);
-                // マイグレーションに失敗した場合でもデータベースは使用可能にする
+                reject(
+                  error instanceof Error
+                    ? error
+                    : new Error(WatchHistoryDatabase.toErrorMessage(error)),
+                );
+                request.transaction?.abort();
               }
             }
           };
