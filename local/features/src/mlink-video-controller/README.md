@@ -250,6 +250,7 @@ UI更新
 - **機能**: アクション処理、動的リンク生成、非視聴ページでの視聴ページ専用リンク無効化、コメントJSONダウンロード
 - **SPA注意**: 非視聴ページでは前回視聴動画IDを使わず、ニコチャート等の外部サービスリンクは各トップページへ遷移
 - **コメント保存**: `保存:コメントJSON` は共通ヘルパーの `fetchNicoDataWithComments` で現在動画の全フォークコメントを取得し、フォーク別 `threads` と統合済み `comments` を含むJSONファイルとして保存する。保存用途のため `bypassCommentFilter: true` を指定し、comment-filter2 の表示用フィルタを通さない元データを使う
+- **キャッシュ削除**: `cache/info/v2` の状態情報から削除URLを組み立てる。NicoCache_nl 本体では通常APIの `rm/rmtmp` がリダイレクトを返し、ajax API の `ajax_rm/ajax_rmtmp` だけが `OK/NG` を返すため ajax API に統一する。完了済みHLSキャッシュは `/cache/ajax_rm?sm9[720p,256].hls`、途中テンポラリHLSは cacheId の文字列に関係なく `/cache/ajax_rmtmp?sm9[720p,256].hls` のように削除する。裸の `sm9` は classic キャッシュ指定として解釈され HLS/DMC キャッシュに一致しないため、完了済みでも `cacheId` を使う。ブラケットやカンマはURLエンコードせず、`fetch(..., { cache: "no-store", credentials: "same-origin" })` し、本文 `OK` を成功条件にする
 - **編集タイミング**: 新しいリンク追加、アクション機能拡張
 
 ### 💾 **データ・状態管理**
