@@ -7,10 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- 【mylist2】Google Drive 連携サービスを他のサービスと同じ階層で管理できるよう、`services/cloud/` から `services/` 直下へ移動。
 - 【mlink-video-controller】mylist2追加処理をSPA遷移後の現在URL基準へ統一し、視聴ページでは動画、検索・タグ・マイリスト検索ページではキーワードを追加できるよう変更。
-- 【README】TypeScript 7.0.2、ESLint 10.6.0、typescript-eslint 8.63.0、Bun 1.3.14の開発環境情報と前提条件を更新。
+- 【README】TypeScript 6.0.2、ESLint 10.6.0、typescript-eslint 8.63.0、Bun 1.3.14の開発環境情報と前提条件を更新。
 - 【CI/Release】ローカル開発環境と同じBun 1.3.14をGitHub ActionsのCI・リリースワークフローでも使用するよう固定。
-- 【features】TypeScript 7.0.2をCLIに導入し、TypeScript 6 APIを必要とするESLint解析系と共存できる依存構成へ更新。ESLint 10.6.0、typescript-eslint 8.63.0、Bun 1.3.14へ移行。
+- 【features】TypeScript 6.0.2をCLIに導入し、TypeScript 6 APIを必要とするESLint解析系と共存できる依存構成へ更新。ESLint 10.6.0、typescript-eslint 8.63.0、Bun 1.3.14へ移行。
 - 【mlink-video-controller】背景画像設定のエクスポート・インポート・デフォルト復元ボタンを、役割が分かりやすく設定画面になじむ配色へ変更。
 - 【mlink-video-controller】未対応ページでサムネイルフィルターを有効化した際、空のCSSセレクターを検索して切り替えに失敗しないよう修正。
 - 【mlink-video-controller】ニコニ広告のお知らせページでデイリー福引ハイライトを動作させ、モジュールの設定欄から対象ページへ移動できるリンクを追加。

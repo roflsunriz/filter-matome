@@ -202,6 +202,12 @@ ProgressService ─── 進捗表示
 - **機能**: 設定保存・読み込み、デフォルト値管理
 - **編集タイミング**: 新設定項目追加、設定形式変更
 
+#### `services/google-drive-service.ts` - Google Drive 連携
+
+- **役割**: Google Drive を利用したクラウドバックアップ連携
+- **機能**: OAuth 認証、バックアップのアップロード・一覧取得・ダウンロード
+- **編集タイミング**: Google Drive 認証やクラウドバックアップ処理を変更する場合
+
 ### 🎭 **UI補助・操作**
 
 #### `ui/event-handlers.ts` - イベントハンドラー

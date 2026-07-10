@@ -21,7 +21,7 @@ import { KeywordService } from "@/mylist2/services/keyword-service";
 import { ImportExportService } from "@/mylist2/services/import-export-service";
 import { SettingsService } from "@/mylist2/services/settings-service";
 import { DatabaseManagementService } from "@/mylist2/services/database-management-service";
-import { GoogleDriveService } from "@/mylist2/services/cloud/google-drive-service";
+import { GoogleDriveService } from "@/mylist2/services/google-drive-service";
 
 export class Mylist2Manager {
   private db: Mylist2DB;
