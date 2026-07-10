@@ -11,6 +11,7 @@ features/src/common/
 ├── indexed-db-emergency-backup.ts        # IndexedDB再作成前の緊急バックアップ
 ├── material-icons.ts                     # マテリアルアイコン統合ヘルパー (9KB)
 ├── toastr.ts                             # 通知システム・トースト表示 (19KB)
+├── cache-removal.ts                      # キャッシュ情報取得・HLS削除処理
 └── css-constants.ts                      # 共通CSS定数・スタイル定義 (1.7KB)
 ```
 
@@ -34,6 +35,7 @@ index.ts ─── 自動初期化・スタイル適用
     ├── common.ts ─── API通信・データ取得
     ├── toastr.ts ─── ユーザー通知
     ├── logger.ts ─── デバッグ情報出力
+    ├── cache-removal.ts ─── 完了済み/テンポラリHLSキャッシュ削除
     ├── indexed-db-emergency-backup.ts ─── IndexedDB緊急退避
     └── material-icons.ts ─── アイコン表示
 ```

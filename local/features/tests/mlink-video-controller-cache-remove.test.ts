@@ -3,7 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   buildCacheRemovalPaths,
   removeCacheByPath,
-} from "../src/mlink-video-controller/utils/video-util";
+} from "../src/common/cache-removal";
 import type { CacheInfoResponse } from "../src/types/video-types";
 
 describe("mlink-video-controller cache removal", () => {

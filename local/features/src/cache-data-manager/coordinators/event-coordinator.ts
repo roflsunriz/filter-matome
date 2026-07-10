@@ -4,6 +4,7 @@ import type { ProgressManager } from "@/cache-data-manager/managers/progress-man
 // APIResponse 型は normalize して扱うためここでは直接使わない
 import type { APIResponse as _APIResponse } from "@/types";
 import { LazyAPIClient } from "@/cache-data-manager/clients/lazy-api-client.js";
+import { removeCacheForVideo } from "@/common/cache-removal.js";
 
 export class EventCoordinator {
   constructor(
@@ -79,7 +80,7 @@ export class EventCoordinator {
       } else if (button.classList.contains("save-audio-btn")) {
         this.handleSaveAudio(baseId);
       } else if (button.classList.contains("delete-btn")) {
-        this.handleDelete(baseId, title);
+        void this.handleDelete(baseId, title);
       }
     });
   }
@@ -140,9 +141,21 @@ export class EventCoordinator {
     window.open(`./ffmpeg?audio=${baseId}`, "_blank");
   }
 
-  private handleDelete(baseId: string, title: string): void {
-    if (confirm(`本当に削除しますか？\nID : ${baseId}\nタイトル : ${title}`)) {
-      window.open(`./rm?${baseId}`, "_blank");
+  private async handleDelete(baseId: string, title: string): Promise<void> {
+    if (!confirm(`本当に削除しますか？\nID : ${baseId}\nタイトル : ${title}`)) {
+      return;
+    }
+
+    try {
+      await removeCacheForVideo(baseId);
+      await this.uiBuilder.refresh();
+      alert("キャッシュ削除を実行しました。");
+    } catch (error) {
+      console.warn("[cache-data-manager] キャッシュ削除に失敗しました", {
+        baseId,
+        error,
+      });
+      alert("キャッシュ削除に失敗しました。");
     }
   }
 

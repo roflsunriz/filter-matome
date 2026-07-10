@@ -1,5 +1,6 @@
 import type { VideoData } from "@/types";
 import { ICONS, createMaterialIcon } from "@/common/material-icons.js";
+import { removeCacheForVideo } from "@/common/cache-removal.js";
 
 /**
  * 検索結果モーダルの設定
@@ -298,7 +299,18 @@ export class SearchResultsModal {
         if (
           confirm(`本当に削除しますか？\nID : ${baseId}\nタイトル : ${title}`)
         ) {
-          window.open(`./rm?${baseId}`, "_blank");
+          void removeCacheForVideo(baseId)
+            .then(() => {
+              alert("キャッシュ削除を実行しました。");
+              this.close();
+            })
+            .catch((error: unknown) => {
+              console.warn(
+                "[cache-data-manager] キャッシュ削除に失敗しました",
+                { baseId, error },
+              );
+              alert("キャッシュ削除に失敗しました。");
+            });
         }
         e.stopPropagation();
       }

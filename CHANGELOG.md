@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 - 【README】`local/features/src` の現行プロジェクト構成、ビルドターゲット、Vite バージョン、nlFilter ファイル名、機能説明に合わせて更新。
+- 【cache-data-manager】動画ごとのキャッシュ情報から完了済みHLSとテンポラリHLSを判定し、それぞれ適切な削除APIで一括削除するよう変更。
+- 【cache-data-manager】動画カードと検索結果カードの削除も同じキャッシュ情報ベースの削除処理へ統一。
+- 【common】HLSキャッシュ削除処理を共通化し、`mlink-video-controller` と `cache-data-manager` から利用するよう変更。
 
 ## [#229] - 2026-07-05
 

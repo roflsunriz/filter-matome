@@ -1,14 +1,20 @@
 "use strict";
 
 import "@/types/global.d.ts";
-import {
-  VideoOperation,
-  SimpleVideoInfo,
-  CacheInfoResponse,
-} from "@/types/video-types";
+import { VideoOperation, SimpleVideoInfo } from "@/types/video-types";
 import { NicoCache_nlInterface } from "@/types/global-types";
+import {
+  buildCacheRemovalPaths,
+  fetchCacheInfo,
+  removeCacheByPath,
+} from "@/common/cache-removal.js";
 
-// 統一された動画ID抽出処理 (common.tsのgetVideoIdWithFallbackを使用)
+export {
+  buildCacheRemovalPaths,
+  fetchCacheInfo,
+  removeCacheByPath,
+} from "@/common/cache-removal.js";
+
 export const getActiveVideoId = async (): Promise<string> => {
   const videoId = (await window.commonHelper?.getVideoIdWithFallback()) ?? null;
   return videoId ?? "";
@@ -44,143 +50,6 @@ export const getVideoInfo = async (): Promise<SimpleVideoInfo> => {
       : "",
     title: videoTitle,
   };
-};
-
-export const fetchCacheInfo = (videoId: string): Promise<CacheInfoResponse> => {
-  const url =
-    "https://www.nicovideo.jp/cache/info/v2?" + encodeURIComponent(videoId);
-  return fetch(url).then((response) => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  });
-};
-
-const toCacheInfoEntry = (
-  videoId: string,
-  cacheInfo: CacheInfoResponse,
-): CacheInfoResponse[string] | undefined =>
-  cacheInfo[videoId] ?? cacheInfo[videoId.toLowerCase()];
-
-const extractHlsCacheId = (value: unknown): string | null => {
-  if (typeof value !== "string") {
-    return null;
-  }
-  const decoded = (() => {
-    try {
-      return decodeURIComponent(value);
-    } catch {
-      return value;
-    }
-  })();
-  const match = /([a-z]{2}\d+(?:low)?\[[^\]]+\]\.hls)/i.exec(decoded);
-  return match ? match[1] : null;
-};
-
-const toStringSet = (value: unknown): Set<string> => {
-  const result = new Set<string>();
-  const add = (item: unknown): void => {
-    if (Array.isArray(item)) {
-      item.forEach(add);
-      return;
-    }
-    const cacheId = extractHlsCacheId(item);
-    if (cacheId) {
-      result.add(cacheId);
-    }
-  };
-  add(value);
-  return result;
-};
-
-export const buildCacheRemovalPaths = (
-  videoId: string,
-  cacheInfo: CacheInfoResponse,
-): string[] => {
-  const entry = toCacheInfoEntry(videoId, cacheInfo);
-  if (!entry) {
-    return [];
-  }
-
-  const candidates = new Set<unknown>();
-  const addCandidate = (value: unknown): void => {
-    if (Array.isArray(value)) {
-      value.forEach(addCandidate);
-      return;
-    }
-    candidates.add(value);
-  };
-
-  addCandidate(entry.preferred);
-  addCandidate(entry.cacheIds);
-  addCandidate(entry.completes);
-  addCandidate(entry.cachings);
-  addCandidate(entry.preferredDmcHls);
-  addCandidate(entry.preferredDmc);
-
-  const caches = entry.caches;
-  if (caches && typeof caches === "object") {
-    Object.entries(caches).forEach(([cacheId, cache]) => {
-      addCandidate(cacheId);
-      if (cache && typeof cache === "object") {
-        addCandidate((cache as { cacheId?: unknown }).cacheId);
-        addCandidate((cache as { filename?: unknown }).filename);
-      }
-    });
-  }
-
-  const normalizedVideoId = videoId.toLowerCase();
-  const completeCacheIds = toStringSet(entry.completes);
-  const cachingCacheIds = toStringSet(entry.cachings);
-  const paths = new Set<string>();
-  candidates.forEach((candidate) => {
-    const cacheId = extractHlsCacheId(candidate);
-    if (!cacheId || !cacheId.toLowerCase().startsWith(normalizedVideoId)) {
-      return;
-    }
-
-    const cache = entry.caches?.[cacheId];
-    const hasStatusInfo =
-      completeCacheIds.size > 0 ||
-      cachingCacheIds.size > 0 ||
-      typeof cache?.complete === "boolean" ||
-      typeof cache?.caching === "boolean";
-    const isComplete =
-      completeCacheIds.has(cacheId) ||
-      cache?.complete === true ||
-      (hasStatusInfo &&
-        cache?.caching === false &&
-        !cachingCacheIds.has(cacheId));
-    const isCaching =
-      cachingCacheIds.has(cacheId) || cache?.caching === true || !hasStatusInfo;
-
-    if (isComplete) {
-      paths.add(`/cache/ajax_rm?${cacheId}`);
-      return;
-    }
-    if (isCaching) {
-      paths.add(`/cache/ajax_rmtmp?${cacheId}`);
-    }
-  });
-
-  return [...paths];
-};
-
-export const removeCacheByPath = async (path: string): Promise<void> => {
-  const response = await fetch(path, {
-    cache: "no-store",
-    credentials: "same-origin",
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-
-  const result = (await response.text()).trim();
-  if (result !== "OK") {
-    throw new Error(result || "empty response");
-  }
 };
 
 export const handleCacheRemove = async (videoId: string): Promise<void> => {
