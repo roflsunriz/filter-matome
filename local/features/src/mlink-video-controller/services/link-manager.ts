@@ -1,5 +1,8 @@
 import { LinkData, ActionMap } from "@/types/mlink-video-controller-types";
-import { Mylist2Handler } from "@/mlink-video-controller/handlers/mylist2";
+import {
+  isMylist2AddSupportedPage,
+  Mylist2Handler,
+} from "@/mlink-video-controller/handlers/mylist2";
 import {
   handleVideoOperation,
   getActiveVideoId,
@@ -12,7 +15,6 @@ export class LinkManager {
   private static instance: LinkManager;
   private commentFilterReady: boolean = false;
   private readonly WATCH_PAGE_ONLY_ACTIONS = new Set<string>([
-    "AddVideoToCustomMylist",
     "commentFilter2",
     "movieinfo",
     "savemovie",
@@ -182,8 +184,14 @@ export class LinkManager {
     return links.map((link) => ({
       ...link,
       disabled:
-        shouldDisableWatchOnly && this.WATCH_PAGE_ONLY_ACTIONS.has(link.action),
-      disabledReason: "視聴ページでのみ利用できます",
+        link.action === "AddVideoToCustomMylist"
+          ? !isMylist2AddSupportedPage()
+          : shouldDisableWatchOnly &&
+            this.WATCH_PAGE_ONLY_ACTIONS.has(link.action),
+      disabledReason:
+        link.action === "AddVideoToCustomMylist"
+          ? "視聴・検索・タグページで利用できます"
+          : "視聴ページでのみ利用できます",
     }));
   }
 
@@ -193,6 +201,12 @@ export class LinkManager {
 
   public async handleAction(action: string): Promise<void> {
     const isWatchPage = isWatchLikePage();
+    if (action === "AddVideoToCustomMylist" && !isMylist2AddSupportedPage()) {
+      window.toastr?.info("視聴・検索・タグページで利用できます", "利用不可", {
+        timeOut: 3000,
+      });
+      return;
+    }
     if (!isWatchPage && this.WATCH_PAGE_ONLY_ACTIONS.has(action)) {
       window.toastr?.info(
         "このリンクは視聴ページでのみ利用できます",
@@ -202,21 +216,17 @@ export class LinkManager {
       return;
     }
 
+    if (action === "AddVideoToCustomMylist") {
+      await new Mylist2Handler().handleAddFromCurrentPage();
+      return;
+    }
+
     const videoId = isWatchPage ? await getActiveVideoId() : "";
     // const commentFilterUI = new CommentFilterUI();
 
     const actionMap: ActionMap = {
       customMylist:
         "https://www.nicovideo.jp/local/features/dist/pages/mylist/index.html",
-      AddVideoToCustomMylist: async () => {
-        const mylist2Handler = new Mylist2Handler();
-        // 動画IDが取得できる場合は動画を追加、そうでなければキーワードを追加
-        if (videoId && videoId.length > 0) {
-          await mylist2Handler.handleAddVideo();
-        } else {
-          await mylist2Handler.handleAddKeyword();
-        }
-      },
       commentFilter2: async () => {
         try {
           // CommentFilter2のインスタンスを取得

@@ -273,7 +273,8 @@ ProgressService ─── 進捗表示
 
 - 動画視聴ページからmylist2へ動画追加する
 - `features/src/mlink-video-controller/handlers/mylist2.ts` の `handleAddVideo` メソッドを編集
-- その他のページからmylist2へキーワード追加する
+- SPA遷移後も現在URLを基準にし、動画情報取得・マイリスト選択中に対象ページが変わった場合は誤登録を防ぐため追加を中止する
+- 検索・タグ・マイリスト検索ページからmylist2へキーワード追加する
 - `features/src/mlink-video-controller/handlers/mylist2.ts` の `handleAddKeyword` メソッドを編集
 
 ### 💡 **新しいマイリスト機能を追加したい**

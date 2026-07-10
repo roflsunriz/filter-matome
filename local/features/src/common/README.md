@@ -12,6 +12,7 @@ features/src/common/
 ├── material-icons.ts                     # マテリアルアイコン統合ヘルパー (9KB)
 ├── toastr.ts                             # 通知システム・トースト表示 (19KB)
 ├── cache-removal.ts                      # キャッシュ情報取得・HLS削除処理
+├── server-response-parser.ts              # Watchページmetaの生JSON・URIエンコードJSON解析
 └── css-constants.ts                      # 共通CSS定数・スタイル定義 (1.7KB)
 ```
 
@@ -58,6 +59,7 @@ features.ts ─── ページ判定
   - `fetchRequest` - 共通fetch関数
   - `checkCache404` - キャッシュ存在確認
   - `fetchWatchPage` - 動画情報取得
+  - `fetchWatchPage` は `server-response` metaが生JSON・URIエンコード済みJSONのどちらでも解析し、不完全な `%` シーケンスを含む説明文でも取得を継続
   - `fetchNicoComments` - 取得可能な全フォークのコメントデータ取得
   - `fetchNicoDataWithComments` - 全フォークの `threads` と統合済み `comments` を含む統合データ取得
   - `fetchNicoComments`/`fetchNicoDataWithComments` は `{ bypassCommentFilter: true }` 指定時に comment-filter2 の fetch 差し替えを通さず、コメントJSON保存や movie-info 用のフィルタ前データを取得

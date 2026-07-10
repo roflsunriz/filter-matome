@@ -13,6 +13,7 @@ import {
   NicoApiServerResponse,
   CommentThread,
 } from "@/types/common-types";
+import { parseServerResponseMetaContent } from "@/common/server-response-parser";
 
 type VideoIdSource =
   | string
@@ -292,8 +293,8 @@ window.commonHelper = {
           doc
             .querySelector('meta[name="server-response"]')
             ?.getAttribute("content") || "{}";
-        const serverResponseUnknown: unknown = JSON.parse(
-          decodeURIComponent(serverResponseContent),
+        const serverResponseUnknown = parseServerResponseMetaContent(
+          serverResponseContent,
         );
         if (
           !serverResponseUnknown ||

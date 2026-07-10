@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- 【mlink-video-controller】mylist2追加処理をSPA遷移後の現在URL基準へ統一し、視聴ページでは動画、検索・タグ・マイリスト検索ページではキーワードを追加できるよう変更。
 - 【README】TypeScript 7.0.2、ESLint 10.6.0、typescript-eslint 8.63.0、Bun 1.3.14の開発環境情報と前提条件を更新。
 - 【CI/Release】ローカル開発環境と同じBun 1.3.14をGitHub ActionsのCI・リリースワークフローでも使用するよう固定。
 - 【features】TypeScript 7.0.2をCLIに導入し、TypeScript 6 APIを必要とするESLint解析系と共存できる依存構成へ更新。ESLint 10.6.0、typescript-eslint 8.63.0、Bun 1.3.14へ移行。
@@ -19,6 +20,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【cache-data-manager】動画ごとのキャッシュ情報から完了済みHLSとテンポラリHLSを判定し、それぞれ適切な削除APIで一括削除するよう変更。
 - 【cache-data-manager】動画カードと検索結果カードの削除も同じキャッシュ情報ベースの削除処理へ統一。
 - 【common】HLSキャッシュ削除処理を共通化し、`mlink-video-controller` と `cache-data-manager` から利用するよう変更。
+
+### Fixed
+- 【common/mlink-video-controller】Watchページの `server-response` metaに生JSONや不完全な `%` シーケンスが含まれても動画情報を取得できるようにし、mylist2追加時の `URIError: malformed URI sequence` を修正。
 
 ## [#229] - 2026-07-05
 
