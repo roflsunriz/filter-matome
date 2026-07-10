@@ -222,6 +222,10 @@ export class SettingsUI {
       this.addThumbnailsFilterSettingsButton(moduleItem);
     }
 
+    if (config.id === "daily_lottery_highlight") {
+      this.addNicoInfoPageLink(moduleItem, config.pageUrl);
+    }
+
     return moduleItem;
   }
 
@@ -447,6 +451,25 @@ export class SettingsUI {
     });
 
     settingsSlot?.appendChild(button);
+  }
+
+  private addNicoInfoPageLink(
+    moduleItem: HTMLElement,
+    pageUrl: string | undefined,
+  ): void {
+    if (!pageUrl) return;
+
+    const settingsSlot = moduleItem.querySelector(".module-settings-slot");
+    const link = document.createElement("a");
+    link.className = "settings-btn module-page-link";
+    link.href = pageUrl;
+    link.target = "_self";
+    link.textContent = "開く";
+    link.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+
+    settingsSlot?.appendChild(link);
   }
 
   private addHeaderPrivacySettingsButton(moduleItem: HTMLElement): void {

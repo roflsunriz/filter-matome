@@ -185,6 +185,15 @@ export const settingsStyles = `
   grid-column: 2;
 }
 
+.module-page-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
 .module-status.active {
   background: #4CAF50 !important;
   color: white !important;

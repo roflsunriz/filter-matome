@@ -48,6 +48,7 @@ export interface ModuleConfig {
   dependencies: string[];
   category: ModuleCategory;
   icon: string;
+  pageUrl?: string;
   exclusiveGroup?: string; // 排他グループ（同じグループ内では1つのモジュールのみ有効）
 }
 

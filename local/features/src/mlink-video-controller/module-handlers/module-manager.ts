@@ -18,7 +18,7 @@ import { ModuleRegistry } from "@/mlink-video-controller/module-handlers/module-
  */
 class PageDetectorImpl implements PageDetector {
   getCurrentPageType(): PageType {
-    const url = window.location.href;
+    const { hostname } = window.location;
     const pathname = window.location.pathname;
 
     if (isWatchLikePage()) {
@@ -30,7 +30,8 @@ class PageDetectorImpl implements PageDetector {
     } else if (pathname.includes("/ranking/")) {
       return PageType.RANKING;
     } else if (
-      url.startsWith("https://blog.nicovideo.jp/niconews/category/nicoad/")
+      hostname === "blog.nicovideo.jp" &&
+      pathname.replace(/\/+$/, "") === "/niconews/category/nicoad"
     ) {
       return PageType.NICO_INFO;
     }

@@ -10,9 +10,10 @@ import { createMaterialIcon } from "@/common/material-icons";
 export const nicoInfoPageModuleConfig: ModuleConfig = {
   id: "daily_lottery_highlight",
   name: "デイリー福引ハイライト",
-  description: "ニコニ広告のお知らせ内でデイリー福引をハイライト表示します",
+  description: "ニコニコインフォでデイリー福引をハイライト表示します",
   enabled: false,
   targetPages: [PageType.NICO_INFO],
+  pageUrl: "https://blog.nicovideo.jp/niconews/category/nicoad",
   dependencies: ["window.toastr"],
   category: ModuleCategory.UI_ENHANCEMENT,
   icon: createMaterialIcon("card_giftcard", {
