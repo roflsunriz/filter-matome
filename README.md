@@ -9,15 +9,15 @@
 ## 機能プレビュー
 
 ### watch-history
-![watch-history](./cover-images/watch-history.jpg)
+![watch-history](./cover-images/watch-history.png)
 ### mylist2
-![mylist2](./cover-images/mylist2.jpg)
+![mylist2](./cover-images/mylist2.png)
 ### comment-filter2
-![comment-filter2](./cover-images/comment-filter2.jpg)
+![comment-filter2](./cover-images/comment-filter2.png)
 ### video-player
-![video-player](./cover-images/video-player.jpg)
+![video-player](./cover-images/video-player.png)
 ### mlink-video-controller
-![mlink-video-controller](./cover-images/mlink-video-controller.jpg)
+![mlink-video-controller](./cover-images/mlink-video-controller.png)
 
 ## ✨ 主な機能
 
