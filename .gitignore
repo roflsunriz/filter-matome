@@ -8,6 +8,7 @@ local/features/test-results/
 playwright.config.ts
 *.bak
 .mp4_cache
+__pycache__/
 
 # コードスペース
 .vscode/
