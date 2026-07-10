@@ -519,9 +519,12 @@ class HideVideoUI {
     return "other";
   }
 
-  getVideoElements(): NodeListOf<Element> {
+  getVideoElements(): Element[] {
     const selector = NICOVIDEO_SELECTORS.VIDEO_ELEMENTS[this.pageType];
-    return document.querySelectorAll(selector);
+    if (!selector) {
+      return [];
+    }
+    return Array.from(document.querySelectorAll(selector));
   }
 
   private getTargetElement(element: Element): Element {
@@ -546,7 +549,7 @@ class HideVideoUI {
         const titleElement = element.querySelector(titleSelectors.default);
         return titleElement?.textContent?.trim() || "";
       }
-    } else if (typeof titleSelectors === "string") {
+    } else if (typeof titleSelectors === "string" && titleSelectors) {
       const titleElement = element.querySelector(titleSelectors);
       return titleElement?.textContent?.trim() || "";
     }
