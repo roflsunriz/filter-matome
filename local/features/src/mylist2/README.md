@@ -1,5 +1,11 @@
 # mylist2 プロジェクト アーキテクチャ & 編集ガイド
 
+## HTML配信位置
+
+- ソース: `src/mylist2/index.html`
+- ビルド成果物: `dist/pages/mylist2/index.html`
+- 配信URL: `https://www.nicovideo.jp/local/features/dist/pages/mylist2/index.html`
+
 ## 📁 プロジェクト構成
 
 ```

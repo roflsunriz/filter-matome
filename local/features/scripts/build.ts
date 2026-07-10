@@ -16,7 +16,7 @@ if (
 const htmlPages = [
   {
     source: "src/mylist2/index.html",
-    output: "pages/mylist/index.html",
+    output: "pages/mylist2/index.html",
   },
   {
     source: "src/movie-info/index.html",

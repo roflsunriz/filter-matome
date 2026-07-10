@@ -1,5 +1,11 @@
 # movie-info ダッシュボード
 
+## HTML配信位置
+
+- ソース: `src/movie-info/index.html`
+- ビルド成果物: `dist/pages/movie-info/index.html`
+- 配信URL: `https://www.nicovideo.jp/local/features/dist/pages/movie-info/index.html`
+
 ## 📌 概要
 
 `movie-info` は NicoCache_nl が扱う動画IDを基に、関連する複数の API から情報を集約して俯瞰できるダッシュボードです。以下のデータソースを横断的に確認できます。

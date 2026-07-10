@@ -93,6 +93,17 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 全ブラウザ機能を含む`features.js`をニコニコ動画全体に1回挿入するフィルタ。ページルーターがURLに応じて共通機能、mlink-video-controller、comment-filter2、video-player、watch-trackerを起動する。
 
+#### HTMLページの配信URL
+
+HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信される。
+
+| 機能 | URL |
+|---|---|
+| mylist2 | `https://www.nicovideo.jp/local/features/dist/pages/mylist2/index.html` |
+| movie-info | `https://www.nicovideo.jp/local/features/dist/pages/movie-info/index.html` |
+| video-player | `https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html` |
+| watch-history | `https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html` |
+
 ### 101_disable_official_function.txt
 
 公式プレイヤーの再生速度調整機能を無効化するフィルタ。これによりfeatures.js内のmlink-video-controllerの再生速度調整機能が正常に動作するようになる。

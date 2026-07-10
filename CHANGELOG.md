@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- 【features/docs】Bunビルド後のHTMLページへ正しくアクセスできるよう、mylist2のビルド出力と実装内リンクを `dist/pages/mylist2/` に統一し、ユーザー向けガイドと各プロジェクトREADMEの配信URLを現行配置に更新。
 - 【mylist2】Google Drive 連携サービスを他のサービスと同じ階層で管理できるよう、`services/cloud/` から `services/` 直下へ移動。
 - 【mlink-video-controller】mylist2追加処理をSPA遷移後の現在URL基準へ統一し、視聴ページでは動画、検索・タグ・マイリスト検索ページではキーワードを追加できるよう変更。
 - 【README】TypeScript 6.0.2、ESLint 10.6.0、typescript-eslint 8.63.0、Bun 1.3.14の開発環境情報と前提条件を更新。
@@ -737,7 +738,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [#186] - 2025-07-17
 
 ### Added
-- 視聴履歴のページを追加し(https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html)、視聴ログを表示するようにした。ブラウザの容量が許す限り履歴を保存するようにした。統計も利用可能。
+- 視聴履歴のページを追加し(https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html)、視聴ログを表示するようにした。ブラウザの容量が許す限り履歴を保存するようにした。統計も利用可能。
 
 ## [#185] - 2025-06-26
 

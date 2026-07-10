@@ -226,7 +226,7 @@ export class LinkManager {
 
     const actionMap: ActionMap = {
       customMylist:
-        "https://www.nicovideo.jp/local/features/dist/pages/mylist/index.html",
+        "https://www.nicovideo.jp/local/features/dist/pages/mylist2/index.html",
       commentFilter2: async () => {
         try {
           // CommentFilter2のインスタンスを取得

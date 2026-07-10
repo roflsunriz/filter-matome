@@ -1,5 +1,11 @@
 # watch-history プロジェクト アーキテクチャ & 編集ガイド
 
+## HTML配信位置
+
+- ソース: `src/watch-history/index.html`
+- ビルド成果物: `dist/pages/watch-history/index.html`
+- 配信URL: `https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html`
+
 ## 📁 プロジェクト構成
 
 ```

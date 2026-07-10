@@ -11,7 +11,7 @@ console.debug("Current location:", self.location.href);
 const CACHE_NAME = "custom-mylist2-v2";
 const CACHE_URLS = [
   "/local/features/dist/features.js",
-  "/local/features/dist/pages/mylist/index.html",
+  "/local/features/dist/pages/mylist2/index.html",
 ];
 
 // 通常のキャッシュの有効期限（24時間）
