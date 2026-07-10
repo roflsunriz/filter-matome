@@ -83,23 +83,14 @@ const setupDeletedVideoPlayerInterface = (): void => {
   };
 };
 
-const isStandalonePage = (): boolean => {
-  return window.location.pathname.startsWith(
-    "/local/features/dist/src/video-player/",
-  );
-};
+let started = false;
 
-const bootstrap = (): void => {
-  setupDeletedVideoPlayerInterface();
-
-  if (isStandalonePage()) {
-    window.logger.info(
-      "スタンドアロンプレイヤーページではrouterは実行しません",
-    );
+export const startVideoPlayerRouter = (): void => {
+  if (started) {
     return;
   }
+  started = true;
 
+  setupDeletedVideoPlayerInterface();
   void initWatchPageRouter();
 };
-
-bootstrap();

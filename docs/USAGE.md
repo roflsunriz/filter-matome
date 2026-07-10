@@ -40,7 +40,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `nlMediaInfo.class`を削除する  
 3. `local`フォルダにある`background-images`, `features`, `images`, フォルダ, `mime.types`, `list.js` のシンボリックリンクを削除する  
 4. `scripts`フォルダを削除する  
-5. `nlFilters`フォルダの `100_common.txt`, `101_disable_official_function.txt`, `102_mlink_video_controller.txt`, `103_comment_filter2.txt`, `104_video_player.txt`, `105_premium_hide.txt`, `106_watch_history.txt`, `nlFilters_編集ガイド.md`を削除する  
+5. `nlFilters`フォルダの `100_features.txt`, `101_disable_official_function.txt`, `105_premium_hide.txt`, `nlFilters_編集ガイド.md`を削除する
 6. NicoCache_nlを再起動する  
 7. 上記標準手順に従ってインストールする  
 
@@ -54,7 +54,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\local\list.js` の固定パス・固定名で参照する。
 
-ビルド成果物（ `local/features/dist/cache-data-manager.iife.js`）へこの固定パス名で**シンボリックリンクを作成**しないと機能しない。
+ビルド成果物（ `local/features/dist/features.js`）へこの固定パス名で**シンボリックリンクを作成**しないと機能しない。
 
 **要約（Windows / PowerShell）※管理者権限が必要**
 
@@ -65,8 +65,8 @@ Remove-Item -Path "C:\NicoCache_nl\local\list.js"
 Remove-Item -Path "C:\NicoCache_nl\local\list.js.map"
 
 # ビルド成果物へリンクを作成
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js" -Target "C:\NicoCache_nl\local\features\dist\cache-data-manager.iife.js"
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Target "C:\NicoCache_nl\local\features\dist\cache-data-manager.iife.js.map"
+New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js" -Target "C:\NicoCache_nl\local\features\dist\features.js"
+New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Target "C:\NicoCache_nl\local\features\dist\features.js.map"
 ```
 
 詳細な手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照。
@@ -89,15 +89,15 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 ---
 
-### 100_common.txt
+### 100_features.txt
 
-共通ライブラリ（common.css, common.es.js）をニコニコ動画全体に挿入するフィルタ。トースト通知、ロギング、マテリアルデザインアイコンなどの基盤機能を提供する。
+全ブラウザ機能を含む`features.js`をニコニコ動画全体に1回挿入するフィルタ。ページルーターがURLに応じて共通機能、mlink-video-controller、comment-filter2、video-player、watch-trackerを起動する。
 
 ### 101_disable_official_function.txt
 
-公式プレイヤーの再生速度調整機能を無効化するフィルタ。これにより102_mlink_video_controller.txtの再生速度調整機能が正常に動作するようになる。非プレミアム会員で制限されている基本的な機能を提供する基盤となる。
+公式プレイヤーの再生速度調整機能を無効化するフィルタ。これによりfeatures.js内のmlink-video-controllerの再生速度調整機能が正常に動作するようになる。
 
-### 102_mlink_video_controller.txt
+#### mlink-video-controller
 
 ![リンクとステータス](resources/mlink-video-controller1.avif)
 
@@ -143,7 +143,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 `設定リセット`・・・デフォルト設定に戻す    
 
 
-### 103_comment_filter2.txt
+#### comment-filter2
 
 ![コメントフィルタ1](resources/comment-filter-2-1.avif)
 
@@ -151,14 +151,14 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 詳しい使い方は[comment-filter2.md](comment-filter2.md)を参照されたい。
 
-### 104_video_player.txt
+#### video-player
 
 ![カスタムキャッシュ](resources/cache.avif)
 
 キャッシュ済みの有料期限切れ動画 / キャッシュ済み削除動画 / キャッシュ済み非公開動画 をローカルプレーヤーでコメント付きで再生するための機能。（ニコニコ動画の仕様上、いつの時点からか削除済み動画と非公開動画ではコメントも非公開になったのでコメントはうまく表示されないかもしれない）
 
 #### 再生方法
-- URLを直接指定する方法(https://www.nicovideo.jp/local/features/dist/src/video-player/standalone/index.html?videoId=<動画ID>)
+- URLを直接指定する方法(https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html?videoId=<動画ID>)
 - mylist2に該当動画を登録して自動ルーティングさせる方法(https://www.nicovideo.jp/watch/soXXXXXXXX などを登録するとキャッシュがあれば自動でリダイレクトする)
 
 動画IDは`soXXXXXXXX`に限らず、`smXXXXXXXX`、`nmXXXXXXXX`、`ssXXXXXXXX`などのニコニコ動画IDに対応する。
@@ -183,7 +183,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 コモンヘッダーのプレミアム会員勧誘要素を非表示にする。
 
-### 106_watch_history.txt
+#### watch-history
 
 ![視聴履歴](resources/watch-history.avif)
 

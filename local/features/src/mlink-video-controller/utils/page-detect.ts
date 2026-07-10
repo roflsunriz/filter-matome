@@ -1,7 +1,7 @@
 import type { ExtendedNicoCache_nl } from "@/types/global-types";
 
 const STANDALONE_PLAYER_PATH =
-  "/local/features/dist/src/video-player/standalone/index.html";
+  "/local/features/dist/pages/video-player/index.html";
 const VIDEO_ID_QUERY = /[?&]videoId=([a-z]{2}\d+)/i;
 
 const getLocationSafe = (loc?: Location): Location => {

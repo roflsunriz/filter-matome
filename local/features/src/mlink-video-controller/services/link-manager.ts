@@ -207,7 +207,7 @@ export class LinkManager {
 
     const actionMap: ActionMap = {
       customMylist:
-        "https://www.nicovideo.jp/local/features/dist/src/mylist2/index.html",
+        "https://www.nicovideo.jp/local/features/dist/pages/mylist/index.html",
       AddVideoToCustomMylist: async () => {
         const mylist2Handler = new Mylist2Handler();
         // 動画IDが取得できる場合は動画を追加、そうでなければキーワードを追加
@@ -245,7 +245,7 @@ export class LinkManager {
       cachelist: "https://www.nicovideo.jp/cache/",
       movieinfo: () => {
         const baseUrl =
-          "https://www.nicovideo.jp/local/features/dist/src/movie-info/index.html";
+          "https://www.nicovideo.jp/local/features/dist/pages/movie-info/index.html";
         const targetUrl = videoId ? baseUrl + "?videoId=" + videoId : baseUrl;
         window.open(targetUrl);
       },
@@ -332,7 +332,7 @@ export class LinkManager {
       yajuyaju: "https://yajuvideo.st/",
       "watch-history": () => {
         window.open(
-          `https://www.nicovideo.jp/local/features/dist/src/watch-history/index.html`,
+          `https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html`,
         );
       },
     };

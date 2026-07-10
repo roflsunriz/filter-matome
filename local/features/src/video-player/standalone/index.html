@@ -1,20 +1,11 @@
-<!DOCTYPE html>
-<html lang="ja">
+<!doctype html>
+<html lang="ja" data-feature-page="video-player">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>video-player</title>
 
-    <!-- 共通ライブラリ -->
-    <script type="module" src="@/common/index.ts" charset="utf-8"></script>
-    <!-- Standalone Video Player -->
-    <script type="module" src="@/video-player/standalone/main.ts" charset="utf-8"></script>
-    <!-- comment-filter2 -->
-    <script type="module" src="@/comment-filter2/index.ts" charset="utf-8"></script>
-    <!-- mlink-video-controller -->
-    <script type="module" src="@/mlink-video-controller/index.ts" charset="utf-8"></script>
-    <!-- watch-tracker -->
-    <script type="module" src="@/watch-history/watch-tracker.ts" charset="utf-8"></script>
+    <script src="/local/features/dist/features.js" defer></script>
   </head>
   <body>
     <div id="nc-standalone-player-root"></div>

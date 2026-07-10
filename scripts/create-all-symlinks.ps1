@@ -127,13 +127,9 @@ $relativeMappings = @(
     @{ SourceRel = 'local\features';                                   LinkRel = 'local\features' }
     @{ SourceRel = 'local\images';                                     LinkRel = 'local\images' }
     @{ SourceRel = 'local\mime.types';                                 LinkRel = 'local\mime.types' }
-    @{ SourceRel = 'nlFilters\100_common.txt';                         LinkRel = 'nlFilters\100_common.txt' }
+    @{ SourceRel = 'nlFilters\100_features.txt';                       LinkRel = 'nlFilters\100_features.txt' }
     @{ SourceRel = 'nlFilters\101_disable_official_function.txt';       LinkRel = 'nlFilters\101_disable_official_function.txt' }
-    @{ SourceRel = 'nlFilters\102_mlink_video_controller.txt';          LinkRel = 'nlFilters\102_mlink_video_controller.txt' }
-    @{ SourceRel = 'nlFilters\103_comment_filter2.txt';                 LinkRel = 'nlFilters\103_comment_filter2.txt' }
-    @{ SourceRel = 'nlFilters\104_video_player.txt';                    LinkRel = 'nlFilters\104_video_player.txt' }
     @{ SourceRel = 'nlFilters\105_premium_hide.txt';                    LinkRel = 'nlFilters\105_premium_hide.txt' }
-    @{ SourceRel = 'nlFilters\106_watch_history.txt';                   LinkRel = 'nlFilters\106_watch_history.txt' }
     @{ SourceRel = 'extensions\CommentFilterLogger.class';              LinkRel = 'extensions\CommentFilterLogger.class' }
     @{ SourceRel = 'extensions\CustomCacheReturner.class';              LinkRel = 'extensions\CustomCacheReturner.class' }
     @{ SourceRel = 'extensions\downloadThruFFmpeg.class';               LinkRel = 'extensions\downloadThruFFmpeg.class' }
@@ -141,7 +137,7 @@ $relativeMappings = @(
     @{ SourceRel = 'extensions\nlMediaInfo.class';                      LinkRel = 'extensions\nlMediaInfo.class' }
     @{ SourceRel = 'nico-cache-gui-launcher.bat';                      LinkRel = 'nico-cache-gui-launcher.bat' }
     @{ SourceRel = 'nico-cache-nl-starter.bat';                        LinkRel = 'nico-cache-nl-starter.bat' }
-    @{ SourceRel = 'local\features\dist\cacheDataManager.iife.js';     LinkRel = 'local\list.js' }
+    @{ SourceRel = 'local\features\dist\features.js';                  LinkRel = 'local\list.js' }
 )
 
 $linkMappings = $relativeMappings | ForEach-Object {

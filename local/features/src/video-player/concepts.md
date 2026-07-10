@@ -1,7 +1,7 @@
 ## 問題の説明
 
 現在のvideo-playerには以下の課題があります。
-公式のニコニコ動画プレイヤーを隠してカスタムプレイヤーを重ねる構成のため、公式プレイヤーはバックグラウンドでコメントを描画し続けパフォーマンスが低下します。キーボードショートカットも公式・カスタムの双方が反応してしまい衝突が起きます。また、埋め込み対象となるウォッチページの読み込み順序に依存するため、ページの再読込を繰り返さないとカスタムプレイヤーが立ち上がらないケースも散見されます（埋め込みは <code>nlFilters/104_video_player.txt</code> が担当）。
+公式のニコニコ動画プレイヤーを隠してカスタムプレイヤーを重ねる構成のため、公式プレイヤーはバックグラウンドでコメントを描画し続けパフォーマンスが低下します。キーボードショートカットも公式・カスタムの双方が反応してしまい衝突が起きます。また、埋め込み対象となるウォッチページの読み込み順序に依存するため、ページの再読込を繰り返さないとカスタムプレイヤーが立ち上がらないケースも散見されます（現在は <code>100_features.txt</code> が単一バンドルを挿入し、中央ルーターがvideo-playerを起動します）。
 
 ## 目的
 
@@ -14,7 +14,7 @@
 ### 全体フロー
 
 1. ウォッチページに挿入した <code>initWatchPageRouter</code> が <code>window.commonHelper.fetchWatchPage()</code> を呼び出し、<code>NicoWatchApi</code> 互換のレスポンスを取得する。
-2. <code>video.watchableUserTypeForPayment</code> または <code>payment.video.watchableUserType</code> が <code>all</code> 以外（＝課金が必要）と判定できた場合のみ、<code>/local/features/dist/src/video-player/standalone/index.html?videoId=...</code> に遷移する。
+2. <code>video.watchableUserTypeForPayment</code> または <code>payment.video.watchableUserType</code> が <code>all</code> 以外（＝課金が必要）と判定できた場合のみ、<code>/local/features/dist/pages/video-player/index.html?videoId=...</code> に遷移する。
 3. ローカルページ（スタンドアロンページ）はクエリパラメーターの <code>videoId</code> を受け取り、再度 <code>fetchWatchPage(videoId)</code> を実行して <code>ApiData</code> に整形する。
 4. <code>StandalonePlayer</code> がキャッシュサーバーから動画ソースを選別しつつ、UIモジュール群（コメント、操作パネル等）を初期化する。
 5. 表示用コンポーネントが <code>NicoWatchApi</code> の各セクションを描画し、ウォッチページ同等のメタ情報を提供する。
@@ -29,7 +29,7 @@
 
 - <code>standalone/index.html</code> で共通ライブラリ（<code>../common/index.ts</code>）と <code>standalone/main.ts</code> を読み込む。
 - <code>createStandaloneLayout</code> がレイアウト（ヘッダー、プレイヤー領域、情報カード、関連動画、説明文）を組み立てる。
-- <code>StandalonePlayer</code> は <code>UrlManager</code>・<code>CommentSystem</code>・<code>PlayerControlsShadow</code> など既存モジュールを再利用し、ビルド済みの <code>video-player.es.js</code>（Vite出力）としてバンドルされる想定。
+- <code>StandalonePlayer</code> は <code>UrlManager</code>・<code>CommentSystem</code>・<code>PlayerControlsShadow</code> など既存モジュールを再利用し、Bunが生成する <code>features.js</code> に統合される。
 - <code>assignWatchContext</code> で <code>window.NicoCache_nl.watch</code> に <code>videoId</code> と <code>apiData</code> を再設定し、既存の共通機能（コメントフィルター等）が同じインターフェースで利用できるようにする。
 
 ### データ取得と共有

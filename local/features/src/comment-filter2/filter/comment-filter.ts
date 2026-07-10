@@ -22,7 +22,8 @@ import {
   normalizeCommands as engineNormalizeCommands,
   chunkThreads,
 } from "@/comment-filter2/filter/comment-filter-engine";
-import commentWorkerUrl from "@/comment-filter2/filter/comment-filter-worker.ts?worker&url";
+const COMMENT_WORKER_URL =
+  "/local/features/dist/workers/comment-filter-worker.js";
 
 interface ProcessRequestPayload {
   threads: CF2Thread[];
@@ -231,9 +232,9 @@ export class CommentFilter {
     return new Promise((resolve, reject) => {
       window?.logger.info(
         "[CommentFilter2] Comment worker URL:",
-        commentWorkerUrl,
+        COMMENT_WORKER_URL,
       );
-      const worker = new Worker(commentWorkerUrl, { type: "module" });
+      const worker = new Worker(COMMENT_WORKER_URL, { type: "module" });
 
       worker.onmessage = (event: MessageEvent<ProcessResponse>) => {
         resolve(event.data.payload);

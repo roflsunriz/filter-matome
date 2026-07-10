@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   # ─────────────────────────────────────────────
@@ -41,6 +41,10 @@ jobs:
         working-directory: local/features
         run: bun run type-check
 
+      - name: Unit tests
+        working-directory: local/features
+        run: bun run test:unit
+
   # ─────────────────────────────────────────────
   # ジョブ②: ビルド + アーティファクト保存
   # ─────────────────────────────────────────────
@@ -58,8 +62,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Cache Bun packages
         uses: actions/cache@v4
@@ -75,7 +79,7 @@ jobs:
 
       - name: Build features
         working-directory: local/features
-        run: bun run build:ALL
+        run: bun run build
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@v4

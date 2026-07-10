@@ -4,7 +4,7 @@
 
 ```
 features/src/common/
-├── index.ts                              # エントリーポイント・自動初期化
+├── index.ts                              # startCommon()エントリーポイント
 ├── common.ts                             # API通信・データ取得ヘルパー (5.0KB)
 ├── header.ts                             # 共通ヘッダーコンポーネント (Shadow DOM版) (19KB)
 ├── logger.ts                             # ログ機能・デバッグ支援 (4.5KB)
@@ -20,7 +20,8 @@ features/src/common/
 ### 初期化フロー
 
 ```
-index.ts ─── 自動初期化・スタイル適用
+features.ts ─── ページ判定
+    └── startCommon() ─── スタイル適用
     ├── css-constants.ts ─── CSS変数定義
     ├── toastr.ts ─── 通知システム初期化
     ├── logger.ts ─── ログシステム初期化
@@ -46,7 +47,7 @@ index.ts ─── 自動初期化・スタイル適用
 
 #### `index.ts` - エントリーポイント
 
-- **役割**: 共通機能の自動初期化・統合
+- **役割**: 中央ルーターから呼ばれる共通機能の明示的初期化
 - **機能**: CSS定数適用、toastrスタイル適用、各モジュールのimport
 - **編集タイミング**: 新しい共通機能追加時、初期化順序変更時
 

@@ -16,9 +16,8 @@ import {
   prepareJsonRules,
   chunkThreads,
 } from "@/comment-filter2/filter/json-comment-filter-engine";
-import jsonWorkerUrl from "@/comment-filter2/filter/json-comment-filter-worker.ts?worker&url";
-
-const jsonCommentWorkerUrl = new URL(jsonWorkerUrl, import.meta.url);
+const JSON_COMMENT_WORKER_URL =
+  "/local/features/dist/workers/json-comment-filter-worker.js";
 
 interface ProcessRequestPayload {
   threads: CF2Thread[];
@@ -235,12 +234,11 @@ export class JsonCommentFilter {
     payload: ProcessRequestPayload,
   ): Promise<ProcessResponsePayload> {
     return new Promise((resolve, reject) => {
-      const workerUrl = jsonCommentWorkerUrl;
       window?.logger.info(
         "[CommentFilter2] JSON worker URL:",
-        workerUrl.toString(),
+        JSON_COMMENT_WORKER_URL,
       );
-      const worker = new Worker(workerUrl, { type: "module" });
+      const worker = new Worker(JSON_COMMENT_WORKER_URL, { type: "module" });
 
       worker.onmessage = (event: MessageEvent<ProcessResponse>) => {
         resolve(event.data.payload);

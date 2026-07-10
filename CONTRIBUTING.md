@@ -233,7 +233,7 @@ git tag -d "#190"
 git push origin :refs/tags/#190
 
 # GitHub Actionsが自動的に実行され、以下が行われます：
-# 1. TypeScript/Viteプロジェクトのビルド
+# 1. TypeScript/Bunプロジェクトのビルド
 # 2. リリースファイルの作成（ZIP/TAR.GZ）
 # 3. GitHubリリースページの作成
 # 4. 自動リリースノートの生成

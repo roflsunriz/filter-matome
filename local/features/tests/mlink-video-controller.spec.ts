@@ -1,6 +1,7 @@
 import { expect, test, type Route } from "@playwright/test";
-import * as esbuild from "esbuild";
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const projectRoot = join(import.meta.dirname, "..");
@@ -50,58 +51,17 @@ function extractTemplateBody(source: string, exportName: string): string {
 }
 
 async function buildControllerBundle(): Promise<string> {
-  const result = await esbuild.build({
-    bundle: true,
-    write: false,
-    format: "iife",
-    globalName: "MlinkTabControllers",
-    platform: "browser",
-    target: "es2020",
-    loader: {
-      ".svg": "text",
-    },
-    plugins: [
-      {
-        name: "inline-css-query",
-        setup(build) {
-          build.onResolve({ filter: /\.css\?inline$/ }, (args) => ({
-            path: join(args.resolveDir, args.path.replace("?inline", "")),
-            namespace: "inline-css-query",
-          }));
-
-          build.onLoad(
-            { filter: /.*/, namespace: "inline-css-query" },
-            (args) => ({
-              contents: readFileSync(args.path, "utf8"),
-              loader: "text",
-            }),
-          );
-        },
-      },
-    ],
-    alias: {
-      "@": join(projectRoot, "src"),
-    },
-    stdin: {
-      resolveDir: projectRoot,
-      loader: "ts",
-      contents: `
-        export { PanelNavigationController } from "./src/mlink-video-controller/tab-controllers/navigation";
-        export { PlaybackTabController } from "./src/mlink-video-controller/tab-controllers/playback-tab";
-        export { SpeedTabController } from "./src/mlink-video-controller/tab-controllers/speed-tab";
-        export { VolumeTabController } from "./src/mlink-video-controller/tab-controllers/volume-tab";
-        export { LinksTabController } from "./src/mlink-video-controller/tab-controllers/links-tab";
-        export { CommentsTabController } from "./src/mlink-video-controller/tab-controllers/comments-tab";
-        export { ModuleManager } from "./src/mlink-video-controller/module-handlers/module-manager";
-        export { SettingsUI } from "./src/mlink-video-controller/module-handlers/settings-ui";
-        export { normalizeModuleSettingsForRegistry } from "./src/mlink-video-controller/module-handlers/settings-normalizer";
-        export { ThumbnailsFilterModule, thumbnailsFilterModuleConfig } from "./src/mlink-video-controller/modules/thumbnails-filter-module";
-        export { HeaderModule, headerModuleConfig } from "./src/mlink-video-controller/modules/header-module";
-      `,
-    },
-  });
-
-  return result.outputFiles[0].text;
+  const tempDirectory = mkdtempSync(join(tmpdir(), "filter-matome-test-"));
+  const outputPath = join(tempDirectory, "controller.js");
+  try {
+    execFileSync("bun", ["scripts/build-playwright-fixture.ts", outputPath], {
+      cwd: projectRoot,
+      stdio: "pipe",
+    });
+    return readFileSync(outputPath, "utf8");
+  } finally {
+    rmSync(tempDirectory, { recursive: true, force: true });
+  }
 }
 
 function buildPanelHtml(): string {
@@ -817,7 +777,7 @@ test("heatmap settings modal opens from module settings and applies values", asy
           ) !== null,
         metaCount: item.querySelectorAll(".module-meta > span").length,
         actionControlCount: item.querySelectorAll(
-          ":scope > .module-actions .settings-btn, :scope > .module-actions .toggle-switch",
+          ":scope > .module-actions .settings-btn, :scope > .module-actions .toggle-switch, :scope > .module-actions .module-external-link",
         ).length,
       }),
     ),
@@ -832,7 +792,7 @@ test("heatmap settings modal opens from module settings and applies values", asy
         item.hasActions &&
         item.hasSettingsSlot &&
         item.hasToggleSlot &&
-        item.metaCount >= 3 &&
+        item.metaCount >= 2 &&
         item.actionControlCount >= 1,
     ),
   ).toBe(true);

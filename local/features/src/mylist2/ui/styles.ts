@@ -1,3 +1,5 @@
+import { materialIconsStyles } from "@/common/material-icons";
+
 /**
  * Mylist2 Manager 用の CSS スタイル（style.css 相当） */
 
@@ -1690,6 +1692,8 @@ export const FAB_AND_SETTINGS_MODAL_STYLES = `
 /**
  * すべての Mylist Manager スタイルを統合 */
 export const MYLIST_MANAGER_STYLES = `
+${materialIconsStyles}
+
 ${MYLIST_MANAGER_STYLES_PART1}
 
 ${MYLIST_MANAGER_STYLES_PART2}

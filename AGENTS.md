@@ -18,7 +18,6 @@
 - `comment-filter2` には video-player と連携するための `video-player-bridge.ts` があります。
 - `mlink-video-controller` には各モジュールのソースコードがあります。`modules` フォルダと `module-handlers` フォルダには各モジュールのソースコードがあります。モジュールの読み込みと管理は `module-handlers` フォルダにあります。モジュールの設定は `settings-manager.ts` と `settings-ui.ts` で管理されています。
 - 各プロジェクトのルートに README.md があります。各プロジェクトの説明と編集ガイドが書かれているため、編集前に確認してください。変更後は README.md を更新してください。
-- `local/features/config/` には Vite の設定ファイルがあります。
-- `bun run build:comment-filter2` などのコマンドで個別ビルドして時間を短縮できます。詳細は `local/features/package.json` を参照してください。
-- `mylist2`、`comment-filter2`、`mlink-video-controller` を更新したときは、併せて `video-player` もビルドしてください。一緒にバンドルされているためです。
+- `local/features/scripts/build.ts` がBun bundlerによる単一バンドル、Worker、Service Worker、静的HTMLの生成を一元管理します。
+- 個別ビルドはありません。どのプロジェクトを更新した場合も `bun run build` で全成果物を生成してください。
 - `extensions/` には NicoCache_nl 用の拡張機能があります。これはNicoCache_nlで使用される拡張機能です。ビルドするには NicoCache_nl のソースコードが必要です。このワークスペースにはないのでコンパイルできません。

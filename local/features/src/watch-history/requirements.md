@@ -18,7 +18,7 @@
 | 区分    | 採用技術                            | 備考                    |
 | ----- | ------------------------------- | --------------------- |
 | 言語    | TypeScript 5 系                  | 型安全と IDE 連携向上         |
-| バンドラ  | Vite 5 系                        | ESBuild & HMR         |
+| バンドラ  | Bun 1.3 系                       | 単一IIFEバンドル      |
 | 実行基盤  | ローカルプロキシサーバ   | Firefox 主眼・Chrome 互換  |
 | ストレージ | IndexedDB v1                    | KeyPath 方式            |
 | アイコン | src/common/material-icons.ts使用 | マテリアルアイコン使用 |

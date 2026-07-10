@@ -248,19 +248,13 @@ declare global {
   }
 }
 
-// 自動初期化
 let commentFilter2Instance: CommentFilter2 | null = null;
 
-// DOM読み込み完了後に初期化
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    initializeCommentFilter2();
-  });
-} else {
-  initializeCommentFilter2();
-}
+export function startCommentFilter2(): CommentFilter2 {
+  if (commentFilter2Instance) {
+    return commentFilter2Instance;
+  }
 
-function initializeCommentFilter2() {
   try {
     commentFilter2Instance = new CommentFilter2();
     window.CommentFilter2Instance = commentFilter2Instance;
@@ -275,8 +269,10 @@ function initializeCommentFilter2() {
     window.logger?.info(
       "[CommentFilter2] Access via window.CommentFilter2Instance for debugging",
     );
+    return commentFilter2Instance;
   } catch (error) {
-    window.logger?.error("[CommentFilter2] Auto-initialization failed:", error);
+    window.logger?.error("[CommentFilter2] Initialization failed:", error);
+    throw error;
   }
 }
 

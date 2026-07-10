@@ -38,10 +38,7 @@ src/
     └── styles.ts                        # CSSスタイル定義 (17KB)
 
 関連フォルダ:
-├── config/
-│   └── vite.config.ts                   # Viteビルド設定
-└── dist/
-    └── list.js                          # コンパイル済みファイル
+└── main.ts                              # makeCacheList登録処理
 ```
 
 ## 🏗️ アーキテクチャ概要
@@ -115,8 +112,8 @@ EventCoordinator ─── ユーザー操作待機
 ### 🎯 **コア機能**
 
 #### `main.ts` - メインエントリーポイント
-- **役割**: システム全体の初期化・統合
-- **機能**: スタイル読み込み、各マネージャー初期化、DOM読み込み監視
+- **役割**: `window.makeCacheList`互換APIの登録と一覧初期化
+- **機能**: 呼び出し時のスタイル適用、各マネージャー初期化
 - **編集タイミング**: システム全体の挙動変更、初期化順序変更
 
 #### `loaders/load-data-from-memory.ts` - データローダー
@@ -333,11 +330,10 @@ EventCoordinator ─── ユーザー操作待機
 - Intersection Observerを使用した遅延処理推奨
 
 ### 🎛️ **ビルド・開発環境**
-- **開発サーバー**: `bun dev` (Vite HMR対応)
-- **本番ビルド**: `bun run build:cache-data-manager` → `dist/cacheDataManager.iife.js`
-- **個別ビルド**: `bun run build:cache-data-manager`
+- **本番ビルド**: `bun run build` → `dist/features.js`
+- **構成**: 中央バンドルが `window.makeCacheList` を登録
 - **型チェック**: `bun run type-check`
-- **設定ファイル**: `config/vite.cache-data-manager.config.js`
+- **設定ファイル**: `scripts/build.ts`
 
 ## 🔍 デバッグ・テスト
 

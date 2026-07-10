@@ -47,7 +47,7 @@ export const buildVideoUrl = (
     currentVideoLinkTarget === "local" &&
     shouldUseLocalPlayer(videoId, context)
   ) {
-    return `/local/features/dist/src/video-player/standalone/index.html?videoId=${encodeURIComponent(videoId)}`;
+    return `/local/features/dist/pages/video-player/index.html?videoId=${encodeURIComponent(videoId)}`;
   }
   return `https://www.nicovideo.jp/watch/${videoId}`;
 };

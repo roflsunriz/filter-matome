@@ -447,7 +447,7 @@ const stats = await dbManager.getDatabaseStats();
 ## 🚀 新しいルーティング方式
 - 公式の視聴ページでは  が有料動画を判定し、スタンドアロンページ  へ遷移します。
 - 公式の視聴ページでは  が有料動画を判定し、スタンドアロンページ  へ遷移します。
-- 公式の視聴ページでは video-player.es.js が有料動画を判定し、スタンドアロンページ /local/features/dist/src/video-player/standalone/index.html へ遷移します。
+- 公式の視聴ページでは features.js 内のvideo-playerルーターが有料動画を判定し、スタンドアロンページ /local/features/dist/pages/video-player/index.html へ遷移します。
 - スタンドアロンページは src/video-player/standalone 配下で構成され、standalone/main.ts が StandalonePlayer を初期化して動画・コメント・メタ情報を描画します。
 - メタ情報を取得できない動画では、タイトルを動画IDへフォールバックしてローカルキャッシュ再生を試行します。
 - ルーティングロジックは src/video-player/router/watch-page-router.ts に切り出されており、無料動画は公式プレイヤーをそのまま利用します。削除・視聴不可動画を検出した場合は既存の deletedVideoPlayer インターフェース経由でスタンドアロン deleted モードを開きます。

@@ -5,14 +5,13 @@
 declare const self: ServiceWorkerGlobalScope;
 
 // Service Worker環境チェック
-window?.logger.debug("Service Worker script loaded");
-window?.logger.debug("Current location:", self.location.href);
+console.debug("Service Worker script loaded");
+console.debug("Current location:", self.location.href);
 
-const CACHE_NAME = "custom-mylist2-v1";
+const CACHE_NAME = "custom-mylist2-v2";
 const CACHE_URLS = [
-  "/local/features/dist/mylist2.css",
-  "/local/features/dist/mylist2.es.js",
-  "/local/features/dist/src/mylist2/index.html",
+  "/local/features/dist/features.js",
+  "/local/features/dist/pages/mylist/index.html",
 ];
 
 // 通常のキャッシュの有効期限（24時間）
@@ -29,7 +28,7 @@ const THUMBNAIL_PATTERN = /nicovideo\.jp\/thumb\//;
 
 // Service Workerのインストール
 self.addEventListener("install", (event: ExtendableEvent) => {
-  window?.logger.debug("Service Worker installing...");
+  console.debug("Service Worker installing...");
   event.waitUntil(
     caches
       .open(CACHE_NAME)
@@ -42,14 +41,14 @@ self.addEventListener("install", (event: ExtendableEvent) => {
         return cache.addAll(CACHE_URLS);
       })
       .catch((error) => {
-        window?.logger.error("Cache installation failed:", error);
+        console.error("Cache installation failed:", error);
       }),
   );
 });
 
 // 定期的なキャッシュクリーンアップ
 self.addEventListener("activate", (event: ExtendableEvent) => {
-  window?.logger.debug("Service Worker activating...");
+  console.debug("Service Worker activating...");
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
       try {
@@ -69,7 +68,7 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
 
         return Promise.all(deletions);
       } catch (error) {
-        window?.logger.error("Cache cleanup failed:", error);
+        console.error("Cache cleanup failed:", error);
       }
     }),
   );
@@ -105,7 +104,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
             return response;
           })
           .catch((error) => {
-            window?.logger.error("Cache save failed:", error);
+            console.error("Cache save failed:", error);
             // オフライン時のフォールバック画像を返す
             return new Response("", {
               status: 404,

@@ -21,8 +21,6 @@ import { logger } from "@/common/logger";
 const WATCH_PAGE_PATH_REGEX = /^\/watch\/[a-z]{2}\d+$/;
 const VIDEO_ID_IN_PATH_REGEX = /[a-z]{2}\d+/;
 const VIDEO_ID_PARAM_REGEX = /^[a-z]{2}\d+$/;
-const STANDALONE_PLAYER_PATH =
-  "/local/features/dist/src/video-player/standalone/index.html";
 
 const extractVideoIdFromQuery = (search: string): string | null => {
   if (typeof search !== "string" || search.length === 0) {
@@ -43,7 +41,7 @@ const extractVideoIdFromQuery = (search: string): string | null => {
 };
 
 const isStandalonePlayerLocation = (loc: Location = location): boolean => {
-  if (loc.pathname !== STANDALONE_PLAYER_PATH) {
+  if (document.documentElement.dataset["featurePage"] !== "video-player") {
     return false;
   }
 
@@ -969,7 +967,6 @@ export class WatchTracker {
   }
 }
 
-// ページ読み込み時に自動初期化
 let watchTracker: WatchTracker | null = null;
 
 async function initializeWatchTracker(): Promise<void> {
@@ -990,62 +987,54 @@ async function initializeWatchTracker(): Promise<void> {
   watchTracker = new WatchTracker();
 }
 
-// DOM読み込み完了時に初期化
+let started = false;
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => {
-    void initializeWatchTracker();
-  });
-} else {
+export function startWatchTracker(): void {
+  if (started) {
+    return;
+  }
+  started = true;
+
   void initializeWatchTracker();
-}
 
-// ページ遷移時の対応（SPA対応）
-let currentUrl = location.href;
-const observer = new MutationObserver(() => {
-  if (location.href !== currentUrl) {
+  let currentUrl = location.href;
+  const observer = new MutationObserver(() => {
+    if (location.href === currentUrl) {
+      return;
+    }
     currentUrl = location.href;
 
-    // 視聴ページかスタンドアロンプレイヤーかをチェック
     if (isWatchPageLocation() || isStandalonePlayerLocation()) {
-      // 少し待ってから初期化（DOM更新完了を待つ）
       setTimeout(() => {
         void initializeWatchTracker();
       }, 1000);
     }
-  }
-});
+  });
 
-observer.observe(document.body, {
-  childList: true,
-  subtree: true,
-});
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
 
-// ページ離脱時の処理
-window.addEventListener("beforeunload", () => {
-  if (watchTracker) {
-    // beforeunloadでは非同期処理ができないので、同期的に記録を試みる
-    watchTracker.destroySync();
-  }
-});
+  window.addEventListener("beforeunload", () => {
+    watchTracker?.destroySync();
+  });
 
-// ページの可視性変更時の処理（タブ切り替え、最小化など）
-document.addEventListener("visibilitychange", () => {
-  if (watchTracker && document.visibilityState === "hidden") {
-    logger.debug(
-      "[WatchTracker] ページが非表示になりました - 進捗を一時保存します",
-    );
-    void watchTracker.saveSnapshot();
-    // 背景でも tracking は継続するゆえ destroy は行いません
-  }
-});
+  document.addEventListener("visibilitychange", () => {
+    if (watchTracker && document.visibilityState === "hidden") {
+      logger.debug(
+        "[WatchTracker] ページが非表示になりました - 進捗を一時保存します",
+      );
+      void watchTracker.saveSnapshot();
+    }
+  });
 
-// ページ離脱時の処理（より確実にキャッチ）
-window.addEventListener("pagehide", () => {
-  if (watchTracker) {
-    logger.debug(
-      "[WatchTracker] ページが離脱されました - 視聴セッションを記録します",
-    );
-    void watchTracker.destroy();
-  }
-});
+  window.addEventListener("pagehide", () => {
+    if (watchTracker) {
+      logger.debug(
+        "[WatchTracker] ページが離脱されました - 視聴セッションを記録します",
+      );
+      void watchTracker.destroy();
+    }
+  });
+}

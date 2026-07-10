@@ -429,7 +429,7 @@ export class Mylist2ManagerUI {
           const available = await checkVideoAvailability(videoId);
           const url =
             available === false
-              ? `/local/features/dist/src/video-player/standalone/index.html?videoId=${encodeURIComponent(videoId)}`
+              ? `/local/features/dist/pages/video-player/index.html?videoId=${encodeURIComponent(videoId)}`
               : `https://www.nicovideo.jp/watch/${videoId}`;
           window.open(url, "_blank");
         } finally {

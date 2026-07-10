@@ -10,20 +10,20 @@
     "sourceMap": true,
     "outDir": "./dist",
     "paths": {
-      "@/*": [
-        "./src/*",
-        "./node_modules/comment-overlay/dist/types/*"
-      ]
+      "@/*": ["./src/*", "./node_modules/comment-overlay/dist/types/*"]
     },
     "skipLibCheck": true,
     "lib": ["DOM", "ES2020"],
     "isolatedModules": true,
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": [
-    "src/**/*.ts",
-    "src/types/vite-env.d.ts",
-    "playwright.config.ts"
-  ],
-  "exclude": ["node_modules", "dist", "config", "scripts", "tests", "tests-examples"]
-} 
+  "include": ["src/**/*.ts", "playwright.config.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "config",
+    "scripts",
+    "tests",
+    "tests-examples"
+  ]
+}

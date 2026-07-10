@@ -246,13 +246,14 @@ window.commonHelper = {
   fetchWatchPage: async (
     SMID?: string,
   ): Promise<ExtendedFetchWatchPageResult | void> => {
-    SMID = SMID ? SMID : /[ns][mo][0-9]+/.exec(location.pathname)?.[0];
-    if (!SMID) {
+    const resolvedVideoId =
+      normalizeVideoId(SMID) ?? window.commonHelper.extractVideoIdFromUrl();
+    if (!resolvedVideoId) {
       console.error("SMIDが取得できませんでした");
       return;
     }
 
-    const cacheKey = SMID.toLowerCase();
+    const cacheKey = resolvedVideoId;
     const cachedResult = getTimedCache(watchPageCache, cacheKey);
     if (cachedResult) {
       return cachedResult;
@@ -266,7 +267,7 @@ window.commonHelper = {
     const request = (async (): Promise<ExtendedFetchWatchPageResult | void> => {
       try {
         const response = await window.commonHelper.fetchRequest(
-          "https://www.nicovideo.jp/watch/" + SMID,
+          "https://www.nicovideo.jp/watch/" + resolvedVideoId,
         );
 
         if (!response.ok) {

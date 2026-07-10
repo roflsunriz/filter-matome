@@ -2,7 +2,7 @@
 
 !!! warning "重要"
       NicoCache_nl はキャッシュデータマネージャースクリプトを `C:\NicoCache_nl\local\list.js` という「固定のパス・固定のファイル名」で参照する。設定で場所や名前は変更不能。  
-      そのため、ビルド成果物（`C:\NicoCache_nl\local\features\dist\cacheDataManager.iife.js`）へ必ずこの固定パス名でシンボリックリンクを張る必要がある。`.map`ファイルはソースからビルドしたときに生成されるデバッグ用ファイル。リリースには含まれていない。
+      そのため、ビルド成果物（`C:\NicoCache_nl\local\features\dist\features.js`）へ必ずこの固定パス名でシンボリックリンクを張る必要がある。`.map`ファイルはソースからビルドしたときに生成されるデバッグ用ファイル。リリースには含まれていない。
 
 ---
 
@@ -16,8 +16,8 @@ Stop-Process -Name javaw -Force
 Stop-Process -Name java -Force
 ```
 
-- ビルド済みファイルの一例: `C:\NicoCache_nl\local\features\dist\cacheDataManager.iife.js`
-- `C:\NicoCache_nl\local\features\dist\cacheDataManager.iife.js.map`
+- ビルド済みファイルの一例: `C:\NicoCache_nl\local\features\dist\features.js`
+- `C:\NicoCache_nl\local\features\dist\features.js.map`
 
 ---
 
@@ -33,8 +33,8 @@ Remove-Item -Path "C:\NicoCache_nl\local\list.js.map"
 **2.** 固定パス名 `C:\NicoCache_nl\local\list.js` に、ビルド成果物へのシンボリックリンクを作成する。
 
 ```powershell
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js" -Target "C:\NicoCache_nl\local\features\dist\cacheDataManager.iife.js"
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Target "C:\NicoCache_nl\local\features\dist\cacheDataManager.iife.js.map"
+New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js" -Target "C:\NicoCache_nl\local\features\dist\features.js"
+New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Target "C:\NicoCache_nl\local\features\dist\features.js.map"
 ```
 
    - `-Path` は必ず `C:\NicoCache_nl\local\list.js`（固定）にする。
@@ -69,6 +69,6 @@ Set-Location "C:\NicoCache_nl"
 .\scripts\create-listjs-symlink.ps1
 ```
 
-対話型のスクリプトなので、Targetを訊かれたらビルド成果物のパスを入力する。既定値で`C:\NicoCache_nl\local\features\dist\cacheDataManager.iife.js`を指定済みなのでそれで良ければEnterで進める。
+対話型のスクリプトなので、Targetを訊かれたらビルド成果物のパスを入力する。既定値で`C:\NicoCache_nl\local\features\dist\features.js`を指定済みなのでそれで良ければEnterで進める。
 
 **3.** スクリプトが自動で `list.js` および `.map` のリンクを作成し、確認情報も表示する。

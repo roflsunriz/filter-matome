@@ -34,8 +34,7 @@ const createBreadcrumbs = (): HTMLElement => {
   divider1.textContent = "›";
 
   const featureLink = document.createElement("a");
-  featureLink.href =
-    "/local/features/dist/src/video-player/standalone/index.html";
+  featureLink.href = "/local/features/dist/pages/video-player/index.html";
   featureLink.textContent = "video-player";
 
   const divider2 = document.createElement("span");

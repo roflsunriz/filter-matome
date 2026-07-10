@@ -7,7 +7,7 @@ import {
 } from "@/types/module-types";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
 import { createMaterialIcon } from "@/common/material-icons";
-import harajukuStyle from "./watch-harajuku-style.css?inline";
+import harajukuStyle from "./watch-harajuku-style.css" with { type: "text" };
 
 export const watchHarajukuModuleConfig: ModuleConfig = {
   id: "watch_harajuku",

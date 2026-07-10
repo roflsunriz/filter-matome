@@ -4534,5 +4534,12 @@ class WatchHistoryApp {
   }
 }
 
-// アプリケーションを起動
-document.addEventListener("DOMContentLoaded", () => new WatchHistoryApp());
+let started = false;
+
+export function startWatchHistoryApp(): void {
+  if (started) {
+    return;
+  }
+  started = true;
+  new WatchHistoryApp();
+}

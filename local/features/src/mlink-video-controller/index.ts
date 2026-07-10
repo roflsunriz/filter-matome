@@ -3,8 +3,6 @@ import { CommentApiCache } from "@/mlink-video-controller/managers/comment-api-c
 import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
 
-CommentApiCache.getInstance().install();
-
 class PanelManager {
   private panel: HTMLElement | null = null;
   private observer: MutationObserver;
@@ -248,7 +246,14 @@ class PanelManager {
   }
 }
 
-// ページ読み込み完了後にマネージャーを初期化
-document.addEventListener("DOMContentLoaded", () => {
+let started = false;
+
+export function startMlinkVideoController(): void {
+  if (started) {
+    return;
+  }
+  started = true;
+
+  CommentApiCache.getInstance().install();
   new PanelManager();
-});
+}

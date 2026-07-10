@@ -27,7 +27,7 @@ features/src/types/
 │   ├── module-types.ts                   # モジュールシステム (2.6KB)
 │   └── util-types.ts                     # ユーティリティ (614B)
 └── environment/
-    ├── vite-env.d.ts                     # Vite環境 (162B)
+    ├── asset-modules.d.ts                # CSS/SVG文字列import
     ├── nico-common.d.ts                  # NicoCommon宣言 (469B)
     └── performance.d.ts                  # パフォーマンス拡張 (432B)
 ```
@@ -161,10 +161,9 @@ common-types.ts ─── API・共通データ構造
 
 ### 🛠️ **開発・環境設定**
 
-#### `vite-env.d.ts` - Vite環境
-- **役割**: Vite開発環境の型定義
-- **機能**: CSS inline import対応
-- **編集タイミング**: Vite設定変更、新しいファイル形式対応
+#### `asset-modules.d.ts` - アセット型定義
+- **役割**: Bunで文字列として読み込むCSS/SVGの型定義
+- **編集タイミング**: 新しいアセット形式対応
 
 #### `nico-common.d.ts` - NicoCommon宣言
 - **役割**: NicoCommonライブラリの型宣言
@@ -209,7 +208,7 @@ common-types.ts ─── API・共通データ構造
 3. `index.ts` - エクスポート設定
 
 ### 🔗 **外部ライブラリを統合したい**
-1. **環境ファイル** - `vite-env.d.ts`, `performance.d.ts`等
+1. **環境ファイル** - `asset-modules.d.ts`, `performance.d.ts`等
 2. `global.d.ts` - グローバル宣言
 3. **専用ファイル** - 大きなライブラリは専用型定義ファイル作成
 
@@ -267,4 +266,4 @@ const rule: NGWordRule = { /* ... */ };
 const settings: UIFilterSettings = { /* ... */ };
 ```
 
-この文書を参考に、効率的にtypes型定義システムを編集・拡張できます！ 
+この文書を参考に、効率的にtypes型定義システムを編集・拡張できます！

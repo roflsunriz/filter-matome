@@ -137,7 +137,7 @@ comment-filter2/
     - `showUI()` / `hideUI()` / `toggleUI()` / `destroy()` などを呼び出し可能。
   - `window[Symbol.for('CommentFilter2GlobalData')]`: 旧実装互換のグローバルデータ。
 - 主要イベント
-  - `CommentFilter2Ready`: 自動初期化完了
+  - `CommentFilter2Ready`: 中央ルーターによる初期化完了
   - `cf2:data-updated`: コメントデータ更新
   - `cf2:smid-changed`: SMID 変更検知
 - ログの活用
@@ -146,6 +146,8 @@ comment-filter2/
 - 互換層
   - レガシー NGWord ルールは `comment-filter.ts` 経由で引き続き適用可能ですが、UI は JSON 形式を正としています。
   - 旧形式からのインポートは `legacy-converter.ts` が JSON 形式へ変換した上で保存します。
+
+`startCommentFilter2()`は`src/features.ts`から視聴ページとスタンドアロンプレイヤーでのみ呼び出されます。エントリーファイルを直接読み込んでも自動起動しません。
 
 ## 編集時の注意
 

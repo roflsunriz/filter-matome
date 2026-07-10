@@ -40,6 +40,7 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
    * モジュール初期化
    */
   async initialize(): Promise<void> {
+    await Promise.resolve();
     if (this._isActive) {
       return;
     }
@@ -48,16 +49,6 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
       // Watch Pageかどうかチェック
       if (!this.isWatchPage()) {
         return;
-      }
-
-      // CSSを読み込み（失敗してもモジュールは動作する）
-      try {
-        await this.loadCSS();
-      } catch (error) {
-        window.logger.warn(
-          "[WatchMatrixBackgroundModule] CSS読み込みに失敗しましたが、モジュールは動作します:",
-          error,
-        );
       }
 
       // キャンバスコンテナを作成
@@ -121,39 +112,6 @@ export class WatchMatrixBackgroundModule implements ModuleInstance {
    */
   private isWatchPage(): boolean {
     return isWatchLikePage();
-  }
-
-  /**
-   * CSSを読み込み
-   */
-  private async loadCSS(): Promise<void> {
-    const cssHref =
-      "/local/features/dist/src/watch_page/background_matrix/matrix_rain.css";
-
-    // 既に読み込まれているかチェック
-    const existingLink = document.querySelector(`link[href="${cssHref}"]`);
-    if (existingLink) {
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve, reject) => {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = cssHref;
-
-      link.onload = () => {
-        resolve();
-      };
-      link.onerror = () => {
-        window.logger.error(
-          "[WatchMatrixBackgroundModule] CSS読み込み失敗:",
-          cssHref,
-        );
-        reject(new Error("CSS読み込み失敗"));
-      };
-
-      document.head.appendChild(link);
-    });
   }
 
   /**

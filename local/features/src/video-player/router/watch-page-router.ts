@@ -319,7 +319,7 @@ const routeDeletedVideo = (
 ): boolean => {
   if (
     window.location.pathname ===
-    "/local/features/dist/src/video-player/standalone/index.html"
+    "/local/features/dist/pages/video-player/index.html"
   ) {
     return false;
   }
@@ -425,8 +425,7 @@ export const buildStandaloneUrl = (
     params.set("title", options.title);
   }
   return (
-    "/local/features/dist/src/video-player/standalone/index.html?" +
-    params.toString()
+    "/local/features/dist/pages/video-player/index.html?" + params.toString()
   );
 };
 
@@ -605,7 +604,7 @@ const routeWatchPageIfNeeded = async (): Promise<void> => {
     // 既にスタンドアロンプレイヤーにいる場合は何もしない
     if (
       window.location.pathname ===
-      "/local/features/dist/src/video-player/standalone/index.html"
+      "/local/features/dist/pages/video-player/index.html"
     ) {
       return;
     }

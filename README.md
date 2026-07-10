@@ -152,8 +152,8 @@ winget install Google.Chrome
 ## 🔧 開発者向け情報
 
 ### 技術スタック
-- **言語**: TypeScript 7.0.2（CLI）、TypeScript 6.0.2（ESLint API互換用）
-- **ビルドツール**: Vite 7.3.6
+- **言語**: TypeScript 6.0.2
+- **ビルドツール**: Bun bundler 1.3.14
 - **開発ランタイム**: Bun 1.3.14
 - **静的解析**: ESLint 10.6.0、typescript-eslint 8.63.0
 - **ストレージ**: IndexedDB
@@ -178,17 +178,13 @@ local/
   │   ├── types/                # 共通型定義
   │   ├── video-player/         # ローカル動画プレイヤー
   │   └── watch-history/        # 視聴履歴SPAと視聴追跡
-  ├── dist/              # ビルド済みファイル
-  └── config/            # Vite設定ファイル群
+  ├── dist/              # Bunで生成した単一バンドル、Worker、静的HTML
+  └── scripts/           # Bunビルド・テストスクリプト
 
 nlFilters/
-├── 100_common.txt                  # 共通ライブラリ(トースト通知、ロギング、共通ヘッダ、マテリアルアイコンヘルパなどを提供する共通ライブラリ)
+├── 100_features.txt                # 全機能を含むfeatures.jsをニコニコ動画全体へ挿入
 ├── 101_disable_official_function.txt # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
-├── 102_mlink_video_controller.txt  # マルチリンクビデオコントローラー(視聴ページにマルチリンクビデオコントローラーを追加)
-├── 103_comment_filter2.txt         # コメントフィルター(視聴ページにコメントフィルターを追加)
-├── 104_video_player.txt            # 動画プレイヤー(視聴ページに動画プレイヤーを追加)
-├── 105_premium_hide.txt            # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
-└── 106_watch_history.txt           # 視聴履歴(視聴ページにウォッチトラッカーを追加)
+└── 105_premium_hide.txt            # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
 
 docs/resources/            # USAGE.mdで使われる画像リソース
 ```
@@ -198,15 +194,9 @@ docs/resources/            # USAGE.mdで使われる画像リソース
 cd local/features
 bun install
 bun run build
-
-# 個別ビルド(詳細はpackage.jsonを参照)
-bun run build:comment-filter2
-bun run build:cache-data-manager
-bun run build:movie-info
-bun run build:video-player
-bun run build:mlink-video-controller
-bun run build:watch-history
 ```
+
+`features.js`へ全ブラウザ機能を統合するため、個別ビルドはありません。
 
 ### nlFilter文法
 ```ini
@@ -251,7 +241,7 @@ mkdocs serve
 ## ⚠️ 重要な注意事項
 
 ### シンボリックリンク作成（必須）
-NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\local\list.js` という固定パス・固定名で参照します。ビルド成果物（例: `cacheDataManager.iife.js`）へこの固定パス名でシンボリックリンクを作成しないと機能しません。詳細手順はガイドを参照してください。
+NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\local\list.js` という固定パス・固定名で参照します。ビルド成果物（例: `features.js`）へこの固定パス名でシンボリックリンクを作成しないと機能しません。詳細手順はガイドを参照してください。
 
 
 ### 使用上の注意

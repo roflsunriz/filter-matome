@@ -103,6 +103,3 @@ export type {
   FetchOptions,
   ExtendedFetchWatchPageResult,
 } from "@/types/common-types";
-
-// Vite環境の型定義
-import "@/types/vite-env.d.ts";

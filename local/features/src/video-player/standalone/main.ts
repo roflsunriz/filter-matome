@@ -1018,7 +1018,14 @@ const assignWatchContext = (videoId: string, apiData: ApiData): void => {
   window.NicoCache_nl.watch.apiData = apiData;
 };
 
-const main = async (): Promise<void> => {
+let started = false;
+
+export const startStandalonePlayer = async (): Promise<void> => {
+  if (started) {
+    return;
+  }
+  started = true;
+
   const videoId = getVideoIdFromQuery();
   const mode = getStandaloneModeFromQuery();
   const layout = createStandaloneLayout({ mode });
@@ -1151,5 +1158,3 @@ const main = async (): Promise<void> => {
     layout.description.textContent = "エラー: " + message;
   }
 };
-
-void main();

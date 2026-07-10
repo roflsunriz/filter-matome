@@ -1,65 +1,50 @@
-<!DOCTYPE html>
-<html lang="ja">
+<!doctype html>
+<html lang="ja" data-feature-page="mylist">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>mylist2</title>
-    
-    <!-- ライブラリ -->
-    <script type="module" src="@/common/index.ts" charset="utf-8"></script>
-    <!-- End of ライブラリ -->
-    
-    <!-- マテリアルアイコンスタイル -->
-    <script type="module">
-      import { materialIconsStyles } from '@/common/material-icons';
-      
-      // スタイルを動的に追加
-      const styleSheet = document.createElement('style');
-      styleSheet.textContent = materialIconsStyles;
-      document.head.appendChild(styleSheet);
-    </script>
-    
-    <!-- マイリスト2（専用ページ） -->
-    <script type="module" src="./index.ts" charset="utf-8"></script>
-    <!-- End of マイリスト2（専用ページ） -->
-    
+
+    <script src="/local/features/dist/features.js" defer></script>
+
     <!-- Service Workerの登録 -->
     <script>
       // Service Workerの登録（HTTPS環境またはlocalhost環境でのみ）
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", async () => {
           // 安全な環境かチェック
-          const isSecureContext = window.isSecureContext || 
-                                 location.protocol === 'https:' || 
-                                 location.hostname === 'localhost' || 
-                                 location.hostname === '127.0.0.1';
-          
+          const isSecureContext =
+            window.isSecureContext ||
+            location.protocol === "https:" ||
+            location.hostname === "localhost" ||
+            location.hostname === "127.0.0.1";
+
           if (!isSecureContext) {
-            console.warn('Service Worker requires HTTPS or localhost environment. Skipping registration.');
+            console.warn(
+              "Service Worker requires HTTPS or localhost environment. Skipping registration.",
+            );
             return;
           }
-          
+
           try {
             const registration = await navigator.serviceWorker.register(
-              "/local/features/dist/mylist2-service-worker.js",
+              "/local/features/dist/mylist-service-worker.js",
               {
-                scope: "/local/features/dist/"
-              }
+                scope: "/local/features/dist/",
+              },
             );
             // Service Workerの状態変化を監視
-            registration.addEventListener('updatefound', () => {
+            registration.addEventListener("updatefound", () => {
               // 更新検知のみ行い、通常ログは出力しない
             });
-            
           } catch (error) {
             console.error("ServiceWorker registration failed:", error);
           }
         });
       } else {
-        console.warn('Service Worker is not supported in this browser');
+        console.warn("Service Worker is not supported in this browser");
       }
     </script>
-    
   </head>
   <body>
     <!-- 共通ヘッダー -->
@@ -68,13 +53,41 @@
       <!-- サイドバー（マイリスト一覧） -->
       <div class="mylist-sidebar">
         <div class="mylist-controls">
-          <input type="text" id="newMylistName" placeholder="新規マイリスト名" />
-          <button id="createNewMylist" title="新規マイリスト作成"><img class="material-icon icon-white" data-style="outlined" data-icon="add" alt="add" loading="lazy"/></button>
+          <input
+            type="text"
+            id="newMylistName"
+            placeholder="新規マイリスト名"
+          />
+          <button id="createNewMylist" title="新規マイリスト作成">
+            <img
+              class="material-icon icon-white"
+              data-style="outlined"
+              data-icon="add"
+              alt="add"
+              loading="lazy"
+            />
+          </button>
         </div>
         <!-- マイリスト検索エリア -->
         <div class="search-container">
-          <input type="text" id="mylistSearchInput" placeholder="マイリストを検索..." />
-          <button id="mylistSearchClear" class="search-clear-btn" title="マイリスト検索クリア"><img class="material-icon icon-white" data-style="outlined" data-icon="clear" alt="clear" loading="lazy"/></button>
+          <input
+            type="text"
+            id="mylistSearchInput"
+            placeholder="マイリストを検索..."
+          />
+          <button
+            id="mylistSearchClear"
+            class="search-clear-btn"
+            title="マイリスト検索クリア"
+          >
+            <img
+              class="material-icon icon-white"
+              data-style="outlined"
+              data-icon="clear"
+              alt="clear"
+              loading="lazy"
+            />
+          </button>
         </div>
         <div class="mylist-sort-controls">
           <select id="mylistSortType">
@@ -113,12 +126,44 @@
           </select>
           <!-- 動画検索エリア -->
           <div class="search-container">
-            <input type="text" id="videoSearchInput" placeholder="動画を検索..." />
-            <button id="videoSearchClear" class="search-clear-btn" title="動画検索クリア"><img class="material-icon icon-white" data-style="outlined" data-icon="clear" alt="clear" loading="lazy"/></button>
+            <input
+              type="text"
+              id="videoSearchInput"
+              placeholder="動画を検索..."
+            />
+            <button
+              id="videoSearchClear"
+              class="search-clear-btn"
+              title="動画検索クリア"
+            >
+              <img
+                class="material-icon icon-white"
+                data-style="outlined"
+                data-icon="clear"
+                alt="clear"
+                loading="lazy"
+              />
+            </button>
           </div>
           <div class="video-selection-controls">
-            <button id="selectAllVideos" class="cml2-btn" title="全て選択"><img class="material-icon icon-white" data-style="outlined" data-icon="check_box" alt="select_all" loading="lazy"/></button>
-            <button id="deselectAllVideos" class="cml2-btn" title="選択解除"><img class="material-icon icon-white" data-style="outlined" data-icon="check_box_outline_blank" alt="deselect_all" loading="lazy"/></button>
+            <button id="selectAllVideos" class="cml2-btn" title="全て選択">
+              <img
+                class="material-icon icon-white"
+                data-style="outlined"
+                data-icon="check_box"
+                alt="select_all"
+                loading="lazy"
+              />
+            </button>
+            <button id="deselectAllVideos" class="cml2-btn" title="選択解除">
+              <img
+                class="material-icon icon-white"
+                data-style="outlined"
+                data-icon="check_box_outline_blank"
+                alt="deselect_all"
+                loading="lazy"
+              />
+            </button>
           </div>
           <div class="bulk-action-controls">
             <select id="selectedVideosAction">
@@ -129,7 +174,15 @@
               <option value="refresh">情報更新</option>
               <option value="availability-check">公開状態チェック</option>
             </select>
-            <button id="executeSelectedAction" title="実行"><img class="material-icon icon-white" data-style="outlined" data-icon="play_arrow" alt="execute" loading="lazy"/></button>
+            <button id="executeSelectedAction" title="実行">
+              <img
+                class="material-icon icon-white"
+                data-style="outlined"
+                data-icon="play_arrow"
+                alt="execute"
+                loading="lazy"
+              />
+            </button>
           </div>
         </div>
         <!-- 動画一覧 -->
@@ -152,14 +205,28 @@
                   <span class="video-upload-date"></span>
                 </div>
               </div>
-              <button class="action-trigger" aria-label="アクションメニュー" title="アクション">⋮</button>
+              <button
+                class="action-trigger"
+                aria-label="アクションメニュー"
+                title="アクション"
+              >
+                ⋮
+              </button>
             </div>
           </template>
           <!-- キーワードアイテムのテンプレート（仮想スクロール対応・アクションメニュー方式） -->
           <template id="keywordItemTemplate">
             <div class="video-item keyword-item">
               <input type="checkbox" class="video-select" />
-              <div class="keyword-icon" title="キーワード検索"><img class="material-icon icon-dark" data-style="outlined" data-icon="search" alt="search" loading="lazy"/></div>
+              <div class="keyword-icon" title="キーワード検索">
+                <img
+                  class="material-icon icon-dark"
+                  data-style="outlined"
+                  data-icon="search"
+                  alt="search"
+                  loading="lazy"
+                />
+              </div>
               <div class="video-info">
                 <div class="video-title">
                   <span class="keyword-text"></span>
@@ -168,44 +235,85 @@
                   <span class="keyword-added-date"></span>
                 </div>
                 <div class="keyword-links">
-                  <a href="#" class="keyword-search" target="_blank">キーワード検索</a>
+                  <a href="#" class="keyword-search" target="_blank"
+                    >キーワード検索</a
+                  >
                   <a href="#" class="tag-search" target="_blank">タグ検索</a>
-                  <a href="#" class="mylist-search" target="_blank">マイリスト検索</a>
+                  <a href="#" class="mylist-search" target="_blank"
+                    >マイリスト検索</a
+                  >
                 </div>
               </div>
-              <button class="action-trigger" aria-label="アクションメニュー" title="アクション">⋮</button>
+              <button
+                class="action-trigger"
+                aria-label="アクションメニュー"
+                title="アクション"
+              >
+                ⋮
+              </button>
             </div>
           </template>
         </div>
       </div>
-      
+
       <!-- FAB（設定モーダルを開く） -->
-      <button id="settingsFab" class="cml2-fab" data-tooltip="マイリスト設定" title="マイリスト設定">
-        <img class="material-icon icon-white" data-style="outlined" data-icon="settings" alt="settings" loading="lazy"/>
+      <button
+        id="settingsFab"
+        class="cml2-fab"
+        data-tooltip="マイリスト設定"
+        title="マイリスト設定"
+      >
+        <img
+          class="material-icon icon-white"
+          data-style="outlined"
+          data-icon="settings"
+          alt="settings"
+          loading="lazy"
+        />
       </button>
     </div>
-    
+
     <!-- マイリスト設定モーダル -->
     <div id="settingsModal" class="cml2-settings-modal">
       <div class="cml2-settings-content">
         <div class="cml2-settings-header">
           <h2 class="cml2-settings-title">マイリスト設定</h2>
-          <button id="settingsModalClose" class="cml2-settings-close" title="閉じる">
-            <img class="material-icon icon-white" data-style="outlined" data-icon="close" alt="close" loading="lazy"/>
+          <button
+            id="settingsModalClose"
+            class="cml2-settings-close"
+            title="閉じる"
+          >
+            <img
+              class="material-icon icon-white"
+              data-style="outlined"
+              data-icon="close"
+              alt="close"
+              loading="lazy"
+            />
           </button>
         </div>
-        
+
         <!-- マイリスト名編集セクション -->
         <div class="cml2-settings-section">
           <div class="cml2-settings-section-title">マイリスト名</div>
           <div class="cml2-settings-mylist-name">
-            <input type="text" id="currentMylistName" placeholder="マイリスト名を入力..." />
+            <input
+              type="text"
+              id="currentMylistName"
+              placeholder="マイリスト名を入力..."
+            />
             <button id="saveMylistName" class="cml2-btn" title="名前を保存">
-              <img class="material-icon icon-white" data-style="outlined" data-icon="save" alt="save" loading="lazy"/>
+              <img
+                class="material-icon icon-white"
+                data-style="outlined"
+                data-icon="save"
+                alt="save"
+                loading="lazy"
+              />
             </button>
           </div>
         </div>
-        
+
         <!-- テーマ選択セクション -->
         <div class="cml2-settings-section cml2-settings-theme">
           <div class="cml2-settings-section-title">テーマ</div>
@@ -217,7 +325,7 @@
             <option value="dark-red">ダーク + レッド</option>
           </select>
         </div>
-        
+
         <!-- 動画リンク先セクション -->
         <div class="cml2-settings-section">
           <div class="cml2-settings-section-title">動画リンク先</div>
@@ -226,71 +334,141 @@
             <option value="local">ローカルプレーヤー (video-player)</option>
           </select>
         </div>
-        
+
         <!-- 動画追加セクション -->
         <div class="cml2-settings-section">
           <div class="cml2-settings-section-title">動画を追加</div>
           <div class="cml2-settings-add-form">
-            <input type="text" id="videoIdInput" placeholder="動画ID または URL" />
+            <input
+              type="text"
+              id="videoIdInput"
+              placeholder="動画ID または URL"
+            />
             <button id="addVideo" class="cml2-btn" title="動画追加">
-              <img class="material-icon icon-white" data-style="outlined" data-icon="add" alt="add" loading="lazy"/>
+              <img
+                class="material-icon icon-white"
+                data-style="outlined"
+                data-icon="add"
+                alt="add"
+                loading="lazy"
+              />
               <span>追加</span>
             </button>
           </div>
         </div>
-        
+
         <!-- キーワード追加セクション -->
         <div class="cml2-settings-section">
           <div class="cml2-settings-section-title">キーワードを追加</div>
           <div class="cml2-settings-add-form">
             <input type="text" id="keywordInput" placeholder="キーワード" />
             <button id="addKeyword" class="cml2-btn" title="キーワード追加">
-              <img class="material-icon icon-white" data-style="outlined" data-icon="add" alt="add" loading="lazy"/>
+              <img
+                class="material-icon icon-white"
+                data-style="outlined"
+                data-icon="add"
+                alt="add"
+                loading="lazy"
+              />
               <span>追加</span>
             </button>
           </div>
         </div>
-        
+
         <!-- インポート・エクスポートセクション -->
         <div class="cml2-settings-section">
           <div class="cml2-settings-section-title">データ管理</div>
           <div class="cml2-settings-actions">
             <button id="exportMylist" class="cml2-btn" title="エクスポート">
-              <img class="material-icon icon-white" data-style="outlined" data-icon="file_upload" alt="export" loading="lazy"/>
+              <img
+                class="material-icon icon-white"
+                data-style="outlined"
+                data-icon="file_upload"
+                alt="export"
+                loading="lazy"
+              />
               <span>エクスポート</span>
             </button>
-            <input type="file" id="importFile" accept=".json" style="display: none" />
+            <input
+              type="file"
+              id="importFile"
+              accept=".json"
+              style="display: none"
+            />
             <button id="importMylist" class="cml2-btn" title="インポート">
-              <img class="material-icon icon-white" data-style="outlined" data-icon="file_download" alt="import" loading="lazy"/>
+              <img
+                class="material-icon icon-white"
+                data-style="outlined"
+                data-icon="file_download"
+                alt="import"
+                loading="lazy"
+              />
               <span>インポート</span>
             </button>
           </div>
         </div>
-        
+
         <!-- 危険ゾーン -->
         <div class="cml2-settings-section cml2-settings-danger-zone">
           <div class="cml2-settings-section-title">危険な操作</div>
           <div class="cml2-settings-actions">
-            <button id="deleteMylist" class="cml2-btn cml2-btn-danger" title="マイリストを削除">
-              <img class="material-icon icon-white" data-style="outlined" data-icon="delete" alt="delete" loading="lazy"/>
+            <button
+              id="deleteMylist"
+              class="cml2-btn cml2-btn-danger"
+              title="マイリストを削除"
+            >
+              <img
+                class="material-icon icon-white"
+                data-style="outlined"
+                data-icon="delete"
+                alt="delete"
+                loading="lazy"
+              />
               <span>マイリストを削除</span>
             </button>
           </div>
         </div>
       </div>
     </div>
-    
+
     <!-- モーダルウィンドウ（マイリスト選択） -->
     <div id="mylistSelectModal" class="modal" style="display: none">
       <div class="modal-content">
-        <span class="close" title="閉じる"><img class="material-icon icon-white" data-style="outlined" data-icon="close" alt="close" loading="lazy"/></span>
+        <span class="close" title="閉じる"
+          ><img
+            class="material-icon icon-white"
+            data-style="outlined"
+            data-icon="close"
+            alt="close"
+            loading="lazy"
+        /></span>
         <h2>マイリストを選択</h2>
         <div id="modalMylistList" class="modal-mylist-list">
           <!-- マイリスト選択肢がここに動的に追加される -->
         </div>
         <div class="modal-actions">
-          <button id="confirmMylistSelection" class="cml2-btn" title="実行"><img class="material-icon icon-white" data-style="outlined" data-icon="play_arrow" alt="execute" loading="lazy"/></button>
-          <button id="cancelMylistSelection" class="cml2-btn cml2-btn-secondary" title="キャンセル"><img class="material-icon icon-white" data-style="outlined" data-icon="close" alt="cancel" loading="lazy"/></button>
+          <button id="confirmMylistSelection" class="cml2-btn" title="実行">
+            <img
+              class="material-icon icon-white"
+              data-style="outlined"
+              data-icon="play_arrow"
+              alt="execute"
+              loading="lazy"
+            />
+          </button>
+          <button
+            id="cancelMylistSelection"
+            class="cml2-btn cml2-btn-secondary"
+            title="キャンセル"
+          >
+            <img
+              class="material-icon icon-white"
+              data-style="outlined"
+              data-icon="close"
+              alt="cancel"
+              loading="lazy"
+            />
+          </button>
         </div>
       </div>
     </div>
@@ -301,12 +479,18 @@
         <p id="confirmMessage"></p>
         <div class="modal-actions">
           <button id="confirmYes" class="cml2-btn cml2-btn-danger">はい</button>
-          <button id="confirmNo" class="cml2-btn cml2-btn-secondary">いいえ</button>
+          <button id="confirmNo" class="cml2-btn cml2-btn-secondary">
+            いいえ
+          </button>
         </div>
       </div>
     </div>
     <!-- プログレスバー -->
-    <div id="progressContainer" class="progress-container" style="display: none">
+    <div
+      id="progressContainer"
+      class="progress-container"
+      style="display: none"
+    >
       <div class="progress-bar">
         <div id="progressBar" class="progress-fill"></div>
       </div>
@@ -317,10 +501,21 @@
       <div class="progress-content">
         <div class="progress-circle">
           <svg class="circular-progress" viewBox="0 0 36 36">
-            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
-                  fill="none" stroke="#eee" stroke-width="3"/>
-            <path class="progress" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
-                  fill="none" stroke="#3498db" stroke-width="3" stroke-linecap="round"/>
+            <path
+              class="circle-bg"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              fill="none"
+              stroke="#eee"
+              stroke-width="3"
+            />
+            <path
+              class="progress"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              fill="none"
+              stroke="#3498db"
+              stroke-width="3"
+              stroke-linecap="round"
+            />
           </svg>
           <div class="progress-text">0%</div>
         </div>
@@ -330,11 +525,30 @@
     <!-- キーワード編集モーダル -->
     <div id="keywordEditModal" class="modal" style="display: none">
       <div class="modal-content">
-        <span class="close-button" title="閉じる"><img class="material-icon icon-white" data-style="outlined" data-icon="close" alt="close" loading="lazy"/></span>
+        <span class="close-button" title="閉じる"
+          ><img
+            class="material-icon icon-white"
+            data-style="outlined"
+            data-icon="close"
+            alt="close"
+            loading="lazy"
+        /></span>
         <h2>キーワードを編集</h2>
-        <input type="text" id="editKeywordInput" placeholder="キーワードを入力..." />
-        <button id="saveKeywordEdit" class="cml2-btn" title="保存"><img class="material-icon icon-white" data-style="outlined" data-icon="save" alt="save" loading="lazy"/></button>
+        <input
+          type="text"
+          id="editKeywordInput"
+          placeholder="キーワードを入力..."
+        />
+        <button id="saveKeywordEdit" class="cml2-btn" title="保存">
+          <img
+            class="material-icon icon-white"
+            data-style="outlined"
+            data-icon="save"
+            alt="save"
+            loading="lazy"
+          />
+        </button>
       </div>
     </div>
   </body>
-</html> 
+</html>

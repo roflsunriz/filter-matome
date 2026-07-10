@@ -5,6 +5,14 @@ import "@/common/header.js";
 import { applyCssConstants } from "@/common/css-constants.js";
 import "@/common/material-icons.js";
 
-// スタイルを自動適用
-applyCssConstants();
-applyToastrStyles();
+let started = false;
+
+export function startCommon(): void {
+  if (started) {
+    return;
+  }
+  started = true;
+
+  applyCssConstants();
+  applyToastrStyles();
+}

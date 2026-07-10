@@ -471,8 +471,13 @@ export class Mylist2DB {
 
           // マイグレーション履歴を記録
           if (db.objectStoreNames.contains("metadata")) {
-            const transaction = db.transaction(["metadata"], "readwrite");
-            const metadataStore = transaction.objectStore("metadata");
+            const upgradeTransaction = (
+              event.target as IDBOpenDBRequest
+            ).transaction;
+            if (!upgradeTransaction) {
+              throw new Error("IndexedDB upgrade transaction is unavailable");
+            }
+            const metadataStore = upgradeTransaction.objectStore("metadata");
 
             await new Promise<void>((resolve, reject) => {
               const getRequest = metadataStore.get("migration_history");

@@ -5,16 +5,21 @@ import { Mylist2Manager as managerRefactored } from "@/mylist2/components/manage
 import { Mylist2ManagerUI as uiRefactored } from "@/mylist2/ui/ui-refactored";
 import { hydrateMaterialIconImages } from "@/common/material-icons";
 
-// スタイルを適用
-headerAdjustments();
-applyMylistManagerStyles();
+let started = false;
 
-// グローバル公開（デバッグ用）
-window.Mylist2DB = db;
-window.Mylist2Manager = managerRefactored;
-window.Mylist2ManagerUI = uiRefactored;
+export function startMylist2(): void {
+  if (started) {
+    return;
+  }
+  started = true;
 
-window.addEventListener("load", () => {
+  headerAdjustments();
+  applyMylistManagerStyles();
+
+  window.Mylist2DB = db;
+  window.Mylist2Manager = managerRefactored;
+  window.Mylist2ManagerUI = uiRefactored;
+
   hydrateMaterialIconImages();
   // 共通モジュールが読み込まれているかチェック
   if (typeof window.NicoCommon === "undefined") {
@@ -34,4 +39,4 @@ window.addEventListener("load", () => {
 
   // メインUIを初期化（リンク化・タグ処理は ui-refactored 側で実施）
   new uiRefactored();
-});
+}

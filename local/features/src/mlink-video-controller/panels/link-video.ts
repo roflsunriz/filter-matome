@@ -138,7 +138,7 @@ export class MlinkVideoController extends BasePanel {
   /**
    * 現在のページが視聴ページかどうかを判定
    * - /watch/ を含む公式視聴ページ
-   * - /local/features/dist/src/video-player/standalone/index.html?videoId=... も対象
+   * - /local/features/dist/pages/video-player/index.html?videoId=... も対象
    */
   private detectWatchPage(): boolean {
     return isWatchLikePage();

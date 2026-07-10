@@ -16,7 +16,7 @@
 
 ```
 movie-info/
-├── index.html              # Vite エントリーポイント
+├── index.html              # 静的ページテンプレート
 ├── index.ts                # 初期化ロジックと UI 制御
 ├── api-clients.ts          # 各種 API 通信ラッパー
 ├── styles.ts               # ダッシュボード用スタイル適用
@@ -65,4 +65,4 @@ bun run type-check
 bun run build
 ```
 
-ビルドは `local/features/` で実行します。個別ビルドは `bun run build:movie-info` を利用できます。
+ビルドは `local/features/` で `bun run build` を実行します。全機能は単一バンドルへ統合されるため個別ビルドはありません。

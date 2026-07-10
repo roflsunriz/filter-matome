@@ -14,7 +14,7 @@ const NAV_LINKS: NavLink[] = [
   { href: "/newarrival", label: "新着動画", icon: "new_releases" },
   { href: "/recent", label: "新着コメント動画", icon: ICONS.comment },
   {
-    href: "/local/features/dist/src/mylist2/index.html",
+    href: "/local/features/dist/pages/mylist/index.html",
     label: "Mylist2",
     icon: "playlist_add",
   },

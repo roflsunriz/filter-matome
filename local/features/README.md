@@ -15,7 +15,7 @@ NicoCache_nl/
 │       │   ├── common/                   # 共通ライブラリ・ヘッダー (8.9KB README)
 │       │   ├── types/                    # 型定義システム (12KB README)
 │       │   └── docs/                     # （旧）ドキュメントページ（HTML/TS実装。現在はルートの docs/ にMarkdownとして集約）
-│       ├── config/                       # Vite設定ファイル群
+│       ├── scripts/build.ts              # Bun単一バンドル設定
 │       ├── dist/                         # ビルド出力ファイル
 │       ├── scripts/                      # スクリプト類
 │       ├── package.json                  # 依存関係定義
@@ -83,11 +83,11 @@ common/common.ts ─── API通信統一化
 
 ### ビルドシステム
 ```
-src/*.ts ─── TypeScript開発
-    ↓ (Vite)
-config/*.config.js ─── 個別ビルド設定
+src/features.ts ─── 中央ページルーター
+    ↓ (Bun bundler)
+scripts/build.ts ─── 単一バンドル・Worker・HTML生成
     ↓
-dist/*.es.js ─── 本番ファイル出力
+dist/features.js ─── 全ブラウザ機能
     ↓
 ニコニコ動画で使用
 ```
@@ -190,7 +190,7 @@ dist/*.es.js ─── 本番ファイル出力
 4. **レガシーシステム**: 
    - **`list.js`**: 直接編集可能
    - **その他`*.js`**: 外部配布のため編集不可（特別な理由がある場合のみファイル名変更して対応）
-5. **ビルド**: `bun run build:ALL` で全体再ビルド
+5. **ビルド**: `bun run build` で全成果物を再生成
 
 ### 🎨 **UIデザインを変更したい**
 
@@ -228,7 +228,7 @@ dist/*.es.js ─── 本番ファイル出力
 - `src/common/` - 全プロジェクトで使用される基盤機能
 - `src/types/` - TypeScript型定義（型安全性）
 - `package.json` - 依存関係とビルドスクリプト
-- `config/` - ビルド設定（Vite）
+- `scripts/build.ts` - Bunビルド設定と成果物契約
 
 #### 📝 **編集前必読**
 - **該当プロジェクトのREADME**: `src/プロジェクト名/README.md`
@@ -282,15 +282,10 @@ dist/*.es.js ─── 本番ファイル出力
 # 開発サーバー起動
 bun dev
 
-# 個別ビルド
-bun run build:comment-filter2
-bun run build:video-player
-bun run build:mylist2
-
 # 全体ビルド
-bun run build:ALL
+bun run build
 ```
-`bun run build:ALL` は `scripts/build-all.mjs` を経由し、個別ビルドスクリプトを `bun run` で順番に起動します。
+全機能は `dist/features.js` に統合されます。Web Worker、Service Worker、静的HTMLも同時に生成され、個別ビルドはありません。
 
 #### 🧪 **デバッグアクセス**
 ```javascript

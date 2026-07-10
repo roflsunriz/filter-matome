@@ -12,8 +12,21 @@ declare global {
   }
 }
 
-// 初期化関数の簡素化
+let registered = false;
+let stylesApplied = false;
+
+function applyStyles(): void {
+  if (stylesApplied) {
+    return;
+  }
+  stylesApplied = true;
+  const style = document.createElement("style");
+  style.textContent = cacheListStyles;
+  document.head.appendChild(style);
+}
+
 async function initializeList(): Promise<void> {
+  applyStyles();
   const progressManager = new ProgressManager();
   const eventManager = new EventManager();
   const dataLoader = new LoadDataFromMemory(progressManager);
@@ -30,13 +43,14 @@ async function initializeList(): Promise<void> {
   await uiBuilder.renderAllEntries();
 }
 
-// HTMLから呼び出されるグローバル関数（変更不可のHTMLとの互換性維持）
-window.makeCacheList = function makeCacheList(): void {
-  void initializeList();
-};
+export function registerCacheDataManager(): void {
+  if (registered) {
+    return;
+  }
+  registered = true;
 
-window.addEventListener("load", () => {
-  const style = document.createElement("style");
-  style.textContent = cacheListStyles;
-  document.head.appendChild(style);
-});
+  // NicoCache_nl が生成する変更不可のHTMLから呼び出される。
+  window.makeCacheList = function makeCacheList(): void {
+    void initializeList();
+  };
+}

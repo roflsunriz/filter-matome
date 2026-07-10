@@ -7,7 +7,7 @@
 ## 現状の方針
 
 - ユーザー向けドキュメント: ルートの `docs/` を編集してください
-- `local/features` のビルド: `docs` 用の Vite ビルドは `build:ALL` から外しています
+- `local/features` のビルド: 旧docsページはBunビルドの対象外です
 
 ## 関連リンク
 
