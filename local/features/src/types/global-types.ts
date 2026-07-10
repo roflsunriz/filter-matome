@@ -55,7 +55,10 @@ interface WindowExtensionInterface {
   Mylist2Manager: typeof Mylist2Manager;
   Mylist2ManagerUI: typeof Mylist2ManagerUI;
   copy_ext: (event: MouseEvent) => void;
-  EstimatedProcessingTime: (commentNum: string, videoLength: string) => string;
+  EstimatedProcessingTime?: (
+    commentNum: string,
+    videoLength: string,
+  ) => string;
   EPTWrapper: (message: string) => void;
   nicofetch: (
     element: string | HTMLElement,
@@ -81,9 +84,9 @@ interface WindowExtensionInterface {
       method: string,
       callback: () => void,
     ) => void;
-    setLevel: (level: LogLevel) => void;
-    enableLogging: (filePattern: string) => void;
-    disableLogging: (filePattern: string) => void;
+    setLevel?: (level: LogLevel) => void;
+    enableLogging?: (filePattern: string) => void;
+    disableLogging?: (filePattern: string) => void;
   };
   opener: {
     NicoCache_nl: {

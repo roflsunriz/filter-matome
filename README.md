@@ -39,6 +39,7 @@
 
 ### 前提条件
 - [NicoCache_nl](https://roflsunriz.github.io/setup-nicocache-nl/) 本体のインストール
+- [Bun 1.3.14](https://bun.com/docs/installation) のインストール
 - [Adoptium Temurin OpenJDK 17 LTS](https://adoptium.net/temurin/releases?version=17&os=any&arch=any)
 ```powershell
 winget install EclipseAdoptium.Temurin.17.JDK
@@ -151,8 +152,10 @@ winget install Google.Chrome
 ## 🔧 開発者向け情報
 
 ### 技術スタック
-- **言語**: TypeScript 5.9.3
+- **言語**: TypeScript 7.0.2（CLI）、TypeScript 6.0.2（ESLint API互換用）
 - **ビルドツール**: Vite 7.3.6
+- **開発ランタイム**: Bun 1.3.14
+- **静的解析**: ESLint 10.6.0、typescript-eslint 8.63.0
 - **ストレージ**: IndexedDB
 - **UI**: Material Design Icons
 - **フィルター言語**: nlFilter (NicoCache_nl独自DSL)
