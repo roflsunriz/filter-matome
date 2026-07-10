@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- 【mlink-video-controller】背景画像設定のエクスポート・インポート・デフォルト復元ボタンを、役割が分かりやすく設定画面になじむ配色へ変更。
 - 【mlink-video-controller】未対応ページでサムネイルフィルターを有効化した際、空のCSSセレクターを検索して切り替えに失敗しないよう修正。
 - 【mlink-video-controller】ニコニ広告のお知らせページでデイリー福引ハイライトを動作させ、モジュールの設定欄から対象ページへ移動できるリンクを追加。
 - 【mlink-video-controller】設定画面で表示するモジュール名を「Watch Page統合」から「タグカウンター」へ変更。

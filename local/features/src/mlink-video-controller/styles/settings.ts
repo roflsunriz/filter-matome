@@ -1011,33 +1011,36 @@ input:disabled + .slider {
 }
 
 .management-btn.export {
-  background: linear-gradient(45deg, #FF9800, #F57C00);
+  background: #2f7d73;
+  border: 1px solid #4d9a90;
 }
 
 .management-btn.export:hover {
-  background: linear-gradient(45deg, #F57C00, #FF9800);
+  background: #3b9186;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(47, 125, 115, 0.28);
 }
 
 .management-btn.import {
-  background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+  background: #5969a8;
+  border: 1px solid #7887c0;
 }
 
 .management-btn.import:hover {
-  background: linear-gradient(45deg, #7B1FA2, #9C27B0);
+  background: #6879ba;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+  box-shadow: 0 4px 15px rgba(89, 105, 168, 0.28);
 }
 
 .management-btn.reset {
-  background: linear-gradient(45deg, #607D8B, #455A64);
+  background: #805d68;
+  border: 1px solid #a17681;
 }
 
 .management-btn.reset:hover {
-  background: linear-gradient(45deg, #455A64, #607D8B);
+  background: #956b78;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(96, 125, 139, 0.3);
+  box-shadow: 0 4px 15px rgba(128, 93, 104, 0.28);
 }
 
 @media (max-width: 600px) {
