@@ -9,9 +9,8 @@ import { createMaterialIcon } from "@/common/material-icons";
 
 export const watchPageModuleConfig: ModuleConfig = {
   id: "watch_page",
-  name: "Watch Page統合",
-  description: "Watch Pageにタグカウンターを表示します",
-  version: "2.0.0",
+  name: "タグカウンター",
+  description: "動画視聴ページにタグカウンターを表示します",
   enabled: false,
   targetPages: [PageType.WATCH],
   dependencies: [],
@@ -20,7 +19,7 @@ export const watchPageModuleConfig: ModuleConfig = {
 };
 
 /**
- * Watch Page統合モジュール
+ * タグカウンターモジュール
  * タグカウンターを管理するモジュール
  */
 export class WatchPageModule implements ModuleInstance {

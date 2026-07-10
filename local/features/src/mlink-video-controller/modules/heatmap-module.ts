@@ -18,7 +18,6 @@ export const heatmapModuleConfig: ModuleConfig = {
   id: "heatmap",
   name: "コメントヒートマップ",
   description: "コメント密度をタイムラインや動画上に表示します",
-  version: "1.0.0",
   enabled: true,
   targetPages: [PageType.WATCH],
   dependencies: [],

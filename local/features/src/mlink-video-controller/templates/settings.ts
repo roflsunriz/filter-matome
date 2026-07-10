@@ -70,7 +70,6 @@ export const settingsTemplate = `
     <h5 class="module-name"></h5>
     <p class="module-description"></p>
     <div class="module-meta">
-      <span class="module-version"></span>
       <span class="module-pages"></span>
       <span class="module-status"></span>
     </div>

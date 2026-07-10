@@ -11,8 +11,7 @@ import { createMaterialIcon } from "@/common/material-icons";
 export const watchTabSessionsModuleConfig: ModuleConfig = {
   id: "watch_tab_sessions",
   name: "タブセッション拡張",
-  description: "Watchページのタブセッション制限を緩和します",
-  version: "1.0.0",
+  description: "動画視聴ページのタブセッション制限を緩和します",
   enabled: false,
   targetPages: [PageType.WATCH],
   dependencies: [],

@@ -153,7 +153,7 @@ export const settingsStyles = `
 .module-meta {
   grid-area: meta;
   display: grid;
-  grid-template-columns: 64px 96px 96px;
+  grid-template-columns: 96px 96px;
   align-items: start;
   gap: 6px;
   min-width: 0;
@@ -177,18 +177,12 @@ export const settingsStyles = `
   text-overflow: ellipsis;
 }
 
-.module-version {
-  grid-column: 1;
-  background: var(--panel-accent) !important;
-  color: white !important;
-}
-
 .module-pages {
-  grid-column: 2;
+  grid-column: 1;
 }
 
 .module-status {
-  grid-column: 3;
+  grid-column: 2;
 }
 
 .module-status.active {

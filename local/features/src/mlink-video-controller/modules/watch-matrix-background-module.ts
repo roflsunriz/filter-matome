@@ -12,7 +12,6 @@ export const watchMatrixBackgroundModuleConfig: ModuleConfig = {
   id: "watch_matrix_background",
   name: "マトリックス背景",
   description: "マトリックス風のアニメーション背景を表示します",
-  version: "1.0.0",
   enabled: false,
   targetPages: [PageType.WATCH],
   dependencies: [],

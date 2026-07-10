@@ -43,7 +43,6 @@ export interface ModuleConfig {
   id: string;
   name: string;
   description: string;
-  version: string;
   enabled: boolean;
   targetPages: PageType[];
   dependencies: string[];

@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Changed
+- 【mlink-video-controller】設定画面で表示するモジュール名を「Watch Page統合」から「タグカウンター」へ変更。
+- 【mlink-video-controller】モジュール設定画面から各モジュールのバージョン表記を削除。
 - 【README】`local/features/src` の現行プロジェクト構成、ビルドターゲット、Vite バージョン、nlFilter ファイル名、機能説明に合わせて更新。
 - 【cache-data-manager】動画ごとのキャッシュ情報から完了済みHLSとテンポラリHLSを判定し、それぞれ適切な削除APIで一括削除するよう変更。
 - 【cache-data-manager】動画カードと検索結果カードの削除も同じキャッシュ情報ベースの削除処理へ統一。

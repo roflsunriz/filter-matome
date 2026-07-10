@@ -21,7 +21,6 @@ export const thumbnailsFilterModuleConfig: ModuleConfig = {
   id: "thumbnails_filter",
   name: "サムネイルフィルター",
   description: "キーワードに基づいて動画サムネイルを非表示にします",
-  version: "1.0.0",
   enabled: false,
   targetPages: [ModulePageType.ALL],
   dependencies: ["window.toastr"],

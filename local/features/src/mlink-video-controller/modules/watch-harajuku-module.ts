@@ -12,8 +12,7 @@ import harajukuStyle from "./watch-harajuku-style.css?inline";
 export const watchHarajukuModuleConfig: ModuleConfig = {
   id: "watch_harajuku",
   name: "原宿風Watch",
-  description: "Watchページをニコニコ動画（原宿）風の表示に変更します",
-  version: "1.0.0",
+  description: "動画視聴ページをニコニコ動画（原宿）風の表示に変更します",
   enabled: false,
   targetPages: [PageType.WATCH],
   dependencies: [],

@@ -16,7 +16,6 @@ export const headerModuleConfig: ModuleConfig = {
   id: "header_privacy",
   name: "ヘッダープライバシー",
   description: "ユーザーアイコンとユーザー名を非表示にします",
-  version: "1.0.0",
   enabled: false,
   targetPages: [PageType.ALL],
   dependencies: ["window.logger"],

@@ -14,7 +14,6 @@ export const watchBackgroundSelectorModuleConfig: ModuleConfig = {
   id: "watch_background_selector",
   name: "背景セレクター",
   description: "ラジアル背景選択UIを提供します",
-  version: "1.0.0",
   enabled: false,
   targetPages: [PageType.WATCH],
   dependencies: [],

@@ -196,10 +196,6 @@ export class SettingsUI {
     ) as HTMLElement;
     description.textContent = config.description;
 
-    // メタ情報設定
-    const version = element.querySelector(".module-version") as HTMLElement;
-    version.textContent = `v${config.version}`;
-
     const pages = element.querySelector(".module-pages") as HTMLElement;
     pages.textContent = this.formatTargetPages(config.targetPages);
 
@@ -992,7 +988,6 @@ export class SettingsUI {
       <h3 class="module-name">背景画像設定</h3>
       <p class="module-description">動画の背景画像を設定します</p>
       <div class="module-meta">
-        <span class="module-version">v1.0.0</span>
         <span class="module-pages">${this.formatTargetPages([PageType.WATCH])}</span>
         <span class="module-status settings">設定</span>
       </div>
