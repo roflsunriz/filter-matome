@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- 【watch-history】各ソート・フィルタ・タブ・モーダル・シリーズ・アラート・削除条件・インポート／エクスポート・DB管理・通知UIを実HTMLとIndexedDB上で操作するPlaywright回帰テストと、判定ロジックの境界値ユニットテストを追加。
+
 ### Changed
+- 【watch-history】画面制御と判定ロジックを独立して保守できるよう、履歴フィルタとお気に入り算出、条件削除ルール、シリーズフィルタを `app.ts` から専用モジュールへ分離。
 - 【features/docs】Bunビルド後のHTMLページへ正しくアクセスできるよう、mylist2のビルド出力と実装内リンクを `dist/pages/mylist2/` に統一し、ユーザー向けガイドと各プロジェクトREADMEの配信URLを現行配置に更新。
 - 【mylist2】Google Drive 連携サービスを他のサービスと同じ階層で管理できるよう、`services/cloud/` から `services/` 直下へ移動。
 - 【mlink-video-controller】mylist2追加処理をSPA遷移後の現在URL基準へ統一し、視聴ページでは動画、検索・タグ・マイリスト検索ページではキーワードを追加できるよう変更。
@@ -24,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【common】HLSキャッシュ削除処理を共通化し、`mlink-video-controller` と `cache-data-manager` から利用するよう変更。
 
 ### Fixed
+- 【watch-history】シリーズ詳細からアラート追加へ移動した際に、選択中シリーズを先に破棄して設定処理が例外になる問題を修正。
 - 【common/mlink-video-controller】Watchページの `server-response` metaに生JSONや不完全な `%` シーケンスが含まれても動画情報を取得できるようにし、mylist2追加時の `URIError: malformed URI sequence` を修正。
 
 ## [#229] - 2026-07-05

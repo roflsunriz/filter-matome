@@ -5,11 +5,13 @@ if (!outputPath) {
   throw new Error("Output path is required");
 }
 
+const entryPath = process.argv[3]
+  ? resolve(process.argv[3])
+  : resolve(import.meta.dirname, "../tests/fixtures/mlink-controller-entry.ts");
+
 const absoluteOutput = resolve(outputPath);
 const result = await Bun.build({
-  entrypoints: [
-    resolve(import.meta.dirname, "../tests/fixtures/mlink-controller-entry.ts"),
-  ],
+  entrypoints: [entryPath],
   outdir: dirname(absoluteOutput),
   target: "browser",
   format: "iife",

@@ -24,3 +24,9 @@
 - E2E で全ページを再現するより、機能単位の実DOM + 最小スタブを優先する。
 - 周辺機能の再現がテストの主張を曖昧にする場合は、省略する。
 - ただし、リグレッション原因が周辺 DOM やイベント伝播にある場合は、その境界だけを fixture に追加する。
+
+## watch-history
+
+- `watch-history.spec.ts` は本番の `index.html` と専用fixture bundleを読み込み、ブラウザの実IndexedDBへ匿名化した履歴・シリーズ・アラートを投入して操作する。
+- 外部境界は `Notification`、`window.open`、ダウンロードURL、ブラウザ確認ダイアログのみをスタブ化し、検索、ソート、フィルタ、Canvas、Storage、モーダル、動的一覧は実DOM上で検証する。
+- `history-filter.ts`、`history-delete-rules.ts`、`series-filter.ts` の境界値はBunユニットテストで補完する。

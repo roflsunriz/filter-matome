@@ -20,7 +20,6 @@ import {
 import type {
   WatchHistoryEntry,
   SortBy,
-  FilterCondition,
   HistoryViewConfig,
   OverallStats,
   WatchHistoryExportData,
@@ -36,44 +35,22 @@ import type {
   DatabaseManagementConfig,
 } from "@/types/watch-history-types";
 import { watchHistoryDB } from "@/watch-history/database";
-
-type DeleteMetadataKey =
-  | "watchCount"
-  | "progressRate"
-  | "lastPosition"
-  | "lengthSec"
-  | "viewCount"
-  | "commentCount"
-  | "mylistCount"
-  | "likeCount";
-
-type DeleteOperator = "gte" | "lte" | "lt" | "gt" | "range";
-
-interface DeleteCondition {
-  metadata: DeleteMetadataKey;
-  operator: DeleteOperator;
-  value: number;
-  maxValue?: number;
-}
-
-const DELETE_METADATA_LABELS: Record<DeleteMetadataKey, string> = {
-  watchCount: "視聴回数",
-  progressRate: "進捗率",
-  lastPosition: "最終再生位置",
-  lengthSec: "動画時間",
-  viewCount: "再生数",
-  commentCount: "コメント数",
-  mylistCount: "マイリスト数",
-  likeCount: "いいね数",
-};
-
-const DELETE_OPERATOR_LABELS: Record<DeleteOperator, string> = {
-  gte: "以上",
-  lte: "以下",
-  lt: "未満",
-  gt: "超過",
-  range: "レンジ",
-};
+import {
+  calculateFavoriteVideos,
+  cleanHistoryFilter,
+  filterHistoryEntries,
+} from "@/watch-history/history-filter";
+import {
+  createDeleteCondition,
+  describeDeleteCondition,
+  findDeleteTargets,
+  formatDeleteMetric,
+  getDeleteMetric,
+  type DeleteCondition,
+  type DeleteMetadataKey,
+  type DeleteOperator,
+} from "@/watch-history/history-delete-rules";
+import { filterSeriesStats } from "@/watch-history/series-filter";
 
 /**
  * 視聴履歴アプリケーションクラス
@@ -746,57 +723,6 @@ class WatchHistoryApp {
   }
 
   /**
-   * フィルタオブジェクトをサニタイズして返す
-   */
-  private cleanFilter(filter: FilterCondition): FilterCondition {
-    const cleaned: FilterCondition = { ...filter };
-
-    // searchText
-    const txt = (cleaned.searchText ?? "").trim();
-    if (
-      !txt ||
-      txt.toLowerCase() === "null" ||
-      txt.toLowerCase() === "undefined"
-    ) {
-      delete cleaned.searchText;
-    } else {
-      cleaned.searchText = txt;
-    }
-
-    // ownerId
-    if (cleaned.ownerId) {
-      const oid = String(cleaned.ownerId).trim();
-      if (
-        !oid ||
-        oid.toLowerCase() === "null" ||
-        oid.toLowerCase() === "undefined"
-      ) {
-        delete cleaned.ownerId;
-      } else {
-        cleaned.ownerId = oid;
-      }
-    }
-
-    // dateRange
-    if (cleaned.dateRange) {
-      const { start, end } = cleaned.dateRange;
-      if (!start && !end) {
-        delete cleaned.dateRange;
-      }
-    }
-
-    if (cleaned.uploadedDateRange) {
-      const { start, end } = cleaned.uploadedDateRange;
-      if (!start && !end) {
-        delete cleaned.uploadedDateRange;
-      }
-    }
-
-    // completedOnly : leave as is (boolean)
-    return cleaned;
-  }
-
-  /**
    * データを読み込む
    */
   private async loadData(): Promise<void> {
@@ -810,7 +736,7 @@ class WatchHistoryApp {
         filter: this.config.filter,
       });
 
-      const sanitizedFilter = this.cleanFilter(this.config.filter);
+      const sanitizedFilter = cleanHistoryFilter(this.config.filter);
       // サニタイズ後のフィルタを設定し直す
       this.config.filter = sanitizedFilter;
 
@@ -855,73 +781,10 @@ class WatchHistoryApp {
       filter: this.config.filter,
     });
 
-    this.filteredEntries = this.entries.filter((entry) => {
-      const filter = this.config.filter;
-
-      // ===== 検索テキストフィルタ =====
-      // 空文字列や "null" / "undefined" といった無効値は無視する
-      const rawSearch = (filter.searchText ?? "").trim().toLowerCase();
-      if (rawSearch && rawSearch !== "null" && rawSearch !== "undefined") {
-        const searchTargets = [
-          entry.title,
-          entry.ownerName,
-          (entry.tags ?? []).join(" "),
-          entry.memo,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        if (!searchTargets.includes(rawSearch)) {
-          return false;
-        }
-      }
-
-      // 投稿者フィルタ
-      if (filter.ownerId && String(entry.ownerId) !== String(filter.ownerId)) {
-        logger.debug("投稿者フィルタで除外:", {
-          videoId: entry.videoId,
-          title: entry.title,
-          entryOwnerId: entry.ownerId,
-          entryOwnerIdType: typeof entry.ownerId,
-          filterOwnerId: filter.ownerId,
-          filterOwnerIdType: typeof filter.ownerId,
-          entryOwnerIdString: String(entry.ownerId),
-          filterOwnerIdString: String(filter.ownerId),
-          isStringEqual: String(entry.ownerId) === String(filter.ownerId),
-        });
-        return false;
-      }
-
-      // 完走フィルタ
-      if (filter.completedOnly && !entry.completed) {
-        return false;
-      }
-
-      // 日付範囲フィルタ
-      if (filter.dateRange) {
-        const watchedAt = entry.watchedAt;
-        if (
-          watchedAt < filter.dateRange.start ||
-          watchedAt > filter.dateRange.end
-        ) {
-          return false;
-        }
-      }
-
-      // 投稿日時範囲フィルタ
-      if (filter.uploadedDateRange) {
-        const uploadedAt = entry.stats?.uploadedAt;
-        if (
-          uploadedAt === undefined ||
-          uploadedAt < filter.uploadedDateRange.start ||
-          uploadedAt > filter.uploadedDateRange.end
-        ) {
-          return false;
-        }
-      }
-
-      return true;
-    });
+    this.filteredEntries = filterHistoryEntries(
+      this.entries,
+      this.config.filter,
+    );
 
     logger.debug("フィルタリング完了:", {
       filteredEntries: this.filteredEntries.length,
@@ -1601,44 +1464,13 @@ class WatchHistoryApp {
   }
 
   /**
-   * お気に入り動画トップ15を計算する
-   */
-  private calculateFavoriteVideos(): {
-    entry: WatchHistoryEntry;
-    score: number;
-  }[] {
-    const list = this.entries.map((entry) => {
-      const logs = Array.isArray(entry.watchLogs) ? entry.watchLogs : [];
-      let totalScore = 0;
-      if (logs.length > 0) {
-        totalScore = logs.reduce((sum, log) => {
-          const completionRatio =
-            entry.lengthSec > 0
-              ? log.completed
-                ? 1
-                : log.position / entry.lengthSec
-              : 0;
-          return sum + completionRatio;
-        }, 0);
-      } else {
-        const ratio =
-          entry.lengthSec > 0 ? entry.lastPosition / entry.lengthSec : 0;
-        totalScore = ratio;
-      }
-      return { entry, score: totalScore };
-    });
-
-    return list.sort((a, b) => b.score - a.score).slice(0, 15);
-  }
-
-  /**
    * お気に入り動画リストを更新する
    */
   private updateFavoriteVideos(): void {
     const container = this.elements["favorite-videos"];
     if (!container) return;
 
-    const favorites = this.calculateFavoriteVideos();
+    const favorites = calculateFavoriteVideos(this.entries);
 
     if (favorites.length === 0) {
       container.innerHTML = `
@@ -2438,41 +2270,10 @@ class WatchHistoryApp {
    * シリーズ統計をフィルタリングする
    */
   private filterSeriesStats(): void {
-    this.filteredSeriesStats = this.seriesStats.filter((stats) => {
-      // 検索テキストフィルタ
-      if (this.seriesFilter.searchText) {
-        const searchText = this.seriesFilter.searchText.toLowerCase();
-        if (!stats.seriesTitle.toLowerCase().includes(searchText)) {
-          return false;
-        }
-      }
-
-      // 進捗フィルタ
-      if (
-        this.seriesFilter.progressFilter &&
-        this.seriesFilter.progressFilter !== "all"
-      ) {
-        switch (this.seriesFilter.progressFilter) {
-          case "watching":
-            if (stats.watchedCount === 0 || stats.progressRate >= 1) {
-              return false;
-            }
-            break;
-          case "completed":
-            if (stats.progressRate < 1) {
-              return false;
-            }
-            break;
-          case "not_started":
-            if (stats.watchedCount > 0) {
-              return false;
-            }
-            break;
-        }
-      }
-
-      return true;
-    });
+    this.filteredSeriesStats = filterSeriesStats(
+      this.seriesStats,
+      this.seriesFilter,
+    );
   }
 
   /**
@@ -2894,9 +2695,11 @@ class WatchHistoryApp {
   private addAlertFromSeriesDetail(): void {
     if (!this.selectedSeries) return;
 
+    const selectedSeriesId = this.selectedSeries.seriesId;
+
     // 既存のアラートをチェック
     const existingAlert = this.seriesAlerts.find(
-      (alert) => alert.seriesId === this.selectedSeries!.seriesId,
+      (alert) => alert.seriesId === selectedSeriesId,
     );
     if (existingAlert) {
       this.showToast("このシリーズのアラートは既に存在します", "error");
@@ -2912,7 +2715,7 @@ class WatchHistoryApp {
       "series-alert-series-select"
     ] as HTMLSelectElement;
     if (seriesSelect) {
-      seriesSelect.value = this.selectedSeries.seriesId.toString();
+      seriesSelect.value = selectedSeriesId.toString();
     }
   }
 
@@ -3209,7 +3012,7 @@ class WatchHistoryApp {
   private async deleteHistoryEntriesByCondition(
     condition: DeleteCondition,
   ): Promise<void> {
-    const matchingEntries = this.getDeleteDryRunEntries(condition);
+    const matchingEntries = findDeleteTargets(this.entries, condition);
     if (matchingEntries.length === 0) {
       this.showToast("条件に一致する履歴がありません", "info");
       return;
@@ -3217,7 +3020,7 @@ class WatchHistoryApp {
 
     const confirmed = await this.showHistoryDeleteConfirmDialog(
       "条件削除の最終確認",
-      `${this.describeDeleteCondition(condition)} に一致する履歴 ${matchingEntries.length.toLocaleString()} 件を削除します。`,
+      `${describeDeleteCondition(condition)} に一致する履歴 ${matchingEntries.length.toLocaleString()} 件を削除します。`,
       matchingEntries,
     );
     if (!confirmed) {
@@ -3265,20 +3068,20 @@ class WatchHistoryApp {
       return;
     }
 
-    const matchingEntries = this.getDeleteDryRunEntries(condition);
+    const matchingEntries = findDeleteTargets(this.entries, condition);
     if (deleteButton) {
       deleteButton.disabled = matchingEntries.length === 0;
     }
 
     const samples = matchingEntries.slice(0, 10).map((entry, index) => {
-      const value = this.getDeleteMetric(entry, condition.metadata);
+      const value = getDeleteMetric(entry, condition.metadata);
       const metricText =
-        value === null ? "値なし" : this.formatDeleteMetric(condition, value);
+        value === null ? "値なし" : formatDeleteMetric(condition, value);
       return `${index + 1}. ${entry.title} (${entry.videoId}) - ${metricText}`;
     });
 
     consoleElement.textContent = [
-      `条件: ${this.describeDeleteCondition(condition)}`,
+      `条件: ${describeDeleteCondition(condition)}`,
       `対象: ${matchingEntries.length.toLocaleString()} / ${this.entries.length.toLocaleString()} 件`,
       "",
       samples.length > 0 ? "サンプル:" : "条件に一致する履歴はありません。",
@@ -3449,108 +3252,12 @@ class WatchHistoryApp {
     const maxInput = this.elements["delete-range-max-input"] as
       HTMLInputElement | undefined;
 
-    if (!metadata || !operator || !valueInput) {
-      return null;
-    }
-
-    const value = Number(valueInput.value);
-    if (!Number.isFinite(value)) {
-      return null;
-    }
-
-    if (operator !== "range") {
-      return { metadata, operator, value };
-    }
-
-    const maxValue = Number(maxInput?.value);
-    if (!Number.isFinite(maxValue)) {
-      return null;
-    }
-
-    return {
+    return createDeleteCondition(
       metadata,
       operator,
-      value: Math.min(value, maxValue),
-      maxValue: Math.max(value, maxValue),
-    };
-  }
-
-  private getDeleteDryRunEntries(
-    condition: DeleteCondition,
-  ): WatchHistoryEntry[] {
-    return this.entries.filter((entry) =>
-      this.matchesDeleteCondition(entry, condition),
+      valueInput?.value ?? "",
+      maxInput?.value,
     );
-  }
-
-  private matchesDeleteCondition(
-    entry: WatchHistoryEntry,
-    condition: DeleteCondition,
-  ): boolean {
-    const value = this.getDeleteMetric(entry, condition.metadata);
-    if (value === null) {
-      return false;
-    }
-
-    switch (condition.operator) {
-      case "gte":
-        return value >= condition.value;
-      case "lte":
-        return value <= condition.value;
-      case "lt":
-        return value < condition.value;
-      case "gt":
-        return value > condition.value;
-      case "range":
-        return (
-          condition.maxValue !== undefined &&
-          value >= condition.value &&
-          value <= condition.maxValue
-        );
-    }
-  }
-
-  private getDeleteMetric(
-    entry: WatchHistoryEntry,
-    metadata: DeleteMetadataKey,
-  ): number | null {
-    switch (metadata) {
-      case "watchCount":
-        return entry.watchCount;
-      case "progressRate":
-        return entry.lengthSec > 0
-          ? Math.round((entry.lastPosition / entry.lengthSec) * 100)
-          : 0;
-      case "lastPosition":
-        return entry.lastPosition;
-      case "lengthSec":
-        return entry.lengthSec;
-      case "viewCount":
-        return entry.stats?.viewCount ?? null;
-      case "commentCount":
-        return entry.stats?.commentCount ?? null;
-      case "mylistCount":
-        return entry.stats?.mylistCount ?? null;
-      case "likeCount":
-        return entry.stats?.likeCount ?? null;
-    }
-  }
-
-  private describeDeleteCondition(condition: DeleteCondition): string {
-    const metadata = DELETE_METADATA_LABELS[condition.metadata];
-    const operator = DELETE_OPERATOR_LABELS[condition.operator];
-    if (condition.operator === "range") {
-      return `${metadata} が ${condition.value} 〜 ${condition.maxValue} の範囲`;
-    }
-    return `${metadata} が ${condition.value} ${operator}`;
-  }
-
-  private formatDeleteMetric(
-    condition: DeleteCondition,
-    value: number,
-  ): string {
-    const suffix = condition.metadata === "progressRate" ? "%" : "";
-    return `${DELETE_METADATA_LABELS[condition.metadata]}=${value}${suffix}`;
   }
 
   /**
