@@ -615,6 +615,189 @@ export const CommentFilter2MainStyles = `
   color: #94a3b8;
 }
 
+/* Rule authoring */
+.cf2-editor-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.cf2-editor-heading h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.cf2-editor-heading p {
+  margin: 0.25rem 0 0;
+  color: #94a3b8;
+  font-size: 0.76rem;
+}
+
+.cf2-editor-step {
+  padding: 0.25rem 0.5rem;
+  background: rgba(59, 130, 246, 0.11);
+  border: 1px solid rgba(96, 165, 250, 0.16);
+  border-radius: 0.35rem;
+  color: #93c5fd;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+.cf2-rule-editor .cf2-field-section {
+  margin: 0;
+  padding: 1rem 0;
+  border-top: 1px solid rgba(75, 85, 99, 0.32);
+}
+
+.cf2-rule-editor .cf2-rule-type-selector {
+  margin-top: 1rem;
+}
+
+.cf2-rule-editor .cf2-input-group {
+  margin-bottom: 0;
+}
+
+.cf2-rule-editor .cf2-pattern-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5.5rem;
+  gap: 0.75rem;
+}
+
+.cf2-rule-editor .cf2-radio-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.5rem;
+}
+
+.cf2-rule-editor .cf2-radio-label {
+  min-height: 2.65rem;
+  padding: 0.65rem 0.75rem;
+  background: rgba(15, 23, 42, 0.48);
+  border: 1px solid rgba(75, 85, 99, 0.42);
+  border-radius: 0.5rem;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.cf2-rule-editor .cf2-radio-label:hover {
+  background: rgba(30, 41, 59, 0.7);
+}
+
+.cf2-rule-editor .cf2-radio-label:has(input:checked) {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(96, 165, 250, 0.52);
+  color: #dbeafe;
+}
+
+.cf2-rule-editor .cf2-text-input,
+.cf2-rule-editor .cf2-test-textarea,
+.cf2-json-editor .cf2-textarea {
+  background: rgba(8, 15, 28, 0.72);
+  border-color: rgba(75, 85, 99, 0.52);
+  border-radius: 0.45rem;
+}
+
+.cf2-rule-editor .cf2-regex-analysis {
+  margin: 0.85rem 0 0;
+  background: rgba(15, 23, 42, 0.38);
+}
+
+.cf2-rule-editor .cf2-regex-preview {
+  margin: 0.85rem 0 0;
+  padding: 0.85rem;
+  background: rgba(15, 23, 42, 0.4);
+  border-color: rgba(75, 85, 99, 0.38);
+}
+
+.cf2-rule-editor .cf2-regex-preview-result {
+  background: rgba(8, 15, 28, 0.64);
+}
+
+.cf2-rule-editor .cf2-scope-section .cf2-help-text {
+  margin: 0.4rem 0 0;
+  font-size: 0.72rem;
+}
+
+.cf2-rule-editor .cf2-nicoru-section .cf2-toggle-container {
+  padding: 0.7rem 0.8rem;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 0.5rem;
+}
+
+.cf2-editor-actions {
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(75, 85, 99, 0.32);
+}
+
+.cf2-editor-actions .cf2-button {
+  flex: 0 0 auto;
+  min-width: 8.5rem;
+  box-shadow: none;
+}
+
+.cf2-editor-actions .cf2-button-primary {
+  background: #2563eb;
+}
+
+.cf2-editor-actions .cf2-button:hover {
+  transform: none;
+}
+
+/* JSONL editor */
+.cf2-json-editor {
+  overflow: hidden;
+}
+
+.cf2-code-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(15, 23, 42, 0.82);
+  border: 1px solid rgba(75, 85, 99, 0.46);
+  border-bottom: 0;
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.cf2-code-language {
+  color: #cbd5e1;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.75rem;
+}
+
+.cf2-code-hint {
+  color: #64748b;
+  font-size: 0.68rem;
+}
+
+.cf2-json-editor .cf2-code-surface {
+  margin: 0 0 1rem;
+}
+
+.cf2-json-editor .cf2-textarea {
+  min-height: 31rem;
+  padding: 1rem 1.1rem;
+  background: rgba(8, 15, 28, 0.86);
+  border-radius: 0 0 0.5rem 0.5rem;
+  color: #dbeafe;
+  font-size: 0.78rem;
+  line-height: 1.75;
+  tab-size: 2;
+}
+
+.cf2-json-editor .cf2-textarea::placeholder {
+  color: #64748b;
+}
+
 .cf2-top-controls {
   display: flex;
   gap: 1rem;
@@ -1186,6 +1369,14 @@ export const CommentFilter2MainStyles = `
 
   .cf2-workspace-main .cf2-settings-heading {
     grid-column: auto;
+  }
+
+  .cf2-rule-editor .cf2-pattern-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cf2-editor-actions .cf2-button {
+    width: 100%;
   }
   
   .cf2-top-controls {

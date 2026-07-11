@@ -186,14 +186,17 @@ export const mainUITemplate = `
       <!-- 左カラム：ルール追加 -->
       <div class="cf2-left-column">
         <!-- ルール追加フォーム -->
-        <div id="cf2-form-section" class="cf2-card cf2-main-card">
-          <div class="cf2-section-header">
-            ${getIconSVG(ICONS.edit)}
-            <div class="cf2-section-title">ルール追加</div>
+        <div id="cf2-form-section" class="cf2-card cf2-main-card cf2-rule-editor">
+          <div class="cf2-editor-heading">
+            <div>
+              <h3>ルールを作成</h3>
+              <p>一致条件と実行するアクションを設定します。</p>
+            </div>
+            <span class="cf2-editor-step">FORM</span>
           </div>
           
           <!-- ルールタイプ選択 -->
-          <div class="cf2-rule-type-selector">
+          <div class="cf2-rule-type-selector cf2-field-section">
             <div class="cf2-input-group">
               <label class="cf2-input-label">ルールタイプ</label>
               <div class="cf2-radio-group">
@@ -210,14 +213,16 @@ export const mainUITemplate = `
           </div>
 
           <!-- 正規表現ルール入力 -->
-          <div id="cf2-regex-inputs" class="cf2-rule-inputs">
-            <div class="cf2-input-group">
+          <div id="cf2-regex-inputs" class="cf2-rule-inputs cf2-field-section">
+            <div class="cf2-pattern-grid">
+            <div class="cf2-input-group cf2-pattern-field">
               <label for="cf2-pattern-input" class="cf2-input-label">パターン（正規表現）</label>
               <input type="text" id="cf2-pattern-input" class="cf2-text-input" placeholder="例: 荒らし|スパム">
             </div>
-            <div class="cf2-input-group">
+            <div class="cf2-input-group cf2-flags-field">
               <label for="cf2-flags-input" class="cf2-input-label">フラグ</label>
               <input type="text" id="cf2-flags-input" class="cf2-text-input" value="gi" placeholder="gi">
+            </div>
             </div>
             <!-- 正規表現複雑度分析結果 -->
             <div id="cf2-regex-analysis" class="cf2-regex-analysis cf2-hidden">
@@ -244,7 +249,7 @@ export const mainUITemplate = `
           </div>
 
           <!-- ユーザーIDルール入力 -->
-          <div id="cf2-userid-inputs" class="cf2-rule-inputs cf2-hidden">
+          <div id="cf2-userid-inputs" class="cf2-rule-inputs cf2-field-section cf2-hidden">
             <div class="cf2-input-group">
               <label for="cf2-userid-input" class="cf2-input-label">ユーザーID</label>
               <input type="text" id="cf2-userid-input" class="cf2-text-input" placeholder="例: nvc:AbCdEfgHiJkLMn">
@@ -252,7 +257,7 @@ export const mainUITemplate = `
           </div>
 
           <!-- アクション設定 -->
-          <div class="cf2-input-group">
+          <div class="cf2-input-group cf2-field-section cf2-action-section">
             <label class="cf2-input-label">アクション</label>
             <div class="cf2-radio-group">
               <label class="cf2-radio-label">
@@ -274,20 +279,20 @@ export const mainUITemplate = `
           </div>
 
           <!-- 置換テキスト -->
-          <div id="cf2-replace-input-group" class="cf2-input-group cf2-hidden">
+          <div id="cf2-replace-input-group" class="cf2-input-group cf2-field-section cf2-hidden">
             <label for="cf2-replace-input" class="cf2-input-label">置換テキスト</label>
             <input type="text" id="cf2-replace-input" class="cf2-text-input" placeholder="例: ****">
           </div>
 
           <!-- SMID設定 -->
-          <div class="cf2-input-group">
+          <div class="cf2-input-group cf2-field-section cf2-scope-section">
             <label for="cf2-smid-input" class="cf2-input-label">対象動画（SMID）</label>
             <input type="text" id="cf2-smid-input" class="cf2-text-input" value="ALL" placeholder="ALL または sm12345678">
             <div class="cf2-help-text">ALLで全動画、特定のSMIDで個別動画を指定</div>
           </div>
 
           <!-- ニコる数条件 -->
-          <div class="cf2-input-group">
+          <div class="cf2-input-group cf2-field-section cf2-nicoru-section">
             <label class="cf2-input-label">ニコる数条件</label>
             <div class="cf2-toggle-container">
               <div class="cf2-toggle-label">
@@ -321,7 +326,7 @@ export const mainUITemplate = `
           </div>
 
           <!-- 追加ボタン -->
-          <div class="cf2-button-group">
+          <div class="cf2-button-group cf2-editor-actions">
             <button id="cf2-add-rule" class="cf2-button cf2-button-primary">
               ${getIconSVG(ICONS.check)}
               <span>ルール追加</span>
@@ -334,15 +339,19 @@ export const mainUITemplate = `
         </div>
 
         <!-- JSON直接編集セクション -->
-        <div id="cf2-json-section" class="cf2-card cf2-main-card cf2-hidden">
-          <div class="cf2-section-header">
-            ${getIconSVG(ICONS.comment)}
-            <div class="cf2-section-title">JSON Lines編集</div>
+        <div id="cf2-json-section" class="cf2-card cf2-main-card cf2-json-editor cf2-hidden">
+          <div class="cf2-editor-heading">
+            <div>
+              <h3>JSON Lines</h3>
+              <p>1行につき1つのルールを記述します。</p>
+            </div>
+            <span class="cf2-editor-step">JSONL</span>
           </div>
-          <div class="cf2-help-text">
-            ${getIconSVG(ICONS.push_pin)} JSON Lines形式: 1行に1つのルールをJSONで記述
+          <div class="cf2-code-toolbar">
+            <span class="cf2-code-language">rules.jsonl</span>
+            <span class="cf2-code-hint">UTF-8 ・ 1 rule / line</span>
           </div>
-          <div class="cf2-textarea-container">
+          <div class="cf2-textarea-container cf2-code-surface">
             <textarea 
               id="cf2-json-textarea" 
               class="cf2-textarea"
@@ -350,7 +359,7 @@ export const mainUITemplate = `
             ></textarea>
           </div>
           
-          <div class="cf2-button-group">
+          <div class="cf2-button-group cf2-editor-actions">
             <button id="cf2-save-json-rules" class="cf2-button cf2-button-primary">
               ${getIconSVG(ICONS.save)}
               <span>JSON保存</span>

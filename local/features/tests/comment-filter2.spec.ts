@@ -103,6 +103,15 @@ test("正規表現の一致、未一致、入力エラーをリアルタイム�
   await expect(ui.locator("#cf2-regex-preview-result")).toHaveClass(
     /cf2-preview-error/,
   );
+
+  await ui.locator("#cf2-format-json").click();
+  await expect(ui.locator("#cf2-json-section")).toBeVisible();
+  await expect(ui.locator(".cf2-code-language")).toHaveText("rules.jsonl");
+  await expect(ui.locator("#cf2-json-textarea")).toHaveValue(
+    /"pattern":"荒らし\|スパム"/,
+  );
+  await ui.locator("#cf2-format-form").click();
+  await expect(ui.locator("#cf2-form-section")).toBeVisible();
 });
 
 test("フォームからルールを追加・削除し、概要集計へ反映する", async ({
