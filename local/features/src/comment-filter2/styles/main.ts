@@ -798,6 +798,129 @@ export const CommentFilter2MainStyles = `
   color: #64748b;
 }
 
+/* Rule Studio */
+.cf2-workspace-main .cf2-layout-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cf2-workspace-main .cf2-left-column,
+.cf2-workspace-main .cf2-right-column {
+  width: 100%;
+}
+
+.cf2-workspace-main .cf2-rule-editor,
+.cf2-workspace-main .cf2-json-editor,
+.cf2-workspace-main #cf2-library-section .cf2-rules-list-card {
+  padding: 1.25rem;
+}
+
+.cf2-builder-flow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.cf2-builder-block {
+  min-width: 0;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.46);
+  border: 1px solid rgba(75, 85, 99, 0.4);
+  border-radius: 0.65rem;
+}
+
+.cf2-builder-condition {
+  grid-column: 1 / -1;
+}
+
+.cf2-builder-block-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 0.85rem;
+}
+
+.cf2-builder-block-heading strong,
+.cf2-builder-block-heading small {
+  display: block;
+}
+
+.cf2-builder-block-heading strong {
+  color: #f1f5f9;
+  font-size: 0.84rem;
+}
+
+.cf2-builder-block-heading small {
+  margin-top: 0.15rem;
+  color: #64748b;
+  font-size: 0.68rem;
+}
+
+.cf2-builder-token {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.45rem;
+  background: #2563eb;
+  border-radius: 0.35rem;
+  color: #eff6ff;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.cf2-builder-block .cf2-field-section,
+.cf2-builder-block .cf2-rule-type-selector {
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+}
+
+.cf2-builder-block .cf2-rule-inputs.cf2-field-section {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.cf2-builder-block .cf2-scope-section,
+.cf2-builder-block .cf2-nicoru-section {
+  padding-bottom: 0.85rem;
+}
+
+.cf2-builder-block .cf2-nicoru-section {
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.cf2-rule-editor > .cf2-editor-actions {
+  margin-top: 0.9rem;
+}
+
+#cf2-library-section .cf2-rules-list-card {
+  background: rgba(30, 41, 59, 0.3);
+}
+
+#cf2-library-section .cf2-rules-controls {
+  justify-content: flex-end;
+}
+
+#cf2-library-section .cf2-rules-controls .cf2-button {
+  flex: 0 0 auto;
+}
+
+#cf2-library-section .cf2-rules-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 0.65rem;
+  max-height: none;
+}
+
+#cf2-library-section .cf2-rule-item {
+  padding: 0.9rem;
+  background: rgba(15, 23, 42, 0.42);
+  border: 1px solid rgba(75, 85, 99, 0.34);
+  border-radius: 0.55rem;
+}
+
 .cf2-top-controls {
   display: flex;
   gap: 1rem;
@@ -1373,6 +1496,14 @@ export const CommentFilter2MainStyles = `
 
   .cf2-rule-editor .cf2-pattern-grid {
     grid-template-columns: 1fr;
+  }
+
+  .cf2-builder-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .cf2-builder-condition {
+    grid-column: auto;
   }
 
   .cf2-editor-actions .cf2-button {

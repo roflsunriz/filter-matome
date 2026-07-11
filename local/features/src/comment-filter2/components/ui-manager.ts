@@ -41,7 +41,7 @@ export class UIManager {
   private backgroundOverlay: HTMLElement | null = null;
   private isVisible: boolean = false;
   private isUICreated: boolean = false;
-  private currentFormat: "form" | "json" = "form";
+  private currentFormat: "form" | "json" | "library" = "form";
   private regexAnalysisDebounceTimer: ReturnType<typeof setTimeout> | null =
     null;
   private currentSettings: Settings = {
@@ -208,6 +208,9 @@ export class UIManager {
     );
     this.safeAddEventListener(UI_ELEMENTS.FORMAT_JSON, "click", () =>
       this.switchFormat("json"),
+    );
+    this.safeAddEventListener(UI_ELEMENTS.FORMAT_LIBRARY, "click", () =>
+      this.switchFormat("library"),
     );
 
     // フォーム機能
@@ -1773,7 +1776,7 @@ export class UIManager {
   /**
    * 形式切替
    */
-  private switchFormat(format: "form" | "json"): void {
+  private switchFormat(format: "form" | "json" | "library"): void {
     this.currentFormat = format;
     this.updateFormatDisplay();
   }
@@ -1797,9 +1800,13 @@ export class UIManager {
     const jsonSection = this.container.querySelector(
       `#${UI_ELEMENTS.JSON_SECTION}`,
     );
+    const librarySection = this.container.querySelector(
+      `#${UI_ELEMENTS.LIBRARY_SECTION}`,
+    );
 
     formSection?.classList.add(CSS_CLASSES.HIDDEN);
     jsonSection?.classList.add(CSS_CLASSES.HIDDEN);
+    librarySection?.classList.add(CSS_CLASSES.HIDDEN);
 
     switch (this.currentFormat) {
       case "form":
@@ -1814,6 +1821,13 @@ export class UIManager {
           ?.classList.add(CSS_CLASSES.TOGGLE_ACTIVE);
         jsonSection?.classList.remove(CSS_CLASSES.HIDDEN);
         void this.loadJsonRules();
+        break;
+      case "library":
+        this.container
+          .querySelector(`#${UI_ELEMENTS.FORMAT_LIBRARY}`)
+          ?.classList.add(CSS_CLASSES.TOGGLE_ACTIVE);
+        librarySection?.classList.remove(CSS_CLASSES.HIDDEN);
+        void this.refreshRulesList();
         break;
     }
   }

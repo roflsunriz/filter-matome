@@ -112,6 +112,10 @@ test("正規表現の一致、未一致、入力エラーをリアルタイム�
   );
   await ui.locator("#cf2-format-form").click();
   await expect(ui.locator("#cf2-form-section")).toBeVisible();
+
+  await ui.locator("#cf2-format-library").click();
+  await expect(ui.locator("#cf2-library-section")).toBeVisible();
+  await expect(ui.locator(".cf2-rule-item")).toHaveCount(2);
 });
 
 test("フォームからルールを追加・削除し、概要集計へ反映する", async ({
@@ -124,7 +128,8 @@ test("フォームからルールを追加・削除し、概要集計へ反映�
   await expect(ui.locator("#cf2-rule-count-text")).toHaveText("3件");
   await expect(ui.locator(".cf2-rule-item")).toHaveCount(3);
 
-  await ui.locator(".cf2-rule-item").last().locator(".cf2-rule-delete").click();
+  await ui.locator("#cf2-format-library").click();
+  await ui.locator('.cf2-rule-delete[data-index="2"]').click();
   await expect(ui.locator("#cf2-rule-count-text")).toHaveText("2件");
 
   await ui.locator('.cf2-sidebar-item[data-cf2-view="overview"]').click();

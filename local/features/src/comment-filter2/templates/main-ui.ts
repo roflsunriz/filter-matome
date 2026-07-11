@@ -171,11 +171,15 @@ export const mainUITemplate = `
         <div class="cf2-format-tabs">
           <button id="cf2-format-form" class="cf2-format-tab active">
             ${getIconSVG(ICONS.edit)}
-            <span>フォーム入力</span>
+            <span>Rule Builder</span>
           </button>
           <button id="cf2-format-json" class="cf2-format-tab">
             ${getIconSVG(ICONS.comment)}
-            <span>JSON直接編集</span>
+            <span>JSON Editor</span>
+          </button>
+          <button id="cf2-format-library" class="cf2-format-tab">
+            ${getIconSVG(ICONS.visibility)}
+            <span>Library</span>
           </button>
         </div>
       </div>
@@ -192,8 +196,15 @@ export const mainUITemplate = `
               <h3>ルールを作成</h3>
               <p>一致条件と実行するアクションを設定します。</p>
             </div>
-            <span class="cf2-editor-step">FORM</span>
+            <span class="cf2-editor-step">VISUAL RULE</span>
           </div>
+
+          <div class="cf2-builder-flow">
+          <section class="cf2-builder-block cf2-builder-condition" aria-labelledby="cf2-builder-if-title">
+            <div class="cf2-builder-block-heading">
+              <span class="cf2-builder-token">IF</span>
+              <div><strong id="cf2-builder-if-title">一致条件</strong><small>どのコメントを検出しますか？</small></div>
+            </div>
           
           <!-- ルールタイプ選択 -->
           <div class="cf2-rule-type-selector cf2-field-section">
@@ -255,8 +266,14 @@ export const mainUITemplate = `
               <input type="text" id="cf2-userid-input" class="cf2-text-input" placeholder="例: nvc:AbCdEfgHiJkLMn">
             </div>
           </div>
+          </section>
 
           <!-- アクション設定 -->
+          <section class="cf2-builder-block" aria-labelledby="cf2-builder-then-title">
+            <div class="cf2-builder-block-heading">
+              <span class="cf2-builder-token">THEN</span>
+              <div><strong id="cf2-builder-then-title">アクション</strong><small>一致したコメントをどうしますか？</small></div>
+            </div>
           <div class="cf2-input-group cf2-field-section cf2-action-section">
             <label class="cf2-input-label">アクション</label>
             <div class="cf2-radio-group">
@@ -283,8 +300,14 @@ export const mainUITemplate = `
             <label for="cf2-replace-input" class="cf2-input-label">置換テキスト</label>
             <input type="text" id="cf2-replace-input" class="cf2-text-input" placeholder="例: ****">
           </div>
+          </section>
 
           <!-- SMID設定 -->
+          <section class="cf2-builder-block" aria-labelledby="cf2-builder-where-title">
+            <div class="cf2-builder-block-heading">
+              <span class="cf2-builder-token">WHERE</span>
+              <div><strong id="cf2-builder-where-title">適用範囲</strong><small>動画とニコる条件を絞り込みます。</small></div>
+            </div>
           <div class="cf2-input-group cf2-field-section cf2-scope-section">
             <label for="cf2-smid-input" class="cf2-input-label">対象動画（SMID）</label>
             <input type="text" id="cf2-smid-input" class="cf2-text-input" value="ALL" placeholder="ALL または sm12345678">
@@ -323,6 +346,8 @@ export const mainUITemplate = `
             <div class="cf2-help-text cf2-hidden" id="cf2-nicoru-mode-note">
               フィルタ免除アクションでは、条件に合致したコメントを後続の非表示/置換から免除します。
             </div>
+          </div>
+          </section>
           </div>
 
           <!-- 追加ボタン -->
@@ -374,7 +399,7 @@ export const mainUITemplate = `
       </div>
 
       <!-- 右カラム：ルール一覧 -->
-      <div class="cf2-right-column">
+      <div id="cf2-library-section" class="cf2-right-column cf2-hidden">
         <!-- ルール一覧表示 -->
         <div id="cf2-rules-list-section" class="cf2-card cf2-rules-list-card cf2-section-anchor">
           <div class="cf2-section-header">
@@ -495,6 +520,7 @@ export const UI_ELEMENTS = {
   // 形式切替
   FORMAT_FORM: "cf2-format-form",
   FORMAT_JSON: "cf2-format-json",
+  FORMAT_LIBRARY: "cf2-format-library",
 
   // フォーム入力
   FORM_SECTION: "cf2-form-section",
@@ -529,6 +555,7 @@ export const UI_ELEMENTS = {
 
   // JSON編集
   JSON_SECTION: "cf2-json-section",
+  LIBRARY_SECTION: "cf2-library-section",
   JSON_TEXTAREA: "cf2-json-textarea",
   SAVE_JSON_RULES: "cf2-save-json-rules",
   VALIDATE_JSON: "cf2-validate-json",
