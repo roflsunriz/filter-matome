@@ -10,7 +10,7 @@
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts",
     "test:unit": "bun scripts/test-unit.ts",
-    "test": "bun run test:unit && playwright test tests/mlink-video-controller.spec.ts tests/watch-history.spec.ts",
+    "test": "bun run test:unit && playwright test tests/mlink-video-controller.spec.ts tests/watch-history.spec.ts tests/mylist2.spec.ts",
     "error-check": "bun run type-check && bun run lint"
   },
   "devDependencies": {

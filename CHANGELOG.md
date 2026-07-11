@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [#230] - 2026-07-11
 
 ### Added
+- 【mylist2】マイリスト作成・検索・ソート、動画検索・ソート・詳細、設定・テーマ、個別／全選択、一括操作5種の動的要素を実DOMとIndexedDB上で操作するPlaywright回帰テストを追加。
 - 【watch-history】各ソート・フィルタ・タブ・モーダル・シリーズ・アラート・削除条件・インポート／エクスポート・DB管理・通知UIを実HTMLとIndexedDB上で操作するPlaywright回帰テストと、判定ロジックの境界値ユニットテストを追加。
 
 ### Changed

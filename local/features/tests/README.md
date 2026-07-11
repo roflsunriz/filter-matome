@@ -30,3 +30,9 @@
 - `watch-history.spec.ts` は本番の `index.html` と専用fixture bundleを読み込み、ブラウザの実IndexedDBへ匿名化した履歴・シリーズ・アラートを投入して操作する。
 - 外部境界は `Notification`、`window.open`、ダウンロードURL、ブラウザ確認ダイアログのみをスタブ化し、検索、ソート、フィルタ、Canvas、Storage、モーダル、動的一覧は実DOM上で検証する。
 - `history-filter.ts`、`history-delete-rules.ts`、`series-filter.ts` の境界値はBunユニットテストで補完する。
+
+## mylist2
+
+- `mylist2.spec.ts` は本番の `index.html` と専用fixture bundleを読み込み、ブラウザの実IndexedDBへ匿名化したマイリスト・動画・キーワードを投入して操作する。
+- マイリスト作成・検索・ソート、動画検索・ソート・詳細表示、設定モーダル・テーマ、個別選択・全選択・中間状態、一括操作5種の確認UIを対象にする。
+- 情報更新と公開状態チェックはAPI実行前の設定モーダルまでをE2Eで検証し、外部APIへの実送信は行わない。
