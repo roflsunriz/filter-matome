@@ -2162,6 +2162,10 @@ export class UIManager {
       if (countText) {
         countText.textContent = `${String(rules.length)}件`;
       }
+      const viewRuleCount = this.container.querySelector(
+        `#${UI_ELEMENTS.VIEW_RULE_COUNT}`,
+      );
+      if (viewRuleCount) viewRuleCount.textContent = String(rules.length);
       const cockpitCount = this.container.querySelector(
         `#${UI_ELEMENTS.COCKPIT_RULE_COUNT}`,
       );

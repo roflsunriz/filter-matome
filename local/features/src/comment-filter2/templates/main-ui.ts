@@ -90,11 +90,12 @@ export const mainUITemplate = `
 
     <!-- コマンド設定セクション（全幅） -->
     <div id="cf2-command-settings-section" class="cf2-card cf2-command-settings-card cf2-view-panel cf2-hidden" data-cf2-panel="commands">
-      <div class="cf2-section-header">
-        ${getIconSVG(ICONS.comment)}
-        <div class="cf2-section-title">コメントコマンド設定</div>
+      <div class="cf2-view-header">
+        <div>
+          <h2>コメントコマンド</h2>
+          <p>コメント種別ごとに許可する表示コマンドを設定します。</p>
+        </div>
       </div>
-      <p class="cf2-help-text">カンマ区切りでコマンドを入力</p>
       
       <div class="cf2-command-grid">
         <!-- 投稿者コメント -->
@@ -153,6 +154,13 @@ export const mainUITemplate = `
     </div>
 
     <section class="cf2-view-panel cf2-hidden" data-cf2-panel="rules">
+    <div class="cf2-view-header">
+      <div>
+        <h2>ルール</h2>
+        <p>新しいフィルタールールを作成し、保存済みルールを管理します。</p>
+      </div>
+      <span class="cf2-view-count"><span id="cf2-view-rule-count">0</span> rules</span>
+    </div>
     <!-- ルール形式切替 -->
     <div class="cf2-format-selector">
       <div class="cf2-card">
@@ -388,11 +396,12 @@ export const mainUITemplate = `
     </section>
 
     <div id="cf2-data-section" class="cf2-card cf2-data-card cf2-view-panel cf2-hidden" data-cf2-panel="data">
-      <div class="cf2-section-header">
-        ${getIconSVG(ICONS.folder)}
-        <div class="cf2-section-title">データ管理</div>
+      <div class="cf2-view-header">
+        <div>
+          <h2>データ管理</h2>
+          <p>ルールのバックアップ、復元、旧バージョンからの移行を行います。</p>
+        </div>
       </div>
-      <p class="cf2-help-text">ルールの持ち出し、復元、旧バージョンからの移行を行います。</p>
       <div class="cf2-button-group">
         <button id="cf2-export-json-btn" class="cf2-button cf2-button-secondary">${getIconSVG(ICONS.export)}<span>エクスポート</span></button>
         <button id="cf2-import-btn" class="cf2-button cf2-button-secondary">${getIconSVG(ICONS.import)}<span>インポート</span></button>
@@ -404,6 +413,12 @@ export const mainUITemplate = `
 
     <!-- 設定セクション（全幅） -->
     <div class="cf2-settings-section cf2-view-panel cf2-hidden" data-cf2-panel="settings">
+      <div class="cf2-view-header cf2-settings-heading">
+        <div>
+          <h2>設定</h2>
+          <p>診断機能とログ連携を管理します。</p>
+        </div>
+      </div>
       <!-- デバッグモード -->
       <div class="cf2-card cf2-debug-card">
         <div class="cf2-toggle-container">
@@ -493,6 +508,7 @@ export const UI_ELEMENTS = {
   COCKPIT_HIDE_COUNT: "cf2-cockpit-hide-count",
   COCKPIT_REPLACE_COUNT: "cf2-cockpit-replace-count",
   DASHBOARD_RECENT_RULES: "cf2-dashboard-recent-rules",
+  VIEW_RULE_COUNT: "cf2-view-rule-count",
   REPLACE_INPUT: "cf2-replace-input",
   SMID_INPUT: "cf2-smid-input",
   NICORU_TOGGLE: "cf2-nicoru-toggle",

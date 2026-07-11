@@ -69,6 +69,7 @@ test("概要ダッシュボードが保存済みルールを集計し、画面�
   await ui.locator('.cf2-sidebar-item[data-cf2-view="rules"]').click();
   await expect(ui.locator('[data-cf2-panel="overview"]')).toBeHidden();
   await expect(ui.locator('[data-cf2-panel="rules"]')).toBeVisible();
+  await expect(ui.locator("#cf2-view-rule-count")).toHaveText("2");
   await expect(
     ui.locator('.cf2-sidebar-item[data-cf2-view="rules"]'),
   ).toHaveClass(/active/);

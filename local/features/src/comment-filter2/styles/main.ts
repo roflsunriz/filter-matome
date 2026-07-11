@@ -426,6 +426,195 @@ export const CommentFilter2MainStyles = `
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* App shell内では旧モーダルのカード表現をフラットな作業面へ統一 */
+.cf2-workspace-main .cf2-view-panel.cf2-card,
+.cf2-workspace-main .cf2-format-selector > .cf2-card {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.cf2-workspace-main .cf2-view-panel.cf2-card:hover,
+.cf2-workspace-main .cf2-format-selector > .cf2-card:hover {
+  background: transparent;
+  border-color: transparent;
+}
+
+.cf2-view-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.35rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.42);
+}
+
+.cf2-view-header h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.35rem;
+  line-height: 1.3;
+}
+
+.cf2-view-header p {
+  margin: 0.35rem 0 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+.cf2-view-count {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.65rem;
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: 999px;
+  color: #93c5fd;
+  font-size: 0.75rem;
+}
+
+.cf2-view-count span {
+  color: #dbeafe;
+  font-weight: 700;
+}
+
+.cf2-workspace-main .cf2-format-selector {
+  margin: 0 0 1rem;
+}
+
+.cf2-workspace-main .cf2-format-selector .cf2-section-header {
+  display: none;
+}
+
+.cf2-workspace-main .cf2-format-tabs {
+  display: inline-flex;
+  width: auto;
+  margin: 0;
+  padding: 0.25rem;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(75, 85, 99, 0.45);
+  border-radius: 0.6rem;
+}
+
+.cf2-workspace-main .cf2-format-tab {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.9rem;
+  background: transparent;
+  border: 0;
+  color: #94a3b8;
+}
+
+.cf2-workspace-main .cf2-format-tab.active {
+  background: rgba(51, 65, 85, 0.9);
+  border: 0;
+  color: #f8fafc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+
+.cf2-workspace-main .cf2-layout-grid {
+  grid-template-columns: minmax(0, 1.08fr) minmax(19rem, 0.92fr);
+  gap: 1rem;
+}
+
+.cf2-workspace-main .cf2-main-card,
+.cf2-workspace-main .cf2-rules-list-card {
+  min-height: 0;
+  padding: 1.15rem;
+  background: rgba(30, 41, 59, 0.38);
+  border: 1px solid rgba(75, 85, 99, 0.38);
+  border-radius: 0.7rem;
+}
+
+.cf2-workspace-main .cf2-main-card:hover,
+.cf2-workspace-main .cf2-rules-list-card:hover {
+  background: rgba(30, 41, 59, 0.38);
+  border-color: rgba(75, 85, 99, 0.38);
+}
+
+.cf2-workspace-main .cf2-rules-list {
+  max-height: 34rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.cf2-workspace-main .cf2-rule-item {
+  margin: 0;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.34);
+}
+
+.cf2-workspace-main .cf2-rule-item:hover {
+  background: transparent;
+}
+
+.cf2-workspace-main .cf2-command-grid {
+  grid-template-columns: 1fr;
+  gap: 0;
+  overflow: hidden;
+  margin: 0 0 1rem;
+  background: rgba(30, 41, 59, 0.38);
+  border: 1px solid rgba(75, 85, 99, 0.38);
+  border-radius: 0.7rem;
+}
+
+.cf2-workspace-main .cf2-command-grid .cf2-input-group {
+  display: grid;
+  grid-template-columns: minmax(11rem, 0.42fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  margin: 0;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.34);
+}
+
+.cf2-workspace-main .cf2-command-grid .cf2-input-group:last-child {
+  border-bottom: 0;
+}
+
+.cf2-workspace-main .cf2-command-grid .cf2-input-label {
+  margin: 0;
+}
+
+.cf2-workspace-main .cf2-data-card > .cf2-button-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.cf2-workspace-main .cf2-data-card .cf2-button {
+  min-height: 5.5rem;
+  flex-direction: column;
+  background: rgba(30, 41, 59, 0.42);
+  border: 1px solid rgba(75, 85, 99, 0.42);
+  box-shadow: none;
+}
+
+.cf2-workspace-main .cf2-settings-section {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.cf2-workspace-main .cf2-settings-heading {
+  grid-column: 1 / -1;
+}
+
+.cf2-workspace-main .cf2-settings-section > .cf2-card {
+  padding: 1rem;
+  background: rgba(30, 41, 59, 0.38);
+  border: 1px solid rgba(75, 85, 99, 0.38);
+  border-radius: 0.7rem;
+}
+
+.cf2-workspace-main .cf2-help-text {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: #94a3b8;
+}
+
 .cf2-top-controls {
   display: flex;
   gap: 1rem;
@@ -983,6 +1172,20 @@ export const CommentFilter2MainStyles = `
 
   .cf2-dashboard-metrics {
     grid-template-columns: 1fr;
+  }
+
+  .cf2-workspace-main .cf2-command-grid .cf2-input-group {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+
+  .cf2-workspace-main .cf2-data-card > .cf2-button-group,
+  .cf2-workspace-main .cf2-settings-section {
+    grid-template-columns: 1fr;
+  }
+
+  .cf2-workspace-main .cf2-settings-heading {
+    grid-column: auto;
   }
   
   .cf2-top-controls {
