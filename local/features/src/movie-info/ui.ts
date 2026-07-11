@@ -17,6 +17,8 @@ class JsonModalManager {
   private overlay: HTMLDivElement | null = null;
   private titleEl: HTMLHeadingElement | null = null;
   private jsonEl: HTMLPreElement | null = null;
+  private closeButton: HTMLButtonElement | null = null;
+  private previouslyFocused: HTMLElement | null = null;
 
   private constructor() {
     this.createModal();
@@ -42,12 +44,16 @@ class JsonModalManager {
     // モーダル本体
     const modal = document.createElement("div");
     modal.className = "json-modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", "movie-info-json-modal-title");
 
     // ヘッダー
     const header = document.createElement("div");
     header.className = "json-modal-header";
 
     this.titleEl = document.createElement("h3");
+    this.titleEl.id = "movie-info-json-modal-title";
     this.titleEl.textContent = "Raw JSON";
 
     const closeBtn = document.createElement("button");
@@ -55,6 +61,7 @@ class JsonModalManager {
     closeBtn.textContent = "×";
     closeBtn.setAttribute("aria-label", "閉じる");
     closeBtn.addEventListener("click", () => this.close());
+    this.closeButton = closeBtn;
 
     header.appendChild(this.titleEl);
     header.appendChild(closeBtn);
@@ -70,6 +77,7 @@ class JsonModalManager {
     modal.appendChild(header);
     modal.appendChild(body);
     this.overlay.appendChild(modal);
+    this.overlay.setAttribute("aria-hidden", "true");
     document.body.appendChild(this.overlay);
 
     // Escキーで閉じる
@@ -86,8 +94,14 @@ class JsonModalManager {
     }
     this.titleEl.textContent = title;
     this.jsonEl.textContent = jsonText;
+    this.previouslyFocused =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     this.overlay.classList.add("visible");
+    this.overlay.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
+    this.closeButton?.focus();
   }
 
   public close(): void {
@@ -95,7 +109,10 @@ class JsonModalManager {
       return;
     }
     this.overlay.classList.remove("visible");
+    this.overlay.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
+    this.previouslyFocused?.focus();
+    this.previouslyFocused = null;
   }
 }
 
@@ -106,6 +123,8 @@ class ErrorModalManager {
   private leadEl: HTMLParagraphElement | null = null;
   private videoIdEl: HTMLDivElement | null = null;
   private listEl: HTMLDivElement | null = null;
+  private closeButton: HTMLButtonElement | null = null;
+  private previouslyFocused: HTMLElement | null = null;
 
   private constructor() {
     this.createModal();
@@ -131,11 +150,13 @@ class ErrorModalManager {
     modal.className = "error-modal";
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", "movie-info-error-modal-title");
 
     const header = document.createElement("div");
     header.className = "error-modal-header";
 
     this.titleEl = document.createElement("h3");
+    this.titleEl.id = "movie-info-error-modal-title";
     this.titleEl.textContent = "処理を完了できませんでした";
 
     const closeBtn = document.createElement("button");
@@ -143,6 +164,7 @@ class ErrorModalManager {
     closeBtn.textContent = "×";
     closeBtn.setAttribute("aria-label", "閉じる");
     closeBtn.addEventListener("click", () => this.close());
+    this.closeButton = closeBtn;
 
     header.appendChild(this.titleEl);
     header.appendChild(closeBtn);
@@ -174,6 +196,7 @@ class ErrorModalManager {
     modal.appendChild(body);
     modal.appendChild(footer);
     this.overlay.appendChild(modal);
+    this.overlay.setAttribute("aria-hidden", "true");
     document.body.appendChild(this.overlay);
 
     document.addEventListener("keydown", (event) => {
@@ -198,6 +221,10 @@ class ErrorModalManager {
     }
 
     this.titleEl.textContent = details.title;
+    this.previouslyFocused =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     this.leadEl.textContent = details.lead;
     this.videoIdEl.textContent = details.videoId
       ? "対象動画ID: " + details.videoId
@@ -229,7 +256,9 @@ class ErrorModalManager {
     });
 
     this.overlay.classList.add("visible");
+    this.overlay.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
+    this.closeButton?.focus();
   }
 
   public close(): void {
@@ -237,7 +266,10 @@ class ErrorModalManager {
       return;
     }
     this.overlay.classList.remove("visible");
+    this.overlay.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
+    this.previouslyFocused?.focus();
+    this.previouslyFocused = null;
   }
 }
 

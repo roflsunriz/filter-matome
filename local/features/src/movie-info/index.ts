@@ -8,6 +8,7 @@ import {
   fetchWatchApiData,
 } from "@/movie-info/api-clients";
 import { headerAdjustments } from "@/movie-info/header-adjustments";
+import { renderDescriptionHtml } from "@/movie-info/description-html";
 import { applyMovieInfoDashboardStyles } from "@/movie-info/styles";
 import { PanelController, showMovieInfoErrorModal } from "@/movie-info/ui";
 import type {
@@ -42,16 +43,6 @@ const formatBytes = (value: unknown): string => {
   }
   const rounded = Math.round(size * 10) / 10;
   return String(rounded) + " " + units[index];
-};
-
-const trimDescription = (text: unknown, limit: number = 140): string => {
-  if (typeof text !== "string" || text.length === 0) {
-    return "-";
-  }
-  if (text.length <= limit) {
-    return text;
-  }
-  return text.slice(0, limit) + "…";
 };
 
 const extractVideoId = (input: string): string | null => {
@@ -275,10 +266,19 @@ const buildApiSummary = (apiData: NicoApiData): HTMLElement => {
   if (channelName) {
     meta.appendChild(document.createTextNode("チャンネル: " + channelName));
   }
-  const description = trimDescription(video?.description, 160);
-  const descLine = document.createElement("div");
-  descLine.textContent = "説明: " + description;
-  meta.appendChild(descLine);
+  const descriptionBlock = document.createElement("section");
+  descriptionBlock.className = "movie-description";
+  const descriptionLabel = document.createElement("h3");
+  descriptionLabel.textContent = "説明";
+  const descriptionContent = document.createElement("div");
+  descriptionContent.className = "movie-description-content";
+  renderDescriptionHtml(
+    descriptionContent,
+    typeof video?.description === "string" ? video.description : "-",
+  );
+  descriptionBlock.appendChild(descriptionLabel);
+  descriptionBlock.appendChild(descriptionContent);
+  meta.appendChild(descriptionBlock);
   container.appendChild(meta);
   return container;
 };
@@ -475,6 +475,104 @@ export function startMovieInfo(): void {
         document.getElementById("panel-comments") as HTMLElement,
       ),
     };
+
+    const sourcePanelIds = {
+      watch: "panel-watch-api",
+      cache: "panel-cache-info",
+      thumb: "panel-thumb-info",
+      media: "panel-media-info",
+      comments: "panel-comments",
+    } as const;
+    type SourceKey = keyof typeof sourcePanelIds;
+
+    const selectSourcePanel = (targetId: string): void => {
+      document
+        .querySelectorAll<HTMLElement>("[data-source-panel]")
+        .forEach((panel) => {
+          panel.hidden = panel.id !== targetId;
+        });
+      document
+        .querySelectorAll<HTMLButtonElement>(".source-tab")
+        .forEach((tab) => {
+          const selected = tab.dataset["panelTarget"] === targetId;
+          tab.classList.toggle("is-active", selected);
+          tab.setAttribute("aria-selected", String(selected));
+        });
+    };
+
+    document
+      .querySelectorAll<HTMLButtonElement>(".source-tab")
+      .forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const targetId = tab.dataset["panelTarget"];
+          if (targetId) selectSourcePanel(targetId);
+        });
+      });
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-overview-target]")
+      .forEach((button) => {
+        button.addEventListener("click", () => {
+          const targetId = button.dataset["overviewTarget"];
+          if (targetId) selectSourcePanel(targetId);
+        });
+      });
+
+    const sourceProgress = document.getElementById("source-progress");
+    const updateSourceNavigation = (): void => {
+      let completedCoreSources = 0;
+      (Object.keys(sourcePanelIds) as SourceKey[]).forEach((source) => {
+        const panel = document.getElementById(sourcePanelIds[source]);
+        const status = panel?.querySelector<HTMLElement>(
+          '[data-role="status"]',
+        );
+        const state = status?.dataset["state"] ?? "idle";
+        const stateLabel =
+          state === "success"
+            ? "成功"
+            : state === "error"
+              ? "失敗"
+              : state === "loading"
+                ? "取得中"
+                : source === "comments"
+                  ? "任意取得"
+                  : "未取得";
+        if (source !== "comments" && state === "success") {
+          completedCoreSources += 1;
+        }
+        document
+          .querySelectorAll<HTMLElement>(`[data-source-state="${source}"]`)
+          .forEach((element) => {
+            element.textContent = stateLabel;
+            element.dataset["state"] = state;
+          });
+        document
+          .querySelectorAll<HTMLElement>(`[data-source-summary="${source}"]`)
+          .forEach((element) => {
+            element.textContent = stateLabel;
+            const overviewButton = element.closest("button");
+            if (overviewButton) overviewButton.dataset["state"] = state;
+          });
+      });
+      if (sourceProgress) {
+        sourceProgress.textContent =
+          completedCoreSources === 0
+            ? "未取得"
+            : `${String(completedCoreSources)} / 4 基本ソース取得済み`;
+      }
+    };
+
+    Object.values(sourcePanelIds).forEach((panelId) => {
+      const status = document
+        .getElementById(panelId)
+        ?.querySelector<HTMLElement>('[data-role="status"]');
+      if (status) {
+        new MutationObserver(updateSourceNavigation).observe(status, {
+          attributes: true,
+          attributeFilter: ["data-state"],
+        });
+      }
+    });
+    updateSourceNavigation();
 
     let currentVideoId: string | null = null;
 

@@ -42,3 +42,9 @@
 - `comment-filter2.spec.ts` は専用fixture bundleから本番の `UIManager` を起動し、ブラウザの実IndexedDBへ匿名化した設定とJSONルールを投入して操作する。
 - 概要ダッシュボードの動的集計、サイドナビゲーション、コマンド設定の読込、正規表現プレビュー、フォームからのルール追加・削除を対象にする。
 - ニコニコ動画APIやコメント送信は行わず、UIとIndexedDBの境界を検証する。
+
+## movie-info
+
+- `movie-info.spec.ts` は本番の `index.html` と専用fixture bundleを読み込み、Watch API、cache/info、getthumbinfo、MediaInfo、コメント統合データの最小スタブで動作させる。
+- 動画ID・URL入力、Enter送信、基本4ソースの状態同期、概要・全タブ切替、説明HTMLの安全な描画、JSONモーダル、コピー、ダウンロード、コメント任意取得を対象にする。
+- APIの部分失敗時は成功済みソースを維持しつつ、概要状態とエラーモーダル、モーダル終了後のフォーカス復帰が正しく動くことを検証する。

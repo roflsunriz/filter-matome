@@ -10,160 +10,80 @@
     <div id="movie-info-app">
       <div id="common-header-container"></div>
       <main class="app-main">
-        <section class="video-selector">
-          <h1>動画データ統合ダッシュボード</h1>
-          <div class="video-input-row">
-            <label for="video-id-input">動画ID</label>
-            <input
-              id="video-id-input"
-              type="text"
-              placeholder="sm9 または URL"
-            />
-            <button id="load-data-btn" type="button">データ取得</button>
-            <button id="fetch-comments-btn" type="button" disabled>
-              コメントを取得
-            </button>
+        <header class="workspace-heading">
+          <div>
+            <p class="workspace-eyebrow">MOVIE INSPECTOR</p>
+            <h1>動画データを調査</h1>
+            <p>複数の取得元を横断し、概要から生データまで確認できます。</p>
           </div>
-          <p class="video-hint">
-            自動取得できない場合は動画IDまたはウォッチURLを入力してください。
-          </p>
-          <p id="global-status" class="global-status"></p>
+          <output id="source-progress" class="source-progress" aria-live="polite">未取得</output>
+        </header>
+
+        <section class="video-selector" aria-labelledby="video-query-heading">
+          <h2 id="video-query-heading" class="visually-hidden">動画を指定</h2>
+          <div class="video-input-row">
+            <label for="video-id-input">動画ID / URL</label>
+            <input id="video-id-input" type="text" placeholder="sm9 または視聴ページURL" autocomplete="off" />
+            <button id="load-data-btn" class="primary-action" type="button">データ取得</button>
+            <button id="fetch-comments-btn" type="button" disabled>コメントを取得</button>
+          </div>
+          <div class="query-feedback">
+            <p class="video-hint">コメントはデータ量が多いため、必要なときだけ取得します。</p>
+            <p id="global-status" class="global-status" aria-live="polite"></p>
+          </div>
         </section>
 
-        <section class="panel-grid">
-          <article id="panel-watch-api" class="info-panel">
-            <header class="panel-header">
-              <h2>ウォッチAPI (apiData)</h2>
-              <div class="panel-actions">
-                <button data-role="copy" type="button" disabled>
-                  JSONコピー
-                </button>
-                <button data-role="download" type="button" disabled>
-                  JSONダウンロード
-                </button>
+        <nav class="source-tabs" aria-label="データソース">
+          <button class="source-tab is-active" type="button" data-panel-target="panel-overview" aria-selected="true">概要</button>
+          <button class="source-tab" type="button" data-panel-target="panel-watch-api" aria-selected="false">Watch API <span class="tab-state" data-source-state="watch">未取得</span></button>
+          <button class="source-tab" type="button" data-panel-target="panel-cache-info" aria-selected="false">Cache <span class="tab-state" data-source-state="cache">未取得</span></button>
+          <button class="source-tab" type="button" data-panel-target="panel-thumb-info" aria-selected="false">Thumb <span class="tab-state" data-source-state="thumb">未取得</span></button>
+          <button class="source-tab" type="button" data-panel-target="panel-media-info" aria-selected="false">MediaInfo <span class="tab-state" data-source-state="media">未取得</span></button>
+          <button class="source-tab" type="button" data-panel-target="panel-comments" aria-selected="false">コメント <span class="tab-state" data-source-state="comments">未取得</span></button>
+        </nav>
+
+        <section class="panel-workspace">
+          <article id="panel-overview" class="overview-panel" data-source-panel>
+            <div class="overview-intro">
+              <div class="overview-icon" aria-hidden="true">▶</div>
+              <div>
+                <p class="section-kicker">OVERVIEW</p>
+                <h2>取得状況</h2>
+                <p>動画を指定すると、各APIの成功・失敗とサマリーをソース別に確認できます。</p>
               </div>
-            </header>
-            <div class="panel-body">
-              <p class="panel-status" data-role="status"></p>
-              <div class="panel-summary" data-role="summary"></div>
-              <button
-                class="show-json-btn"
-                data-role="show-json"
-                type="button"
-                hidden
-                disabled
-              >
-                Raw JSONを表示
-              </button>
+            </div>
+            <div class="source-status-grid">
+              <button type="button" data-overview-target="panel-watch-api"><span>Watch API</span><strong data-source-summary="watch">未取得</strong></button>
+              <button type="button" data-overview-target="panel-cache-info"><span>Cache</span><strong data-source-summary="cache">未取得</strong></button>
+              <button type="button" data-overview-target="panel-thumb-info"><span>Thumb</span><strong data-source-summary="thumb">未取得</strong></button>
+              <button type="button" data-overview-target="panel-media-info"><span>MediaInfo</span><strong data-source-summary="media">未取得</strong></button>
+              <button type="button" data-overview-target="panel-comments"><span>Comments</span><strong data-source-summary="comments">任意取得</strong></button>
             </div>
           </article>
 
-          <article id="panel-cache-info" class="info-panel">
-            <header class="panel-header">
-              <h2>キャッシュ情報 (cache/info/v2)</h2>
-              <div class="panel-actions">
-                <button data-role="copy" type="button" disabled>
-                  JSONコピー
-                </button>
-                <button data-role="download" type="button" disabled>
-                  JSONダウンロード
-                </button>
-              </div>
-            </header>
-            <div class="panel-body">
-              <p class="panel-status" data-role="status"></p>
-              <div class="panel-summary" data-role="summary"></div>
-              <button
-                class="show-json-btn"
-                data-role="show-json"
-                type="button"
-                hidden
-                disabled
-              >
-                Raw JSONを表示
-              </button>
-            </div>
+          <article id="panel-watch-api" class="info-panel" data-source-panel hidden>
+            <header class="panel-header"><div><p class="section-kicker">SOURCE</p><h2>ウォッチAPI <span>apiData</span></h2></div></header>
+            <div class="panel-layout"><div class="panel-body"><p class="panel-status" data-role="status"></p><div class="panel-summary" data-role="summary"></div></div><aside class="panel-actions" aria-label="Watch APIの操作"><h3>このデータを使う</h3><button class="show-json-btn" data-role="show-json" type="button" hidden disabled>Raw JSONを表示</button><button data-role="copy" type="button" disabled>JSONコピー</button><button data-role="download" type="button" disabled>ダウンロード</button></aside></div>
           </article>
 
-          <article id="panel-thumb-info" class="info-panel">
-            <header class="panel-header">
-              <h2>サムネイル情報 (ext-thumb API)</h2>
-              <div class="panel-actions">
-                <button data-role="copy" type="button" disabled>
-                  JSONコピー
-                </button>
-                <button data-role="download" type="button" disabled>
-                  JSONダウンロード
-                </button>
-              </div>
-            </header>
-            <div class="panel-body">
-              <p class="panel-status" data-role="status"></p>
-              <div class="panel-summary" data-role="summary"></div>
-              <button
-                class="show-json-btn"
-                data-role="show-json"
-                type="button"
-                hidden
-                disabled
-              >
-                Raw JSONを表示
-              </button>
-            </div>
+          <article id="panel-cache-info" class="info-panel" data-source-panel hidden>
+            <header class="panel-header"><div><p class="section-kicker">SOURCE</p><h2>キャッシュ情報 <span>cache/info/v2</span></h2></div></header>
+            <div class="panel-layout"><div class="panel-body"><p class="panel-status" data-role="status"></p><div class="panel-summary" data-role="summary"></div></div><aside class="panel-actions" aria-label="Cache APIの操作"><h3>このデータを使う</h3><button class="show-json-btn" data-role="show-json" type="button" hidden disabled>Raw JSONを表示</button><button data-role="copy" type="button" disabled>JSONコピー</button><button data-role="download" type="button" disabled>ダウンロード</button></aside></div>
           </article>
 
-          <article id="panel-media-info" class="info-panel">
-            <header class="panel-header">
-              <h2>MediaInfo (mediainfo JSON)</h2>
-              <div class="panel-actions">
-                <button data-role="copy" type="button" disabled>
-                  JSONコピー
-                </button>
-                <button data-role="download" type="button" disabled>
-                  JSONダウンロード
-                </button>
-              </div>
-            </header>
-            <div class="panel-body">
-              <p class="panel-status" data-role="status"></p>
-              <div class="panel-summary" data-role="summary"></div>
-              <button
-                class="show-json-btn"
-                data-role="show-json"
-                type="button"
-                hidden
-                disabled
-              >
-                Raw JSONを表示
-              </button>
-            </div>
+          <article id="panel-thumb-info" class="info-panel" data-source-panel hidden>
+            <header class="panel-header"><div><p class="section-kicker">SOURCE</p><h2>サムネイル情報 <span>ext-thumb API</span></h2></div></header>
+            <div class="panel-layout"><div class="panel-body"><p class="panel-status" data-role="status"></p><div class="panel-summary" data-role="summary"></div></div><aside class="panel-actions" aria-label="Thumb APIの操作"><h3>このデータを使う</h3><button class="show-json-btn" data-role="show-json" type="button" hidden disabled>Raw JSONを表示</button><button data-role="copy" type="button" disabled>JSONコピー</button><button data-role="download" type="button" disabled>ダウンロード</button></aside></div>
           </article>
 
-          <article id="panel-comments" class="info-panel">
-            <header class="panel-header">
-              <h2>コメント &amp; apiData (選択時取得)</h2>
-              <div class="panel-actions">
-                <button data-role="copy" type="button" disabled>
-                  JSONコピー
-                </button>
-                <button data-role="download" type="button" disabled>
-                  JSONダウンロード
-                </button>
-              </div>
-            </header>
-            <div class="panel-body">
-              <p class="panel-status" data-role="status"></p>
-              <div class="panel-summary" data-role="summary"></div>
-              <button
-                class="show-json-btn"
-                data-role="show-json"
-                type="button"
-                hidden
-                disabled
-              >
-                Raw JSONを表示
-              </button>
-            </div>
+          <article id="panel-media-info" class="info-panel" data-source-panel hidden>
+            <header class="panel-header"><div><p class="section-kicker">SOURCE</p><h2>MediaInfo <span>mediainfo JSON</span></h2></div></header>
+            <div class="panel-layout"><div class="panel-body"><p class="panel-status" data-role="status"></p><div class="panel-summary" data-role="summary"></div></div><aside class="panel-actions" aria-label="MediaInfoの操作"><h3>このデータを使う</h3><button class="show-json-btn" data-role="show-json" type="button" hidden disabled>Raw JSONを表示</button><button data-role="copy" type="button" disabled>JSONコピー</button><button data-role="download" type="button" disabled>ダウンロード</button></aside></div>
+          </article>
+
+          <article id="panel-comments" class="info-panel" data-source-panel hidden>
+            <header class="panel-header"><div><p class="section-kicker">ON DEMAND SOURCE</p><h2>コメント <span>全フォーク統合</span></h2></div></header>
+            <div class="panel-layout"><div class="panel-body"><p class="panel-status" data-role="status"></p><div class="panel-summary" data-role="summary"></div></div><aside class="panel-actions" aria-label="コメントデータの操作"><h3>このデータを使う</h3><button class="show-json-btn" data-role="show-json" type="button" hidden disabled>Raw JSONを表示</button><button data-role="copy" type="button" disabled>JSONコピー</button><button data-role="download" type="button" disabled>ダウンロード</button></aside></div>
           </article>
         </section>
       </main>
