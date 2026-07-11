@@ -1995,11 +1995,100 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
 }
 
 .custom-mylist2-manager .video-list-selection-header input {
-  width: 18px;
-  height: 18px;
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
   margin: 0;
-  accent-color: var(--cml2-accent);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.18),
+    rgba(255, 255, 255, 0.02)
+  );
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
   cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.custom-mylist2-manager .video-list-selection-header input::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 4px;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0) 65%
+  );
+  pointer-events: none;
+}
+
+.custom-mylist2-manager .video-list-selection-header input::after {
+  content: "";
+  width: 10px;
+  height: 6px;
+  border: 2px solid transparent;
+  border-left-color: #ffffff;
+  border-bottom-color: #ffffff;
+  opacity: 0;
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.custom-mylist2-manager .video-list-selection-header input:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.custom-mylist2-manager .video-list-selection-header input:focus-visible {
+  outline: none;
+  border-color: var(--cml2-accent);
+  box-shadow:
+    0 0 0 3px var(--cml2-focus-ring),
+    0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.custom-mylist2-manager .video-list-selection-header input:checked,
+.custom-mylist2-manager .video-list-selection-header input:indeterminate {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: linear-gradient(
+    135deg,
+    var(--cml2-accent),
+    var(--cml2-accent-hover)
+  );
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.custom-mylist2-manager .video-list-selection-header input:checked::after {
+  opacity: 1;
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+
+.custom-mylist2-manager .video-list-selection-header input:indeterminate::after {
+  width: 10px;
+  height: 0;
+  border: 0;
+  border-top: 2px solid #ffffff;
+  opacity: 1;
+  transform: none;
 }
 
 .custom-mylist2-manager .video-list {
