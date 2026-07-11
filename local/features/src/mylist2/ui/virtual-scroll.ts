@@ -111,6 +111,7 @@ export class VirtualScrollManager {
     this.applyFilter();
     this.invalidateRenderedRange();
     this.render();
+    this.selectionChangeCallback?.(this.selectedIds);
   }
 
   /**
@@ -121,6 +122,7 @@ export class VirtualScrollManager {
     this.applyFilter();
     this.invalidateRenderedRange();
     this.render();
+    this.selectionChangeCallback?.(this.selectedIds);
   }
 
   /**
@@ -187,6 +189,8 @@ export class VirtualScrollManager {
     } else {
       this.selectedIds.delete(itemId);
     }
+
+    itemElement.classList.toggle("is-selected", target.checked);
 
     this.selectionChangeCallback?.(this.selectedIds);
   }
@@ -284,6 +288,7 @@ export class VirtualScrollManager {
       // 選択状態を復元
       const itemId = this.getItemId(element);
       if (itemId && this.selectedIds.has(itemId)) {
+        element.classList.add("is-selected");
         const checkbox = element.querySelector(
           ".video-select",
         ) as HTMLInputElement;

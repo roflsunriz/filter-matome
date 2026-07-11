@@ -1690,6 +1690,408 @@ export const FAB_AND_SETTINGS_MODAL_STYLES = `
 `;
 
 /**
+ * Midnight Indigo を基調に、選択中の一括操作を明確にする視覚調整
+ */
+export const MYLIST_VISUAL_REFRESH_STYLES = `
+.custom-mylist2-manager {
+  --cml2-bg: #070d1b;
+  --cml2-text: #edf1ff;
+  --cml2-panel: #0e172b;
+  --cml2-border: #263450;
+  --cml2-muted: #96a2bc;
+  --cml2-muted-strong: #697793;
+  --cml2-accent: #7068f4;
+  --cml2-accent-hover: #857eff;
+  --cml2-focus-ring: rgba(112, 104, 244, 0.34);
+  --cml2-link: #8fa9ff;
+  --cml2-link-hover: #b2c2ff;
+  --cml2-scrollbar-thumb: #465675;
+  --cml2-scrollbar-track: #0a1222;
+  --cml2-text-soft: #d6dcf0;
+  overflow: hidden;
+  border: 1px solid rgba(143, 169, 255, 0.16);
+  border-radius: 12px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.56);
+}
+
+.custom-mylist2-manager.cml2-theme-dark-green {
+  --cml2-accent: #35a67a;
+  --cml2-accent-hover: #43bd8d;
+  --cml2-focus-ring: rgba(53, 166, 122, 0.34);
+}
+
+.custom-mylist2-manager.cml2-theme-dark-amber {
+  --cml2-accent: #d79b36;
+  --cml2-accent-hover: #e8ad49;
+  --cml2-focus-ring: rgba(215, 155, 54, 0.34);
+}
+
+.custom-mylist2-manager.cml2-theme-dark-violet {
+  --cml2-accent: #9968df;
+  --cml2-accent-hover: #ad7cf0;
+  --cml2-focus-ring: rgba(153, 104, 223, 0.34);
+}
+
+.custom-mylist2-manager.cml2-theme-dark-red {
+  --cml2-accent: #d95666;
+  --cml2-accent-hover: #ea6878;
+  --cml2-focus-ring: rgba(217, 86, 102, 0.34);
+}
+
+.custom-mylist2-manager .mylist-sidebar {
+  box-sizing: border-box;
+  height: 100%;
+  padding: 18px 14px;
+  background: #091224;
+  border-right-color: #263450;
+}
+
+.custom-mylist2-manager .mylist-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.custom-mylist2-manager .mylist-sidebar-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #263450;
+}
+
+.custom-mylist2-manager .sidebar-footer-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #2a3957;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cml2-text-soft);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.custom-mylist2-manager .sidebar-footer-action:hover {
+  background: rgba(143, 169, 255, 0.09);
+  border-color: #465a84;
+  color: #ffffff;
+}
+
+.custom-mylist2-manager .sidebar-footer-action .material-icon {
+  width: 19px;
+  height: 19px;
+}
+
+.custom-mylist2-manager .mylist-main {
+  padding: 16px;
+  border-radius: 0;
+  background: #070d1b;
+  box-shadow: none;
+}
+
+.custom-mylist2-manager input[type="text"],
+.custom-mylist2-manager select {
+  min-height: 38px;
+  border-radius: 8px;
+  background: #0a1325;
+  border-color: #2a3957;
+}
+
+.custom-mylist2-manager button {
+  min-height: 38px;
+  border-radius: 8px;
+}
+
+.custom-mylist2-manager .mylist-list {
+  margin: 12px -6px 0;
+}
+
+.custom-mylist2-manager .mylist-item {
+  position: relative;
+  margin: 3px 0;
+  padding: 12px 10px 12px 14px;
+  border: 0;
+  border-radius: 7px;
+}
+
+.custom-mylist2-manager .mylist-item::before {
+  content: "";
+  position: absolute;
+  inset: 7px auto 7px 0;
+  width: 3px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.custom-mylist2-manager .mylist-item:hover {
+  background: rgba(143, 169, 255, 0.07);
+}
+
+.custom-mylist2-manager .mylist-item.active {
+  background: rgba(112, 104, 244, 0.18);
+  color: #f7f8ff;
+}
+
+.custom-mylist2-manager .mylist-item.active::before {
+  background: #817aff;
+  box-shadow: 0 0 14px rgba(129, 122, 255, 0.46);
+}
+
+.custom-mylist2-manager .video-filter-bar.always-visible {
+  display: grid;
+  grid-template-columns: 240px 360px;
+  align-items: center;
+  justify-content: start;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 9px;
+  background: rgba(14, 23, 43, 0.96);
+  border-color: #2a3957;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
+.custom-mylist2-manager .video-filter-bar .search-container {
+  width: 360px;
+  height: 38px;
+}
+
+.custom-mylist2-manager .video-filter-bar #videoSortType,
+.custom-mylist2-manager .video-filter-bar #videoSearchInput,
+.custom-mylist2-manager .video-filter-bar #videoSearchClear {
+  height: 38px;
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+.custom-mylist2-manager .video-filter-bar #videoSortType {
+  width: 240px;
+}
+
+.custom-mylist2-manager .video-filter-bar #videoSearchInput {
+  width: 320px;
+}
+
+.custom-mylist2-manager .video-filter-bar #videoSearchClear {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+}
+
+.custom-mylist2-manager .selection-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-height: 0;
+  margin: 0;
+  padding: 0 12px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: linear-gradient(90deg, #2455ad, #4b44be);
+  opacity: 0;
+  transform: translateY(-12px);
+  visibility: hidden;
+  transition:
+    max-height 0.24s ease,
+    margin 0.24s ease,
+    padding 0.24s ease,
+    opacity 0.18s ease,
+    transform 0.24s ease,
+    visibility 0s linear 0.24s;
+}
+
+.custom-mylist2-manager.has-selection .selection-action-bar {
+  max-height: 74px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-color: rgba(157, 177, 255, 0.54);
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.custom-mylist2-manager .selection-action-bar button {
+  min-height: 36px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  white-space: nowrap;
+}
+
+.custom-mylist2-manager .selection-action-bar button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.custom-mylist2-manager .selection-action-bar button.danger {
+  background: rgba(136, 22, 47, 0.58);
+}
+
+.custom-mylist2-manager .selection-action-bar #deselectAllVideos {
+  margin-left: auto;
+  width: 36px;
+  padding: 0;
+  font-size: 20px;
+}
+
+.custom-mylist2-manager .selection-action-bar #selectedVideosAction {
+  display: none;
+}
+
+.custom-mylist2-manager .video-list-selection-header {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid #202e48;
+  border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+  background: #0b1527;
+}
+
+.custom-mylist2-manager .video-list-selection-header label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--cml2-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.custom-mylist2-manager .video-list-selection-header input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--cml2-accent);
+  cursor: pointer;
+}
+
+.custom-mylist2-manager .video-list {
+  border: 1px solid #202e48;
+  border-radius: 0 0 9px 9px;
+  background: #091121;
+}
+
+.custom-mylist2-manager .video-list .video-item,
+.custom-mylist2-manager .video-list .keyword-item {
+  padding: 10px 12px 10px 50px;
+  background: #091121;
+  border-bottom-color: #202e48;
+  transition: background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.custom-mylist2-manager .video-list .video-item .video-select,
+.custom-mylist2-manager .video-list .keyword-item .video-select {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  margin: 0;
+  opacity: 1;
+}
+
+.custom-mylist2-manager .video-list .video-item:hover,
+.custom-mylist2-manager .video-list .keyword-item:hover {
+  background: #0e1930;
+}
+
+.custom-mylist2-manager .video-list .video-item.is-selected,
+.custom-mylist2-manager .video-list .keyword-item.is-selected {
+  background: linear-gradient(90deg, rgba(69, 102, 184, 0.28), rgba(112, 104, 244, 0.1));
+  box-shadow: inset 3px 0 #7770ff;
+}
+
+.custom-mylist2-manager .video-thumbnail {
+  border-radius: 7px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.32);
+}
+
+.custom-mylist2-manager .video-title {
+  color: #f3f5ff;
+  letter-spacing: 0.01em;
+}
+
+.custom-mylist2-manager .selected-items-count {
+  display: inline-flex;
+  align-items: center;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.custom-mylist2-manager .video-details-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0;
+  border: 1px solid #354563;
+  border-radius: 8px;
+  background: #111d34;
+  color: var(--cml2-text);
+  opacity: 0;
+  transform: translateX(5px);
+  transition: opacity 0.16s ease, transform 0.16s ease, background-color 0.16s ease;
+  flex-shrink: 0;
+}
+
+.custom-mylist2-manager .video-details-trigger .material-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.custom-mylist2-manager .video-item:hover .video-details-trigger,
+.custom-mylist2-manager .video-item:focus-within .video-details-trigger {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.custom-mylist2-manager .video-details-trigger:hover {
+  background: #1a2a49;
+}
+
+@media (max-width: 768px) {
+  .custom-mylist2-manager .video-filter-bar.always-visible {
+    grid-template-columns: 1fr;
+  }
+
+  .custom-mylist2-manager .video-filter-bar .search-container,
+  .custom-mylist2-manager .video-filter-bar #videoSortType {
+    width: 100%;
+  }
+
+  .custom-mylist2-manager .video-filter-bar #videoSearchInput {
+    width: auto;
+  }
+
+  .custom-mylist2-manager .selection-action-bar {
+    flex-wrap: wrap;
+  }
+
+  .custom-mylist2-manager.has-selection .selection-action-bar {
+    max-height: 180px;
+  }
+
+  .custom-mylist2-manager .selected-items-count {
+    flex-basis: 100%;
+  }
+}
+`;
+
+/**
  * すべての Mylist Manager スタイルを統合 */
 export const MYLIST_MANAGER_STYLES = `
 ${materialIconsStyles}
@@ -1707,6 +2109,8 @@ ${SIDEBAR_UTILITY_STYLES}
 ${VIRTUAL_SCROLL_ACTION_MENU_STYLES}
 
 ${FAB_AND_SETTINGS_MODAL_STYLES}
+
+${MYLIST_VISUAL_REFRESH_STYLES}
 `;
 /**
  * Mylist Manager スタイルをDOMに適用する関数

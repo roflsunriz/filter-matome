@@ -383,10 +383,49 @@ export class Mylist2ManagerUI {
       return;
     }
 
+    this.virtualScrollManager.onSelectionChange((selectedIds) => {
+      const root = document.getElementById("Mylist2Manager");
+      const countElement = document.getElementById("selectedItemsCount");
+      const count = selectedIds.size;
+
+      root?.classList.toggle("has-selection", count > 0);
+      if (countElement) {
+        countElement.textContent = count > 0 ? `${count}件を選択中` : "";
+      }
+      const actionBar = document.querySelector(".selection-action-bar");
+      actionBar?.setAttribute("aria-hidden", String(count === 0));
+
+      const selectAllCheckbox = document.getElementById(
+        "selectAllVideos",
+      ) as HTMLInputElement | null;
+      if (selectAllCheckbox) {
+        const selectableVideoCount = this.virtualScrollManager
+          .getFilteredItems()
+          .filter((item) => item.type === "video").length;
+        const selectedVideoCount = [...selectedIds].filter((id) =>
+          id.startsWith("video:"),
+        ).length;
+        selectAllCheckbox.checked =
+          selectableVideoCount > 0 &&
+          selectedVideoCount === selectableVideoCount;
+        selectAllCheckbox.indeterminate =
+          selectedVideoCount > 0 && selectedVideoCount < selectableVideoCount;
+      }
+    });
+
     // アクショントリガーのクリックイベントを委譲で処理
     const container = document.getElementById("videoList");
     if (container) {
       container.addEventListener("click", (e) => {
+        const detailsTrigger = (e.target as HTMLElement).closest(
+          ".video-details-trigger",
+        );
+        if (detailsTrigger) {
+          e.stopPropagation();
+          void this.handleVideoDetailsClick(detailsTrigger as HTMLElement);
+          return;
+        }
+
         const trigger = (e.target as HTMLElement).closest(".action-trigger");
         if (trigger) {
           e.stopPropagation();
@@ -582,6 +621,23 @@ export class Mylist2ManagerUI {
     }
   }
 
+  private async handleVideoDetailsClick(trigger: HTMLElement): Promise<void> {
+    const itemElement = trigger.closest<HTMLElement>(".video-item");
+    const compositeId = itemElement?.dataset.compositeId;
+    if (!itemElement || !compositeId) return;
+
+    const videoData = this.currentVideos.find(
+      (video) => video.id === compositeId,
+    );
+    if (!videoData) return;
+
+    await this.showVideoDetailsModal(
+      videoData,
+      compositeId,
+      itemElement.dataset.memo ?? "",
+    );
+  }
+
   private initializeAdditionalControls(): void {
     this.initializeHeaderControls();
     this.initializeSearchEventListeners();
@@ -664,11 +720,17 @@ export class Mylist2ManagerUI {
         meta.appendChild(span);
       });
       const actionButton = document.createElement("button");
-      actionButton.className = "action-trigger";
+      actionButton.className = "video-details-trigger";
       actionButton.type = "button";
-      actionButton.setAttribute("aria-label", "アクションメニュー");
-      actionButton.title = "アクション";
-      actionButton.textContent = "⋮";
+      actionButton.setAttribute("aria-label", "動画の詳細");
+      actionButton.title = "詳細";
+      const actionIcon = document.createElement("img");
+      actionIcon.className = "material-icon icon-white";
+      actionIcon.dataset.style = "outlined";
+      actionIcon.dataset.icon = "info";
+      actionIcon.alt = "";
+      actionButton.appendChild(actionIcon);
+      hydrateMaterialIconImages(actionButton);
       info.append(title, stats, meta);
       fallbackElement.append(checkbox, thumbnail, info, actionButton);
       fallbackElement.dataset.id = video.originalId;
@@ -1176,6 +1238,20 @@ export class Mylist2ManagerUI {
       );
     }
 
+    document
+      .querySelectorAll<HTMLElement>("[data-batch-action]")
+      .forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.dataset.batchAction;
+          const actionSelect = document.getElementById(
+            "selectedVideosAction",
+          ) as HTMLSelectElement | null;
+          if (!action || !actionSelect) return;
+          actionSelect.value = action;
+          executeSelectedActionElement?.click();
+        });
+      });
+
     // マイリスト名の保存
     const saveMylistNameElement = document.getElementById("saveMylistName");
     if (saveMylistNameElement) {
@@ -1575,11 +1651,16 @@ export class Mylist2ManagerUI {
     }
 
     // 全選択ボタンのイベントリスナー（動画のみ）
-    const selectAllVideosElement = document.getElementById("selectAllVideos");
+    const selectAllVideosElement = document.getElementById(
+      "selectAllVideos",
+    ) as HTMLInputElement | null;
     if (selectAllVideosElement) {
-      selectAllVideosElement.addEventListener("click", () => {
-        // 仮想スクロールマネージャーを使用
-        this.virtualScrollManager.selectAllVideos();
+      selectAllVideosElement.addEventListener("change", () => {
+        if (selectAllVideosElement.checked) {
+          this.virtualScrollManager.selectAllVideos();
+        } else {
+          this.virtualScrollManager.deselectAll();
+        }
       });
     }
 

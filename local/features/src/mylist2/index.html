@@ -102,11 +102,39 @@
         <div id="mylistList" class="mylist-list">
           <!-- マイリストがここに動的に追加される -->
         </div>
+        <div class="mylist-sidebar-footer">
+          <button id="settingsFab" class="sidebar-footer-action" title="設定">
+            <img
+              class="material-icon icon-white"
+              data-style="outlined"
+              data-icon="settings"
+              alt=""
+              loading="lazy"
+            />
+            <span>設定</span>
+          </button>
+          <a
+            class="sidebar-footer-action"
+            href="https://roflsunriz.github.io/filter-matome/mylist2/"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="mylist2 ヘルプ"
+          >
+            <img
+              class="material-icon icon-white"
+              data-style="outlined"
+              data-icon="help_outline"
+              alt=""
+              loading="lazy"
+            />
+            <span>ヘルプ</span>
+          </a>
+        </div>
       </div>
       <!-- メインコンテンツ（選択中のマイリストの内容） -->
       <div class="mylist-main">
         <!-- 動画一覧のコントロール（常時表示） -->
-        <div class="video-list-controls always-visible">
+        <div class="video-filter-bar always-visible">
           <select id="videoSortType">
             <option value="uploadedAt_desc">投稿日時順 (新しい順)</option>
             <option value="uploadedAt_asc">投稿日時順 (古い順)</option>
@@ -145,45 +173,46 @@
               />
             </button>
           </div>
-          <div class="video-selection-controls">
-            <button id="selectAllVideos" class="cml2-btn" title="全て選択">
-              <img
-                class="material-icon icon-white"
-                data-style="outlined"
-                data-icon="check_box"
-                alt="select_all"
-                loading="lazy"
-              />
-            </button>
-            <button id="deselectAllVideos" class="cml2-btn" title="選択解除">
-              <img
-                class="material-icon icon-white"
-                data-style="outlined"
-                data-icon="check_box_outline_blank"
-                alt="deselect_all"
-                loading="lazy"
-              />
-            </button>
-          </div>
-          <div class="bulk-action-controls">
-            <select id="selectedVideosAction">
-              <option value="">選択...</option>
-              <option value="move">移動</option>
-              <option value="copy">コピー</option>
-              <option value="delete">削除</option>
-              <option value="refresh">情報更新</option>
-              <option value="availability-check">公開状態チェック</option>
-            </select>
-            <button id="executeSelectedAction" title="実行">
-              <img
-                class="material-icon icon-white"
-                data-style="outlined"
-                data-icon="play_arrow"
-                alt="execute"
-                loading="lazy"
-              />
-            </button>
-          </div>
+        </div>
+        <div class="selection-action-bar" aria-hidden="true">
+          <span
+            id="selectedItemsCount"
+            class="selected-items-count"
+            aria-live="polite"
+          ></span>
+          <button type="button" data-batch-action="move">
+            <span>移動</span>
+          </button>
+          <button type="button" data-batch-action="copy">
+            <span>コピー</span>
+          </button>
+          <button type="button" data-batch-action="delete" class="danger">
+            <span>削除</span>
+          </button>
+          <button type="button" data-batch-action="refresh">
+            <span>情報更新</span>
+          </button>
+          <button type="button" data-batch-action="availability-check">
+            <span>公開状態チェック</span>
+          </button>
+          <button id="deselectAllVideos" type="button" title="選択解除">
+            ×
+          </button>
+          <select id="selectedVideosAction" aria-hidden="true" tabindex="-1">
+            <option value="">選択...</option>
+            <option value="move">移動</option>
+            <option value="copy">コピー</option>
+            <option value="delete">削除</option>
+            <option value="refresh">情報更新</option>
+            <option value="availability-check">公開状態チェック</option>
+          </select>
+          <button id="executeSelectedAction" type="button" hidden>実行</button>
+        </div>
+        <div class="video-list-selection-header">
+          <label for="selectAllVideos">
+            <input id="selectAllVideos" type="checkbox" />
+            <span>すべて選択</span>
+          </label>
         </div>
         <!-- 動画一覧 -->
         <div id="videoList" class="video-list">
@@ -206,11 +235,17 @@
                 </div>
               </div>
               <button
-                class="action-trigger"
-                aria-label="アクションメニュー"
-                title="アクション"
+                class="video-details-trigger"
+                aria-label="動画の詳細"
+                title="詳細"
               >
-                ⋮
+                <img
+                  class="material-icon icon-white"
+                  data-style="outlined"
+                  data-icon="info"
+                  alt=""
+                  loading="lazy"
+                />
               </button>
             </div>
           </template>
@@ -255,22 +290,6 @@
           </template>
         </div>
       </div>
-
-      <!-- FAB（設定モーダルを開く） -->
-      <button
-        id="settingsFab"
-        class="cml2-fab"
-        data-tooltip="マイリスト設定"
-        title="マイリスト設定"
-      >
-        <img
-          class="material-icon icon-white"
-          data-style="outlined"
-          data-icon="settings"
-          alt="settings"
-          loading="lazy"
-        />
-      </button>
     </div>
 
     <!-- マイリスト設定モーダル -->
