@@ -154,10 +154,351 @@ export const CommentFilter2MainStyles = `
 }
 
 /* Top controls (full width) */
+.cf2-cockpit {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(139, 92, 246, 0.22), transparent 34%),
+    linear-gradient(145deg, rgba(30, 41, 59, 0.96), rgba(17, 24, 39, 0.92));
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 1rem;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.cf2-cockpit-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.cf2-eyebrow {
+  margin-bottom: 0.35rem;
+  color: #93c5fd;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.cf2-cockpit h2 {
+  margin: 0 0 0.65rem;
+  color: #f9fafb;
+  font-size: clamp(1.25rem, 2.5vw, 1.65rem);
+  line-height: 1.25;
+}
+
+.cf2-cockpit-apply {
+  flex: 0 0 auto;
+  min-width: 10rem;
+}
+
+.cf2-cockpit-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0 1.5rem 1.25rem;
+  overflow: hidden;
+  background: rgba(148, 163, 184, 0.14);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 0.75rem;
+}
+
+.cf2-cockpit-metric {
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  background: rgba(15, 23, 42, 0.66);
+}
+
+.cf2-cockpit-metric > span {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
+.cf2-cockpit-metric strong {
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.cf2-cockpit-nav {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 1rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.cf2-cockpit-nav-item {
+  padding: 0.8rem 0.9rem;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: #94a3b8;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cf2-cockpit-nav-item:hover,
+.cf2-cockpit-nav-item.active {
+  color: #f8fafc;
+  border-bottom-color: #60a5fa;
+}
+
+.cf2-section-anchor {
+  scroll-margin-top: 1rem;
+}
+
+/* App shell — visualize案01「クイック・コックピット」 */
+.cf2-container {
+  width: min(1120px, 94vw);
+}
+
+.cf2-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  background: rgba(17, 24, 39, 0.96);
+  border-bottom: 1px solid rgba(75, 85, 99, 0.5);
+  backdrop-filter: blur(18px);
+}
+
+.cf2-content {
+  padding: 0;
+  gap: 0;
+}
+
+.cf2-workspace {
+  display: grid;
+  grid-template-columns: 10.5rem minmax(0, 1fr);
+  min-height: min(680px, calc(90vh - 69px));
+}
+
+.cf2-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 0.75rem;
+  background: rgba(15, 23, 42, 0.52);
+  border-right: 1px solid rgba(75, 85, 99, 0.45);
+}
+
+.cf2-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.72rem 0.8rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0.55rem;
+  color: #94a3b8;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.cf2-sidebar-item:hover {
+  background: rgba(51, 65, 85, 0.48);
+  color: #e2e8f0;
+}
+
+.cf2-sidebar-item.active {
+  background: rgba(59, 130, 246, 0.16);
+  color: #bfdbfe;
+}
+
+.cf2-workspace-main {
+  min-width: 0;
+  padding: clamp(1.1rem, 3vw, 2rem);
+}
+
+.cf2-dashboard {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.cf2-dashboard-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cf2-dashboard-hero h2 {
+  margin: 0 0 0.5rem;
+  color: #f8fafc;
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+  line-height: 1.25;
+}
+
+.cf2-dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.cf2-dashboard-apply {
+  flex: 0 0 auto;
+}
+
+.cf2-dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.cf2-dashboard-metric {
+  padding: 1rem;
+  background: rgba(30, 41, 59, 0.58);
+  border-radius: 0.65rem;
+}
+
+.cf2-dashboard-metric span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
+.cf2-dashboard-metric strong {
+  color: #f8fafc;
+  font-size: 1.35rem;
+}
+
+.cf2-dashboard-recent {
+  margin-top: 0.25rem;
+}
+
+.cf2-dashboard-recent .cf2-section-header {
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.45);
+}
+
+.cf2-text-button {
+  margin-left: auto;
+  padding: 0.35rem 0.5rem;
+  background: transparent;
+  border: 0;
+  color: #93c5fd;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cf2-dashboard-rule {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.cf2-dashboard-rule code {
+  overflow: hidden;
+  color: #e2e8f0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cf2-dashboard-rule-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  background: #60a5fa;
+  border-radius: 50%;
+}
+
+.cf2-dashboard-empty {
+  padding: 1.5rem 0;
+  color: #94a3b8;
+}
+
+.cf2-view-panel {
+  animation: cf2-view-enter 0.18s ease-out;
+}
+
+@keyframes cf2-view-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .cf2-top-controls {
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.cf2-regex-preview {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.58);
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  border-radius: 0.65rem;
+}
+
+.cf2-regex-preview-header {
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.cf2-preview-count {
+  margin-left: auto;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.14);
+  color: #93c5fd;
+  font-size: 0.75rem;
+}
+
+.cf2-test-textarea {
+  width: 100%;
+  min-height: 5.5rem;
+  padding: 0.75rem;
+  resize: vertical;
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(75, 85, 99, 0.65);
+  border-radius: 0.5rem;
+  color: #f9fafb;
+  font: inherit;
+}
+
+.cf2-test-textarea:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+}
+
+.cf2-regex-preview-result {
+  margin-top: 0.75rem;
+  min-height: 3rem;
+  padding: 0.75rem;
+  background: rgba(2, 6, 23, 0.58);
+  border-radius: 0.5rem;
+  color: #94a3b8;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.cf2-regex-preview-result mark {
+  padding: 0.08rem 0.18rem;
+  background: rgba(250, 204, 21, 0.28);
+  border-bottom: 2px solid #facc15;
+  border-radius: 0.2rem;
+  color: #fef9c3;
+}
+
+.cf2-regex-preview-result.cf2-preview-success {
+  color: #e5e7eb;
+}
+
+.cf2-regex-preview-result.cf2-preview-error {
+  background: rgba(127, 29, 29, 0.18);
+  color: #fca5a5;
 }
 
 .cf2-control-card {
@@ -580,6 +921,21 @@ export const CommentFilter2MainStyles = `
 }
 
 @media (max-width: 768px) {
+  .cf2-cockpit-hero {
+    flex-direction: column;
+  }
+
+  .cf2-cockpit-apply {
+    width: 100%;
+  }
+
+  .cf2-cockpit-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .cf2-cockpit-nav {
+    flex-wrap: wrap;
+  }
   .cf2-container {
     width: min(95vw, 90vw);
     max-height: 95vh;
@@ -590,8 +946,43 @@ export const CommentFilter2MainStyles = `
   }
   
   .cf2-content {
-    padding: 0 1.5rem 1.5rem 1.5rem;
-    gap: 1.25rem;
+    padding: 0;
+    gap: 0;
+  }
+
+  .cf2-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .cf2-sidebar {
+    position: sticky;
+    top: 65px;
+    z-index: 1;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0.5rem;
+    background: rgba(15, 23, 42, 0.96);
+    border-right: 0;
+    border-bottom: 1px solid rgba(75, 85, 99, 0.45);
+  }
+
+  .cf2-sidebar-item {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  .cf2-workspace-main {
+    padding: 1rem;
+  }
+
+  .cf2-dashboard-hero,
+  .cf2-dashboard-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cf2-dashboard-metrics {
+    grid-template-columns: 1fr;
   }
   
   .cf2-top-controls {

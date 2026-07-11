@@ -20,32 +20,76 @@ export const mainUITemplate = `
 
   <!-- メインコンテンツ -->
   <div id="cf2-content" class="cf2-content">
-    <!-- 全体コントロール（全幅） -->
-    <div class="cf2-top-controls">
-      <!-- 全体ON/OFFトグル -->
-      <div class="cf2-card cf2-control-card">
-        <div class="cf2-toggle-container">
-          <div class="cf2-toggle-label">
-            ${getIconSVG(ICONS.visibility)}
-            <span>フィルター有効</span>
+    <div class="cf2-workspace">
+      <aside class="cf2-sidebar" aria-label="メインナビゲーション">
+        <button class="cf2-sidebar-item active" type="button" data-cf2-view="overview">
+          ${getIconSVG(ICONS.visibility)}<span>概要</span>
+        </button>
+        <button class="cf2-sidebar-item" type="button" data-cf2-view="rules">
+          ${getIconSVG(ICONS.edit)}<span>ルール</span>
+        </button>
+        <button class="cf2-sidebar-item" type="button" data-cf2-view="commands">
+          ${getIconSVG(ICONS.comment)}<span>コマンド</span>
+        </button>
+        <button class="cf2-sidebar-item" type="button" data-cf2-view="data">
+          ${getIconSVG(ICONS.folder)}<span>データ</span>
+        </button>
+        <button class="cf2-sidebar-item" type="button" data-cf2-view="settings">
+          ${getIconSVG(ICONS.settings)}<span>設定</span>
+        </button>
+      </aside>
+
+      <main class="cf2-workspace-main">
+    <!-- 概要ダッシュボード -->
+    <section class="cf2-dashboard" data-cf2-panel="overview" aria-labelledby="cf2-cockpit-title">
+      <div class="cf2-dashboard-hero">
+        <div>
+          <h2 id="cf2-cockpit-title">フィルターは正常です</h2>
+          <div class="cf2-status">
+            <div id="cf2-status-indicator" class="cf2-status-indicator active"></div>
+            <span id="cf2-status-text" class="cf2-status-text">準備完了</span>
           </div>
-          <div id="cf2-main-toggle" class="cf2-toggle active">
-            <div class="cf2-toggle-slider"></div>
+        </div>
+        <div class="cf2-dashboard-actions">
+          <div class="cf2-toggle-container">
+            <strong id="cf2-cockpit-toggle-label">ON</strong>
+            <div id="cf2-main-toggle" class="cf2-toggle active" role="switch" aria-checked="true" aria-label="フィルター有効">
+              <div class="cf2-toggle-slider"></div>
+            </div>
           </div>
+          <button id="cf2-cockpit-apply" class="cf2-button cf2-button-primary cf2-dashboard-apply">
+            ${getIconSVG(ICONS.refresh)}
+            <span>今すぐ適用</span>
+          </button>
         </div>
       </div>
 
-      <!-- ステータス表示 -->
-      <div class="cf2-status-card cf2-control-card">
-        <div class="cf2-status">
-          <div id="cf2-status-indicator" class="cf2-status-indicator active"></div>
-          <span id="cf2-status-text" class="cf2-status-text">準備完了</span>
+      <div class="cf2-dashboard-metrics">
+        <div class="cf2-dashboard-metric">
+          <span>有効ルール</span>
+          <strong id="cf2-cockpit-rule-count">0</strong>
+        </div>
+        <div class="cf2-dashboard-metric">
+          <span>非表示ルール</span>
+          <strong id="cf2-cockpit-hide-count">0</strong>
+        </div>
+        <div class="cf2-dashboard-metric">
+          <span>置換ルール</span>
+          <strong id="cf2-cockpit-replace-count">0</strong>
         </div>
       </div>
-    </div>
+      <div class="cf2-dashboard-recent">
+        <div class="cf2-section-header">
+          ${getIconSVG(ICONS.visibility)}
+          <div class="cf2-section-title">最近のルール</div>
+          <button class="cf2-text-button" type="button" data-cf2-view="rules">すべて見る</button>
+        </div>
+        <div id="cf2-dashboard-recent-rules" class="cf2-dashboard-rule-list"></div>
+      </div>
+    </section>
 
     <!-- コマンド設定セクション（全幅） -->
-    <div class="cf2-card cf2-command-settings-card">
+    <div id="cf2-command-settings-section" class="cf2-card cf2-command-settings-card cf2-view-panel cf2-hidden" data-cf2-panel="commands">
       <div class="cf2-section-header">
         ${getIconSVG(ICONS.comment)}
         <div class="cf2-section-title">コメントコマンド設定</div>
@@ -108,6 +152,7 @@ export const mainUITemplate = `
       </div>
     </div>
 
+    <section class="cf2-view-panel cf2-hidden" data-cf2-panel="rules">
     <!-- ルール形式切替 -->
     <div class="cf2-format-selector">
       <div class="cf2-card">
@@ -175,6 +220,18 @@ export const mainUITemplate = `
               </div>
               <div id="cf2-regex-warnings" class="cf2-regex-warnings"></div>
               <div id="cf2-regex-suggestions" class="cf2-regex-suggestions"></div>
+            </div>
+            <div class="cf2-regex-preview">
+              <div class="cf2-section-header cf2-regex-preview-header">
+                ${getIconSVG(ICONS.visibility)}
+                <div class="cf2-section-title">一致プレビュー</div>
+                <span id="cf2-regex-preview-count" class="cf2-preview-count">未テスト</span>
+              </div>
+              <label for="cf2-regex-test-input" class="cf2-input-label">テスト用の文字列</label>
+              <textarea id="cf2-regex-test-input" class="cf2-test-textarea" placeholder="例: このコメントには荒らしという文字が含まれます"></textarea>
+              <div id="cf2-regex-preview-result" class="cf2-regex-preview-result" aria-live="polite">
+                パターンとテスト文字列を入力すると、一致箇所を確認できます。
+              </div>
             </div>
           </div>
 
@@ -302,7 +359,7 @@ export const mainUITemplate = `
       <!-- 右カラム：ルール一覧 -->
       <div class="cf2-right-column">
         <!-- ルール一覧表示 -->
-        <div class="cf2-card cf2-rules-list-card">
+        <div id="cf2-rules-list-section" class="cf2-card cf2-rules-list-card cf2-section-anchor">
           <div class="cf2-section-header">
             ${getIconSVG(ICONS.visibility)}
             <div class="cf2-section-title">現在のルール一覧</div>
@@ -326,34 +383,27 @@ export const mainUITemplate = `
             <!-- ルール一覧がここに動的に挿入される -->
           </div>
         </div>
-        <!-- データ管理 -->
-        <div class="cf2-card cf2-data-card">
-          <div class="cf2-section-header">
-            ${getIconSVG(ICONS.folder)}
-            <div class="cf2-section-title">データ管理</div>
-          </div>
-          <div class="cf2-button-group">
-            <button id="cf2-export-json-btn" class="cf2-button cf2-button-secondary">
-              ${getIconSVG(ICONS.export)}
-              <span>エクスポート</span>
-            </button>
-            <button id="cf2-import-btn" class="cf2-button cf2-button-secondary">
-              ${getIconSVG(ICONS.import)}
-              <span>インポート</span>
-            </button>
-            <button id="cf2-legacy-import-btn" class="cf2-button cf2-button-warning" title="CommentFilter（旧バージョン）の設定ファイルをインポートします">
-              ${getIconSVG(ICONS.warning)}
-              <span>レガシーインポート</span>
-            </button>
-          </div>
-          <input type="file" id="cf2-file-input" class="cf2-file-input" accept=".json,.jsonl,.csv">
-          <input type="file" id="cf2-legacy-file-input" class="cf2-file-input" accept=".json">
-        </div>
       </div>
+    </div>
+    </section>
+
+    <div id="cf2-data-section" class="cf2-card cf2-data-card cf2-view-panel cf2-hidden" data-cf2-panel="data">
+      <div class="cf2-section-header">
+        ${getIconSVG(ICONS.folder)}
+        <div class="cf2-section-title">データ管理</div>
+      </div>
+      <p class="cf2-help-text">ルールの持ち出し、復元、旧バージョンからの移行を行います。</p>
+      <div class="cf2-button-group">
+        <button id="cf2-export-json-btn" class="cf2-button cf2-button-secondary">${getIconSVG(ICONS.export)}<span>エクスポート</span></button>
+        <button id="cf2-import-btn" class="cf2-button cf2-button-secondary">${getIconSVG(ICONS.import)}<span>インポート</span></button>
+        <button id="cf2-legacy-import-btn" class="cf2-button cf2-button-warning" title="CommentFilter（旧バージョン）の設定ファイルをインポートします">${getIconSVG(ICONS.warning)}<span>レガシーインポート</span></button>
+      </div>
+      <input type="file" id="cf2-file-input" class="cf2-file-input" accept=".json,.jsonl,.csv">
+      <input type="file" id="cf2-legacy-file-input" class="cf2-file-input" accept=".json">
     </div>
 
     <!-- 設定セクション（全幅） -->
-    <div class="cf2-settings-section">
+    <div class="cf2-settings-section cf2-view-panel cf2-hidden" data-cf2-panel="settings">
       <!-- デバッグモード -->
       <div class="cf2-card cf2-debug-card">
         <div class="cf2-toggle-container">
@@ -382,7 +432,7 @@ export const mainUITemplate = `
     </div>
 
     <!-- デバッグ情報（全幅） -->
-    <div id="cf2-debug-section" class="cf2-debug-section cf2-collapsed">
+    <div id="cf2-debug-section" class="cf2-debug-section cf2-collapsed" data-cf2-panel="settings">
       <div class="cf2-card">
         <div class="cf2-section-header">
           ${getIconSVG(ICONS.info)}
@@ -395,11 +445,13 @@ export const mainUITemplate = `
     </div>
 
     <!-- 再読み込みボタン（全幅） -->
-    <div class="cf2-reload-section">
+    <div class="cf2-reload-section cf2-view-panel cf2-hidden" data-cf2-panel="settings">
       <button id="cf2-reload-btn" class="cf2-button cf2-button-primary cf2-reload-button">
         ${getIconSVG(ICONS.refresh)}
         <span>再読み込みして適用</span>
       </button>
+    </div>
+      </main>
     </div>
   </div>
 </div>
@@ -430,6 +482,17 @@ export const UI_ELEMENTS = {
   REGEX_COMPLEXITY_BADGE: "cf2-regex-complexity-badge",
   REGEX_WARNINGS: "cf2-regex-warnings",
   REGEX_SUGGESTIONS: "cf2-regex-suggestions",
+  REGEX_TEST_INPUT: "cf2-regex-test-input",
+  REGEX_PREVIEW_RESULT: "cf2-regex-preview-result",
+  REGEX_PREVIEW_COUNT: "cf2-regex-preview-count",
+  COCKPIT_RULE_COUNT: "cf2-cockpit-rule-count",
+  COCKPIT_SMID: "cf2-cockpit-smid",
+  COCKPIT_APPLY: "cf2-cockpit-apply",
+  COCKPIT_TITLE: "cf2-cockpit-title",
+  COCKPIT_TOGGLE_LABEL: "cf2-cockpit-toggle-label",
+  COCKPIT_HIDE_COUNT: "cf2-cockpit-hide-count",
+  COCKPIT_REPLACE_COUNT: "cf2-cockpit-replace-count",
+  DASHBOARD_RECENT_RULES: "cf2-dashboard-recent-rules",
   REPLACE_INPUT: "cf2-replace-input",
   SMID_INPUT: "cf2-smid-input",
   NICORU_TOGGLE: "cf2-nicoru-toggle",

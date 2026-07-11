@@ -258,6 +258,9 @@ export class UIManager {
     this.safeAddEventListener(UI_ELEMENTS.RELOAD_BTN, "click", () =>
       this.reloadPage(),
     );
+    this.safeAddEventListener(UI_ELEMENTS.COCKPIT_APPLY, "click", () =>
+      this.applyFilter(window.CommentFilter2Data?.currentSmid ?? null),
+    );
 
     // ファイル入力の特別処理
     const fileInput = this.container.querySelector(
@@ -296,6 +299,7 @@ export class UIManager {
 
     // 正規表現パターン入力のリアルタイム分析
     this.setupRegexAnalysis();
+    this.setupCockpitNavigation();
 
     // キー伝搬停止処理を設定
     this.setupKeyPropagationPrevention();
@@ -572,7 +576,12 @@ export class UIManager {
       } else {
         mainToggle.classList.remove(CSS_CLASSES.TOGGLE_ACTIVE);
       }
+      mainToggle.setAttribute(
+        "aria-checked",
+        String(this.currentSettings.isEnabled),
+      );
     }
+    this.updateCockpitState();
 
     // デバッグトグルの更新
     const debugToggle = this.container.querySelector(
@@ -957,7 +966,25 @@ export class UIManager {
     }
 
     this.updateStatus();
+    this.updateCockpitState();
     this.updateDebugInfo();
+  }
+
+  /** 現在の有効状態をコックピットの要約へ同期する */
+  private updateCockpitState(): void {
+    if (!this.container) return;
+    const enabled = this.currentSettings.isEnabled;
+    const title = this.container.querySelector(`#${UI_ELEMENTS.COCKPIT_TITLE}`);
+    const label = this.container.querySelector(
+      `#${UI_ELEMENTS.COCKPIT_TOGGLE_LABEL}`,
+    );
+    const toggle = this.container.querySelector(`#${UI_ELEMENTS.MAIN_TOGGLE}`);
+    if (title)
+      title.textContent = enabled
+        ? "フィルターは正常です"
+        : "フィルターは停止中です";
+    if (label) label.textContent = enabled ? "ON" : "OFF";
+    toggle?.setAttribute("aria-checked", String(enabled));
   }
 
   /**
@@ -1463,6 +1490,9 @@ export class UIManager {
     const flagsInput = this.container.querySelector(
       `#${UI_ELEMENTS.FLAGS_INPUT}`,
     ) as HTMLInputElement;
+    const testInput = this.container.querySelector(
+      `#${UI_ELEMENTS.REGEX_TEST_INPUT}`,
+    ) as HTMLTextAreaElement;
 
     if (!patternInput || !flagsInput) {
       window.logger?.warn(
@@ -1478,15 +1508,111 @@ export class UIManager {
       }
       this.regexAnalysisDebounceTimer = setTimeout(() => {
         this.analyzeAndDisplayRegexComplexity();
+        this.updateRegexPreview();
       }, 300);
     };
 
     patternInput.addEventListener("input", handlePatternChange);
     flagsInput.addEventListener("input", handlePatternChange);
+    testInput?.addEventListener("input", handlePatternChange);
 
     window.logger?.debug(
       "[CommentFilter2] Regex analysis event listeners set up",
     );
+  }
+
+  /** サイドナビゲーションでワークスペースの表示を切り替える */
+  private setupCockpitNavigation(): void {
+    if (!this.container) return;
+
+    this.container
+      .querySelectorAll<HTMLButtonElement>("[data-cf2-view]")
+      .forEach((button) => {
+        button.addEventListener("click", () => {
+          const view = button.dataset.cf2View;
+          if (!view) return;
+          this.container
+            ?.querySelectorAll<HTMLElement>("[data-cf2-panel]")
+            .forEach((panel) => {
+              panel.classList.toggle(CSS_CLASSES.HIDDEN, panel.dataset.cf2Panel !== view);
+            });
+          this.container
+            ?.querySelectorAll(".cf2-sidebar-item")
+            .forEach((item) => {
+              item.classList.toggle("active", item.getAttribute("data-cf2-view") === view);
+            });
+          this.container?.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      });
+
+    const smid = window.CommentFilter2Data?.currentSmid;
+    const smidElement = this.container.querySelector(
+      `#${UI_ELEMENTS.COCKPIT_SMID}`,
+    );
+    if (smidElement && smid) smidElement.textContent = smid;
+  }
+
+  /** 入力中の正規表現を任意のテスト文字列へ適用して一致箇所を表示する */
+  private updateRegexPreview(): void {
+    if (!this.container) return;
+
+    const pattern =
+      this.container.querySelector<HTMLInputElement>(
+        `#${UI_ELEMENTS.PATTERN_INPUT}`,
+      )?.value ?? "";
+    const flags =
+      this.container.querySelector<HTMLInputElement>(
+        `#${UI_ELEMENTS.FLAGS_INPUT}`,
+      )?.value ?? "";
+    const testText =
+      this.container.querySelector<HTMLTextAreaElement>(
+        `#${UI_ELEMENTS.REGEX_TEST_INPUT}`,
+      )?.value ?? "";
+    const result = this.container.querySelector(
+      `#${UI_ELEMENTS.REGEX_PREVIEW_RESULT}`,
+    );
+    const count = this.container.querySelector(
+      `#${UI_ELEMENTS.REGEX_PREVIEW_COUNT}`,
+    );
+    if (!result || !count) return;
+
+    if (!pattern || !testText) {
+      count.textContent = "未テスト";
+      result.textContent =
+        "パターンとテスト文字列を入力すると、一致箇所を確認できます。";
+      result.classList.remove("cf2-preview-success", "cf2-preview-error");
+      return;
+    }
+
+    try {
+      const previewFlags = flags.includes("g") ? flags : `${flags}g`;
+      const regex = new RegExp(pattern, previewFlags);
+      const fragments: string[] = [];
+      let cursor = 0;
+      let matchCount = 0;
+      let match: RegExpExecArray | null;
+      while ((match = regex.exec(testText)) !== null && matchCount < 100) {
+        fragments.push(this.escapeHtml(testText.slice(cursor, match.index)));
+        fragments.push(`<mark>${this.escapeHtml(match[0] || "∅")}</mark>`);
+        cursor = match.index + match[0].length;
+        matchCount += 1;
+        if (match[0].length === 0) regex.lastIndex += 1;
+      }
+      fragments.push(this.escapeHtml(testText.slice(cursor)));
+      result.innerHTML = fragments.join("");
+      count.textContent =
+        matchCount === 0
+          ? "一致なし"
+          : `${String(matchCount)}件一致${matchCount === 100 ? "以上" : ""}`;
+      result.classList.toggle("cf2-preview-success", matchCount > 0);
+      result.classList.remove("cf2-preview-error");
+    } catch (error) {
+      count.textContent = "入力エラー";
+      result.textContent =
+        error instanceof Error ? error.message : String(error);
+      result.classList.add("cf2-preview-error");
+      result.classList.remove("cf2-preview-success");
+    }
   }
 
   /**
@@ -1881,6 +2007,11 @@ export class UIManager {
         `#${UI_ELEMENTS.NICORU_VALUE}`,
       ) as HTMLInputElement
     ).value = "10";
+    const testInput = this.container.querySelector<HTMLTextAreaElement>(
+      `#${UI_ELEMENTS.REGEX_TEST_INPUT}`,
+    );
+    if (testInput) testInput.value = "";
+    this.updateRegexPreview();
 
     // ラジオボタンをリセット
     (
@@ -2030,6 +2161,51 @@ export class UIManager {
 
       if (countText) {
         countText.textContent = `${String(rules.length)}件`;
+      }
+      const cockpitCount = this.container.querySelector(
+        `#${UI_ELEMENTS.COCKPIT_RULE_COUNT}`,
+      );
+      if (cockpitCount) {
+        cockpitCount.textContent = String(
+          rules.filter((rule) => rule.enabled !== false).length,
+        );
+      }
+      const hideCount = this.container.querySelector(
+        `#${UI_ELEMENTS.COCKPIT_HIDE_COUNT}`,
+      );
+      const replaceCount = this.container.querySelector(
+        `#${UI_ELEMENTS.COCKPIT_REPLACE_COUNT}`,
+      );
+      if (hideCount) {
+        hideCount.textContent = String(
+          rules.filter((rule) => rule.enabled !== false && rule.action.type === "hide").length,
+        );
+      }
+      if (replaceCount) {
+        replaceCount.textContent = String(
+          rules.filter((rule) => rule.enabled !== false && rule.action.type === "replace").length,
+        );
+      }
+      const recentRules = this.container.querySelector(
+        `#${UI_ELEMENTS.DASHBOARD_RECENT_RULES}`,
+      );
+      if (recentRules) {
+        recentRules.innerHTML = rules.length
+          ? rules
+              .slice(-3)
+              .reverse()
+              .map((rule) => {
+                const content = rule.pattern || rule.userId || "";
+                const action =
+                  rule.action.type === "hide"
+                    ? "非表示"
+                    : rule.action.type === "replace"
+                      ? "置換"
+                      : "免除";
+                return `<div class="cf2-dashboard-rule"><span class="cf2-dashboard-rule-dot"></span><code>${this.escapeHtml(content)}</code><span class="cf2-rule-type">${action}</span></div>`;
+              })
+              .join("")
+          : '<div class="cf2-dashboard-empty">ルールはまだありません。左の「ルール」から追加できます。</div>';
       }
 
       if (!rulesList) return;
