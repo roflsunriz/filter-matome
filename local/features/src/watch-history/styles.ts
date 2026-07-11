@@ -2749,6 +2749,310 @@ const seriesStyles = `
     justify-content: center;
   }
 }
+
+/* ===== 視聴履歴ワークスペース刷新 ===== */
+.main-content {
+  max-width: 1560px;
+  padding: 24px clamp(16px, 3vw, 40px);
+}
+
+.tab-nav {
+  position: relative;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.tab-buttons {
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  padding: 10px 14px;
+}
+
+.management-menu {
+  position: relative;
+  margin-left: auto;
+}
+
+.management-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.management-menu > summary::-webkit-details-marker,
+.advanced-sort-menu > summary::-webkit-details-marker,
+.filter-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.management-menu .tab-actions {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 230px;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  background: #1a1a24;
+  border: 1px solid #343445;
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.management-menu .tab-actions .btn {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.history-layout {
+  grid-template-columns: minmax(190px, 230px) minmax(0, 1fr);
+  gap: clamp(16px, 2vw, 28px);
+  height: auto;
+  min-height: calc(100vh - 190px);
+}
+
+.sidebar,
+.content-area {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.sidebar {
+  padding: 0 18px 0 0;
+  overflow: visible;
+  border-right: 1px solid #2a2a38;
+}
+
+.content-area {
+  padding: 0;
+  overflow: visible;
+}
+
+.library-section,
+.sort-section,
+.filter-section,
+.stats-summary,
+.sidebar-management-link {
+  margin: 0;
+  padding: 0 0 18px;
+  border: 0;
+  border-bottom: 1px solid #2a2a38;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sort-section,
+.filter-section,
+.stats-summary,
+.sidebar-management-link {
+  margin-top: 18px;
+}
+
+.library-link {
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #a0a0b0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.library-link:hover,
+.library-link.active {
+  background: rgba(102, 126, 234, 0.16);
+  color: #d8ddff;
+}
+
+.sort-btn {
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+}
+
+.sort-btn:hover,
+.sort-btn.active {
+  border-color: transparent;
+  background: rgba(102, 126, 234, 0.14);
+}
+
+.advanced-sort-menu > summary,
+.filter-section > summary {
+  cursor: pointer;
+  color: #aeb5d8;
+}
+
+.advanced-sort-menu > summary {
+  padding: 8px 10px;
+  font-size: 0.88rem;
+}
+
+.advanced-sort-controls,
+.filter-controls {
+  margin-top: 10px;
+}
+
+.history-query-bar {
+  margin-bottom: 14px;
+}
+
+.history-query-bar .search-section {
+  margin: 0;
+}
+
+.history-query-bar .search-input {
+  min-height: 46px;
+  border-width: 1px;
+  border-radius: 8px;
+}
+
+.content-header {
+  margin-bottom: 4px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid #2a2a38;
+}
+
+.content-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.active-filter-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.active-filter-chip {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(102, 126, 234, 0.16);
+  color: #cbd2ff;
+  font-size: 0.78rem;
+}
+
+.history-list {
+  overflow: visible;
+  padding: 0;
+}
+
+.history-item {
+  align-items: center;
+  margin: 0;
+  padding: 14px 0;
+  border: 0;
+  border-bottom: 1px solid #2a2a38;
+  border-radius: 0;
+  background: transparent;
+  transform: none;
+}
+
+.history-item:hover {
+  border-color: #3a3a4b;
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: none;
+  transform: none;
+}
+
+.history-thumbnail {
+  width: clamp(128px, 15vw, 176px);
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.history-progress {
+  margin: 3px 0;
+}
+
+.history-primary-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.history-progress-label {
+  color: #a0a0b0;
+  font-size: 0.84rem;
+}
+
+.history-resume-btn {
+  flex-shrink: 0;
+}
+
+.history-delete-btn {
+  opacity: 0;
+}
+
+@media (max-width: 1024px) {
+  .history-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 0 0 16px;
+    border-right: 0;
+    border-bottom: 1px solid #2a2a38;
+  }
+
+  .library-section,
+  .sort-section,
+  .filter-section,
+  .stats-summary,
+  .sidebar-management-link {
+    margin: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .tab-nav {
+    align-items: flex-start;
+  }
+
+  .tab-buttons {
+    flex: 1;
+  }
+
+  .tab-btn {
+    padding: 9px;
+    font-size: 0.88rem;
+  }
+
+  .sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-summary,
+  .sidebar-management-link {
+    display: none;
+  }
+
+  .history-item {
+    align-items: stretch;
+  }
+
+  .history-thumbnail {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+  }
+
+  .history-meta,
+  .history-stats {
+    flex-wrap: wrap;
+  }
+}
 `;
 
 // スタイルをexportしてファイルの末尾で追加

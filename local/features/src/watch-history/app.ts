@@ -292,6 +292,14 @@ class WatchHistoryApp {
         this.guardEvent((ev) => this.handleSort(ev)),
       );
     });
+    document
+      .querySelectorAll(".management-menu .tab-actions button")
+      .forEach((button) => {
+        button.addEventListener("click", () => {
+          const menu = button.closest(".management-menu") as HTMLDetailsElement;
+          menu.open = false;
+        });
+      });
 
     // フィルタ
     this.elements["filter-completed"]?.addEventListener(
@@ -341,6 +349,18 @@ class WatchHistoryApp {
     this.elements["clear-uploaded-date-range"]?.addEventListener(
       "click",
       this.guardEvent(() => this.clearUploadedDateRange()),
+    );
+    document.getElementById("library-all")?.addEventListener(
+      "click",
+      this.guardEvent(() => this.setLibraryFilter("all")),
+    );
+    document.getElementById("library-in-progress")?.addEventListener(
+      "click",
+      this.guardEvent(() => this.setLibraryFilter("in-progress")),
+    );
+    document.getElementById("library-completed")?.addEventListener(
+      "click",
+      this.guardEvent(() => this.setLibraryFilter("completed")),
     );
 
     // リフレッシュ
@@ -803,6 +823,7 @@ class WatchHistoryApp {
     this.updateStats();
     this.updateFilters();
     this.updateContentCount();
+    this.updateActiveFilterChips();
   }
 
   /**
@@ -849,6 +870,12 @@ class WatchHistoryApp {
           ) {
             return;
           }
+          if (
+            e.target &&
+            (e.target as HTMLElement).closest(".history-resume-btn")
+          ) {
+            return;
+          }
           this.showVideoDetail(this.filteredEntries[index]);
         }),
       );
@@ -860,6 +887,14 @@ class WatchHistoryApp {
         this.guardEvent((e) => {
           e.stopPropagation();
           void this.deleteHistoryEntry(this.filteredEntries[index]);
+        }),
+      );
+      const resumeBtn = item.querySelector(".history-resume-btn");
+      resumeBtn?.addEventListener(
+        "click",
+        this.guardEvent((e) => {
+          e.stopPropagation();
+          this.openHistoryVideo(this.filteredEntries[index]);
         }),
       );
     });
@@ -943,6 +978,13 @@ class WatchHistoryApp {
             </div>
             <span class="progress-text">${progressPercent}%</span>
           </div>
+          <div class="history-primary-action">
+            <span class="history-progress-label">${entry.completed ? "完走済み" : `${progressPercent}%まで視聴`}</span>
+            <button type="button" class="history-resume-btn btn ${entry.completed ? "btn-secondary" : "btn-primary"}" aria-label="${this.escapeHtml(entry.title)}を${entry.completed ? "もう一度見る" : "続きから見る"}">
+              ${createMaterialIcon(entry.completed ? "replay" : "play_arrow", { color: "white", size: "small" })}
+              ${entry.completed ? "もう一度" : "続きから"}
+            </button>
+          </div>
           <div class="history-stats">
             <div class="stat-item watch-count-item" data-video-id="${entry.videoId}">
               ${createMaterialIcon("repeat", { color: "dark", size: "small" })}
@@ -1012,6 +1054,69 @@ class WatchHistoryApp {
         </div>
       </div>
     `;
+  }
+
+  private openHistoryVideo(entry: WatchHistoryEntry): void {
+    window.open(`https://www.nicovideo.jp/watch/${entry.videoId}`, "_blank");
+  }
+
+  private setLibraryFilter(mode: "all" | "in-progress" | "completed"): void {
+    const completedFilter = this.elements[
+      "filter-completed"
+    ] as HTMLInputElement;
+    completedFilter.checked = mode === "completed";
+    document.querySelectorAll(".library-link").forEach((link) => {
+      link.classList.toggle("active", link.id === `library-${mode}`);
+    });
+
+    if (mode === "in-progress") {
+      this.filteredEntries = this.entries.filter((entry) => !entry.completed);
+      this.updateHistoryList();
+      this.updateContentCount();
+      this.updateActiveFilterChips(["途中から"]);
+      return;
+    }
+    this.handleFilter();
+  }
+
+  private updateActiveFilterChips(additional: string[] = []): void {
+    const container = document.getElementById("active-filter-chips");
+    if (!container) return;
+
+    const chips = [...additional];
+    const searchInput = this.elements["search-input"] as HTMLInputElement;
+    const completedFilter = this.elements[
+      "filter-completed"
+    ] as HTMLInputElement;
+    const ownerFilter = this.elements["filter-owner"] as HTMLSelectElement;
+    const dateStart = this.elements["filter-date-start"] as HTMLInputElement;
+    const dateEnd = this.elements["filter-date-end"] as HTMLInputElement;
+    const uploadedStart = this.elements[
+      "filter-uploaded-date-start"
+    ] as HTMLInputElement;
+    const uploadedEnd = this.elements[
+      "filter-uploaded-date-end"
+    ] as HTMLInputElement;
+
+    if (searchInput.value.trim())
+      chips.push(`検索: ${searchInput.value.trim()}`);
+    if (completedFilter.checked) chips.push("完走済み");
+    if (ownerFilter.value) {
+      chips.push(
+        `投稿者: ${ownerFilter.selectedOptions[0]?.textContent ?? ""}`,
+      );
+    }
+    if (dateStart.value || dateEnd.value) chips.push("視聴期間");
+    if (uploadedStart.value || uploadedEnd.value) chips.push("投稿期間");
+
+    container.replaceChildren(
+      ...chips.map((label) => {
+        const chip = document.createElement("span");
+        chip.className = "active-filter-chip";
+        chip.textContent = label;
+        return chip;
+      }),
+    );
   }
 
   /**
@@ -1539,6 +1644,7 @@ class WatchHistoryApp {
     this.filterEntries();
     this.updateHistoryList();
     this.updateContentCount();
+    this.updateActiveFilterChips();
     this.saveConfig();
   }
 
@@ -1553,6 +1659,7 @@ class WatchHistoryApp {
       this.filterEntries();
       this.updateHistoryList();
       this.updateContentCount();
+      this.updateActiveFilterChips();
       this.saveConfig();
     }
   }
@@ -1580,6 +1687,7 @@ class WatchHistoryApp {
     this.filterEntries();
     this.updateHistoryList();
     this.updateContentCount();
+    this.updateActiveFilterChips();
     this.saveConfig();
 
     // 成功メッセージを表示
@@ -1609,6 +1717,7 @@ class WatchHistoryApp {
     this.filterEntries();
     this.updateHistoryList();
     this.updateContentCount();
+    this.updateActiveFilterChips();
     this.saveConfig();
 
     this.showToast("投稿期間フィルタをクリアしました", "success");
@@ -1707,6 +1816,7 @@ class WatchHistoryApp {
     this.filterEntries();
     this.updateHistoryList();
     this.updateContentCount();
+    this.updateActiveFilterChips();
     this.saveConfig();
   }
 

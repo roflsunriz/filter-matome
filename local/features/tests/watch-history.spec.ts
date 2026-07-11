@@ -283,6 +283,7 @@ test("履歴の検索・全ソート・全フィルタ・動的詳細操作が�
   await page.locator("#search-clear").click();
   await expect(page.locator(".history-item")).toHaveCount(3);
 
+  await page.locator(".advanced-sort-menu summary").click();
   for (const sortButton of await page.locator(".sort-btn").all()) {
     await sortButton.click();
     await expect(sortButton).toHaveClass(/active/);
@@ -293,6 +294,7 @@ test("履歴の検索・全ソート・全フィルタ・動的詳細操作が�
     );
   }
 
+  await page.locator(".filter-section summary").click();
   await page.locator("#filter-owner").selectOption("owner-b");
   await expect(page.locator(".history-item")).toHaveCount(1);
   await page.locator("#filter-owner").selectOption("");
@@ -312,6 +314,12 @@ test("履歴の検索・全ソート・全フィルタ・動的詳細操作が�
   await expect(page.locator(".history-item")).toHaveCount(3);
 
   const firstItem = page.locator('.history-item[data-video-id="sm100"]');
+  await firstItem.locator(".history-resume-btn").click();
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { openedUrl?: string }).openedUrl,
+    ),
+  ).toBe("https://www.nicovideo.jp/watch/sm100");
   await firstItem.locator(".watch-count-item").click();
   await expect(firstItem.locator(".watch-logs-accordion")).toHaveClass(
     /expanded/,
@@ -529,6 +537,7 @@ test("インポート・エクスポート・DB管理・通知モーダルの全
       );
     };
   });
+  await page.locator(".management-menu summary").click();
   await page.locator("#export-btn").click();
   await expect
     .poll(() =>
@@ -558,8 +567,10 @@ test("インポート・エクスポート・DB管理・通知モーダルの全
   await expect(
     page.locator('.history-item[data-video-id="sm999"]'),
   ).toHaveCount(1);
+  await page.locator(".management-menu summary").click();
   await page.locator("#import-btn").click();
 
+  await page.locator(".management-menu summary").click();
   await page.locator("#database-management-btn").click();
   await expect(page.locator("#database-management-modal")).not.toHaveClass(
     /hidden/,
