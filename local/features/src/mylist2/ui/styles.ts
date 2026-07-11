@@ -1702,14 +1702,18 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
   --cml2-muted-strong: #697793;
   --cml2-accent: #7068f4;
   --cml2-accent-hover: #857eff;
+  --cml2-accent-rgb: 112, 104, 244;
+  --cml2-accent-deep: #2455ad;
+  --cml2-accent-gradient-end: #4b44be;
+  --cml2-accent-contrast: #ffffff;
   --cml2-focus-ring: rgba(112, 104, 244, 0.34);
-  --cml2-link: #8fa9ff;
-  --cml2-link-hover: #b2c2ff;
+  --cml2-link: var(--cml2-accent-hover);
+  --cml2-link-hover: var(--cml2-accent-contrast);
   --cml2-scrollbar-thumb: #465675;
   --cml2-scrollbar-track: #0a1222;
   --cml2-text-soft: #d6dcf0;
   overflow: hidden;
-  border: 1px solid rgba(143, 169, 255, 0.16);
+  border: 1px solid rgba(var(--cml2-accent-rgb), 0.2);
   border-radius: 12px;
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.56);
 }
@@ -1717,24 +1721,36 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
 .custom-mylist2-manager.cml2-theme-dark-green {
   --cml2-accent: #35a67a;
   --cml2-accent-hover: #43bd8d;
+  --cml2-accent-rgb: 53, 166, 122;
+  --cml2-accent-deep: #176c55;
+  --cml2-accent-gradient-end: #238b69;
   --cml2-focus-ring: rgba(53, 166, 122, 0.34);
 }
 
 .custom-mylist2-manager.cml2-theme-dark-amber {
   --cml2-accent: #d79b36;
   --cml2-accent-hover: #e8ad49;
+  --cml2-accent-rgb: 215, 155, 54;
+  --cml2-accent-deep: #8c5d19;
+  --cml2-accent-gradient-end: #b47820;
   --cml2-focus-ring: rgba(215, 155, 54, 0.34);
 }
 
 .custom-mylist2-manager.cml2-theme-dark-violet {
   --cml2-accent: #9968df;
   --cml2-accent-hover: #ad7cf0;
+  --cml2-accent-rgb: 153, 104, 223;
+  --cml2-accent-deep: #5c349b;
+  --cml2-accent-gradient-end: #7949bd;
   --cml2-focus-ring: rgba(153, 104, 223, 0.34);
 }
 
 .custom-mylist2-manager.cml2-theme-dark-red {
   --cml2-accent: #d95666;
   --cml2-accent-hover: #ea6878;
+  --cml2-accent-rgb: 217, 86, 102;
+  --cml2-accent-deep: #8d2b3c;
+  --cml2-accent-gradient-end: #b53c50;
   --cml2-focus-ring: rgba(217, 86, 102, 0.34);
 }
 
@@ -1781,8 +1797,8 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
 }
 
 .custom-mylist2-manager .sidebar-footer-action:hover {
-  background: rgba(143, 169, 255, 0.09);
-  border-color: #465a84;
+  background: rgba(var(--cml2-accent-rgb), 0.12);
+  border-color: rgba(var(--cml2-accent-rgb), 0.5);
   color: #ffffff;
 }
 
@@ -1833,17 +1849,17 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
 }
 
 .custom-mylist2-manager .mylist-item:hover {
-  background: rgba(143, 169, 255, 0.07);
+  background: rgba(var(--cml2-accent-rgb), 0.09);
 }
 
 .custom-mylist2-manager .mylist-item.active {
-  background: rgba(112, 104, 244, 0.18);
+  background: rgba(var(--cml2-accent-rgb), 0.2);
   color: #f7f8ff;
 }
 
 .custom-mylist2-manager .mylist-item.active::before {
-  background: #817aff;
-  box-shadow: 0 0 14px rgba(129, 122, 255, 0.46);
+  background: var(--cml2-accent-hover);
+  box-shadow: 0 0 14px rgba(var(--cml2-accent-rgb), 0.5);
 }
 
 .custom-mylist2-manager .video-filter-bar.always-visible {
@@ -1897,7 +1913,11 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
   overflow: hidden;
   border: 1px solid transparent;
   border-radius: 9px;
-  background: linear-gradient(90deg, #2455ad, #4b44be);
+  background: linear-gradient(
+    90deg,
+    var(--cml2-accent-deep),
+    var(--cml2-accent-gradient-end)
+  );
   opacity: 0;
   transform: translateY(-12px);
   visibility: hidden;
@@ -1914,7 +1934,8 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
   max-height: 74px;
   margin-bottom: 10px;
   padding: 10px 12px;
-  border-color: rgba(157, 177, 255, 0.54);
+  border-color: rgba(var(--cml2-accent-rgb), 0.72);
+  box-shadow: 0 8px 24px rgba(var(--cml2-accent-rgb), 0.2);
   opacity: 1;
   transform: translateY(0);
   visibility: visible;
@@ -1956,7 +1977,11 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
   border: 1px solid #202e48;
   border-bottom: 0;
   border-radius: 9px 9px 0 0;
-  background: #0b1527;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--cml2-accent-rgb), 0.1),
+    #0b1527 38%
+  );
 }
 
 .custom-mylist2-manager .video-list-selection-header label {
@@ -2002,13 +2027,17 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
 
 .custom-mylist2-manager .video-list .video-item:hover,
 .custom-mylist2-manager .video-list .keyword-item:hover {
-  background: #0e1930;
+  background: rgba(var(--cml2-accent-rgb), 0.1);
 }
 
 .custom-mylist2-manager .video-list .video-item.is-selected,
 .custom-mylist2-manager .video-list .keyword-item.is-selected {
-  background: linear-gradient(90deg, rgba(69, 102, 184, 0.28), rgba(112, 104, 244, 0.1));
-  box-shadow: inset 3px 0 #7770ff;
+  background: linear-gradient(
+    90deg,
+    rgba(var(--cml2-accent-rgb), 0.3),
+    rgba(var(--cml2-accent-rgb), 0.08)
+  );
+  box-shadow: inset 3px 0 var(--cml2-accent-hover);
 }
 
 .custom-mylist2-manager .video-thumbnail {
@@ -2038,7 +2067,7 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
   height: 38px;
   min-height: 38px;
   padding: 0;
-  border: 1px solid #354563;
+  border: 1px solid rgba(var(--cml2-accent-rgb), 0.42);
   border-radius: 8px;
   background: #111d34;
   color: var(--cml2-text);
@@ -2060,7 +2089,9 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
 }
 
 .custom-mylist2-manager .video-details-trigger:hover {
-  background: #1a2a49;
+  background: rgba(var(--cml2-accent-rgb), 0.24);
+  border-color: var(--cml2-accent-hover);
+  box-shadow: 0 0 0 2px rgba(var(--cml2-accent-rgb), 0.14);
 }
 
 @media (max-width: 768px) {
