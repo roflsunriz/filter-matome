@@ -25,7 +25,7 @@ const seed = {
       viewCount: 100,
       commentCount: 10,
       mylistCount: 5,
-      thumbnailUrl: pixel,
+      thumbnailUrl: "",
       uploadedAt: 1000,
       addedAt: 3000,
       authorName: "投稿者A",
@@ -145,6 +145,10 @@ test("マイリスト検索・作成・ソート・設定・テーマが動作�
 });
 
 test("動画検索・ソート・詳細表示・選択状態が同期する", async ({ page }) => {
+  await expect(
+    page.locator('.video-item[data-id="sm100"] .video-thumbnail'),
+  ).toHaveAttribute("data-fallback-thumbnail", "true");
+
   await page.getByPlaceholder("動画を検索...").fill("検索用メモ");
   await expect(page.locator(".video-item:not(.keyword-item)")).toHaveCount(1);
   await page.getByTitle("動画検索クリア").click();

@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【watch-history】各ソート・フィルタ・タブ・モーダル・シリーズ・アラート・削除条件・インポート／エクスポート・DB管理・通知UIを実HTMLとIndexedDB上で操作するPlaywright回帰テストと、判定ロジックの境界値ユニットテストを追加。
 
 ### Changed
+- 【common/watch-history/mylist2/cache-data-manager】内蔵フォールバックサムネイルとURL・読込エラー処理をcommonへ集約し、各動画一覧と詳細表示で同じ代替画像を使用するよう統一。
 - 【movie-info】APIカードを常時並べる構成から、取得状況を俯瞰する概要、ソース切替タブ、選択中データの操作レールを備えた動画インスペクターへ刷新し、狭幅画面でも調査しやすい配置へ変更。
 - 【movie-info】JSON・エラーモーダルを開いた際のフォーカス移動と、閉じた後の呼び出し元へのフォーカス復帰を追加。
 - 【comment-filter2】状態、有効ルール数、対象動画、フィルター切替、即時適用、主要設定への移動を上段へ集約したクイック・コックピット中心のUIへ刷新。
@@ -39,6 +40,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【common】HLSキャッシュ削除処理を共通化し、`mlink-video-controller` と `cache-data-manager` から利用するよう変更。
 
 ### Fixed
+- 【watch-history】サムネイルURLが空、不正、または画像読込に失敗した場合に、存在しない固定パスではなく内蔵SVGのフォールバックサムネイルを表示するよう修正。
 - 【movie-info】Watch APIの動画説明文に含まれる安全なHTMLを正しく描画しつつ、スクリプト、イベント属性、危険なURLをDOMPurifyで除去するよう修正。
 - 【watch-history】シリーズ詳細からアラート追加へ移動した際に、選択中シリーズを先に破棄して設定処理が例外になる問題を修正。
 - 【common/mlink-video-controller】Watchページの `server-response` metaに生JSONや不完全な `%` シーケンスが含まれても動画情報を取得できるようにし、mylist2追加時の `URIError: malformed URI sequence` を修正。
@@ -79,6 +81,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【cache-data-manager】IndexedDB再作成時の緊急バックアップ処理を追加し、データ消失リスクを下げるよう変更。
 
 ### Removed
+- 【resources】共通ヘルパーの内蔵SVGへ置き換えたため、`local/images/fallback-thumbnail.svg`を削除。
 - 【mlink-video-controller】`マイリストセレクタ`モジュールを廃止し、モジュール一覧と遅延読み込み対象から削除。
 
 ### Fixed

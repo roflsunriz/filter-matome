@@ -69,7 +69,7 @@ const entries: SeedEntry[] = [
       uploadedAt: now - 10 * 86_400_000,
     },
     tags: ["音楽", "テスト"],
-    thumbnailUrl: "data:image/gif;base64,R0lGODlhAQABAAAAACw=",
+    thumbnailUrl: "",
     memo: "既存メモ",
     series: {
       id: 10,
@@ -349,6 +349,40 @@ test("履歴の検索・全ソート・全フィルタ・動的詳細操作が�
   await page.locator("#refresh-btn").click();
   await expect(page.locator("#toast-container")).toContainText(
     "データを更新しました",
+  );
+});
+
+test("サムネイル欠落時と画像読込失敗時にフォールバックを表示する", async ({
+  page,
+}) => {
+  await openApp(page);
+  const missingThumbnail = page.locator(
+    '.history-item[data-video-id="sm100"] .thumbnail-image',
+  );
+  await expect(missingThumbnail).toHaveAttribute(
+    "src",
+    /^data:image\/svg\+xml/,
+  );
+
+  const loadFailureThumbnail = page.locator(
+    '.history-item[data-video-id="sm200"] .thumbnail-image',
+  );
+  await loadFailureThumbnail.evaluate((image) => {
+    image.dispatchEvent(new Event("error"));
+  });
+  await expect(loadFailureThumbnail).toHaveAttribute(
+    "data-fallback-thumbnail",
+    "true",
+  );
+  await expect(loadFailureThumbnail).toHaveAttribute(
+    "src",
+    /^data:image\/svg\+xml/,
+  );
+
+  await missingThumbnail.click();
+  await expect(page.locator(".video-detail-thumbnail img")).toHaveAttribute(
+    "src",
+    /^data:image\/svg\+xml/,
   );
 });
 

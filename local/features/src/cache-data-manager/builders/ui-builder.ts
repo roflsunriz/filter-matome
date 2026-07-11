@@ -14,6 +14,7 @@ import { getLazyImageLoader } from "@/cache-data-manager/components/lazy-image-l
 import { createHeaderTemplate } from "@/cache-data-manager/templates/header-template.js";
 import { createCardTemplate } from "@/cache-data-manager/templates/card-template.js";
 import { removeCacheForVideo } from "@/common/cache-removal.js";
+import { applyFallbackThumbnail } from "@/common/thumbnail-fallback.js";
 
 export class UIBuilder {
   private static readonly TEMPORARY_DELETE_CONCURRENCY = 6;
@@ -143,7 +144,7 @@ export class UIBuilder {
 
     // エラーハンドリング追加
     thumbnailImg.onerror = () => {
-      thumbnailImg.src = "/local/images/fallback-thumbnail.svg";
+      applyFallbackThumbnail(thumbnailImg);
       thumbnailImg.classList.add("error-thumbnail");
     };
 

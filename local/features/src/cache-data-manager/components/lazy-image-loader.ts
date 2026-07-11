@@ -1,6 +1,11 @@
 /**
  * LazyImageLoader - Intersection Observer を使用したサムネイル遅延読み込み
  */
+import {
+  applyFallbackThumbnail,
+  FALLBACK_THUMBNAIL_URL,
+  normalizeThumbnailUrl,
+} from "@/common/thumbnail-fallback";
 
 export interface LazyImageConfig {
   rootMargin: string;
@@ -23,7 +28,7 @@ export class LazyImageLoader {
       // ビューポートの上下1000pxで先読み開始（ちらつき軽減）
       rootMargin: config.rootMargin ?? "1000px 0px",
       threshold: config.threshold ?? 0,
-      fallbackSrc: config.fallbackSrc ?? "/local/images/fallback-thumbnail.svg",
+      fallbackSrc: config.fallbackSrc ?? FALLBACK_THUMBNAIL_URL,
       placeholderClass: config.placeholderClass ?? "lazy-placeholder",
       loadedClass: config.loadedClass ?? "lazy-loaded",
       errorClass: config.errorClass ?? "lazy-error",
@@ -83,8 +88,19 @@ export class LazyImageLoader {
    * 画像URLを設定し、読み込み済みURLなら即時表示する
    */
   public setSource(img: HTMLImageElement, src: string): void {
-    img.dataset.src = src;
-    if (this.applyCachedState(img, src)) {
+    const normalizedSource = normalizeThumbnailUrl(src);
+    if (normalizedSource === FALLBACK_THUMBNAIL_URL) {
+      applyFallbackThumbnail(img);
+      img.classList.remove(
+        this.config.placeholderClass,
+        this.config.loadedClass,
+      );
+      img.classList.add(this.config.errorClass);
+      img.removeAttribute("data-src");
+      return;
+    }
+    img.dataset.src = normalizedSource;
+    if (this.applyCachedState(img, normalizedSource)) {
       return;
     }
 
@@ -111,7 +127,11 @@ export class LazyImageLoader {
     }
 
     if (this.failedSrcs.has(src)) {
-      img.src = this.config.fallbackSrc;
+      if (this.config.fallbackSrc === FALLBACK_THUMBNAIL_URL) {
+        applyFallbackThumbnail(img);
+      } else {
+        img.src = this.config.fallbackSrc;
+      }
       img.classList.remove(
         this.config.placeholderClass,
         this.config.loadedClass,
@@ -161,7 +181,11 @@ export class LazyImageLoader {
     tempImg.onerror = () => {
       this.failedSrcs.add(src);
       if (img.dataset.src !== src) return;
-      img.src = this.config.fallbackSrc;
+      if (this.config.fallbackSrc === FALLBACK_THUMBNAIL_URL) {
+        applyFallbackThumbnail(img);
+      } else {
+        img.src = this.config.fallbackSrc;
+      }
       img.classList.remove(this.config.placeholderClass);
       img.classList.add(this.config.errorClass);
       img.removeAttribute("data-src");

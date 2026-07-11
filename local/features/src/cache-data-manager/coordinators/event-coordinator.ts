@@ -5,6 +5,10 @@ import type { ProgressManager } from "@/cache-data-manager/managers/progress-man
 import type { APIResponse as _APIResponse } from "@/types";
 import { LazyAPIClient } from "@/cache-data-manager/clients/lazy-api-client.js";
 import { removeCacheForVideo } from "@/common/cache-removal.js";
+import {
+  normalizeThumbnailUrl,
+  THUMBNAIL_ERROR_HANDLER,
+} from "@/common/thumbnail-fallback.js";
 
 export class EventCoordinator {
   constructor(
@@ -258,7 +262,7 @@ export class EventCoordinator {
       `;
     } else if (isOkResponse(detail)) {
       const titleSafe = detail.title ?? "";
-      const thumb = detail.thumbnailUrl ?? "";
+      const thumb = normalizeThumbnailUrl(detail.thumbnailUrl);
       const author = detail.author ?? "";
       const duration = detail.duration ?? "";
       const views =
@@ -280,7 +284,7 @@ export class EventCoordinator {
           <span class="close-btn">&times;</span>
           <h2>${titleSafe}</h2>
           <div class="modal-body">
-            <img src="${thumb}" class="modal-thumbnail">
+            <img src="${thumb}" class="modal-thumbnail" onerror="${THUMBNAIL_ERROR_HANDLER}">
             <div class="modal-info">
               <p>投稿者: ${author}</p>
               <p>再生時間: ${duration}</p>

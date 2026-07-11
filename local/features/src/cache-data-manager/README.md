@@ -191,6 +191,7 @@ EventCoordinator ─── ユーザー操作待機
 
 #### `components/lazy-image-loader.ts` - サムネイル遅延読み込み
 - **役割**: サムネイル画像の遅延読み込み
+- **共通処理**: URL欠落・読込失敗時は`common/thumbnail-fallback.ts`の代替サムネイルを表示
 - **機能**:
   - Intersection Observerによる遅延読み込み
   - プレースホルダー表示

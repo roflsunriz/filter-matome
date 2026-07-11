@@ -14,6 +14,10 @@ import { CommonHeader } from "@/common/header";
 import { logger } from "@/common/logger";
 import { createVideoDetailHTML } from "@/watch-history/video-detail-renderer";
 import {
+  normalizeThumbnailUrl,
+  THUMBNAIL_ERROR_HANDLER,
+} from "@/common/thumbnail-fallback";
+import {
   calculateTagStats,
   renderTagCloud,
 } from "@/watch-history/tag-cloud-renderer";
@@ -897,10 +901,10 @@ class WatchHistoryApp {
     return `
       <div class="history-item" data-video-id="${entry.videoId}">
         <div class="history-thumbnail">
-          <img src="${entry.thumbnailUrl || "/default-thumbnail.jpg"}" 
-               alt="${entry.title}" 
+          <img src="${normalizeThumbnailUrl(entry.thumbnailUrl)}"
+               alt="${this.escapeHtml(entry.title)}"
                class="thumbnail-image"
-               onerror="this.src='/default-thumbnail.jpg'">
+               onerror="${THUMBNAIL_ERROR_HANDLER}">
           <div class="video-duration">${this.formatDuration(entry.lengthSec)}</div>
         </div>
         <div class="history-content">
@@ -1488,7 +1492,7 @@ class WatchHistoryApp {
         return `
         <div class="favorite-item" data-video-id="${entry.videoId}">
           <span class="favorite-rank">${index + 1}</span>
-          <img class="favorite-thumb" src="${entry.thumbnailUrl || "/default-thumbnail.jpg"}" alt="${this.escapeHtml(entry.title)}" onerror="this.src='/default-thumbnail.jpg'">
+          <img class="favorite-thumb" src="${normalizeThumbnailUrl(entry.thumbnailUrl)}" alt="${this.escapeHtml(entry.title)}" onerror="${THUMBNAIL_ERROR_HANDLER}">
           <span class="favorite-title">${this.escapeHtml(entry.title)}</span>
           <span class="favorite-score">${score.toFixed(2)}</span>
         </div>
@@ -2825,7 +2829,7 @@ class WatchHistoryApp {
         return `
         <div class="series-video-item" data-video-id="${video.videoId}">
           <div class="video-thumbnail">
-            <img src="${video.thumbnailUrl}" alt="${this.escapeHtml(video.title)}" onerror="this.src='/default-thumbnail.jpg'">
+            <img src="${normalizeThumbnailUrl(video.thumbnailUrl)}" alt="${this.escapeHtml(video.title)}" onerror="${THUMBNAIL_ERROR_HANDLER}">
             <div class="video-duration">${this.formatDuration(video.lengthSec)}</div>
           </div>
           <div class="video-content">

@@ -10,6 +10,7 @@ import type {
 } from "@/types/mylist-types";
 import { DBVideo as VideoInfo } from "@/types/video-types";
 import { hydrateMaterialIconImages } from "@/common/material-icons";
+import { setThumbnailSource } from "@/common/thumbnail-fallback";
 
 import { ModalService } from "@/mylist2/ui/modal-service";
 import { ValidationService } from "@/mylist2/ui/validation-service";
@@ -672,7 +673,7 @@ export class Mylist2ManagerUI {
       checkbox.className = "video-select";
       const thumbnail = document.createElement("img");
       thumbnail.className = "video-thumbnail";
-      thumbnail.src = video.thumbnailUrl;
+      setThumbnailSource(thumbnail, video.thumbnailUrl);
       thumbnail.alt = "サムネイル";
       const info = document.createElement("div");
       info.className = "video-info";
@@ -771,7 +772,7 @@ export class Mylist2ManagerUI {
       ".video-thumbnail",
     ) as HTMLImageElement;
     if (thumbnailElement) {
-      thumbnailElement.src = video.thumbnailUrl;
+      setThumbnailSource(thumbnailElement, video.thumbnailUrl);
     }
 
     // タイトルをリンクとして設定

@@ -10,6 +10,7 @@ features/src/common/
 ├── logger.ts                             # ログ機能・デバッグ支援 (4.5KB)
 ├── indexed-db-emergency-backup.ts        # IndexedDB再作成前の緊急バックアップ
 ├── material-icons.ts                     # マテリアルアイコン統合ヘルパー (9KB)
+├── thumbnail-fallback.ts                  # 共通フォールバックサムネイルとURL正規化
 ├── toastr.ts                             # 通知システム・トースト表示 (19KB)
 ├── cache-removal.ts                      # キャッシュ情報取得・HLS削除処理
 ├── server-response-parser.ts              # Watchページmetaの生JSON・URIエンコードJSON解析
@@ -40,6 +41,7 @@ features.ts ─── ページ判定
     ├── cache-removal.ts ─── 完了済み/テンポラリHLSキャッシュ削除
     ├── indexed-db-emergency-backup.ts ─── IndexedDB緊急退避
     └── material-icons.ts ─── アイコン表示
+    └── thumbnail-fallback.ts ─── 画像欠落・読込失敗時の共通サムネイル表示
 ```
 
 ## 📋 各ファイルの役割詳細
@@ -98,6 +100,12 @@ features.ts ─── ページ判定
   - カラー・サイズ・スタイル設定
   - よく使うアイコンのショートカット
 - **編集タイミング**: 新しいアイコン追加、アイコンスタイル変更
+
+#### `thumbnail-fallback.ts` - 共通フォールバックサムネイル
+
+- **役割**: watch-history、mylist2、cache-data-managerで使用する代替サムネイルを一元管理
+- **機能**: 内蔵SVGのData URL提供、画像URL正規化、空・不正URLと読込失敗時のフォールバック切替
+- **編集タイミング**: 代替画像のデザイン、許可する画像URL形式、画像エラー処理を変更する場合
 
 ### 💬 **通知・ログ**
 

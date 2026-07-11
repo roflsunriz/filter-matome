@@ -1,5 +1,8 @@
-import { logger } from "@/common/logger";
 import type { WatchHistoryEntry } from "@/types/watch-history-types";
+import {
+  normalizeThumbnailUrl,
+  THUMBNAIL_ERROR_HANDLER,
+} from "@/common/thumbnail-fallback";
 
 interface VideoDetailRendererOptions {
   formatDuration: (seconds: number) => string;
@@ -11,7 +14,9 @@ export function createVideoDetailHTML(
 ): string {
   const watchedAtDate = new Date(entry.watchedAt);
   const firstWatchedAtDate = new Date(entry.firstWatchedAt);
-  const thumbnailUrl = escapeAttribute(normalizeImageUrl(entry.thumbnailUrl));
+  const thumbnailUrl = escapeAttribute(
+    normalizeThumbnailUrl(entry.thumbnailUrl),
+  );
   const title = escapeAttribute(entry.title);
   const videoId = escapeHtml(entry.videoId);
   let progressPercent = 0;
@@ -24,7 +29,7 @@ export function createVideoDetailHTML(
   return `
       <div class="video-detail-grid">
         <div class="video-detail-thumbnail">
-          <img src="${thumbnailUrl}" alt="${title}" onerror="this.src='/default-thumbnail.jpg'">
+          <img src="${thumbnailUrl}" alt="${title}" onerror="${THUMBNAIL_ERROR_HANDLER}">
         </div>
         <div class="video-detail-info">
           <div class="info-row">
@@ -88,17 +93,4 @@ function escapeHtml(text: string): string {
 
 function escapeAttribute(text: string): string {
   return escapeHtml(text).replace(/"/g, "&quot;");
-}
-
-function normalizeImageUrl(url: string): string {
-  if (!url) return "/default-thumbnail.jpg";
-  try {
-    const parsed = new URL(url, window.location.origin);
-    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-      return parsed.href;
-    }
-  } catch (error) {
-    logger.warn("不正なサムネイルURLを無視しました:", error);
-  }
-  return "/default-thumbnail.jpg";
 }
