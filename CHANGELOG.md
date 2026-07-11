@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [#230] - 2026-07-11
 
 ### Added
+- 【comment-filter2】概要ダッシュボード、画面切替、コマンド設定、正規表現プレビュー、ルール追加・削除の動的要素を実DOMとIndexedDB上で操作するPlaywright回帰テストを追加。
 - 【comment-filter2】正規表現ルールの誤爆を保存前に確認できるよう、任意のテスト文字列に対する一致箇所・一致件数・入力エラーをリアルタイム表示するプレビューを追加。
 - 【mylist2】マイリスト作成・検索・ソート、動画検索・ソート・詳細、設定・テーマ、個別／全選択、一括操作5種の動的要素を実DOMとIndexedDB上で操作するPlaywright回帰テストを追加。
 - 【watch-history】各ソート・フィルタ・タブ・モーダル・シリーズ・アラート・削除条件・インポート／エクスポート・DB管理・通知UIを実HTMLとIndexedDB上で操作するPlaywright回帰テストと、判定ロジックの境界値ユニットテストを追加。
