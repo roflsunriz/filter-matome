@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#231] - 2026-07-13
+
+### Added
+
+- 【features】`package.json` の `version` を `231` に更新。
+- 【README】latest バッジを `#231` に更新。
+
 ### Changed
 
 - mylist2 の検索操作と動画情報を読み取りやすくするため、検索クリアボタンを入力内へ収めて白抜きアイコンを中央配置し、動画カード全体のクリック／キーボード操作で詳細を開くよう変更した。再生数、コメント数、マイリスト数、再生時間、投稿者、投稿日には白抜きMaterialアイコンを追加した。
