@@ -9,6 +9,7 @@ import {
   createMaterialIcon,
   hydrateMaterialIconImages,
   getIconPath,
+  ICONS,
 } from "@/common/material-icons";
 import { CommonHeader } from "@/common/header";
 import { logger } from "@/common/logger";
@@ -981,7 +982,7 @@ class WatchHistoryApp {
           <div class="history-primary-action">
             <span class="history-progress-label">${entry.completed ? "完走済み" : `${progressPercent}%まで視聴`}</span>
             <button type="button" class="history-resume-btn btn ${entry.completed ? "btn-secondary" : "btn-primary"}" aria-label="${this.escapeHtml(entry.title)}を${entry.completed ? "もう一度見る" : "続きから見る"}">
-              ${createMaterialIcon(entry.completed ? "replay" : "play_arrow", { color: "white", size: "small" })}
+              ${createMaterialIcon(entry.completed ? ICONS.replay : ICONS.play, { color: "white", size: "small" })}
               ${entry.completed ? "もう一度" : "続きから"}
             </button>
           </div>

@@ -35,6 +35,7 @@ export const ICONS = {
   edit: "edit",
   folder: "folder_open",
   refresh: "refresh",
+  replay: "replay",
   push_pin: "push_pin",
   play: "play_arrow",
   pause: "pause",

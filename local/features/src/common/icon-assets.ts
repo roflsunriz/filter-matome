@@ -90,6 +90,7 @@ import pushPinOutlinedIcon from "@material-design-icons/svg/outlined/push_pin.sv
 import radioButtonUncheckedOutlinedIcon from "@material-design-icons/svg/outlined/radio_button_unchecked.svg";
 import refreshOutlinedIcon from "@material-design-icons/svg/outlined/refresh.svg";
 import repeatOutlinedIcon from "@material-design-icons/svg/outlined/repeat.svg";
+import replayOutlinedIcon from "@material-design-icons/svg/outlined/replay.svg";
 import replay10OutlinedIcon from "@material-design-icons/svg/outlined/replay_10.svg";
 import rocketLaunchOutlinedIcon from "@material-design-icons/svg/outlined/rocket_launch.svg";
 import saveOutlinedIcon from "@material-design-icons/svg/outlined/save.svg";
@@ -230,6 +231,7 @@ const outlinedSvgMap = {
   radio_button_unchecked: radioButtonUncheckedOutlinedIcon,
   refresh: refreshOutlinedIcon,
   repeat: repeatOutlinedIcon,
+  replay: replayOutlinedIcon,
   replay_10: replay10OutlinedIcon,
   rocket_launch: rocketLaunchOutlinedIcon,
   save: saveOutlinedIcon,
