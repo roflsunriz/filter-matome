@@ -100,8 +100,9 @@ body {
 .mylist-controls,
 .mylist-sort-controls,
 .mylist-sidebar > .search-container {
+  --cml2-sidebar-inline-padding: 14px;
   flex: 0 0 auto;
-  padding-inline: 14px;
+  padding-inline: var(--cml2-sidebar-inline-padding);
 }
 .mylist-controls { display: flex; gap: 8px; padding-top: 14px; }
 .mylist-sidebar > .search-container { margin-top: 10px; }
@@ -123,6 +124,9 @@ body {
   border: 0;
   background: transparent;
   color: var(--cml2-muted);
+}
+.mylist-sidebar > .search-container .search-clear-btn {
+  inset-inline-end: calc(var(--cml2-sidebar-inline-padding) + 4px);
 }
 .search-clear-btn .material-icon {
   position: absolute;
@@ -536,7 +540,10 @@ input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
   .custom-mylist2-manager { grid-template-columns: clamp(150px, 40vw, 240px) minmax(0, 1fr); }
   .mylist-controls,
   .mylist-sort-controls,
-  .mylist-sidebar > .search-container { padding-inline: 8px; }
+  .mylist-sidebar > .search-container {
+    --cml2-sidebar-inline-padding: 8px;
+    padding-inline: var(--cml2-sidebar-inline-padding);
+  }
   .mylist-sidebar-footer { grid-template-columns: 1fr; padding-inline: 8px; }
   .sidebar-footer-action { min-height: 34px; }
   .video-filter-bar { grid-template-columns: 1fr; gap: 7px; padding: 8px; }

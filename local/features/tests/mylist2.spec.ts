@@ -184,6 +184,46 @@ test("共通ヘッダーと重ならずダーク背景でビューポートを�
   await expect(page.getByTitle("mylist2 ヘルプ")).toBeInViewport();
 });
 
+test("検索クリアボタンが入力欄の右端内側に揃う", async ({ page }) => {
+  for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 375, height: 600 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const geometry = await page.evaluate(() => {
+      const result: Record<
+        string,
+        { insideInput: boolean; rightGap: number } | null
+      > = {};
+      for (const buttonId of ["mylistSearchClear", "videoSearchClear"]) {
+        const button = document.getElementById(buttonId);
+        const input = button?.parentElement?.querySelector("input");
+        if (!button || !input) {
+          result[buttonId] = null;
+          continue;
+        }
+        const buttonRect = button.getBoundingClientRect();
+        const inputRect = input.getBoundingClientRect();
+        result[buttonId] = {
+          insideInput:
+            buttonRect.left >= inputRect.left &&
+            buttonRect.right <= inputRect.right,
+          rightGap: inputRect.right - buttonRect.right,
+        };
+      }
+      return result;
+    });
+
+    for (const buttonId of ["mylistSearchClear", "videoSearchClear"]) {
+      const buttonGeometry = geometry[buttonId];
+      expect(buttonGeometry).not.toBeNull();
+      if (!buttonGeometry) throw new Error(`${buttonId} is missing`);
+      expect(buttonGeometry.insideInput).toBe(true);
+      expect(Math.abs(buttonGeometry.rightGap - 4)).toBeLessThan(1);
+    }
+  }
+});
+
 test("マイリスト検索・作成・ソート・設定・テーマが動作する", async ({
   page,
 }) => {

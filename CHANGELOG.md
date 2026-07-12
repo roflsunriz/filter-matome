@@ -37,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- 【mylist2】マイリスト検索のクリアボタンがサイドバーの左右余白分だけ入力欄の外へずれないよう、入力欄内の右端へ配置を補正した。
 - 【mlink-video-controller】原宿風Watchで動画詳細を閉じると右上の「その他」ボタンが無効になる問題を、公式と同じユーザー動画非表示メニューを常設し、公式確認ダイアログへ橋渡しする方式で修正した。
 - 【mlink-video-controller】原宿風Watchで動画詳細を閉じると投稿者DOMが削除されて右上の投稿者欄が消える問題を、共通ヘルパーがwatchページのmetaタグから取得する `apiData` を基に投稿者情報を再構築して修正した。
 - 【comment-filter2】概要の「今すぐ適用」で変更が表示へ反映されるよう、video_player では再フィルタリング後に即時同期し、公式プレイヤーでは確認後に再読み込みする分岐と回帰テストを追加した。
