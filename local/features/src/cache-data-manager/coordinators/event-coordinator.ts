@@ -67,6 +67,10 @@ export class EventCoordinator {
 
       const title =
         (card.querySelector(".video-title") as HTMLElement)?.textContent ?? "";
+      const target = event.target as HTMLElement;
+      if (target.closest(".card-more") && !target.closest("button")) {
+        return;
+      }
       const button = (event.target as HTMLElement).closest(
         "button",
       ) as HTMLButtonElement;

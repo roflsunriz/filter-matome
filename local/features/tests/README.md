@@ -48,3 +48,9 @@
 - `movie-info.spec.ts` は本番の `index.html` と専用fixture bundleを読み込み、Watch API、cache/info、getthumbinfo、MediaInfo、コメント統合データの最小スタブで動作させる。
 - 動画ID・URL入力、Enter送信、基本4ソースの状態同期、概要・全タブ切替、説明HTMLの安全な描画、JSONモーダル、コピー、ダウンロード、コメント任意取得を対象にする。
 - APIの部分失敗時は成功済みソースを維持しつつ、概要状態とエラーモーダル、モーダル終了後のフォーカス復帰が正しく動くことを検証する。
+
+## cache-data-manager
+
+- `cache-data-manager.spec.ts` は専用fixture bundleから本番の登録処理をローカル文書へ注入し、NicoCache_nlが提供する `tempList`、`cacheList`、`ncversion` とメタデータIndexedDBを投入して起動する。
+- 初期表示と固定カード高、フィルター、ソート、検索結果とページ送り、再生・詳細・削除、一括削除・公開状態確認の動的要素を実DOM上で検証する。
+- getthumbinfo、キャッシュ情報・削除API、`window.open`、確認ダイアログだけを外部境界としてスタブ化し、実配信サーバーやローカルプロキシには接続しない。

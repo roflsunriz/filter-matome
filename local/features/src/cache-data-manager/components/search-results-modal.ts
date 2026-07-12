@@ -260,6 +260,7 @@ export class SearchResultsModal {
     this.modal.addEventListener("click", (e) => {
       const target = e.target;
       if (!(target instanceof HTMLElement)) return;
+      if (target.closest(".card-more")) return;
 
       const card = target.closest(".video-card");
       if (card instanceof HTMLElement && this.onCardClick) {

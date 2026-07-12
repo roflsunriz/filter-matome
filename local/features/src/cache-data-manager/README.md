@@ -369,6 +369,14 @@ typeof window.FlexSearch !== 'undefined';
 document.querySelector('.filter-sort-container');
 ```
 
+### UI回帰テスト
+
+`tests/cache-data-manager.spec.ts` は本番コードを専用bundleとしてローカルHTMLへ注入し、NicoCache_nlのメモリデータと外部API境界をスタブ化して動的UIを検証します。
+
+```powershell
+bunx playwright test tests/cache-data-manager.spec.ts
+```
+
 ### 主要なDOM要素
 - `.virtual-scroll-container` - 仮想スクロールコンテナ
 - `.virtual-scroll-grid` - グリッドコンテナ
