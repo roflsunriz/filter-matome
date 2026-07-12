@@ -154,6 +154,12 @@ export class StandalonePlayer {
     this.externalEndedCallback = callback;
   }
 
+  public async replay(): Promise<void> {
+    if (!this.videoElement) return;
+    this.videoElement.currentTime = 0;
+    await this.videoElement.play();
+  }
+
   constructor(options: StandalonePlayerOptions) {
     this.mount = options.mount;
     ensureCustomElements();

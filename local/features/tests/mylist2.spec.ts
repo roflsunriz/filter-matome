@@ -160,6 +160,15 @@ test("共通ヘッダーと重ならずダーク背景でビューポートを�
   });
 
   expect(layout.bodyBackground).not.toBe("rgb(255, 255, 255)");
+  expect(layout.bodyBackground).toBe("rgb(17, 21, 27)");
+  await expect(page.locator(".mylist-sidebar")).toHaveCSS(
+    "background-color",
+    "rgb(26, 32, 41)",
+  );
+  await expect(page.locator(".video-list-selection-header")).toHaveCSS(
+    "background-color",
+    "rgb(36, 44, 55)",
+  );
   expect(layout.managerTop).toBeGreaterThanOrEqual(layout.headerBottom - 1);
   expect(layout.managerBottom).toBeGreaterThanOrEqual(
     layout.viewportHeight - 1,
@@ -178,6 +187,36 @@ test("共通ヘッダーと重ならずダーク背景でビューポートを�
 test("マイリスト検索・作成・ソート・設定・テーマが動作する", async ({
   page,
 }) => {
+  for (const clearButtonId of ["mylistSearchClear", "videoSearchClear"]) {
+    const geometry = await page
+      .locator(`#${clearButtonId}`)
+      .evaluate((button) => {
+        const buttonRect = button.getBoundingClientRect();
+        const containerRect = button.parentElement?.getBoundingClientRect();
+        const iconRect = button.querySelector("img")?.getBoundingClientRect();
+        return {
+          contained:
+            !!containerRect &&
+            buttonRect.left >= containerRect.left &&
+            buttonRect.right <= containerRect.right,
+          centered:
+            !!iconRect &&
+            Math.abs(
+              iconRect.left +
+                iconRect.width / 2 -
+                (buttonRect.left + buttonRect.width / 2),
+            ) < 1 &&
+            Math.abs(
+              iconRect.top +
+                iconRect.height / 2 -
+                (buttonRect.top + buttonRect.height / 2),
+            ) < 1,
+        };
+      });
+    expect(geometry.contained).toBe(true);
+    expect(geometry.centered).toBe(true);
+  }
+
   await page.getByPlaceholder("マイリストを検索...").fill("移動先");
   await expect(page.getByText("料理動画", { exact: true })).toBeHidden();
   await page.getByTitle("マイリスト検索クリア").click();
@@ -219,10 +258,23 @@ test("動画検索・ソート・詳細表示・選択状態が同期する", as
   await expect(page.locator("#videoSortType")).toHaveValue("title_asc");
 
   const firstVideo = page.locator(".video-item:not(.keyword-item)").first();
-  await firstVideo.hover();
-  await firstVideo.getByTitle("詳細").click();
+  await expect(firstVideo.locator(".video-details-trigger")).toHaveCount(0);
+  await firstVideo.click({ position: { x: 110, y: 70 } });
   await expect(page.locator("#videoDetailsModal")).toBeVisible();
   await page.locator("#videoDetailsModal .close-button").click();
+
+  for (const [selector, icon] of [
+    [".view-count", "visibility"],
+    [".comment-count", "comment"],
+    [".mylist-count", "bookmark"],
+    [".video-length", "schedule"],
+    [".video-author", "person"],
+    [".video-upload-date", "upload"],
+  ]) {
+    await expect(
+      firstVideo.locator(`${selector} img[data-icon="${icon}"]`),
+    ).toHaveClass(/icon-white/);
+  }
 
   const firstCheckbox = firstVideo.locator(".video-select");
   await firstCheckbox.check();

@@ -107,3 +107,39 @@ export const createAutoNextStatItem = (
   item.append(labelEl, statusEl);
   return item;
 };
+
+export const createRepeatPlaybackStatItem = (
+  checked: boolean,
+  onChange: (checked: boolean) => void,
+): HTMLElement => {
+  const item = document.createElement("div");
+  item.className = "nc-stat-item nc-stat-item--repeat";
+
+  const label = document.createElement("label");
+  label.className = "nc-stat-item__auto-next-label";
+
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.className = "nc-stat-item__auto-next-checkbox";
+  checkbox.checked = checked;
+
+  const labelText = document.createElement("span");
+  labelText.className = "nc-stat-item__label";
+  labelText.textContent = "繰り返し再生";
+
+  const status = document.createElement("span");
+  status.className = "nc-stat-item__value";
+  const updateStatus = (): void => {
+    status.textContent = checkbox.checked ? "ON" : "OFF";
+  };
+
+  checkbox.addEventListener("change", () => {
+    updateStatus();
+    onChange(checkbox.checked);
+  });
+
+  updateStatus();
+  label.append(checkbox, labelText);
+  item.append(label, status);
+  return item;
+};

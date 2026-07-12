@@ -418,20 +418,33 @@ export class Mylist2ManagerUI {
     const container = document.getElementById("videoList");
     if (container) {
       container.addEventListener("click", (e) => {
-        const detailsTrigger = (e.target as HTMLElement).closest(
-          ".video-details-trigger",
-        );
-        if (detailsTrigger) {
-          e.stopPropagation();
-          void this.handleVideoDetailsClick(detailsTrigger as HTMLElement);
-          return;
-        }
-
-        const trigger = (e.target as HTMLElement).closest(".action-trigger");
+        const target = e.target as HTMLElement;
+        const trigger = target.closest(".action-trigger");
         if (trigger) {
           e.stopPropagation();
           this.handleActionTriggerClick(trigger as HTMLElement);
+          return;
         }
+
+        const videoItem = target.closest<HTMLElement>(
+          ".video-item:not(.keyword-item)",
+        );
+        if (
+          videoItem &&
+          !target.closest("a, button, input, select, textarea")
+        ) {
+          void this.handleVideoDetailsClick(videoItem);
+        }
+      });
+      container.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const target = e.target as HTMLElement;
+        const videoItem = target.closest<HTMLElement>(
+          ".video-item:not(.keyword-item)",
+        );
+        if (!videoItem || target !== videoItem) return;
+        e.preventDefault();
+        void this.handleVideoDetailsClick(videoItem);
       });
     }
 
@@ -667,6 +680,9 @@ export class Mylist2ManagerUI {
       // フォールバック用の要素を作成（シンプル化済み）
       const fallbackElement = document.createElement("div");
       fallbackElement.className = "video-item";
+      fallbackElement.tabIndex = 0;
+      fallbackElement.setAttribute("role", "button");
+      fallbackElement.setAttribute("aria-label", `動画の詳細: ${video.title}`);
       const linkCtx = { authorName: video.authorName, title: video.title };
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
@@ -695,45 +711,54 @@ export class Mylist2ManagerUI {
       const meta = document.createElement("div");
       meta.className = "video-meta";
       [
-        ["view-count", `再生数: ${video.viewCount.toLocaleString()}`],
-        ["comment-count", `コメント数: ${video.commentCount.toLocaleString()}`],
-        ["mylist-count", `マイリスト数: ${video.mylistCount.toLocaleString()}`],
+        [
+          "view-count",
+          "visibility",
+          video.viewCount.toLocaleString(),
+          "再生数",
+        ],
+        [
+          "comment-count",
+          "comment",
+          video.commentCount.toLocaleString(),
+          "コメント数",
+        ],
+        [
+          "mylist-count",
+          "bookmark",
+          video.mylistCount.toLocaleString(),
+          "マイリスト数",
+        ],
         [
           "video-length",
-          `${Math.floor(video.length / 60)}分${video.length % 60}秒`,
+          "schedule",
+          `${Math.floor(video.length / 60)}:${String(video.length % 60).padStart(2, "0")}`,
+          "再生時間",
         ],
-      ].forEach(([className, text]) => {
+      ].forEach(([className, iconName, text, label]) => {
         const span = document.createElement("span");
         span.className = className;
-        span.textContent = text;
+        span.title = label;
+        this.setIconValue(span, iconName, text);
         stats.appendChild(span);
       });
       [
-        ["video-author", `投稿者: ${video.authorName}`],
+        ["video-author", "person", video.authorName, "投稿者"],
         [
           "video-upload-date",
-          `投稿日: ${new Date(video.uploadedAt).toLocaleDateString()}`,
+          "upload",
+          new Date(video.uploadedAt).toLocaleDateString(),
+          "投稿日",
         ],
-      ].forEach(([className, text]) => {
+      ].forEach(([className, iconName, text, label]) => {
         const span = document.createElement("span");
         span.className = className;
-        span.textContent = text;
+        span.title = label;
+        this.setIconValue(span, iconName, text);
         meta.appendChild(span);
       });
-      const actionButton = document.createElement("button");
-      actionButton.className = "video-details-trigger";
-      actionButton.type = "button";
-      actionButton.setAttribute("aria-label", "動画の詳細");
-      actionButton.title = "詳細";
-      const actionIcon = document.createElement("img");
-      actionIcon.className = "material-icon icon-white";
-      actionIcon.dataset.style = "outlined";
-      actionIcon.dataset.icon = "info";
-      actionIcon.alt = "";
-      actionButton.appendChild(actionIcon);
-      hydrateMaterialIconImages(actionButton);
       info.append(title, stats, meta);
-      fallbackElement.append(checkbox, thumbnail, info, actionButton);
+      fallbackElement.append(checkbox, thumbnail, info);
       fallbackElement.dataset.id = video.originalId;
       fallbackElement.dataset.compositeId = video.id;
       return fallbackElement;
@@ -751,6 +776,9 @@ export class Mylist2ManagerUI {
     // データの設定
     item.dataset.id = video.originalId;
     item.dataset.compositeId = video.id;
+    item.tabIndex = 0;
+    item.setAttribute("role", "button");
+    item.setAttribute("aria-label", `動画の詳細: ${video.title}`);
     if (video.description) {
       item.dataset.description = video.description;
     }
@@ -811,36 +839,71 @@ export class Mylist2ManagerUI {
   private setVideoStats(item: HTMLElement, video: VideoInfo): void {
     const viewCountElement = item.querySelector(".view-count");
     if (viewCountElement) {
-      viewCountElement.textContent = `再生数: ${video.viewCount.toLocaleString()}`;
+      this.setIconValue(
+        viewCountElement,
+        "visibility",
+        video.viewCount.toLocaleString(),
+      );
     }
 
     const commentCountElement = item.querySelector(".comment-count");
     if (commentCountElement) {
-      commentCountElement.textContent = `コメント数: ${video.commentCount.toLocaleString()}`;
+      this.setIconValue(
+        commentCountElement,
+        "comment",
+        video.commentCount.toLocaleString(),
+      );
     }
 
     const mylistCountElement = item.querySelector(".mylist-count");
     if (mylistCountElement) {
-      mylistCountElement.textContent = `マイリスト数: ${video.mylistCount.toLocaleString()}`;
+      this.setIconValue(
+        mylistCountElement,
+        "bookmark",
+        video.mylistCount.toLocaleString(),
+      );
     }
 
     const lengthElement = item.querySelector(".video-length");
     if (lengthElement) {
       const minutes = Math.floor(video.length / 60);
       const seconds = video.length % 60;
-      lengthElement.textContent = `${minutes}分${seconds}秒`;
+      this.setIconValue(
+        lengthElement,
+        "schedule",
+        `${minutes}:${String(seconds).padStart(2, "0")}`,
+      );
     }
 
     const authorElement = item.querySelector(".video-author");
     if (authorElement) {
-      authorElement.textContent = "投稿者: " + video.authorName;
+      this.setIconValue(authorElement, "person", video.authorName);
     }
 
     const uploadDateElement = item.querySelector(".video-upload-date");
     if (uploadDateElement) {
-      uploadDateElement.textContent =
-        "投稿日: " + new Date(video.uploadedAt).toLocaleDateString();
+      this.setIconValue(
+        uploadDateElement,
+        "upload",
+        new Date(video.uploadedAt).toLocaleDateString(),
+      );
     }
+  }
+
+  private setIconValue(
+    element: Element,
+    iconName: string,
+    value: string,
+  ): void {
+    element.replaceChildren();
+    const icon = document.createElement("img");
+    icon.className = "material-icon icon-white material-icon-small";
+    icon.dataset.style = "outlined";
+    icon.dataset.icon = iconName;
+    icon.alt = "";
+    icon.loading = "lazy";
+    element.append(icon, document.createTextNode(value));
+    hydrateMaterialIconImages(element);
   }
 
   renderKeywordItem(keyword: KeywordInfo): HTMLElement {

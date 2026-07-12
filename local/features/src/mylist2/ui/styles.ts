@@ -1,2257 +1,594 @@
-import { materialIconsStyles } from "@/common/material-icons";
 import { MINIMAL_DARK_THEME_TOKENS } from "@/common/visual-theme";
 
-/**
- * Mylist2 Manager 用の CSS スタイル（style.css 相当） */
+const MYLIST2_STYLE_ID = "mylist2-manager-styles";
 
-export const MYLIST_MANAGER_STYLES_PART1 = `
-/* Theme variables (scoped to Mylist2 root) */
-.custom-mylist2-manager {
+// 旧構成を参照する外部コードとの互換性を維持する。新しいスタイルは単一の
+// カスケードとして設計しているため、個別パートへは分割しない。
+export const MYLIST_MANAGER_STYLES_PART1 = "";
+export const MYLIST_MANAGER_STYLES_PART2 = "";
+export const MYLIST_MANAGER_STYLES_PART3 = "";
+export const MYLIST_MANAGER_STYLES_PART4 = "";
+export const SIDEBAR_UTILITY_STYLES = "";
+export const VIRTUAL_SCROLL_ACTION_MENU_STYLES = "";
+export const FAB_AND_SETTINGS_MODAL_STYLES = "";
+export const MYLIST_VISUAL_REFRESH_STYLES = "";
+
+/** mylist2 のレイアウトとカラーテーマ。面色は全テーマ共通で、アクセントだけを切り替える。 */
+export const MYLIST_MANAGER_STYLES = String.raw`
+:root {
+  color-scheme: dark;
   ${MINIMAL_DARK_THEME_TOKENS}
-  /* base defaults (dark-blue) */
-  --cml2-bg: var(--nc-bg);
-  --cml2-text: var(--nc-text);
-  --cml2-panel: var(--nc-surface);
-  --cml2-border: var(--nc-border);
-  --cml2-muted: var(--nc-muted);
-  --cml2-muted-strong: var(--nc-muted);
-  --cml2-accent: var(--nc-primary);
-  --cml2-accent-hover: var(--nc-primary-hover);
-  --cml2-danger: var(--nc-danger);
-  --cml2-danger-hover: #ffd0ca;
-  --cml2-focus-ring: color-mix(in srgb, var(--nc-primary) 30%, transparent);
-  --cml2-link: var(--nc-primary);
-  --cml2-link-hover: var(--nc-primary-hover);
-  --cml2-scrollbar-thumb: #666666;
-  --cml2-scrollbar-track: var(--cml2-panel);
-  --cml2-text-soft: var(--nc-text);
-  --cml2-border-success: #27ae60;
-  --cml2-border-danger: #e74c3c;
-  --cml2-border-warning: #f39c12;
-  --cml2-border-info: #3498db;
 }
 
-/* Theme presets */
-.cml2-theme-dark-blue { /* defaults already match */ }
-.cml2-theme-dark-green {
-  --cml2-accent: #27ae60;
-  --cml2-accent-hover: #2ecc71;
-  --cml2-focus-ring: rgba(39, 174, 96, 0.3);
-}
-.cml2-theme-dark-amber {
-  --cml2-accent: #f39c12;
-  --cml2-accent-hover: #f1c40f;
-  --cml2-focus-ring: rgba(243, 156, 18, 0.3);
-}
-.cml2-theme-dark-violet {
-  --cml2-accent: #8e44ad;
-  --cml2-accent-hover: #9b59b6;
-  --cml2-focus-ring: rgba(142, 68, 173, 0.3);
-}
-.cml2-theme-dark-red {
-  --cml2-accent: #e74c3c;
-  --cml2-accent-hover: #c0392b;
-  --cml2-focus-ring: rgba(231, 76, 60, 0.3);
+html,
+body {
+  width: 100%;
+  height: 100dvh;
+  margin: 0;
+  overflow: hidden;
+  background: var(--nc-bg);
+  color: var(--nc-text);
 }
 
-.mylist-item {
-  padding: 12px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--cml2-border);
-  transition: background-color 0.2s;
+body {
+  font-family: Inter, "Noto Sans JP", "Yu Gothic UI", system-ui, sans-serif;
 }
 
-.mylist-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
-
-.mylist-details {
-  flex: 1;
-}
-
-.mylist-count-mylist-tab,
-.mylist-count {
-  font-size: 12px;
-  color: var(--cml2-muted);
-  margin-left: 8px;
-  padding: 2px 6px;
-}
-
-.mylist-count-mylist-tab {
-  background: var(--cml2-panel);
-  border-radius: 4px;
-}
-
-.mylist-name {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-
-.mylist-date {
-  font-size: 12px;
-  color: var(--cml2-muted);
-}
-
-.mylist-controls {
-  display: flex;
-  gap: 8px;
-}
-
-.mylist-item:hover {
-  background: var(--cml2-panel);
-}
-
-.mylist-item.active {
-  background: var(--cml2-accent);
-}
-
-/* 既存スタイルに追加 */
 
 .custom-mylist2-manager {
-  display: flex;
-  position: fixed;
-  top: 52%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 97%;
-  height: 87%;
+  --cml2-bg: var(--nc-bg);
+  --cml2-surface: var(--nc-surface);
+  --cml2-subtle: var(--nc-surface-subtle);
+  --cml2-border: var(--nc-border);
+  --cml2-text: var(--nc-text);
+  --cml2-muted: var(--nc-muted);
+  --cml2-primary: var(--nc-primary);
+  --cml2-primary-rgb: 111, 156, 255;
+  --cml2-danger: #ff6b7a;
+  --cml2-success: #58c99d;
+  display: grid;
+  grid-template-columns: clamp(240px, 25vw, 340px) minmax(0, 1fr);
+  width: 100%;
+  min-height: 0;
+  overflow: hidden;
   background: var(--cml2-bg);
   color: var(--cml2-text);
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  z-index: 8000;
+  accent-color: var(--cml2-primary);
 }
+
+.custom-mylist2-manager.cml2-theme-dark-green { --cml2-primary: #55c99a; --cml2-primary-rgb: 85, 201, 154; }
+.custom-mylist2-manager.cml2-theme-dark-amber { --cml2-primary: #e8b75d; --cml2-primary-rgb: 232, 183, 93; }
+.custom-mylist2-manager.cml2-theme-dark-violet { --cml2-primary: #a98cff; --cml2-primary-rgb: 169, 140, 255; }
+.custom-mylist2-manager.cml2-theme-dark-red { --cml2-primary: #f37882; --cml2-primary-rgb: 243, 120, 130; }
+
+.custom-mylist2-manager button,
+.custom-mylist2-manager input,
+.custom-mylist2-manager select,
+.custom-mylist2-manager textarea,
+.cml2-modal button,
+.cml2-modal input,
+.cml2-modal select,
+.cml2-modal textarea,
+.cml2-alert-modal button,
+.cml2-settings-modal button,
+.cml2-settings-modal input,
+.cml2-settings-modal select {
+  font: inherit;
+}
+
+.custom-mylist2-manager button,
+.custom-mylist2-manager a,
+.cml2-modal button,
+.cml2-alert-modal button,
+.cml2-settings-modal button { -webkit-tap-highlight-color: transparent; }
 
 .mylist-sidebar {
-  width: 250px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--cml2-surface);
   border-right: 1px solid var(--cml2-border);
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  height: 95%;
 }
 
-.mylist-main {
-  flex: 1;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
+.mylist-controls,
+.mylist-sort-controls,
+.mylist-sidebar > .search-container {
+  flex: 0 0 auto;
+  padding-inline: 14px;
 }
+.mylist-controls { display: flex; gap: 8px; padding-top: 14px; }
+.mylist-sidebar > .search-container { margin-top: 10px; }
+.mylist-sort-controls { padding-block: 10px 12px; border-bottom: 1px solid var(--cml2-border); }
 
-.mylist-controls {
-  margin-bottom: 15px;
-}
-
-.video-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.video-item {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid var(--cml2-border);
-  gap: 10px;
-}
-
-/* 動画リスト用の豪華なチェックボックススタイル */
-.video-item .video-select {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.02));
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-  position: relative;
+.search-container { position: relative; display: flex; min-width: 0; }
+.search-container input { box-sizing: border-box; width: 100%; padding-right: 42px; }
+.search-clear-btn {
+  position: absolute;
+  inset-inline-end: 4px;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  min-height: 30px !important;
   display: grid;
   place-items: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.video-item .video-select::before {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  border-radius: 4px;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 65%);
-  transition: opacity 0.25s ease;
-  pointer-events: none;
-}
-
-.video-item .video-select::after {
-  content: "";
-  width: 10px;
-  height: 6px;
-  border: 2px solid transparent;
-  border-left-color: #ffffff;
-  border-bottom-color: #ffffff;
-  transform: translateY(-1px) rotate(-45deg) scale(0);
-  opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  pointer-events: none;
-}
-
-.video-item .video-select:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-}
-
-.video-item .video-select:focus-visible {
-  outline: none;
-  border-color: var(--cml2-accent);
-  box-shadow: 0 0 0 3px var(--cml2-focus-ring), 0 6px 18px rgba(0, 0, 0, 0.5);
-}
-
-.video-item .video-select:checked {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: linear-gradient(135deg, var(--cml2-accent) 0%, var(--cml2-accent-hover) 100%);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.22);
-}
-
-.video-item .video-select:checked::before {
-  opacity: 0.4;
-}
-
-.video-item .video-select:checked::after {
-  opacity: 1;
-  transform: translateY(-1px) rotate(-45deg) scale(1);
-}
-
-.video-item .video-select:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  transform: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .video-item .video-select {
-    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .video-item .video-select::after {
-    transition: opacity 0.2s ease;
-  }
-}
-
-.video-thumbnail {
-  width: 96px;
-  height: 72px;
-  object-fit: cover;
-}
-
-.video-info {
-  flex: 1;
-  padding: 5px;
-}
-
-.video-title {
-  font-weight: bold;
-  margin-bottom: 5px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.video-title .video-title-link {
-  min-width: 0;
-}
-
-.cml2-availability-badge {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 11px;
-  line-height: 1.4;
-  font-weight: 700;
-  border: 1px solid transparent;
-}
-
-.cml2-availability-badge.status-deleted {
-  color: #ffdddd;
-  background: rgba(231, 76, 60, 0.2);
-  border-color: rgba(231, 76, 60, 0.5);
-}
-
-.cml2-availability-badge.status-private {
-  color: #ffe8bd;
-  background: rgba(243, 156, 18, 0.2);
-  border-color: rgba(243, 156, 18, 0.5);
-}
-
-.cml2-availability-badge.status-unavailable,
-.cml2-availability-badge.status-unknown {
-  color: #d6eaff;
-  background: rgba(52, 152, 219, 0.18);
-  border-color: rgba(52, 152, 219, 0.45);
-}
-
-.video-author {
-  font-size: 12px;
-  color: var(--cml2-muted);
-  margin-bottom: 2px;
-}
-
-.video-upload-date {
-  font-size: 12px;
-  color: var(--cml2-muted);
-  margin-bottom: 5px;
-}
-
-.video-stats {
-  font-size: 12px;
+  padding: 0;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
   color: var(--cml2-muted);
 }
-
-.video-stats span:not(:last-child) {
-  margin-right: 15px;
-}
-
-/* フォーム要素のスタイル */
-input[type="text"],
-select {
-  background: var(--cml2-panel);
-  border: 1px solid var(--cml2-border);
-  color: var(--cml2-text);
-  padding: 8px;
-  border-radius: 4px;
-}
-
-#searchOption {
-  margin-right: 10px;
-}
-
-#mylistSortType {
-  margin-top: 10px;
-}
-
-button {
-  background: var(--cml2-accent);
-  color: var(--cml2-text);
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:hover {
-  background: var(--cml2-accent-hover);
-}
-
-button.danger {
-  background: var(--cml2-danger);
-}
-
-button.danger:hover {
-  background: var(--cml2-danger-hover);
-}
-`;
-
-export const MYLIST_MANAGER_STYLES_PART2 = `
-/* メインコンテンツ領域のスタイル */
-.mylist-main {
-  padding: 20px;
-  background: var(--cml2-bg);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* マイリスト情報セクション */
-.current-mylist-info {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 15px;
-  background: var(--cml2-panel);
-  border-radius: 6px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.mylist-name-edit {
-  flex: 1;
-  padding: 8px 12px;
-  background: var(--cml2-bg);
-  border: 1px solid var(--cml2-border);
-  border-radius: 4px;
-  font-size: 14px;
-  color: var(--cml2-text);
-}
-
-.current-mylist-info button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.current-mylist-info button:not(.danger) {
-  background: var(--cml2-accent);
-  color: var(--cml2-text);
-}
-
-.current-mylist-info button.danger {
-  background: var(--cml2-danger);
-  color: var(--cml2-text);
-}
-
-.current-mylist-info button:hover {
-  opacity: 0.9;
-}
-
-/* インポート・エクスポートコントロール */
-.import-export-controls {
-  display: flex;
-  gap: 10px;
-  margin-left: auto;
-}
-
-.import-export-controls button {
-  background: var(--cml2-accent);
-}
-
-/* 動画追加フォーム */
-.video-add-form {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  padding: 15px;
-  background: var(--cml2-panel);
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.video-add-form input {
-  flex: 1;
-  padding: 8px 12px;
-  background: var(--cml2-bg);
-  border: 1px solid var(--cml2-border);
-  border-radius: 4px;
-  font-size: 14px;
-  color: var(--cml2-text);
-}
-
-.video-add-form button {
-  padding: 8px 20px;
-  background: var(--cml2-accent);
-  color: var(--cml2-text);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.video-add-form button:hover {
-  background: var(--cml2-accent-hover);
-}
-
-/* 動画一覧コントロール */
-.video-list-controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-  padding: 15px;
-  background: var(--cml2-panel);
-  border-radius: 6px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-/* 常時表示の動画一覧コントロール */
-.video-list-controls.always-visible {
-  position: relative;
-  z-index: 8000;
-  background: rgba(42, 43, 44, 0.98);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--cml2-border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* 常時表示コントロールのレスポンシブ調整 */
-@media (max-width: 1024px) {
-  .video-list-controls.always-visible {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-}
-
-@media (max-width: 768px) {
-  .video-list-controls.always-visible {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    padding: 12px;
-  }
-  
-  .video-list-controls.always-visible select,
-  .video-list-controls.always-visible .search-container,
-  .video-list-controls.always-visible .video-selection-controls,
-  .video-list-controls.always-visible .bulk-action-controls {
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .video-list-controls.always-visible {
-    padding: 10px;
-    margin-bottom: 10px;
-  }
-}
-
-.video-selection-controls {
-  display: flex;
-  gap: 8px;
-}
-
-#videoSortType {
-  min-width: 200px;
-}
-
-/* 一括操作コントロール */
-.bulk-action-controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.bulk-action-controls select {
-  min-width: 200px;
-}
-
-.bulk-action-controls button {
-  padding: 8px 16px;
-  background: var(--cml2-accent);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.bulk-action-controls button:hover {
-  background: var(--cml2-accent-hover);
-}
-
-/* ホバーエフェクト */
-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* フォーカス時のスタイル */
-input:focus,
-select:focus {
-  outline: none;
-  border-color: var(--cml2-accent);
-  box-shadow: 0 0 0 2px var(--cml2-focus-ring);
-}
-
-/* プレースホルダーのスタイル */
-input::placeholder {
-  color: var(--cml2-muted-strong);
-}
-
-/* スクロールバーのスタイル */
-.video-list::-WebKit-scrollbar {
-  width: 8px;
-}
-
-.video-list::-WebKit-scrollbar-track {
-  background: var(--cml2-bg);
-}
-
-.video-list::-WebKit-scrollbar-thumb {
-  background: var(--cml2-border);
-  border-radius: 4px;
-}
-
-.video-list::-WebKit-scrollbar-thumb:hover {
-  background: var(--cml2-border);
-}
-`;
-
-export const MYLIST_MANAGER_STYLES_PART3 = `
-/* 進捗モーダルのスタイル */
-.progress-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  /* 進捗は背面。お知らせ(.cml2-alert-modal: z-index 100200)が前面 */
-  z-index: 9500;
-}
-
-.progress-content {
-  background: white;
-  padding: 2em;
-  border-radius: 8px;
-  text-align: center;
-}
-
-.progress-circle {
-  position: relative;
-  width: 150px;
-  height: 150px;
-  margin: 1em auto;
-}
-
-.circular-progress {
-  transform: rotate(-90deg);
-  width: 100%;
-  height: 100%;
-}
-
-.progress {
-  stroke-dasharray: 100;
-  stroke-dashoffset: 100;
-  transition: stroke-dashoffset 0.3s ease;
-}
-
-.progress-text {
+.search-clear-btn .material-icon {
   position: absolute;
   top: 50%;
   left: 50%;
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 0;
   transform: translate(-50%, -50%);
-  font-size: 1.5em;
-  font-weight: bold;
+  filter: brightness(0) invert(1);
 }
 
-.progress-status {
-  margin-top: 1em;
-  color: var(--cml2-muted-strong);
+.custom-mylist2-manager input:not([type="checkbox"]):not([type="file"]),
+.custom-mylist2-manager select,
+.custom-mylist2-manager textarea,
+.cml2-modal input,
+.cml2-modal select,
+.cml2-modal textarea,
+.cml2-settings-modal input,
+.cml2-settings-modal select {
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 11px;
+  border: 1px solid var(--cml2-border, #364151);
+  border-radius: 7px;
+  outline: 0;
+  background: var(--cml2-subtle, #242c37);
+  color: var(--cml2-text, #edf1f7);
 }
+.custom-mylist2-manager input::placeholder,
+.custom-mylist2-manager textarea::placeholder,
+.cml2-modal input::placeholder,
+.cml2-settings-modal input::placeholder { color: var(--cml2-muted, #a9b4c3); opacity: .78; }
+.mylist-controls input { flex: 1 1 auto; }
+.mylist-controls button { flex: 0 0 38px; }
+.mylist-sort-controls select { width: 100%; }
 
-/* ヘッダースタイル */
-/* ヘッダー関連のスタイルは共通モジュールに移動しました */
-
-/* メインコンテンツの調整 */
-.custom-mylist2-manager {
-  margin-top: 10px;
-  padding-top: 10px;
-}
-
-.cml2-video-link {
-  color: var(--cml2-link);
-  text-decoration: none;
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cml2-video-link:hover {
-  color: var(--cml2-link-hover);
-  text-decoration: underline;
-}
-
-/* ボタンの共通スタイルを独自の名前空間付きに変更 */
-.cml2-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
+.custom-mylist2-manager button,
+.cml2-btn,
+.cml2-alert-modal button {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: var(--cml2-primary, #6f9cff);
+  color: #11151b;
   cursor: pointer;
-  transition: background-color 0.2s;
-  color: var(--cml2-text);
-  background: var(--cml2-accent);
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease, opacity .16s ease;
 }
+.custom-mylist2-manager button:hover,
+.cml2-btn:hover,
+.cml2-alert-modal button:hover { filter: brightness(1.08); }
+.custom-mylist2-manager button:disabled,
+.cml2-btn:disabled { cursor: not-allowed; opacity: .5; }
+.cml2-btn-secondary,
+.modal-actions .cml2-btn-secondary,
+.cml2-modal-footer .close-button { background: #242c37; border-color: #364151; color: #edf1f7; }
+.cml2-btn-danger,
+.danger { color: #ff8a95; }
+.cml2-btn.cml2-btn-danger { background: #5a2630; border-color: #88404b; color: #ffe7ea; }
 
-.cml2-btn:hover {
-  background: var(--cml2-accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* 危険な操作用ボタンスタイル - 詳細度を上げる */
-.current-mylist-info .cml2-btn.cml2-btn-danger,
-.video-actions .delete-video,
-.video-actions .delete-keyword {
-  background: var(--cml2-danger);
-}
-
-.current-mylist-info .cml2-btn.cml2-btn-danger:hover,
-.video-actions .delete-video:hover,
-.video-actions .delete-keyword:hover {
-  background: var(--cml2-danger-hover);
-}
-
-.cml2-video-link {
-  color: var(--cml2-link);
-  text-decoration: none;
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cml2-video-link:hover {
-  color: var(--cml2-link-hover);
-  text-decoration: underline;
-}
-
-/* マイリストサイドバーのスクロール設定 */
 .mylist-list {
-  flex: 1;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--cml2-scrollbar-thumb) var(--cml2-scrollbar-track);
-  margin-top: 15px;
-}
-
-/* WebKit系ブラウザ用のスクロールバー スタイル */
-.mylist-list::-WebKit-scrollbar {
-  width: 8px;
-}
-
-.mylist-list::-WebKit-scrollbar-track {
-  background: var(--cml2-scrollbar-track);
-}
-
-.mylist-list::-WebKit-scrollbar-thumb {
-  background-color: var(--cml2-scrollbar-thumb);
-  border-radius: 4px;
-}
-`;
-
-export const MYLIST_MANAGER_STYLES_PART4 = `
-/* モーダルダイアログのスタイル */
-.cml2-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 100100;
-}
-
-.cml2-modal-content {
-  background: var(--cml2-bg, #1a1b1c);
-  color: var(--cml2-text, #ffffff);
-  padding: 20px;
-  border-radius: 8px;
-  min-width: 300px;
-  max-width: 90%;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
-.cml2-modal-title {
-  margin: 0 0 15px 0;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--cml2-border, #333333);
-}
-
-.cml2-modal-body {
-  margin-bottom: 20px;
-}
-
-.cml2-batch-api-summary {
-  margin: 0 0 12px;
-  color: var(--cml2-text-soft, #dddddd);
-}
-
-.cml2-batch-api-field {
-  display: grid;
-  grid-template-columns: 130px minmax(120px, 1fr);
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.cml2-batch-api-field input {
-  background: var(--cml2-panel, #2a2b2c);
-  border: 1px solid var(--cml2-border, #333333);
-  color: var(--cml2-text, #ffffff);
-  padding: 8px;
-  border-radius: 4px;
-}
-
-.cml2-modal-footer {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.video-details-body {
-  max-height: 60vh;
+  flex: 1 1 0;
+  min-height: 0;
   overflow: auto;
+  padding: 5px 8px;
+  scrollbar-color: var(--cml2-border) transparent;
 }
-
-.video-details-section {
-  margin-top: 8px;
-}
-
-.video-description {
-  white-space: pre-wrap;
-  background: var(--cml2-panel, #2a2b2c);
-  color: var(--cml2-text, #ffffff);
-  border: 1px solid var(--cml2-border, #333333);
+.mylist-item {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin: 2px 0;
+  padding: 10px 9px;
   border-radius: 6px;
-  padding: 8px;
-}
-
-.video-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.video-tags .cml2-tag {
-  display: inline-block;
-  background: var(--cml2-panel, #2a2b2c);
-  border: 1px solid var(--cml2-border, #333333);
-  border-radius: 12px;
-  padding: 2px 8px;
-  color: var(--cml2-text-soft, #dddddd);
-}
-
-/* セレクトボックスのスタイル */
-.cml2-select {
-  width: 100%;
-  padding: 8px;
-  background: var(--cml2-panel, #2a2b2c);
-  border: 1px solid var(--cml2-border, #333333);
-  color: var(--cml2-text, #ffffff);
-  border-radius: 4px;
-  margin-bottom: 15px;
-}
-
-.cml2-select option {
-  background: var(--cml2-bg, #1a1b1c);
-  color: var(--cml2-text, #ffffff);
-}
-
-/* 検索コンテナのスタイル */
-.search-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.search-container input {
-  flex: 1;
-  padding: 8px 12px;
-  background: var(--cml2-bg);
-  border: 1px solid var(--cml2-border);
-  border-radius: 4px;
   color: var(--cml2-text);
-  font-size: 14px;
-  min-width: 0; /* flexアイテムの最小幅を0に設定 */
-}
-
-.search-container input::placeholder {
-  color: var(--cml2-muted);
-}
-
-.search-clear-btn {
-  background: var(--cml2-muted-strong);
-  border: none;
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  transition: background-color 0.2s;
-}
-
-.search-clear-btn:hover {
-  background: var(--cml2-muted);
-}
-
-.search-clear-btn .material-icon {
-  width: 16px;
-  height: 16px;
-}
-
-/* 検索欄のスタイル（後方互換性のため残す）*/
-.mylist-search,
-.video-search {
-  margin: 10px 0;
-  padding: 0 10px;
-}
-
-.mylist-search input,
-.video-search input {
-  width: 93%;
-  padding: 8px 12px;
-  background: var(--cml2-bg);
-  border: 1px solid var(--cml2-border);
-  border-radius: 4px;
-  color: var(--cml2-text);
-  font-size: 14px;
-}
-
-.mylist-search input::placeholder,
-.video-search input::placeholder {
-  color: var(--cml2-muted);
-}
-
-/* 非表示アイテムのスタイル */
-.mylist-item.hidden,
-.video-item.hidden {
-  display: none;
-}
-
-/* プログレスサークルのスタイル */
-.circular-progress path.progress {
-  stroke-dasharray: 100; /* 円周の長さを100単位で設定 */
-  stroke-dashoffset: 100; /* 初期状態では完全に非表示 */
-  transition: stroke-dashoffset 0.3s ease; /* アニメーション効果を追加 */
-  transform: rotate(-90deg); /* 開始位置を12時の位置に調整 */
-  transform-origin: center; /* 回転の中心を設定 */
-}
-
-#createNewMylist {
-  font-size: 10px;
-}
-
-.keyword-icon {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--cml2-scrollbar-thumb);
-  border-radius: 4px;
-}
-
-.keyword-icon svg {
-  fill: var(--cml2-muted-strong);
-}
-
-.keyword-links a {
-  margin-right: 1em;
-  color: var(--cml2-link);
-  text-decoration: none;
-}
-
-.keyword-links a:hover {
-  text-decoration: underline;
-}
-
-.keyword-text,
-.keyword-added-date {
-  font-weight: bold;
-  color: var(--cml2-text-soft);
-}
-
-/* キーワード編集モーダルのスタイル */
-#keywordEditModal.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 100100;
-}
-
-#keywordEditModal .modal-content {
-  background: var(--cml2-bg, #1a1b1c);
-  color: var(--cml2-text, #ffffff);
-  padding: 20px;
-  border-radius: 8px;
-  min-width: 300px;
-  max-width: 90%;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-  position: relative;
-}
-
-#keywordEditModal h2 {
-  margin: 0 0 15px 0;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--cml2-border);
-  font-size: 1.2em;
-}
-
-#keywordEditModal .close-button {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  font-size: 24px;
-  color: var(--cml2-muted);
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-#keywordEditModal .close-button:hover {
-  color: var(--cml2-text);
-}
-
-#keywordEditModal #editKeywordInput {
-  width: 100%;
-  padding: 8px 12px;
-  background: var(--cml2-panel);
-  border: 1px solid var(--cml2-border);
-  border-radius: 4px;
-  color: var(--cml2-text);
-  font-size: 14px;
-  margin-bottom: 15px;
-  box-sizing: border-box;
-}
-
-#keywordEditModal #editKeywordInput:focus {
-  outline: none;
-  border-color: var(--cml2-accent);
-  box-shadow: 0 0 0 2px var(--cml2-focus-ring);
-}
-
-#keywordEditModal #saveKeywordEdit {
-  padding: 8px 16px;
-  background: var(--cml2-accent);
-  color: var(--cml2-text);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 14px;
-}
-
-#keywordEditModal #saveKeywordEdit:hover {
-  background: var(--cml2-accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* カスタムアラートモーダルのスタイル */
-.cml2-alert-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 100200;
-}
-
-.cml2-alert-content {
-  background: var(--cml2-bg, #1a1b1c);
-  color: var(--cml2-text, #ffffff);
-  padding: 20px;
-  border-radius: 8px;
-  min-width: 300px;
-  max-width: 90%;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-}
-
-.cml2-alert-title {
-  margin: 0 0 15px 0;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--cml2-border, #333333);
-  font-size: 1.2em;
-}
-
-.cml2-alert-message {
-  margin-bottom: 20px;
-  line-height: 1.5;
-  white-space: pre-line;
-}
-
-.cml2-alert-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-/* アラートタイプによる色分け */
-.cml2-alert-content.success {
-  border-left: 4px solid var(--cml2-border-success, #27ae60);
-}
-
-.cml2-alert-content.error {
-  border-left: 4px solid var(--cml2-border-danger, #e74c3c);
-}
-
-.cml2-alert-content.warning {
-  border-left: 4px solid var(--cml2-border-warning, #f39c12);
-}
-
-.cml2-alert-content.info {
-  border-left: 4px solid var(--cml2-border-info, #3498db);
-}
-`;
-
-/**
- * サイドバーユーティリティ用のCSSスタイル
- */
-export const SIDEBAR_UTILITY_STYLES = `
-/* サイドバー内要素の統一 */
-#newMylistName {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-#createNewMylist {
-  width: 64px;
-  box-sizing: border-box;
-}
-
-#mylistSearchInput {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-#mylistSearchClear {
-  width: 58px;
-  box-sizing: border-box;
-}
-
-#mylistSortType {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* 小さい画面での動画リスト拡張 */
-@media (max-width: 1024px) {
-  .mylist-main {
-    position: relative;
-  }
-  
-  #videoList {
-    margin-top: 0;
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
-  }
-}
-
-/* 小さい画面でのレイアウト調整 */
-@media (max-width: 480px) {
-  .video-list-controls {
-    margin-bottom: 10px;
-  }
-}
-`;
-
-/**
- * 仮想スクロールとアクションメニュー用のスタイル
- */
-export const VIRTUAL_SCROLL_ACTION_MENU_STYLES = `
-/* ============================
-   仮想スクロール用スタイル
-   ============================ */
-
-/* スクロールコンテナ */
-.video-list {
-  position: relative;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-/* 高さスペーサー */
-.video-list-spacer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  pointer-events: none;
-}
-
-/* 仮想スクロール時のアイテム配置 */
-.video-list .video-item,
-.video-list .keyword-item {
-  position: absolute;
-  left: 0;
-  right: 0;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid var(--cml2-border);
-  gap: 10px;
-  background: var(--cml2-bg);
-}
-
-/* ホバー時の背景 */
-.video-list .video-item:hover,
-.video-list .keyword-item:hover {
-  background: var(--cml2-panel);
-}
-
-/* ============================
-   アクショントリガーボタン
-   ============================ */
-
-.action-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--cml2-muted);
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s ease, background-color 0.2s ease;
-  flex-shrink: 0;
-}
-
-.action-trigger:hover {
-  background: var(--cml2-panel);
-  color: var(--cml2-text);
-}
-
-.action-trigger:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--cml2-focus-ring);
-  opacity: 1;
-}
-
-/* ホバー時にトリガーを表示 */
-.video-item:hover .action-trigger,
-.keyword-item:hover .action-trigger,
-.video-item:focus-within .action-trigger,
-.keyword-item:focus-within .action-trigger {
-  opacity: 1;
-}
-
-/* タッチデバイスでは常時表示 */
-@media (hover: none) and (pointer: coarse) {
-  .action-trigger {
-    opacity: 1;
-  }
-}
-
-/* ============================
-   チェックボックスのホバー表示
-   ============================ */
-
-/* 仮想スクロール時のチェックボックスはホバーで表示 */
-.video-list .video-item .video-select,
-.video-list .keyword-item .video-select {
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-/* ホバー時にチェックボックスを表示 */
-.video-list .video-item:hover .video-select,
-.video-list .keyword-item:hover .video-select,
-.video-list .video-item:focus-within .video-select,
-.video-list .keyword-item:focus-within .video-select {
-  opacity: 1;
-}
-
-/* チェック済みの場合は常時表示 */
-.video-list .video-item .video-select:checked,
-.video-list .keyword-item .video-select:checked {
-  opacity: 1;
-}
-
-/* フォーカス時も表示 */
-.video-list .video-item .video-select:focus,
-.video-list .keyword-item .video-select:focus {
-  opacity: 1;
-}
-
-/* タッチデバイスでは常時表示 */
-@media (hover: none) and (pointer: coarse) {
-  .video-list .video-item .video-select,
-  .video-list .keyword-item .video-select {
-    opacity: 1;
-  }
-}
-
-/* ============================
-   ポップオーバーメニュー
-   ============================ */
-
-.cml2-action-popover {
-  position: fixed;
-  z-index: 99999;
-  min-width: 140px;
-  background: var(--cml2-panel, #2a2b2c);
-  border: 1px solid var(--cml2-border, #333333);
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  padding: 4px 0;
-  animation: cml2-popover-fade-in 0.15s ease-out;
-}
-
-@keyframes cml2-popover-fade-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.cml2-action-popover-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 14px;
-  border: none;
-  background: transparent;
-  color: var(--cml2-text, #ffffff);
-  font-size: 14px;
-  cursor: pointer;
-  text-align: left;
-  transition: background-color 0.15s ease;
-}
-
-.cml2-action-popover-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.cml2-action-popover-item:focus {
-  outline: none;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.cml2-action-popover-item.danger {
-  color: var(--cml2-danger, #e74c3c);
-}
-
-.cml2-action-popover-item.danger:hover {
-  background: rgba(231, 76, 60, 0.15);
-}
-
-.cml2-action-popover-item .material-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.cml2-action-popover-label {
-  flex: 1;
-}
-
-/* ============================
-   動画アクションボタン（旧スタイル互換）
-   ============================ */
-
-/* 旧来の .video-actions は非表示 */
-.video-item .video-actions,
-.keyword-item .video-actions {
-  display: none;
-}
-`;
-
-/**
- * FAB（Floating Action Button）とマイリスト設定モーダル用スタイル
- */
-export const FAB_AND_SETTINGS_MODAL_STYLES = `
-/* ============================
-   FAB（Floating Action Button）
-   ============================ */
-
-.cml2-fab {
-  position: fixed;
-  bottom: 80px;
-  right: 80px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--cml2-accent, #2a88bd);
-  color: white;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 8500;
-}
-
-.cml2-fab:hover {
-  background: var(--cml2-accent-hover, #3498db);
-  transform: scale(1.08);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 3px 6px rgba(0, 0, 0, 0.3);
-}
-
-.cml2-fab:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--cml2-focus-ring, rgba(52, 152, 219, 0.3)), 
-              0 6px 16px rgba(0, 0, 0, 0.5);
-}
-
-.cml2-fab:active {
-  transform: scale(0.95);
-}
-
-.cml2-fab .material-icon {
-  width: 28px;
-  height: 28px;
-}
-
-/* FABのツールチップ */
-.cml2-fab::before {
-  content: attr(data-tooltip);
-  position: absolute;
-  right: calc(100% + 12px);
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.85);
-  color: white;
-  font-size: 13px;
-  border-radius: 4px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-.cml2-fab:hover::before {
-  opacity: 1;
-}
-
-/* 動画リストの下部にFABと重ならないようパディング追加 */
-.video-list {
-  padding-bottom: 80px;
-}
-
-/* ============================
-   マイリスト設定モーダル
-   ============================ */
-
-.cml2-settings-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 100000;
-  animation: cml2-modal-fade-in 0.2s ease-out;
-}
-
-.cml2-settings-modal.visible {
-  display: flex;
-}
-
-@keyframes cml2-modal-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.cml2-settings-content {
-  background: var(--cml2-bg, #1a1b1c);
-  color: var(--cml2-text, #ffffff);
-  padding: 24px;
-  border-radius: 12px;
-  min-width: 400px;
-  max-width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  animation: cml2-settings-slide-up 0.25s ease-out;
-}
-
-@keyframes cml2-settings-slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.cml2-settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--cml2-border, #333333);
-}
-
-.cml2-settings-title {
-  margin: 0;
-  font-size: 1.3em;
-  font-weight: 600;
-}
-
-.cml2-settings-close {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--cml2-muted, #888888);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.cml2-settings-close:hover {
-  background: var(--cml2-panel, #2a2b2c);
-  color: var(--cml2-text, #ffffff);
-}
-
-.cml2-settings-close .material-icon {
-  width: 24px;
-  height: 24px;
-}
-
-/* 設定セクション */
-.cml2-settings-section {
-  margin-bottom: 24px;
-}
-
-.cml2-settings-section:last-child {
-  margin-bottom: 0;
-}
-
-.cml2-settings-section-title {
-  font-size: 0.85em;
-  font-weight: 600;
-  color: var(--cml2-muted, #888888);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
-}
-
-/* マイリスト名編集 */
-.cml2-settings-mylist-name {
-  display: flex;
-  gap: 8px;
-}
-
-.cml2-settings-mylist-name input {
-  flex: 1;
-  padding: 10px 14px;
-  background: var(--cml2-panel, #2a2b2c);
-  border: 1px solid var(--cml2-border, #333333);
-  border-radius: 6px;
-  color: var(--cml2-text, #ffffff);
-  font-size: 14px;
-}
-
-.cml2-settings-mylist-name input:focus {
-  outline: none;
-  border-color: var(--cml2-accent, #2a88bd);
-  box-shadow: 0 0 0 2px var(--cml2-focus-ring, rgba(52, 152, 219, 0.3));
-}
-
-/* テーマ選択 */
-.cml2-settings-theme select {
-  width: 100%;
-  padding: 10px 14px;
-  background: var(--cml2-panel, #2a2b2c);
-  border: 1px solid var(--cml2-border, #333333);
-  border-radius: 6px;
-  color: var(--cml2-text, #ffffff);
-  font-size: 14px;
   cursor: pointer;
 }
+.mylist-item:hover { background: var(--cml2-subtle); }
+.mylist-item.active { background: rgb(var(--cml2-primary-rgb) / .15); color: var(--cml2-primary); }
+.mylist-info { min-width: 0; flex: 1; }
+.mylist-details { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
+.mylist-name { overflow: hidden; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.mylist-date,
+.mylist-count-mylist-tab { color: var(--cml2-muted); font-size: 12px; }
+.mylist-count-mylist-tab { flex: 0 0 auto; }
+.hidden { display: none !important; }
 
-.cml2-settings-theme select:focus {
-  outline: none;
-  border-color: var(--cml2-accent, #2a88bd);
-}
-
-/* アクションボタングループ */
-.cml2-settings-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.cml2-settings-actions .cml2-btn {
-  flex: 1;
-  min-width: 120px;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 14px;
-}
-
-.cml2-settings-actions .cml2-btn .material-icon {
-  width: 18px;
-  height: 18px;
-}
-
-/* 動画/キーワード追加フォーム */
-.cml2-settings-add-form {
-  display: flex;
-  gap: 8px;
-}
-
-.cml2-settings-add-form input {
-  flex: 1;
-  padding: 10px 14px;
-  background: var(--cml2-panel, #2a2b2c);
-  border: 1px solid var(--cml2-border, #333333);
-  border-radius: 6px;
-  color: var(--cml2-text, #ffffff);
-  font-size: 14px;
-}
-
-.cml2-settings-add-form input:focus {
-  outline: none;
-  border-color: var(--cml2-accent, #2a88bd);
-  box-shadow: 0 0 0 2px var(--cml2-focus-ring, rgba(52, 152, 219, 0.3));
-}
-
-.cml2-settings-add-form .cml2-btn {
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* 危険ゾーン */
-.cml2-settings-danger-zone {
-  padding-top: 16px;
-  border-top: 1px solid var(--cml2-border, #333333);
-}
-
-.cml2-settings-danger-zone .cml2-settings-section-title {
-  color: var(--cml2-danger, #e74c3c);
-}
-
-/* レスポンシブ対応 */
-@media (max-width: 520px) {
-  .cml2-settings-content {
-    min-width: auto;
-    width: calc(100% - 32px);
-    margin: 16px;
-    padding: 20px;
-  }
-
-  .cml2-settings-actions {
-    flex-direction: column;
-  }
-
-  .cml2-settings-actions .cml2-btn {
-    width: 100%;
-  }
-
-  .cml2-fab {
-    bottom: 16px;
-    right: 16px;
-    width: 48px;
-    height: 48px;
-  }
-
-  .cml2-fab .material-icon {
-    width: 24px;
-    height: 24px;
-  }
-
-  .cml2-fab::before {
-    display: none;
-  }
-}
-`;
-
-/**
- * Midnight Indigo を基調に、選択中の一括操作を明確にする視覚調整
- */
-export const MYLIST_VISUAL_REFRESH_STYLES = `
-.custom-mylist2-manager {
-  --cml2-bg: var(--nc-bg);
-  --cml2-text: var(--nc-text);
-  --cml2-panel: var(--nc-surface);
-  --cml2-border: var(--nc-border);
-  --cml2-muted: var(--nc-muted);
-  --cml2-muted-strong: var(--nc-muted);
-  --cml2-accent: var(--nc-primary);
-  --cml2-accent-hover: var(--nc-primary-hover);
-  --cml2-accent-rgb: 111, 156, 255;
-  --cml2-accent-deep: #243555;
-  --cml2-accent-gradient-end: #2c426b;
-  --cml2-accent-contrast: var(--nc-primary-contrast);
-  --cml2-focus-ring: color-mix(in srgb, var(--nc-primary) 34%, transparent);
-  --cml2-link: var(--cml2-accent-hover);
-  --cml2-link-hover: var(--cml2-accent-contrast);
-  --cml2-scrollbar-thumb: var(--nc-muted);
-  --cml2-scrollbar-track: var(--nc-surface);
-  --cml2-text-soft: var(--nc-text);
-  position: relative;
-  inset: auto;
-  transform: none;
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.custom-mylist2-manager.cml2-theme-dark-green {
-  --cml2-accent: #35a67a;
-  --cml2-accent-hover: #43bd8d;
-  --cml2-accent-rgb: 53, 166, 122;
-  --cml2-accent-deep: #176c55;
-  --cml2-accent-gradient-end: #238b69;
-  --cml2-focus-ring: rgba(53, 166, 122, 0.34);
-}
-
-.custom-mylist2-manager.cml2-theme-dark-amber {
-  --cml2-accent: #d79b36;
-  --cml2-accent-hover: #e8ad49;
-  --cml2-accent-rgb: 215, 155, 54;
-  --cml2-accent-deep: #8c5d19;
-  --cml2-accent-gradient-end: #b47820;
-  --cml2-focus-ring: rgba(215, 155, 54, 0.34);
-}
-
-.custom-mylist2-manager.cml2-theme-dark-violet {
-  --cml2-accent: #9968df;
-  --cml2-accent-hover: #ad7cf0;
-  --cml2-accent-rgb: 153, 104, 223;
-  --cml2-accent-deep: #5c349b;
-  --cml2-accent-gradient-end: #7949bd;
-  --cml2-focus-ring: rgba(153, 104, 223, 0.34);
-}
-
-.custom-mylist2-manager.cml2-theme-dark-red {
-  --cml2-accent: #d95666;
-  --cml2-accent-hover: #ea6878;
-  --cml2-accent-rgb: 217, 86, 102;
-  --cml2-accent-deep: #8d2b3c;
-  --cml2-accent-gradient-end: #b53c50;
-  --cml2-focus-ring: rgba(217, 86, 102, 0.34);
-}
-
-.custom-mylist2-manager .mylist-sidebar {
-  box-sizing: border-box;
-  height: auto;
-  min-height: 0;
-  overflow: hidden;
-  padding: 18px 14px;
-  background: var(--nc-surface);
-  border-right-color: var(--nc-border);
-}
-
-.custom-mylist2-manager .mylist-list {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-}
-
-.custom-mylist2-manager .mylist-controls,
-.custom-mylist2-manager .search-container,
-.custom-mylist2-manager .mylist-sort-controls,
-.custom-mylist2-manager .mylist-sidebar-footer {
-  flex: 0 0 auto;
-}
-
-.custom-mylist2-manager .mylist-sidebar-footer {
+.mylist-sidebar-footer {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  flex: 0 0 auto;
   gap: 8px;
-  margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid #263450;
+  padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--cml2-border);
+  background: var(--cml2-surface);
 }
-
-.custom-mylist2-manager .sidebar-footer-action {
-  display: inline-flex;
+.sidebar-footer-action {
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-width: 0;
-  min-height: 40px;
-  padding: 8px 10px;
-  border: 1px solid #2a3957;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--cml2-text-soft);
-  font: inherit;
-  font-size: 13px;
+  min-height: 38px;
+  padding: 7px 9px;
+  border: 1px solid var(--cml2-border) !important;
+  border-radius: 7px;
+  background: transparent !important;
+  color: var(--cml2-muted) !important;
   text-decoration: none;
-  cursor: pointer;
-  box-sizing: border-box;
 }
+.sidebar-footer-action:hover { background: var(--cml2-subtle) !important; color: var(--cml2-text) !important; }
 
-.custom-mylist2-manager .sidebar-footer-action:hover {
-  background: rgba(var(--cml2-accent-rgb), 0.12);
-  border-color: rgba(var(--cml2-accent-rgb), 0.5);
-  color: #ffffff;
-}
-
-.custom-mylist2-manager .sidebar-footer-action .material-icon {
-  width: 19px;
-  height: 19px;
-}
-
-.custom-mylist2-manager .mylist-main {
-  box-sizing: border-box;
+.mylist-main {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
-  height: 100%;
   overflow: hidden;
-  padding: 16px;
-  border-radius: 0;
   background: var(--cml2-bg);
-  box-shadow: none;
 }
-
-.custom-mylist2-manager input[type="text"],
-.custom-mylist2-manager select {
-  min-height: 38px;
-  border-radius: 8px;
-  background: var(--cml2-surface, var(--nc-surface));
-  border-color: var(--cml2-border);
-}
-
-.custom-mylist2-manager button {
-  min-height: 38px;
-  border-radius: 8px;
-}
-
-.custom-mylist2-manager .mylist-list {
-  margin: 12px -6px 0;
-}
-
-.custom-mylist2-manager .mylist-item {
-  position: relative;
-  margin: 3px 0;
-  padding: 12px 10px 12px 14px;
-  border: 0;
-  border-radius: 7px;
-}
-
-.custom-mylist2-manager .mylist-item::before {
-  content: "";
-  position: absolute;
-  inset: 7px auto 7px 0;
-  width: 3px;
-  border-radius: 999px;
-  background: transparent;
-}
-
-.custom-mylist2-manager .mylist-item:hover {
-  background: rgba(var(--cml2-accent-rgb), 0.09);
-}
-
-.custom-mylist2-manager .mylist-item.active {
-  background: rgba(var(--cml2-accent-rgb), 0.2);
-  color: #f7f8ff;
-}
-
-.custom-mylist2-manager .mylist-item.active::before {
-  background: var(--cml2-accent-hover);
-  box-shadow: 0 0 14px rgba(var(--cml2-accent-rgb), 0.5);
-}
-
-.custom-mylist2-manager .video-filter-bar.always-visible {
+.video-filter-bar {
   display: grid;
-  grid-template-columns: 240px 360px;
-  align-items: center;
-  justify-content: start;
-  gap: 12px;
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 9px;
-  background: rgba(14, 23, 43, 0.96);
-  border-color: #2a3957;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  grid-template-columns: minmax(180px, 280px) minmax(180px, 1fr);
+  flex: 0 0 auto;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--cml2-border);
+  background: var(--cml2-surface);
 }
+.video-filter-bar select { width: 100%; }
 
-.custom-mylist2-manager .video-filter-bar .search-container {
-  width: 360px;
-  height: 38px;
-}
-
-.custom-mylist2-manager .video-filter-bar #videoSortType,
-.custom-mylist2-manager .video-filter-bar #videoSearchInput,
-.custom-mylist2-manager .video-filter-bar #videoSearchClear {
-  height: 38px;
-  min-height: 38px;
-  box-sizing: border-box;
-}
-
-.custom-mylist2-manager .video-filter-bar #videoSortType {
-  width: 240px;
-}
-
-.custom-mylist2-manager .video-filter-bar #videoSearchInput {
-  width: 320px;
-}
-
-.custom-mylist2-manager .video-filter-bar #videoSearchClear {
-  width: 32px;
-  min-width: 32px;
-  padding: 0;
-}
-
-.custom-mylist2-manager .selection-action-bar {
+.selection-action-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  max-height: 0;
-  margin: 0;
-  padding: 0 12px;
-  overflow: hidden;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  background: var(--nc-surface-subtle);
-  opacity: 0;
-  transform: translateY(-12px);
-  visibility: hidden;
-  transition:
-    max-height 0.24s ease,
-    margin 0.24s ease,
-    padding 0.24s ease,
-    opacity 0.18s ease,
-    transform 0.24s ease,
-    visibility 0s linear 0.24s;
-}
-
-.custom-mylist2-manager.has-selection .selection-action-bar {
-  max-height: 74px;
-  margin-bottom: 10px;
-  padding: 10px 12px;
-  border-color: rgba(var(--cml2-accent-rgb), 0.72);
-  box-shadow: 0 8px 24px rgba(var(--cml2-accent-rgb), 0.2);
-  opacity: 1;
-  transform: translateY(0);
-  visibility: visible;
-  transition-delay: 0s;
-}
-
-.custom-mylist2-manager .selection-action-bar button {
-  min-height: 36px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
-  white-space: nowrap;
-}
-
-.custom-mylist2-manager .selection-action-bar button:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.custom-mylist2-manager .selection-action-bar button.danger {
-  background: rgba(136, 22, 47, 0.58);
-}
-
-.custom-mylist2-manager .selection-action-bar #deselectAllVideos {
-  margin-left: auto;
-  width: 36px;
-  padding: 0;
-  font-size: 20px;
-}
-
-.custom-mylist2-manager .selection-action-bar #selectedVideosAction {
-  display: none;
-}
-
-.custom-mylist2-manager .video-list-selection-header {
-  display: flex;
-  align-items: center;
-  min-height: 42px;
-  padding: 0 14px;
-  border: 1px solid #202e48;
-  border-bottom: 0;
-  border-radius: 9px 9px 0 0;
-  background: var(--nc-surface-subtle);
-}
-
-.custom-mylist2-manager .video-list-selection-header label {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  color: var(--cml2-text-soft);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.custom-mylist2-manager .video-list-selection-header input {
-  appearance: none;
-  -webkit-appearance: none;
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  margin: 0;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 6px;
-  background: var(--nc-surface);
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.25s ease,
-    border-color 0.25s ease,
-    background 0.25s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.custom-mylist2-manager .video-list-selection-header input::before {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  border-radius: 4px;
-  background: radial-gradient(
-    circle at 30% 30%,
-    rgba(255, 255, 255, 0.35),
-    rgba(255, 255, 255, 0) 65%
-  );
-  pointer-events: none;
-}
-
-.custom-mylist2-manager .video-list-selection-header input::after {
-  content: "";
-  width: 10px;
-  height: 6px;
-  border: 2px solid transparent;
-  border-left-color: #ffffff;
-  border-bottom-color: #ffffff;
-  opacity: 0;
-  transform: translateY(-1px) rotate(-45deg) scale(0);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  pointer-events: none;
-}
-
-.custom-mylist2-manager .video-list-selection-header input:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 8px 16px rgba(0, 0, 0, 0.45),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-}
-
-.custom-mylist2-manager .video-list-selection-header input:focus-visible {
-  outline: none;
-  border-color: var(--cml2-accent);
-  box-shadow:
-    0 0 0 3px var(--cml2-focus-ring),
-    0 6px 18px rgba(0, 0, 0, 0.5);
-}
-
-.custom-mylist2-manager .video-list-selection-header input:checked,
-.custom-mylist2-manager .video-list-selection-header input:indeterminate {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: linear-gradient(
-    135deg,
-    var(--cml2-accent),
-    var(--cml2-accent-hover)
-  );
-  box-shadow:
-    0 10px 22px rgba(0, 0, 0, 0.5),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
-}
-
-.custom-mylist2-manager .video-list-selection-header input:checked::after {
-  opacity: 1;
-  transform: translateY(-1px) rotate(-45deg) scale(1);
-}
-
-.custom-mylist2-manager .video-list-selection-header input:indeterminate::after {
-  width: 10px;
-  height: 0;
-  border: 0;
-  border-top: 2px solid #ffffff;
-  opacity: 1;
-  transform: none;
-}
-
-.custom-mylist2-manager .video-list {
+  flex: 0 0 auto;
+  gap: 7px;
   min-height: 0;
-  overflow-y: auto;
-  border: 1px solid #202e48;
-  border-radius: 0 0 9px 9px;
-  background: #091121;
+  max-height: 0;
+  padding: 0 16px;
+  overflow: hidden;
+  visibility: hidden;
+  background: var(--cml2-surface);
+  border-bottom: 0 solid var(--cml2-border);
+  opacity: 0;
+  transition: max-height .2s ease, padding .2s ease, opacity .15s ease;
 }
-
-.custom-mylist2-manager .video-list .video-item,
-.custom-mylist2-manager .video-list .keyword-item {
-  padding: 10px 12px 10px 50px;
-  background: #091121;
-  border-bottom-color: #202e48;
-  transition: background-color 0.16s ease, box-shadow 0.16s ease;
-}
-
-.custom-mylist2-manager .video-list .video-item .video-select,
-.custom-mylist2-manager .video-list .keyword-item .video-select {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  margin: 0;
+.custom-mylist2-manager.has-selection .selection-action-bar,
+.selection-action-bar[aria-hidden="false"] {
+  max-height: 60px;
+  padding-block: 8px;
+  visibility: visible;
+  border-bottom-width: 1px;
   opacity: 1;
 }
+.selection-action-bar button { min-height: 32px; padding: 5px 10px; background: var(--cml2-subtle); border-color: var(--cml2-border); color: var(--cml2-text); }
+.selection-action-bar button.danger { color: var(--cml2-danger); }
+.selected-items-count { margin-right: auto; color: var(--cml2-primary); font-size: 13px; font-weight: 650; }
+#selectedVideosAction { display: none; }
 
-.custom-mylist2-manager .video-list .video-item:hover,
-.custom-mylist2-manager .video-list .keyword-item:hover {
-  background: rgba(var(--cml2-accent-rgb), 0.1);
+.video-list-selection-header {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 7px 18px;
+  border-bottom: 1px solid var(--cml2-border);
+  background: var(--cml2-subtle);
+  color: var(--cml2-muted);
+  font-size: 13px;
 }
+.video-list-selection-header label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
 
-.custom-mylist2-manager .video-list .video-item.is-selected,
-.custom-mylist2-manager .video-list .keyword-item.is-selected {
-  background: linear-gradient(
-    90deg,
-    rgba(var(--cml2-accent-rgb), 0.3),
-    rgba(var(--cml2-accent-rgb), 0.08)
-  );
-  box-shadow: inset 3px 0 var(--cml2-accent-hover);
+.video-list {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: auto;
+  background: var(--cml2-bg);
+  scrollbar-color: var(--cml2-border) transparent;
 }
-
-.custom-mylist2-manager .video-thumbnail {
-  border-radius: 7px;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.32);
+.video-list-spacer { z-index: 0; }
+.video-item {
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 20px 120px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  height: 92px;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--cml2-border);
+  background: var(--cml2-surface);
+  color: var(--cml2-text);
+  cursor: pointer;
 }
-
-.custom-mylist2-manager .video-title {
-  color: #f3f5ff;
-  letter-spacing: 0.01em;
+.video-item:hover { background: var(--cml2-subtle); }
+.video-item:focus-visible { outline: 2px solid var(--cml2-primary); outline-offset: -2px; }
+.video-item.is-selected { background: rgb(var(--cml2-primary-rgb) / .13); box-shadow: inset 3px 0 var(--cml2-primary); }
+.video-thumbnail,
+.keyword-icon {
+  width: 120px;
+  height: 68px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--cml2-subtle);
 }
-
-.custom-mylist2-manager .selected-items-count {
+.keyword-icon { display: grid; place-items: center; }
+.video-info { min-width: 0; overflow: hidden; }
+.video-title { overflow: hidden; color: var(--cml2-text); font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.video-title-link,
+.keyword-links a,
+.cml2-video-link { color: var(--cml2-primary); text-decoration: none; }
+.video-title-link:hover,
+.keyword-links a:hover,
+.cml2-video-link:hover { text-decoration: underline; }
+.video-stats,
+.video-meta,
+.keyword-meta,
+.keyword-links { display: flex; align-items: center; gap: 12px; min-width: 0; margin-top: 5px; color: var(--cml2-muted); font-size: 12px; }
+.video-author { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.video-stats > span,
+.video-meta > span { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.video-stats .material-icon,
+.video-meta .material-icon { flex: 0 0 auto; width: 14px; height: 14px; filter: brightness(0) invert(1); }
+.keyword-links { flex-wrap: wrap; gap: 6px 14px; }
+.cml2-availability-badge,
+.cml2-tag {
   display: inline-flex;
   align-items: center;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: var(--cml2-subtle, #242c37);
+  color: var(--cml2-muted, #a9b4c3);
+  font-size: 12px;
 }
+.status-deleted,
+.status-private,
+.status-unavailable { color: var(--cml2-danger, #ff6b7a); }
+.action-trigger {
+  width: 34px;
+  min-height: 34px !important;
+  padding: 6px !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  color: var(--cml2-muted) !important;
+  opacity: 0;
+}
+.video-item:hover .action-trigger,
+.video-item:focus-within .action-trigger { opacity: 1; }
 
-.custom-mylist2-manager .video-details-trigger {
+.cml2-action-popover {
+  position: fixed;
+  z-index: 11000;
+  min-width: 160px;
+  padding: 5px;
+  border: 1px solid #364151;
+  border-radius: 8px;
+  background: #1a2029;
+  box-shadow: 0 12px 30px rgb(0 0 0 / .35);
+}
+.cml2-action-popover-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 9px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #edf1f7;
+  text-align: left;
+  cursor: pointer;
+}
+.cml2-action-popover-item:hover { background: #242c37; }
+.cml2-action-popover-item.danger { color: #ff8a95; }
+
+.modal,
+.cml2-modal,
+.cml2-alert-modal,
+.progress-modal,
+.mylist-selector-modal,
+.cml2-settings-modal {
+  --cml2-surface: #1a2029;
+  --cml2-subtle: #242c37;
+  --cml2-border: #364151;
+  --cml2-text: #edf1f7;
+  --cml2-muted: #a9b4c3;
+  --cml2-primary: #6f9cff;
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  min-height: 38px;
-  padding: 0;
-  border: 1px solid rgba(var(--cml2-accent-rgb), 0.42);
-  border-radius: 8px;
-  background: #111d34;
+  padding: 20px;
+  overflow: auto;
+  background: rgb(4 7 11 / .76);
   color: var(--cml2-text);
-  opacity: 0;
-  transform: translateX(5px);
-  transition: opacity 0.16s ease, transform 0.16s ease, background-color 0.16s ease;
-  flex-shrink: 0;
+}
+.modal-content,
+.cml2-modal-content,
+.cml2-alert-content,
+.progress-content,
+.mylist-selector-content,
+.cml2-settings-content {
+  position: relative;
+  width: min(100%, 560px);
+  max-height: min(760px, calc(100dvh - 40px));
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid var(--cml2-border);
+  border-radius: 10px;
+  background: var(--cml2-surface);
+  box-shadow: 0 20px 55px rgb(0 0 0 / .42);
+}
+.cml2-settings-content { width: min(100%, 680px); padding: 0; }
+.modal-content h2,
+.cml2-modal-title,
+.cml2-alert-title { margin: 0 0 16px; color: var(--cml2-text); font-size: 19px; }
+.close,
+.close-button,
+.cml2-settings-close {
+  cursor: pointer;
+}
+.modal-content > .close,
+.modal-content > .close-button {
+  position: absolute;
+  inset-block-start: 14px;
+  inset-inline-end: 14px;
+}
+.modal-actions,
+.cml2-modal-footer,
+.cml2-alert-buttons,
+.cml2-settings-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.cml2-modal-body { color: var(--cml2-muted); line-height: 1.55; }
+.cml2-modal-body select,
+.cml2-modal-body input,
+.video-memo { width: 100%; }
+.cml2-batch-api-field { display: grid; gap: 6px; margin-top: 12px; color: var(--cml2-text); }
+.video-details-section + .video-details-section { padding-top: 14px; border-top: 1px solid var(--cml2-border); }
+.video-description { overflow-wrap: anywhere; }
+.video-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.cml2-settings-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 17px 20px;
+  border-bottom: 1px solid var(--cml2-border);
+  background: var(--cml2-surface);
+}
+.cml2-settings-title { font-size: 19px; font-weight: 700; }
+.cml2-settings-close { width: 34px; min-height: 34px; padding: 5px; border: 0; background: transparent; color: var(--cml2-muted); }
+.cml2-settings-section { padding: 17px 20px; border-bottom: 1px solid var(--cml2-border); }
+.cml2-settings-section:last-child { border-bottom: 0; }
+.cml2-settings-section-title { margin-bottom: 9px; color: var(--cml2-muted); font-size: 13px; font-weight: 650; }
+.cml2-settings-mylist-name,
+.cml2-settings-add-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.cml2-settings-theme select { width: 100%; }
+.cml2-settings-danger-zone { background: rgb(255 107 122 / .045); }
+.cml2-settings-modal:not(.visible) { display: none; }
+
+.modal-mylist-list { display: grid; gap: 5px; max-height: 50dvh; overflow: auto; }
+.modal-mylist-list .mylist-item { background: var(--cml2-subtle); }
+.mylist-selector-content { width: min(100%, 600px); }
+.suggested-mylists { margin-block: 12px; }
+.match-info { color: var(--cml2-muted); font-size: 12px; }
+
+.progress-container {
+  position: fixed;
+  inset-inline: 50%;
+  inset-block-end: 20px;
+  z-index: 13000;
+  width: min(420px, calc(100% - 32px));
+  padding: 12px;
+  transform: translateX(-50%);
+  border: 1px solid #364151;
+  border-radius: 8px;
+  background: #1a2029;
+  color: #edf1f7;
+}
+.progress-bar { height: 7px; overflow: hidden; border-radius: 999px; background: #242c37; }
+.progress-fill { height: 100%; background: #6f9cff; transition: width .2s ease; }
+.progress-text { margin-top: 7px; color: #a9b4c3; font-size: 12px; }
+.progress-circle { position: relative; width: 92px; margin: auto; }
+.circular-progress { display: block; width: 100%; transform: rotate(-90deg); }
+.circle-bg { stroke: #242c37; }
+.circular-progress .progress { stroke: #6f9cff; }
+.progress-circle > .progress-text { position: absolute; inset: 50% auto auto 50%; margin: 0; transform: translate(-50%, -50%); }
+.progress-status { margin-top: 12px; color: #a9b4c3; text-align: center; }
+
+.material-icon { display: block; width: 20px; height: 20px; }
+.icon-white { filter: brightness(0) invert(1); }
+
+:where(.custom-mylist2-manager, .cml2-modal, .cml2-alert-modal, .cml2-settings-modal) :focus-visible,
+.cml2-action-popover :focus-visible,
+.sidebar-footer-action:focus-visible {
+  outline: 2px solid var(--cml2-primary, #6f9cff);
+  outline-offset: 2px;
 }
 
-.custom-mylist2-manager .video-details-trigger .material-icon {
-  width: 20px;
-  height: 20px;
+@media (hover: none) {
+  .action-trigger { opacity: 1; }
 }
 
-.custom-mylist2-manager .video-item:hover .video-details-trigger,
-.custom-mylist2-manager .video-item:focus-within .video-details-trigger {
-  opacity: 1;
-  transform: translateX(0);
+@media (max-width: 720px) {
+  .custom-mylist2-manager { grid-template-columns: clamp(150px, 40vw, 240px) minmax(0, 1fr); }
+  .mylist-controls,
+  .mylist-sort-controls,
+  .mylist-sidebar > .search-container { padding-inline: 8px; }
+  .mylist-sidebar-footer { grid-template-columns: 1fr; padding-inline: 8px; }
+  .sidebar-footer-action { min-height: 34px; }
+  .video-filter-bar { grid-template-columns: 1fr; gap: 7px; padding: 8px; }
+  .selection-action-bar { overflow-x: auto; }
+  .selection-action-bar button { flex: 0 0 auto; }
+  .video-item { grid-template-columns: 18px 88px minmax(0, 1fr); gap: 8px; padding-inline: 8px; }
+  .video-thumbnail,
+  .keyword-icon { width: 88px; height: 54px; }
+  .video-stats { gap: 7px; }
+  .video-meta { display: none; }
 }
 
-.custom-mylist2-manager .video-details-trigger:hover {
-  background: rgba(var(--cml2-accent-rgb), 0.24);
-  border-color: var(--cml2-accent-hover);
-  box-shadow: 0 0 0 2px rgba(var(--cml2-accent-rgb), 0.14);
+@media (max-width: 440px) {
+  .custom-mylist2-manager { grid-template-columns: 132px minmax(0, 1fr); }
+  .mylist-controls { display: grid; grid-template-columns: minmax(0, 1fr) 34px; }
+  .mylist-name { font-size: 13px; }
+  .mylist-date { display: none; }
+  .sidebar-footer-action span { display: none; }
+  .video-item { grid-template-columns: 18px minmax(0, 1fr); }
+  .video-thumbnail,
+  .keyword-icon { display: none; }
+  .video-stats { overflow: hidden; white-space: nowrap; }
+  .modal,
+  .cml2-modal,
+  .cml2-alert-modal,
+  .progress-modal,
+  .mylist-selector-modal,
+  .cml2-settings-modal { padding: 10px; }
+  .modal-content,
+  .cml2-modal-content,
+  .cml2-alert-content,
+  .progress-content,
+  .mylist-selector-content,
+  .cml2-settings-content { max-height: calc(100dvh - 20px); padding: 16px; }
+  .cml2-settings-content { padding: 0; }
 }
 
-@media (max-width: 768px) {
-  .custom-mylist2-manager .video-filter-bar.always-visible {
-    grid-template-columns: 1fr;
-  }
-
-  .custom-mylist2-manager .video-filter-bar .search-container,
-  .custom-mylist2-manager .video-filter-bar #videoSortType {
-    width: 100%;
-  }
-
-  .custom-mylist2-manager .video-filter-bar #videoSearchInput {
-    width: auto;
-  }
-
-  .custom-mylist2-manager .selection-action-bar {
-    flex-wrap: wrap;
-  }
-
-  .custom-mylist2-manager.has-selection .selection-action-bar {
-    max-height: 180px;
-  }
-
-  .custom-mylist2-manager .selected-items-count {
-    flex-basis: 100%;
-  }
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
 `;
 
-/**
- * すべての Mylist Manager スタイルを統合 */
-export const MYLIST_MANAGER_STYLES = `
-${materialIconsStyles}
-
-${MYLIST_MANAGER_STYLES_PART1}
-
-${MYLIST_MANAGER_STYLES_PART2}
-
-${MYLIST_MANAGER_STYLES_PART3}
-
-${MYLIST_MANAGER_STYLES_PART4}
-
-${SIDEBAR_UTILITY_STYLES}
-
-${VIRTUAL_SCROLL_ACTION_MENU_STYLES}
-
-${FAB_AND_SETTINGS_MODAL_STYLES}
-
-${MYLIST_VISUAL_REFRESH_STYLES}
-`;
-/**
- * Mylist Manager スタイルをDOMに適用する関数
- */
+/** mylist2 のスタイルを一度だけ適用する。 */
 export const applyMylistManagerStyles = (): HTMLStyleElement => {
-  const styleElement = document.createElement("style");
-  styleElement.textContent = MYLIST_MANAGER_STYLES;
-  document.head.appendChild(styleElement);
-  return styleElement;
+  const existing = document.getElementById(MYLIST2_STYLE_ID);
+  if (existing instanceof HTMLStyleElement) return existing;
+
+  const style = document.createElement("style");
+  style.id = MYLIST2_STYLE_ID;
+  style.textContent = MYLIST_MANAGER_STYLES;
+  document.head.appendChild(style);
+  return style;
 };

@@ -57,9 +57,67 @@ test.beforeEach(async ({ page }) => {
   await openApp(page);
 });
 
+test("モーダル本文が残り高さいっぱいを使い、低い画面では内部スクロールする", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 760, height: 420 });
+  const ui = page.locator("#cf2-shadow-host");
+  const container = ui.locator(".cf2-container");
+  const header = ui.locator(".cf2-header");
+  const content = ui.locator(".cf2-content");
+  const workspace = ui.locator(".cf2-workspace");
+  const main = ui.locator(".cf2-workspace-main");
+
+  const [containerHeight, headerHeight, contentHeight, workspaceHeight] =
+    await Promise.all([
+      container.evaluate((element) => element.getBoundingClientRect().height),
+      header.evaluate((element) => element.getBoundingClientRect().height),
+      content.evaluate((element) => element.getBoundingClientRect().height),
+      workspace.evaluate((element) => element.getBoundingClientRect().height),
+    ]);
+
+  expect(
+    Math.abs(contentHeight - (containerHeight - headerHeight)),
+  ).toBeLessThan(1);
+  expect(Math.abs(workspaceHeight - contentHeight)).toBeLessThan(1);
+  await expect(main).toHaveCSS("overflow-y", "auto");
+
+  await ui.locator('.cf2-sidebar-item[data-cf2-view="rules"]').click();
+  const scrollMetrics = await main.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+  }));
+  expect(scrollMetrics.scrollHeight).toBeGreaterThan(
+    scrollMetrics.clientHeight,
+  );
+  await main.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  expect(await main.evaluate((element) => element.scrollTop)).toBeGreaterThan(
+    0,
+  );
+});
+
+test("Shadow DOM 内のアイコンを白抜き表示する", async ({ page }) => {
+  const icons = page.locator("#cf2-shadow-host .material-icon");
+  await expect(icons.first()).toHaveCSS(
+    "filter",
+    "brightness(0) saturate(1) invert(1)",
+  );
+});
+
 test("ルールスタジオを多重カードにせず区切り線で構成する", async ({ page }) => {
   const ui = page.locator("#cf2-shadow-host");
   await ui.locator('.cf2-sidebar-item[data-cf2-view="rules"]').click();
+
+  await expect(ui.locator(".cf2-container")).toHaveCSS(
+    "background-color",
+    "rgb(26, 32, 41)",
+  );
+  await expect(ui.locator(".cf2-dashboard-metric").first()).toHaveCSS(
+    "background-color",
+    "rgb(36, 44, 55)",
+  );
 
   await expect(ui.locator(".cf2-rule-editor")).toHaveCSS(
     "border-top-width",

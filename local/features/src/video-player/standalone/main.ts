@@ -9,7 +9,13 @@ import {
   formatDuration,
   createStatItem,
   createAutoNextStatItem,
+  createRepeatPlaybackStatItem,
 } from "@/video-player/standalone/utils";
+import {
+  AUTO_NEXT_STORAGE_KEY,
+  REPEAT_PLAYBACK_STORAGE_KEY,
+  resolveEndedPlaybackAction,
+} from "@/video-player/standalone/playback-preferences";
 import type { ApiData, NicoApiData } from "@/types/index";
 import DOMPurify from "dompurify";
 import type { Config as DOMPurifyConfig } from "dompurify";
@@ -586,8 +592,6 @@ const renderMeta = (container: HTMLElement, apiData: ApiData): void => {
   appendMetaItem(container, "ジャンル", resolveGenreLabel(apiData));
 };
 
-const AUTO_NEXT_STORAGE_KEY = "video-player-auto-next";
-
 /**
  * 説明文（HTML）から動画IDを抽出し、現在の動画の「次」を推定する
  *
@@ -710,6 +714,8 @@ const renderStats = (
   const resolved = resolveNextVideoId(apiData, currentVideoId);
   const hasNextVideo = resolved !== null;
   const savedPref = localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true";
+  const repeatPref =
+    localStorage.getItem(REPEAT_PLAYBACK_STORAGE_KEY) === "true";
 
   container.append(
     createStatItem("再生数", formatNumber(apiData.video.count.view)),
@@ -727,6 +733,9 @@ const renderStats = (
       },
       resolved?.source === "description" ? "説明文" : undefined,
     ),
+    createRepeatPlaybackStatItem(repeatPref, (checked: boolean) => {
+      localStorage.setItem(REPEAT_PLAYBACK_STORAGE_KEY, String(checked));
+    }),
   );
 };
 
@@ -1088,22 +1097,27 @@ export const startStandalonePlayer = async (): Promise<void> => {
 
     await player.initialize(videoId, { apiData });
 
-    // シリーズ連続再生: 再生完了時に次の動画へ自動遷移
+    // 繰り返し再生を優先し、無効な場合だけ次の動画へ自動遷移する。
     const resolved = resolveNextVideoId(apiData, videoId);
-    if (resolved) {
-      // 数値のみIDはバックグラウンドでプレフィックス付きIDに正規化
-      // 動画再生中に解決が完了するため、遷移時には正規IDが利用可能
-      const canonicalIdPromise: Promise<string> = isNumericOnlyVideoId(
-        resolved.id,
-      )
+    const canonicalIdPromise: Promise<string> | null = resolved
+      ? isNumericOnlyVideoId(resolved.id)
         ? resolveNumericVideoId(resolved.id)
-        : Promise.resolve(resolved.id);
+        : Promise.resolve(resolved.id)
+      : null;
 
-      player.onVideoEnded(() => {
-        const autoNext = localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true";
-        if (!autoNext) {
-          return;
-        }
+    player.onVideoEnded(() => {
+      const action = resolveEndedPlaybackAction(
+        localStorage.getItem(REPEAT_PLAYBACK_STORAGE_KEY) === "true",
+        localStorage.getItem(AUTO_NEXT_STORAGE_KEY) === "true",
+        resolved !== null,
+      );
+      if (action === "repeat") {
+        void player.replay().catch((error: unknown) => {
+          window.logger.error("繰り返し再生の開始に失敗しました", error);
+        });
+        return;
+      }
+      if (action === "next" && resolved && canonicalIdPromise) {
         const sourceLabel =
           resolved.source === "description" ? "説明文リンク" : "シリーズ";
         void canonicalIdPromise.then((nextId) => {
@@ -1114,8 +1128,8 @@ export const startStandalonePlayer = async (): Promise<void> => {
           nextUrl.searchParams.set("videoId", nextId);
           window.location.href = nextUrl.toString();
         });
-      });
-    }
+      }
+    });
   } catch (error) {
     window.logger.error("Standalone player failed", error);
     const message = error instanceof Error ? error.message : String(error);

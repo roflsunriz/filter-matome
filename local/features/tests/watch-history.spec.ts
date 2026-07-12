@@ -403,22 +403,64 @@ test("各タブ・シリーズ・アラートの静的および動的ボタン�
   await expect(page.locator("#stats-content")).toHaveClass(/active/);
   await expect(page.locator("#stats-detail-total-videos")).toHaveText("3");
   await expect(page.locator("#creator-stats")).toContainText("投稿者A");
-  await page.locator("#tag-cloud .tag-cloud-item").first().click();
+  const cloudTag = page.locator("#tag-cloud .tag-cloud-item").first();
+  await expect(cloudTag).toHaveCSS("background-color", "rgb(36, 44, 55)");
+  await expect(cloudTag).toHaveCSS("border-radius", "999px");
+  await cloudTag.click();
   await expect(page.locator("#history-content")).toHaveClass(/active/);
   await expect(page.locator("#search-input")).not.toHaveValue("");
 
   await page.locator("#series-tab").click();
   await expect(page.locator("#series-content")).toHaveClass(/active/);
   await expect(page.locator(".series-item")).toHaveCount(1);
+  await expect(page.locator("body")).toHaveCSS(
+    "background-color",
+    "rgb(17, 21, 27)",
+  );
+  await expect(page.locator(".series-item")).toHaveCSS(
+    "background-color",
+    "rgb(26, 32, 41)",
+  );
+  await expect(page.locator(".series-progress .progress-bar")).toHaveCSS(
+    "background-color",
+    "rgb(36, 44, 55)",
+  );
   await expect(page.locator(".series-list")).toHaveCSS(
     "border-left-width",
     "0px",
   );
+  await expect
+    .poll(() =>
+      page
+        .locator(".series-list")
+        .evaluate(
+          (element) =>
+            getComputedStyle(element).gridTemplateColumns.split(" ").length,
+        ),
+    )
+    .toBe(2);
+  const iconFilter = await page
+    .locator(".material-icon")
+    .first()
+    .evaluate((element) => getComputedStyle(element).filter);
+  expect(iconFilter).not.toBe("none");
   await expect(page.locator(".series-item")).toHaveCSS("border-radius", "0px");
   await expect(page.locator(".series-item .series-header")).toHaveCSS(
     "background-color",
     "rgba(0, 0, 0, 0)",
   );
+  await page.setViewportSize({ width: 700, height: 900 });
+  await expect
+    .poll(() =>
+      page
+        .locator(".series-list")
+        .evaluate(
+          (element) =>
+            getComputedStyle(element).gridTemplateColumns.split(" ").length,
+        ),
+    )
+    .toBe(1);
+  await page.setViewportSize({ width: 1280, height: 720 });
   await page.locator("#series-search-input").fill("存在しない");
   await expect(page.locator(".series-item")).toHaveCount(0);
   await page.locator("#series-search-clear").click();

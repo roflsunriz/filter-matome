@@ -1,68 +1,144 @@
 import { MINIMAL_DARK_THEME_ROOT } from "@/common/visual-theme";
 
+const page = (selector: string, declarations: string): string =>
+  `${selector} { ${declarations} }`;
+
 export const STANDALONE_PAGE_STYLES = [
   MINIMAL_DARK_THEME_ROOT,
-  "body.nc-standalone-body { margin: 0; padding: 0; background: var(--nc-bg); color: var(--nc-text); font-family: var(--nc-font); min-height: 100vh; overflow-x: hidden; }",
-  "a { color: #7aa2ff; text-decoration: none; }",
-  "a:hover { text-decoration: underline; }",
-  ".nc-standalone-page { margin: 0; padding: 0 0 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; }",
-  ".nc-common-header-container { width: 100%; margin: 0; }",
-  ".nc-header, .nc-main, .nc-description { width: 90vw; margin-left: auto; margin-right: auto; box-sizing: border-box; }",
-  ".nc-header { display: flex; flex-direction: column; gap: 12px; }",
-  ".nc-header__breadcrumbs { font-size: 13px; color: #8a94ad; display: flex; align-items: center; gap: 8px; }",
-  ".nc-header__breadcrumbs a { color: inherit; }",
-  ".nc-header__title { font-size: 28px; font-weight: 600; line-height: 1.4; }",
-  ".nc-header__meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: #9ca6c3; }",
-  ".nc-main { display: flex; flex-direction: column; gap: 28px; }",
-  ".nc-player-surface { background: var(--nc-surface); border: 1px solid var(--nc-border); border-radius: var(--nc-radius); padding: 20px; box-shadow: none; box-sizing: border-box; }",
-
-  /* プレイヤーとコメントのレスポンシブレイアウト */
-  ".standalone-player-wrapper { display: flex; flex-direction: row; width: 100%; max-width: 100%; gap: 16px; box-sizing: border-box; position: relative; }",
-  ".standalone-player-wrapper .custom-player { flex: 1 1 auto; min-width: 0; position: relative; }",
-  ".standalone-player-wrapper .comment-container { flex: 0 0 auto; width: clamp(280px, 25vw, 400px); min-width: 280px; max-width: 400px; background: rgba(23, 26, 38, 0.92); border-radius: 12px; padding: 12px; box-shadow: inset 0 0 0 1px rgba(127, 158, 255, 0.16); box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; max-height: calc(100vh - 200px); }",
-
-  /* videoとvideo-containerのレスポンシブ対応（通常表示時のみ） */
-  ".standalone-player-wrapper .custom-player:not(:fullscreen):not(.nc-fullscreen-player) { width: 100%; height: auto; }",
-  ".standalone-player-wrapper .custom-player:not(:fullscreen):not(.nc-fullscreen-player) .video-container { position: relative; width: 100%; aspect-ratio: var(--video-aspect-ratio, 16 / 9); max-height: calc(100vh - 200px); }",
-
-  ".nc-info-card { background: rgba(20, 24, 36, 0.88); border-radius: 16px; padding: 20px; box-shadow: inset 0 0 0 1px rgba(112, 138, 210, 0.22); display: flex; flex-direction: column; gap: 22px; }",
-  ".nc-stat-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }",
-  ".nc-stat-item { background: rgba(34, 40, 64, 0.82); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; box-shadow: inset 0 0 0 1px rgba(142, 170, 255, 0.18); }",
-  ".nc-stat-item__label { font-size: 12px; color: #8e98b8; letter-spacing: 0.02em; }",
-  ".nc-stat-item__value { font-size: 18px; font-weight: 600; }",
-  ".nc-tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; }",
-  ".nc-tag { border-radius: 999px; background: rgba(102, 136, 220, 0.24); color: #d8e2ff; padding: 6px 14px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }",
-  ".nc-tag__link { color: inherit; text-decoration: none; transition: color 0.15s ease; }",
-  ".nc-tag__link:hover { color: #a8c4ff; text-decoration: underline; }",
-  ".nc-tag__nicopedia { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 4px; background: rgba(255, 255, 255, 0.12); color: #9cb8ff; transition: background 0.15s ease, color 0.15s ease; text-decoration: none; }",
-  ".nc-tag__nicopedia:hover { background: rgba(255, 255, 255, 0.24); color: #d8e2ff; text-decoration: none; }",
-  ".nc-tag__nicopedia-icon { display: block; }",
-  ".nc-description { background: rgba(14, 16, 25, 0.9); border-radius: 16px; padding: 22px; line-height: 1.6; font-size: 14px; color: #c9d5f3; box-shadow: inset 0 0 0 1px rgba(112, 138, 210, 0.22); word-wrap: break-word; overflow-wrap: break-word; }",
-  ".nc-description a { color: #7aa2ff; text-decoration: none; transition: color 0.15s ease; }",
-  ".nc-description a:hover { color: #a8c4ff; text-decoration: underline; }",
-  ".nc-description img { max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; }",
-  ".nc-description p { margin: 0 0 1em 0; }",
-  ".nc-description p:last-child { margin-bottom: 0; }",
-  ".nc-owner { display: flex; gap: 12px; align-items: center; }",
-  ".nc-owner img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px rgba(130, 170, 255, 0.3); }",
-  ".nc-owner__info { display: flex; flex-direction: column; gap: 2px; }",
-  ".nc-owner__link { font-size: 12px; color: #8ab2ff; }",
-  ".nc-series { display: flex; flex-direction: column; gap: 8px; }",
-  ".nc-series__item { padding: 10px 14px; border-radius: 12px; background: rgba(32, 38, 60, 0.72); display: flex; flex-direction: column; gap: 4px; }",
-  ".nc-section-title { font-size: 16px; font-weight: 600; color: #d9e2ff; }",
-  ".nc-empty { color: #7d86a8; font-size: 13px; }",
-
-  /* 連続再生チェックボックス */
-  ".nc-stat-item--auto-next { cursor: pointer; transition: box-shadow 0.15s ease; }",
-  ".nc-stat-item--auto-next:hover { box-shadow: inset 0 0 0 1px rgba(142, 170, 255, 0.38); }",
-  ".nc-stat-item--disabled { opacity: 0.5; cursor: default; }",
-  ".nc-stat-item--disabled:hover { box-shadow: inset 0 0 0 1px rgba(142, 170, 255, 0.18); }",
-  ".nc-stat-item__auto-next-label { display: flex; align-items: center; gap: 8px; cursor: inherit; }",
-  ".nc-stat-item__auto-next-checkbox { width: 16px; height: 16px; accent-color: #7aa2ff; cursor: inherit; margin: 0; flex-shrink: 0; }",
-
-  /* レスポンシブ対応 - タブレット */
-  "@media (max-width: 1024px) { .nc-main { gap: 20px; } .standalone-player-wrapper { flex-direction: column; } .standalone-player-wrapper .comment-container { width: 100%; max-width: 100%; min-width: 100%; max-height: 400px; } .video-container { max-height: 60vh; } }",
-
-  /* レスポンシブ対応 - モバイル */
-  "@media (max-width: 768px) { .nc-standalone-page { padding-bottom: 32px; gap: 16px; } .nc-header, .nc-main, .nc-description { width: calc(100vw - 24px); } .nc-header__title { font-size: 20px; } .nc-player-surface { padding: 12px; border-radius: 12px; } .standalone-player-wrapper .comment-container { max-height: 300px; padding: 8px; } .nc-stat-list { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); } }",
+  page(
+    "html, body",
+    "margin: 0; min-height: 100%; background: var(--nc-bg); color: var(--nc-text);",
+  ),
+  page(
+    "body.nc-standalone-body",
+    "min-height: 100dvh; overflow-x: hidden; font-family: var(--nc-font); line-height: 1.5;",
+  ),
+  page("body.nc-fullscreen-active", "overflow: hidden; background: #000;"),
+  page(
+    "a",
+    "color: var(--nc-primary); text-decoration: none; text-underline-offset: 3px;",
+  ),
+  page(
+    "a:hover",
+    "color: var(--nc-primary-hover); text-decoration: underline;",
+  ),
+  page(
+    "a:focus-visible, input:focus-visible, button:focus-visible",
+    "outline: 3px solid color-mix(in srgb, var(--nc-primary) 35%, transparent); outline-offset: 2px;",
+  ),
+  page(
+    ".nc-standalone-page",
+    "display: flex; flex-direction: column; gap: 24px; min-height: 100dvh; padding-bottom: 48px;",
+  ),
+  page(".nc-common-header-container", "width: 100%;"),
+  page(
+    ".nc-header, .nc-main, .nc-description",
+    "box-sizing: border-box; width: min(100% - 32px, 1440px); margin-inline: auto;",
+  ),
+  page(".nc-header", "display: grid; gap: 10px;"),
+  page(
+    ".nc-header__breadcrumbs",
+    "display: flex; align-items: center; gap: 8px; overflow: hidden; color: var(--nc-muted); font-size: 0.78rem; white-space: nowrap;",
+  ),
+  page(
+    ".nc-header__title",
+    "margin: 0; color: var(--nc-text); font-size: clamp(1.3rem, 2.4vw, 1.8rem); line-height: 1.4; overflow-wrap: anywhere;",
+  ),
+  page(
+    ".nc-header__meta",
+    "display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--nc-muted); font-size: 0.78rem;",
+  ),
+  page(".nc-main", "display: grid; gap: 20px;"),
+  page(
+    ".nc-player-surface, .nc-info-card, .nc-description",
+    "background: var(--nc-surface); border: 1px solid var(--nc-border); border-radius: var(--nc-radius);",
+  ),
+  page(".nc-player-surface", "box-sizing: border-box; padding: 16px;"),
+  page(".nc-player-host, #nc-player-mount", "min-width: 0;"),
+  page(
+    ".standalone-player-wrapper",
+    "display: flex; align-items: flex-start; gap: 16px; width: 100%; min-width: 0;",
+  ),
+  page(
+    ".standalone-player-wrapper .custom-player",
+    "position: relative; flex: 1 1 auto; min-width: 0;",
+  ),
+  page(
+    ".standalone-player-wrapper .custom-player:not(:fullscreen):not(.nc-fullscreen-player) .video-container",
+    "position: relative; width: 100%; max-height: calc(100dvh - 180px); aspect-ratio: var(--video-aspect-ratio, 16 / 9); background: #000;",
+  ),
+  page(
+    ".standalone-player-wrapper .comment-container",
+    "box-sizing: border-box; display: flex; flex: 0 1 380px; flex-direction: column; width: clamp(280px, 26vw, 400px); min-width: 280px; max-height: calc(100dvh - 180px); overflow: hidden; padding: 12px; background: var(--nc-surface); border: 1px solid var(--nc-border); border-radius: var(--nc-radius);",
+  ),
+  page(".nc-info-card", "display: grid; gap: 20px; padding: 20px;"),
+  page(
+    ".nc-stat-list",
+    "display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;",
+  ),
+  page(
+    ".nc-stat-item",
+    "display: grid; gap: 4px; min-width: 0; padding: 12px; background: var(--nc-surface-subtle); border-radius: var(--nc-radius);",
+  ),
+  page(".nc-stat-item__label", "color: var(--nc-muted); font-size: 0.75rem;"),
+  page(
+    ".nc-stat-item__value",
+    "color: var(--nc-text); font-size: 1.05rem; font-weight: 700; overflow-wrap: anywhere;",
+  ),
+  page(
+    ".nc-stat-item__auto-next-label",
+    "display: flex; align-items: center; gap: 8px; cursor: inherit;",
+  ),
+  page(
+    ".nc-stat-item__auto-next-checkbox",
+    "width: 16px; height: 16px; margin: 0; accent-color: var(--nc-primary); cursor: inherit;",
+  ),
+  page(".nc-stat-item--auto-next", "cursor: pointer;"),
+  page(".nc-stat-item--disabled", "cursor: default; opacity: .52;"),
+  page(".nc-tag-cloud", "display: flex; flex-wrap: wrap; gap: 8px;"),
+  page(
+    ".nc-tag",
+    "display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--nc-surface-subtle); border-radius: 999px; color: var(--nc-text); font-size: .78rem;",
+  ),
+  page(".nc-tag__link", "color: inherit;"),
+  page(
+    ".nc-tag__nicopedia",
+    "display: grid; place-items: center; width: 18px; height: 18px; background: var(--nc-surface); border-radius: var(--nc-radius-sm); color: var(--nc-primary);",
+  ),
+  page(".nc-tag__nicopedia-icon", "display: block;"),
+  page(".nc-owner", "display: flex; align-items: center; gap: 12px;"),
+  page(
+    ".nc-owner img",
+    "width: 48px; height: 48px; object-fit: cover; border: 1px solid var(--nc-border); border-radius: 50%;",
+  ),
+  page(".nc-owner__info", "display: grid; gap: 3px; min-width: 0;"),
+  page(".nc-owner__name", "font-weight: 700; overflow-wrap: anywhere;"),
+  page(".nc-owner__link", "font-size: .78rem;"),
+  page(
+    ".nc-section-title",
+    "margin: 0; color: var(--nc-text); font-size: 1rem;",
+  ),
+  page(".nc-series", "display: grid; gap: 8px;"),
+  page(
+    ".nc-series__item",
+    "display: grid; gap: 4px; padding: 10px 12px; background: var(--nc-surface-subtle); border-radius: var(--nc-radius);",
+  ),
+  page(".nc-empty", "color: var(--nc-muted); font-size: .82rem;"),
+  page(
+    ".nc-description",
+    "padding: 20px; color: var(--nc-text); font-size: .9rem; line-height: 1.75; overflow-wrap: anywhere;",
+  ),
+  page(".nc-description > :first-child", "margin-top: 0;"),
+  page(".nc-description > :last-child", "margin-bottom: 0;"),
+  page(
+    ".nc-description img",
+    "max-width: 100%; height: auto; border-radius: var(--nc-radius-sm);",
+  ),
+  page(
+    ".nc-standalone-page--deleted .nc-player-surface",
+    "border-color: color-mix(in srgb, var(--nc-danger) 45%, var(--nc-border));",
+  ),
+  "@media (max-width: 960px) { .standalone-player-wrapper { flex-direction: column; } .standalone-player-wrapper .comment-container { width: 100%; min-width: 0; max-height: 360px; } }",
+  "@media (max-width: 640px) { .nc-standalone-page { gap: 16px; padding-bottom: 24px; } .nc-header, .nc-main, .nc-description { width: min(100% - 24px, 1440px); } .nc-player-surface, .nc-info-card, .nc-description { padding: 12px; } .nc-stat-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }",
+  "@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }",
 ].join("\n");
