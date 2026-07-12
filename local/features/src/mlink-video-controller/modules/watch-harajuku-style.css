@@ -1079,6 +1079,45 @@
     white-space: nowrap !important;
   }
 
+  .HarajukuOwner-menuWrapper {
+    position: relative !important;
+    flex: 0 0 30px !important;
+  }
+
+  .HarajukuOwner-menuPopup[hidden] {
+    display: none !important;
+  }
+
+  .HarajukuOwner-menuPopup {
+    position: absolute !important;
+    top: calc(100% + 4px) !important;
+    right: 0 !important;
+    z-index: 40 !important;
+    width: max-content !important;
+    min-width: 180px !important;
+    padding: 4px !important;
+    border: 1px solid var(--hy-border-dark) !important;
+    background: var(--hy-panel) !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .3) !important;
+  }
+
+  #root#root main .HarajukuOwner-menuItem {
+    display: block !important;
+    width: 100% !important;
+    min-height: 28px !important;
+    padding: 4px 8px !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--hy-text) !important;
+    font: inherit !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+  }
+
+  #root#root main .HarajukuOwner-menuItem:hover {
+    background: var(--hy-panel-2) !important;
+  }
+
   #root#root main .HarajukuOwner-action {
     display: inline-flex !important;
     flex: 0 0 30px !important;
@@ -1484,11 +1523,66 @@
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header)[aria-hidden="false"] {
-    display: flex !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    align-content: start !important;
+    gap: 12px 8px !important;
     height: var(--hy-detail-expanded-height) !important;
     min-height: var(--hy-detail-expanded-height) !important;
     max-height: var(--hy-detail-expanded-height) !important;
     overflow: auto !important;
+  }
+
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header)[aria-hidden="false"] > :first-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > dl {
+    display: none !important;
+  }
+
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > dl + div {
+    display: contents !important;
+  }
+
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > div:has(+ dl):has(> [class*="grid-area_title"]),
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > dl + div > * {
+    display: flex !important;
+    flex: 1 1 0 !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    gap: 4px !important;
+    height: 24px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > div:has(+ dl):has(> [class*="grid-area_title"]) > svg,
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > div:has(+ dl):has(> [class*="grid-area_title"]) > [class*="grid-area_title"],
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > dl + div > * > svg,
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > dl + div > * > [class*="grid-area_title"] {
+    flex: 0 0 auto !important;
+  }
+
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > div:has(+ dl):has(> [class*="grid-area_title"]) > [class*="grid-area_data"],
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > dl + div > * > [class*="grid-area_data"] {
+    flex: 1 1 auto !important;
+  }
+
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > dl + div > * * {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > div:has(> a[data-anchor-area="video_detail"] > img):has([data-element-name="follow_user"]) {
+    display: none !important;
+  }
+
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > hr:has(+ div > a[data-anchor-area="video_detail"] > img) {
+    display: none !important;
   }
 
   section[class*="grid-template-areas"]:has(div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header)[aria-hidden="false"]) {

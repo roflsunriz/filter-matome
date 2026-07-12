@@ -54,6 +54,11 @@ interface OwnerMetadata {
   menuAction: HTMLButtonElement | null;
 }
 
+type OwnerApiMetadata = Omit<
+  OwnerMetadata,
+  "followAction" | "supportAction" | "menuAction"
+>;
+
 const THEME_KEY = "harajuku-theme";
 const BACKGROUND_PRIORITY_KEY = "harajuku-background-priority";
 const STYLE_ID = "mlink-watch-harajuku-style";
@@ -91,6 +96,7 @@ export class WatchHarajukuModule implements ModuleInstance {
   private retryTimer: number | null = null;
   private scheduled = false;
   private _isActive = false;
+  private ownerApiMetadata: OwnerApiMetadata | null = null;
 
   constructor(config: ModuleConfig) {
     this.config = config;
@@ -112,6 +118,7 @@ export class WatchHarajukuModule implements ModuleInstance {
     this.injectStyle();
     this.setTheme(this.getTheme());
     this.setBackgroundPriority(this.getBackgroundPriority());
+    await this.loadOwnerApiMetadata();
     this.scheduleRender();
     this.startRetryTimer();
     this.startObserver();
@@ -150,6 +157,7 @@ export class WatchHarajukuModule implements ModuleInstance {
     document.documentElement.style.colorScheme = "";
 
     this.scheduled = false;
+    this.ownerApiMetadata = null;
     this._isActive = false;
   }
 
@@ -165,10 +173,10 @@ export class WatchHarajukuModule implements ModuleInstance {
     return this._isActive ? ModuleStatus.ACTIVE : ModuleStatus.INACTIVE;
   }
 
-  onSPANavigate(): Promise<void> {
+  async onSPANavigate(): Promise<void> {
     if (!isWatchLikePage()) {
       this.destroy();
-      return Promise.resolve();
+      return;
     }
 
     document.querySelectorAll(`.${CHROME_CLASS}`).forEach((node) => {
@@ -177,9 +185,9 @@ export class WatchHarajukuModule implements ModuleInstance {
     document.querySelectorAll(".HarajukuOwner").forEach((node) => {
       node.remove();
     });
+    await this.loadOwnerApiMetadata();
     this.scheduleRender();
     this.startRetryTimer();
-    return Promise.resolve();
   }
 
   private injectStyle(): void {
@@ -417,68 +425,76 @@ export class WatchHarajukuModule implements ModuleInstance {
   }
 
   private readOwnerMetadata(): OwnerMetadata | undefined {
-    const detailContent = document.querySelector<HTMLElement>(
-      SELECTORS.detailContent,
-    );
-    if (!detailContent) {
+    if (!this.ownerApiMetadata) {
       return undefined;
     }
 
-    const videoLink = detailContent.querySelector<HTMLAnchorElement>(
-      'a[data-anchor-area="video_detail"][href$="/video"]',
+    const followAction = document.querySelector<HTMLElement>(
+      '[data-element-name="follow_user"]',
     );
-    const iconLink = detailContent.querySelector<HTMLAnchorElement>(
-      'a[data-anchor-area="video_detail"]:has(> img)',
+    const supportAction = document.querySelector<HTMLAnchorElement>(
+      'a[data-element-name="creator_support"]',
     );
-    const icon = iconLink?.querySelector<HTMLImageElement>("img");
-    const profileHref = iconLink?.getAttribute("href") ?? "";
-    const nameLink = Array.from(
-      detailContent.querySelectorAll<HTMLAnchorElement>(
-        'a[data-anchor-area="video_detail"]',
-      ),
-    ).find(
-      (link) =>
-        link.getAttribute("href") === profileHref &&
-        !link.querySelector("img") &&
-        this.textOf(link),
-    );
-    const followAction = detailContent.querySelector<HTMLElement>(
-      '[data-element-area="video_detail"][data-element-name="follow_user"]',
-    );
-    const supportAction = detailContent.querySelector<HTMLAnchorElement>(
-      'a[data-element-area="video_detail"][data-element-name="creator_support"]',
-    );
-
-    if (!videoLink || !iconLink || !icon || !nameLink) {
-      return undefined;
-    }
-
-    let ownerRoot: Element | null = videoLink.parentElement;
-    while (
-      ownerRoot &&
-      ownerRoot !== detailContent &&
-      (!ownerRoot.contains(followAction) ||
-        !ownerRoot.contains(supportAction) ||
-        !ownerRoot.querySelector(
-          'button[data-scope="menu"][data-part="trigger"]',
-        ))
-    ) {
-      ownerRoot = ownerRoot.parentElement;
-    }
-    const menuAction = ownerRoot?.querySelector<HTMLButtonElement>(
-      'button[data-scope="menu"][data-part="trigger"]',
+    const menuAction = document.querySelector<HTMLButtonElement>(
+      `${SELECTORS.detailContent} button[data-scope="menu"][data-part="trigger"]`,
     );
 
     return {
-      name: this.textOf(nameLink),
-      profileHref,
-      videoHref: videoLink.getAttribute("href") ?? "",
-      iconSrc: icon.currentSrc || icon.src,
-      iconAlt: icon.alt,
+      ...this.ownerApiMetadata,
       followAction,
       supportAction,
-      menuAction: menuAction ?? null,
+      menuAction,
     };
+  }
+
+  private async loadOwnerApiMetadata(): Promise<void> {
+    this.ownerApiMetadata = null;
+    const requestedVideoId = await window.commonHelper.getVideoIdWithFallback();
+    const result = await window.commonHelper.fetchWatchPage(
+      requestedVideoId ?? undefined,
+    );
+    const currentVideoId = window.commonHelper.extractVideoIdFromUrl();
+    if (!result || !requestedVideoId || requestedVideoId !== currentVideoId) {
+      return undefined;
+    }
+
+    const apiData = result.apiData as unknown as {
+      owner?: {
+        id?: number | string;
+        nickname?: string;
+        iconUrl?: string;
+      } | null;
+      channel?: {
+        id?: number | string;
+        name?: string;
+        iconUrl?: string;
+        url?: string;
+      } | null;
+    };
+    const owner = apiData.owner;
+    if (owner?.id !== undefined && owner.nickname && owner.iconUrl) {
+      const profileHref = `/user/${owner.id}`;
+      this.ownerApiMetadata = {
+        name: owner.nickname,
+        profileHref,
+        videoHref: `${profileHref}/video`,
+        iconSrc: owner.iconUrl,
+        iconAlt: owner.nickname,
+      };
+      return;
+    }
+
+    const channel = apiData.channel;
+    if (channel?.id !== undefined && channel.name && channel.iconUrl) {
+      const profileHref = channel.url || `/channel/${channel.id}`;
+      this.ownerApiMetadata = {
+        name: channel.name,
+        profileHref,
+        videoHref: `${profileHref.replace(/\/$/, "")}/video`,
+        iconSrc: channel.iconUrl,
+        iconAlt: channel.name,
+      };
+    }
   }
 
   private cloneActionIcon(source: Element | null, fallback: string): Element {
@@ -509,6 +525,99 @@ export class WatchHarajukuModule implements ModuleInstance {
     button.append(this.cloneActionIcon(source, fallbackIcon));
     button.addEventListener("click", () => source?.click());
     return button;
+  }
+
+  private waitForElement<T extends Element>(
+    selector: string,
+    timeoutMs = 1500,
+  ): Promise<T | null> {
+    const existing = document.querySelector<T>(selector);
+    if (existing) {
+      return Promise.resolve(existing);
+    }
+
+    return new Promise((resolve) => {
+      const observer = new MutationObserver(() => {
+        const element = document.querySelector<T>(selector);
+        if (element) {
+          observer.disconnect();
+          window.clearTimeout(timer);
+          resolve(element);
+        }
+      });
+      const timer = window.setTimeout(() => {
+        observer.disconnect();
+        resolve(null);
+      }, timeoutMs);
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+  }
+
+  private openOfficialOwnerMuteDialog = async (): Promise<void> => {
+    const detailContent = document.querySelector<HTMLElement>(
+      SELECTORS.detailContent,
+    );
+    const wasCollapsed = detailContent?.getAttribute("aria-hidden") !== "false";
+    const detailToggle = document.querySelector<HTMLElement>(
+      `${SELECTORS.bottom} > section:first-of-type > header > :first-child`,
+    );
+    if (wasCollapsed) {
+      detailToggle?.click();
+    }
+
+    const menuTrigger = await this.waitForElement<HTMLButtonElement>(
+      `${SELECTORS.detailContent} button[data-scope="menu"][data-part="trigger"]`,
+    );
+    if (!menuTrigger) {
+      return;
+    }
+    menuTrigger.click();
+
+    const muteAction = await this.waitForElement<HTMLButtonElement>(
+      '[data-scope="menu"][data-part="item"][data-value="mute"] button',
+    );
+    muteAction?.click();
+
+    if (wasCollapsed && muteAction) {
+      window.setTimeout(() => detailToggle?.click(), 100);
+    }
+  };
+
+  private createOwnerMenu(source: HTMLButtonElement | null): HTMLDivElement {
+    const wrapper = document.createElement("div");
+    wrapper.className = "HarajukuOwner-menuWrapper";
+
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "HarajukuOwner-action HarajukuOwner-menu";
+    trigger.setAttribute("aria-label", "その他の操作");
+    trigger.setAttribute("aria-haspopup", "menu");
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.append(this.cloneActionIcon(source, "…"));
+
+    const menu = document.createElement("div");
+    menu.className = "HarajukuOwner-menuPopup";
+    menu.setAttribute("role", "menu");
+    menu.hidden = true;
+    const mute = document.createElement("button");
+    mute.type = "button";
+    mute.className = "HarajukuOwner-menuItem";
+    mute.setAttribute("role", "menuitem");
+    mute.textContent = "このユーザーの動画を非表示";
+    mute.addEventListener("click", () => {
+      menu.hidden = true;
+      trigger.setAttribute("aria-expanded", "false");
+      void this.openOfficialOwnerMuteDialog();
+    });
+    menu.append(mute);
+
+    trigger.addEventListener("click", () => {
+      const willOpen = menu.hidden;
+      menu.hidden = !willOpen;
+      trigger.setAttribute("aria-expanded", String(willOpen));
+    });
+    wrapper.append(trigger, menu);
+    return wrapper;
   }
 
   private createOwnerPanel(owner: OwnerMetadata): HTMLDivElement {
@@ -559,14 +668,7 @@ export class WatchHarajukuModule implements ModuleInstance {
     support.append(this.cloneActionIcon(owner.supportAction, "♡"));
     actions.append(support);
 
-    actions.append(
-      this.createOwnerActionButton(
-        "HarajukuOwner-action HarajukuOwner-menu",
-        "その他の操作",
-        owner.menuAction,
-        "…",
-      ),
-    );
+    actions.append(this.createOwnerMenu(owner.menuAction));
 
     panel.append(iconLink, body, actions);
     return panel;
