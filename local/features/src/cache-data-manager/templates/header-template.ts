@@ -18,6 +18,11 @@ const NAV_LINKS: NavLink[] = [
     label: "Mylist2",
     icon: "playlist_add",
   },
+  {
+    href: "https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html",
+    label: "watch-history",
+    icon: "history",
+  },
 ];
 
 /**
@@ -47,21 +52,24 @@ export function createHeaderTemplate(): string {
   return `
     <div class="header-content">
       <div class="header-top-row">
-        <span class="header-title">CacheDataManager</span>
-        <span class="header-version">${window.ncversion}</span>
+        <div class="header-brand">
+          <span class="header-title">Cache Data Manager</span>
+          <span class="header-version">${window.ncversion}</span>
+        </div>
         <nav class="main-nav">
           ${navItems}
         </nav>
       </div>
       <div class="header-controls-row">
-        <div class="filter-sort-placeholder"></div>
-          <div class="search-box">
-          <input type="text" id="searchInput" placeholder="動画を検索...">
+        <div class="search-box" role="search">
+          <label class="search-label" for="searchInput">キャッシュを検索</label>
+          <input type="search" id="searchInput" placeholder="動画ID・タイトルで検索" autocomplete="off">
           <span class="search-section">
             <button id="searchBtn">${searchIcon}<span class="search-label">検索</span></button>
             <button id="clearSearch">${clearIcon}<span class="search-label">クリア</span></button>
           </span>
         </div>
+        <div class="filter-sort-placeholder"></div>
       </div>
     </div>
   `;

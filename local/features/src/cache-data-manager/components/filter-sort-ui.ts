@@ -74,43 +74,46 @@ export class FilterSortUI {
     );
 
     return `
-      <div class="filter-group">
-        <label class="filter-label">
-          ${filterIcon}
-          <span>フィルター</span>
-        </label>
-        <select id="qualityFilter" class="filter-select">
-          ${this.buildQualityOptions(filterConfig.quality)}
-        </select>
+      <div class="filter-group" aria-label="絞り込み">
+        <label class="filter-label" for="statusFilter">${filterIcon}<span>状態</span></label>
         <select id="statusFilter" class="filter-select">
           ${this.buildStatusOptions(filterConfig.status)}
         </select>
+        <label class="filter-label" for="qualityFilter"><span>画質</span></label>
+        <select id="qualityFilter" class="filter-select">
+          ${this.buildQualityOptions(filterConfig.quality)}
+        </select>
       </div>
       <div class="sort-group">
-        <label class="sort-label">
+        <label class="sort-label" for="sortOption">
           ${sortIcon}
           <span>ソート</span>
         </label>
         <select id="sortOption" class="sort-select">
           ${this.buildSortOptions(sortConfig.option)}
         </select>
-        <button id="sortDirectionBtn" class="sort-direction-btn" title="${sortConfig.direction === "asc" ? "昇順" : "降順"}">
+        <button id="sortDirectionBtn" class="sort-direction-btn" aria-label="${sortConfig.direction === "asc" ? "昇順" : "降順"}">
           ${directionIcon}
         </button>
       </div>
       <div class="filter-actions">
-        <button id="resetFiltersBtn" class="reset-filters-btn" title="リセット">
+        <button id="resetFiltersBtn" class="reset-filters-btn">
           ${createMaterialIcon("refresh", { color: "white", size: "small" })}
           <span>リセット</span>
-        </button>
-        <button id="deleteTemporaryBtn" class="delete-temporary-btn" title="テンポラリ動画を一括削除">
-          ${createMaterialIcon("delete_sweep", { color: "white", size: "small" })}
-          <span>テンポラリ削除</span>
         </button>
         <button id="checkAvailabilityBtn" class="check-availability-btn" title="getthumbinfoで公開状態を一括確認">
           ${createMaterialIcon(ICONS.check, { color: "white", size: "small" })}
           <span>公開状態チェック</span>
         </button>
+        <details class="bulk-actions">
+          <summary>その他の操作</summary>
+          <div class="bulk-actions-menu">
+            <button id="deleteTemporaryBtn" class="delete-temporary-btn">
+              ${createMaterialIcon("delete_sweep", { color: "white", size: "small" })}
+              <span>テンポラリを一括削除</span>
+            </button>
+          </div>
+        </details>
       </div>
     `;
   }
@@ -254,6 +257,10 @@ export class FilterSortUI {
         },
       );
       btn.title = sortConfig.direction === "asc" ? "昇順" : "降順";
+      btn.setAttribute(
+        "aria-label",
+        sortConfig.direction === "asc" ? "昇順" : "降順",
+      );
     }
   }
 

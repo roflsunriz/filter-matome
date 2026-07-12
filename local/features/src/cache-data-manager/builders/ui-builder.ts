@@ -55,7 +55,8 @@ export class UIBuilder {
 
     // 仮想スクロールレンダラー初期化
     this.virtualScrollRenderer = new VirtualScrollRenderer({
-      itemHeight: 420,
+      // 固定カード高300px + グリッド行間16px
+      itemHeight: 316,
       bufferSize: 10,
       containerSelector: ".cache-container",
     });
@@ -192,9 +193,9 @@ export class UIBuilder {
 
   private getTempOrCompleteString(isTemp: unknown): string {
     if (isTemp === true) {
-      return "Temporary";
+      return "一時";
     } else {
-      return "Complete";
+      return "完了";
     }
   }
 
