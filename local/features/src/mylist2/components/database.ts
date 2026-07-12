@@ -471,9 +471,8 @@ export class Mylist2DB {
 
           // マイグレーション履歴を記録
           if (db.objectStoreNames.contains("metadata")) {
-            const upgradeTransaction = (
-              event.target as IDBOpenDBRequest
-            ).transaction;
+            const upgradeTransaction = (event.target as IDBOpenDBRequest)
+              .transaction;
             if (!upgradeTransaction) {
               throw new Error("IndexedDB upgrade transaction is unavailable");
             }

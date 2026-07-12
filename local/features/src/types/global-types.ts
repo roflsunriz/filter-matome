@@ -55,10 +55,7 @@ interface WindowExtensionInterface {
   Mylist2Manager: typeof Mylist2Manager;
   Mylist2ManagerUI: typeof Mylist2ManagerUI;
   copy_ext: (event: MouseEvent) => void;
-  EstimatedProcessingTime?: (
-    commentNum: string,
-    videoLength: string,
-  ) => string;
+  EstimatedProcessingTime?: (commentNum: string, videoLength: string) => string;
   EPTWrapper: (message: string) => void;
   nicofetch: (
     element: string | HTMLElement,
