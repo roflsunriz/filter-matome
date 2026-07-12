@@ -20,6 +20,8 @@
     --hy-sidebar-width: clamp(320px, 30vw, 460px);
     --hy-stat-date-width: clamp(132px, 38%, 176px);
     --hy-stat-height: 60px;
+    --hy-owner-height: 88px;
+    --hy-owner-gap: 8px;
     --hy-sidebar-header-height: 25px;
     --hy-title-row-height: 34px;
     --hy-detail-summary-height: 28px;
@@ -1001,6 +1003,122 @@
 
   .HarajukuStats-row .HarajukuStats-label::after {
     content: ":";
+  }
+
+  .HarajukuOwner {
+    position: absolute !important;
+    top: 0 !important;
+    left: auto !important;
+    right: 0 !important;
+    display: grid !important;
+    grid-template-columns: 52px minmax(0, 1fr) auto !important;
+    grid-template-rows: 1fr auto !important;
+    column-gap: 8px !important;
+    width: var(--hy-sidebar-width) !important;
+    height: var(--hy-owner-height) !important;
+    box-sizing: border-box !important;
+    padding: 8px !important;
+    border: 1px solid var(--hy-border) !important;
+    background: linear-gradient(var(--hy-panel), var(--hy-panel-2)) !important;
+    color: var(--hy-text) !important;
+    font-family: "MS PGothic", "Meiryo", sans-serif !important;
+    pointer-events: auto !important;
+  }
+
+  .HarajukuOwner-iconLink {
+    grid-row: 1 / 3 !important;
+    align-self: start !important;
+    width: 52px !important;
+    height: 52px !important;
+  }
+
+  .HarajukuOwner-icon {
+    display: block !important;
+    width: 52px !important;
+    height: 52px !important;
+    border: 1px solid var(--hy-border) !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    box-sizing: border-box !important;
+  }
+
+  .HarajukuOwner-body {
+    display: flex !important;
+    min-width: 0 !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 5px !important;
+  }
+
+  .HarajukuOwner-name {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    color: var(--hy-text) !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    line-height: 18px !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .HarajukuOwner-videos {
+    color: var(--hy-link) !important;
+    font-size: 12px !important;
+    line-height: 16px !important;
+    white-space: nowrap !important;
+  }
+
+  .HarajukuOwner-actions {
+    grid-column: 2 / 4 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 4px !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  #root#root main .HarajukuOwner-action {
+    display: inline-flex !important;
+    flex: 0 0 30px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    padding: 0 !important;
+    border: 1px solid var(--hy-border-dark) !important;
+    border-radius: var(--hy-radius) !important;
+    background: linear-gradient(var(--hy-panel), var(--hy-panel-2)) !important;
+    color: var(--hy-text) !important;
+    fill: var(--hy-text) !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+  }
+
+  #root#root main .HarajukuOwner-action:hover {
+    border-color: var(--hy-link) !important;
+    color: var(--hy-link) !important;
+    fill: var(--hy-link) !important;
+  }
+
+  #root#root main .HarajukuOwner-action:disabled,
+  #root#root main .HarajukuOwner-action[aria-disabled="true"] {
+    cursor: default !important;
+    opacity: .45 !important;
+    pointer-events: none !important;
+  }
+
+  #root#root main .HarajukuOwner-action svg {
+    display: block !important;
+    width: 17px !important;
+    height: 17px !important;
+    color: inherit !important;
+    fill: inherit !important;
   }
 
   div[class*="grid-area_"][class*="sidebar"] section > header {

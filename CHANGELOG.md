@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【tests】ローカル実行時にもブラウザウィンドウが開かないよう、Playwrightテストを常にヘッドレスChromiumで実行する設定へ変更した。
 - 【comment-filter2】フィルター適用の導線を概要へ集約するため、設定タブの重複していた「再読み込みして適用」ボタンを削除した。
 - 【cache-data-manager】目的のキャッシュを素早く見つけ、安全に操作できるよう、検索・絞り込み・並び替えを一つの操作領域へ集約し、一括削除とカードの副操作をメニューへ整理した。
 - 【cache-data-manager】仮想スクロールの正確な行位置を維持しながら表示密度と可読性を改善するため、カードの300px固定高を維持し、レンダラーの初期行高をカード高と16pxの行間に一致させた。
@@ -17,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【mlink-video-controller】原宿風Watchで投稿者を確認して操作しやすくするため、「動画の詳細情報」から投稿者アイコン・投稿者名・投稿動画リンク・フォロー・サポーター登録・その他メニューを取得し、右上に原宿風の投稿者欄として追加した。
 - 【cache-data-manager】特殊な配信環境に依存せず動的UIの回帰を検出できるよう、本番スクリプトをローカル文書へ注入し、検索・フィルター・ソート・モーダル・カード操作・一括操作を検証するPlaywrightテストを追加した。
 
 ### Fixed

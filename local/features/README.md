@@ -287,6 +287,13 @@ bun run build
 ```
 全機能は `dist/features.js` に統合されます。Web Worker、Service Worker、静的HTMLも同時に生成され、個別ビルドはありません。
 
+```bash
+# 単体テストとPlaywrightテスト
+bun run test
+```
+
+Playwrightテストはローカル実行を含め、常にヘッドレスChromiumで実行されます。
+
 #### 🧪 **デバッグアクセス**
 ```javascript
 // プロジェクト固有

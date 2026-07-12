@@ -43,6 +43,17 @@ interface StructuredVideoData {
   }>;
 }
 
+interface OwnerMetadata {
+  name: string;
+  profileHref: string;
+  videoHref: string;
+  iconSrc: string;
+  iconAlt: string;
+  followAction: HTMLElement | null;
+  supportAction: HTMLAnchorElement | null;
+  menuAction: HTMLButtonElement | null;
+}
+
 const THEME_KEY = "harajuku-theme";
 const BACKGROUND_PRIORITY_KEY = "harajuku-background-priority";
 const STYLE_ID = "mlink-watch-harajuku-style";
@@ -124,6 +135,9 @@ export class WatchHarajukuModule implements ModuleInstance {
     document.querySelectorAll(`.${CHROME_CLASS}`).forEach((node) => {
       node.remove();
     });
+    document.querySelectorAll(".HarajukuOwner").forEach((node) => {
+      node.remove();
+    });
 
     document.documentElement.removeAttribute("data-hy-theme");
     document.documentElement.removeAttribute("data-hy-background-priority");
@@ -158,6 +172,9 @@ export class WatchHarajukuModule implements ModuleInstance {
     }
 
     document.querySelectorAll(`.${CHROME_CLASS}`).forEach((node) => {
+      node.remove();
+    });
+    document.querySelectorAll(".HarajukuOwner").forEach((node) => {
       node.remove();
     });
     this.scheduleRender();
@@ -399,6 +416,162 @@ export class WatchHarajukuModule implements ModuleInstance {
     }).format(date);
   }
 
+  private readOwnerMetadata(): OwnerMetadata | undefined {
+    const detailContent = document.querySelector<HTMLElement>(
+      SELECTORS.detailContent,
+    );
+    if (!detailContent) {
+      return undefined;
+    }
+
+    const videoLink = detailContent.querySelector<HTMLAnchorElement>(
+      'a[data-anchor-area="video_detail"][href$="/video"]',
+    );
+    const iconLink = detailContent.querySelector<HTMLAnchorElement>(
+      'a[data-anchor-area="video_detail"]:has(> img)',
+    );
+    const icon = iconLink?.querySelector<HTMLImageElement>("img");
+    const profileHref = iconLink?.getAttribute("href") ?? "";
+    const nameLink = Array.from(
+      detailContent.querySelectorAll<HTMLAnchorElement>(
+        'a[data-anchor-area="video_detail"]',
+      ),
+    ).find(
+      (link) =>
+        link.getAttribute("href") === profileHref &&
+        !link.querySelector("img") &&
+        this.textOf(link),
+    );
+    const followAction = detailContent.querySelector<HTMLElement>(
+      '[data-element-area="video_detail"][data-element-name="follow_user"]',
+    );
+    const supportAction = detailContent.querySelector<HTMLAnchorElement>(
+      'a[data-element-area="video_detail"][data-element-name="creator_support"]',
+    );
+
+    if (!videoLink || !iconLink || !icon || !nameLink) {
+      return undefined;
+    }
+
+    let ownerRoot: Element | null = videoLink.parentElement;
+    while (
+      ownerRoot &&
+      ownerRoot !== detailContent &&
+      (!ownerRoot.contains(followAction) ||
+        !ownerRoot.contains(supportAction) ||
+        !ownerRoot.querySelector(
+          'button[data-scope="menu"][data-part="trigger"]',
+        ))
+    ) {
+      ownerRoot = ownerRoot.parentElement;
+    }
+    const menuAction = ownerRoot?.querySelector<HTMLButtonElement>(
+      'button[data-scope="menu"][data-part="trigger"]',
+    );
+
+    return {
+      name: this.textOf(nameLink),
+      profileHref,
+      videoHref: videoLink.getAttribute("href") ?? "",
+      iconSrc: icon.currentSrc || icon.src,
+      iconAlt: icon.alt,
+      followAction,
+      supportAction,
+      menuAction: menuAction ?? null,
+    };
+  }
+
+  private cloneActionIcon(source: Element | null, fallback: string): Element {
+    const icon = source?.querySelector("svg")?.cloneNode(true);
+    if (icon instanceof Element) {
+      icon.removeAttribute("class");
+      icon.setAttribute("aria-hidden", "true");
+      return icon;
+    }
+
+    const fallbackNode = document.createElement("span");
+    fallbackNode.setAttribute("aria-hidden", "true");
+    fallbackNode.textContent = fallback;
+    return fallbackNode;
+  }
+
+  private createOwnerActionButton(
+    className: string,
+    label: string,
+    source: HTMLElement | null,
+    fallbackIcon: string,
+  ): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = className;
+    button.setAttribute("aria-label", label);
+    button.disabled = !source;
+    button.append(this.cloneActionIcon(source, fallbackIcon));
+    button.addEventListener("click", () => source?.click());
+    return button;
+  }
+
+  private createOwnerPanel(owner: OwnerMetadata): HTMLDivElement {
+    const panel = document.createElement("div");
+    panel.className = "HarajukuOwner";
+
+    const iconLink = document.createElement("a");
+    iconLink.className = "HarajukuOwner-iconLink";
+    iconLink.href = owner.profileHref;
+    iconLink.setAttribute("aria-label", owner.name);
+    const icon = document.createElement("img");
+    icon.className = "HarajukuOwner-icon";
+    icon.src = owner.iconSrc;
+    icon.alt = owner.iconAlt;
+    icon.loading = "lazy";
+    iconLink.append(icon);
+
+    const body = document.createElement("div");
+    body.className = "HarajukuOwner-body";
+    const name = document.createElement("a");
+    name.className = "HarajukuOwner-name";
+    name.href = owner.profileHref;
+    name.textContent = owner.name;
+    const video = document.createElement("a");
+    video.className = "HarajukuOwner-videos";
+    video.href = owner.videoHref;
+    video.textContent = "投稿動画";
+    body.append(name, video);
+
+    const actions = document.createElement("div");
+    actions.className = "HarajukuOwner-actions";
+    actions.append(
+      this.createOwnerActionButton(
+        "HarajukuOwner-action HarajukuOwner-follow",
+        "フォロー",
+        owner.followAction,
+        "☆",
+      ),
+    );
+
+    const support = document.createElement("a");
+    support.className = "HarajukuOwner-action HarajukuOwner-support";
+    support.href = owner.supportAction?.href ?? "#";
+    support.setAttribute("aria-label", "サポーター登録");
+    if (!owner.supportAction) {
+      support.setAttribute("aria-disabled", "true");
+    }
+    support.append(this.cloneActionIcon(owner.supportAction, "♡"));
+    actions.append(support);
+
+    actions.append(
+      this.createOwnerActionButton(
+        "HarajukuOwner-action HarajukuOwner-menu",
+        "その他の操作",
+        owner.menuAction,
+        "…",
+      ),
+    );
+
+    panel.append(iconLink, body, actions);
+    return panel;
+  }
+
   private createThemeButton(): HTMLButtonElement {
     const button = document.createElement("button");
     button.type = "button";
@@ -538,10 +711,20 @@ export class WatchHarajukuModule implements ModuleInstance {
     }
 
     const values = this.currentMeta();
-    const signature = META_ITEMS.map((item) => values[item.source] || "-").join(
-      "\n",
-    );
-    if (chrome.dataset.hySignature === signature) {
+    const owner = this.readOwnerMetadata();
+    const signature = [
+      ...META_ITEMS.map((item) => values[item.source] || "-"),
+      owner?.name ?? "-",
+      owner?.profileHref ?? "-",
+      owner?.videoHref ?? "-",
+      owner?.iconSrc ?? "-",
+      owner?.followAction?.getAttribute("data-element-params") ?? "-",
+      owner?.supportAction?.getAttribute("data-element-params") ?? "-",
+    ].join("\n");
+    if (
+      chrome.dataset.hySignature === signature &&
+      (!owner || document.querySelector(".HarajukuOwner"))
+    ) {
       return true;
     }
     chrome.dataset.hySignature = signature;
@@ -553,6 +736,15 @@ export class WatchHarajukuModule implements ModuleInstance {
       if (value) {
         value.textContent = values[item.source] || "-";
       }
+    }
+
+    document.querySelectorAll(".HarajukuOwner").forEach((node) => {
+      node.remove();
+    });
+    if (owner) {
+      document
+        .querySelector<HTMLElement>(SELECTORS.bottom)
+        ?.append(this.createOwnerPanel(owner));
     }
 
     return true;
