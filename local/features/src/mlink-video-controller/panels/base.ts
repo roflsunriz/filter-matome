@@ -1,15 +1,18 @@
+import { MINIMAL_DARK_THEME_TOKENS } from "@/common/visual-theme";
+
 export const basePanelStyles = `
   :host {
-    --panel-bg: linear-gradient(135deg, rgba(20, 20, 30, 0.95), rgba(30, 30, 45, 0.95));
-    --panel-fg: #ffffff;
-    --panel-accent: rgba(100, 150, 255, 0.3);
-    --panel-accent-hover: rgba(100, 150, 255, 0.5);
-    --panel-border: rgba(255, 255, 255, 0.1);
-    --panel-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    --panel-radius: 16px;
-    --fab-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --fab-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
+    ${MINIMAL_DARK_THEME_TOKENS}
+    --panel-bg: color-mix(in srgb, var(--nc-surface) 96%, transparent);
+    --panel-fg: var(--nc-text);
+    --panel-accent: var(--nc-primary);
+    --panel-accent-hover: var(--nc-primary-hover);
+    --panel-border: var(--nc-border);
+    --panel-shadow: var(--nc-shadow-raised);
+    --panel-radius: var(--nc-radius);
+    --fab-bg: var(--nc-primary);
+    --fab-shadow: var(--nc-shadow-raised);
+    font-family: var(--nc-font);
     font-weight: 400;
     letter-spacing: 0.02em;
   }
@@ -22,8 +25,8 @@ export const basePanelStyles = `
     height: 64px;
     border-radius: 50%;
     background: var(--fab-bg);
-    color: #ffffff;
-    border: none;
+    color: var(--nc-primary-contrast);
+    border: 1px solid var(--nc-primary);
     cursor: pointer;
     font-size: 28px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -32,17 +35,16 @@ export const basePanelStyles = `
     align-items: center;
     justify-content: center;
     box-shadow: var(--fab-shadow);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
   }
 
   #fab:hover {
-    transform: scale(1.1) translateY(-2px);
-    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.6);
+    background: var(--nc-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--nc-shadow-raised);
   }
 
   #fab:active {
-    transform: scale(1.05) translateY(-1px);
+    transform: none;
   }
 
   .panel {
@@ -58,8 +60,6 @@ export const basePanelStyles = `
     box-shadow: var(--panel-shadow);
     z-index: 10000;
     display: none;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--panel-border);
     overflow: hidden;
   }

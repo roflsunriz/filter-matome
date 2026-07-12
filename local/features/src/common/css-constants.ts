@@ -3,8 +3,11 @@
  * 全環境で統一的に使用する位置調整値を定義
  */
 
+import { MINIMAL_DARK_THEME_TOKENS } from "@/common/visual-theme";
+
 export const CSS_CONSTANTS = `
 :root {
+  ${MINIMAL_DARK_THEME_TOKENS}
   /* ヘッダー位置調整定数 */
   --header-offset-top: 0;
   --header-offset-left: 0;
@@ -27,21 +30,21 @@ export const CSS_CONSTANTS = `
   --header-movie-info-left: 0;
 
   /* ヘッダー背景・色関連 */
-  --header-bg-color: #252525;
-  --header-text-color: #fff;
-  --header-padding: 8px 20px;
+  --header-bg-color: var(--nc-surface);
+  --header-text-color: var(--nc-text);
+  --header-padding: 10px 20px;
   --header-font-size: 15px;
   
   /* 固定モード時の追加スタイル */
-  --header-fixed-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  --header-fixed-shadow: var(--nc-shadow-raised);
   
   /* 検索ボタン色 */
-  --header-search-btn-bg: #2a88bd;
-  --header-search-btn-hover: #3498db;
+  --header-search-btn-bg: var(--nc-primary);
+  --header-search-btn-hover: var(--nc-primary-hover);
   
   /* リンク色 */
-  --header-link-color: #fff;
-  --header-link-hover: #2196f3;
+  --header-link-color: var(--nc-muted);
+  --header-link-hover: var(--nc-text);
 }
 `;
 

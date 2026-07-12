@@ -16,10 +16,28 @@ export const MYLIST2_HEADER_ADJUSTMENT_STYLES = `
 
 body {
   margin: 0;
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--nc-bg, #11151b);
+  color: var(--nc-text, #edf1f7);
 }
 
 #headerContainer {
+  position: relative;
+  z-index: 9000;
+  flex: 0 0 auto;
   width: 100%;
+}
+
+#Mylist2Manager {
+  flex: 1 1 0;
+  height: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 `;
 

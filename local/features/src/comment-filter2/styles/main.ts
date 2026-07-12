@@ -1,6 +1,11 @@
+import { MINIMAL_DARK_THEME_TOKENS } from "@/common/visual-theme";
+
 /* CommentFilter2 - Modern Dark Theme */
 /* Reset and Base Styles */
 export const CommentFilter2MainStyles = `
+:host, .cf2-container {
+  ${MINIMAL_DARK_THEME_TOKENS}
+}
 * {
   box-sizing: border-box;
 }
@@ -49,24 +54,19 @@ export const CommentFilter2MainStyles = `
   z-index: 10001;
   
   /* Glassmorphism inspired dark theme */
-  background: rgba(17, 24, 39, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--nc-surface);
   
-  border: 1px solid rgba(55, 65, 81, 0.7);
-  border-radius: 1rem;
+  border: 1px solid var(--nc-border);
+  border-radius: var(--nc-radius);
   
   /* Shadow system */
-  box-shadow: 
-    0 25px 50px -12px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.02),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: var(--nc-shadow-raised);
   
   /* Modern typography */
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--nc-font);
   font-size: 0.875rem;
   line-height: 1.5;
-  color: #f9fafb;
+  color: var(--nc-text);
   
   /* Dimensions - ビューポート全体を活用 */
   width: min(90vw, 100vw);
@@ -115,10 +115,7 @@ export const CommentFilter2MainStyles = `
 }
 
 .cf2-title-text {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--nc-text);
 }
 
 .cf2-close-btn {
@@ -142,7 +139,6 @@ export const CommentFilter2MainStyles = `
   background: rgba(239, 68, 68, 0.1);
   border-color: rgba(239, 68, 68, 0.3);
   color: #ef4444;
-  transform: scale(1.05);
 }
 
 /* Content */
@@ -156,12 +152,10 @@ export const CommentFilter2MainStyles = `
 /* Top controls (full width) */
 .cf2-cockpit {
   overflow: hidden;
-  background:
-    radial-gradient(circle at 88% 12%, rgba(139, 92, 246, 0.22), transparent 34%),
-    linear-gradient(145deg, rgba(30, 41, 59, 0.96), rgba(17, 24, 39, 0.92));
-  border: 1px solid rgba(96, 165, 250, 0.2);
-  border-radius: 1rem;
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: var(--nc-surface-subtle);
+  border: 1px solid var(--nc-border);
+  border-radius: var(--nc-radius);
+  box-shadow: none;
 }
 
 .cf2-cockpit-hero {
@@ -811,22 +805,27 @@ export const CommentFilter2MainStyles = `
 .cf2-workspace-main .cf2-rule-editor,
 .cf2-workspace-main .cf2-json-editor,
 .cf2-workspace-main #cf2-library-section .cf2-rules-list-card {
-  padding: 1.25rem;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 .cf2-builder-flow {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.8rem;
+  grid-template-columns: 1fr;
+  gap: 0;
   margin-top: 1rem;
+  border-top: 1px solid var(--nc-border);
 }
 
 .cf2-builder-block {
   min-width: 0;
-  padding: 1rem;
-  background: rgba(15, 23, 42, 0.46);
-  border: 1px solid rgba(75, 85, 99, 0.4);
-  border-radius: 0.65rem;
+  padding: 1.1rem 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--nc-border);
+  border-radius: 0;
 }
 
 .cf2-builder-condition {
@@ -859,9 +858,11 @@ export const CommentFilter2MainStyles = `
 .cf2-builder-token {
   flex: 0 0 auto;
   padding: 0.25rem 0.45rem;
-  background: #2563eb;
-  border-radius: 0.35rem;
-  color: #eff6ff;
+  min-width: 3.25rem;
+  padding-inline: 0;
+  background: transparent;
+  border-radius: 0;
+  color: var(--nc-primary);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 0.66rem;
   font-weight: 700;
@@ -878,7 +879,7 @@ export const CommentFilter2MainStyles = `
 .cf2-builder-block .cf2-rule-inputs.cf2-field-section {
   margin-top: 0.85rem;
   padding-top: 0.85rem;
-  border-top: 1px solid rgba(75, 85, 99, 0.3);
+  border-top: 0;
 }
 
 .cf2-builder-block .cf2-scope-section,
@@ -888,7 +889,7 @@ export const CommentFilter2MainStyles = `
 
 .cf2-builder-block .cf2-nicoru-section {
   padding-top: 0.85rem;
-  border-top: 1px solid rgba(75, 85, 99, 0.3);
+  border-top: 0;
 }
 
 .cf2-rule-editor > .cf2-editor-actions {
@@ -896,7 +897,7 @@ export const CommentFilter2MainStyles = `
 }
 
 #cf2-library-section .cf2-rules-list-card {
-  background: rgba(30, 41, 59, 0.3);
+  background: transparent;
 }
 
 #cf2-library-section .cf2-rules-controls {
@@ -908,17 +909,17 @@ export const CommentFilter2MainStyles = `
 }
 
 #cf2-library-section .cf2-rules-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-  gap: 0.65rem;
+  display: block;
   max-height: none;
+  border-top: 1px solid var(--nc-border);
 }
 
 #cf2-library-section .cf2-rule-item {
-  padding: 0.9rem;
-  background: rgba(15, 23, 42, 0.42);
-  border: 1px solid rgba(75, 85, 99, 0.34);
-  border-radius: 0.55rem;
+  padding: 0.9rem 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--nc-border);
+  border-radius: 0;
 }
 
 .cf2-top-controls {
@@ -1136,8 +1137,8 @@ export const CommentFilter2MainStyles = `
 }
 
 .cf2-toggle.active {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  border-color: transparent;
+  background: var(--nc-primary);
+  border-color: var(--nc-primary);
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
@@ -1268,7 +1269,7 @@ export const CommentFilter2MainStyles = `
 }
 
 .cf2-button:hover {
-  transform: translateY(-1px);
+  border-color: var(--nc-primary);
 }
 
 .cf2-button:active {
@@ -1276,30 +1277,32 @@ export const CommentFilter2MainStyles = `
 }
 
 .cf2-button-primary {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  background: var(--nc-primary);
+  color: var(--nc-primary-contrast);
+  box-shadow: none;
 }
 
 .cf2-button-primary:hover {
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+  background: var(--nc-primary-hover);
+  box-shadow: none;
 }
 
 .cf2-button-secondary {
-  background: rgba(55, 65, 81, 0.8);
-  border-color: rgba(75, 85, 99, 0.5);
-  color: #e5e7eb;
+  background: var(--nc-surface);
+  border-color: var(--nc-border);
+  color: var(--nc-text);
 }
 
 .cf2-button-secondary:hover {
-  background: rgba(55, 65, 81, 1);
-  border-color: rgba(75, 85, 99, 0.7);
+  background: var(--nc-surface-subtle);
+  border-color: var(--nc-primary);
 }
 
 .cf2-button-danger {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  background: var(--nc-danger-bg);
+  color: var(--nc-danger);
+  border-color: var(--nc-danger);
+  box-shadow: none;
 }
 
 .cf2-button-danger:hover {

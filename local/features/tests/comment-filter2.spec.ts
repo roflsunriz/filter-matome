@@ -57,6 +57,27 @@ test.beforeEach(async ({ page }) => {
   await openApp(page);
 });
 
+test("ルールスタジオを多重カードにせず区切り線で構成する", async ({ page }) => {
+  const ui = page.locator("#cf2-shadow-host");
+  await ui.locator('.cf2-sidebar-item[data-cf2-view="rules"]').click();
+
+  await expect(ui.locator(".cf2-rule-editor")).toHaveCSS(
+    "border-top-width",
+    "0px",
+  );
+  await expect(ui.locator(".cf2-builder-block").first()).toHaveCSS(
+    "border-left-width",
+    "0px",
+  );
+  await expect(ui.locator("#cf2-library-section .cf2-rules-list")).toHaveCSS(
+    "display",
+    "block",
+  );
+  await expect(
+    ui.locator("#cf2-library-section .cf2-rule-item").first(),
+  ).toHaveCSS("border-radius", "0px");
+});
+
 test("概要ダッシュボードが保存済みルールを集計し、画面を切り替える", async ({
   page,
 }) => {

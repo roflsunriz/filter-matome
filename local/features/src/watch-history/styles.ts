@@ -6,6 +6,7 @@
  */
 
 import { materialIconsStyles } from "@/common/material-icons";
+import { MINIMAL_DARK_THEME_TOKENS } from "@/common/visual-theme";
 
 /**
  * 視聴履歴のスタイルを動的に適用する
@@ -21,6 +22,11 @@ export function applyWatchHistoryStyles(): void {
   style.textContent = `
 /* ===== ニコニコ動画視聴履歴拡張 - スタイルシート ===== */
 
+:root {
+  color-scheme: dark;
+  ${MINIMAL_DARK_THEME_TOKENS}
+}
+
 /* リセット・基本設定 */
 * {
   margin: 0;
@@ -29,9 +35,9 @@ export function applyWatchHistoryStyles(): void {
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #0d0d14;
-  color: #e8e8f0;
+  font-family: var(--nc-font);
+  background-color: var(--nc-bg);
+  color: var(--nc-text);
   line-height: 1.6;
 }
 
@@ -53,10 +59,11 @@ ${materialIconsStyles}
 
 /* アプリケーションヘッダー */
 .app-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--nc-surface);
+  color: var(--nc-text);
+  border-bottom: 1px solid var(--nc-border);
   padding: 1rem 0;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: none;
   position: relative;
   z-index: 999;
 }
@@ -1433,15 +1440,16 @@ const seriesStyles = `
     margin: 0 auto;
   }
 
-  .series-header {
+  .series-layout > .series-header {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 12px;
-    padding: 16px;
-    background: #1a1a24;
-    border-radius: 8px;
-    border: 1px solid #2a2a38;
+    padding: 0 0 16px;
+    background: transparent;
+    border-radius: 0;
+    border: 0;
+    border-bottom: 1px solid var(--nc-border);
   }
 
   .series-search {
@@ -1457,19 +1465,20 @@ const seriesStyles = `
   .series-content-area {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
   }
 
   /* シリーズアイテム */
   .series-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 16px;
-    padding: 20px;
-    border: 2px solid #2a2a38;
-    border-radius: 12px;
-    background: #12121a;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    gap: 0;
+    padding: 0;
+    border: 0;
+    border-top: 1px solid var(--nc-border);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
     min-height: 200px;
   }
 
@@ -1478,18 +1487,18 @@ const seriesStyles = `
   }
 
   .series-item {
-    background: #1a1a24;
-    border: 1px solid #2a2a38;
-    border-radius: 8px;
-    padding: 16px;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--nc-border);
+    border-radius: 0;
+    padding: 16px 4px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.15s ease;
   }
 
   .series-item:hover {
-    background: #1f1f2a;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    border-color: #667eea;
+    background: var(--nc-surface-subtle);
+    box-shadow: none;
   }
 
   .series-content {
@@ -1498,10 +1507,14 @@ const seriesStyles = `
     gap: 12px;
   }
 
-  .series-header {
+  .series-item .series-header {
     display: flex;
     flex-direction: row;
     gap: 8px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
   }
 
   .series-title {

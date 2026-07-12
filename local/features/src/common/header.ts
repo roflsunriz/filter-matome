@@ -91,6 +91,7 @@ export class CommonHeader implements CommonHeaderInstance {
         box-sizing: border-box;
         margin: 0;
         overflow: visible;
+        border-bottom: 1px solid var(--nc-border, #364151);
       }
 
       .custom-header.fixed {
@@ -168,11 +169,12 @@ export class CommonHeader implements CommonHeaderInstance {
 
       .search-container select,
       .search-container input {
-        padding: 5px 10px;
-        border: 1px solid #444;
-        border-radius: 3px;
-        background: #333;
-        color: #fff;
+        min-height: 36px;
+        padding: 6px 10px;
+        border: 1px solid var(--nc-border, #364151);
+        border-radius: var(--nc-radius-sm, 6px);
+        background: var(--nc-surface, #1a2029);
+        color: var(--nc-text, #edf1f7);
       }
 
       .search-container select {
@@ -189,10 +191,10 @@ export class CommonHeader implements CommonHeaderInstance {
       .search-container button {
         margin-left: 0;
         background: var(--header-search-btn-bg, #2a88bd);
-        color: #ffffff;
-        border: none;
+        color: var(--nc-primary-contrast, #0d1b36);
+        border: 1px solid var(--header-search-btn-bg, #6f9cff);
         padding: 8px 16px;
-        border-radius: 4px;
+        border-radius: var(--nc-radius-sm, 6px);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -206,10 +208,10 @@ export class CommonHeader implements CommonHeaderInstance {
       /* アイコンボタン専用スタイル */
       .icon-btn {
         background: var(--header-search-btn-bg, #2a88bd);
-        color: #ffffff;
-        border: none;
+        color: var(--nc-primary-contrast, #0d1b36);
+        border: 1px solid var(--header-search-btn-bg, #6f9cff);
         padding: 8px;
-        border-radius: 4px;
+        border-radius: var(--nc-radius-sm, 6px);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -223,12 +225,15 @@ export class CommonHeader implements CommonHeaderInstance {
       }
 
       .clear-btn {
-        background: var(--header-clear-btn-bg, #f44336);
+        background: var(--nc-surface, #1a2029);
+        border-color: var(--nc-border, #364151);
+        color: var(--nc-muted, #a9b4c3);
         margin-left: 0;
       }
 
       .clear-btn:hover {
-        background: var(--header-clear-btn-hover, #d32f2f);
+        background: var(--nc-surface-subtle, #242c37);
+        color: var(--nc-text, #edf1f7);
       }
 
       /* リンク部分 */
@@ -277,9 +282,11 @@ export class CommonHeader implements CommonHeaderInstance {
         display: none;
         position: absolute;
         right: 0;
-        background-color: #333;
+        background-color: var(--nc-surface, #1a2029);
+        border: 1px solid var(--nc-border, #364151);
+        border-radius: var(--nc-radius, 10px);
         min-width: 160px;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        box-shadow: var(--nc-shadow-raised, 0 12px 30px rgba(0, 0, 0, 0.24));
         z-index: 9001;
       }
 
@@ -291,6 +298,14 @@ export class CommonHeader implements CommonHeaderInstance {
 
       .more-links:hover .dropdown-content {
         display: block;
+      }
+
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      a:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--nc-primary, #6f9cff) 35%, transparent);
+        outline-offset: 2px;
       }
 
       @media (max-width: 960px) {

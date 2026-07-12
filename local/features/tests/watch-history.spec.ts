@@ -410,6 +410,15 @@ test("各タブ・シリーズ・アラートの静的および動的ボタン�
   await page.locator("#series-tab").click();
   await expect(page.locator("#series-content")).toHaveClass(/active/);
   await expect(page.locator(".series-item")).toHaveCount(1);
+  await expect(page.locator(".series-list")).toHaveCSS(
+    "border-left-width",
+    "0px",
+  );
+  await expect(page.locator(".series-item")).toHaveCSS("border-radius", "0px");
+  await expect(page.locator(".series-item .series-header")).toHaveCSS(
+    "background-color",
+    "rgba(0, 0, 0, 0)",
+  );
   await page.locator("#series-search-input").fill("存在しない");
   await expect(page.locator(".series-item")).toHaveCount(0);
   await page.locator("#series-search-clear").click();

@@ -1,21 +1,23 @@
 import { materialIconsStyles } from "@/common/material-icons.js";
+import { MINIMAL_DARK_THEME_TOKENS } from "@/common/visual-theme";
 
 export const cacheListStyles =
   materialIconsStyles +
   `
   :root {
     color-scheme: dark;
-    --cdm-bg: #11151b;
-    --cdm-surface: #1a2029;
-    --cdm-surface-subtle: #242c37;
-    --cdm-text: #edf1f7;
-    --cdm-muted: #a9b4c3;
-    --cdm-border: #364151;
-    --cdm-primary: #6f9cff;
-    --cdm-primary-hover: #8bafff;
-    --cdm-danger: #ffb4ab;
-    --cdm-danger-bg: #3f2022;
-    --cdm-radius: 10px;
+    ${MINIMAL_DARK_THEME_TOKENS}
+    --cdm-bg: var(--nc-bg);
+    --cdm-surface: var(--nc-surface);
+    --cdm-surface-subtle: var(--nc-surface-subtle);
+    --cdm-text: var(--nc-text);
+    --cdm-muted: var(--nc-muted);
+    --cdm-border: var(--nc-border);
+    --cdm-primary: var(--nc-primary);
+    --cdm-primary-hover: var(--nc-primary-hover);
+    --cdm-danger: var(--nc-danger);
+    --cdm-danger-bg: var(--nc-danger-bg);
+    --cdm-radius: var(--nc-radius);
   }
 
   * { box-sizing: border-box; }

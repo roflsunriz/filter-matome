@@ -1,3 +1,5 @@
+import { MINIMAL_DARK_THEME_TOKENS } from "@/common/visual-theme";
+
 const STYLE_ID = "movie-info-dashboard-styles";
 
 export const applyMovieInfoDashboardStyles = (): void => {
@@ -5,9 +7,9 @@ export const applyMovieInfoDashboardStyles = (): void => {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-    :root { color-scheme: light; --mi-bg:#f4f6f8; --mi-surface:#fff; --mi-soft:#f7f8fa; --mi-text:#17202a; --mi-muted:#66717f; --mi-line:#dfe4ea; --mi-accent:#2563eb; --mi-accent-soft:#eaf1ff; --mi-success:#15803d; --mi-success-soft:#e9f8ee; --mi-danger:#b42318; --mi-danger-soft:#fff0ee; --mi-shadow:0 18px 50px rgba(20,31,46,.08); }
+    :root { color-scheme:dark; ${MINIMAL_DARK_THEME_TOKENS} --mi-bg:var(--nc-bg); --mi-surface:var(--nc-surface); --mi-soft:var(--nc-surface-subtle); --mi-text:var(--nc-text); --mi-muted:var(--nc-muted); --mi-line:var(--nc-border); --mi-accent:var(--nc-primary); --mi-accent-soft:#243555; --mi-success:var(--nc-success); --mi-success-soft:#183427; --mi-danger:var(--nc-danger); --mi-danger-soft:var(--nc-danger-bg); --mi-shadow:none; }
     * { box-sizing:border-box; }
-    body { margin:0; background:var(--mi-bg); color:var(--mi-text); font-family:'Segoe UI','Hiragino Kaku Gothic ProN',Meiryo,sans-serif; }
+    body { margin:0; background:var(--mi-bg); color:var(--mi-text); font-family:var(--nc-font); }
     button,input { font:inherit; }
     button:focus-visible,input:focus-visible { outline:3px solid rgba(37,99,235,.28); outline-offset:2px; }
     #movie-info-app { padding-bottom:64px; }
@@ -26,8 +28,8 @@ export const applyMovieInfoDashboardStyles = (): void => {
     button:hover:not(:disabled) { background:var(--mi-soft); border-color:#909baa; }
     button:disabled { opacity:.48; cursor:not-allowed; }
     [hidden] { display:none!important; }
-    button.primary-action { background:var(--mi-text); border-color:var(--mi-text); color:#fff; }
-    button.primary-action:hover:not(:disabled) { background:#2d3946; }
+    button.primary-action { background:var(--mi-accent); border-color:var(--mi-accent); color:var(--nc-primary-contrast); }
+    button.primary-action:hover:not(:disabled) { background:var(--nc-primary-hover); border-color:var(--nc-primary-hover); }
     .query-feedback { display:flex; justify-content:space-between; gap:16px; margin-top:9px; }
     .video-hint,.global-status { margin:0; color:var(--mi-muted); font-size:.84rem; }
     .global-status { font-weight:650; color:var(--mi-text); text-align:right; }
@@ -43,7 +45,7 @@ export const applyMovieInfoDashboardStyles = (): void => {
     .overview-intro { display:flex; align-items:center; gap:16px; }
     .overview-intro h2,.panel-header h2 { margin:3px 0 4px; font-size:1.35rem; }
     .overview-intro p,.panel-header p { margin:0; color:var(--mi-muted); }
-    .overview-icon { width:80px; aspect-ratio:16/9; display:grid; place-items:center; flex:0 0 auto; background:var(--mi-text); color:#fff; border-radius:8px; }
+    .overview-icon { width:80px; aspect-ratio:16/9; display:grid; place-items:center; flex:0 0 auto; background:var(--mi-soft); color:var(--mi-text); border:1px solid var(--mi-line); border-radius:8px; }
     .source-status-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
     .source-status-grid button { min-height:92px; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-start; gap:4px; text-align:left; border-top:4px solid var(--mi-line); }
     .source-status-grid button[data-state='success'] { background:var(--mi-success-soft); border-top-color:var(--mi-success); }
@@ -56,18 +58,18 @@ export const applyMovieInfoDashboardStyles = (): void => {
     .panel-actions { padding:24px 18px; border-left:1px solid var(--mi-line); background:var(--mi-soft); display:flex; flex-direction:column; gap:9px; }
     .panel-actions h3 { margin:0 0 5px; font-size:.92rem; }
     .panel-actions button { width:100%; text-align:left; }
-    .show-json-btn { order:-1; background:var(--mi-text); border-color:var(--mi-text); color:#fff; }
+    .show-json-btn { order:-1; background:var(--mi-accent); border-color:var(--mi-accent); color:var(--nc-primary-contrast); }
     .panel-status { margin:0; padding:8px 11px; border-left:4px solid var(--mi-line); background:var(--mi-soft); font-weight:650; font-size:.88rem; }
-    .panel-status[data-state='loading'] { border-color:var(--mi-accent); background:var(--mi-accent-soft); color:#1d4ed8; }
-    .panel-status[data-state='success'] { border-color:var(--mi-success); background:var(--mi-success-soft); color:#166534; }
-    .panel-status[data-state='error'] { border-color:var(--mi-danger); background:var(--mi-danger-soft); color:#991b1b; }
+    .panel-status[data-state='loading'] { border-color:var(--mi-accent); background:var(--mi-accent-soft); color:var(--mi-accent); }
+    .panel-status[data-state='success'] { border-color:var(--mi-success); background:var(--mi-success-soft); color:var(--mi-success); }
+    .panel-status[data-state='error'] { border-color:var(--mi-danger); background:var(--mi-danger-soft); color:var(--mi-danger); }
     .summary-container { display:flex; flex-direction:column; gap:17px; }
     .summary-grid { margin:0; display:grid; grid-template-columns:minmax(120px,max-content) 1fr; gap:0; border-top:1px solid var(--mi-line); }
     .summary-grid dt,.summary-grid dd { margin:0; padding:9px 4px; border-bottom:1px solid var(--mi-line); overflow-wrap:anywhere; }
     .summary-grid dt { color:var(--mi-muted); font-weight:600; }
     .summary-grid dd { color:var(--mi-text); }
     .tag-list { display:flex; flex-wrap:wrap; gap:6px; }
-    .tag-chip { padding:4px 9px; border-radius:999px; background:var(--mi-accent-soft); color:#1e40af; font-size:.8rem; }
+    .tag-chip { padding:4px 9px; border-radius:999px; background:var(--mi-accent-soft); color:var(--mi-accent); font-size:.8rem; }
     .video-meta { display:flex; flex-direction:column; gap:6px; color:var(--mi-muted); overflow-wrap:anywhere; }
     .movie-description { display:grid; gap:8px; margin-top:5px; color:var(--mi-text); }
     .movie-description h3 { margin:0; font-size:.88rem; }

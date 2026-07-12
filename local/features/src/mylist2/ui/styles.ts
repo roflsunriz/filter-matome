@@ -1,4 +1,5 @@
 import { materialIconsStyles } from "@/common/material-icons";
+import { MINIMAL_DARK_THEME_TOKENS } from "@/common/visual-theme";
 
 /**
  * Mylist2 Manager 用の CSS スタイル（style.css 相当） */
@@ -6,23 +7,24 @@ import { materialIconsStyles } from "@/common/material-icons";
 export const MYLIST_MANAGER_STYLES_PART1 = `
 /* Theme variables (scoped to Mylist2 root) */
 .custom-mylist2-manager {
+  ${MINIMAL_DARK_THEME_TOKENS}
   /* base defaults (dark-blue) */
-  --cml2-bg: #1a1b1c;
-  --cml2-text: #ffffff;
-  --cml2-panel: #2a2b2c;
-  --cml2-border: #333333;
-  --cml2-muted: #888888;
-  --cml2-muted-strong: #666666;
-  --cml2-accent: #2a88bd;
-  --cml2-accent-hover: #3498db;
-  --cml2-danger: #e74c3c;
-  --cml2-danger-hover: #c0392b;
-  --cml2-focus-ring: rgba(52, 152, 219, 0.3);
-  --cml2-link: #1976d2;
-  --cml2-link-hover: #1565c0;
+  --cml2-bg: var(--nc-bg);
+  --cml2-text: var(--nc-text);
+  --cml2-panel: var(--nc-surface);
+  --cml2-border: var(--nc-border);
+  --cml2-muted: var(--nc-muted);
+  --cml2-muted-strong: var(--nc-muted);
+  --cml2-accent: var(--nc-primary);
+  --cml2-accent-hover: var(--nc-primary-hover);
+  --cml2-danger: var(--nc-danger);
+  --cml2-danger-hover: #ffd0ca;
+  --cml2-focus-ring: color-mix(in srgb, var(--nc-primary) 30%, transparent);
+  --cml2-link: var(--nc-primary);
+  --cml2-link-hover: var(--nc-primary-hover);
   --cml2-scrollbar-thumb: #666666;
   --cml2-scrollbar-track: var(--cml2-panel);
-  --cml2-text-soft: #dddddd;
+  --cml2-text-soft: var(--nc-text);
   --cml2-border-success: #27ae60;
   --cml2-border-danger: #e74c3c;
   --cml2-border-warning: #f39c12;
@@ -1694,28 +1696,36 @@ export const FAB_AND_SETTINGS_MODAL_STYLES = `
  */
 export const MYLIST_VISUAL_REFRESH_STYLES = `
 .custom-mylist2-manager {
-  --cml2-bg: #070d1b;
-  --cml2-text: #edf1ff;
-  --cml2-panel: #0e172b;
-  --cml2-border: #263450;
-  --cml2-muted: #96a2bc;
-  --cml2-muted-strong: #697793;
-  --cml2-accent: #7068f4;
-  --cml2-accent-hover: #857eff;
-  --cml2-accent-rgb: 112, 104, 244;
-  --cml2-accent-deep: #2455ad;
-  --cml2-accent-gradient-end: #4b44be;
-  --cml2-accent-contrast: #ffffff;
-  --cml2-focus-ring: rgba(112, 104, 244, 0.34);
+  --cml2-bg: var(--nc-bg);
+  --cml2-text: var(--nc-text);
+  --cml2-panel: var(--nc-surface);
+  --cml2-border: var(--nc-border);
+  --cml2-muted: var(--nc-muted);
+  --cml2-muted-strong: var(--nc-muted);
+  --cml2-accent: var(--nc-primary);
+  --cml2-accent-hover: var(--nc-primary-hover);
+  --cml2-accent-rgb: 111, 156, 255;
+  --cml2-accent-deep: #243555;
+  --cml2-accent-gradient-end: #2c426b;
+  --cml2-accent-contrast: var(--nc-primary-contrast);
+  --cml2-focus-ring: color-mix(in srgb, var(--nc-primary) 34%, transparent);
   --cml2-link: var(--cml2-accent-hover);
   --cml2-link-hover: var(--cml2-accent-contrast);
-  --cml2-scrollbar-thumb: #465675;
-  --cml2-scrollbar-track: #0a1222;
-  --cml2-text-soft: #d6dcf0;
+  --cml2-scrollbar-thumb: var(--nc-muted);
+  --cml2-scrollbar-track: var(--nc-surface);
+  --cml2-text-soft: var(--nc-text);
+  position: relative;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
-  border: 1px solid rgba(var(--cml2-accent-rgb), 0.2);
-  border-radius: 12px;
-  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.56);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .custom-mylist2-manager.cml2-theme-dark-green {
@@ -1756,16 +1766,25 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
 
 .custom-mylist2-manager .mylist-sidebar {
   box-sizing: border-box;
-  height: 100%;
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
   padding: 18px 14px;
-  background: #091224;
-  border-right-color: #263450;
+  background: var(--nc-surface);
+  border-right-color: var(--nc-border);
 }
 
 .custom-mylist2-manager .mylist-list {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+
+.custom-mylist2-manager .mylist-controls,
+.custom-mylist2-manager .search-container,
+.custom-mylist2-manager .mylist-sort-controls,
+.custom-mylist2-manager .mylist-sidebar-footer {
+  flex: 0 0 auto;
 }
 
 .custom-mylist2-manager .mylist-sidebar-footer {
@@ -1808,9 +1827,14 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
 }
 
 .custom-mylist2-manager .mylist-main {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
   padding: 16px;
   border-radius: 0;
-  background: #070d1b;
+  background: var(--cml2-bg);
   box-shadow: none;
 }
 
@@ -1818,8 +1842,8 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
 .custom-mylist2-manager select {
   min-height: 38px;
   border-radius: 8px;
-  background: #0a1325;
-  border-color: #2a3957;
+  background: var(--cml2-surface, var(--nc-surface));
+  border-color: var(--cml2-border);
 }
 
 .custom-mylist2-manager button {
@@ -1913,11 +1937,7 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
   overflow: hidden;
   border: 1px solid transparent;
   border-radius: 9px;
-  background: linear-gradient(
-    90deg,
-    var(--cml2-accent-deep),
-    var(--cml2-accent-gradient-end)
-  );
+  background: var(--nc-surface-subtle);
   opacity: 0;
   transform: translateY(-12px);
   visibility: hidden;
@@ -1977,11 +1997,7 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
   border: 1px solid #202e48;
   border-bottom: 0;
   border-radius: 9px 9px 0 0;
-  background: linear-gradient(
-    90deg,
-    rgba(var(--cml2-accent-rgb), 0.1),
-    #0b1527 38%
-  );
+  background: var(--nc-surface-subtle);
 }
 
 .custom-mylist2-manager .video-list-selection-header label {
@@ -2005,11 +2021,7 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
   margin: 0;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 6px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.18),
-    rgba(255, 255, 255, 0.02)
-  );
+  background: var(--nc-surface);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.45),
     inset 0 0 0 1px rgba(255, 255, 255, 0.06);
@@ -2092,6 +2104,8 @@ export const MYLIST_VISUAL_REFRESH_STYLES = `
 }
 
 .custom-mylist2-manager .video-list {
+  min-height: 0;
+  overflow-y: auto;
   border: 1px solid #202e48;
   border-radius: 0 0 9px 9px;
   background: #091121;

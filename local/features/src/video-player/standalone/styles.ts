@@ -1,5 +1,8 @@
+import { MINIMAL_DARK_THEME_ROOT } from "@/common/visual-theme";
+
 export const STANDALONE_PAGE_STYLES = [
-  "body.nc-standalone-body { margin: 0; padding: 0; background: #0b0d14; color: #f4f6ff; font-family: 'Segoe UI', 'Helvetica Neue', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; min-height: 100vh; overflow-x: hidden; }",
+  MINIMAL_DARK_THEME_ROOT,
+  "body.nc-standalone-body { margin: 0; padding: 0; background: var(--nc-bg); color: var(--nc-text); font-family: var(--nc-font); min-height: 100vh; overflow-x: hidden; }",
   "a { color: #7aa2ff; text-decoration: none; }",
   "a:hover { text-decoration: underline; }",
   ".nc-standalone-page { margin: 0; padding: 0 0 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; }",
@@ -11,7 +14,7 @@ export const STANDALONE_PAGE_STYLES = [
   ".nc-header__title { font-size: 28px; font-weight: 600; line-height: 1.4; }",
   ".nc-header__meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: #9ca6c3; }",
   ".nc-main { display: flex; flex-direction: column; gap: 28px; }",
-  ".nc-player-surface { background: rgba(14, 16, 25, 0.9); border-radius: 18px; padding: 20px; box-shadow: 0 28px 60px rgba(0, 0, 0, 0.35); box-sizing: border-box; }",
+  ".nc-player-surface { background: var(--nc-surface); border: 1px solid var(--nc-border); border-radius: var(--nc-radius); padding: 20px; box-shadow: none; box-sizing: border-box; }",
 
   /* プレイヤーとコメントのレスポンシブレイアウト */
   ".standalone-player-wrapper { display: flex; flex-direction: row; width: 100%; max-width: 100%; gap: 16px; box-sizing: border-box; position: relative; }",

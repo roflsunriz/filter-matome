@@ -114,6 +114,67 @@ test.beforeEach(async ({ page }) => {
   await openApp(page);
 });
 
+test("共通ヘッダーと重ならずダーク背景でビューポートを使用する", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 600 });
+
+  const layout = await page.evaluate(() => {
+    const header = document.querySelector("#headerContainer");
+    const manager = document.querySelector("#Mylist2Manager");
+    if (!(header instanceof HTMLElement) || !(manager instanceof HTMLElement)) {
+      throw new Error("mylist2 layout elements are missing");
+    }
+    const headerRect = header.getBoundingClientRect();
+    const managerRect = manager.getBoundingClientRect();
+    const footer = document.querySelector(".mylist-sidebar-footer");
+    if (!(footer instanceof HTMLElement)) {
+      throw new Error("mylist2 sidebar footer is missing");
+    }
+    const footerRect = footer.getBoundingClientRect();
+    const videoList = document.querySelector("#videoList");
+    const mylistList = document.querySelector("#mylistList");
+    if (
+      !(videoList instanceof HTMLElement) ||
+      !(mylistList instanceof HTMLElement)
+    ) {
+      throw new Error("mylist2 scroll containers are missing");
+    }
+    const videoListRect = videoList.getBoundingClientRect();
+    const mylistListRect = mylistList.getBoundingClientRect();
+    return {
+      bodyBackground: getComputedStyle(document.body).backgroundColor,
+      headerBottom: headerRect.bottom,
+      managerTop: managerRect.top,
+      managerBottom: managerRect.bottom,
+      viewportHeight: window.innerHeight,
+      footerTop: footerRect.top,
+      footerBottom: footerRect.bottom,
+      bodyClientHeight: document.body.clientHeight,
+      bodyScrollHeight: document.body.scrollHeight,
+      documentClientHeight: document.documentElement.clientHeight,
+      documentScrollHeight: document.documentElement.scrollHeight,
+      mylistListBottom: mylistListRect.bottom,
+      videoListBottom: videoListRect.bottom,
+    };
+  });
+
+  expect(layout.bodyBackground).not.toBe("rgb(255, 255, 255)");
+  expect(layout.managerTop).toBeGreaterThanOrEqual(layout.headerBottom - 1);
+  expect(layout.managerBottom).toBeGreaterThanOrEqual(
+    layout.viewportHeight - 1,
+  );
+  expect(layout.managerBottom).toBeLessThanOrEqual(layout.viewportHeight + 1);
+  expect(layout.footerTop).toBeGreaterThanOrEqual(layout.headerBottom);
+  expect(layout.footerBottom).toBeLessThanOrEqual(layout.viewportHeight);
+  expect(layout.mylistListBottom).toBeLessThanOrEqual(layout.footerTop);
+  expect(layout.videoListBottom).toBeLessThanOrEqual(layout.viewportHeight);
+  expect(layout.bodyScrollHeight).toBe(layout.bodyClientHeight);
+  expect(layout.documentScrollHeight).toBe(layout.documentClientHeight);
+  await expect(page.getByTitle("設定", { exact: true })).toBeInViewport();
+  await expect(page.getByTitle("mylist2 ヘルプ")).toBeInViewport();
+});
+
 test("マイリスト検索・作成・ソート・設定・テーマが動作する", async ({
   page,
 }) => {
