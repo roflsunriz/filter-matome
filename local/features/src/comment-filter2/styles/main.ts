@@ -1536,10 +1536,6 @@ export const CommentFilter2MainStyles = `
     min-height: 300px;
   }
   
-  .cf2-reload-button {
-    padding: 0.875rem 1.5rem;
-    font-size: 0.9375rem;
-  }
 }
 
 /* Smooth entrance animation */
@@ -1556,47 +1552,6 @@ export const CommentFilter2MainStyles = `
 
 .cf2-container {
   animation: cf2-fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Reload button section */
-.cf2-reload-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(55, 65, 81, 0.5);
-}
-
-.cf2-reload-button {
-  width: 100%;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 1rem 2rem;
-  
-  background: linear-gradient(135deg, #10b981, #059669);
-  border: none;
-  border-radius: 0.75rem;
-  color: white;
-  cursor: pointer;
-  
-  box-shadow: 
-    0 4px 12px rgba(16, 185, 129, 0.3),
-    0 1px 0 rgba(255, 255, 255, 0.1) inset;
-  
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.cf2-reload-button:hover {
-  background: linear-gradient(135deg, #059669, #047857);
-  box-shadow: 
-    0 8px 20px rgba(16, 185, 129, 0.4),
-    0 1px 0 rgba(255, 255, 255, 0.15) inset;
-  transform: translateY(-2px);
-}
-
-.cf2-reload-button:active {
-  transform: translateY(0);
-  box-shadow: 
-    0 4px 12px rgba(16, 185, 129, 0.3),
-    0 1px 0 rgba(255, 255, 255, 0.1) inset;
 }
 
 /* Focus management */

@@ -493,13 +493,6 @@ export const mainUITemplate = `
       </div>
     </div>
 
-    <!-- 再読み込みボタン（全幅） -->
-    <div class="cf2-reload-section cf2-view-panel cf2-hidden" data-cf2-panel="settings">
-      <button id="cf2-reload-btn" class="cf2-button cf2-button-primary cf2-reload-button">
-        ${getIconSVG(ICONS.refresh)}
-        <span>再読み込みして適用</span>
-      </button>
-    </div>
       </main>
     </div>
   </div>
@@ -584,7 +577,6 @@ export const UI_ELEMENTS = {
   EASY_COMMANDS: "cf2-easy-commands",
   SAVE_COMMANDS_BTN: "cf2-save-commands",
   RESET_COMMANDS_BTN: "cf2-reset-commands",
-  RELOAD_BTN: "cf2-reload-btn",
 } as const;
 
 /**

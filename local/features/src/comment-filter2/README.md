@@ -59,6 +59,7 @@ comment-filter2/
 - UI ではフォーム編集と JSON エディタを切り替えられ、`FilterStorage` を通じて即時保存されます。
 - JSON/CSV のインポート時は `jsonl-parser.ts` と `legacy-converter.ts` が形式を自動判定し最新形式へ変換します。
 - 設定変更後は再読込や即時フィルタリングを行い、必要に応じてログ (`FilterLogger`) を収集します。
+- 概要の「今すぐ適用」は、video_player 利用時にはコメントを再フィルタリングして即時同期し、公式プレイヤー利用時には確認後にページを再読み込みします。
 
 ### video_player 連携
 

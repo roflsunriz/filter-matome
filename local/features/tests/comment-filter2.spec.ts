@@ -31,7 +31,7 @@ function buildBundle(): string {
 async function fulfillDocument(route: Route): Promise<void> {
   await route.fulfill({
     contentType: "text/html; charset=utf-8",
-    body: "<!doctype html><html lang=\"ja\"><head><meta charset=\"utf-8\"><title>comment-filter2 test</title></head><body><main id=\"watch\"></main></body></html>",
+    body: '<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>comment-filter2 test</title></head><body><main id="watch"></main></body></html>',
   });
 }
 
@@ -81,6 +81,52 @@ test("概要ダッシュボードが保存済みルールを集計し、画面�
   await ui.locator('.cf2-sidebar-item[data-cf2-view="data"]').click();
   await expect(ui.locator('[data-cf2-panel="data"]')).toBeVisible();
   await expect(ui.locator("#cf2-export-json-btn")).toBeVisible();
+
+  await ui.locator('.cf2-sidebar-item[data-cf2-view="settings"]').click();
+  await expect(ui.locator('[data-cf2-panel="settings"]').first()).toBeVisible();
+  await expect(ui.locator("#cf2-reload-btn")).toHaveCount(0);
+});
+
+test("概要の今すぐ適用がコメントを再処理して表示側へ同期する", async ({
+  page,
+}) => {
+  const ui = page.locator("#cf2-shadow-host");
+  const applied = page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        window.addEventListener("cf2:test-filter-applied", () => resolve(), {
+          once: true,
+        });
+      }),
+  );
+
+  await ui.locator("#cf2-cockpit-apply").click();
+  await applied;
+
+  const filteredBodies = await page.evaluate(() =>
+    window.CommentFilter2Data?.filteredData?.data.threads[0]?.comments.map(
+      (comment) => comment.body,
+    ),
+  );
+  expect(filteredBodies).toEqual(["", "通常コメント"]);
+});
+
+test("公式プレイヤーでは今すぐ適用時にページ再読み込みを確認する", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    delete window.videoPlayer;
+  });
+  const dialog = page.waitForEvent("dialog");
+  const click = page.locator("#cf2-shadow-host #cf2-cockpit-apply").click();
+  const confirmation = await dialog;
+
+  expect(confirmation.message()).toContain("ページを再読み込みして設定を適用");
+  await confirmation.dismiss();
+  await click;
+  expect(
+    await page.evaluate(() => window.CommentFilter2Data?.filteredData),
+  ).toBeNull();
 });
 
 test("正規表現の一致、未一致、入力エラーをリアルタイム表示する", async ({

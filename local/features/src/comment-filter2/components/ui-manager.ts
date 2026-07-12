@@ -33,6 +33,8 @@ import { getIconSVG, ICONS } from "@/common/material-icons";
 // グローバル型定義は既に globalTypes.ts で定義済み
 
 export class UIManager {
+  private readonly onFilterApplied: () => void;
+  private readonly canApplyImmediately: () => boolean;
   private storage: FilterStorage;
   private filter: CommentFilter;
   private jsonFilter: JsonCommentFilter;
@@ -55,7 +57,12 @@ export class UIManager {
     },
   };
 
-  constructor() {
+  constructor(
+    onFilterApplied: () => void = () => undefined,
+    canApplyImmediately: () => boolean = () => true,
+  ) {
+    this.onFilterApplied = onFilterApplied;
+    this.canApplyImmediately = canApplyImmediately;
     this.storage = new FilterStorage();
     this.filter = new CommentFilter();
     this.jsonFilter = new JsonCommentFilter();
@@ -258,11 +265,8 @@ export class UIManager {
     this.safeAddEventListener(UI_ELEMENTS.RESET_COMMANDS_BTN, "click", () =>
       this.resetCommandSettings(),
     );
-    this.safeAddEventListener(UI_ELEMENTS.RELOAD_BTN, "click", () =>
-      this.reloadPage(),
-    );
     this.safeAddEventListener(UI_ELEMENTS.COCKPIT_APPLY, "click", () =>
-      this.applyFilter(window.CommentFilter2Data?.currentSmid ?? null),
+      this.applyFromCockpit(),
     );
 
     // ファイル入力の特別処理
@@ -1349,13 +1353,29 @@ export class UIManager {
       this.jsonFilter.updateSettings(this.currentSettings);
 
       const jsonRules = await this.storage.getJsonRules();
-      await this.jsonFilter.applyFilters(jsonRules, currentSmid);
+      const filteredData = await this.jsonFilter.applyFilters(
+        jsonRules,
+        currentSmid,
+      );
+      if (filteredData) {
+        this.onFilterApplied();
+      }
     } catch (error) {
       window.logger?.error(
         "[CommentFilter2] Filter application failed:",
         error,
       );
     }
+  }
+
+  /** プレイヤー種別に応じて、即時同期またはページ再読み込みを行う。 */
+  private async applyFromCockpit(): Promise<void> {
+    if (!this.canApplyImmediately()) {
+      await this.reloadPage();
+      return;
+    }
+
+    await this.applyFilter(window.CommentFilter2Data?.currentSmid ?? null);
   }
 
   /**
@@ -1537,12 +1557,18 @@ export class UIManager {
           this.container
             ?.querySelectorAll<HTMLElement>("[data-cf2-panel]")
             .forEach((panel) => {
-              panel.classList.toggle(CSS_CLASSES.HIDDEN, panel.dataset.cf2Panel !== view);
+              panel.classList.toggle(
+                CSS_CLASSES.HIDDEN,
+                panel.dataset.cf2Panel !== view,
+              );
             });
           this.container
             ?.querySelectorAll(".cf2-sidebar-item")
             .forEach((item) => {
-              item.classList.toggle("active", item.getAttribute("data-cf2-view") === view);
+              item.classList.toggle(
+                "active",
+                item.getAttribute("data-cf2-view") === view,
+              );
             });
           this.container?.scrollTo({ top: 0, behavior: "smooth" });
         });
@@ -2196,12 +2222,16 @@ export class UIManager {
       );
       if (hideCount) {
         hideCount.textContent = String(
-          rules.filter((rule) => rule.enabled !== false && rule.action.type === "hide").length,
+          rules.filter(
+            (rule) => rule.enabled !== false && rule.action.type === "hide",
+          ).length,
         );
       }
       if (replaceCount) {
         replaceCount.textContent = String(
-          rules.filter((rule) => rule.enabled !== false && rule.action.type === "replace").length,
+          rules.filter(
+            (rule) => rule.enabled !== false && rule.action.type === "replace",
+          ).length,
         );
       }
       const recentRules = this.container.querySelector(

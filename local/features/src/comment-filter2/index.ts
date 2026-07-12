@@ -14,8 +14,11 @@ export class CommentFilter2 {
 
   constructor() {
     this.dataInterceptor = new DataInterceptor();
-    this.uiManager = new UIManager();
     this.videoPlayerBridge = new VideoPlayerBridge();
+    this.uiManager = new UIManager(
+      () => this.videoPlayerBridge.forceSync(),
+      () => this.videoPlayerBridge.getStatus().isVideoPlayerDetected,
+    );
 
     void this.initialize();
   }
@@ -138,9 +141,6 @@ export class CommentFilter2 {
       if (globalData?.originalData && smid) {
         // フィルターを適用
         await this.uiManager.applyFilter(smid);
-
-        // video_playerとの同期を実行
-        this.videoPlayerBridge.forceSync();
       }
     } catch (error) {
       window.logger?.error(

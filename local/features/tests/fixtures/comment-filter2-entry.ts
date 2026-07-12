@@ -44,14 +44,70 @@ async function seedAndStart(): Promise<void> {
     },
   });
 
-  const manager = new UIManager();
+  const manager = new UIManager(
+    () => {
+      window.dispatchEvent(new CustomEvent("cf2:test-filter-applied"));
+    },
+    () => Boolean(window.videoPlayer),
+  );
   // UIManagerのコンストラクター内初期化（IndexedDB接続・設定読込）の完了を待つ。
   await new Promise((resolve) => setTimeout(resolve, 50));
   await manager.show();
 }
 
 Object.assign(window, {
-  CommentFilter2Data: { currentSmid: "sm100", originalData: null },
+  videoPlayer: {
+    getComments: () => ({ meta: { status: 200 }, data: { threads: [] } }),
+  },
+  CommentFilter2Data: {
+    currentSmid: "sm100",
+    originalData: {
+      meta: { status: 200 },
+      data: {
+        threads: [
+          {
+            id: "thread-1",
+            fork: "main",
+            commentCount: 2,
+            comments: [
+              {
+                id: "comment-1",
+                no: 1,
+                vposMs: 0,
+                body: "荒らしコメント",
+                commands: [],
+                userId: "user-1",
+                isPremium: false,
+                score: 0,
+                postedAt: "2026-07-12T00:00:00Z",
+                nicoruCount: 0,
+                nicoruId: null,
+                source: "nicovideo",
+                isMyPost: false,
+              },
+              {
+                id: "comment-2",
+                no: 2,
+                vposMs: 1000,
+                body: "通常コメント",
+                commands: [],
+                userId: "user-2",
+                isPremium: false,
+                score: 0,
+                postedAt: "2026-07-12T00:00:01Z",
+                nicoruCount: 0,
+                nicoruId: null,
+                source: "nicovideo",
+                isMyPost: false,
+              },
+            ],
+          },
+        ],
+      },
+    },
+    filteredData: null,
+    lastUpdated: Date.now(),
+  },
   logger: {
     debug: () => undefined,
     info: () => undefined,
