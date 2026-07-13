@@ -5,6 +5,13 @@ import {
   createVideoNavigation,
   type VideoNavigationElements,
 } from "@/common/video-navigation";
+import {
+  COMMENT_BACKGROUND_MODE_CHANGE_EVENT,
+  getCommentBackgroundMode,
+  setCommentBackgroundMode,
+  getCommentBackgroundModeFromEvent,
+  type CommentBackgroundMode,
+} from "@/video-player/ui/comment-background-mode";
 
 export interface StandaloneLayout {
   root: HTMLElement;
@@ -20,6 +27,7 @@ export interface StandaloneLayout {
   ownerLink: HTMLAnchorElement;
   seriesList: HTMLElement;
   infoCard: HTMLElement;
+  commentBackgroundToggle: HTMLButtonElement | null;
   videoNavigation: VideoNavigationElements;
 }
 
@@ -58,6 +66,59 @@ const navigateToVideo = (videoId: string): void => {
   targetUrl.search = "";
   targetUrl.searchParams.set("videoId", videoId);
   window.location.assign(targetUrl.toString());
+};
+
+const createCommentBackgroundToggle = (): HTMLButtonElement => {
+  const button = document.createElement("button");
+  button.className = "nc-comment-background-toggle";
+  button.type = "button";
+
+  const surfaceIcon = document.createElement("span");
+  surfaceIcon.className = "nc-comment-background-toggle__surface-icon";
+  surfaceIcon.setAttribute("aria-hidden", "true");
+
+  const knob = document.createElement("span");
+  knob.className = "nc-comment-background-toggle__knob";
+  knob.setAttribute("aria-hidden", "true");
+
+  const imageIcon = document.createElement("span");
+  imageIcon.className = "nc-comment-background-toggle__image-icon";
+  imageIcon.setAttribute("aria-hidden", "true");
+
+  const update = (mode: CommentBackgroundMode): void => {
+    const isBackgroundImage = mode === "background-image";
+    const label = isBackgroundImage
+      ? "既存の背景に戻す"
+      : "背景セレクターの背景を表示";
+    document.body.dataset.commentBackgroundMode = mode;
+    button.setAttribute("aria-label", label);
+    button.setAttribute("aria-pressed", String(isBackgroundImage));
+    button.title = label;
+    button.dataset.backgroundMode = mode;
+  };
+
+  const handleModeChange = (event: Event): void => {
+    const mode = getCommentBackgroundModeFromEvent(event);
+    if (mode) {
+      update(mode);
+    }
+  };
+
+  button.addEventListener("click", () => {
+    const nextMode: CommentBackgroundMode =
+      getCommentBackgroundMode() === "background-image"
+        ? "default"
+        : "background-image";
+    update(setCommentBackgroundMode(nextMode));
+  });
+  window.addEventListener(
+    COMMENT_BACKGROUND_MODE_CHANGE_EVENT,
+    handleModeChange,
+  );
+
+  button.append(surfaceIcon, knob, imageIcon);
+  update(getCommentBackgroundMode());
+  return button;
 };
 
 export const createStandaloneLayout = (
@@ -117,6 +178,16 @@ export const createStandaloneLayout = (
   playerHost.append(playerMount);
   playerSurface.append(playerHost);
 
+  const playerSurfaceShell = document.createElement("div");
+  playerSurfaceShell.className = "nc-player-surface-shell";
+
+  const commentBackgroundToggle =
+    options.mode === "deleted" ? null : createCommentBackgroundToggle();
+  if (commentBackgroundToggle) {
+    playerSurfaceShell.append(commentBackgroundToggle);
+  }
+  playerSurfaceShell.append(playerSurface);
+
   const infoCard = document.createElement("aside");
   infoCard.className = "nc-info-card";
 
@@ -157,7 +228,7 @@ export const createStandaloneLayout = (
 
   infoCard.append(statsList, tags, ownerContainer, seriesTitle, seriesList);
 
-  main.append(playerSurface, infoCard);
+  main.append(playerSurfaceShell, infoCard);
 
   const description = document.createElement("section");
   description.className = "nc-description";
@@ -215,6 +286,7 @@ export const createStandaloneLayout = (
     ownerLink,
     seriesList,
     infoCard,
+    commentBackgroundToggle,
     videoNavigation,
   };
 };

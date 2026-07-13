@@ -15,8 +15,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - 【common/video-player/movie-info】動画ID・URL入力と完成済みキャッシュのタイトル検索を両画面で一貫して利用できるよう、検索API、結果一覧、動画指定フォーム、レスポンシブスタイルを common へ集約し、movie-info でも検索結果からデータ取得できるようにした。
+- 【video-player/mlink-video-controller】背景切替トグルの形状を角張った印象を保つ6pxの角丸へ変更し、原宿風 Watch の汎用ボタン規則がスタンドアロンUIを上書きしないよう適用範囲を公式プレイヤーの `#root` 配下へ限定した。
 - comment-filter2 のルール入力画面で一致プレビューをアコーディオン化し、必要なときだけテスト入力欄と結果を展開できるようにした。
 - 共通ヘッダーの「その他」メニューから video-player へ移動できるよう、キャッシュ管理リンクの直後に導線を追加した。
+
+### Fixed
+
+- 【video-player】背景モードへ切り替えてラジアルメニューから画像を選んでもページ背景に現れない問題を、mlink の背景変数を使う固定レイヤーとコンテンツの積層順を明示して修正した。
 
 ## [#231] - 2026-07-13
 

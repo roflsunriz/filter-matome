@@ -16,6 +16,10 @@ export const STANDALONE_PAGE_STYLES = [
     "body.nc-standalone-body",
     "min-height: 100dvh; overflow-x: hidden; font-family: var(--nc-font); line-height: 1.5;",
   ),
+  page(
+    'body.nc-standalone-body[data-comment-background-mode="background-image"] #nc-standalone-player-root::before',
+    'content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none; background-attachment: var(--bg-att, fixed); background-blend-mode: var(--bg-bl-m, normal); background-clip: var(--bg-cl, border-box); background-color: var(--bg-col, var(--nc-bg)); background-image: var(--bg-img, none); background-origin: var(--bg-org, padding-box); background-position: var(--bg-pos, center); background-repeat: var(--bg-rep, no-repeat); background-size: var(--bg-siz, cover);',
+  ),
   page("body.nc-fullscreen-active", "overflow: hidden; background: #000;"),
   page(
     "a",
@@ -30,8 +34,12 @@ export const STANDALONE_PAGE_STYLES = [
     "outline: 3px solid color-mix(in srgb, var(--nc-primary) 35%, transparent); outline-offset: 2px;",
   ),
   page(
+    "#nc-standalone-player-root",
+    "position: relative; isolation: isolate; min-height: 100dvh;",
+  ),
+  page(
     ".nc-standalone-page",
-    "display: flex; flex-direction: column; gap: 24px; min-height: 100dvh; padding-bottom: 48px;",
+    "position: relative; z-index: 1; display: flex; flex-direction: column; gap: 24px; min-height: 100dvh; padding-bottom: 48px;",
   ),
   page(".nc-common-header-container", "width: 100%;"),
   page(
@@ -57,7 +65,59 @@ export const STANDALONE_PAGE_STYLES = [
     ".nc-player-surface, .nc-info-card, .nc-description",
     "background: var(--nc-surface); border: 1px solid var(--nc-border); border-radius: var(--nc-radius);",
   ),
+  page(
+    ".nc-player-surface-shell",
+    "position: relative; min-width: 0; padding-top: 30px;",
+  ),
   page(".nc-player-surface", "box-sizing: border-box; padding: 16px;"),
+  page(
+    ".nc-comment-background-toggle",
+    'position: absolute; top: 0; right: 16px; z-index: 2; width: 64px; height: 24px; min-width: 64px; padding: 0; border: 1px solid #777; border-radius: var(--nc-radius-sm); background: linear-gradient(#fff, #d8d8d8); background-clip: padding-box; color: #111; font-family: "MS PGothic", "Meiryo", sans-serif; font-size: 12px; font-weight: bold; line-height: 22px; text-align: center; text-shadow: 0 1px 0 #fff; cursor: pointer; box-shadow: inset 0 1px rgba(255, 255, 255, .85), 0 1px 1px rgba(0, 0, 0, .25); box-sizing: border-box; overflow: hidden;',
+  ),
+  page(
+    ".nc-comment-background-toggle:hover",
+    "border-color: #555; background: linear-gradient(#fff, #cfcfcf);",
+  ),
+  page(
+    ".nc-comment-background-toggle:focus-visible",
+    "outline: 2px solid rgba(111, 156, 255, .9); outline-offset: 2px;",
+  ),
+  page(
+    ".nc-comment-background-toggle__surface-icon, .nc-comment-background-toggle__image-icon",
+    "position: absolute; top: 5px; z-index: 0; width: 14px; height: 14px; border-radius: 999px; box-sizing: border-box; pointer-events: none;",
+  ),
+  page(
+    ".nc-comment-background-toggle__surface-icon",
+    "left: 8px; border: 1px solid #555; background: linear-gradient(90deg, #111 0 50%, #fff 50% 100%);",
+  ),
+  page(
+    ".nc-comment-background-toggle__image-icon",
+    "right: 8px; border: 1px solid rgba(0, 0, 0, .35); background: conic-gradient(#f44336, #ffeb3b, #4caf50, #03a9f4, #3f51b5, #e91e63, #f44336);",
+  ),
+  page(
+    ".nc-comment-background-toggle__knob",
+    "position: absolute; left: 1px; top: 1px; z-index: 1; width: 22px; height: 22px; border: 1px solid #777; border-radius: 999px; background: linear-gradient(#fff, #dcdcdc); background-clip: padding-box; box-sizing: border-box; box-shadow: 0 1px 1px rgba(0, 0, 0, .35); pointer-events: none; transition: left .16s ease;",
+  ),
+  page(
+    '.nc-comment-background-toggle[data-background-mode="background-image"] .nc-comment-background-toggle__knob',
+    "left: 41px;",
+  ),
+  page(
+    ':root[data-hy-theme="dark"] .nc-comment-background-toggle',
+    "border-color: #666; background: linear-gradient(#3a3a3a, #202020); color: #eee; text-shadow: 0 -1px 0 #000;",
+  ),
+  page(
+    ':root[data-hy-theme="dark"] .nc-comment-background-toggle__surface-icon',
+    "border-color: #aaa;",
+  ),
+  page(
+    ':root[data-hy-theme="dark"] .nc-comment-background-toggle__image-icon',
+    "border-color: rgba(255, 255, 255, .55);",
+  ),
+  page(
+    ':root[data-hy-theme="dark"] .nc-comment-background-toggle__knob',
+    "border-color: #222; background: linear-gradient(#f5f5f5, #aaa);",
+  ),
   page(".nc-player-host, #nc-player-mount", "min-width: 0;"),
   page(
     ".standalone-player-wrapper",
@@ -143,6 +203,6 @@ export const STANDALONE_PAGE_STYLES = [
     "border-color: color-mix(in srgb, var(--nc-danger) 45%, var(--nc-border));",
   ),
   "@media (max-width: 960px) { .standalone-player-wrapper { flex-direction: column; } .standalone-player-wrapper .comment-container { width: 100%; min-width: 0; max-height: 360px; } }",
-  "@media (max-width: 640px) { .nc-standalone-page { gap: 16px; padding-bottom: 24px; } .nc-header, .nc-main, .nc-description { width: min(100% - 24px, 1440px); } .nc-player-surface, .nc-info-card, .nc-description { padding: 12px; } .nc-stat-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }",
+  "@media (max-width: 640px) { .nc-standalone-page { gap: 16px; padding-bottom: 24px; } .nc-header, .nc-main, .nc-description { width: min(100% - 24px, 1440px); } .nc-player-surface, .nc-info-card, .nc-description { padding: 12px; } .nc-comment-background-toggle { right: 12px; } .nc-stat-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }",
   "@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }",
 ].join("\n");

@@ -54,3 +54,7 @@
 - `cache-data-manager.spec.ts` は専用fixture bundleから本番の登録処理をローカル文書へ注入し、NicoCache_nlが提供する `tempList`、`cacheList`、`ncversion` とメタデータIndexedDBを投入して起動する。
 - 初期表示と固定カード高、フィルター、ソート、検索結果とページ送り、再生・詳細・削除、一括削除・公開状態確認の動的要素を実DOM上で検証する。
 - getthumbinfo、キャッシュ情報・削除API、`window.open`、確認ダイアログだけを外部境界としてスタブ化し、実配信サーバーやローカルプロキシには接続しない。
+
+## video-player
+
+- `video-player.spec.ts` は本番のスタンドアロンレイアウトを専用fixture bundleから起動し、背景切替トグルの状態保存と、mlink の `--bg-*` 変数を固定背景レイヤーへ反映する積層を実DOM上で検証する。

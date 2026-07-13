@@ -67,8 +67,6 @@ export class CommentList extends HTMLElement {
         flex-direction: column;
       }
 
-
-
       .comment-list {
         flex: 1;
         overflow-y: auto;

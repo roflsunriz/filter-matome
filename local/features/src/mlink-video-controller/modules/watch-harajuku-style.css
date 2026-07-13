@@ -488,10 +488,10 @@
     font-family: inherit !important;
   }
 
-  button,
-  [role="button"],
-  [data-part="trigger"],
-  .Pressable {
+  #root button,
+  #root [role="button"],
+  #root [data-part="trigger"],
+  #root .Pressable {
     border-radius: var(--hy-radius) !important;
     font-family: inherit !important;
   }
