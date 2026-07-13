@@ -6,17 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#232] - 2026-07-13
+
 ### Added
 
+- 【features】`package.json` の `version` を `232` に更新した。
+- 【README】latest バッジを `#232` に更新した。
 - 【scripts】各実行スクリプトから対応する説明へ辿れるよう、READMEがなかった7本（10秒・60秒切り出し、拡張ビルド、Claudeリンク、list.jsリンク、Python依存導入、MkDocsフック）に個別READMEを追加した。
 - 【extensions】cache-data-managerとmlink-video-controllerから安定したHLS削除処理を利用できるよう、完了済み・停止済みHLSの一括削除、ダウンロード中HLSの削除予約、状態確認をJSON APIで提供する `FilterMatomeCacheControl` を追加した。ユーザーが用意した可能性のあるMP4・FLV・SWFは削除対象から除外する。
 - 【video-player】ニコニコ動画のウォッチページから動画情報を取得できない場合でもキャッシュ動画のタイトルや説明を確認できるよう、nicochart.jp の公開情報を最終フォールバックとして取得する読み取り専用NicoCache_nl拡張を追加した。接続先と動画IDを制限し、nicochart 側にも情報がない場合は従来どおりローカルキャッシュのみで再生を試みる。
+- 【video-player】コメント表示を背景へ切り替えて視認性を調整できるよう、スタンドアロンプレーヤーへ背景モードの切替トグルを追加した。
 - 【common】各ローカル機能へ直接移動しやすくするため、共通ヘッダーの「その他」メニューで video-player の直後に movie-info へのリンクを追加した。
 - 【video-player】キャッシュ済み動画をタイトルから探して直接再生できるよう、NicoCache_nl の検索APIを利用したキーワード検索、画質違いをまとめた結果一覧、検索中・0件・失敗時の案内を動画指定ナビゲーションへ追加した。
 - 【video-player】パンくずリスト直下から動画URLまたは `videoId` を指定して再生できるよう、動画ID抽出付きの入力欄と共通Material Design Iconsの再生ボタンを追加した。
 
 ### Changed
 
+- 【release】`#232` の配布アーカイブで新しいNicoCache_nl拡張を利用できるよう、`FilterMatomeCacheControl` と `NicochartInfoProxy` のJavaソースおよびコンパイル済みクラスをリリース対象へ追加した。
 - 【common】検索クリア操作を簡潔に識別できるよう、共通ヘッダーのクリアボタンを `clear_all` アイコンから `close` アイコンへ変更した。
 - 【common】検索欄の大きさがヘッダー幅に左右されないよう入力幅を240pxに固定し、検索対象のプルダウンと入力欄の高さを36pxへ統一した。
 - 【common】目的のリンクを短時間で見つけられるよう、共通ヘッダーのナビゲーションを「メイン」「その他」「filter-matome」の3サブメニューへ再編した。

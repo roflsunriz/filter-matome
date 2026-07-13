@@ -82,6 +82,10 @@ jobs:
           cp extensions/ExtUtil.class release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.class not found"
           cp extensions/nlMediaInfo.java release/NicoCache_nl/extensions/ || echo "Warning: nlMediaInfo.java not found"
           cp extensions/nlMediaInfo.class release/NicoCache_nl/extensions/ || echo "Warning: nlMediaInfo.class not found"
+          cp extensions/FilterMatomeCacheControl.java release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeCacheControl.java not found"
+          cp extensions/FilterMatomeCacheControl.class release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeCacheControl.class not found"
+          cp extensions/NicochartInfoProxy.java release/NicoCache_nl/extensions/ || echo "Warning: NicochartInfoProxy.java not found"
+          cp extensions/NicochartInfoProxy.class release/NicoCache_nl/extensions/ || echo "Warning: NicochartInfoProxy.class not found"
 
           # 開発用ファイルを除外（ただし、開発環境構築に必要なpackage.json等は保持）
           find release/NicoCache_nl -name "node_modules" -type d -exec rm -rf {} + || true
