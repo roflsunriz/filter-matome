@@ -59,9 +59,10 @@ import { filterSeriesStats } from "@/watch-history/series-filter";
 import {
   getSeriesAlertExtensionStatus,
   mergeSeriesAlertStates,
+  replaceSeriesAlertsInExtension,
   requestSeriesAlertCheck,
   sendSeriesAlertTestNotification,
-  syncSeriesAlertsToExtension,
+  type SeriesAlertExtensionStatus,
 } from "@/watch-history/series-alert-extension-client";
 
 /**
@@ -87,6 +88,7 @@ class WatchHistoryApp {
   private seriesAlerts: SeriesAlert[] = [];
   private selectedSeries: SeriesStats | null = null;
   private alertUIUpdateInterval: number | null = null;
+  private seriesAlertRefreshInFlight = false;
 
   // データベース管理関連
   private persistenceStatus: PersistenceStatus | null = null;
@@ -720,6 +722,9 @@ class WatchHistoryApp {
 
       // データを読み込み
       await this.loadData();
+
+      // 旧IndexedDBアラートを一度だけextensionの正本へ移行する。
+      await this.loadSeriesAlertData(false);
 
       // UIを更新
       this.updateUI();
@@ -1829,6 +1834,9 @@ class WatchHistoryApp {
     try {
       const result = await watchHistoryDB.exportData();
       if (result.success && result.data) {
+        const extensionStatus = await getSeriesAlertExtensionStatus();
+        result.data.seriesAlerts = extensionStatus.alerts;
+        this.applySeriesAlertExtensionStatus(extensionStatus);
         const blob = new Blob([JSON.stringify(result.data, null, 2)], {
           type: "application/json",
         });
@@ -1886,12 +1894,23 @@ class WatchHistoryApp {
 
       const result = await watchHistoryDB.importData(data, config);
       if (result.success && result.data !== undefined) {
+        let importedAlertCount = 0;
+        if (data.seriesAlerts.length > 0) {
+          const current = await getSeriesAlertExtensionStatus();
+          const merged = mergeSeriesAlertStates(
+            current.alerts,
+            data.seriesAlerts,
+          );
+          const updated = await replaceSeriesAlertsInExtension(merged);
+          this.seriesAlerts = updated.alerts;
+          this.applySeriesAlertExtensionStatus(updated);
+          importedAlertCount = data.seriesAlerts.length;
+        }
         this.showToast(
-          `${result.data}件のデータをインポートしました`,
+          `${result.data}件の履歴と${importedAlertCount}件のシリーズアラートをインポートしました`,
           "success",
         );
         await this.refreshData();
-        // シリーズアラートデータも更新
         await this.refreshSeriesAlertData();
       }
     } catch (error) {
@@ -2310,7 +2329,6 @@ class WatchHistoryApp {
    */
   private async initializeSeriesAlertTab(): Promise<void> {
     await this.loadSeriesAlertData();
-    await this.synchronizeSeriesAlertsWithExtension();
     this.updateSeriesAlertUI();
     this.startAlertUIUpdater();
   }
@@ -2342,85 +2360,83 @@ class WatchHistoryApp {
   /**
    * シリーズアラートデータを読み込む
    */
-  private async loadSeriesAlertData(): Promise<void> {
+  private async loadSeriesAlertData(showLoading = true): Promise<void> {
     try {
-      this.showSeriesAlertLoading(true);
-      const alertResult = await watchHistoryDB.getAllSeriesAlerts();
+      if (showLoading) this.showSeriesAlertLoading(true);
+      let extensionStatus = await getSeriesAlertExtensionStatus();
+      const legacyResult = await watchHistoryDB.getLegacySeriesAlerts();
 
-      if (alertResult.success && alertResult.data) {
-        this.seriesAlerts = alertResult.data;
-      } else {
-        this.seriesAlerts = [];
-      }
-    } catch (error) {
-      logger.error("シリーズアラートデータ読み込みエラー:", error);
-      this.showToast("シリーズアラートデータの読み込みに失敗しました", "error");
-    } finally {
-      this.showSeriesAlertLoading(false);
-    }
-  }
-
-  /**
-   * IndexedDBとNicoCache_nl extensionのアラート状態を双方向同期する。
-   */
-  private async synchronizeSeriesAlertsWithExtension(): Promise<boolean> {
-    try {
-      const extensionStatus = await getSeriesAlertExtensionStatus();
-      const mergedAlerts = mergeSeriesAlertStates(
-        this.seriesAlerts,
-        extensionStatus.alerts,
-      );
-      for (const alert of mergedAlerts) {
-        const local = this.seriesAlerts.find((item) => item.id === alert.id);
-        if (!local || alert.updatedAt > local.updatedAt) {
-          const result = await watchHistoryDB.saveSeriesAlert(alert);
-          if (!result.success) {
-            throw new Error(result.error || "IndexedDBへの同期に失敗しました");
-          }
+      if (
+        legacyResult.success &&
+        legacyResult.data &&
+        legacyResult.data.length > 0
+      ) {
+        const migrated = mergeSeriesAlertStates(
+          extensionStatus.alerts,
+          legacyResult.data,
+        );
+        extensionStatus = await replaceSeriesAlertsInExtension(migrated);
+        const clearResult = await watchHistoryDB.clearLegacySeriesAlerts();
+        if (clearResult.success) {
+          this.showToast(
+            `${legacyResult.data.length}件の旧シリーズアラートをextensionへ移行しました`,
+            "success",
+          );
+        } else {
+          logger.warn("旧シリーズアラート消去失敗:", clearResult.error);
         }
       }
-      this.seriesAlerts = mergedAlerts;
-      const syncedStatus = await syncSeriesAlertsToExtension(mergedAlerts);
-      this.updateSeriesAlertExtensionStatus(
-        syncedStatus.notificationAvailable
-          ? "常駐通知: 有効"
-          : "常駐通知: GUIログ/通知音",
-        syncedStatus.lastError ? "error" : "success",
-      );
-      return true;
+
+      this.seriesAlerts = extensionStatus.alerts;
+      this.applySeriesAlertExtensionStatus(extensionStatus);
     } catch (error) {
-      logger.warn("シリーズアラートextension同期エラー:", error);
-      this.updateSeriesAlertExtensionStatus("常駐通知: 未接続", "error");
-      return false;
+      logger.error("シリーズアラートデータ読み込みエラー:", error);
+      this.updateSeriesAlertExtensionStatus("拡張DB: 未接続", "error");
+      if (showLoading) {
+        this.showToast(
+          "extensionからシリーズアラートを読み込めませんでした",
+          "error",
+        );
+      }
+    } finally {
+      if (showLoading) this.showSeriesAlertLoading(false);
     }
   }
 
   /**
-   * UIで変更した現在のアラート一覧をextensionへ反映する。
+   * extensionを正本としてアラート一覧を置き換える。
    */
-  private async pushSeriesAlertsToExtension(
+  private async saveSeriesAlertsToExtension(
+    alerts: SeriesAlert[],
     showFailureToast = true,
   ): Promise<boolean> {
     try {
-      const status = await syncSeriesAlertsToExtension(this.seriesAlerts);
-      this.updateSeriesAlertExtensionStatus(
-        status.notificationAvailable
-          ? "常駐通知: 有効"
-          : "常駐通知: GUIログ/通知音",
-        status.lastError ? "error" : "success",
-      );
+      const status = await replaceSeriesAlertsInExtension(alerts);
+      this.seriesAlerts = status.alerts;
+      this.applySeriesAlertExtensionStatus(status);
       return true;
     } catch (error) {
-      logger.warn("シリーズアラートextension送信エラー:", error);
-      this.updateSeriesAlertExtensionStatus("常駐通知: 未接続", "error");
+      logger.warn("シリーズアラートextension保存エラー:", error);
+      this.updateSeriesAlertExtensionStatus("拡張DB: 未接続", "error");
       if (showFailureToast) {
         this.showToast(
-          "NicoCache_nl extensionへ同期できません。拡張の配置と再起動を確認してください",
+          "NicoCache_nl extensionへ保存できません。拡張の配置と再起動を確認してください",
           "error",
         );
       }
       return false;
     }
+  }
+
+  private applySeriesAlertExtensionStatus(
+    status: SeriesAlertExtensionStatus,
+  ): void {
+    this.updateSeriesAlertExtensionStatus(
+      status.notificationAvailable
+        ? "拡張DB: 接続済み・通知有効"
+        : "拡張DB: 接続済み・GUIログ/通知音",
+      status.lastError ? "error" : "success",
+    );
   }
 
   private updateSeriesAlertExtensionStatus(
@@ -2750,7 +2766,6 @@ class WatchHistoryApp {
    */
   private async refreshSeriesAlertData(): Promise<void> {
     await this.loadSeriesAlertData();
-    await this.synchronizeSeriesAlertsWithExtension();
     this.updateSeriesAlertUI();
     this.showToast("シリーズアラートデータを更新しました", "success");
   }
@@ -2836,15 +2851,12 @@ class WatchHistoryApp {
     };
 
     try {
-      const result = await watchHistoryDB.saveSeriesAlert(newAlert);
-      if (result.success) {
-        this.seriesAlerts.push(newAlert);
+      if (
+        await this.saveSeriesAlertsToExtension([...this.seriesAlerts, newAlert])
+      ) {
         this.updateSeriesAlertUI();
         this.closeSeriesAlertModal();
         this.showToast("シリーズアラートを追加しました", "success");
-        await this.pushSeriesAlertsToExtension();
-      } else {
-        this.showToast("シリーズアラートの保存に失敗しました", "error");
       }
     } catch (error) {
       logger.error("シリーズアラート保存エラー:", error);
@@ -3027,20 +3039,15 @@ class WatchHistoryApp {
     };
 
     try {
-      const result = await watchHistoryDB.saveSeriesAlert(updatedAlert);
-      if (result.success) {
-        const index = this.seriesAlerts.findIndex((a) => a.id === alert.id);
-        if (index !== -1) {
-          this.seriesAlerts[index] = updatedAlert;
-        }
+      const nextAlerts = this.seriesAlerts.map((item) =>
+        item.id === alert.id ? updatedAlert : item,
+      );
+      if (await this.saveSeriesAlertsToExtension(nextAlerts)) {
         this.updateSeriesAlertUI();
         this.showToast(
           `アラートを${updatedAlert.enabled ? "有効" : "無効"}にしました`,
           "success",
         );
-        await this.pushSeriesAlertsToExtension();
-      } else {
-        this.showToast("アラートの更新に失敗しました", "error");
       }
     } catch (error) {
       logger.error("アラート更新エラー:", error);
@@ -3057,14 +3064,12 @@ class WatchHistoryApp {
     }
 
     try {
-      const result = await watchHistoryDB.deleteSeriesAlert(alert.id);
-      if (result.success) {
-        this.seriesAlerts = this.seriesAlerts.filter((a) => a.id !== alert.id);
+      const nextAlerts = this.seriesAlerts.filter(
+        (item) => item.id !== alert.id,
+      );
+      if (await this.saveSeriesAlertsToExtension(nextAlerts)) {
         this.updateSeriesAlertUI();
         this.showToast("アラートを削除しました", "success");
-        await this.pushSeriesAlertsToExtension();
-      } else {
-        this.showToast("アラートの削除に失敗しました", "error");
       }
     } catch (error) {
       logger.error("アラート削除エラー:", error);
@@ -3454,6 +3459,14 @@ class WatchHistoryApp {
     this.alertUIUpdateInterval = window.setInterval(() => {
       if (this.elements["series-alert-tab"]?.classList.contains("active")) {
         this.updateSeriesAlertUI();
+        if (!this.seriesAlertRefreshInFlight) {
+          this.seriesAlertRefreshInFlight = true;
+          void this.loadSeriesAlertData(false)
+            .then(() => this.updateSeriesAlertUI())
+            .finally(() => {
+              this.seriesAlertRefreshInFlight = false;
+            });
+        }
       }
     }, 10 * 1000);
   }
@@ -3473,7 +3486,6 @@ class WatchHistoryApp {
         this.showToast("有効なアラートがありません", "info");
         return;
       }
-      if (!(await this.pushSeriesAlertsToExtension())) return;
       const accepted = await requestSeriesAlertCheck();
       this.showToast(
         accepted
@@ -3483,7 +3495,7 @@ class WatchHistoryApp {
       );
     } catch (error) {
       logger.error("手動アラートチェックエラー:", error);
-      this.updateSeriesAlertExtensionStatus("常駐通知: 未接続", "error");
+      this.updateSeriesAlertExtensionStatus("拡張DB: 未接続", "error");
       this.showToast("extensionへアラート確認を依頼できませんでした", "error");
     }
   }
@@ -3495,7 +3507,9 @@ class WatchHistoryApp {
     try {
       const displayed = await sendSeriesAlertTestNotification();
       this.updateSeriesAlertExtensionStatus(
-        displayed ? "常駐通知: 有効" : "常駐通知: GUIログ/通知音",
+        displayed
+          ? "拡張DB: 接続済み・通知有効"
+          : "拡張DB: 接続済み・GUIログ/通知音",
         "success",
       );
       this.showToast(
@@ -3506,7 +3520,7 @@ class WatchHistoryApp {
       );
     } catch (error) {
       logger.error("extension通知テストエラー:", error);
-      this.updateSeriesAlertExtensionStatus("常駐通知: 未接続", "error");
+      this.updateSeriesAlertExtensionStatus("拡張DB: 未接続", "error");
       this.showToast("extensionから通知を送信できませんでした", "error");
     }
   }
@@ -3756,11 +3770,12 @@ class WatchHistoryApp {
       // 現在のデータをエクスポート（バックアップとして使用）
       const result = await watchHistoryDB.exportData();
       if (result.success && result.data) {
+        const extensionStatus = await getSeriesAlertExtensionStatus();
         const backup = {
-          version: 2,
+          version: 3,
           timestamp: Date.now(),
           watchHistory: result.data.entries,
-          seriesAlerts: result.data.seriesAlerts,
+          seriesAlerts: extensionStatus.alerts,
         };
 
         const backupKey = `watch-history-backup-${Date.now()}`;
@@ -4016,8 +4031,20 @@ class WatchHistoryApp {
     }
 
     try {
+      const backupData = localStorage.getItem(backupKey);
+      const backup = backupData
+        ? (JSON.parse(backupData) as { seriesAlerts?: SeriesAlert[] })
+        : null;
       const result = await watchHistoryDB.restoreFromBackup(backupKey);
       if (result.success) {
+        if (Array.isArray(backup?.seriesAlerts)) {
+          const status = await replaceSeriesAlertsInExtension(
+            backup.seriesAlerts,
+          );
+          this.seriesAlerts = status.alerts;
+          this.applySeriesAlertExtensionStatus(status);
+          this.updateSeriesAlertUI();
+        }
         this.showToast("バックアップを復元しました", "success");
         // データを再読み込み
         await this.refreshData();

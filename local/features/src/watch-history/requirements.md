@@ -20,7 +20,7 @@
 | 言語    | TypeScript 5 系                  | 型安全と IDE 連携向上         |
 | バンドラ  | Bun 1.3 系                       | 単一IIFEバンドル      |
 | 実行基盤  | ローカルプロキシサーバ   | Firefox 主眼・Chrome 互換  |
-| ストレージ | IndexedDB v1                    | KeyPath 方式            |
+| ストレージ | IndexedDB v3 / NicoCache_nl extension | 履歴はIndexedDB、シリーズアラートはextension管理 |
 | アイコン | src/common/material-icons.ts使用 | マテリアルアイコン使用 |
 
 ---
@@ -86,6 +86,8 @@
 | `memo`                  | string           | 手書きメモ                            |             |
 
 > **Index**：`watchedAt` 降順 / `ownerId` / `completed` を作成します。
+
+シリーズアラートはIndexedDBへ保存せず、`FilterMatomeSeriesAlerts` extensionのAPIを通じて`data/filter-matome-series-alerts.json`へ保存します。旧DBの`seriesAlerts`ストアは初回起動時にextensionへ移行した後、通常の読み書きには使用しません。
 
 ---
 

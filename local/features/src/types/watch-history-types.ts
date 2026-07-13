@@ -364,7 +364,7 @@ export interface WatchHistoryExportData {
   version: string;
   /** 履歴エントリ配列 */
   entries: WatchHistoryEntry[];
-  /** シリーズアラート配列 */
+  /** NicoCache_nl extensionが管理するシリーズアラート配列 */
   seriesAlerts: SeriesAlert[];
 }
 

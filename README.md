@@ -95,7 +95,7 @@ winget install Google.Chrome
 ### 視聴履歴 (watch-history)
 - **無制限履歴保存**: ニコニコ動画の50件制限を突破
 - **高度な統計**: 日別視聴状況・時間帯別視聴状況
-- **シリーズ追跡**: NicoCache_nl常駐extensionによるページ非表示時の新規投稿通知・シリーズナビゲーション
+- **シリーズ追跡**: NicoCache_nl常駐extensionを正本とするアラート管理、ページ非表示時の新規投稿通知・シリーズナビゲーション
 - **検索・フィルタ**: 強力な検索・ソート機能
 - **メモ機能**: 履歴にメモを残せる
 - **インポート/エクスポート**: データの移行・バックアップ
@@ -266,7 +266,7 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 - オフライン作業用データの削除
 - ブラウザデータの削除
 
-**注意**: mylist2やcomment-filter2,watch-historyのデータはIndexedDBに保存されているので必ずエクスポートして安全な場所に退避してください！
+**注意**: mylist2やcomment-filter2、watch-historyの視聴履歴はIndexedDBに保存されます。watch-historyのシリーズアラートはNicoCache_nl extensionが管理します。画面のエクスポートには履歴とアラートの両方が含まれるため、必ず安全な場所に退避してください！
 
 
 ## 🔗 関連リンク

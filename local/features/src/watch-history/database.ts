@@ -39,7 +39,7 @@ export class WatchHistoryDatabase {
   constructor(config?: Partial<DatabaseConfig>) {
     this.config = {
       dbName: config?.dbName || "NicoWatchHistory",
-      version: config?.version || 2,
+      version: config?.version || 3,
       storeName: config?.storeName || "watchHistory",
     };
   }
@@ -113,19 +113,6 @@ export class WatchHistoryDatabase {
               store.createIndex("title", "title", { unique: false });
               store.createIndex("seriesId", "series.id", { unique: false });
 
-              // シリーズアラートストアを作成
-              const alertStore = db.createObjectStore("seriesAlerts", {
-                keyPath: "id",
-              });
-              logger.debug("シリーズアラートストアを作成");
-
-              // シリーズアラートのインデックスを作成
-              alertStore.createIndex("seriesId", "seriesId", { unique: false });
-              alertStore.createIndex("enabled", "enabled", { unique: false });
-              alertStore.createIndex("nextCheckAt", "nextCheckAt", {
-                unique: false,
-              });
-
               logger.debug("インデックス作成完了");
             } else {
               // 既存データベースの場合はマイグレーション実行
@@ -147,21 +134,6 @@ export class WatchHistoryDatabase {
                   });
                   store.createIndex("title", "title", { unique: false });
                   store.createIndex("seriesId", "series.id", { unique: false });
-                }
-
-                if (!db.objectStoreNames.contains("seriesAlerts")) {
-                  const alertStore = db.createObjectStore("seriesAlerts", {
-                    keyPath: "id",
-                  });
-                  alertStore.createIndex("seriesId", "seriesId", {
-                    unique: false,
-                  });
-                  alertStore.createIndex("enabled", "enabled", {
-                    unique: false,
-                  });
-                  alertStore.createIndex("nextCheckAt", "nextCheckAt", {
-                    unique: false,
-                  });
                 }
 
                 // マイグレーションを実行
@@ -232,7 +204,6 @@ export class WatchHistoryDatabase {
         "title",
         "seriesId",
       ],
-      seriesAlerts: ["seriesId", "enabled", "nextCheckAt"],
     };
 
     Object.entries(expectedSchema).forEach(([storeName, indexNames]) => {
@@ -508,17 +479,12 @@ export class WatchHistoryDatabase {
       return { success: false, error: "エクスポート用データ取得失敗" };
     }
 
-    const seriesAlertsResult = await this.getAllSeriesAlerts();
-    const seriesAlerts =
-      seriesAlertsResult.success && seriesAlertsResult.data
-        ? seriesAlertsResult.data
-        : [];
-
     const exportData: WatchHistoryExportData = {
       exportedAt: Date.now(),
-      version: "2.0.0",
+      version: "3.0.0",
       entries: entriesResult.data,
-      seriesAlerts: seriesAlerts,
+      // 正本はNicoCache_nl extensionにあるため、app.tsで取得して設定する。
+      seriesAlerts: [],
     };
 
     return { success: true, data: exportData };
@@ -560,35 +526,6 @@ export class WatchHistoryDatabase {
           // 新規エントリ
           await this.saveEntry(entry);
           importedCount++;
-        }
-      }
-
-      // シリーズアラートデータをインポート
-      if (exportData.seriesAlerts && Array.isArray(exportData.seriesAlerts)) {
-        for (const alert of exportData.seriesAlerts) {
-          const existingAlert = await this.getSeriesAlert(alert.id);
-
-          if (existingAlert.success && existingAlert.data) {
-            // 既存アラートがある場合
-            if (config.duplicateHandling === "skip") {
-              continue;
-            } else if (config.duplicateHandling === "overwrite") {
-              await this.saveSeriesAlert(alert);
-              importedCount++;
-            } else if (config.duplicateHandling === "merge") {
-              // アラートの場合はより新しいデータを使用
-              const merged =
-                alert.updatedAt > existingAlert.data.updatedAt
-                  ? alert
-                  : existingAlert.data;
-              await this.saveSeriesAlert(merged);
-              importedCount++;
-            }
-          } else {
-            // 新規アラート
-            await this.saveSeriesAlert(alert);
-            importedCount++;
-          }
         }
       }
 
@@ -947,90 +884,14 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * シリーズアラートを保存する
+   * extension管理へ移すため、旧IndexedDBのシリーズアラートを取得する。
    */
-  async saveSeriesAlert(alert: SeriesAlert): Promise<DBResult<void>> {
+  async getLegacySeriesAlerts(): Promise<DBResult<SeriesAlert[]>> {
     if (!this.db) {
       return { success: false, error: "データベース未初期化" };
     }
-
-    try {
-      return new Promise<DBResult<void>>((resolve, reject) => {
-        const transaction = this.db!.transaction(["seriesAlerts"], "readwrite");
-        const store = transaction.objectStore("seriesAlerts");
-
-        transaction.oncomplete = () => {
-          resolve({ success: true });
-        };
-
-        transaction.onerror = () => {
-          reject(
-            new Error(
-              `シリーズアラート保存失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`,
-            ),
-          );
-        };
-
-        const putRequest = store.put(alert);
-        putRequest.onerror = () => {
-          reject(
-            new Error(
-              `シリーズアラート保存失敗: ${WatchHistoryDatabase.toErrorMessage(putRequest.error)}`,
-            ),
-          );
-        };
-      });
-    } catch (error) {
-      return {
-        success: false,
-        error: `シリーズアラート保存失敗: ${String(error)}`,
-      };
-    }
-  }
-
-  /**
-   * シリーズアラートを取得する
-   */
-  async getSeriesAlert(alertId: string): Promise<DBResult<SeriesAlert>> {
-    if (!this.db) {
-      return { success: false, error: "データベース未初期化" };
-    }
-
-    try {
-      const transaction = this.db.transaction(["seriesAlerts"], "readonly");
-      const store = transaction.objectStore("seriesAlerts");
-
-      const result = await new Promise<SeriesAlert | undefined>(
-        (resolve, reject) => {
-          const request = store.get(alertId);
-          request.onsuccess = () =>
-            resolve(request.result as SeriesAlert | undefined);
-          request.onerror = () =>
-            reject(
-              new Error(WatchHistoryDatabase.toErrorMessage(request.error)),
-            );
-        },
-      );
-
-      if (result) {
-        return { success: true, data: result };
-      } else {
-        return { success: false, error: "シリーズアラートが見つからぬ" };
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: `シリーズアラート取得失敗: ${String(error)}`,
-      };
-    }
-  }
-
-  /**
-   * 全シリーズアラートを取得する
-   */
-  async getAllSeriesAlerts(): Promise<DBResult<SeriesAlert[]>> {
-    if (!this.db) {
-      return { success: false, error: "データベース未初期化" };
+    if (!this.db.objectStoreNames.contains("seriesAlerts")) {
+      return { success: true, data: [] };
     }
 
     try {
@@ -1054,11 +915,14 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * シリーズアラートを削除する
+   * extensionへの移行が完了した旧シリーズアラートを消去する。
    */
-  async deleteSeriesAlert(alertId: string): Promise<DBResult<void>> {
+  async clearLegacySeriesAlerts(): Promise<DBResult<void>> {
     if (!this.db) {
       return { success: false, error: "データベース未初期化" };
+    }
+    if (!this.db.objectStoreNames.contains("seriesAlerts")) {
+      return { success: true };
     }
 
     try {
@@ -1073,16 +937,16 @@ export class WatchHistoryDatabase {
         transaction.onerror = () => {
           reject(
             new Error(
-              `シリーズアラート削除失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`,
+              `旧シリーズアラート消去失敗: ${WatchHistoryDatabase.toErrorMessage(transaction.error)}`,
             ),
           );
         };
 
-        const deleteRequest = store.delete(alertId);
-        deleteRequest.onerror = () => {
+        const clearRequest = store.clear();
+        clearRequest.onerror = () => {
           reject(
             new Error(
-              `シリーズアラート削除失敗: ${WatchHistoryDatabase.toErrorMessage(deleteRequest.error)}`,
+              `旧シリーズアラート消去失敗: ${WatchHistoryDatabase.toErrorMessage(clearRequest.error)}`,
             ),
           );
         };
@@ -1090,7 +954,7 @@ export class WatchHistoryDatabase {
     } catch (error) {
       return {
         success: false,
-        error: `シリーズアラート削除失敗: ${String(error)}`,
+        error: `旧シリーズアラート消去失敗: ${String(error)}`,
       };
     }
   }

@@ -586,15 +586,48 @@ test("各タブ・シリーズ・アラートの静的および動的ボタン�
     page.locator("#series-detail-videos .series-video-item"),
   ).toHaveCount(2);
   await page.locator("#series-detail-add-alert").click();
-  await expect(page.locator("#series-alert-modal")).not.toHaveClass(/hidden/);
-  await expect(page.locator("#series-alert-series-select")).toHaveValue("10");
-  await page.locator("#series-alert-modal-close").click();
+  await expect(page.locator("#toast-container")).toContainText(
+    "このシリーズのアラートは既に存在します",
+  );
+  await expect(page.locator("#series-alert-modal")).toHaveClass(/hidden/);
+  await page.locator("#series-detail-modal-close").click();
 
   await page.locator("#series-alert-tab").click();
   await expect(page.locator("#series-alert-content")).toHaveClass(/active/);
   await expect(page.locator(".series-alert-item")).toHaveCount(1);
+  expect(
+    await page.evaluate(
+      () =>
+        new Promise<number>((resolve, reject) => {
+          const request = indexedDB.open("NicoWatchHistory");
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () => {
+            const database = request.result;
+            const transaction = database.transaction(
+              "seriesAlerts",
+              "readonly",
+            );
+            const count = transaction.objectStore("seriesAlerts").count();
+            count.onsuccess = () => {
+              database.close();
+              resolve(count.result);
+            };
+            count.onerror = () => reject(count.error);
+          };
+        }),
+    ),
+  ).toBe(0);
   await page.locator(".alert-toggle").click();
   await expect(page.locator(".alert-status")).toHaveText("無効");
+  expect(
+    await page.evaluate(async () => {
+      const response = await fetch(
+        "/cache/watch-history-series-alerts/status",
+        { headers: { "X-Filter-Matome-Series-Alerts": "1" } },
+      );
+      return (await response.json()) as { alerts: Array<{ enabled: boolean }> };
+    }),
+  ).toMatchObject({ alerts: [{ enabled: false }] });
   await page.locator("#series-alert-refresh-btn").click();
   await page.locator("#add-series-alert-btn").click();
   await expect(page.locator("#series-alert-modal")).not.toHaveClass(/hidden/);
@@ -760,7 +793,7 @@ test("インポート・エクスポート・DB管理・常駐通知の全操作
 
   await page.locator("#series-alert-tab").click();
   await expect(page.locator("#series-alert-extension-status")).toHaveText(
-    "常駐通知: 有効",
+    "拡張DB: 接続済み・通知有効",
   );
   await page.locator("#notification-permission-btn").click();
   await expect(page.locator("#toast-container")).toContainText(

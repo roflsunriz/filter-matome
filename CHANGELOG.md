@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- 【watch-history】ページ内タイマーとNotifications APIによるシリーズ確認を常駐extensionへ移し、シリーズアラート画面へ接続状態、手動確認依頼、通知テストを追加した。IndexedDBとextension側の確認状態は更新日時で統合し、設定追加・有効化・削除・インポートを即時同期する。
+- 【watch-history】ページ内タイマーとNotifications APIによるシリーズ確認を常駐extensionへ移し、シリーズアラート画面をextension管理データの完全なフロントエンドへ変更した。追加・有効化・削除・手動確認・インポート／エクスポートはextension APIへ直接行い、旧IndexedDBアラートだけを初回起動時に移行する。
 
 - 【nlFilters】共通ヘッダー更新後もプレミアム会員勧誘を非表示にできるよう、生成ハッシュ付きクラスへの依存をやめ、登録リンクの安定したURL属性から対象コンテナを特定するよう変更した。
 - 【開発者向け】機能ごとの責務、起動条件、永続化、外部API、テスト対象を実装から判断できるよう、`local/features` と各プロジェクトのREADMEを現在の構成へ全面整理し、資料専用の `api-info` と起動境界の `runtime` にREADMEを追加した。固定ファイルサイズ、廃止済みパス、存在しない開発コマンドなど陳腐化した説明を削除した。

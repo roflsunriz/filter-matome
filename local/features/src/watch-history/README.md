@@ -12,13 +12,13 @@
 ## 構成
 
 - `watch-tracker.ts`: 動画ID・メタデータ取得、動画要素監視、進捗とセッション記録。
-- `database.ts`: 履歴、統計、シリーズ、アラート、入出力、DB操作。
+- `database.ts`: 履歴、統計、シリーズ、入出力、DB操作。旧IndexedDBアラートの一度限りの移行も扱う。
 - `migration-manager.ts`: バージョン移行、永続化要求、バックアップ、設定。
 - `app.ts`: SPA全体のUI、操作、通知、DB管理。
 - `history-filter.ts`: 履歴の検索・絞り込みとお気に入り集計。
 - `history-delete-rules.ts`: 条件付き削除の値取得、比較、説明生成。
 - `series-filter.ts`: シリーズ一覧の絞り込み。
-- `series-alert-extension-client.ts`: IndexedDBとNicoCache_nl常駐extensionのアラート設定・確認状態を同期。
+- `series-alert-extension-client.ts`: NicoCache_nl常駐extensionを正本としてアラート一覧を取得・保存し、確認と通知テストを依頼。
 - `tag-cloud-renderer.ts`, `video-detail-renderer.ts`: 表示専用処理。
 - `styles.ts`: 共通テーマを使うレスポンシブスタイル。
 - `requirements.md`: 追跡・履歴機能の補足要件。
@@ -37,8 +37,9 @@
 
 - DB名: `NicoWatchHistory`。
 - `watchHistory`: 動画IDをキーにした履歴、統計、タグ、シリーズ、メモ、視聴ログ。
-- `seriesAlerts`: シリーズ別アラートと次回確認状態。
-- DBバージョン、インデックス、移行は `database.ts` と `migration-manager.ts` を正とする。
+- DBバージョン3以降のIndexedDBにはシリーズアラートを保存しない。既存DBの`seriesAlerts`はextensionへの初回移行後に空にする。
+- シリーズアラートの正本: NicoCache_nlの`data/filter-matome-series-alerts.json`。
+- 視聴履歴DBのバージョン、インデックス、移行は `database.ts` と `migration-manager.ts` を正とする。
 
 初期化後にスキーマを検証し、破損時はバックアップと再作成の方針に従います。型を任意化して旧データを放置せず、入出力形式を含めて明示的に移行してください。
 
@@ -51,7 +52,7 @@
 - 永続化要求、手動移行、バックアップ作成・復元、健全性確認。
 - `FilterMatomeSeriesAlerts` extensionによる常駐シリーズ確認とOS通知。システム通知が使えない場合はNicoCache_nl GUIログと通知音へフォールバックする。
 
-シリーズアラートタブを開くと、IndexedDBの設定とextensionが`data/filter-matome-series-alerts.json`へ保持する状態を`updatedAt`で統合します。定期確認と通知はextensionが担当するため、watch-historyページやブラウザを閉じてもNicoCache_nlが起動していれば動作します。
+シリーズアラート画面はextension APIの完全なフロントエンドで、一覧取得・追加・有効化・削除・手動確認・入出力をすべてextensionへ直接行います。旧IndexedDBにアラートがある場合だけ、watch-historyの初回起動時に`updatedAt`で統合してから旧データを消去します。定期確認と通知はextensionが担当するため、その後はwatch-historyページやブラウザを開く必要がありません。
 
 ## 変更時の確認
 
@@ -66,7 +67,7 @@
 - `tests/watch-history.spec.ts`: 実IndexedDBを使う全タブ、フィルター、統計、シリーズ、削除、入出力、DB管理、通知UI。
 - `tests/watch-history-filter.test.ts`: 履歴フィルターと集計。
 - `tests/watch-history-delete-modal.test.ts`: 条件付き削除ルール。
-- `tests/watch-history-series-alert-extension.test.ts`: IndexedDBとextension状態の統合規則。
+- `tests/watch-history-series-alert-extension.test.ts`: 旧IndexedDB・インポートデータをextensionの正本へ移す統合規則。
 
 ```powershell
 cd local/features

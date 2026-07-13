@@ -21,22 +21,22 @@ const createAlert = (
   updatedAt,
 });
 
-describe("series alert extension state merge", () => {
-  test("extensionの定期確認結果が新しければIndexedDB側を更新する", () => {
+describe("series alert extension migration merge", () => {
+  test("extensionの正本より移行データが新しければ採用する", () => {
     const local = createAlert("alert-1", 100, "sm1");
     const extension = createAlert("alert-1", 200, "sm2");
 
     expect(mergeSeriesAlertStates([local], [extension])).toEqual([extension]);
   });
 
-  test("IndexedDB側の編集が新しければextensionの古い状態で戻さない", () => {
+  test("extensionの正本が新しければ古い移行データで戻さない", () => {
     const local = createAlert("alert-1", 300, "sm3");
     const extension = createAlert("alert-1", 200, "sm2");
 
     expect(mergeSeriesAlertStates([local], [extension])).toEqual([local]);
   });
 
-  test("片側だけにあるアラートも失わずに統合する", () => {
+  test("正本と移行データの片側だけにあるアラートも保持する", () => {
     const local = createAlert("alert-2", 100, "sm2");
     const extension = createAlert("alert-1", 100, "sm1");
 

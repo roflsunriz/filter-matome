@@ -11,7 +11,6 @@ import type {
   MigrationProgress,
   DatabaseManagementConfig,
   WatchHistoryEntry,
-  SeriesAlert,
   DBResult,
 } from "@/types/watch-history-types";
 import { logger } from "@/common/logger";
@@ -189,7 +188,7 @@ export class MigrationManager {
         );
 
         // トランザクションを作成（必要に応じて）
-        const storeNames = ["watchHistory", "seriesAlerts"];
+        const storeNames = ["watchHistory"];
         const transaction = db.transaction(storeNames, "readwrite");
 
         await migration.migrate(db, transaction);
@@ -295,33 +294,22 @@ export class MigrationManager {
     try {
       logger.info("[MigrationManager] バックアップを作成中...");
 
-      const transaction = db.transaction(
-        ["watchHistory", "seriesAlerts"],
-        "readonly",
-      );
+      const transaction = db.transaction(["watchHistory"], "readonly");
       const watchHistoryStore = transaction.objectStore("watchHistory");
-      const seriesAlertsStore = transaction.objectStore("seriesAlerts");
 
-      const [watchHistory, seriesAlerts] = await Promise.all([
-        new Promise<WatchHistoryEntry[]>((resolve, reject) => {
+      const watchHistory = await new Promise<WatchHistoryEntry[]>(
+        (resolve, reject) => {
           const request = watchHistoryStore.getAll();
           request.onsuccess = () => resolve(request.result);
           request.onerror = () =>
             reject(new Error(MigrationManager.toErrorMessage(request.error)));
-        }),
-        new Promise<SeriesAlert[]>((resolve, reject) => {
-          const request = seriesAlertsStore.getAll();
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () =>
-            reject(new Error(MigrationManager.toErrorMessage(request.error)));
-        }),
-      ]);
+        },
+      );
 
       const backup = {
         version: db.version,
         timestamp: Date.now(),
         entries: watchHistory,
-        seriesAlerts,
       };
 
       // LocalStorageにバックアップを保存
@@ -449,7 +437,6 @@ export class MigrationManager {
         version?: number;
         entries?: unknown[];
         watchHistory?: unknown[];
-        seriesAlerts?: unknown[];
       };
       logger.info(
         "[MigrationManager] バックアップからリストア中...",
@@ -457,33 +444,19 @@ export class MigrationManager {
       );
 
       // データベースを開き直してリストア
-      const request = indexedDB.open("NicoWatchHistory", backup.version);
+      const request = indexedDB.open("NicoWatchHistory");
 
       return new Promise((resolve, reject) => {
         request.onsuccess = () => {
           const db = request.result;
-          const transaction = db.transaction(
-            ["watchHistory", "seriesAlerts"],
-            "readwrite",
-          );
+          const transaction = db.transaction(["watchHistory"], "readwrite");
 
           // 既存データを削除
           const watchHistoryStore = transaction.objectStore("watchHistory");
-          const seriesAlertsStore = transaction.objectStore("seriesAlerts");
 
           Promise.all([
             new Promise<void>((resolve, reject) => {
               const clearRequest = watchHistoryStore.clear();
-              clearRequest.onsuccess = () => resolve();
-              clearRequest.onerror = () =>
-                reject(
-                  new Error(
-                    MigrationManager.toErrorMessage(clearRequest.error),
-                  ),
-                );
-            }),
-            new Promise<void>((resolve, reject) => {
-              const clearRequest = seriesAlertsStore.clear();
               clearRequest.onsuccess = () => resolve();
               clearRequest.onerror = () =>
                 reject(
@@ -515,25 +488,6 @@ export class MigrationManager {
                   }),
                 );
               });
-
-              if (backup.seriesAlerts && Array.isArray(backup.seriesAlerts)) {
-                (backup.seriesAlerts as SeriesAlert[]).forEach(
-                  (alert: SeriesAlert) => {
-                    promises.push(
-                      new Promise<void>((resolve, reject) => {
-                        const addRequest = seriesAlertsStore.add(alert);
-                        addRequest.onsuccess = () => resolve();
-                        addRequest.onerror = () =>
-                          reject(
-                            new Error(
-                              MigrationManager.toErrorMessage(addRequest.error),
-                            ),
-                          );
-                      }),
-                    );
-                  },
-                );
-              }
 
               Promise.all(promises)
                 .then(() => {

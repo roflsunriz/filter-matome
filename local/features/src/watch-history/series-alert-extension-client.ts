@@ -85,7 +85,7 @@ export const getSeriesAlertExtensionStatus =
   async (): Promise<SeriesAlertExtensionStatus> =>
     parseStatus(await requestJson("status"));
 
-export const syncSeriesAlertsToExtension = async (
+export const replaceSeriesAlertsInExtension = async (
   alerts: SeriesAlert[],
 ): Promise<SeriesAlertExtensionStatus> =>
   parseStatus(
@@ -112,18 +112,18 @@ export const sendSeriesAlertTestNotification = async (): Promise<boolean> => {
 };
 
 /**
- * extension側の定期確認結果とIndexedDB側の編集結果を更新日時で統合する。
- * extensionだけに残るアラートも復元し、通知だけが密かに残る状態を避ける。
+ * 旧IndexedDBやインポートデータをextensionの正本へ移すとき、
+ * 同じIDは更新日時が新しい方を採用する。
  */
 export const mergeSeriesAlertStates = (
-  localAlerts: SeriesAlert[],
-  extensionAlerts: SeriesAlert[],
+  currentAlerts: SeriesAlert[],
+  incomingAlerts: SeriesAlert[],
 ): SeriesAlert[] => {
   const merged = new Map<string, SeriesAlert>();
-  for (const alert of localAlerts) merged.set(alert.id, alert);
-  for (const alert of extensionAlerts) {
-    const local = merged.get(alert.id);
-    if (!local || alert.updatedAt >= local.updatedAt) {
+  for (const alert of currentAlerts) merged.set(alert.id, alert);
+  for (const alert of incomingAlerts) {
+    const current = merged.get(alert.id);
+    if (!current || alert.updatedAt >= current.updatedAt) {
       merged.set(alert.id, alert);
     }
   }

@@ -97,13 +97,14 @@ X-Filter-Matome-Cache-Control: 1
 
 #### watch-history常駐シリーズアラート
 
-`FilterMatomeSeriesAlerts`は、watch-historyのシリーズアラートタブを開いたときにIndexedDBの設定をNicoCache_nlへ同期する。以後はNicoCache_nlが約60秒ごとに期限到来を確認し、対象動画の公開ウォッチページから次動画を検出する。ログインCookieやブラウザの通知権限には依存しない。
+`FilterMatomeSeriesAlerts`がシリーズアラートの正本を管理し、watch-historyのシリーズアラート画面はextension APIから一覧取得・追加・変更・削除する管理フロントエンドとして動作する。NicoCache_nlは約60秒ごとに期限到来を確認し、対象動画の公開ウォッチページから次動画を検出する。ログインCookieやブラウザの通知権限には依存しない。
 
 - Windowsなどシステムトレイ通知を利用できる環境ではOS通知を表示し、通知をクリックすると新着動画を開く。
 - システムトレイ通知を利用できない環境では、NicoCache_nl GUIの`Series Alerts`タブへ記録し、可能なら通知音を鳴らす。
 - 設定と最終確認状態は`NicoCache_nl/data/filter-matome-series-alerts.json`へ原子的に保存する。破損を検出した場合は同じ場所へ`.corrupt-<時刻>`付きで退避する。
+- 旧版のIndexedDBにあるアラートは、更新後にwatch-historyを最初に開いた時点でextensionへ一度だけ移行される。以後の追加・変更・削除とJSON入出力はIndexedDBを経由しない。
 - NicoCache_nlを停止している間は確認できない。再起動後、期限を過ぎたアラートは次の定期処理で確認する。
-- 初回導入時はwatch-historyのシリーズアラートタブを一度開き、`常駐通知: 有効`または`常駐通知: GUIログ/通知音`と表示されることを確認する。`通知テスト`で実際の通知経路を確認できる。
+- シリーズアラート画面で`拡張DB: 接続済み・通知有効`または`拡張DB: 接続済み・GUIログ/通知音`と表示されることを確認する。`通知テスト`で実際の通知経路を確認できる。
 
 #### 配置と更新
 
@@ -126,7 +127,7 @@ X-Filter-Matome-Cache-Control: 1
 4. 更新後にだけ失敗する場合は、古い `.class` の残存を確認してから、標準手順で `extensions/` を再度上書きする。
 5. `NicochartInfoProxy`が失敗してもvideo-playerはキャッシュ再生を継続する。詳細はNicoCache_nlの警告ログで `NicochartInfoProxy` を確認する。
 6. HLS削除が `pending` のままの場合は対象動画のキャッシュが継続中か確認する。完了または中断後、最大約60秒の定期再確認で削除される。
-7. シリーズアラートが`常駐通知: 未接続`の場合は、`FilterMatomeSeriesAlerts.class`が配置されているか、起動ログに`FilterMatomeSeriesAlerts`があるか確認してNicoCache_nlを再起動する。
+7. シリーズアラートが`拡張DB: 未接続`の場合は、`FilterMatomeSeriesAlerts.class`が配置されているか、起動ログに`FilterMatomeSeriesAlerts`があるか確認してNicoCache_nlを再起動する。
 
 ---
 
