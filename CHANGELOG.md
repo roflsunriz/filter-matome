@@ -17,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【common】検索クリア操作を簡潔に識別できるよう、共通ヘッダーのクリアボタンを `clear_all` アイコンから `close` アイコンへ変更した。
+- 【common】検索欄の大きさがヘッダー幅に左右されないよう入力幅を240pxに固定し、検索対象のプルダウンと入力欄の高さを36pxへ統一した。
+- 【common】目的のリンクを短時間で見つけられるよう、共通ヘッダーのナビゲーションを「メイン」「その他」「filter-matome」の3サブメニューへ再編した。
 - 【scripts】一括シンボリックリンク作成時に、新しく追加された `FilterMatomeCacheControl.class` と `NicochartInfoProxy.class` もNicoCache_nlの `extensions` へリンクするよう更新した。
 - 【cache-data-manager/mlink-video-controller】不安定だったNicoCache_nl本体の `ajax_rm` / `ajax_rmtmp` 呼び出しを廃止し、HLS限定・ダウンロード中の削除予約・構造化された結果判定に対応する `FilterMatomeCacheControl` APIへ移行した。
 - 【docs】NicoCache_nl拡張の導入・更新時に役割や依存関係を判断できるよう、`docs/USAGE.md`へ`extensions/`全般の説明、同梱クラス一覧、再起動手順、外部コマンド要件、注意事項、トラブルシュートを追加した。

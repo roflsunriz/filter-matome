@@ -272,6 +272,99 @@ test.beforeAll(() => {
   appBundle = buildAppBundle();
 });
 
+test("共通ヘッダーのリンクが3つのサブメニューに分類される", async ({
+  page,
+}) => {
+  await openApp(page);
+
+  const header = page.locator("#common-header-container");
+  await expect(header.locator("nav.header-links > a")).toHaveText("トップ");
+
+  for (const [menu, button, links] of [
+    ["main", "メイン▼", ["動画", "静画", "生放送", "チャンネル"]],
+    [
+      "other",
+      "その他▼",
+      [
+        "大百科",
+        "実況",
+        "Nアニメ",
+        "ランキング",
+        "マイページ",
+        "新着動画",
+        "新着コメント",
+      ],
+    ],
+    [
+      "filter-matome",
+      "filter-matome▼",
+      [
+        "mylist2",
+        "watch-history",
+        "キャッシュ",
+        "video-player",
+        "movie-info",
+        "filter-matome (GitHub)",
+      ],
+    ],
+  ] as const) {
+    const menuElement = header.locator(`[data-header-menu="${menu}"]`);
+    await expect(menuElement.locator("button")).toHaveText(button);
+    await expect(menuElement.locator(".dropdown-content a")).toHaveText(links);
+
+    await menuElement.locator("button").focus();
+    await expect(menuElement.locator(".dropdown-content")).toBeVisible();
+  }
+
+  for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 375, height: 600 },
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const menu of ["main", "other", "filter-matome"]) {
+      const menuElement = header.locator(`[data-header-menu="${menu}"]`);
+      await menuElement.locator("button").focus();
+      const menuBox = await menuElement
+        .locator(".dropdown-content")
+        .boundingBox();
+      expect(menuBox).not.toBeNull();
+      if (!menuBox) throw new Error(`${menu} menu is not visible`);
+      expect(menuBox.x).toBeGreaterThanOrEqual(0);
+      expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(viewport.width);
+    }
+  }
+});
+
+test("共通ヘッダーの検索入力は固定幅で選択欄と高さが揃う", async ({ page }) => {
+  await openApp(page);
+
+  const header = page.locator("#common-header-container");
+  const searchSelect = header.locator("[data-header-search-select]");
+  const searchInput = header.locator("[data-header-search-input]");
+  await expect(
+    header.locator('[data-header-clear-btn] img[alt="close"]'),
+  ).toHaveCount(1);
+
+  for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 375, height: 600 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const [selectBox, inputBox] = await Promise.all([
+      searchSelect.boundingBox(),
+      searchInput.boundingBox(),
+    ]);
+
+    expect(selectBox).not.toBeNull();
+    expect(inputBox).not.toBeNull();
+    if (!selectBox || !inputBox) {
+      throw new Error("common header search controls are not visible");
+    }
+    expect(inputBox.width).toBe(240);
+    expect(inputBox.height).toBe(selectBox.height);
+  }
+});
+
 test("履歴の検索・全ソート・全フィルタ・動的詳細操作が機能する", async ({
   page,
 }) => {

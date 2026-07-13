@@ -169,6 +169,8 @@ export class CommonHeader implements CommonHeaderInstance {
 
       .search-container select,
       .search-container input {
+        box-sizing: border-box;
+        height: 36px;
         min-height: 36px;
         padding: 6px 10px;
         border: 1px solid var(--nc-border, #364151);
@@ -183,9 +185,9 @@ export class CommonHeader implements CommonHeaderInstance {
       }
 
       .search-container input {
-        flex: 1 1 140px;
-        min-width: 0;
-        width: 100%;
+        flex: 0 0 var(--header-search-input-width, 240px);
+        width: var(--header-search-input-width, 240px);
+        max-width: 100%;
       }
 
       .search-container button {
@@ -275,6 +277,12 @@ export class CommonHeader implements CommonHeaderInstance {
 
       /* ドロップダウンメニュー */
       .more-links {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .link-menu {
         position: relative;
       }
 
@@ -290,13 +298,19 @@ export class CommonHeader implements CommonHeaderInstance {
         z-index: 9001;
       }
 
+      .link-menu:first-child .dropdown-content {
+        right: auto;
+        left: 0;
+      }
+
       .dropdown-content a {
         padding: 12px 16px;
         display: block;
         white-space: nowrap;
       }
 
-      .more-links:hover .dropdown-content {
+      .link-menu:hover .dropdown-content,
+      .link-menu:focus-within .dropdown-content {
         display: block;
       }
 
@@ -342,6 +356,10 @@ export class CommonHeader implements CommonHeaderInstance {
           gap: 10px;
         }
 
+        .more-links {
+          gap: 10px;
+        }
+
         .search-container {
           flex-wrap: wrap;
         }
@@ -350,9 +368,6 @@ export class CommonHeader implements CommonHeaderInstance {
           flex: 1 1 120px;
         }
 
-        .search-container input {
-          flex: 1 1 180px;
-        }
       }
 
       /* マテリアルアイコンの統合 */
@@ -387,7 +402,7 @@ export class CommonHeader implements CommonHeaderInstance {
                 ${createMaterialIcon(ICONS.search, { style: "outlined", color: "white" })}
               </button>
               <button id="searchClear" data-header-clear-btn class="icon-btn clear-btn" title="クリア">
-                ${createMaterialIcon(ICONS.clear, { style: "outlined", color: "white" })}
+                ${createMaterialIcon(ICONS.close, { style: "outlined", color: "white" })}
               </button>
             </div>
           </div>
@@ -397,64 +412,76 @@ export class CommonHeader implements CommonHeaderInstance {
                 ${createMaterialIcon(ICONS.home, { style: "outlined", color: "white" })}
                 トップ
               </a>
-              <a href="https://www.nicovideo.jp/video_top" target="_blank" title="動画">
-                ${createMaterialIcon(ICONS.play, { style: "outlined", color: "white" })}
-                動画
-              </a>
-              <a href="https://seiga.nicovideo.jp/" target="_blank" title="静画">
-                ${createMaterialIcon(ICONS.image, { style: "outlined", color: "white" })}
-                静画
-              </a>
-              <a href="https://live.nicovideo.jp/" target="_blank" title="生放送">
-                ${createMaterialIcon(ICONS.live_tv, { style: "outlined", color: "white" })}
-                生放送
-              </a>
-              <a href="https://ch.nicovideo.jp/" target="_blank" title="チャンネル">
-                ${createMaterialIcon(ICONS.tv, { style: "outlined", color: "white" })}
-                チャンネル
-              </a>
               <span class="more-links">
-                <button id="moreLinksBtn" data-header-more-btn>その他▼</button>
-                <div class="dropdown-content">
-                  <a href="https://dic.nicovideo.jp/" target="_blank" title="大百科">
-                    大百科
-                  </a>
-                  <a href="https://jk.nicovideo.jp/" target="_blank" title="実況">
-                    実況
-                  </a>
-                  <a href="https://anime.nicovideo.jp/" target="_blank" title="Nアニメ">
-                    Nアニメ
-                  </a>
-                  <a href="https://www.nicovideo.jp/ranking" target="_blank" title="ランキング">ランキング</a>
-                  <a href="https://www.nicovideo.jp/my/history/video" target="_blank" title="マイページ">
-                    ${createMaterialIcon(ICONS.bookmark, { style: "outlined", color: "white" })}
-                    マイページ
-                  </a>
-                  <a href="https://www.nicovideo.jp/newarrival" target="_blank" title="新着動画">
-                    新着動画
-                  </a>
-                  <a href="https://www.nicovideo.jp/recent" target="_blank" title="新着コメント">
-                    新着コメント
-                  </a>
-                  <a href="https://www.nicovideo.jp/local/features/dist/pages/mylist2/index.html" target="_blank" title="mylist2">
-                    mylist2
-                  </a>
-                  <a href="https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html" target="_blank" title="watch-history">
-                    watch-history
-                  </a>
-                  <a href="https://www.nicovideo.jp/cache/" target="_blank" title="キャッシュ">
-                    キャッシュ
-                  </a>
-                  <a href="https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html" target="_blank" title="video-player">
-                    video-player
-                  </a>
-                  <a href="https://www.nicovideo.jp/local/features/dist/pages/movie-info/index.html" target="_blank" title="movie-info">
-                    movie-info
-                  </a>
-                  <a href="https://github.com/roflsunriz/filter-matome" target="_blank" title="filter-matome">
-                    filter-matome (GitHub)
-                  </a>
-                </div>
+                <span class="link-menu" data-header-menu="main">
+                  <button type="button" aria-haspopup="true">メイン▼</button>
+                  <div class="dropdown-content">
+                    <a href="https://www.nicovideo.jp/video_top" target="_blank" title="動画">
+                      ${createMaterialIcon(ICONS.play, { style: "outlined", color: "white" })}
+                      動画
+                    </a>
+                    <a href="https://seiga.nicovideo.jp/" target="_blank" title="静画">
+                      ${createMaterialIcon(ICONS.image, { style: "outlined", color: "white" })}
+                      静画
+                    </a>
+                    <a href="https://live.nicovideo.jp/" target="_blank" title="生放送">
+                      ${createMaterialIcon(ICONS.live_tv, { style: "outlined", color: "white" })}
+                      生放送
+                    </a>
+                    <a href="https://ch.nicovideo.jp/" target="_blank" title="チャンネル">
+                      ${createMaterialIcon(ICONS.tv, { style: "outlined", color: "white" })}
+                      チャンネル
+                    </a>
+                  </div>
+                </span>
+                <span class="link-menu" data-header-menu="other">
+                  <button id="moreLinksBtn" type="button" data-header-more-btn aria-haspopup="true">その他▼</button>
+                  <div class="dropdown-content">
+                    <a href="https://dic.nicovideo.jp/" target="_blank" title="大百科">
+                      大百科
+                    </a>
+                    <a href="https://jk.nicovideo.jp/" target="_blank" title="実況">
+                      実況
+                    </a>
+                    <a href="https://anime.nicovideo.jp/" target="_blank" title="Nアニメ">
+                      Nアニメ
+                    </a>
+                    <a href="https://www.nicovideo.jp/ranking" target="_blank" title="ランキング">ランキング</a>
+                    <a href="https://www.nicovideo.jp/my/history/video" target="_blank" title="マイページ">
+                      ${createMaterialIcon(ICONS.bookmark, { style: "outlined", color: "white" })}
+                      マイページ
+                    </a>
+                    <a href="https://www.nicovideo.jp/newarrival" target="_blank" title="新着動画">
+                      新着動画
+                    </a>
+                    <a href="https://www.nicovideo.jp/recent" target="_blank" title="新着コメント">
+                      新着コメント
+                    </a>
+                  </div>
+                </span>
+                <span class="link-menu" data-header-menu="filter-matome">
+                  <button type="button" aria-haspopup="true">filter-matome▼</button>
+                  <div class="dropdown-content">
+                    <a href="https://www.nicovideo.jp/local/features/dist/pages/mylist2/index.html" target="_blank" title="mylist2">
+                      mylist2
+                    </a>
+                    <a href="https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html" target="_blank" title="watch-history">
+                      watch-history
+                    </a>
+                    <a href="https://www.nicovideo.jp/cache/" target="_blank" title="キャッシュ">
+                      キャッシュ
+                    </a>
+                    <a href="https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html" target="_blank" title="video-player">
+                      video-player
+                    </a>
+                    <a href="https://www.nicovideo.jp/local/features/dist/pages/movie-info/index.html" target="_blank" title="movie-info">
+                      movie-info
+                    </a>
+                    <a href="https://github.com/roflsunriz/filter-matome" target="_blank" title="filter-matome">
+                      filter-matome (GitHub)
+                    </a>
+                  </div>
+                </span>
               </span>
             </nav>
           </div>
