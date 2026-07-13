@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【video-player】キャッシュ済み動画をタイトルから探して直接再生できるよう、NicoCache_nl の検索APIを利用したキーワード検索、画質違いをまとめた結果一覧、検索中・0件・失敗時の案内を動画指定ナビゲーションへ追加した。
 - 【video-player】パンくずリスト直下から動画URLまたは `videoId` を指定して再生できるよう、動画ID抽出付きの入力欄と共通Material Design Iconsの再生ボタンを追加した。
 
 ### Changed
