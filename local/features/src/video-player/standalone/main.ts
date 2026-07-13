@@ -16,6 +16,7 @@ import {
   REPEAT_PLAYBACK_STORAGE_KEY,
   resolveEndedPlaybackAction,
 } from "@/video-player/standalone/playback-preferences";
+import { fetchNicochartVideoInfo } from "@/video-player/core/nicochart-client";
 import type { ApiData, NicoApiData } from "@/types/index";
 import DOMPurify from "dompurify";
 import type { Config as DOMPurifyConfig } from "dompurify";
@@ -1028,6 +1029,41 @@ const assignWatchContext = (videoId: string, apiData: ApiData): void => {
   window.NicoCache_nl.watch.apiData = apiData;
 };
 
+type VideoInfoResult = {
+  apiData: ApiData;
+  source: "watch-page" | "nicochart";
+};
+
+const fetchVideoInfoWithFallback = async (
+  videoId: string,
+): Promise<VideoInfoResult | null> => {
+  try {
+    const result = await window.commonHelper.fetchWatchPage(videoId);
+    if (result) {
+      return {
+        apiData: toApiData(result.apiData, videoId),
+        source: "watch-page",
+      };
+    }
+    window.logger.warn(
+      "ウォッチページから動画情報を取得できませんでした。nicochart.jpを試します",
+    );
+  } catch (error) {
+    window.logger.warn(
+      "ウォッチページの動画情報取得に失敗しました。nicochart.jpを試します",
+      error,
+    );
+  }
+
+  try {
+    const apiData = await fetchNicochartVideoInfo(videoId);
+    return apiData ? { apiData, source: "nicochart" } : null;
+  } catch (error) {
+    window.logger.warn("nicochart.jpの動画情報取得に失敗しました", error);
+    return null;
+  }
+};
+
 let started = false;
 
 export const startStandalonePlayer = async (): Promise<void> => {
@@ -1081,16 +1117,23 @@ export const startStandalonePlayer = async (): Promise<void> => {
   }
 
   try {
-    const result = await window.commonHelper.fetchWatchPage(videoId);
-    if (!result) {
+    const videoInfo = await fetchVideoInfoWithFallback(videoId);
+    if (!videoInfo) {
       throw new Error("ウォッチページの取得に失敗しました");
     }
 
-    const apiData = toApiData(result.apiData, videoId);
+    const { apiData, source } = videoInfo;
     layout.title.textContent = apiData.video.title;
     document.title = "video-player - " + apiData.video.title;
 
     renderMeta(layout.metaList, apiData);
+    if (source === "nicochart") {
+      appendMetaItem(
+        layout.metaList,
+        "情報取得元",
+        "nicochart.jp（情報が最新でない場合があります）",
+      );
+    }
     renderStats(layout.statsList, apiData, videoId);
     renderTags(layout.tags, apiData);
     renderDescription(layout.description, apiData);
@@ -1099,7 +1142,10 @@ export const startStandalonePlayer = async (): Promise<void> => {
 
     assignWatchContext(videoId, apiData);
 
-    await player.initialize(videoId, { apiData });
+    await player.initialize(videoId, {
+      apiData,
+      enableComments: source === "watch-page",
+    });
 
     // 繰り返し再生を優先し、無効な場合だけ次の動画へ自動遷移する。
     const resolved = resolveNextVideoId(apiData, videoId);

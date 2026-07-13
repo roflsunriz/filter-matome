@@ -8,12 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【video-player】ニコニコ動画のウォッチページから動画情報を取得できない場合でもキャッシュ動画のタイトルや説明を確認できるよう、nicochart.jp の公開情報を最終フォールバックとして取得する読み取り専用NicoCache_nl拡張を追加した。接続先と動画IDを制限し、nicochart 側にも情報がない場合は従来どおりローカルキャッシュのみで再生を試みる。
 - 【common】各ローカル機能へ直接移動しやすくするため、共通ヘッダーの「その他」メニューで video-player の直後に movie-info へのリンクを追加した。
 - 【video-player】キャッシュ済み動画をタイトルから探して直接再生できるよう、NicoCache_nl の検索APIを利用したキーワード検索、画質違いをまとめた結果一覧、検索中・0件・失敗時の案内を動画指定ナビゲーションへ追加した。
 - 【video-player】パンくずリスト直下から動画URLまたは `videoId` を指定して再生できるよう、動画ID抽出付きの入力欄と共通Material Design Iconsの再生ボタンを追加した。
 
 ### Changed
 
+- 【docs】NicoCache_nl拡張の導入・更新時に役割や依存関係を判断できるよう、`docs/USAGE.md`へ`extensions/`全般の説明、同梱クラス一覧、再起動手順、外部コマンド要件、注意事項、トラブルシュートを追加した。
 - 【common/video-player/movie-info】動画ID・URL入力と完成済みキャッシュのタイトル検索を両画面で一貫して利用できるよう、検索API、結果一覧、動画指定フォーム、レスポンシブスタイルを common へ集約し、movie-info でも検索結果からデータ取得できるようにした。
 - 【video-player/mlink-video-controller】背景切替トグルの形状を角張った印象を保つ6pxの角丸へ変更し、原宿風 Watch の汎用ボタン規則がスタンドアロンUIを上書きしないよう適用範囲を公式プレイヤーの `#root` 配下へ限定した。
 - comment-filter2 のルール入力画面で一致プレビューをアコーディオン化し、必要なときだけテスト入力欄と結果を展開できるようにした。

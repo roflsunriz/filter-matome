@@ -12,6 +12,12 @@
 
 動画IDに一致しない文字列を入力して Enter を押すか「検索」を選ぶと、NicoCache_nl の `/cache/search/<キーワード>` APIで完成済みキャッシュのタイトルを部分一致検索します。検索結果は動画ID単位に画質違いをまとめ、タイトル、動画ID、キャッシュ数、合計サイズ、更新日時、キャッシュ識別子を表示します。結果を選ぶと既存の動画ID再生へ遷移し、`/cache/info/v2` と `/cache/find_cache` を使用する通常のソース解決で再生します。表示件数は更新日時の新しい順に最大50件です。
 
+ニコニコ動画のウォッチページから動画情報を取得できない場合は、最終手段として nicochart.jp の動画詳細ページを参照します。nicochart.jp は全動画を網羅せず、保存情報の更新が遅れる場合があるため、画面には取得元を明示します。この経路ではコメント情報を取得できないためコメント機能を無効にし、タイトル、投稿日、再生時間、統計、説明文、投稿者、タグなど取得できた項目とローカルキャッシュを使って再生します。nicochart.jp にも情報がない場合は、従来どおり動画IDを仮タイトルとしてキャッシュ再生だけを試みます。
+
+nicochart.jp は CORS でHTMLを直接取得できないため、NicoCache_nl 拡張 `extensions/NicochartInfoProxy.java` が `/cache/nicochart-info/<videoId>` で対象ページを取得します。拡張側は接続先を nicochart.jp、パスを厳格な動画IDに固定し、汎用プロキシとして悪用できないようにしています。接続・読み取りタイムアウトと8 MiBの応答上限を設け、video-player 側の `core/nicochart-parser.ts` が返されたHTMLを解析します。拡張が未導入または nicochart.jp が利用できない場合は、キャッシュのみの再生へ進みます。
+
+配布物の `extensions/NicochartInfoProxy.class` を他の拡張と同様に NicoCache_nl の `extensions/` へ配置し、NicoCache_nl を再起動すると有効になります。プロキシ設定、PAC、`genCerts.bat` / `genCerts.sh` の対象追加は不要です。
+
 ## HTML配信位置
 
 - ソース: `src/video-player/standalone/index.html`
@@ -33,6 +39,9 @@ features/src/video-player/
 │   ├── comment-system.ts                 # コメントシステム統合 (21KB)
 │   ├── database-manager.ts               # 🆕 データベース統合管理システム (18KB)
 │   ├── migration-manager.ts              # 🆕 マイグレーション管理システム (15KB)
+│   ├── nicochart-client.ts               # NicoCache_nl拡張APIからHTMLを取得
+│   ├── nicochart-parser.ts               # nicochart HTMLから動画情報を正規化
+│   ├── nicochart-types.ts                # 正規化データ型・ApiData変換
 │   └── url-manager.ts                    # URL・キャッシュ管理 (5KB)
 ├── ui/
 │   ├── comment-list.ts                   # コメントリスト表示 (16KB)
@@ -116,6 +125,12 @@ database-manager.ts ─── データベース統合管理
 - **役割**: コメント機能の中央制御・統合管理
 - **機能**: レンダラー・リスト・フェッチャーの統合、CommentFilter2連携、NGフィルター
 - **編集タイミング**: コメント機能全体の修正、新しいフィルター追加、外部連携変更
+
+#### `core/nicochart-*.ts` - 動画情報の最終フォールバック
+- **役割**: ウォッチページの動画情報を取得できないときだけ nicochart.jp の公開情報を取得する
+- **機能**: 同一オリジンのNicoCache_nl拡張API呼び出し、ページ内HTML解析、`ApiData` への変換
+- **編集タイミング**: nicochart.jp のHTML構造、取得項目、フォールバック順を変更するとき。通信制限は `extensions/NicochartInfoProxy.java` を編集する
+- **注意**: 個人運営サイトへの負荷を避けるため、通常のウォッチページ取得が失敗した場合に1回だけ要求する。nicochart.jp をブラウザから直接 `fetch` するとCORSで応答本文を参照できない
 
 #### 🆕 `core/comment-overlay-comment-system.ts` - コメントオーバーレイ描画統合
 - **役割**: `comment-overlay` ライブラリを用いたコメント描画・表示制御

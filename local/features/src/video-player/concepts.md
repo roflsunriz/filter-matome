@@ -15,7 +15,7 @@
 
 1. ウォッチページに挿入した <code>initWatchPageRouter</code> が <code>window.commonHelper.fetchWatchPage()</code> を呼び出し、<code>NicoWatchApi</code> 互換のレスポンスを取得する。
 2. <code>video.watchableUserTypeForPayment</code> または <code>payment.video.watchableUserType</code> が <code>all</code> 以外（＝課金が必要）と判定できた場合のみ、<code>/local/features/dist/pages/video-player/index.html?videoId=...</code> に遷移する。
-3. ローカルページ（スタンドアロンページ）はクエリパラメーターの <code>videoId</code> を受け取り、再度 <code>fetchWatchPage(videoId)</code> を実行して <code>ApiData</code> に整形する。
+3. ローカルページ（スタンドアロンページ）はクエリパラメーターの <code>videoId</code> を受け取り、再度 <code>fetchWatchPage(videoId)</code> を実行して <code>ApiData</code> に整形する。取得できない場合だけ nicochart.jp の公開情報を最終フォールバックとして参照する。
 4. <code>StandalonePlayer</code> がキャッシュサーバーから動画ソースを選別しつつ、UIモジュール群（コメント、操作パネル等）を初期化する。
 5. 表示用コンポーネントが <code>NicoWatchApi</code> の各セクションを描画し、ウォッチページ同等のメタ情報を提供する。
 
@@ -37,6 +37,8 @@
 
 - <code>window.commonHelper.fetchWatchPage(videoId?)</code> が返すオブジェクトは <code>nico-watch-api.md</code> に定義された <code>NicoWatchApi</code> に準拠する。
 - スタンドアロン側では <code>ApiData</code> 型にマッピングし、UIが必要とするプロパティのみを抽出する。変換時に欠損値は <code>-</code> や既定文言へフォールバックする。
+- nicochart.jp のフォールバックでは、NicoCache_nl 拡張が接続先と動画IDを固定した同一オリジンの読み取り専用エンドポイントを提供し、video-player がHTMLを解析する。画面には取得元と情報の鮮度に関する注意を表示する。
+- nicochart.jp からコメントAPI情報やシリーズ情報は得られないため、この経路ではコメント機能を無効にし、連続再生候補も生成しない。
 - コメントは <code>comment.threads</code> や <code>comment.nvComment</code> の情報を <code>CommentSystem</code> へ渡して初期化する。
 - 関連動画 <code>related.items</code> は存在すればカードとして描画し、無い場合はプレースホルダを表示する。
 
@@ -70,7 +72,7 @@
 ## エラーとフォールバック
 
 - ウォッチページで課金判定・API取得に失敗した場合は遷移せず公式プレイヤーを使う。
-- スタンドアロンページで <code>fetchWatchPage</code> が失敗した場合はエラー文言を表示し、<code>window.logger.error</code> で詳細を記録する。
+- スタンドアロンページで <code>fetchWatchPage</code> が失敗した場合は NicoCache_nl 拡張経由で nicochart.jp を1回だけ参照する。有効な情報を取得できなければ、エラーをログに残して動画IDを仮タイトルとするローカルキャッシュ再生へ進む。
 - 動画ソースの解決に失敗した場合はトーストで通知し、例外をスローして操作を停止する。
 - コメント初期化で例外が発生した場合はエラーをログに残しつつプレイヤー再生は継続する。
 

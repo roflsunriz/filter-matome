@@ -37,7 +37,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 `C:\NicoCache_nl`にインストールしたとする  
 
 1. `C:\NicoCache_nl`フォルダを開く  
-2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `nlMediaInfo.class`を削除する  
+2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `NicochartInfoProxy.class`, `nlMediaInfo.class`を削除する
 3. `local`フォルダにある`background-images`, `features`, `images`, フォルダ, `mime.types`, `list.js` のシンボリックリンクを削除する  
 4. `scripts`フォルダを削除する  
 5. `nlFilters`フォルダの `100_features.txt`, `101_disable_official_function.txt`, `105_premium_hide.txt`, `nlFilters_編集ガイド.md`を削除する
@@ -50,7 +50,50 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 ---
 
-### 1.1 Symlink Setup (Required)
+### 1.1 extensions（NicoCache_nl拡張機能）
+
+`extensions/` は、ブラウザへ挿入されるJavaScriptやCSSでは実行できないサーバー側の処理をNicoCache_nlへ追加するディレクトリである。ローカルキャッシュファイルの探索、外部コマンドの実行、NicoCache_nl GUIへのログ表示、外部サイトからの限定的な情報取得などを担当する。
+
+配布物には同名の `.class` と `.java` が含まれる。
+
+- `.class`: NicoCache_nlが実行時に読み込むコンパイル済み拡張機能。本機能を利用するために必要。
+- `.java`: 拡張機能のソースコード。通常利用時のコンパイルには使用せず、実装確認や開発用として同梱している。
+
+#### 同梱される拡張機能
+
+| ファイル | 役割 | 主な利用箇所・追加要件 |
+|---|---|---|
+| `CommentFilterLogger.class` | comment-filter2から送信されたフィルター結果を受け取り、NicoCache_nl GUIのログタブへ表示する | comment-filter2の「ログ送信」を有効にした場合に使用。GUIなしで起動した場合はログタブを表示しない |
+| `CustomCacheReturner.class` | `local/cache`内のHLS・MP4候補を動画IDで検索し、JSONで返す | video-playerのローカル動画ソース探索に使用 |
+| `downloadThruFFmpeg.class` | キャッシュ動画から動画または音声を書き出す | mlink-video-controllerとキャッシュ一覧の「保存:動画」「保存:音声」で使用。別途`ffmpeg`コマンドが必要 |
+| `ExtUtil.class` | 拡張機能向けの共通処理を提供する補助クラス | 単独で操作する機能ではない。他の `.class` と一緒に配置する |
+| `NicochartInfoProxy.class` | video-playerが通常の動画情報を取得できない場合だけ、サーバー側からnicochart.jpの公開情報を取得する | 接続先と動画IDを制限した読み取り専用処理。PACや`genCerts.bat` / `genCerts.sh`の変更は不要 |
+| `nlMediaInfo.class` | キャッシュファイルを`mediainfo --Output=JSON`で解析してJSONを返す | movie-infoのMediaInfo表示で使用。別途`mediainfo`コマンドが必要 |
+
+#### 配置と更新
+
+1. 配布物の `extensions/` にある `.class` と `.java` を、ディレクトリ構造を変えずにNicoCache_nlの `extensions/` へ上書きコピーする。
+2. リリースノートで削除された拡張がある場合は、古い `.class` をNicoCache_nlの `extensions/` から削除する。古い `.class` を残すと、廃止済みの処理が読み込まれ続ける場合がある。
+3. NicoCache_nlを再起動する。ブラウザの再読み込みだけでは、追加・更新・削除した `.class` は反映されない。
+
+!!! warning "拡張機能の取り扱い"
+
+    - 拡張機能はNicoCache_nlと同じJavaプロセス内で動作し、ローカルファイルの読み取りや外部コマンドの起動、ネットワーク通信を行える。信頼できる配布元の `.class` だけを配置する。
+    - `.java`だけを更新しても動作は変わらない。通常利用者は配布済みの `.class` を使用し、自分で再コンパイルしない。
+    - 一部の拡張だけを任意に抜くと、対応する画面機能が404や取得失敗になる。基本的には配布物の一式を使用する。
+    - `downloadThruFFmpeg.class`と`nlMediaInfo.class`は外部コマンドを呼び出すため、`ffmpeg`または`mediainfo`がPATHから実行できることを確認する。
+
+#### 動作しない場合
+
+1. `.class`が `NicoCache_nl/extensions/` 直下にあることを確認する。サブフォルダへ移動しない。
+2. NicoCache_nlを再起動し、起動ログに対象拡張の読み込み失敗やJavaバージョンのエラーがないか確認する。
+3. 保存・MediaInfo機能の場合は、PowerShellなどで `ffmpeg -version` または `mediainfo --Version` が成功するか確認する。
+4. 更新後にだけ失敗する場合は、古い `.class` の残存を確認してから、標準手順で `extensions/` を再度上書きする。
+5. `NicochartInfoProxy`が失敗してもvideo-playerはキャッシュ再生を継続する。詳細はNicoCache_nlの警告ログで `NicochartInfoProxy` を確認する。
+
+---
+
+### 1.2 Symlink Setup (Required)
 
 NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\local\list.js` の固定パス・固定名で参照する。
 
