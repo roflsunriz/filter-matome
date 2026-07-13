@@ -73,7 +73,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 #### HLSキャッシュ削除API
 
-`FilterMatomeCacheControl`は、NicoCache_nl本体のソースを書き換えず、公開されているキャッシュAPIとシステムイベントだけを利用する。削除対象は動画IDに紐づく `.hls` に限定され、ユーザーが用意した可能性のあるMP4・FLV・SWFは保持される。
+`FilterMatomeCacheControl`は、cache-data-managerとmlink-video-controllerのキャッシュ削除で使用する。NicoCache_nl本体のソースを書き換えず、公開されているキャッシュAPIとシステムイベントだけを利用する。削除対象は動画IDに紐づく `.hls` に限定され、ユーザーが用意した可能性のあるMP4・FLV・SWFは保持される。
 
 すべてのリクエストで `X-Filter-Matome-Cache-Control: 1` ヘッダーが必要。状態変更にはGETではなくPOSTを使用する。
 

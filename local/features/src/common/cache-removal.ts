@@ -1,131 +1,175 @@
-import type { CacheInfoResponse } from "@/types/video-types.js";
+const CACHE_REMOVAL_API_BASE = "/cache/filter-matome/v1";
+const CACHE_REMOVAL_REQUEST_HEADER = "X-Filter-Matome-Cache-Control";
 
-const toCacheInfoEntry = (
-  videoId: string,
-  cacheInfo: CacheInfoResponse,
-): CacheInfoResponse[string] | undefined =>
-  cacheInfo[videoId] ?? cacheInfo[videoId.toLowerCase()];
+const REMOVAL_STATUSES = [
+  "not_found",
+  "pending",
+  "completed",
+  "partial",
+  "failed",
+] as const;
+const REMOVAL_OUTCOMES = [
+  "deleted",
+  "queued",
+  "not_found",
+  "failed",
+  "expired",
+] as const;
 
-const extractHlsCacheId = (value: unknown): string | null => {
-  if (typeof value !== "string") return null;
-  const decoded = (() => {
-    try {
-      return decodeURIComponent(value);
-    } catch {
-      return value;
-    }
-  })();
-  const match = /([a-z]{2}\d+(?:low)?\[[^\]]+\]\.hls)/i.exec(decoded);
-  return match?.[1] ?? null;
-};
+export type CacheRemovalStatus = (typeof REMOVAL_STATUSES)[number];
+export type CacheRemovalOutcome = (typeof REMOVAL_OUTCOMES)[number];
 
-const toStringSet = (value: unknown): Set<string> => {
-  const result = new Set<string>();
-  const add = (item: unknown): void => {
-    if (Array.isArray(item)) {
-      item.forEach(add);
-      return;
-    }
-    const cacheId = extractHlsCacheId(item);
-    if (cacheId) result.add(cacheId);
-  };
-  add(value);
-  return result;
-};
+export interface CacheRemovalResultEntry {
+  cacheId: string;
+  outcome: CacheRemovalOutcome;
+}
 
-/** キャッシュ情報から、完了済み/作成中それぞれの削除URLを生成する。 */
-export const buildCacheRemovalPaths = (
-  videoId: string,
-  cacheInfo: CacheInfoResponse,
-): string[] => {
-  const entry = toCacheInfoEntry(videoId, cacheInfo);
-  if (!entry) return [];
+export interface CacheRemovalResponse {
+  requestId: string;
+  videoId: string;
+  status: CacheRemovalStatus;
+  target: "hls";
+  preservesNonHls: true;
+  results: CacheRemovalResultEntry[];
+}
 
-  const candidates = new Set<unknown>();
-  const addCandidate = (value: unknown): void => {
-    if (Array.isArray(value)) {
-      value.forEach(addCandidate);
-      return;
-    }
-    candidates.add(value);
-  };
-  addCandidate(entry.preferred);
-  addCandidate(entry.cacheIds);
-  addCandidate(entry.completes);
-  addCandidate(entry.cachings);
-  addCandidate(entry.preferredDmcHls);
-  addCandidate(entry.preferredDmc);
+export interface CacheRemovalNotice {
+  kind: "success" | "warning" | "error";
+  message: string;
+}
 
-  if (entry.caches && typeof entry.caches === "object") {
-    Object.entries(entry.caches).forEach(([cacheId, cache]) => {
-      addCandidate(cacheId);
-      if (cache && typeof cache === "object") {
-        addCandidate(cache.cacheId);
-        addCandidate(cache.filename);
-      }
-    });
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const isOneOf = <T extends string>(
+  value: unknown,
+  candidates: readonly T[],
+): value is T => typeof value === "string" && candidates.includes(value as T);
+
+const parseCacheRemovalResponse = (value: unknown): CacheRemovalResponse => {
+  if (
+    !isRecord(value) ||
+    typeof value.requestId !== "string" ||
+    typeof value.videoId !== "string" ||
+    !isOneOf(value.status, REMOVAL_STATUSES) ||
+    value.target !== "hls" ||
+    value.preservesNonHls !== true ||
+    !Array.isArray(value.results)
+  ) {
+    throw new Error("HLSキャッシュ削除APIの応答形式が不正です");
   }
 
-  const normalizedVideoId = videoId.toLowerCase();
-  const completeCacheIds = toStringSet(entry.completes);
-  const cachingCacheIds = toStringSet(entry.cachings);
-  const paths = new Set<string>();
-  candidates.forEach((candidate) => {
-    const cacheId = extractHlsCacheId(candidate);
-    if (!cacheId || !cacheId.toLowerCase().startsWith(normalizedVideoId))
-      return;
-
-    const cache = entry.caches?.[cacheId];
-    const hasStatusInfo =
-      completeCacheIds.size > 0 ||
-      cachingCacheIds.size > 0 ||
-      typeof cache?.complete === "boolean" ||
-      typeof cache?.caching === "boolean";
-    const isComplete =
-      completeCacheIds.has(cacheId) ||
-      cache?.complete === true ||
-      (hasStatusInfo &&
-        cache?.caching === false &&
-        !cachingCacheIds.has(cacheId));
-    const isCaching =
-      cachingCacheIds.has(cacheId) || cache?.caching === true || !hasStatusInfo;
-
-    if (isComplete) {
-      paths.add(`/cache/ajax_rm?${cacheId}`);
-    } else if (isCaching) {
-      paths.add(`/cache/ajax_rmtmp?${cacheId}`);
+  const results = value.results.map((entry): CacheRemovalResultEntry => {
+    if (
+      !isRecord(entry) ||
+      typeof entry.cacheId !== "string" ||
+      !entry.cacheId.toLowerCase().endsWith(".hls") ||
+      !isOneOf(entry.outcome, REMOVAL_OUTCOMES)
+    ) {
+      throw new Error("HLSキャッシュ削除APIの結果形式が不正です");
     }
+    return { cacheId: entry.cacheId, outcome: entry.outcome };
   });
-  return [...paths];
+
+  return {
+    requestId: value.requestId,
+    videoId: value.videoId,
+    status: value.status,
+    target: "hls",
+    preservesNonHls: true,
+    results,
+  };
 };
 
-export const fetchCacheInfo = async (
-  videoId: string,
-): Promise<CacheInfoResponse> => {
-  const response = await fetch(
-    `https://www.nicovideo.jp/cache/info/v2?${encodeURIComponent(videoId)}`,
-  );
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  return (await response.json()) as CacheInfoResponse;
-};
-
-export const removeCacheByPath = async (path: string): Promise<void> => {
-  const response = await fetch(path, {
+const fetchCacheRemovalApi = async (
+  path: string,
+  init: RequestInit,
+): Promise<CacheRemovalResponse> => {
+  const response = await fetch(`${CACHE_REMOVAL_API_BASE}/${path}`, {
+    ...init,
     cache: "no-store",
     credentials: "same-origin",
+    headers: {
+      ...init.headers,
+      [CACHE_REMOVAL_REQUEST_HEADER]: "1",
+    },
   });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
-  const result = (await response.text()).trim();
-  if (result !== "OK") throw new Error(result || "empty response");
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(
+        "FilterMatomeCacheControl拡張が見つかりません。NicoCache_nlのextensions配置と再起動を確認してください",
+      );
+    }
+    throw new Error(`HLSキャッシュ削除API: HTTP ${response.status}`);
+  }
+
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error("HLSキャッシュ削除APIからJSONを取得できませんでした");
+  }
+  return parseCacheRemovalResponse(data);
 };
 
-/** 動画に紐付く完了済み/テンポラリHLSキャッシュをすべて削除する。 */
-export const removeCacheForVideo = async (videoId: string): Promise<number> => {
-  const cacheInfo = await fetchCacheInfo(videoId);
-  const paths = buildCacheRemovalPaths(videoId, cacheInfo);
-  if (paths.length === 0) {
-    throw new Error("削除可能なHLSキャッシュが見つかりません");
+/** 動画に紐づくHLSだけを削除し、ダウンロード中なら削除予約を登録する。 */
+export const removeCacheForVideo = async (
+  videoId: string,
+): Promise<CacheRemovalResponse> =>
+  fetchCacheRemovalApi("remove", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      videoId,
+      scope: "hls",
+      activeDownload: "queue",
+    }),
+  });
+
+/** 削除予約を含むリクエストの最新状態を取得する。 */
+export const fetchCacheRemovalStatus = async (
+  requestId: string,
+): Promise<CacheRemovalResponse> =>
+  fetchCacheRemovalApi(`remove-status?id=${encodeURIComponent(requestId)}`, {
+    method: "GET",
+  });
+
+export const getCacheRemovalNotice = (
+  result: CacheRemovalResponse,
+): CacheRemovalNotice => {
+  const deleted = result.results.filter(
+    (entry) => entry.outcome === "deleted",
+  ).length;
+  const failed = result.results.filter(
+    (entry) => entry.outcome === "failed" || entry.outcome === "expired",
+  ).length;
+
+  switch (result.status) {
+    case "not_found":
+      return {
+        kind: "warning",
+        message: "削除可能なHLSキャッシュが見つかりません。",
+      };
+    case "pending":
+      return {
+        kind: "warning",
+        message:
+          "HLSキャッシュの削除を予約しました。キャッシュ完了または中断後に削除されます。",
+      };
+    case "completed":
+      return {
+        kind: "success",
+        message: `HLSキャッシュを削除しました。(${deleted.toLocaleString()} 件)`,
+      };
+    case "partial":
+      return {
+        kind: "error",
+        message: `HLSキャッシュの削除が一部失敗しました。(削除 ${deleted.toLocaleString()} 件 / 失敗 ${failed.toLocaleString()} 件)`,
+      };
+    case "failed":
+      return {
+        kind: "error",
+        message: "HLSキャッシュの削除に失敗しました。",
+      };
   }
-  for (const path of paths) await removeCacheByPath(path);
-  return paths.length;
 };

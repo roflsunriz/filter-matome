@@ -1,6 +1,9 @@
 import type { VideoData } from "@/types";
 import { ICONS, createMaterialIcon } from "@/common/material-icons.js";
-import { removeCacheForVideo } from "@/common/cache-removal.js";
+import {
+  getCacheRemovalNotice,
+  removeCacheForVideo,
+} from "@/common/cache-removal.js";
 
 /**
  * 検索結果モーダルの設定
@@ -301,16 +304,23 @@ export class SearchResultsModal {
           confirm(`本当に削除しますか？\nID : ${baseId}\nタイトル : ${title}`)
         ) {
           void removeCacheForVideo(baseId)
-            .then(() => {
-              alert("キャッシュ削除を実行しました。");
-              this.close();
+            .then((result) => {
+              const notice = getCacheRemovalNotice(result);
+              alert(notice.message);
+              if (notice.kind !== "error") {
+                this.close();
+              }
             })
             .catch((error: unknown) => {
               console.warn(
                 "[cache-data-manager] キャッシュ削除に失敗しました",
                 { baseId, error },
               );
-              alert("キャッシュ削除に失敗しました。");
+              alert(
+                error instanceof Error
+                  ? error.message
+                  : "HLSキャッシュの削除に失敗しました。",
+              );
             });
         }
         e.stopPropagation();

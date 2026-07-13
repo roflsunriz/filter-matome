@@ -605,7 +605,9 @@ export class UIBuilder {
       return;
     }
 
-    const successfulBaseIds = new Set<string>();
+    const deletedBaseIds = new Set<string>();
+    const queuedBaseIds = new Set<string>();
+    const notFoundBaseIds = new Set<string>();
     const failedBaseIds: string[] = [];
     this.progressManager.show("テンポラリ動画を削除中...");
 
@@ -616,8 +618,16 @@ export class UIBuilder {
         UIBuilder.TEMPORARY_DELETE_CONCURRENCY,
         async (baseId) => {
           try {
-            await removeCacheForVideo(baseId);
-            successfulBaseIds.add(baseId);
+            const result = await removeCacheForVideo(baseId);
+            if (result.status === "pending") {
+              queuedBaseIds.add(baseId);
+            } else if (result.status === "completed") {
+              deletedBaseIds.add(baseId);
+            } else if (result.status === "not_found") {
+              notFoundBaseIds.add(baseId);
+            } else {
+              failedBaseIds.push(baseId);
+            }
           } catch (error) {
             failedBaseIds.push(baseId);
             console.warn("[cache-data-manager] キャッシュ削除に失敗しました", {
@@ -634,16 +644,20 @@ export class UIBuilder {
         },
       );
 
-      this.removeTemporaryEntriesFromMemory(successfulBaseIds);
+      this.removeTemporaryEntriesFromMemory(deletedBaseIds);
       await this.refresh();
 
       if (failedBaseIds.length > 0) {
         alert(
-          `テンポラリ動画の一括削除が一部失敗しました。\n成功: ${successfulBaseIds.size.toLocaleString()} 件\n失敗: ${failedBaseIds.length.toLocaleString()} 件\n失敗ID: ${failedBaseIds.slice(0, 20).join(", ")}`,
+          `テンポラリ動画の一括削除が一部失敗しました。\n削除: ${deletedBaseIds.size.toLocaleString()} 件\n削除予約: ${queuedBaseIds.size.toLocaleString()} 件\n対象HLSなし: ${notFoundBaseIds.size.toLocaleString()} 件\n失敗: ${failedBaseIds.length.toLocaleString()} 件\n失敗ID: ${failedBaseIds.slice(0, 20).join(", ")}`,
+        );
+      } else if (queuedBaseIds.size > 0 || notFoundBaseIds.size > 0) {
+        alert(
+          `テンポラリ動画の削除を処理しました。\n削除: ${deletedBaseIds.size.toLocaleString()} 件\n削除予約: ${queuedBaseIds.size.toLocaleString()} 件\n対象HLSなし: ${notFoundBaseIds.size.toLocaleString()} 件`,
         );
       } else {
         alert(
-          `テンポラリ動画を ${successfulBaseIds.size.toLocaleString()} 件削除しました。`,
+          `テンポラリ動画を ${deletedBaseIds.size.toLocaleString()} 件削除しました。`,
         );
       }
     } finally {

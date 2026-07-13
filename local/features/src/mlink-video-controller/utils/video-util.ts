@@ -4,15 +4,14 @@ import "@/types/global.d.ts";
 import { VideoOperation, SimpleVideoInfo } from "@/types/video-types";
 import { NicoCache_nlInterface } from "@/types/global-types";
 import {
-  buildCacheRemovalPaths,
-  fetchCacheInfo,
-  removeCacheByPath,
+  getCacheRemovalNotice,
+  removeCacheForVideo,
 } from "@/common/cache-removal.js";
 
 export {
-  buildCacheRemovalPaths,
-  fetchCacheInfo,
-  removeCacheByPath,
+  fetchCacheRemovalStatus,
+  getCacheRemovalNotice,
+  removeCacheForVideo,
 } from "@/common/cache-removal.js";
 
 export const getActiveVideoId = async (): Promise<string> => {
@@ -59,41 +58,17 @@ export const handleCacheRemove = async (videoId: string): Promise<void> => {
   const videoTitle = nicoCache?.watch?.apiData?.video?.title || "";
   if (confirm("本当に削除しますか？: " + videoId + " " + videoTitle)) {
     try {
-      const cacheInfo = await fetchCacheInfo(videoId);
-      const paths = buildCacheRemovalPaths(videoId, cacheInfo);
-      if (paths.length === 0) {
-        window.logger.warn(
-          "[video-util] 削除可能なHLSキャッシュが見つかりません",
-          { videoId },
-        );
-        window.toastr?.warning?.("削除可能なHLSキャッシュが見つかりません");
-        return;
-      }
-
-      const failedPaths: string[] = [];
-      for (const path of paths) {
-        try {
-          await removeCacheByPath(path);
-        } catch (error) {
-          failedPaths.push(path);
-          window.logger.warn("[video-util] キャッシュ削除リクエスト失敗", {
-            path,
-            error,
-          });
-        }
-      }
-
-      if (failedPaths.length > 0) {
-        window.toastr?.error?.(
-          `キャッシュ削除が一部失敗しました (${paths.length - failedPaths.length}/${paths.length})`,
-        );
-        return;
-      }
-
-      window.toastr?.success?.("キャッシュ削除を実行しました");
+      const result = await removeCacheForVideo(videoId);
+      const notice = getCacheRemovalNotice(result);
+      window.logger.info("[video-util] HLSキャッシュ削除API応答", result);
+      window.toastr?.[notice.kind]?.(notice.message);
     } catch (error) {
       window.logger.error("[video-util] キャッシュ削除に失敗しました", error);
-      window.toastr?.error?.("キャッシュ削除に失敗しました");
+      window.toastr?.error?.(
+        error instanceof Error
+          ? error.message
+          : "HLSキャッシュの削除に失敗しました。",
+      );
     }
   }
 };

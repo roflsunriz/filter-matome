@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【cache-data-manager/mlink-video-controller】不安定だったNicoCache_nl本体の `ajax_rm` / `ajax_rmtmp` 呼び出しを廃止し、HLS限定・ダウンロード中の削除予約・構造化された結果判定に対応する `FilterMatomeCacheControl` APIへ移行した。
 - 【docs】NicoCache_nl拡張の導入・更新時に役割や依存関係を判断できるよう、`docs/USAGE.md`へ`extensions/`全般の説明、同梱クラス一覧、再起動手順、外部コマンド要件、注意事項、トラブルシュートを追加した。
 - 【common/video-player/movie-info】動画ID・URL入力と完成済みキャッシュのタイトル検索を両画面で一貫して利用できるよう、検索API、結果一覧、動画指定フォーム、レスポンシブスタイルを common へ集約し、movie-info でも検索結果からデータ取得できるようにした。
 - 【video-player/mlink-video-controller】背景切替トグルの形状を角張った印象を保つ6pxの角丸へ変更し、原宿風 Watch の汎用ボタン規則がスタンドアロンUIを上書きしないよう適用範囲を公式プレイヤーの `#root` 配下へ限定した。

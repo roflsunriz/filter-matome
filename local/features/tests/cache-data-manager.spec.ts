@@ -135,8 +135,24 @@ test.beforeEach(async ({ page }) => {
       }),
     });
   });
-  await page.route("https://www.nicovideo.jp/cache/ajax_rm?**", (route) =>
-    route.fulfill({ contentType: "text/plain", body: "OK" }),
+  await page.route(
+    "https://www.nicovideo.jp/cache/filter-matome/v1/remove",
+    (route) => {
+      const request = route.request();
+      const body = request.postDataJSON() as { videoId?: string };
+      const videoId = body.videoId ?? "sm0";
+      void route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          requestId: `request-${videoId}`,
+          videoId,
+          status: "completed",
+          target: "hls",
+          preservesNonHls: true,
+          results: [{ cacheId: `${videoId}[720p].hls`, outcome: "deleted" }],
+        }),
+      });
+    },
   );
 });
 
@@ -240,7 +256,7 @@ test("個別削除と一括操作が確認後に更新される", async ({ page 
   await page.locator(".video-card .card-more").first().click();
   await page.locator(".video-card .delete-btn").first().click();
   page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("キャッシュ削除を実行しました");
+    expect(dialog.message()).toContain("HLSキャッシュを削除しました");
     await dialog.accept();
   });
   await expect(page.locator(".result-count")).toHaveText("8 件");
@@ -263,4 +279,41 @@ test("個別削除と一括操作が確認後に更新される", async ({ page 
   });
   await page.locator("#checkAvailabilityBtn").click();
   await expect(page.locator(".global-progress")).toBeHidden();
+});
+
+test("HLSがないMP4テンポラリ項目は一括削除後も一覧に残る", async ({ page }) => {
+  const removalUrl = "https://www.nicovideo.jp/cache/filter-matome/v1/remove";
+  await page.unroute(removalUrl);
+  await page.route(removalUrl, (route) => {
+    const body = route.request().postDataJSON() as { videoId?: string };
+    const videoId = body.videoId ?? "sm0";
+    void route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        requestId: `request-${videoId}`,
+        videoId,
+        status: "not_found",
+        target: "hls",
+        preservesNonHls: true,
+        results: [],
+      }),
+    });
+  });
+
+  const seed = createSeed(5);
+  seed.tempList = { "sm1005.mp4": ["ユーザー用意MP4"] };
+  await openApp(page, seed);
+
+  await page.locator(".bulk-actions").click();
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("テンポラリ動画を一括削除しますか？");
+    await dialog.accept();
+  });
+  await page.locator("#deleteTemporaryBtn").click();
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("対象HLSなし: 1 件");
+    await dialog.accept();
+  });
+
+  await expect(page.locator(".result-count")).toHaveText("5 件");
 });

@@ -16,7 +16,7 @@ features/src/common/
 ├── material-icons.ts                     # マテリアルアイコン統合ヘルパー (9KB)
 ├── thumbnail-fallback.ts                  # 共通フォールバックサムネイルとURL正規化
 ├── toastr.ts                             # 通知システム・トースト表示 (19KB)
-├── cache-removal.ts                      # キャッシュ情報取得・HLS削除処理
+├── cache-removal.ts                      # 拡張APIによるHLS限定削除・削除予約
 ├── cache-search-client.ts                # NicoCache_nlキャッシュ検索APIと結果正規化
 ├── cache-search-results.ts               # キャッシュ検索結果の共通UI
 ├── server-response-parser.ts              # Watchページmetaの生JSON・URIエンコードJSON解析
@@ -46,7 +46,7 @@ features.ts ─── ページ判定
     ├── common.ts ─── API通信・データ取得
     ├── toastr.ts ─── ユーザー通知
     ├── logger.ts ─── デバッグ情報出力
-    ├── cache-removal.ts ─── 完了済み/テンポラリHLSキャッシュ削除
+    ├── cache-removal.ts ─── FilterMatomeCacheControl APIによるHLS限定削除・削除予約
     ├── indexed-db-emergency-backup.ts ─── IndexedDB緊急退避
     └── material-icons.ts ─── アイコン表示
     └── thumbnail-fallback.ts ─── 画像欠落・読込失敗時の共通サムネイル表示
@@ -121,6 +121,13 @@ features.ts ─── ページ判定
 - **機能**: `[a-z]{2}\d+` の動画ID抽出、利用画面ごとの主操作コールバック、検索の中断、検索結果からの動画選択
 - **関連ファイル**: API通信と正規化は `cache-search-client.ts`、結果一覧は `cache-search-results.ts`、表示規則は `video-navigation-styles.ts`
 - **編集タイミング**: 動画指定方法、NicoCache_nl の検索API、検索結果表示を変更する場合
+
+#### `cache-removal.ts` - HLSキャッシュ削除クライアント
+
+- **役割**: cache-data-managerとmlink-video-controllerから `FilterMatomeCacheControl` のJSON APIを呼び出す
+- **機能**: 動画ID単位のHLS限定削除、ダウンロード中HLSの削除予約、`requestId`による状態確認、構造化応答の検証と通知文生成
+- **安全性**: `scope: "hls"` を固定し、応答に `.hls` 以外の削除結果が含まれる場合は不正な応答として拒否する。MP4・FLV・SWFは削除しない
+- **編集タイミング**: `FilterMatomeCacheControl` API仕様、削除状態、利用画面の通知規則を変更する場合
 
 ### 💬 **通知・ログ**
 
