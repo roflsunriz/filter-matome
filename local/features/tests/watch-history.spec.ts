@@ -219,8 +219,37 @@ async function seedDatabase(page: Page): Promise<void> {
   }, entries);
 }
 
-async function openApp(page: Page): Promise<void> {
+interface DelayedStatusRequest {
+  started: Promise<void>;
+  release(): void;
+}
+
+interface ExtensionRouteController {
+  delayNextStatus(): DelayedStatusRequest;
+}
+
+async function openApp(page: Page): Promise<ExtensionRouteController> {
   let extensionAlerts: unknown[] = [];
+  let delayedStatus:
+    | {
+        started(): void;
+        release: Promise<void>;
+      }
+    | undefined;
+  const extensionController: ExtensionRouteController = {
+    delayNextStatus: () => {
+      let markStarted = () => undefined;
+      let release = () => undefined;
+      const started = new Promise<void>((resolve) => {
+        markStarted = resolve;
+      });
+      const releasePromise = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      delayedStatus = { started: markStarted, release: releasePromise };
+      return { started, release };
+    },
+  };
   await page.route(
     "https://www.nicovideo.jp/cache/watch-history-series-alerts/**",
     async (route) => {
@@ -228,6 +257,14 @@ async function openApp(page: Page): Promise<void> {
       if (action === "config") {
         const body = route.request().postDataJSON() as { alerts?: unknown[] };
         extensionAlerts = body.alerts ?? [];
+      }
+      let statusAlerts = extensionAlerts;
+      if (action === "status" && delayedStatus) {
+        const pending = delayedStatus;
+        delayedStatus = undefined;
+        statusAlerts = [...extensionAlerts];
+        pending.started();
+        await pending.release;
       }
       const response =
         action === "check-now"
@@ -240,7 +277,7 @@ async function openApp(page: Page): Promise<void> {
                 checking: false,
                 lastRunAt: 0,
                 lastError: "",
-                alerts: extensionAlerts,
+                alerts: statusAlerts,
               };
       await route.fulfill({
         contentType: "application/json",
@@ -276,6 +313,7 @@ async function openApp(page: Page): Promise<void> {
     ).WatchHistoryTest.startWatchHistoryApp();
   });
   await expect(page.locator(".history-item")).toHaveCount(entries.length);
+  return extensionController;
 }
 
 test.beforeAll(() => {
@@ -656,6 +694,38 @@ test("各タブ・シリーズ・アラートの静的および動的ボタン�
   await page.locator("#series-alert-save").click();
   await expect(page.locator(".series-alert-item")).toHaveCount(1);
   await expect(page.locator(".alert-status")).toHaveText("無効");
+});
+
+test("削除前に開始した再取得の応答でアラートが復活しない", async ({
+  page,
+}) => {
+  const extension = await openApp(page);
+  await page.locator("#series-alert-tab").click();
+  await expect(page.locator("#series-alert-extension-status")).toHaveText(
+    "拡張DB: 接続済み・通知有効",
+  );
+  await expect(page.locator(".series-alert-item")).toHaveCount(1);
+
+  const delayedStatus = extension.delayNextStatus();
+  await page.locator("#series-alert-refresh-btn").click();
+  await delayedStatus.started;
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.locator(".alert-delete").click();
+  await expect(page.locator(".series-alert-item")).toHaveCount(0);
+
+  delayedStatus.release();
+  await page.waitForTimeout(100);
+  await expect(page.locator(".series-alert-item")).toHaveCount(0);
+  expect(
+    await page.evaluate(async () => {
+      const response = await fetch(
+        "/cache/watch-history-series-alerts/status",
+        { headers: { "X-Filter-Matome-Series-Alerts": "1" } },
+      );
+      return (await response.json()) as { alerts: unknown[] };
+    }),
+  ).toMatchObject({ alerts: [] });
 });
 
 test("削除モーダルの全条件演算子・キャンセル・確定・個別削除を検証する", async ({

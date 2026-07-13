@@ -89,6 +89,8 @@ class WatchHistoryApp {
   private selectedSeries: SeriesStats | null = null;
   private alertUIUpdateInterval: number | null = null;
   private seriesAlertRefreshInFlight = false;
+  private seriesAlertWriteInFlight = false;
+  private seriesAlertMutationVersion = 0;
 
   // データベース管理関連
   private persistenceStatus: PersistenceStatus | null = null;
@@ -2361,10 +2363,24 @@ class WatchHistoryApp {
    * シリーズアラートデータを読み込む
    */
   private async loadSeriesAlertData(showLoading = true): Promise<void> {
+    if (this.seriesAlertWriteInFlight) return;
+    const mutationVersion = this.seriesAlertMutationVersion;
     try {
       if (showLoading) this.showSeriesAlertLoading(true);
       let extensionStatus = await getSeriesAlertExtensionStatus();
+      if (
+        this.seriesAlertWriteInFlight ||
+        mutationVersion !== this.seriesAlertMutationVersion
+      ) {
+        return;
+      }
       const legacyResult = await watchHistoryDB.getLegacySeriesAlerts();
+      if (
+        this.seriesAlertWriteInFlight ||
+        mutationVersion !== this.seriesAlertMutationVersion
+      ) {
+        return;
+      }
 
       if (
         legacyResult.success &&
@@ -2376,6 +2392,12 @@ class WatchHistoryApp {
           legacyResult.data,
         );
         extensionStatus = await replaceSeriesAlertsInExtension(migrated);
+        if (
+          this.seriesAlertWriteInFlight ||
+          mutationVersion !== this.seriesAlertMutationVersion
+        ) {
+          return;
+        }
         const clearResult = await watchHistoryDB.clearLegacySeriesAlerts();
         if (clearResult.success) {
           this.showToast(
@@ -2410,8 +2432,17 @@ class WatchHistoryApp {
     alerts: SeriesAlert[],
     showFailureToast = true,
   ): Promise<boolean> {
+    if (this.seriesAlertWriteInFlight) {
+      if (showFailureToast) {
+        this.showToast("シリーズアラートを更新中です", "info");
+      }
+      return false;
+    }
+    this.seriesAlertWriteInFlight = true;
+    const mutationVersion = ++this.seriesAlertMutationVersion;
     try {
       const status = await replaceSeriesAlertsInExtension(alerts);
+      if (mutationVersion !== this.seriesAlertMutationVersion) return false;
       this.seriesAlerts = status.alerts;
       this.applySeriesAlertExtensionStatus(status);
       return true;
@@ -2425,6 +2456,8 @@ class WatchHistoryApp {
         );
       }
       return false;
+    } finally {
+      this.seriesAlertWriteInFlight = false;
     }
   }
 
