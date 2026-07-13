@@ -37,7 +37,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 `C:\NicoCache_nl`にインストールしたとする  
 
 1. `C:\NicoCache_nl`フォルダを開く  
-2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `NicochartInfoProxy.class`, `nlMediaInfo.class`を削除する
+2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `FilterMatomeCacheControl.class`, `NicochartInfoProxy.class`, `nlMediaInfo.class`を削除する
 3. `local`フォルダにある`background-images`, `features`, `images`, フォルダ, `mime.types`, `list.js` のシンボリックリンクを削除する  
 4. `scripts`フォルダを削除する  
 5. `nlFilters`フォルダの `100_features.txt`, `101_disable_official_function.txt`, `105_premium_hide.txt`, `nlFilters_編集ガイド.md`を削除する
@@ -67,8 +67,37 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 | `CustomCacheReturner.class` | `local/cache`内のHLS・MP4候補を動画IDで検索し、JSONで返す | video-playerのローカル動画ソース探索に使用 |
 | `downloadThruFFmpeg.class` | キャッシュ動画から動画または音声を書き出す | mlink-video-controllerとキャッシュ一覧の「保存:動画」「保存:音声」で使用。別途`ffmpeg`コマンドが必要 |
 | `ExtUtil.class` | 拡張機能向けの共通処理を提供する補助クラス | 単独で操作する機能ではない。他の `.class` と一緒に配置する |
+| `FilterMatomeCacheControl.class` | filter-matome向けにHLSキャッシュの一括削除と削除予約をJSON APIで提供する | 完了済み・停止済みHLSは削除し、ダウンロード中HLSは完了または中断後に削除する。MP4・FLV・SWFは削除しない |
 | `NicochartInfoProxy.class` | video-playerが通常の動画情報を取得できない場合だけ、サーバー側からnicochart.jpの公開情報を取得する | 接続先と動画IDを制限した読み取り専用処理。PACや`genCerts.bat` / `genCerts.sh`の変更は不要 |
 | `nlMediaInfo.class` | キャッシュファイルを`mediainfo --Output=JSON`で解析してJSONを返す | movie-infoのMediaInfo表示で使用。別途`mediainfo`コマンドが必要 |
+
+#### HLSキャッシュ削除API
+
+`FilterMatomeCacheControl`は、NicoCache_nl本体のソースを書き換えず、公開されているキャッシュAPIとシステムイベントだけを利用する。削除対象は動画IDに紐づく `.hls` に限定され、ユーザーが用意した可能性のあるMP4・FLV・SWFは保持される。
+
+すべてのリクエストで `X-Filter-Matome-Cache-Control: 1` ヘッダーが必要。状態変更にはGETではなくPOSTを使用する。
+
+```http
+GET /cache/filter-matome/v1/capabilities
+X-Filter-Matome-Cache-Control: 1
+```
+
+```http
+POST /cache/filter-matome/v1/remove
+Content-Type: application/json
+X-Filter-Matome-Cache-Control: 1
+
+{"videoId":"sm9","scope":"hls","activeDownload":"queue"}
+```
+
+完了済み・停止済みHLSは `deleted`、ダウンロード中HLSは `queued` として返る。`queued` は即時削除済みという意味ではなく、キャッシュ完了・中断イベントと定期再確認によって削除される。応答の `requestId` は次のAPIで確認できる。
+
+```http
+GET /cache/filter-matome/v1/remove-status?id=<requestId>
+X-Filter-Matome-Cache-Control: 1
+```
+
+リクエスト全体の状態は `not_found`、`pending`、`completed`、`partial`、`failed` のいずれかとなる。NicoCache_nlを再起動すると処理中の削除予約は失われるため、`pending` の間はNicoCache_nlを終了しない。
 
 #### 配置と更新
 
@@ -90,6 +119,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 3. 保存・MediaInfo機能の場合は、PowerShellなどで `ffmpeg -version` または `mediainfo --Version` が成功するか確認する。
 4. 更新後にだけ失敗する場合は、古い `.class` の残存を確認してから、標準手順で `extensions/` を再度上書きする。
 5. `NicochartInfoProxy`が失敗してもvideo-playerはキャッシュ再生を継続する。詳細はNicoCache_nlの警告ログで `NicochartInfoProxy` を確認する。
+6. HLS削除が `pending` のままの場合は対象動画のキャッシュが継続中か確認する。完了または中断後、最大約60秒の定期再確認で削除される。
 
 ---
 

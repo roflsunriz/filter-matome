@@ -186,6 +186,9 @@ nlFilters/
 ├── 101_disable_official_function.txt # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
 └── 105_premium_hide.txt            # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
 
+extensions/
+└── FilterMatomeCacheControl.java/.class # MP4等を保持したままHLSだけを削除・削除予約するサーバーAPI
+
 docs/resources/            # USAGE.mdで使われる画像リソース
 ```
 

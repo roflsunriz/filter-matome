@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【extensions】cache-data-managerとmlink-video-controllerから安定したHLS削除処理を利用できるよう、完了済み・停止済みHLSの一括削除、ダウンロード中HLSの削除予約、状態確認をJSON APIで提供する `FilterMatomeCacheControl` を追加した。ユーザーが用意した可能性のあるMP4・FLV・SWFは削除対象から除外する。
 - 【video-player】ニコニコ動画のウォッチページから動画情報を取得できない場合でもキャッシュ動画のタイトルや説明を確認できるよう、nicochart.jp の公開情報を最終フォールバックとして取得する読み取り専用NicoCache_nl拡張を追加した。接続先と動画IDを制限し、nicochart 側にも情報がない場合は従来どおりローカルキャッシュのみで再生を試みる。
 - 【common】各ローカル機能へ直接移動しやすくするため、共通ヘッダーの「その他」メニューで video-player の直後に movie-info へのリンクを追加した。
 - 【video-player】キャッシュ済み動画をタイトルから探して直接再生できるよう、NicoCache_nl の検索APIを利用したキーワード検索、画質違いをまとめた結果一覧、検索中・0件・失敗時の案内を動画指定ナビゲーションへ追加した。
