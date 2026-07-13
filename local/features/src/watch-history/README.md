@@ -1,471 +1,73 @@
-# watch-history プロジェクト アーキテクチャ & 編集ガイド
+# watch-history
 
-## UIデザイン
+## 役割
 
-アプリ背景と上部UIは `common/visual-theme.ts` の共通ダークトークンを使用し、グラデーション中心の装飾を抑えたサーフェスと1px境界へ揃えます。統計グラフの系列色、進捗色、削除などの状態色は意味を保つため固有管理します。
+ウォッチページとスタンドアロンvideo-playerの実際のメディア再生を追跡し、IndexedDBへ視聴履歴を保存します。専用SPAでは履歴検索、フィルター、統計、シリーズ、アラート、メモ、削除、入出力、DB管理を提供します。
 
-ページと一覧背景は `#11151b`、サイドバー・履歴行・統計・シリーズ・モーダルは `#1a2029`、フィルター・バッジ・進捗背景・ホバーは `#242c37` を使用します。統計系列や状態表示以外で旧テーマの紫系面色を追加しません。
-
-シリーズタブは検索ツールバー、一覧外枠、各シリーズを多重カードにせず、デスクトップでは横2列、760px以下では1列の区切り線付きリストとして構成します。シリーズ内の見出しに外側ツールバー用の装飾を適用しないよう、セレクタのスコープを分離してください。アイコンは白抜きで統一し、タグクラウドの各タグはバッジ面色 `#242c37` の丸いピルとして表示します。
-
-## HTML配信位置
-
-- ソース: `src/watch-history/index.html`
-- ビルド成果物: `dist/pages/watch-history/index.html`
 - 配信URL: `https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html`
+- HTML生成元: `index.html`
+- SPA入口: `startWatchHistoryApp()`
+- 追跡入口: `startWatchTracker()`
 
-## 📁 プロジェクト構成
+## 構成
 
+- `watch-tracker.ts`: 動画ID・メタデータ取得、動画要素監視、進捗とセッション記録。
+- `database.ts`: 履歴、統計、シリーズ、アラート、入出力、DB操作。
+- `migration-manager.ts`: バージョン移行、永続化要求、バックアップ、設定。
+- `app.ts`: SPA全体のUI、操作、通知、DB管理。
+- `history-filter.ts`: 履歴の検索・絞り込みとお気に入り集計。
+- `history-delete-rules.ts`: 条件付き削除の値取得、比較、説明生成。
+- `series-filter.ts`: シリーズ一覧の絞り込み。
+- `tag-cloud-renderer.ts`, `video-detail-renderer.ts`: 表示専用処理。
+- `styles.ts`: 共通テーマを使うレスポンシブスタイル。
+- `requirements.md`: 追跡・履歴機能の補足要件。
+
+## 追跡フロー
+
+1. ウォッチページのパスまたはスタンドアロンページの `videoId` から動画IDを取得する。
+2. `commonHelper.fetchWatchPage(videoId)` でメタデータを取得し、既存履歴を更新または新規作成する。
+3. 対象の `HTMLVideoElement` を探し、`loadedmetadata`、`play`、`pause`、`ended`、`timeupdate` を監視する。
+4. 再生位置、視聴秒数、完了率、繰り返し、視聴ログを一定間隔で保存する。
+5. URL変更、ページ非表示、離脱時に状態を確定する。
+
+動画IDはURL・呼び出し元を優先し、再生状態は実際の動画要素を正とします。ページのメタ情報だけで再生済みと判定しないでください。
+
+## データと復旧
+
+- DB名: `NicoWatchHistory`。
+- `watchHistory`: 動画IDをキーにした履歴、統計、タグ、シリーズ、メモ、視聴ログ。
+- `seriesAlerts`: シリーズ別アラートと次回確認状態。
+- DBバージョン、インデックス、移行は `database.ts` と `migration-manager.ts` を正とする。
+
+初期化後にスキーマを検証し、破損時はバックアップと再作成の方針に従います。型を任意化して旧データを放置せず、入出力形式を含めて明示的に移行してください。
+
+## SPA機能
+
+- タイトル・投稿者・タグ・メモ検索、日付・完了状態フィルター、複数ソート。
+- 履歴、統計、シリーズ、シリーズアラートの各タブ。
+- 動画詳細、メモ編集、個別削除、全削除、複数条件による削除。
+- JSONインポート・エクスポート。
+- 永続化要求、手動移行、バックアップ作成・復元、健全性確認。
+- Notifications APIを使うシリーズ通知。権限要求は必ずユーザー操作から行う。
+
+## 変更時の確認
+
+- 追跡間隔や完了条件変更では、短時間再生、シーク、リピート、動画切替、ページ離脱を確認する。
+- DB変更では移行、バックアップ、インポート、統計、シリーズ集計をまとめて更新する。
+- 削除条件は表示ラベルと純粋関数を一致させ、実際の削除前に対象件数を提示する。
+- 通知は権限拒否や未対応環境を通常の分岐として扱う。
+- サムネイル失敗時は共通フォールバックを使う。
+
+## テスト
+
+- `tests/watch-history.spec.ts`: 実IndexedDBを使う全タブ、フィルター、統計、シリーズ、削除、入出力、DB管理、通知UI。
+- `tests/watch-history-filter.test.ts`: 履歴フィルターと集計。
+- `tests/watch-history-delete-modal.test.ts`: 条件付き削除ルール。
+
+```powershell
+cd local/features
+bun run test:unit
+bunx playwright test tests/watch-history.spec.ts
+bun run type-check
+bun run build
 ```
-features/src/watch-history/
-├── app.ts                                # SPA統制・DOMイベント・各責務の連携
-├── history-filter.ts                     # 履歴フィルタ・お気に入り順位の純粋ロジック
-├── history-delete-rules.ts               # 条件削除の入力正規化・判定・表示文言
-├── series-filter.ts                      # シリーズ検索・進捗フィルタの純粋ロジック
-├── watch-tracker.ts                      # 視聴追跡・メタデータ収集 (29KB)
-├── database.ts                           # IndexedDB操作・統計計算 (32KB)
-├── migration-manager.ts                  # データベースマイグレーション (17KB)
-├── tag-cloud-renderer.ts                 # タグ統計計算・タグクラウド描画
-├── video-detail-renderer.ts              # 動画詳細モーダルのHTML生成
-├── styles.ts                             # 動的CSS・マテリアルデザイン (37KB)
-├── index.html                            # SPAページ・UI構造定義 (36KB)
-└── requirements.md                       # 仕様定義書・実装指針 (9KB)
-```
-
-## 🏗️ アーキテクチャ概要
-
-### メインフロー（視聴履歴システム）
-
-```
-watch-tracker.ts ─── 視聴ページで動作・メタデータ収集
-    ↓
-commonHelper.fetchWatchPage ─── API連携・動画情報取得
-    ↓
-database.ts ─── IndexedDB保存・統計生成
-    ↓
-app.ts ─── SPA表示・検索・ソート・分析
-    ↓
-styles.ts ─── 美しいUI描画・レスポンシブ対応
-```
-
-### データ永続化サブシステム
-
-```
-IndexedDB ─── ローカル完結・無制限保存
-    ↓ ┌─── WatchHistory ─── 視聴履歴・メタデータ
-    ↓ │
-    ↓ ├─── SeriesAlerts ─── シリーズ追跡・通知
-    ↓ │
-    ↓ └─── 統計生成 ─── 日次・週次・月次分析
-    ↓
-高度な履歴管理・分析機能
-```
-
-### マイグレーション・バージョン管理
-
-```
-migration-manager.ts ─── 自動データベース昇格
-    ↓ ┌─── V1→V2 ─── シリーズ情報追加
-    ↓ │
-    ↓ ├─── バックアップ ─── 安全な移行処理
-    ↓ │
-    ↓ └─── 整合性チェック ─── データ検証・復旧
-    ↓
-無停止アップグレード・後方互換性
-```
-
-### 視聴追跡・分析フロー
-
-```
-視聴ページロード ─── メタデータ抽出
-    ↓
-再生イベント監視 ─── 進捗・完走・繰り返し検出
-    ↓
-リアルタイム記録 ─── 15秒間隔・デバウンス処理
-    ↓
-統計生成・シリーズ検出 ─── 自動分類・アラート
-```
-
-## 📋 各ファイルの役割詳細
-
-### 🎯 **コア機能**
-
-#### `app.ts` - メインSPAアプリケーション (最重要)
-
-- **役割**: 視聴履歴ビューSPAのメイン統制・UI管理
-- **機能**: 検索・ソート・フィルタリング、統計表示、シリーズ管理、インポート・エクスポート
-- **履歴UI**: 検索・件数・適用中条件・再生再開を主導線に置き、低頻度のソートと詳細フィルタは折りたたみ、削除・入出力・DB管理は管理導線へ集約する
-- **再生導線**: 履歴行の進捗に応じて「続きから」または「もう一度」を表示し、詳細モーダルを経由せず視聴ページを開ける。「もう一度」には共通アイコンマップへ登録した `outlined/replay` を使用する
-- **フィルタ仕様**: 視聴期間と投稿期間は別フィルタとして扱い、どちらも `input` と `change` の両方で即時再描画し、日付入力中も一覧件数を更新する
-- **データ保持方針**: `entries` は常に全件のソースリストとして保持し、検索・期間・投稿者・完走フィルタは `filteredEntries` にだけ適用する
-- **削除UI**: 履歴削除は専用モーダルに集約し、全削除、メタデータ/演算子/数値条件削除、リアルタイムのドライランコンソールを提供する。削除前はブラウザ確認ではなく専用最終確認モーダルで削除対象を全件詳細表示する
-- **シリーズUI**: シリーズ一覧の「最後に視聴」行から、直近視聴動画を再生ボタンで直接開けます。
-- **サムネイル**: URLが空、不正、または画像読込に失敗した場合は、`common/thumbnail-fallback.ts`の共通「NO THUMBNAIL」画像を履歴・お気に入り・シリーズ・詳細で表示します。
-- **編集タイミング**: UI機能追加、新しい分析機能、表示ロジック変更、ユーザー操作追加
-- **責務境界**: フィルタ・条件削除・シリーズ絞り込みなどDOMに依存しない判定は専用モジュールへ委譲し、`app.ts` は画面状態と機能間の連携を担当
-
-#### `history-filter.ts` / `history-delete-rules.ts` / `series-filter.ts`
-
-- **役割**: DOMやIndexedDBに依存しない検索・絞り込み・削除判定を管理
-- **テスト**: Bunユニットテストで境界値と全演算子を検証し、Playwrightで実DOM・実IndexedDBを使う操作テストも実施
-- **編集タイミング**: 検索対象、期間境界、削除メタデータ、比較演算子、シリーズ進捗条件を変更する場合
-
-#### `watch-tracker.ts` - 視聴追跡・メタデータ収集
-
-- **役割**: 視聴ページでの動画情報収集・視聴状況監視
-- **機能**: 動画ID抽出、commonHelper連携、進捗記録、完走判定、繰り返し検出
-- **編集タイミング**: 視聴追跡精度向上、新メタデータ対応、イベント監視追加、API仕様変更
-
-#### `database.ts` - IndexedDB操作・統計計算
-
-- **注意**: `watchHistory` / `seriesAlerts` のスキーマ更新やマイグレーションに失敗した場合は、半端なDBを正常扱いせず初期化失敗として扱います。
-- **役割**: ローカルデータ永続化・高度な検索・統計生成
-- **機能**: CRUD操作、インデックス活用、統計計算、バックアップ・復旧、クエリ最適化
-- **編集タイミング**: 新データ種類追加、検索機能拡張、統計ロジック変更、パフォーマンス改善
-
-#### `migration-manager.ts` - データベースマイグレーション
-
-- **役割**: バージョン管理・自動データ移行・整合性保証
-- **機能**: スキーマ更新、段階的移行、バックアップ作成、ロールバック、永続化管理
-- **編集タイミング**: 新バージョン追加、マイグレーション戦略変更、データ構造変更
-
-### 🎨 **UI・プレゼンテーション**
-
-#### `styles.ts` - 動的CSS・マテリアルデザイン (巨大ファイル)
-
-- **役割**: SPAの美しいUI・動的スタイル適用・レスポンシブ対応
-- **機能**: マテリアルアイコン統合、グラデーション、モーダル、アニメーション、メディアクエリ
-- **編集タイミング**: デザイン変更、新UI要素追加、レスポンシブ改善、アクセシビリティ向上
-
-#### `index.html` - SPAページ・UI構造定義
-
-- **役割**: アプリケーションの骨格・HTML構造・要素配置
-- **機能**: タブナビゲーション、検索UI、統計表示、モーダル構造、アクション配置
-- **編集タイミング**: UI構造変更、新しい画面追加、レイアウト変更、要素追加
-
-#### `video-detail-renderer.ts` - 動画詳細HTML生成
-
-- **役割**: 動画詳細モーダル内の表示HTMLを生成し、`app.ts` のUI制御責務から分離
-- **機能**: 表示値のHTML/属性エスケープ、サムネイルURL正規化、視聴進捗・タグ・メモ表示
-- **編集タイミング**: 動画詳細モーダルの表示項目追加、表示サニタイズ方針変更
-
-#### `tag-cloud-renderer.ts` - タグクラウド描画
-
-- **役割**: タグ統計計算とタグクラウドDOM生成を `app.ts` から分離
-- **機能**: タグ集計、表示サイズ分類、空表示、タグクリックイベント付与
-- **編集タイミング**: タグクラウドの集計基準、表示件数、見た目、クリック挙動を変更する場合
-
-### 📚 **ドキュメンテーション**
-
-#### `requirements.md` - 仕様定義書・実装指針
-
-- **役割**: プロジェクト仕様・技術選定・データフロー設計書
-- **機能**: 技術スタック定義、データベーススキーマ、UI要件、実装方針
-- **編集タイミング**: 仕様変更、新機能要件追加、技術方針変更、アーキテクチャ見直し
-
-## 🎯 目的別編集ガイド
-
-### 💾 **新しい履歴データ項目を追加したい**
-
-1. `database.ts` - スキーマ定義・インデックス・CRUD操作追加
-2. `migration-manager.ts` - 新バージョン・マイグレーション戦略定義
-3. `watch-tracker.ts` - メタデータ収集ロジック拡張
-4. `app.ts` - UI表示・フィルタリング機能追加
-
-### 🎨 **UIデザインを改善したい**
-
-- **メイン対象**: `styles.ts` (スタイル定義)
-- **補助対象**: `index.html` (構造変更), `app.ts` (UI制御)
-- **アイコン**: `../common/material-icons.ts` (アイコン追加)
-
-### 📊 **新しい統計機能を追加したい**
-
-1. `database.ts` - 統計計算ロジック・インデックス最適化
-2. `app.ts` - 統計表示UI・グラフ生成
-3. `styles.ts` - 統計画面スタイル・チャート対応
-4. `index.html` - 統計要素・レイアウト追加
-
-### 🔍 **検索・フィルタ機能を拡張したい**
-
-- **メイン**: `app.ts` (検索ロジック・フィルター処理)
-- **データベース**: `database.ts` (インデックス活用・クエリ最適化)
-- **UI**: `index.html` (検索フォーム), `styles.ts` (UI改善)
-
-### 🏷️ **シリーズ機能を拡張したい**
-
-1. `app.ts` - シリーズUI・アラート管理・通知機能
-2. `database.ts` - シリーズデータ構造・検索機能
-3. `watch-tracker.ts` - シリーズ自動検出・分類ロジック
-4. `migration-manager.ts` - シリーズ関連マイグレーション
-
-### 📈 **視聴追跡精度を向上させたい**
-
-- **メイン**: `watch-tracker.ts`
-- **設定調整**: 進捗間隔・完走閾値・繰り返し検出
-- **イベント監視**: 新しい視聴パターン対応
-- **API連携**: commonHelper機能拡張
-
-### 🔄 **データ移行・バックアップ機能を変更したい**
-
-- **メイン**: `migration-manager.ts`
-- **バックアップ**: 自動作成・手動実行・復旧処理
-- **移行戦略**: 段階的処理・整合性チェック・ロールバック
-- **統合**: `database.ts` (移行後処理), `app.ts` (UI連携)
-
-### 📤 **インポート・エクスポート機能を拡張したい**
-
-- **メイン**: `app.ts` (ファイル処理・変換ロジック)
-- **フォーマット**: JSON・CSV・カスタム形式対応
-- **UI**: `index.html` (ファイル選択), `styles.ts` (進捗表示)
-- **データベース**: `database.ts` (一括処理・検証)
-
-### ⚡ **パフォーマンスを最適化したい**
-
-- **データベース**: `database.ts` (インデックス最適化・バッチ処理)
-- **UI描画**: `app.ts` (仮想スクロール・遅延読み込み)
-- **スタイル**: `styles.ts` (CSS最適化・アニメーション軽量化)
-- **追跡**: `watch-tracker.ts` (デバウンス・メモリ効率)
-
-## ⚠️ 重要な注意点
-
-### 🔥 **必ず確認すべきファイル**
-
-- **データ構造変更時**: `database.ts`, `migration-manager.ts` (全体に影響)
-- **UI変更時**: `styles.ts` (デザイン全体), `index.html` (構造), `app.ts` (制御)
-- **追跡機能変更時**: `watch-tracker.ts` (メタデータ収集全体に影響)
-- **新機能追加時**: `requirements.md` (仕様整理), `app.ts` (機能統合)
-
-### 🚨 **変更時の影響範囲**
-
-- `database.ts` 変更 → データアクセス全体・統計機能に影響
-- `migration-manager.ts` 変更 → データ移行・バージョン管理に影響
-- `app.ts` 変更 → UI表示・ユーザー操作全体に影響
-- `styles.ts` 変更 → 全画面デザイン・レスポンシブ対応に影響
-- `watch-tracker.ts` 変更 → 視聴データ収集全体に影響
-- `index.html` 変更 → アプリ構造・要素配置全体に影響
-
-### 📝 **コーディング規約**
-
-- デバッグログは`logger.debug/info/warn/error`を使用（共通ロガー）
-- IndexedDBの非同期処理は必ずPromise・async/awaitで管理
-- UI更新は状態管理パターンに従い、直接DOM操作を最小限に
-- エラーハンドリングは必須（特にデータベース・API操作）
-- TypeScript型定義を活用し、型安全性を保持
-
-### 🎯 **アーキテクチャ特徴**
-
-- **SPA設計**: 単一ページアプリケーション・動的コンテンツ更新
-- **IndexedDB**: ローカル完結・大容量データ・高速検索
-- **マテリアルデザイン**: 統一されたアイコン・美しいUI
-- **レスポンシブ**: モバイル・タブレット・デスクトップ対応
-- **TypeScript**: 型安全性・IDE支援・保守性向上
-- **CommonHelper連携**: 共通API・メタデータ取得
-- **自動マイグレーション**: 無停止データベース更新
-- **統計・分析**: リアルタイム集計・可視化
-- **シリーズ管理**: 自動検出・追跡・アラート機能
-
-## 🔍 デバッグ・テスト
-
-### 自動テスト
-
-`local/features/` で `bun run test` を実行すると、純粋ロジックのユニットテストに加え、watch-history の実HTML・IndexedDB・Canvasを使用するPlaywrightテストが実行されます。検索、全ソート、期間・投稿者・完走フィルタ、各タブ、詳細・メモ、シリーズ・アラート、削除確認、インポート・エクスポート、DB管理、通知UIを検証対象にしています。
-
-### コンソールからのアクセス
-
-```javascript
-// データベース直接操作
-const db = new WatchHistoryDatabase();
-await db.initialize();
-
-// 全履歴取得
-const entries = await db.getAllEntries();
-console.log("全履歴:", entries);
-
-// 統計情報確認
-const stats = await db.getOverallStats();
-console.log("統計:", stats);
-
-// マイグレーション状態確認
-const migrationManager = new MigrationManager();
-const status = await migrationManager.getPersistenceStatus();
-console.log("永続化状況:", status);
-
-// 視聴追跡テスト（視聴ページで実行）
-const tracker = new WatchTracker();
-// 自動初期化・追跡開始
-
-// アプリケーション状態確認
-const app = new WatchHistoryApp();
-// DOM操作・UI状態確認可能
-```
-
-### 主要なDOM要素
-
-- `#history-list` - 履歴一覧表示
-- `#stats-content` - 統計画面
-- `#series-content` - シリーズ管理
-- `#search-input` - 検索入力
-
-### 重要なクラス・インターフェース
-
-- `WatchHistoryApp` - メインアプリケーション制御
-- `WatchTracker` - 視聴追跡・メタデータ収集
-- `WatchHistoryDatabase` - データベース操作・統計
-- `MigrationManager` - マイグレーション・永続化管理
-- `WatchHistoryEntry` - 履歴エントリ型定義
-- `OverallStats` - 統計データ型定義
-
-### データベーススキーマ
-
-```javascript
-// 履歴エントリ例
-const entry: WatchHistoryEntry = {
-  videoId: 'sm12345678',
-  title: '面白い動画',
-  ownerId: 'owner123',
-  ownerName: '投稿者名',
-  lengthSec: 600,
-  watchedAt: Date.now(),
-  firstWatchedAt: Date.now(),
-  lastPosition: 300,
-  completed: false,
-  watchCount: 1,
-  watchLogs: [
-    { date: Date.now(), position: 300, completed: false }
-  ],
-  stats: { viewCount: 10000, commentCount: 500 },
-  tags: ['タグ1', 'タグ2'],
-  thumbnailUrl: 'https://...',
-  memo: 'メモ',
-  series: { id: 'series123', title: 'シリーズ名', part: 1 }
-};
-```
-
-この文書を参考に、効率的にwatch-historyプロジェクトを編集できます！
-
-## 🆕 高度な視聴履歴管理機能 詳細ガイド
-
-### 🎯 **機能概要**
-
-watch-historyは、ニコニコ動画の50件制限を打破し、無制限かつ高機能なローカル履歴システムを提供する画期的なSPAです。
-
-### 📊 **管理されるデータ**
-
-- **視聴履歴**: 動画メタデータ・進捗・完走状況・視聴回数
-- **シリーズ管理**: 自動検出・進捗追跡・アラート通知
-- **統計分析**: 日次・時間別・投稿者別・タグ別分析
-- **視聴ログ**: 詳細な視聴セッション記録・行動分析
-- **カスタムメモ**: ユーザー独自メモ・評価・分類
-
-### 🔧 **主要機能**
-
-#### **リアルタイム視聴追跡**
-
-```javascript
-// 15秒間隔デバウンス処理
-const tracker = new WatchTracker();
-// 自動初期化：メタデータ取得→進捗監視→完走判定
-
-// 進捗記録例
-tracker.recordProgress(videoId, currentTime, duration);
-
-// 完走判定（95%閾値）
-const isCompleted = currentTime / duration >= 0.95;
-```
-
-#### **高度な検索・フィルタ**
-
-```javascript
-// 複合条件検索
-const results = await db.searchEntries({
-  title: "検索ワード",
-  ownerId: "owner123",
-  completed: true,
-  dateRange: { start: "2024-01-01", end: "2024-12-31" },
-  tags: ["タグ1", "タグ2"],
-});
-
-// ソート・ページネーション
-const sorted = await db.getSortedEntries("watchedAt", "desc", 50, 1);
-```
-
-#### **統計・分析機能**
-
-```javascript
-// 総合統計
-const stats = await db.getOverallStats();
-// { totalVideos: 1000, totalTime: 360000, completionRate: 0.75 }
-
-// 日次統計
-const dailyStats = await db.getDailyStats("2024-01-01", "2024-01-31");
-
-// 投稿者別統計
-const creatorStats = await db.getCreatorStats(10); // 上位10名
-```
-
-#### **シリーズ管理・アラート**
-
-```javascript
-// シリーズ自動検出
-const seriesInfo = await tracker.detectSeries(title, ownerId);
-
-// アラート設定
-await db.createSeriesAlert({
-  seriesId: "series123",
-  interval: "daily", // daily/weekly/monthly
-  enabled: true,
-});
-
-// 進捗チェック
-const progress = await db.getSeriesProgress("series123");
-```
-
-### 🎨 **UI・UX機能**
-
-- **レスポンシブデザイン**: モバイル・タブレット・デスクトップ完全対応
-- **段階的な情報表示**: 日常的な検索・再生再開を優先し、高度な絞り込み、詳細ソート、データ管理は必要なときだけ展開
-- **マテリアルデザイン**: 統一されたアイコン・美しいアニメーション
-- **ダークモード**: 目に優しい夜間表示（自動切替対応）
-- **インクリメンタル検索**: 入力即座に結果更新・高速応答
-- **無限スクロール**: 大量データの快適閲覧・遅延読み込み
-
-### 📤 **データ管理・バックアップ**
-
-```javascript
-// エクスポート（JSON・CSV対応）
-const exportData = await app.exportData("json", {
-  includeStats: true,
-  dateRange: { start: "2024-01-01", end: "2024-12-31" },
-});
-
-// インポート（重複チェック・マージ機能）
-await app.importData(fileData, {
-  mergeStrategy: "update", // update/skip/error
-  validateData: true,
-});
-
-// バックアップ作成
-const backup = await migrationManager.createBackup();
-```
-
-### 🔄 **自動マイグレーション**
-
-- **無停止アップグレード**: アプリ使用中もデータ移行可能
-- **段階的処理**: 大量データも安全・確実に移行
-- **整合性チェック**: 移行前後でデータ検証
-- **失敗時の扱い**: マイグレーション失敗時は初期化失敗として扱い、壊れた状態で処理を続行しない
-
-### ⚡ **パフォーマンス最適化**
-
-- **インデックス活用**: 高速検索・ソート・フィルタリング
-- **仮想スクロール**: 大量データの軽快表示
-- **デバウンス処理**: 過度なAPI呼び出し防止
-- **メモリ管理**: 効率的なデータ管理・GC最適化
-
-### 🛡️ **プライバシー・セキュリティ**
-
-- **完全ローカル**: クラウド不要・データ外部送信なし
-- **暗号化対応**: 機密データの安全保存（オプション）
-- **データ削除**: 完全消去・復旧不可能削除対応
-
-この高度な視聴履歴管理システムにより、ニコニコ動画の視聴体験が革命的に向上します！

@@ -1,60 +1,41 @@
-# features テスト実装方針
+# features テストガイド
 
-## 実環境再現の粒度
+## 実行方法
 
-- 実ページ由来の DOM・データ・イベントを raw Chrome DevTools Protocol で採取して fixture 化する。ただし、対象機能に関係しないページ全体の再現は避ける。
-- 対象機能が依存する境界だけを必要十分に再現する。例: コモンヘッダーのテストでは `#CommonHeader` とユーザーアイコン・ユーザー名だけを再現し、動画プレイヤーやサイドバーなどは持ち込まない。
-- 外部 API、localStorage、クリップボード、NicoCache_nl グローバルなどは、テスト対象の入出力契約が確認できる最小スタブにする。
-- 実環境と乖離しやすい CSS セレクター、DOM 属性、レスポンス形状は、実ページや実 API で観測した名前を優先する。
+`local/features/` で実行します。
 
-## 採取 fixture
+```powershell
+bun run test:unit
+bun run test
+```
 
-- `tests/fixtures/` 配下に、raw CDP で採取した DOM を置く。
-- fixture 冒頭に採取元 URL と採取日をコメントで残す。
-- ログイン中のユーザー名、アイコン URL、ID など個人情報は匿名化する。匿名化しても、class 名、data 属性、階層、対象機能が依存するタグ種別は維持する。
+- `test:unit`: `scripts/test-unit.ts` が `tests/*.test.ts` を実行する。
+- `test`: 単体テストに続けて、`package.json` で列挙した `*.spec.ts` をPlaywrightのヘッドレスChromiumで実行する。
+- `test-results/`: Playwrightの一時生成物。編集・コミットしない。
 
-## HTML fixture
+## fixture方針
 
-- Playwright で HTML を直接投入する場合は、断片ではなく `<!doctype html>`、`<html lang="ja">`、`<meta charset="utf-8">` を含むテスト文書に包む。
-- `page.route().fulfill()` で HTML を返す場合は `contentType: "text/html; charset=utf-8"` を明示する。
-- fixture は日本語表示を含めて UTF-8 前提で保存し、文字化けして見える文字列を期待値や DOM に混ぜない。
+- `tests/fixtures/` には、対象機能が依存するDOM、データ、イベントだけを保存する。
+- 実ページ由来のfixtureは採取元と採取日をコメントに残し、ユーザー名、ID、Cookie、トークンなどを匿名化する。
+- 外部API、NicoCache_nlのグローバル、localStorage、通知、クリップボード、ダウンロードは、検証する契約に必要な最小スタブにする。
+- CSSセレクター、data属性、レスポンス形状は実環境で確認した値を使い、表示言語や生成クラス名へ依存させない。
+- HTMLを直接配信するfixtureはdoctype、言語、UTF-8指定を含む完全な文書にする。
 
-## 複雑化を避ける基準
+## テストの分担
 
-- E2E で全ページを再現するより、機能単位の実DOM + 最小スタブを優先する。
-- 周辺機能の再現がテストの主張を曖昧にする場合は、省略する。
-- ただし、リグレッション原因が周辺 DOM やイベント伝播にある場合は、その境界だけを fixture に追加する。
+- `cache-data-manager.spec.ts`: `tempList`・`cacheList` を使う一覧、検索、絞り込み、ソート、詳細、削除、一括操作。
+- `comment-filter2.spec.ts`: 実IndexedDBを使う設定UI、ルールCRUD、即時適用、正規表現プレビュー。
+- `mlink-video-controller.spec.ts`: パネル、各タブ、モジュール設定、インポート・正規化、主要UI操作。
+- `movie-info.spec.ts`: 基本4ソース、任意コメント取得、部分失敗、JSON・コピー・ダウンロード操作。
+- `mylist2.spec.ts`: 実IndexedDBを使うマイリスト・動画・設定・詳細・一括操作。
+- `video-player.spec.ts`: スタンドアロンUIと背景モードなどのブラウザー統合。
+- `watch-history.spec.ts`: 実IndexedDBを使う履歴・統計・シリーズ・削除・入出力・DB管理。
+- `*.test.ts`: フィルター、削除条件、URL生成、API正規化、設定判断など、DOMから分離できる境界値と回帰。
 
-## watch-history
+## 追加・変更時の原則
 
-- `watch-history.spec.ts` は本番の `index.html` と専用fixture bundleを読み込み、ブラウザの実IndexedDBへ匿名化した履歴・シリーズ・アラートを投入して操作する。サムネイルURLの欠落・画像読込失敗時に内蔵フォールバックへ切り替わることも検証する。
-- 外部境界は `Notification`、`window.open`、ダウンロードURL、ブラウザ確認ダイアログのみをスタブ化し、検索、ソート、フィルタ、Canvas、Storage、モーダル、動的一覧は実DOM上で検証する。
-- `history-filter.ts`、`history-delete-rules.ts`、`series-filter.ts` の境界値はBunユニットテストで補完する。
-
-## mylist2
-
-- `mylist2.spec.ts` は本番の `index.html` と専用fixture bundleを読み込み、ブラウザの実IndexedDBへ匿名化したマイリスト・動画・キーワードを投入して操作する。サムネイル欠落時の共通フォールバック表示も検証する。
-- マイリスト作成・検索・ソート、動画検索・ソート・詳細表示、設定モーダル・テーマ、個別選択・全選択・中間状態、一括操作5種の確認UIを対象にする。
-- 情報更新と公開状態チェックはAPI実行前の設定モーダルまでをE2Eで検証し、外部APIへの実送信は行わない。
-
-## comment-filter2
-
-- `comment-filter2.spec.ts` は専用fixture bundleから本番の `UIManager` を起動し、ブラウザの実IndexedDBへ匿名化した設定とJSONルールを投入して操作する。
-- 概要ダッシュボードの動的集計、サイドナビゲーション、コマンド設定の読込、正規表現プレビュー、フォームからのルール追加・削除を対象にする。
-- ニコニコ動画APIやコメント送信は行わず、UIとIndexedDBの境界を検証する。
-
-## movie-info
-
-- `movie-info.spec.ts` は本番の `index.html` と専用fixture bundleを読み込み、Watch API、cache/info、getthumbinfo、MediaInfo、コメント統合データの最小スタブで動作させる。
-- 動画ID・URL入力、Enter送信、基本4ソースの状態同期、概要・全タブ切替、説明HTMLの安全な描画、JSONモーダル、コピー、ダウンロード、コメント任意取得を対象にする。
-- APIの部分失敗時は成功済みソースを維持しつつ、概要状態とエラーモーダル、モーダル終了後のフォーカス復帰が正しく動くことを検証する。
-
-## cache-data-manager
-
-- `cache-data-manager.spec.ts` は専用fixture bundleから本番の登録処理をローカル文書へ注入し、NicoCache_nlが提供する `tempList`、`cacheList`、`ncversion` とメタデータIndexedDBを投入して起動する。
-- 初期表示と固定カード高、フィルター、ソート、検索結果とページ送り、再生・詳細・削除、一括削除・公開状態確認の動的要素を実DOM上で検証する。
-- getthumbinfo、キャッシュ情報・削除API、`window.open`、確認ダイアログだけを外部境界としてスタブ化し、実配信サーバーやローカルプロキシには接続しない。
-
-## video-player
-
-- `video-player.spec.ts` は本番のスタンドアロンレイアウトを専用fixture bundleから起動し、背景切替トグルの状態保存と、mlink の `--bg-*` 変数を固定背景レイヤーへ反映する積層を実DOM上で検証する。
+- バグ修正では、原因に最も近い層へ再発防止テストを追加する。
+- UI操作は表示確認だけで終わらせず、クリック、入力、選択、キャンセル、保存、再表示まで検証する。
+- IndexedDBのテストはストア作成だけでなく、既存データ、マイグレーション、破損時の復旧を必要に応じて含める。
+- 実サービスへの書き込み、削除、通知送信は行わず、境界でスタブ化する。
+- fixtureを更新した場合は、実装の不具合を期待値へ取り込んでいないか差分を確認する。

@@ -1,171 +1,66 @@
-# comment-filter2 プロジェクトガイド
+# comment-filter2
 
-## UIデザイン
+## 役割
 
-モーダルの機能構造を保ちながら、背景・サーフェス・境界・文字・主操作・角丸・影は `common/visual-theme.ts` の共通トークンを使用します。動画ページ上へ重ねるオーバーレイは可読性確保のため固有表現として維持します。
+ニコニコ動画のコメントAPI応答を捕捉し、保存済みルールで非表示・置換・コマンド制御を行って、公式ページまたはローカルvideo-playerへ渡します。設定UIはShadow DOMで表示し、ルールと設定はIndexedDBへ保存します。
 
-通常のモーダル面とカードは `#1a2029`、コックピット・タブ・バッジ・ホバーは `#242c37` を使用します。背面を見せる必要があるページオーバーレイと、成功・警告・危険の状態表示を除き、独自の半透明面を追加しません。
+`startCommentFilter2()` は `src/features.ts` からウォッチページとスタンドアロンプレイヤーで起動されます。直接importしただけでは自動起動しません。
 
-ルールスタジオは外枠、IF・THEN・WHERE、入力群をカードとして重ねず、ひとつの編集面を余白と区切り線で構成します。選択肢や入力など操作対象にだけ境界を残し、保存済みルールもカードグリッドではなく行リストとして表示します。
+## 構成
 
-## プロジェクト概要
+- `index.ts`: 初期化、ショートカット、イベント購読、`window.CommentFilter2Instance`。
+- `proxy/data-interceptor.ts`: `fetch` とHistory APIを監視し、元コメント応答と動画IDを捕捉。
+- `filter/`: 現行JSONルール、互換ルール、純粋なフィルターエンジン、Worker、索引、ニコる統計。
+- `storage/indexed-db.ts`: `CommentFilter2DB` のスキーマ、マイグレーション、整合性検証、バックアップ・復旧。
+- `components/ui-manager.ts`: 概要、ルール、コマンド、データ、設定のUIと操作。
+- `integrations/video-player-bridge.ts`: フィルター済みコメントをvideo-playerへ同期する境界。
+- `templates/`, `styles/`: Shadow DOM用テンプレートとスタイル。
+- `utils/`: JSON/JSONL/CSV変換、旧形式移行、サニタイズ、正規表現診断、ログ。
 
-- ニコニコ動画のコメント API (`https://public.nvcomment.nicovideo.jp/v1/threads`) を横取りし、NG ルールや置換ルールを適用したデータを video_player に渡すブラウザ拡張モジュールです。
-- ルールと設定は IndexedDB に保存され、Shadow DOM 上の専用 UI から編集・インポート・エクスポートが可能です。
-- JSON 形式のルールを中心に運用しつつ、従来形式 (CSV/レガシー JSONL) の読み込み・変換機構も保持しています。
-- 複数スレッドや大量コメントに対しても Web Worker とニコる統計を使った最適化で高速にフィルタリングします。
+## データフロー
 
-## ディレクトリ構成
+1. `DataInterceptor` がコメントAPI応答を捕捉し、元データをグローバルストアへ保持する。
+2. `cf2:data-updated` または `cf2:smid-changed` を受けて、UI管理層が保存済み設定とルールを読む。
+3. JSONフィルターがスレッドごとにルールを適用する。大量データはWorkerへ分割し、失敗時はメインスレッドへフォールバックする。
+4. フィルター済みデータをグローバルストアへ戻し、`VideoPlayerBridge` が差分を確認してvideo-playerへ通知する。
 
+内部取得で `bypassCommentFilter` が指定された要求は置換しません。movie-infoやコメントJSON保存が元レスポンスを取得するための契約なので維持してください。
+
+## 永続化と互換性
+
+- DB名: `CommentFilter2DB`。
+- 主なストア: 互換ルールの `rules`、設定の `settings`、現行JSONルールの `json_rules`。
+- 現行ルールはJSON形式を正とし、旧NGWord、CSV、JSONLはインポート・移行境界として扱う。
+- スキーマの実バージョンと移行処理は `FilterStorage` を正とする。
+- 初期化失敗やスキーマ不整合時は、読めるデータを緊急バックアップしてから一度だけ再作成を試みる。
+
+## 公開境界
+
+- `window.CommentFilter2Instance`: UI表示、再適用、診断用の実行時インスタンス。
+- `CommentFilter2Ready`: 初期化完了。
+- `cf2:data-updated`: コメントデータ更新。
+- `cf2:smid-changed`: 対象動画IDの変更。
+- `commentFilter2Update`: video-playerへ送る更新イベント。
+
+イベント名やデータ型を変更するときは `src/types/video-player-bridge-types.ts` とvideo-player側の受信処理を同時に更新してください。
+
+## 変更時の確認
+
+- ルール仕様変更では、純粋エンジン、Worker、メインスレッドの結果を一致させる。
+- 正規表現や置換文字列は `sanitizer.ts` と `regex-analyzer.ts` を通し、危険な入力や過大な計算量を考慮する。
+- IndexedDB変更では既存データの強制マイグレーション、バックアップ、破損復旧を更新する。
+- UI変更では低い画面の内部スクロール、フォーカス、公式プレイヤーのショートカットとの競合を確認する。
+
+## テスト
+
+- `tests/comment-filter2.spec.ts`: UI、実IndexedDB、ルールCRUD、即時適用、正規表現プレビュー。
+- `tests/comment-filter2-nicoru-exclusion.test.ts`: ニコる条件と免除ルール。
+- `tests/comment-data-bypass.test.ts`: フィルターを迂回する内部取得契約。
+
+```powershell
+cd local/features
+bun run test:unit
+bunx playwright test tests/comment-filter2.spec.ts
+bun run type-check
+bun run build
 ```
-comment-filter2/
-├─ index.ts                              // エントリーポイント
-├─ components/
-│  └─ ui-manager.ts                      // UI とユーザー操作の統括
-├─ filter/
-│  ├─ comment-filter.ts                  // 旧 NGWord ルール実装 (互換用)
-│  ├─ comment-filter-engine.ts           // 正規表現 & ユーザー ID ルール処理
-│  ├─ comment-filter-worker.ts           // 上記の Web Worker
-│  ├─ json-comment-filter.ts             // 現行 JSON ルール実装
-│  ├─ json-comment-filter-engine.ts      // JSON ルール用エンジン
-│  ├─ json-comment-filter-worker.ts      // JSON ルール用 Web Worker
-│  ├─ rule-indexer.ts                    // 文字列パターン高速化 (Aho-Corasick)
-│  └─ thread-nicoru-stats.ts             // ニコる条件判定のための統計
-├─ integrations/
-│  └─ video-player-bridge.ts             // video_player へのデータ供給
-├─ proxy/
-│  └─ data-interceptor.ts                // fetch/History API をフック
-├─ storage/
-│  └─ indexed-db.ts                      // IndexedDB 実装と移行ロジック
-├─ styles/
-│  └─ main.ts                            // Shadow DOM 向けスタイル
-├─ templates/
-│  └─ main-ui.ts                         // UI テンプレート
-└─ utils/
-   ├─ constants.ts                       // 定数・イベント名
-   ├─ csv.ts                             // CSV 変換ユーティリティ
-   ├─ filter-helper.ts                   // フィルタ適用ヘルパー
-   ├─ filter-logger.ts                   // フィルタ結果ログ収集
-   ├─ jsonl-parser.ts                    // JSONL/CSV 判定と変換
-   ├─ legacy-converter.ts                // レガシー設定からの移行
-   └─ sanitizer.ts                       // コマンド・正規表現のサニタイズ
-```
-
-## 主要フロー
-
-### コメント取得とフィルタリング
-
-1. `proxy/data-interceptor.ts` が `window.fetch` と History API を差し替え、コメント API 応答を捕捉します。
-2. 元データと SMID を `window.CommentFilter2Data` (エイリアス `window.commentFilter2GlobalData`) に保存し、`cf2:data-updated`/`cf2:smid-changed` を発火します。
-3. `index.ts` がこれらのイベントを監視し、`UIManager.applyFilter()` を呼び出してフィルタリングを実行します。
-4. `utils/filter-helper.ts` 経由で IndexedDB から設定と JSON ルールを取得し、`filter/json-comment-filter.ts` が Web Worker 分散処理や nicoru 条件を考慮してコメントを加工します。
-5. フィルタ済みデータは再びグローバルストアに書き戻され、video_player 連携や UI から参照できます。
-
-### UI と設定フロー
-
-- Ctrl+Shift+F もしくは `window.CommentFilter2Instance.toggleUI()` で Shadow DOM 内に UI を生成します。
-- UI ではフォーム編集と JSON エディタを切り替えられ、`FilterStorage` を通じて即時保存されます。
-- JSON/CSV のインポート時は `jsonl-parser.ts` と `legacy-converter.ts` が形式を自動判定し最新形式へ変換します。
-- 設定変更後は再読込や即時フィルタリングを行い、必要に応じてログ (`FilterLogger`) を収集します。
-- 概要の「今すぐ適用」は、video_player 利用時にはコメントを再フィルタリングして即時同期し、公式プレイヤー利用時には確認後にページを再読み込みします。
-
-### video_player 連携
-
-- `integrations/video-player-bridge.ts` が DOM 監視とバックオフ制御で video_player の存在を検知。
-- `notifyVideoPlayerWithDiffCheck()` で差分を確認しつつフィルタ済みデータを送信し、同期後は `hasSuccessfullyNotified` を立てて過剰通知を防ぎます。
-- `forceSync()` は UI からの再同期要求や SMID 変更時に呼び出され、デバウンス処理で video_player への負荷を抑えます。
-
-## コアモジュール解説
-
-- `index.ts`: 初期化・キーボードショートカット設定・イベント購読・デバッグ用 API (`window.CommentFilter2Instance`) を提供。
-- `proxy/data-interceptor.ts`: SMID 判定 (SPA 対応)、グローバルデータ初期化、`selectMainThread` によるメインスレッド選択、フィルタ済み `Response` の生成を担当。
-  - `bypassCommentFilter` 由来の内部フラグ付きリクエストはフィルタ済み `Response` に差し替えず、movie-info やコメントJSON保存がフィルタ前データを取得できるようにする。
-- `components/ui-manager.ts`: Shadow DOM UI の生成、設定/ルール CRUD、ファイル入出力、フィルタ実行、バックアップ操作を一元化。
-- `filter/json-comment-filter.ts`: ルール前処理 (`prepareJsonRules`)、Web Worker 分散 (`json-comment-filter-worker.ts`)、nicoru 条件やコマンド制限の適用、フィルタログ記録を実装。
-- `filter/comment-filter.ts`: 旧 NGWord 形式 (正規表現+ユーザー ID) の互換実装。UI のレガシーインポートや既存データ移行用に保持。
-- `storage/indexed-db.ts`: バージョン 3 (JSON ルールストア) への移行、整合性チェック/修復、バックアップ・リストア、マイグレーション履歴取得などを実装。
-- `storage/indexed-db.ts`: 初期化後に必須ストアとインデックスを検証し、作成失敗の残骸がある場合は読めるストアを `localStorage` の `comment-filter2-emergency-backup-*` に退避してから、一度だけDBを削除・再作成します。
-- `utils/filter-logger.ts`: フィルタ結果をバッファリングし、`settings.logToCommentFilterLogger` が真のとき外部ロガーへ送信。
-- `filter/rule-indexer.ts`: Aho-Corasick を用いたリテラルパターンの事前絞り込みで、正規表現評価回数を削減。
-- `filter/thread-nicoru-stats.ts`: 各スレッドのニコる統計を算出し、`nicoru_cond` 付きルールの発火条件に利用。
-
-## IndexedDB とデータ形式
-
-- データベース名は `CommentFilter2DB`、実装クラス `FilterStorage` が実際にはバージョン `3` を使用します。
-- 主なオブジェクトストア
-  - `rules`: 旧 NGWord 形式 (互換用)
-  - `settings`: キーバリュー形式の設定 (`debugMode`, `isEnabled`, `commandSettings`, `logToCommentFilterLogger` など)
-  - `json_rules`: 現行 JSON ルール。`enabled`, `smid` インデックスを保持。
-- `createFullBackup()` / `restoreFromBackup()` で全ストアをシリアライズし、UI からバックアップ可能です。
-- マイグレーション関連 API
-  - `checkDatabaseIntegrity()` / `repairDatabase()` / `optimizeDatabase()` によりルール構造の検証・自動修復・重複排除を実行。
-  - `getMigrationHistory()` は過去のバージョンアップログを返却。
-
-## フィルタリング機能の詳細
-
-- ルール種別
-  - 正規表現 (`pattern` + `flags`)
-  - ユーザー ID (`userId`)
-  - `action.type` は `hide` または `replace` または `unspecified` (フィルタ免除)。
-- 対象 SMID 条件: `smid` が `['ALL']` または具体的な SMID 配列で指定可能。
-- ニコる条件 (`nicoru_cond`): `op` (gte/lte/range など) と `mode` (include/exclude) をサポートし、スレッド統計から判定。`hide`/`replace` では `include` が「条件に合致したら対象」、`exclude` が「条件に合致したら除外」を表します。`action.type: "unspecified"` はフィルタ免除専用のため `mode` に関係なく条件に一致したコメントを後続の非表示/置換ルールから免除し、フォーム入力では `exclude` に固定します。
-- コメントコマンド制御:
-  - `commandSettings` によりフォーク別 (`owner`/`main`/`easy`) に許可・強制コマンドを設定。
-  - `sanitizeCommentCommands()` と `enforceCommandSettings()` が未許可コマンドを除外し、指定コマンドを付与。
-- パフォーマンス
-  - `chunkThreads()` でコメントスレッドを分割し Web Worker に振り分け。
-  - `SubstringMatcher` によるリテラル一致の事前判定で正規表現の実行数を削減。
-  - ハードウェアスレッド数 (`navigator.hardwareConcurrency`) を参照して Worker 数を決定し、フォールバック時はメインスレッド実行に切り替え。
-- デバッグ
-  - `debugMode` 有効時は `window.logger.debug` で詳細ログを出力し、適用済みルール数などを可視化。
-  - `FilterLogger` が `CF2FilterLogEntry` を蓄積し、UI から送信状態を確認可能。
-
-## UI 機能
-
-- Shadow DOM (`closed`) 上に HTML テンプレートとスタイルを注入し、本体ページと干渉しない独立 UI を構築。
-- キーボードショートカット保護やフォーカス制御でニコニコ本体のショートカットと競合しないよう調整。
-- 主な機能
-  - 状態、有効ルール数、対象動画、即時適用をまとめたクイック・コックピット
-  - 概要・ルール・コマンド・データ・設定を独立したワークスペースとして切り替えるサイドナビゲーション
-  - ルール一覧・追加・削除・一括削除
-  - アコーディオンで開閉できる、テスト文字列に対する正規表現のリアルタイム一致プレビュー
-  - JSON 直接編集 (フォーマット切替)
-  - JSON / JSONL / CSV インポート & JSON エクスポート
-  - バックアップ・リストア操作
-  - フィルタ適用テスト (`applyFilters`)・ログ表示・設定リセット
-- UI 生成は初回表示時のみ実行され、`destroy()` で Shadow DOM とスタイルをクリーンアップします。
-- モーダル本文はヘッダーを除く残り高さいっぱいを使用し、低い画面では各ワークスペースの内容を本文内でスクロールできます。操作アイコンは共通テキスト色の白抜き表示に統一しています。
-- 正規表現ルールの作成時は一致プレビューを開いてテスト文字列を入力すると、一致箇所と件数を確認できます。テスト文字列は確認専用で、ルールや設定には保存されません。
-- ルール編集、コマンド設定、データ管理、診断設定は同じアプリシェル内で統一した見出し・余白・操作密度を使用し、画面ごとに必要な操作だけを表示します。
-
-## video_player との橋渡し
-
-- `VideoPlayerBridge` は MutationObserver で `#video-element` を監視し、存在確認後に `notifyVideoPlayerWithDiffCheck()` で差分送信します。
-- 連携状態は `getStatus()` (検出状況・最終同期時間・SMID など) で取得可能。
-- バックオフとデバウンスにより API 再送を制御し、`forceSync()` や `startDataMonitoring()` が再同期サイクルを管理します。
-
-## デバッグ / 開発 Tips
-
-- グローバル API
-  - `window.CommentFilter2Instance`: エントリインスタンスへの参照。
-    - `getDebugInfo()` で初期化状態・SMID・video_player 連携状況・定数を確認。
-    - `showUI()` / `hideUI()` / `toggleUI()` / `destroy()` などを呼び出し可能。
-  - `window[Symbol.for('CommentFilter2GlobalData')]`: 旧実装互換のグローバルデータ。
-- 主要イベント
-  - `CommentFilter2Ready`: 中央ルーターによる初期化完了
-  - `cf2:data-updated`: コメントデータ更新
-  - `cf2:smid-changed`: SMID 変更検知
-- ログの活用
-  - `window.logger` (info/debug/warn/error) を経由して開発ツールから状況を確認。
-  - `FilterLogger` バッファは `settings.logToCommentFilterLogger` が真のとき送信されるため、テスト時は設定値に注意。
-- 互換層
-  - レガシー NGWord ルールは `comment-filter.ts` 経由で引き続き適用可能ですが、UI は JSON 形式を正としています。
-  - 旧形式からのインポートは `legacy-converter.ts` が JSON 形式へ変換した上で保存します。
-
-`startCommentFilter2()`は`src/features.ts`から視聴ページとスタンドアロンプレイヤーでのみ呼び出されます。エントリーファイルを直接読み込んでも自動起動しません。
-
-## 編集時の注意
-
-- フィルタ処理のエントリ (`filter-helper.ts` → `JsonCommentFilter`) と UI (`ui-manager.ts`) は密接に連携しているため、片側を変更した際はもう一方の挙動も必ず確認してください。
-- IndexedDB スキーマを変更する場合は `FilterStorage` のマイグレーション関数と README の該当記述を更新してください。
-- video_player との通信仕様を変更する場合は `mlink-video-controller` 側との互換性も要確認です。

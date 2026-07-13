@@ -1,283 +1,67 @@
-# common プロジェクト アーキテクチャ & 編集ガイド
+# common
 
-## 共通ビジュアルテーマ
+## 役割
 
-`visual-theme.ts` は cache-data-manager を基準に、背景、サーフェス、境界、文字色、主操作色、角丸、影、フォーカスリングを意味単位のCSSカスタムプロパティとして定義します。共通ヘッダーや各プロジェクトはこのトークンを固有変数へ割り当て、機能固有のレイアウトや状態色は各プロジェクト側で管理してください。
+複数プロジェクトが共有するブラウザー基盤です。`startCommon()` はCSS定数とトースト用スタイルを一度だけ適用し、各モジュールは必要な関数・クラスと互換用グローバルを提供します。
 
-## 📁 プロジェクト構成
+このディレクトリの変更はほぼすべての機能へ波及するため、利用元を検索してから編集してください。
 
+## ファイル構成
+
+- `common.ts`: 動画ID、ウォッチページ、コメント取得などの共通ヘルパー。`window.commonHelper` を公開。
+- `header.ts`: 共通ヘッダーとナビゲーション。`window.NicoCommon` を公開。
+- `logger.ts`: 共通ロガー。`window.logger` を公開。
+- `toastr.ts`: 通知UI。`window.toastr` を公開。
+- `material-icons.ts`, `icon-assets.ts`: Material Design Iconsの生成、URL化、既存画像の置換。
+- `css-constants.ts`, `visual-theme.ts`: 共通CSS変数とダークテーマトークン。
+- `thumbnail-fallback.ts`: 欠落・読込失敗時の共通サムネイル。
+- `server-response-parser.ts`: `server-response` メタ情報の安全な解析。
+- `cache-search-client.ts`, `cache-search-results.ts`: NicoCache_nlキャッシュ検索と結果UI。
+- `cache-removal.ts`: `FilterMatomeCacheControl` APIの削除・削除予約・状態確認。
+- `video-navigation.ts`, `video-navigation-styles.ts`: 動画ID・URL入力とキャッシュ検索の共通UI。
+- `indexed-db-emergency-backup.ts`: 破損したIndexedDBを再作成する前の緊急退避。
+- `index.ts`: 共通副作用の起動入口。
+
+## 設計境界
+
+- APIクライアントはHTTPステータスだけでなく、NicoCache_nl固有のJSONエラー形式を正規化して返す。
+- 動画IDは呼び出し元またはURLを優先し、`window.NicoCache_nl.watch` は型確認付きのフォールバックに限定する。
+- DOMやAPIから得る `unknown` は、共通境界で検証してから機能固有型へ渡す。
+- 表示用HTML、動画説明、検索結果は、DOMPurifyまたはDOM APIで安全に組み立てる。
+- アイコンは `material-icons.ts` のヘルパーを使い、各プロジェクトへSVGを重複埋め込みしない。
+
+## グローバル互換API
+
+既存ページやNicoCache_nlのHTMLから利用されるため、次の名前を変更するときは全参照元を検索してください。
+
+- `window.commonHelper`
+- `window.NicoCommon`
+- `window.logger`
+- `window.toastr`
+
+新規コードは可能な限り直接importし、グローバルはページ境界との互換用途に限定します。
+
+## 変更時の確認
+
+- 共通ヘッダー変更: 各静的SPAとニコニコ動画上のmlink表示を確認する。
+- 動画ナビゲーション変更: movie-infoとvideo-playerを同時に確認する。
+- キャッシュ検索・削除変更: cache-data-manager、video-player、mlink-video-controllerを確認する。
+- テーマやアイコン変更: 狭幅、低高さ、高DPI、フォーカス表示、長い翻訳文を確認する。
+- IndexedDB復旧変更: データを退避できない場合に無条件削除しないことを確認する。
+
+## テスト
+
+- `tests/common-material-icons.test.ts`
+- `tests/common-server-response-parser.test.ts`
+- `tests/video-player-video-navigation.test.ts`
+- `tests/video-player-cache-search.test.ts`
+- `tests/mlink-video-controller-cache-remove.test.ts`
+- 各プロジェクトのPlaywrightテストに含まれる共通ヘッダー・テーマ・サムネイル確認
+
+```powershell
+cd local/features
+bun run test:unit
+bun run test
+bun run type-check
+bun run build
 ```
-features/src/common/
-├── index.ts                              # startCommon()エントリーポイント
-├── common.ts                             # API通信・データ取得ヘルパー (5.0KB)
-├── header.ts                             # 共通ヘッダーコンポーネント (Shadow DOM版) (19KB)
-├── logger.ts                             # ログ機能・デバッグ支援 (4.5KB)
-├── indexed-db-emergency-backup.ts        # IndexedDB再作成前の緊急バックアップ
-├── material-icons.ts                     # マテリアルアイコン統合ヘルパー (9KB)
-├── thumbnail-fallback.ts                  # 共通フォールバックサムネイルとURL正規化
-├── toastr.ts                             # 通知システム・トースト表示 (19KB)
-├── cache-removal.ts                      # 拡張APIによるHLS限定削除・削除予約
-├── cache-search-client.ts                # NicoCache_nlキャッシュ検索APIと結果正規化
-├── cache-search-results.ts               # キャッシュ検索結果の共通UI
-├── server-response-parser.ts              # Watchページmetaの生JSON・URIエンコードJSON解析
-├── video-navigation.ts                   # 動画ID・URL指定とキャッシュ検索の共通フォーム
-├── video-navigation-styles.ts            # 動画指定フォームと検索結果の共通スタイル
-└── css-constants.ts                      # 共通CSS定数・スタイル定義 (1.7KB)
-```
-
-## 🏗️ アーキテクチャ概要
-
-### 初期化フロー
-
-```
-features.ts ─── ページ判定
-    └── startCommon() ─── スタイル適用
-    ├── css-constants.ts ─── CSS変数定義
-    ├── toastr.ts ─── 通知システム初期化
-    ├── logger.ts ─── ログシステム初期化
-    └── common.ts ─── グローバルヘルパー登録
-```
-
-### 機能フロー
-
-```
-各プロジェクト
-    ├── header.ts ─── 統一ヘッダー表示
-    ├── common.ts ─── API通信・データ取得
-    ├── toastr.ts ─── ユーザー通知
-    ├── logger.ts ─── デバッグ情報出力
-    ├── cache-removal.ts ─── FilterMatomeCacheControl APIによるHLS限定削除・削除予約
-    ├── indexed-db-emergency-backup.ts ─── IndexedDB緊急退避
-    └── material-icons.ts ─── アイコン表示
-    └── thumbnail-fallback.ts ─── 画像欠落・読込失敗時の共通サムネイル表示
-```
-
-## 📋 各ファイルの役割詳細
-
-### 🎯 **コア機能**
-
-#### `index.ts` - エントリーポイント
-
-- **役割**: 中央ルーターから呼ばれる共通機能の明示的初期化
-- **機能**: CSS定数適用、toastrスタイル適用、各モジュールのimport
-- **編集タイミング**: 新しい共通機能追加時、初期化順序変更時
-
-#### `common.ts` - API通信・データ取得ヘルパー
-
-- **役割**: ニコニコ動画APIとの通信を統一化
-- **機能**:
-  - `fetchRequest` - 共通fetch関数
-  - `checkCache404` - キャッシュ存在確認
-  - `fetchWatchPage` - 動画情報取得
-  - `fetchWatchPage` は `server-response` metaが生JSON・URIエンコード済みJSONのどちらでも解析し、不完全な `%` シーケンスを含む説明文でも取得を継続
-  - `fetchNicoComments` - 取得可能な全フォークのコメントデータ取得
-  - `fetchNicoDataWithComments` - 全フォークの `threads` と統合済み `comments` を含む統合データ取得
-  - `fetchNicoComments`/`fetchNicoDataWithComments` は `{ bypassCommentFilter: true }` 指定時に comment-filter2 の fetch 差し替えを通さず、コメントJSON保存や movie-info 用のフィルタ前データを取得
-  - `getVideoIdWithFallback` - SPA直後の古い `NicoCache_nl.watch` 状態より現在URL/入力URLの動画IDを優先して取得
-  - `fetchWatchPage`/`fetchNicoComments` の短期メモリキャッシュ・同時リクエスト共有
-- **編集タイミング**: API仕様変更対応、新しいエンドポイント追加
-
-### 🎨 **UI・インターフェース**
-
-#### `header.ts` - 共通ヘッダーコンポーネント (最も大きなファイル)
-
-- **役割**: 全プロジェクト共通のニコニコ動画風ヘッダー
-- **機能**:
-  - Shadow DOM実装
-  - 検索機能（キーワード・タグ・マイリスト等。入力欄は240pxの固定幅とし、検索対象の選択欄と36pxの高さに統一。クリア操作は簡潔なcloseアイコンで表示）
-  - リンクナビゲーション（ニコニコの主要サービスは「メイン」、関連サービスは「その他」、ローカル機能とGitHubは「filter-matome」の各サブメニューへ分類）
-  - 固定モード対応
-  - 画面上端・左右端に接地するフルブリード配置と折り返しによるレスポンシブ対応
-- **編集タイミング**: ヘッダーデザイン変更、新しいリンク追加、検索機能拡張
-
-#### `css-constants.ts` - 共通CSS定数
-
-- **役割**: 全環境で統一的に使用するCSS変数定義
-- **機能**:
-  - ヘッダー位置調整定数
-  - 色・サイズ・z-index定数
-  - 各環境微調整値（固定解像度前提の負オフセットは避ける）
-- **編集タイミング**: デザイン統一、新しいスタイル定数追加
-
-#### `material-icons.ts` - マテリアルアイコン統合
-
-- **役割**: マテリアルデザインアイコンの統一管理
-- **機能**:
-  - アイコンパス生成
-  - SVGタグ生成
-  - カラー・サイズ・スタイル設定
-  - よく使うアイコンのショートカット
-- **編集タイミング**: 新しいアイコン追加、アイコンスタイル変更
-
-#### `thumbnail-fallback.ts` - 共通フォールバックサムネイル
-
-- **役割**: watch-history、mylist2、cache-data-managerで使用する代替サムネイルを一元管理
-- **機能**: 内蔵SVGのData URL提供、画像URL正規化、空・不正URLと読込失敗時のフォールバック切替
-- **編集タイミング**: 代替画像のデザイン、許可する画像URL形式、画像エラー処理を変更する場合
-
-#### `video-navigation.ts` - 共通動画指定ナビゲーション
-
-- **役割**: video-player と movie-info で使用する動画ID・URL指定とキャッシュ検索を一元管理
-- **機能**: `[a-z]{2}\d+` の動画ID抽出、利用画面ごとの主操作コールバック、検索の中断、検索結果からの動画選択
-- **関連ファイル**: API通信と正規化は `cache-search-client.ts`、結果一覧は `cache-search-results.ts`、表示規則は `video-navigation-styles.ts`
-- **編集タイミング**: 動画指定方法、NicoCache_nl の検索API、検索結果表示を変更する場合
-
-#### `cache-removal.ts` - HLSキャッシュ削除クライアント
-
-- **役割**: cache-data-managerとmlink-video-controllerから `FilterMatomeCacheControl` のJSON APIを呼び出す
-- **機能**: 動画ID単位のHLS限定削除、ダウンロード中HLSの削除予約、`requestId`による状態確認、構造化応答の検証と通知文生成
-- **安全性**: `scope: "hls"` を固定し、応答に `.hls` 以外の削除結果が含まれる場合は不正な応答として拒否する。MP4・FLV・SWFは削除しない
-- **編集タイミング**: `FilterMatomeCacheControl` API仕様、削除状態、利用画面の通知規則を変更する場合
-
-### 💬 **通知・ログ**
-
-#### `toastr.ts` - 通知システム
-
-- **役割**: ユーザーへの通知・メッセージ表示
-- **機能**:
-  - 成功・エラー・警告・情報通知
-  - 位置・表示時間・アニメーション設定
-  - プログレスバー・クローズボタン対応
-- **編集タイミング**: 通知デザイン変更、新しい通知タイプ追加
-
-#### `logger.ts` - ログ機能
-
-- **役割**: デバッグ・エラー追跡・パフォーマンス測定
-- **機能**:
-  - 出力対象制御（WARN・ERROR のみ出力、DEBUG・INFO・LOG は互換メソッドとして保持）
-  - ファイル別ログ有効/無効制御
-  - 呼び出し元ファイル自動検出
-  - パフォーマンス測定ヘルパー
-- **編集タイミング**: ログ出力調整、新しいログ機能追加
-
-## 🎯 目的別編集ガイド
-
-### 💡 **新しい共通機能を追加したい**
-
-1. 適切なファイルに機能実装（または新規ファイル作成）
-2. `index.ts` - 新しい機能のimport追加
-3. 必要に応じて `css-constants.ts` に定数追加
-4. `src/types/common-types.ts` または `global.d.ts` に型定義追加
-
-### 🌐 **新しいAPI通信機能を追加したい**
-
-- **メイン対象**: `common.ts`
-- **手順**:
-  1. 新しいヘルパー関数を `window.commonHelper` に追加
-  2. 型定義を `src/types/common-types.ts` に追加
-  3. エラーハンドリング・ログ出力を含める
-
-### 🎨 **ヘッダーをカスタマイズしたい**
-
-1. **HTML構造変更**: `header.ts` の `getHeaderTemplate()` メソッド
-2. **スタイル変更**: `header.ts` の `getHeaderStyles()` メソッド
-3. **機能追加**: `header.ts` の `setupEventListeners()` メソッド
-4. **位置調整**: `css-constants.ts` の位置調整定数
-
-### 🔔 **通知機能をカスタマイズしたい**
-
-1. **新しい通知タイプ**: `toastr.ts` の `notify()` メソッド
-2. **スタイル変更**: `toastr.ts` の `TOASTR_STYLES` 定数
-3. **アニメーション変更**: `toastr.ts` の `animate()` メソッド
-
-### 🎯 **アイコンを追加・変更したい**
-
-1. **新しいアイコン追加**: `material-icons.ts` の `ICONS` 定数
-2. **アイコンスタイル変更**: `material-icons.ts` の `materialIconsStyles`
-3. **ショートカット追加**: `material-icons.ts` の `commonIcons`
-
-### 🐛 **ログ出力を調整したい**
-
-- **特定ファイルのログ制御**: `logger.ts` の `initializeLoggerConfig()` メソッド
-- **ログ出力**: `logger.warn()` / `logger.error()` を使用
-- **新しいログタイプ追加**: `logger.ts` に新しいメソッド追加
-
-### 💾 **型定義を更新したい**
-
-- **共通型**: `src/types/common-types.ts`
-- **グローバル型**: `src/types/global.d.ts`
-- **アイコン型**: `src/types/icon-types.ts`
-- **通知型**: `src/types/toastr-types.ts`
-
-## ⚠️ 重要な注意点
-
-### 🔥 **必ず確認すべきファイル**
-
-- **共通機能追加時**: `index.ts` (初期化順序)
-- **API関連変更時**: `src/types/common-types.ts` (型定義)
-- **スタイル変更時**: `css-constants.ts` (CSS変数)
-- **グローバル機能追加時**: `src/types/global.d.ts` (型定義)
-
-### 🚨 **変更時の影響範囲**
-
-- `index.ts` 変更 → 全プロジェクトの初期化に影響
-- `css-constants.ts` 変更 → 全プロジェクトのスタイルに影響
-- `common.ts` 変更 → APIを使用する全機能に影響
-- `logger.ts` 変更 → 全プロジェクトのデバッグ機能に影響
-
-### 📝 **コーディング規約**
-
-- windowオブジェクトへの追加は慎重に行う
-- Shadow DOM使用時は外部スタイルとの干渉に注意
-- ログ出力は適切なレベルで行う
-- 型定義は必ず更新する
-- エラーハンドリングは必須
-
-### 🔄 **互換性維持**
-
-- 既存のwindowオブジェクトのプロパティは変更しない
-- 公開APIの引数・戻り値の型は慎重に変更する
-- CSS変数名は既存プロジェクトとの互換性を考慮
-
-## 🔍 デバッグ・テスト
-
-### コンソールからのアクセス
-
-```javascript
-// 共通ヘルパー関数
-window.commonHelper.fetchWatchPage("sm9");
-window.commonHelper.fetchNicoComments(apiData);
-
-// ログ機能
-window.logger.warn("警告メッセージ");
-window.logger.error("エラーメッセージ");
-
-// 通知システム
-window.toastr.success("成功メッセージ");
-window.toastr.error("エラーメッセージ");
-
-// ヘッダー機能（CommonHeaderインスタンス）
-window.NicoCommon.createHeader("container-id", config);
-```
-
-### 主要なグローバル要素
-
-- `window.commonHelper` - API通信ヘルパー
-- `window.logger` - ログ機能
-- `window.toastr` - 通知システム
-- `window.NicoCommon` - ヘッダー関連
-
-### CSS変数の確認
-
-```css
-/* ブラウザの開発者ツールで確認可能 */
-:root {
-  --header-offset-top: 0;
-  --header-width: 100%;
-  --header-bg-color: #252525;
-  --icon-size-medium: 20px;
-  /* 他多数... */
-}
-```
-
-## 🚀 パフォーマンス考慮事項
-
-### 最適化ポイント
-
-- **初期化**: `index.ts` での並列処理
-- **API通信**: `common.ts` でのキャッシュ活用
-- **ログ出力**: 本番環境での自動調整
-- **アイコン**: lazy loading対応
-- **通知**: メモリリーク防止
-
-この文書を参考に、効率的にcommonプロジェクトを編集・拡張できます！

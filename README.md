@@ -152,10 +152,10 @@ winget install Google.Chrome
 ## 🔧 開発者向け情報
 
 ### 技術スタック
-- **言語**: TypeScript 6.0.2
-- **ビルドツール**: Bun bundler 1.3.14
-- **開発ランタイム**: Bun 1.3.14
-- **静的解析**: ESLint 10.6.0、typescript-eslint 8.63.0
+- **言語**: TypeScript
+- **ビルドツール・ランタイム**: Bun（要求バージョンは `local/features/package.json` を参照）
+- **静的解析**: ESLint、typescript-eslint
+- **テスト**: Bun test、Playwright
 - **ストレージ**: IndexedDB
 - **UI**: Material Design Icons
 - **フィルター言語**: nlFilter (NicoCache_nl独自DSL)
@@ -164,7 +164,6 @@ winget install Google.Chrome
 ```
 local/
 ├─ background-images/    # 視聴ページ用の背景画像
-├─ images/               # comment-filter2ドキュメント用画像、フォールバックサムネイル
 └─┬── features/          # メイン機能群
   ├── src/               # TypeScriptソースコード
   │   ├── api-info/             # ニコニコ動画/API仕様メモ
@@ -174,9 +173,11 @@ local/
   │   ├── mlink-video-controller/ # 視聴ページ操作パネルとモジュール
   │   ├── movie-info/           # 動画/API情報ダッシュボード
   │   ├── mylist2/              # マイリスト2
+  │   ├── runtime/              # 配信ページ判定と起動境界
   │   ├── types/                # 共通型定義
   │   ├── video-player/         # ローカル動画プレイヤー
   │   └── watch-history/        # 視聴履歴SPAと視聴追跡
+  ├── tests/             # Bun単体テスト、Playwrightテスト、fixture
   ├── dist/              # Bunで生成した単一バンドル、Worker、静的HTML
   └── scripts/           # Bunビルド・テストスクリプト
 
@@ -195,10 +196,15 @@ docs/resources/            # USAGE.mdで使われる画像リソース
 ```bash
 cd local/features
 bun install
+bun run format
+bun run lint
+bun run type-check
+bun run test
 bun run build
 ```
 
 `features.js`へ全ブラウザ機能を統合するため、個別ビルドはありません。
+構成、生成物、プロジェクト別READMEは [`local/features/README.md`](local/features/README.md) を参照してください。
 
 ### nlFilter文法
 ```ini

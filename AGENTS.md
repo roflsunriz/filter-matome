@@ -8,7 +8,7 @@
 ### 作業前に確認する文書
 
 - リポジトリ全体の用途と導入方法はルートの `README.md`、更新方法は `how-to-update.md`、開発規約は `CONTRIBUTING.md` を確認する。
-- TypeScript機能群を変更する前に `local/features/README.md` を確認し、対象ディレクトリに `README.md` がある場合はその編集ガイドも確認する。`api-info/` と `runtime/` には個別READMEがないため、参照元と実装を確認して責務を判断する。
+- TypeScript機能群を変更する前に `local/features/README.md` と、対象ディレクトリの `README.md` を確認する。
 - `nlFilters/` を変更する前に `nlFilters/nlFilters_編集ガイド.md` を確認する。
 - `scripts/` のスクリプトを変更または実行する前に、対応する `scripts/README.*.md` を確認する。
 - ユーザー操作、構成、設定、ビルド手順、外部連携が変わる場合は、対象README、`how-to-update.md`、`docs/`、`CHANGELOG.md` の更新要否を確認する。
