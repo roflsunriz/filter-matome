@@ -6,6 +6,7 @@
 
 ## 主な機能
 - リンク定義に基づく一括作成（`scripts`、`local`、`nlFilters`、`extensions` など）
+- `extensions` の同梱クラス7件（`FilterMatomeCacheControl.class`、`NicochartInfoProxy.class`を含む）をNicoCache_nlへリンク
 - 既存リンクの判定（同一ターゲットなら再作成せずスキップ）
 - `--force` による既存シンボリックリンクの再作成
 - `--dry-run` による作成予定一覧の確認

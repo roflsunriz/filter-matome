@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【scripts】各実行スクリプトから対応する説明へ辿れるよう、READMEがなかった7本（10秒・60秒切り出し、拡張ビルド、Claudeリンク、list.jsリンク、Python依存導入、MkDocsフック）に個別READMEを追加した。
 - 【extensions】cache-data-managerとmlink-video-controllerから安定したHLS削除処理を利用できるよう、完了済み・停止済みHLSの一括削除、ダウンロード中HLSの削除予約、状態確認をJSON APIで提供する `FilterMatomeCacheControl` を追加した。ユーザーが用意した可能性のあるMP4・FLV・SWFは削除対象から除外する。
 - 【video-player】ニコニコ動画のウォッチページから動画情報を取得できない場合でもキャッシュ動画のタイトルや説明を確認できるよう、nicochart.jp の公開情報を最終フォールバックとして取得する読み取り専用NicoCache_nl拡張を追加した。接続先と動画IDを制限し、nicochart 側にも情報がない場合は従来どおりローカルキャッシュのみで再生を試みる。
 - 【common】各ローカル機能へ直接移動しやすくするため、共通ヘッダーの「その他」メニューで video-player の直後に movie-info へのリンクを追加した。
@@ -16,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【scripts】一括シンボリックリンク作成時に、新しく追加された `FilterMatomeCacheControl.class` と `NicochartInfoProxy.class` もNicoCache_nlの `extensions` へリンクするよう更新した。
 - 【cache-data-manager/mlink-video-controller】不安定だったNicoCache_nl本体の `ajax_rm` / `ajax_rmtmp` 呼び出しを廃止し、HLS限定・ダウンロード中の削除予約・構造化された結果判定に対応する `FilterMatomeCacheControl` APIへ移行した。
 - 【docs】NicoCache_nl拡張の導入・更新時に役割や依存関係を判断できるよう、`docs/USAGE.md`へ`extensions/`全般の説明、同梱クラス一覧、再起動手順、外部コマンド要件、注意事項、トラブルシュートを追加した。
 - 【common/video-player/movie-info】動画ID・URL入力と完成済みキャッシュのタイトル検索を両画面で一貫して利用できるよう、検索API、結果一覧、動画指定フォーム、レスポンシブスタイルを common へ集約し、movie-info でも検索結果からデータ取得できるようにした。
