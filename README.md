@@ -171,7 +171,6 @@ local/
   │   ├── cache-data-manager/   # NicoCache_nlキャッシュ一覧UI
   │   ├── comment-filter2/      # コメントフィルター
   │   ├── common/               # 共通ヘルパー、共通ヘッダー、ロガー、トースト
-  │   ├── docs/                 # 機能ドキュメント補助
   │   ├── mlink-video-controller/ # 視聴ページ操作パネルとモジュール
   │   ├── movie-info/           # 動画/API情報ダッシュボード
   │   ├── mylist2/              # マイリスト2
