@@ -83,6 +83,7 @@ class WatchHistoryApp {
 
   // シリーズ関連
   private seriesStats: SeriesStats[] = [];
+  private seriesDataLoadPromise: Promise<void> | null = null;
   private filteredSeriesStats: SeriesStats[] = [];
   private seriesFilter: SeriesFilterCondition = {};
   private seriesAlerts: SeriesAlert[] = [];
@@ -2320,9 +2321,7 @@ class WatchHistoryApp {
    * シリーズタブを初期化する
    */
   private async initializeSeriesTab(): Promise<void> {
-    if (this.seriesStats.length === 0) {
-      await this.loadSeriesData();
-    }
+    await this.ensureSeriesDataLoaded();
     await this.updateSeriesUI();
   }
 
@@ -2330,9 +2329,25 @@ class WatchHistoryApp {
    * シリーズアラートタブを初期化する
    */
   private async initializeSeriesAlertTab(): Promise<void> {
-    await this.loadSeriesAlertData();
+    await Promise.all([
+      this.ensureSeriesDataLoaded(),
+      this.loadSeriesAlertData(),
+    ]);
     this.updateSeriesAlertUI();
     this.startAlertUIUpdater();
+  }
+
+  /**
+   * どのタブからアラート追加を開いてもシリーズ選択肢を利用可能にする。
+   */
+  private async ensureSeriesDataLoaded(): Promise<void> {
+    if (this.seriesStats.length > 0) return;
+    if (!this.seriesDataLoadPromise) {
+      this.seriesDataLoadPromise = this.loadSeriesData().finally(() => {
+        this.seriesDataLoadPromise = null;
+      });
+    }
+    await this.seriesDataLoadPromise;
   }
 
   /**
@@ -2806,7 +2821,8 @@ class WatchHistoryApp {
   /**
    * シリーズアラートモーダルを開く
    */
-  private openSeriesAlertModal(): void {
+  private async openSeriesAlertModal(): Promise<void> {
+    await this.ensureSeriesDataLoaded();
     // シリーズ選択肢を更新
     this.updateSeriesSelectOptions();
     this.elements["series-alert-modal"]?.classList.remove("hidden");
@@ -2900,7 +2916,7 @@ class WatchHistoryApp {
   /**
    * シリーズ詳細からアラートを追加する
    */
-  private addAlertFromSeriesDetail(): void {
+  private async addAlertFromSeriesDetail(): Promise<void> {
     if (!this.selectedSeries) return;
 
     const selectedSeriesId = this.selectedSeries.seriesId;
@@ -2916,7 +2932,7 @@ class WatchHistoryApp {
 
     // シリーズ詳細モーダルを閉じてアラートモーダルを開く
     this.closeSeriesDetailModal();
-    this.openSeriesAlertModal();
+    await this.openSeriesAlertModal();
 
     // 選択されたシリーズを設定
     const seriesSelect = this.elements[

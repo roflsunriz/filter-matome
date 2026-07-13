@@ -535,6 +535,18 @@ test("サムネイル欠落時と画像読込失敗時にフォールバック�
   );
 });
 
+test("シリーズタブを開かなくてもアラートのシリーズ選択肢を取得する", async ({
+  page,
+}) => {
+  await openApp(page);
+  await page.locator("#series-alert-tab").click();
+  await page.locator("#add-series-alert-btn").click();
+  await expect(page.locator("#series-alert-modal")).not.toHaveClass(/hidden/);
+  await expect(
+    page.locator('#series-alert-series-select option[value="10"]'),
+  ).toHaveText("テストシリーズ");
+});
+
 test("各タブ・シリーズ・アラートの静的および動的ボタンが機能する", async ({
   page,
 }) => {

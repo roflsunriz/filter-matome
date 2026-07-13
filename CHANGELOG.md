@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - 【watch-history】シリーズアラート削除前に開始した自動再取得の古い応答が削除後のUIへ適用され、数秒後にアラートが一時的に復活する競合を修正した。
+- 【watch-history】シリーズタブを先に開かないと、シリーズアラート追加画面のシリーズ選択肢を取得できない初期化依存を修正した。
 
 ## [#232] - 2026-07-13
 
