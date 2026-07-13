@@ -8,11 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【common】各ローカル機能へ直接移動しやすくするため、共通ヘッダーの「その他」メニューで video-player の直後に movie-info へのリンクを追加した。
 - 【video-player】キャッシュ済み動画をタイトルから探して直接再生できるよう、NicoCache_nl の検索APIを利用したキーワード検索、画質違いをまとめた結果一覧、検索中・0件・失敗時の案内を動画指定ナビゲーションへ追加した。
 - 【video-player】パンくずリスト直下から動画URLまたは `videoId` を指定して再生できるよう、動画ID抽出付きの入力欄と共通Material Design Iconsの再生ボタンを追加した。
 
 ### Changed
 
+- 【common/video-player/movie-info】動画ID・URL入力と完成済みキャッシュのタイトル検索を両画面で一貫して利用できるよう、検索API、結果一覧、動画指定フォーム、レスポンシブスタイルを common へ集約し、movie-info でも検索結果からデータ取得できるようにした。
 - comment-filter2 のルール入力画面で一致プレビューをアコーディオン化し、必要なときだけテスト入力欄と結果を展開できるようにした。
 - 共通ヘッダーの「その他」メニューから video-player へ移動できるよう、キャッシュ管理リンクの直後に導線を追加した。
 

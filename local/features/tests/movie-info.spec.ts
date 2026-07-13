@@ -51,6 +51,19 @@ async function openApp(
   failure: string | null = null,
 ): Promise<void> {
   await page.route(pageUrl, fulfillDocument);
+  await page.route("**/cache/search/**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json; charset=utf-8",
+      body: JSON.stringify({
+        "sm100[720p,128].hls": [
+          "検索で見つかったテスト動画",
+          "fixture",
+          1048576,
+          1783900800,
+        ],
+      }),
+    });
+  });
   await page.goto(pageUrl);
   await page.evaluate(() => {
     Object.defineProperty(navigator, "clipboard", {
@@ -103,10 +116,10 @@ test.beforeEach(async ({ page }) => {
 test("動画ID入力、基本データ取得、概要状態、全ソース切替が同期する", async ({
   page,
 }) => {
-  await page.locator("#video-id-input").fill("不正な入力");
+  await page.locator("#video-id-input").fill("");
   await page.locator("#video-id-input").press("Enter");
-  await expect(page.locator("#global-status")).toHaveText(
-    "動画IDを正しく入力してください",
+  await expect(page.locator(".common-video-navigation__message")).toHaveText(
+    "キャッシュ検索キーワードを入力してください。",
   );
 
   await loadVideo(page);
@@ -155,6 +168,40 @@ test("動画ID入力、基本データ取得、概要状態、全ソース切替
   await expect(description.locator("script")).toHaveCount(0);
   await expect(description.locator("[onclick]")).toHaveCount(0);
   await expect(description.locator('a[href^="javascript:"]')).toHaveCount(0);
+});
+
+test("共通キャッシュ検索の結果から動画データを取得できる", async ({ page }) => {
+  await page.locator("#video-id-input").fill("テスト動画");
+  await page.getByRole("button", { name: "キャッシュを検索" }).click();
+  await expect(page.locator(".common-cache-search-results__status")).toHaveText(
+    "1件の動画キャッシュが見つかりました。",
+  );
+  await expect(
+    page.locator(".common-cache-search-results__select"),
+  ).toContainText("検索で見つかったテスト動画");
+  await page.locator(".common-cache-search-results__select").click();
+  await expect(page.locator("#video-id-input")).toHaveValue("sm100");
+  await expect(page.locator("#global-status")).toHaveText(
+    "データ取得が完了しました",
+  );
+});
+
+test("狭幅でも共通動画指定と検索結果の操作が画面内に収まる", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator("#video-id-input").fill("テスト動画");
+  await page.getByRole("button", { name: "キャッシュを検索" }).click();
+  await expect(
+    page.locator(".common-cache-search-results__select"),
+  ).toBeVisible();
+  await expect(page.locator("#load-data-btn")).toBeVisible();
+  await expect(page.locator("#fetch-comments-btn")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
 });
 
 test("JSON表示、フォーカス復帰、コピー、ダウンロードが選択ソースへ作用する", async ({

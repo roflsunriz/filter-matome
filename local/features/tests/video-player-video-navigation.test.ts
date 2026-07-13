@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 
-import { extractVideoIdFromInput } from "@/video-player/standalone/video-navigation";
+import { extractVideoIdFromInput } from "@/common/video-navigation";
 
-describe("video-player video navigation", () => {
+describe("common video navigation", () => {
   test("extracts a videoId from a watch URL", () => {
     expect(
       extractVideoIdFromInput(

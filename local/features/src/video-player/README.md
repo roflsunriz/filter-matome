@@ -152,17 +152,17 @@ database-manager.ts ─── データベース統合管理
 - **補足**: コメントサーバが利用不可・低速でも、コメント読み込み失敗は再生失敗として扱わず動画再生を継続します。すべての再生プローブが失敗した場合は、キャッシュデータが存在しないことをモーダルダイアログで通知します。
 - **編集タイミング**: 再生開始速度改善、フォールバック戦略変更、HLS/MP4再生処理変更
 
-#### `standalone/video-navigation.ts` - 動画指定ナビゲーション
-- **役割**: パンくずリスト直下の動画URL・`videoId` 入力とスタンドアロンページ遷移
-- **機能**: 動画ID抽出、キーワード検索の起動、入力エラー表示、共通Material Design Iconsを使用した再生・検索ボタン
-- **編集タイミング**: 動画指定フォームの表示や遷移ルールを変更するとき
+#### `common/video-navigation.ts` - 共通動画指定ナビゲーション
+- **役割**: パンくずリスト直下の動画URL・`videoId` 入力とキャッシュ検索を movie-info と共有
+- **機能**: 動画ID抽出、キーワード検索の起動、入力エラー表示、共通Material Design Iconsを使用した再生・検索ボタン。video-player 固有の遷移先は `standalone/layout.ts` からコールバックで指定
+- **編集タイミング**: 動画指定フォームの共通動作を変更するとき。video-player 固有の遷移ルールは `standalone/layout.ts` を編集
 
-#### `standalone/cache-search-client.ts` - キャッシュ検索APIクライアント
+#### `common/cache-search-client.ts` - キャッシュ検索APIクライアント
 - **役割**: NicoCache_nl の `/cache/search/<キーワード>` API呼び出しと未検証JSONの正規化
 - **機能**: クエリのURLエンコード、通信エラー処理、画質違いキャッシュの動画ID単位への集約、更新日時順ソート
 - **編集タイミング**: NicoCache_nl の検索API仕様や検索結果モデルを変更するとき
 
-#### `standalone/cache-search-results.ts` - キャッシュ検索結果UI
+#### `common/cache-search-results.ts` - キャッシュ検索結果UI
 - **役割**: 検索中、0件、失敗、検索結果一覧の表示
 - **機能**: 最大50件表示、サイズ・日時・キャッシュ識別子表示、選択した動画IDの再生画面への受け渡し
 - **編集タイミング**: 検索結果の情報量や選択UIを変更するとき
@@ -466,5 +466,5 @@ const stats = await dbManager.getDatabaseStats();
 - スタンドアロンページは src/video-player/standalone 配下で構成され、standalone/main.ts が StandalonePlayer を初期化して動画・コメント・メタ情報を描画します。
 - メタ情報を取得できない動画では、タイトルを動画IDへフォールバックしてローカルキャッシュ再生を試行します。
 - ルーティングロジックは src/video-player/router/watch-page-router.ts に切り出されており、無料動画は公式プレイヤーをそのまま利用します。削除・視聴不可動画を検出した場合は既存の deletedVideoPlayer インターフェース経由でスタンドアロン deleted モードを開きます。
-- レイアウトやスタイルを変更する場合は standalone/layout.ts と standalone/styles.ts を編集してください。動画指定フォームの動作は standalone/video-navigation.ts で管理します。
+- レイアウトやプレイヤー固有スタイルを変更する場合は standalone/layout.ts と standalone/styles.ts を編集してください。動画指定フォームと検索結果の共通動作・スタイルは common/video-navigation.ts と common/video-navigation-styles.ts で管理します。
 - プレーヤー表示枠は動画メタデータの videoWidth/videoHeight から実動画比率へ更新し、全画面表示では画面内に収まる動画矩形を中央配置します。

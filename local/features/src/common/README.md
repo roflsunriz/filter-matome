@@ -17,7 +17,11 @@ features/src/common/
 ├── thumbnail-fallback.ts                  # 共通フォールバックサムネイルとURL正規化
 ├── toastr.ts                             # 通知システム・トースト表示 (19KB)
 ├── cache-removal.ts                      # キャッシュ情報取得・HLS削除処理
+├── cache-search-client.ts                # NicoCache_nlキャッシュ検索APIと結果正規化
+├── cache-search-results.ts               # キャッシュ検索結果の共通UI
 ├── server-response-parser.ts              # Watchページmetaの生JSON・URIエンコードJSON解析
+├── video-navigation.ts                   # 動画ID・URL指定とキャッシュ検索の共通フォーム
+├── video-navigation-styles.ts            # 動画指定フォームと検索結果の共通スタイル
 └── css-constants.ts                      # 共通CSS定数・スタイル定義 (1.7KB)
 ```
 
@@ -81,7 +85,7 @@ features.ts ─── ページ判定
 - **機能**:
   - Shadow DOM実装
   - 検索機能（キーワード・タグ・マイリスト等）
-  - リンクナビゲーション（「その他」メニューからキャッシュ管理とvideo-playerへ移動可能）
+  - リンクナビゲーション（「その他」メニューからキャッシュ管理、video-player、movie-infoへ移動可能）
   - 固定モード対応
   - 画面上端・左右端に接地するフルブリード配置と折り返しによるレスポンシブ対応
 - **編集タイミング**: ヘッダーデザイン変更、新しいリンク追加、検索機能拡張
@@ -110,6 +114,13 @@ features.ts ─── ページ判定
 - **役割**: watch-history、mylist2、cache-data-managerで使用する代替サムネイルを一元管理
 - **機能**: 内蔵SVGのData URL提供、画像URL正規化、空・不正URLと読込失敗時のフォールバック切替
 - **編集タイミング**: 代替画像のデザイン、許可する画像URL形式、画像エラー処理を変更する場合
+
+#### `video-navigation.ts` - 共通動画指定ナビゲーション
+
+- **役割**: video-player と movie-info で使用する動画ID・URL指定とキャッシュ検索を一元管理
+- **機能**: `[a-z]{2}\d+` の動画ID抽出、利用画面ごとの主操作コールバック、検索の中断、検索結果からの動画選択
+- **関連ファイル**: API通信と正規化は `cache-search-client.ts`、結果一覧は `cache-search-results.ts`、表示規則は `video-navigation-styles.ts`
+- **編集タイミング**: 動画指定方法、NicoCache_nl の検索API、検索結果表示を変更する場合
 
 ### 💬 **通知・ログ**
 

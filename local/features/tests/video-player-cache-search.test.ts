@@ -4,9 +4,9 @@ import {
   getCacheSearchUrl,
   parseCacheSearchResponse,
   searchVideoCaches,
-} from "@/video-player/standalone/cache-search-client";
+} from "@/common/cache-search-client";
 
-describe("video-player cache search", () => {
+describe("common cache search", () => {
   test("builds an encoded NicoCache_nl search URL", () => {
     expect(getCacheSearchUrl(" 豪血寺一族 ")).toBe(
       "https://www.nicovideo.jp/cache/search/%E8%B1%AA%E8%A1%80%E5%AF%BA%E4%B8%80%E6%97%8F?order=d",

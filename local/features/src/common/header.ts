@@ -448,6 +448,9 @@ export class CommonHeader implements CommonHeaderInstance {
                   <a href="https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html" target="_blank" title="video-player">
                     video-player
                   </a>
+                  <a href="https://www.nicovideo.jp/local/features/dist/pages/movie-info/index.html" target="_blank" title="movie-info">
+                    movie-info
+                  </a>
                   <a href="https://github.com/roflsunriz/filter-matome" target="_blank" title="filter-matome">
                     filter-matome (GitHub)
                   </a>

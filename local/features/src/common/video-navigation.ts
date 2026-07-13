@@ -1,6 +1,6 @@
 import { createMaterialIcon, ICONS } from "@/common/material-icons";
-import { searchVideoCaches } from "@/video-player/standalone/cache-search-client";
-import { createCacheSearchResults } from "@/video-player/standalone/cache-search-results";
+import { searchVideoCaches } from "@/common/cache-search-client";
+import { createCacheSearchResults } from "@/common/cache-search-results";
 
 const VIDEO_ID_PATTERN = /[a-z]{2}\d+/i;
 
@@ -12,32 +12,46 @@ export const extractVideoIdFromInput = (value: string): string | null => {
 export interface VideoNavigationElements {
   form: HTMLFormElement;
   input: HTMLInputElement;
+  primaryButton: HTMLButtonElement;
+  searchButton: HTMLButtonElement;
 }
 
-const navigateToVideo = (videoId: string): void => {
-  const targetUrl = new URL("index.html", window.location.href);
-  targetUrl.search = "";
-  targetUrl.searchParams.set("videoId", videoId);
-  window.location.assign(targetUrl.toString());
-};
+export interface VideoNavigationOptions {
+  onVideoId: (videoId: string) => void | Promise<void>;
+  inputId?: string;
+  primaryButtonId?: string;
+  primaryActionLabel?: string;
+  primaryActionTitle?: string;
+  primaryActionIcon?: string;
+  resultActionLabel?: string;
+  loggerScope?: string;
+}
 
-export const createVideoNavigation = (): VideoNavigationElements => {
+export const createVideoNavigation = (
+  options: VideoNavigationOptions,
+): VideoNavigationElements => {
+  const primaryActionLabel = options.primaryActionLabel ?? "再生";
+  const primaryActionTitle =
+    options.primaryActionTitle ?? `動画を${primaryActionLabel}`;
+  const resultActionLabel = options.resultActionLabel ?? primaryActionLabel;
+  const inputId = options.inputId ?? "common-video-navigation-input";
+
   const form = document.createElement("form");
-  form.className = "nc-video-navigation";
+  form.className = "common-video-navigation";
   form.noValidate = true;
   form.setAttribute("aria-label", "動画の指定またはキャッシュ検索");
 
   const label = document.createElement("label");
-  label.className = "nc-video-navigation__label";
-  label.htmlFor = "nc-video-navigation-input";
+  label.className = "common-video-navigation__label";
+  label.htmlFor = inputId;
   label.textContent = "動画URL / videoId / キャッシュ検索";
 
   const controls = document.createElement("div");
-  controls.className = "nc-video-navigation__controls";
+  controls.className = "common-video-navigation__controls";
 
   const input = document.createElement("input");
-  input.id = "nc-video-navigation-input";
-  input.className = "nc-video-navigation__input";
+  input.id = inputId;
+  input.className = "common-video-navigation__input";
   input.type = "text";
   input.name = "videoId";
   input.autocomplete = "off";
@@ -47,14 +61,17 @@ export const createVideoNavigation = (): VideoNavigationElements => {
     "動画URL、videoId、キャッシュ検索キーワード",
   );
 
-  const submitButton = document.createElement("button");
-  submitButton.className = "nc-video-navigation__submit";
-  submitButton.type = "submit";
-  submitButton.title = "動画を再生";
-  submitButton.setAttribute("aria-label", "動画を再生");
-  submitButton.insertAdjacentHTML(
+  const primaryButton = document.createElement("button");
+  primaryButton.className = "common-video-navigation__submit";
+  primaryButton.type = "submit";
+  if (options.primaryButtonId) {
+    primaryButton.id = options.primaryButtonId;
+  }
+  primaryButton.title = primaryActionTitle;
+  primaryButton.setAttribute("aria-label", primaryActionTitle);
+  primaryButton.insertAdjacentHTML(
     "beforeend",
-    createMaterialIcon(ICONS.play, {
+    createMaterialIcon(options.primaryActionIcon ?? ICONS.play, {
       style: "outlined",
       color: "dark",
       size: 20,
@@ -62,13 +79,13 @@ export const createVideoNavigation = (): VideoNavigationElements => {
     }),
   );
 
-  const buttonLabel = document.createElement("span");
-  buttonLabel.textContent = "再生";
-  submitButton.append(buttonLabel);
+  const primaryButtonLabel = document.createElement("span");
+  primaryButtonLabel.textContent = primaryActionLabel;
+  primaryButton.append(primaryButtonLabel);
 
   const searchButton = document.createElement("button");
   searchButton.className =
-    "nc-video-navigation__submit nc-video-navigation__search";
+    "common-video-navigation__submit common-video-navigation__search";
   searchButton.type = "button";
   searchButton.title = "キャッシュを検索";
   searchButton.setAttribute("aria-label", "キャッシュを検索");
@@ -87,12 +104,37 @@ export const createVideoNavigation = (): VideoNavigationElements => {
   searchButton.append(searchButtonLabel);
 
   const message = document.createElement("p");
-  message.className = "nc-video-navigation__message";
+  message.className = "common-video-navigation__message";
   message.setAttribute("role", "alert");
   message.setAttribute("aria-live", "polite");
 
+  const reportSelectionError = (error: unknown): void => {
+    const detail = error instanceof Error ? error.message : String(error);
+    window.logger?.error?.(
+      `[${options.loggerScope ?? "common"}] video selection failed`,
+      detail,
+    );
+    message.textContent = `動画を処理できませんでした。${detail}`;
+  };
+
+  const selectVideo = (videoId: string): void => {
+    input.value = videoId;
+    input.removeAttribute("aria-invalid");
+    searchResults.clear();
+    try {
+      void Promise.resolve(options.onVideoId(videoId)).catch(
+        reportSelectionError,
+      );
+    } catch (error) {
+      reportSelectionError(error);
+    }
+  };
+
   let searchController: AbortController | null = null;
-  const searchResults = createCacheSearchResults(navigateToVideo);
+  const searchResults = createCacheSearchResults(
+    selectVideo,
+    resultActionLabel,
+  );
 
   const clearError = (): void => {
     message.textContent = "";
@@ -128,7 +170,10 @@ export const createVideoNavigation = (): VideoNavigationElements => {
         return;
       }
       const detail = error instanceof Error ? error.message : String(error);
-      window.logger?.warn?.("[video-player] cache search failed", detail);
+      window.logger?.warn?.(
+        `[${options.loggerScope ?? "common"}] cache search failed`,
+        detail,
+      );
       searchResults.showError(
         `${detail} NicoCache_nlが起動しているか確認してください。`,
       );
@@ -161,11 +206,10 @@ export const createVideoNavigation = (): VideoNavigationElements => {
       return;
     }
 
-    input.removeAttribute("aria-invalid");
-    navigateToVideo(videoId);
+    selectVideo(videoId);
   });
 
-  controls.append(input, submitButton, searchButton);
+  controls.append(input, primaryButton, searchButton);
   form.append(label, controls, message, searchResults.root);
-  return { form, input };
+  return { form, input, primaryButton, searchButton };
 };

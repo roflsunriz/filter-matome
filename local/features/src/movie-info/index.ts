@@ -1,6 +1,11 @@
 import "@/types/global-types";
 import type { IntegratedNicoData, NicoApiData } from "@/types/common-types";
 import {
+  createVideoNavigation,
+  extractVideoIdFromInput,
+} from "@/common/video-navigation";
+import { ICONS } from "@/common/material-icons";
+import {
   fetchCacheInfo,
   fetchCommentsWithApi,
   fetchMediaInfo,
@@ -43,12 +48,6 @@ const formatBytes = (value: unknown): string => {
   }
   const rounded = Math.round(size * 10) / 10;
   return String(rounded) + " " + units[index];
-};
-
-const extractVideoId = (input: string): string | null => {
-  const pattern = /([a-z]{2}\d+)/i;
-  const match = pattern.exec(input);
-  return match ? match[1].toLowerCase() : null;
 };
 
 const updateUrlWithVideoId = (videoId: string): void => {
@@ -367,14 +366,6 @@ const createCommentPreview = (data: IntegratedNicoData): CommentPreview => {
   };
 };
 
-const normalizeVideoIdFromInput = (value: string): string | null => {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return null;
-  }
-  return extractVideoId(trimmed);
-};
-
 const setStatusText = (element: HTMLElement | null, text: string): void => {
   if (element) {
     element.textContent = text;
@@ -447,12 +438,6 @@ export function startMovieInfo(): void {
       });
     }
 
-    const videoInput = document.getElementById(
-      "video-id-input",
-    ) as HTMLInputElement | null;
-    const loadButton = document.getElementById(
-      "load-data-btn",
-    ) as HTMLButtonElement | null;
     const globalStatus = document.getElementById("global-status");
     const commentButton = document.getElementById(
       "fetch-comments-btn",
@@ -718,6 +703,22 @@ export function startMovieInfo(): void {
       }
     };
 
+    const navigationMount = document.getElementById(
+      "movie-info-video-navigation",
+    );
+    const videoNavigation = createVideoNavigation({
+      onVideoId: handleLoad,
+      inputId: "video-id-input",
+      primaryButtonId: "load-data-btn",
+      primaryActionLabel: "データ取得",
+      primaryActionTitle: "動画データを取得",
+      primaryActionIcon: ICONS.download,
+      resultActionLabel: "選択してデータ取得",
+      loggerScope: "movie-info",
+    });
+    navigationMount?.replaceChildren(videoNavigation.form);
+    const { input: videoInput } = videoNavigation;
+
     const handleCommentFetch = async (): Promise<void> => {
       if (!currentVideoId || !commentButton) {
         return;
@@ -760,32 +761,6 @@ export function startMovieInfo(): void {
       setCommentButtonIdle();
     };
 
-    if (loadButton) {
-      loadButton.addEventListener("click", () => {
-        const inputValue = videoInput ? videoInput.value : "";
-        const normalized = normalizeVideoIdFromInput(inputValue);
-        if (!normalized) {
-          setStatusText(globalStatus, "動画IDを正しく入力してください");
-          return;
-        }
-        if (videoInput) {
-          videoInput.value = normalized;
-        }
-        void handleLoad(normalized);
-      });
-    }
-
-    if (videoInput) {
-      videoInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          if (loadButton) {
-            loadButton.click();
-          }
-        }
-      });
-    }
-
     if (commentButton) {
       commentButton.addEventListener("click", () => {
         void handleCommentFetch();
@@ -794,12 +769,10 @@ export function startMovieInfo(): void {
 
     const initialVideoId =
       (await window.commonHelper?.getVideoIdWithFallback?.()) ||
-      normalizeVideoIdFromInput(window.location.search) ||
+      extractVideoIdFromInput(window.location.search) ||
       null;
     if (initialVideoId) {
-      if (videoInput) {
-        videoInput.value = initialVideoId;
-      }
+      videoInput.value = initialVideoId;
       void handleLoad(initialVideoId);
     } else {
       setStatusText(globalStatus, "動画IDを入力してデータを取得してください");

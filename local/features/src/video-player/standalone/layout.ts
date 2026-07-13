@@ -4,7 +4,7 @@ import { headerAdjustments } from "@/video-player/standalone/header-adjustments"
 import {
   createVideoNavigation,
   type VideoNavigationElements,
-} from "@/video-player/standalone/video-navigation";
+} from "@/common/video-navigation";
 
 export interface StandaloneLayout {
   root: HTMLElement;
@@ -53,6 +53,13 @@ const createBreadcrumbs = (): HTMLElement => {
   return nav;
 };
 
+const navigateToVideo = (videoId: string): void => {
+  const targetUrl = new URL("index.html", window.location.href);
+  targetUrl.search = "";
+  targetUrl.searchParams.set("videoId", videoId);
+  window.location.assign(targetUrl.toString());
+};
+
 export const createStandaloneLayout = (
   options: StandaloneLayoutOptions = {},
 ): StandaloneLayout => {
@@ -77,7 +84,14 @@ export const createStandaloneLayout = (
   header.className = "nc-header";
 
   const breadcrumbs = createBreadcrumbs();
-  const videoNavigation = createVideoNavigation();
+  const videoNavigation = createVideoNavigation({
+    onVideoId: navigateToVideo,
+    inputId: "nc-video-navigation-input",
+    primaryActionLabel: "再生",
+    primaryActionTitle: "動画を再生",
+    resultActionLabel: "再生",
+    loggerScope: "video-player",
+  });
 
   const title = document.createElement("h1");
   title.className = "nc-header__title";

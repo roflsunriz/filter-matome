@@ -1,4 +1,4 @@
-import type { CacheSearchResult } from "@/video-player/standalone/cache-search-client";
+import type { CacheSearchResult } from "@/common/cache-search-client";
 
 const MAX_VISIBLE_RESULTS = 50;
 
@@ -49,19 +49,20 @@ export interface CacheSearchResultsView {
 
 export const createCacheSearchResults = (
   onSelect: (videoId: string) => void,
+  selectionActionLabel: string,
 ): CacheSearchResultsView => {
   const root = document.createElement("section");
-  root.className = "nc-cache-search-results";
+  root.className = "common-cache-search-results";
   root.hidden = true;
   root.setAttribute("aria-label", "キャッシュ検索結果");
 
   const status = document.createElement("p");
-  status.className = "nc-cache-search-results__status";
+  status.className = "common-cache-search-results__status";
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
 
   const list = document.createElement("ul");
-  list.className = "nc-cache-search-results__list";
+  list.className = "common-cache-search-results__list";
 
   const clearList = (): void => {
     list.replaceChildren();
@@ -80,7 +81,7 @@ export const createCacheSearchResults = (
 
   const showLoading = (query: string): void => {
     clearList();
-    status.className = "nc-cache-search-results__status";
+    status.className = "common-cache-search-results__status";
     status.textContent = `「${query}」を検索しています…`;
     root.setAttribute("aria-busy", "true");
     showPanel();
@@ -89,7 +90,7 @@ export const createCacheSearchResults = (
   const showError = (message: string): void => {
     clearList();
     status.className =
-      "nc-cache-search-results__status nc-cache-search-results__status--error";
+      "common-cache-search-results__status common-cache-search-results__status--error";
     status.textContent = message;
     root.removeAttribute("aria-busy");
     showPanel();
@@ -97,7 +98,7 @@ export const createCacheSearchResults = (
 
   const showResults = (query: string, results: CacheSearchResult[]): void => {
     clearList();
-    status.className = "nc-cache-search-results__status";
+    status.className = "common-cache-search-results__status";
     root.removeAttribute("aria-busy");
 
     if (results.length === 0) {
@@ -114,23 +115,23 @@ export const createCacheSearchResults = (
 
     for (const result of visibleResults) {
       const item = document.createElement("li");
-      item.className = "nc-cache-search-results__item";
+      item.className = "common-cache-search-results__item";
 
       const button = document.createElement("button");
-      button.className = "nc-cache-search-results__select";
+      button.className = "common-cache-search-results__select";
       button.type = "button";
       button.dataset.videoId = result.videoId;
       button.setAttribute(
         "aria-label",
-        `${result.title}（${result.videoId}）を再生`,
+        `${result.title}（${result.videoId}）を${selectionActionLabel}`,
       );
 
       const title = document.createElement("span");
-      title.className = "nc-cache-search-results__title";
+      title.className = "common-cache-search-results__title";
       title.textContent = result.title;
 
       const meta = document.createElement("span");
-      meta.className = "nc-cache-search-results__meta";
+      meta.className = "common-cache-search-results__meta";
       meta.textContent = [
         result.videoId,
         `${result.cacheIds.length}キャッシュ`,
@@ -139,7 +140,7 @@ export const createCacheSearchResults = (
       ].join(" · ");
 
       const variants = document.createElement("span");
-      variants.className = "nc-cache-search-results__variants";
+      variants.className = "common-cache-search-results__variants";
       variants.textContent = getCacheVariantLabel(result);
 
       button.append(title, meta, variants);
