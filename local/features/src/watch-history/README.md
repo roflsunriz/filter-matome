@@ -14,7 +14,13 @@
 - `watch-tracker.ts`: 動画ID・メタデータ取得、動画要素監視、進捗とセッション記録。
 - `database.ts`: 履歴、統計、シリーズ、入出力、DB操作。旧IndexedDBアラートの一度限りの移行も扱う。
 - `migration-manager.ts`: バージョン移行、永続化要求、バックアップ、設定。
-- `app.ts`: SPA全体のUI、操作、通知、DB管理。
+- `app.ts`: SPAの入口、DOM初期化、イベント配線、設定読込。
+- `app-base.ts`: SPA全体で共有する状態、共通UI操作、機能間の抽象境界。
+- `app-history-list.ts`: 履歴一覧と視聴ログ表示。
+- `app-dashboard.ts`: 統計、フィルター、入出力、動画詳細、メモ編集。
+- `app-series.ts`: シリーズ一覧とextension管理のシリーズアラートUI。
+- `app-delete.ts`: 履歴削除モーダルとシリーズ内ナビゲーション。
+- `app-database-admin.ts`: IndexedDBの永続化、移行、バックアップ、診断UI。
 - `history-filter.ts`: 履歴の検索・絞り込みとお気に入り集計。
 - `history-delete-rules.ts`: 条件付き削除の値取得、比較、説明生成。
 - `series-filter.ts`: シリーズ一覧の絞り込み。
@@ -68,6 +74,7 @@
 - `tests/watch-history-filter.test.ts`: 履歴フィルターと集計。
 - `tests/watch-history-delete-modal.test.ts`: 条件付き削除ルール。
 - `tests/watch-history-series-alert-extension.test.ts`: 旧IndexedDB・インポートデータをextensionの正本へ移す統合規則。
+- `tests/watch-history-app-structure.test.ts`: SPA実装ファイルを1,000行以下に保つ構造制約。
 
 ```powershell
 cd local/features
