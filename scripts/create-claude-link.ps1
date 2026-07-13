@@ -27,7 +27,9 @@ if (Test-Path -LiteralPath $linkPath) {
         if ($existingTarget) {
             $resolvedExistingTarget = [System.IO.Path]::GetFullPath((Join-Path -Path $existingItem.Directory.FullName -ChildPath $existingTarget))
             if ($resolvedExistingTarget -eq $targetPath) {
-                Write-Host "Symbolic link already exists: $linkPath -> $existingTarget"
+                Write-Information `
+                    "Symbolic link already exists: $linkPath -> $existingTarget" `
+                    -InformationAction Continue
                 exit 0
             }
         }
@@ -43,4 +45,6 @@ if (Test-Path -LiteralPath $linkPath) {
 $relativeTargetPath = [System.IO.Path]::GetRelativePath($repositoryRoot, $targetPath)
 New-Item -ItemType SymbolicLink -Path $linkPath -Target $relativeTargetPath | Out-Null
 
-Write-Host "Created symbolic link: $linkPath -> $relativeTargetPath"
+Write-Information `
+    "Created symbolic link: $linkPath -> $relativeTargetPath" `
+    -InformationAction Continue

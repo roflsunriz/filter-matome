@@ -1,4 +1,4 @@
-#requires -Version 7.0
+﻿#requires -Version 7.0
 <#
 .SYNOPSIS
   NicoCache_nl の `C:\NicoCache_nl\local\list.js` と `list.js.map` へシンボリックリンクを張るスクリプト
@@ -100,14 +100,17 @@ if ($AdditionalArgs.Count -gt 0) {
 
 # 対話的 Target 入力（未指定時はデフォルトを案内）
 if (-not $targetSpecified) {
-    $promptMsg = "Target を入力してください（Enter で既定 '$Target' を使用）"
     $userInput = Read-Host -Prompt "リンク先のJSファイルパスを入力してください (既定値: '$TargetFile')"
     if ($userInput) { $TargetFile = $userInput }
 }
 
 function Remove-Item-Safely {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string]$PathToRemove)
     if (-not (Test-Path $PathToRemove)) { return }
+    if (-not $PSCmdlet.ShouldProcess($PathToRemove, '既存のリンクまたはファイルを削除')) {
+        return
+    }
     # 安全に消したいので、sri コマンドがあればそれを優先利用
     $sriCmd = Get-Command sri -ErrorAction SilentlyContinue
     if ($sriCmd) {
@@ -137,9 +140,11 @@ $mapLinkPath = Join-Path $LinkDir "list.js.map"
 $targetMap   = "$TargetFile.map"
 $hasMap      = Test-Path $targetMap
 
-Write-Host "作成対象: $linkPath -> $TargetFile"
+Write-Information "作成対象: $linkPath -> $TargetFile" -InformationAction Continue
 if (-not $hasMap) {
-    Write-Host "map ファイルが存在しないため、list.js.map の更新はスキップします: $targetMap"
+    Write-Information `
+        "map ファイルが存在しないため、list.js.map の更新はスキップします: $targetMap" `
+        -InformationAction Continue
 }
 
 if (-not (Test-Path $TargetFile)) {
@@ -150,35 +155,43 @@ if (-not (Test-Path $TargetFile)) {
 try {
     # 既存のリンク/ファイルを整理
     if ($Force -or (Test-Path $linkPath)) {
-        Write-Host "既存 $linkPath を削除します"
+        Write-Information "既存 $linkPath を削除します" -InformationAction Continue
         Remove-Item-Safely -PathToRemove $linkPath
     }
 
     if ($hasMap) {
         if ($Force -or (Test-Path $mapLinkPath)) {
-            Write-Host "既存 $mapLinkPath を削除します"
+            Write-Information "既存 $mapLinkPath を削除します" -InformationAction Continue
             Remove-Item-Safely -PathToRemove $mapLinkPath
         }
     }
 
     # シンボリックリンクを作成
     New-Item -ItemType SymbolicLink -Path $linkPath -Target $TargetFile -ErrorAction Stop | Out-Null
-    Write-Host "作成しました: $linkPath -> $TargetFile"
+    Write-Information "作成しました: $linkPath -> $TargetFile" -InformationAction Continue
 
     if ($hasMap) {
         New-Item -ItemType SymbolicLink -Path $mapLinkPath -Target $targetMap -ErrorAction Stop | Out-Null
-        Write-Host "作成しました: $mapLinkPath -> $targetMap"
+        Write-Information "作成しました: $mapLinkPath -> $targetMap" -InformationAction Continue
     }
 
     # 確認出力
     Get-Item $linkPath | Select-Object Mode, LinkType, Target | Format-List
-    Resolve-Path $linkPath | ForEach-Object { Write-Host "ResolvedPath: $_" }
-    Write-Host "Test-Path list.js: $(Test-Path $linkPath)"
-    if (Test-Path $mapLinkPath) { Write-Host "Test-Path list.js.map: $(Test-Path $mapLinkPath)" }
+    Resolve-Path $linkPath | ForEach-Object {
+        Write-Information "ResolvedPath: $_" -InformationAction Continue
+    }
+    Write-Information "Test-Path list.js: $(Test-Path $linkPath)" -InformationAction Continue
+    if (Test-Path $mapLinkPath) {
+        Write-Information `
+            "Test-Path list.js.map: $(Test-Path $mapLinkPath)" `
+            -InformationAction Continue
+    }
 
 } catch {
     Write-Error "処理中にエラーが発生しました: $($_.Exception.Message)"
     exit 1
 }
 
-Write-Host "完了。必要に応じてアプリ側のコードを確認してください。"
+Write-Information `
+    '完了。必要に応じてアプリ側のコードを確認してください。' `
+    -InformationAction Continue

@@ -25,7 +25,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
         `scripts` フォルダは便利なスクリプトがひとまとめになっているが使わないなら必ずしもコピー必須ではない
 
-3. NicoCache_nlをGUIまたは通常の終了手段で終了し、`RunNicoCache.ps1`または`NicoCache_nl Starter.bat`から再起動する
+3. NicoCache_nlをGUIまたは通常の終了手段で終了する。Windowsで終了対象を安全に限定したい場合は、リポジトリルートの`stop-nicocache.ps1`を使用する。その後、`RunNicoCache.ps1`または`NicoCache_nl Starter.bat`から再起動する
 
 ### クリーンインストール手順
 

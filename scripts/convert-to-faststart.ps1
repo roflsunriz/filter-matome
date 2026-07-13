@@ -1,4 +1,4 @@
-<# 
+﻿<#
 .SYNOPSIS
   mp4 を faststart（moov 先頭）化して _faststart 付きで保存
 
@@ -147,7 +147,9 @@ foreach ($f in $files) {
   )
 
   if ($DryRun) {
-    Write-Host "[DRYRUN] ffmpeg $($cmd -join ' ')" -ForegroundColor Yellow
+    Write-Information `
+      "[DRYRUN] ffmpeg $($cmd -join ' ')" `
+      -InformationAction Continue
     $processed++; continue
   }
 
@@ -173,18 +175,25 @@ foreach ($f in $files) {
       # タイムスタンプ継承（任意）
       try {
         (Get-Item -LiteralPath $out).LastWriteTimeUtc = (Get-Item -LiteralPath $f.FullName).LastWriteTimeUtc
-      } catch {}
+      }
+      catch {
+        Write-Verbose "出力ファイルへ元のタイムスタンプを設定できませんでした: $($_.Exception.Message)"
+      }
       if (-not $Quiet) {
-        Write-Host "OK  $($f.Name)  ->  $(Split-Path -Leaf $out)"
+        Write-Information `
+          "OK  $($f.Name)  ->  $(Split-Path -Leaf $out)" `
+          -InformationAction Continue
       }
       $processed++
     } else {
-      Write-Host "NG  $($f.Name)" -ForegroundColor Red
+      Write-Information "NG  $($f.Name)" -InformationAction Continue
       if ($stderr) { Write-Verbose $stderr }
       $errors++
     }
   }
 }
 
-Write-Host "`nDone. processed=$processed, skipped=$skipped, errors=$errors"
+Write-Information `
+  "`nDone. processed=$processed, skipped=$skipped, errors=$errors" `
+  -InformationAction Continue
 exit $errors

@@ -12,9 +12,11 @@ PowerShell（管理者権限）で実行する。（Windows + R -> 「wt」ま�
 安全のため、NicoCache_nl を停止させておく。
 
 ```powershell
-Stop-Process -Name javaw -Force
-Stop-Process -Name java -Force
+Set-Location "C:\filter-matome"
+.\stop-nicocache.ps1
 ```
+
+`stop-nicocache.ps1`は`-jar ...\NicoCache_nl.jar`の指紋があるPIDだけを対象にし、正常終了できない場合に限って確認後に強制終了する。`Stop-Process -Name java -Force`のような名前指定は、NicoCache_nl以外のJavaプロセスも終了するため使用しない。
 
 - ビルド済みファイルの一例: `C:\NicoCache_nl\local\features\dist\features.js`
 - `C:\NicoCache_nl\local\features\dist\features.js.map`

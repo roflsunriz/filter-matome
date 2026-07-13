@@ -20,6 +20,7 @@
 - `nlFilters/` はNicoCache_nl専用DSLのフィルターである。JavaScriptやCSSの挿入、レスポンス本文の置換などを行う。`100_features.txt` が `local/features/dist/features.js` をニコニコ動画側へ読み込む主要フィルターである。
 - `docs/` はMkDocsで公開する利用者向け文書、`docs/resources/` は文書内の画像、`cover-images/` はルートREADMEの機能プレビュー画像である。
 - `scripts/` はシンボリックリンク作成、Java拡張のビルド、動画変換、ドキュメント生成などの補助スクリプトである。用途の異なるスクリプトが混在するため、名前だけで判断して実行しない。
+- `stop-nicocache.ps1` は、`NicoCache_nl.jar` の指紋があるPIDだけを対象に、正常終了、応答待ち、確認付き強制終了を行うWindows用の終了スクリプトである。NicoCache_nlの終了と再起動ではこのスクリプトを標準経路として使用する。
 - `extensions/` はNicoCache_nl用Java拡張の `.java` と対応する `.class` を管理する。TypeScriptのBunビルドには含まれない。コンパイルにはJDKと、このリポジトリに含まれないNicoCache_nl本体が必要である。
 - `.github/workflows/` はCI、ドキュメント公開、リリース生成の正式な自動化定義である。ビルド、検証、配布物を変更するときは併せて確認する。
 
@@ -83,11 +84,29 @@ bun run build
 - 通常ビルドでは、`C:\NicoCache_nl\build-ant.ps1` はApache Ant、`C:\NicoCache_nl\build-javac.ps1` はJDKの `javac` と `jar` および `manifest-nl.mf` に依存する。どちらも `C:\NicoCache_nl\src\` と `NicoCache_nl.jar` を更新するため、ユーザーが依頼したビルドまたは検証の範囲でのみ実行する。
 - オーバーレイ、ビルドスクリプト、実行ファイルは環境によって存在しない場合がある。記載されたパスを無条件に仮定せず、毎回存在を確認する。
 
-## NicoCache_nlの起動とデバッグ
+## NicoCache_nlの起動・終了・再起動・デバッグ
 
-- 実行には `C:\NicoCache_nl\RunNicoCache.ps1` または `C:\NicoCache_nl\NicoCache_nl Starter.bat` を使用する。
-- デバッグ時は、変更前の値を記録してから `C:\NicoCache_nl\NicoCacheGUI.property` の `DebugMode=false` を `DebugMode=true` に変更して再起動すると、同ファイルの `DebugLog` で指定されたログが出力される。検証後は、ユーザーから継続指定がない限り元の値へ戻す。ログに秘密情報や個人情報が含まれる可能性を考慮し、内容を無制限に出力またはコミットしない。
-- 再起動では、すべての `java.exe` や `javaw.exe` を名前だけで一括終了しない。プロセスのコマンドラインと実行パスを確認し、`NicoCache_nl.jar` を実行しているPIDだけを対象にする。GUIや通常の終了手段を優先し、強制終了は通常終了できず、かつユーザーが依頼した作業範囲で必要な場合に限る。
+### 終了
+
+- NicoCache_nlを終了するときは、GUI、CUI、デバッグ用途を問わず、原則としてリポジトリルートの `C:\filter-matome\stop-nicocache.ps1` を使用する。スクリプトは `java.exe` / `javaw.exe` という名前だけでは対象にせず、コマンドラインの独立した `-jar ...\NicoCache_nl.jar` 引数を指紋としてPIDを限定し、操作直前と強制終了直前に作成時刻と指紋を再確認する。
+- 実際に終了する前に `& "C:\filter-matome\stop-nicocache.ps1" -ListOnly` を実行し、表示されたPID、実行ファイル、指紋が意図したNicoCache_nlであることを確認する。対象確認だけで十分な調査では、終了操作へ進まない。
+- GUI版の通常終了では `& "C:\filter-matome\stop-nicocache.ps1"` を使用する。スクリプトはNicoCache_nl本体のWindows終了通知経路から内部 `shutdown()` を呼び、既定で最大65秒待つ。GUIを手作業で閉じる操作や、独自のWindowsメッセージ送信で代替しない。
+- CUI版として起動している場合、GUI操作が不都合な場合、またはGUIのない非対話環境では `-SkipGuiShutdown` を指定できる。この指定は正常終了経路を省略して強制終了の判定へ進むため、用途を確認せず既定値として付けない。
+- 通常終了できない場合は、スクリプトが表示する強制終了確認を経由する。確認の既定値は「いいえ」である。ユーザーが強制終了を明示的に許可した場合に限って「はい」を選ぶ。
+- `-Force` は強制終了の対話確認を省略する。ユーザーが現在の依頼で非対話の強制終了を明示的に許可した場合に限り使用する。CUI-onlyの完全非対話実行は `-SkipGuiShutdown -Force` とするが、単に確認を避ける目的では使用しない。
+- `-WhatIf` は対象と操作内容の確認に利用できる。`-ListOnly`、`-WhatIf`、通常終了、強制終了の結果を混同せず、実際にプロセスが終了したことをスクリプトの結果で確認する。
+- `stop-nicocache.ps1` が存在しない、構文エラーになる、対象を特定できない、または終了に失敗した場合は、その状態を報告して原因を調査する。`Stop-Process -Name java`、`Stop-Process -Name javaw`、`taskkill /IM java.exe` など、名前だけで全Javaプロセスを終了する方法へフォールバックしない。
+
+### 起動と再起動
+
+- 起動には `C:\NicoCache_nl\RunNicoCache.ps1` または `C:\NicoCache_nl\NicoCache_nl Starter.bat` を使用する。実行前に対象ファイルが存在することを確認する。
+- 再起動では、まず上記の終了手順を完了し、対象PIDが終了したことを確認してから起動する。旧プロセスが残っている、強制終了が拒否された、または終了結果が不明な状態で新しいNicoCache_nlを重ねて起動しない。
+- 起動後は `& "C:\filter-matome\stop-nicocache.ps1" -ListOnly` などで新しいPIDと指紋を確認し、必要に応じて対象のローカル配信やログも確認する。起動したというコマンド結果だけで再起動成功と判断しない。
+
+### デバッグ
+
+- デバッグ時は、変更前の値を記録してから `C:\NicoCache_nl\NicoCacheGUI.property` の `DebugMode=false` を `DebugMode=true` に変更し、上記の終了・再起動手順を使う。同ファイルの `DebugLog` で指定されたログが出力される。
+- 検証後は、ユーザーから継続指定がない限り `DebugMode` を元の値へ戻し、同じ終了・再起動手順で反映する。ログに秘密情報や個人情報が含まれる可能性を考慮し、内容を無制限に出力またはコミットしない。
 
 ## `C:\NicoCache_nl` の主要パス
 

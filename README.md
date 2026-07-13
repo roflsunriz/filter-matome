@@ -207,6 +207,23 @@ bun run build
 `features.js`へ全ブラウザ機能を統合するため、個別ビルドはありません。
 構成、生成物、プロジェクト別READMEは [`local/features/README.md`](local/features/README.md) を参照してください。
 
+### NicoCache_nlの安全な終了
+
+リポジトリルートの`stop-nicocache.ps1`は、コマンドラインに`-jar ...\NicoCache_nl.jar`がある`java.exe` / `javaw.exe`のPIDだけを特定して終了するWindows用スクリプトです。プロセス名だけでJavaプロセスを一括終了しません。
+
+```powershell
+# 対象の確認だけを行う
+.\stop-nicocache.ps1 -ListOnly
+
+# NicoCache_nlの正常終了を試みる
+.\stop-nicocache.ps1
+
+# GUI操作と対話確認を省略し、指紋に一致したPIDだけを強制終了する
+.\stop-nicocache.ps1 -SkipGuiShutdown -Force
+```
+
+GUI版ではNicoCache_nl本体の正常終了処理を呼び、既定で最大65秒待ちます。応答しない場合やGUIなしで起動している場合は、PIDと指紋を再確認した後に強制終了の確認を表示します。確認の既定値は「いいえ」です。CUI版や自動処理では`-SkipGuiShutdown`でGUI経路を、`-Force`で対話確認を個別に省略できます。どちらを指定しても強制終了直前のPID、作成時刻、指紋の再確認は省略しません。実行内容だけを確認する場合は`-WhatIf`を指定できます。
+
 ### nlFilter文法
 ```ini
 [Replace]

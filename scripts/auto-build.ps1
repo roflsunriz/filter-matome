@@ -1,4 +1,10 @@
- # コンソールの色を設定（緑背景に黄色文字）
+﻿[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingWriteHost',
+    '',
+    Justification = '対話型ビルド画面へ完了待ちを直接表示するためWrite-Hostが必要です。')]
+param()
+
+# コンソールの色を設定（緑背景に黄色文字）
 $Host.UI.RawUI.BackgroundColor = "DarkGreen"
 $Host.UI.RawUI.ForegroundColor = "Yellow"
 Clear-Host

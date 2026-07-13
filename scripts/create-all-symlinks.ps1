@@ -1,4 +1,4 @@
-#requires -Version 7.0
+﻿#requires -Version 7.0
 <#
 .SYNOPSIS
   filter-matome から NicoCache_nl へシンボリックリンクを一括作成するスクリプト
@@ -27,6 +27,10 @@
 #>
 
 [CmdletBinding(PositionalBinding = $false)]
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingWriteHost',
+    '',
+    Justification = '対話型リンク作成ツールの色分け表示にWrite-Hostが必要です。')]
 param(
     [Alias('s')]
     [string]$SourceRoot = 'C:\filter-matome',
@@ -181,8 +185,12 @@ if ($missingParents.Count -gt 0) {
 
 # --- 安全な削除ヘルパー ---
 function Remove-ItemSafely {
+    [CmdletBinding(SupportsShouldProcess)]
     param([string]$PathToRemove)
     if (-not (Test-Path -LiteralPath $PathToRemove)) { return }
+    if (-not $PSCmdlet.ShouldProcess($PathToRemove, '既存のシンボリックリンクを削除')) {
+        return
+    }
     $sriCmd = Get-Command sri -ErrorAction SilentlyContinue
     if ($sriCmd) {
         try {

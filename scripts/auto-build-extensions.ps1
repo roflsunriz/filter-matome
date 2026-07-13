@@ -1,29 +1,35 @@
-# •¶šƒR[ƒh‚ğUTF-8‚Éİ’è
+ï»¿[Diagnostics.CodeAnalysis.SuppressMessageAttribute(
+    'PSAvoidUsingWriteHost',
+    '',
+    Justification = 'å¯¾è©±å‹ãƒ“ãƒ«ãƒ‰çµæœã®è‰²åˆ†ã‘ã¨æ”¹è¡Œåˆ¶å¾¡ã«Write-HostãŒå¿…è¦ã§ã™ã€‚')]
+param()
+
+# æ–‡å­—ã‚³ãƒ¼ãƒ‰ã‚’UTF-8ã«è¨­å®š
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-# ƒŠƒ|ƒWƒgƒŠƒ‹[ƒg‚Ì extensions ‚ÉˆÚ“®
+# ãƒªãƒã‚¸ãƒˆãƒªãƒ«ãƒ¼ãƒˆã® extensions ã«ç§»å‹•
 Set-Location (Join-Path $PSScriptRoot "..\extensions")
 
-# ¬Œ÷‚µ‚½ƒtƒ@ƒCƒ‹‚ÌƒŠƒXƒg‚ğ‰Šú‰»
+# æˆåŠŸã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒªã‚¹ãƒˆã‚’åˆæœŸåŒ–
 $successFiles = @()
 
-# nlMovieFetcher.java‚ÌƒRƒ“ƒpƒCƒ‹‚É‚Â‚¢‚Äƒ†[ƒU[‚ÉŠm”F
-$compileMovieFetcher = Read-Host "nlMovieFetcher.java‚ğƒRƒ“ƒpƒCƒ‹‚µ‚Ü‚·‚©H (y/n)"
+# nlMovieFetcher.javaã®ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã«ã¤ã„ã¦ãƒ¦ãƒ¼ã‚¶ãƒ¼ã«ç¢ºèª
+$compileMovieFetcher = Read-Host "nlMovieFetcher.javaã‚’ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã—ã¾ã™ã‹ï¼Ÿ (y/n)"
 
-# ‚·‚×‚Ä‚ÌJavaƒtƒ@ƒCƒ‹‚ğˆ—
+# ã™ã¹ã¦ã®Javaãƒ•ã‚¡ã‚¤ãƒ«ã‚’å‡¦ç†
 Get-ChildItem -Filter "*.java" | Where-Object { $_.Name -notmatch "sample" } | ForEach-Object {
-    # nlMovieFetcher.java‚ÌƒXƒLƒbƒvˆ—
+    # nlMovieFetcher.javaã®ã‚¹ã‚­ãƒƒãƒ—å‡¦ç†
     if ($_.Name -eq "nlMovieFetcher.java" -and $compileMovieFetcher -eq "n") {
         Write-Host "Skipping nlMovieFetcher.java" -ForegroundColor Yellow
         return
     }
-    
-    # JavaƒRƒ“ƒpƒCƒ‹Às
-    # ƒ‹[ƒg‚Ì JAR ‚ğQÆ
+
+    # Javaã‚³ãƒ³ãƒ‘ã‚¤ãƒ«å®Ÿè¡Œ
+    # ãƒ«ãƒ¼ãƒˆã® JAR ã‚’å‚ç…§
     $jarPath = (Join-Path $PSScriptRoot "..\NicoCache_nl.jar")
     $compileOutput = & "$env:JAVA_HOME\bin\javac" -Xlint -Xlint:-path -classpath "..;$jarPath" $_.FullName 2>&1
 
-    # ƒRƒ“ƒpƒCƒ‹Œ‹‰Ê‚Ìˆ—
+    # ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«çµæœã®å‡¦ç†
     if ($compileOutput) {
         foreach ($line in $compileOutput) {
             if ($line -match "error") {
@@ -38,25 +44,25 @@ Get-ChildItem -Filter "*.java" | Where-Object { $_.Name -notmatch "sample" } | F
         }
     }
     else {
-        Write-Host "$($_.Name) ‚ÌƒRƒ“ƒpƒCƒ‹‚ª" -NoNewline
-        Write-Host "¬Œ÷" -ForegroundColor Green -NoNewline
-        Write-Host "‚µ‚Ü‚µ‚½B"
+        Write-Host "$($_.Name) ã®ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ãŒ" -NoNewline
+        Write-Host "æˆåŠŸ" -ForegroundColor Green -NoNewline
+        Write-Host "ã—ã¾ã—ãŸã€‚"
         $successFiles += $_.Name
     }
 }
 
-# ¬Œ÷‚µ‚½ƒtƒ@ƒCƒ‹‚Ìˆê——‚ğ•\¦
+# æˆåŠŸã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã®ä¸€è¦§ã‚’è¡¨ç¤º
 if ($successFiles.Count -gt 0) {
-    Write-Host "`nƒRƒ“ƒpƒCƒ‹¬Œ÷‚µ‚½ƒtƒ@ƒCƒ‹ˆê——:" -ForegroundColor Green
+    Write-Host "`nã‚³ãƒ³ãƒ‘ã‚¤ãƒ«æˆåŠŸã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ä¸€è¦§:" -ForegroundColor Green
     Write-Host ($successFiles -join " ")
 }
 
-Write-Host "`nuŒxv" -ForegroundColor Yellow -NoNewline
-Write-Host "‚Í–³‹‚µ‚Ä–â‘è‚ ‚è‚Ü‚¹‚ñB‹C‚É‚È‚é‚æ‚¤‚Å‚ ‚ê‚ÎŒf¦”Â‚É•ñ‚µ‚Ä‚­‚¾‚³‚¢"
+Write-Host "`nã€Œè­¦å‘Šã€" -ForegroundColor Yellow -NoNewline
+Write-Host "ã¯ç„¡è¦–ã—ã¦å•é¡Œã‚ã‚Šã¾ã›ã‚“ã€‚æ°—ã«ãªã‚‹ã‚ˆã†ã§ã‚ã‚Œã°æ²ç¤ºæ¿ã«å ±å‘Šã—ã¦ãã ã•ã„"
 
-Write-Host "uƒGƒ‰[v" -ForegroundColor Red -NoNewline
-Write-Host "‚ÍƒRƒ“ƒpƒCƒ‹¸”s‚Å‚·B‰ğŒˆ‚µ‚Ä‚­‚¾‚³‚¢"
+Write-Host "ã€Œã‚¨ãƒ©ãƒ¼ã€" -ForegroundColor Red -NoNewline
+Write-Host "ã¯ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«å¤±æ•—ã§ã™ã€‚è§£æ±ºã—ã¦ãã ã•ã„"
 
-# ˆê’â~
-Write-Host "`n‘±s‚·‚é‚É‚Í‰½‚©ƒL[‚ğ‰Ÿ‚µ‚Ä‚­‚¾‚³‚¢..."
+# ä¸€æ™‚åœæ­¢
+Write-Host "`nç¶šè¡Œã™ã‚‹ã«ã¯ä½•ã‹ã‚­ãƒ¼ã‚’æŠ¼ã—ã¦ãã ã•ã„..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

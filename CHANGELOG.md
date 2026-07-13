@@ -8,11 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【運用スクリプト】NicoCache_nl以外のJavaプロセスを誤って終了しないよう、`-jar ...\NicoCache_nl.jar`の指紋があるPIDだけを特定し、正常終了を待ってから確認付きで強制終了できる`stop-nicocache.ps1`を追加した。CUI版や自動処理ではGUI終了経路と対話確認を個別に省略できる。
 - 【watch-history/extensions】視聴履歴ページやブラウザを閉じていてもシリーズ新着を確認できるよう、アラート設定を同期してNicoCache_nlの60秒定期イベントから公開ウォッチページを確認し、OS通知またはGUIログ・通知音を出す`FilterMatomeSeriesAlerts`拡張を追加した。通知クリックから新着動画を開け、設定は`data/`へ原子的に永続化する。
 - 【extensions】`FilterMatomeSeriesAlerts`が内部クラスを生成しない構成にし、配置が必要な生成物を単一の`.class`ファイルにまとめた。
 
 ### Changed
 
+- 【開発者向け】NicoCache_nlの終了・再起動で安全な経路を一貫して選べるよう、`AGENTS.md`を`stop-nicocache.ps1`中心の対象確認、正常終了、CUI-only、確認付き強制終了、起動後確認の順に再編した。
 - 【watch-history】ページ内タイマーとNotifications APIによるシリーズ確認を常駐extensionへ移し、シリーズアラート画面をextension管理データの完全なフロントエンドへ変更した。追加・有効化・削除・手動確認・インポート／エクスポートはextension APIへ直接行い、旧IndexedDBアラートだけを初回起動時に移行する。
 - 【watch-history】4,000行を超えていたSPA実装を、入口、共通状態、履歴一覧、ダッシュボード、シリーズ、削除、DB管理の責務別モジュールへ分割し、各ファイルを1,000行以下に整理した。
 
@@ -23,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- 【運用スクリプト/CI】PowerShell 5.1で日本語を正しく扱い、非対話環境でも出力を捕捉できるようPowerShellスクリプトのエンコーディング、情報出力、未使用値、空の例外処理、`ShouldProcess`対応を整理し、GitHub Release actionをNode 24対応の`v3`へ更新した。
 - 【watch-history】シリーズアラート削除前に開始した自動再取得の古い応答が削除後のUIへ適用され、数秒後にアラートが一時的に復活する競合を修正した。
 - 【watch-history】シリーズタブを先に開かないと、シリーズアラート追加画面のシリーズ選択肢を取得できない初期化依存を修正した。
 

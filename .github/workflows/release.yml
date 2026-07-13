@@ -63,6 +63,7 @@ jobs:
           cp LICENSE release/NicoCache_nl/
           cp "nico-cache-nl-starter.bat" release/NicoCache_nl/
           cp "nico-cache-gui-launcher.bat" release/NicoCache_nl/
+          cp "stop-nicocache.ps1" release/NicoCache_nl/
           cp GUIDE.html release/NicoCache_nl/
 
           # mime.typesをコピー
@@ -219,7 +220,7 @@ jobs:
           name: release-notes
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           files: filter-matome-${{ github.ref_name }}.7z
           body_path: release_notes.md
