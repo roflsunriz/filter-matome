@@ -49,4 +49,4 @@ Replace<
 - URL条件を変更した場合は、中央ページルーターの条件と一致しているか確認してください。
 - 問題発生時はブラウザキャッシュを消すか、Ctrl+F5で再読み込みします。
 
-参考: [nlFilterの文法](https://w.atwiki.jp/nicocachenlwiki/pages/17.html)
+参考: [nlFilterの文法](https://roflsunriz.github.io/setup-nicocache-nl/nl-filters-syntax/)
