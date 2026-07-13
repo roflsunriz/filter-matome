@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- 【開発者向け】NicoCache_nl連携を安全に扱えるよう、ブラウザー側ヘルパーとHTTP APIの区別、シンボリックリンクの向き、オーバーレイビルドの影響範囲、対象PIDを限定した再起動手順、実行フォルダーの確認済み用途をエージェント向け規則へ明記した。
+
 ## [#232] - 2026-07-13
 
 ### Added
