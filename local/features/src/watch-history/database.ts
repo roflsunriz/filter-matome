@@ -1311,23 +1311,6 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * チェックが必要なシリーズアラートを取得する
-   */
-  async getAlertsToCheck(): Promise<DBResult<SeriesAlert[]>> {
-    const alertsResult = await this.getAllSeriesAlerts();
-    if (!alertsResult.success || !alertsResult.data) {
-      return { success: false, error: "アラート取得失敗" };
-    }
-
-    const now = Date.now();
-    const alertsToCheck = alertsResult.data.filter(
-      (alert) => alert.enabled && alert.nextCheckAt <= now,
-    );
-
-    return { success: true, data: alertsToCheck };
-  }
-
-  /**
    * シリーズフィルタを適用する
    */
   private applySeriesFilter(

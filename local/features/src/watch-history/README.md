@@ -18,6 +18,7 @@
 - `history-filter.ts`: 履歴の検索・絞り込みとお気に入り集計。
 - `history-delete-rules.ts`: 条件付き削除の値取得、比較、説明生成。
 - `series-filter.ts`: シリーズ一覧の絞り込み。
+- `series-alert-extension-client.ts`: IndexedDBとNicoCache_nl常駐extensionのアラート設定・確認状態を同期。
 - `tag-cloud-renderer.ts`, `video-detail-renderer.ts`: 表示専用処理。
 - `styles.ts`: 共通テーマを使うレスポンシブスタイル。
 - `requirements.md`: 追跡・履歴機能の補足要件。
@@ -48,14 +49,16 @@
 - 動画詳細、メモ編集、個別削除、全削除、複数条件による削除。
 - JSONインポート・エクスポート。
 - 永続化要求、手動移行、バックアップ作成・復元、健全性確認。
-- Notifications APIを使うシリーズ通知。権限要求は必ずユーザー操作から行う。
+- `FilterMatomeSeriesAlerts` extensionによる常駐シリーズ確認とOS通知。システム通知が使えない場合はNicoCache_nl GUIログと通知音へフォールバックする。
+
+シリーズアラートタブを開くと、IndexedDBの設定とextensionが`data/filter-matome-series-alerts.json`へ保持する状態を`updatedAt`で統合します。定期確認と通知はextensionが担当するため、watch-historyページやブラウザを閉じてもNicoCache_nlが起動していれば動作します。
 
 ## 変更時の確認
 
 - 追跡間隔や完了条件変更では、短時間再生、シーク、リピート、動画切替、ページ離脱を確認する。
 - DB変更では移行、バックアップ、インポート、統計、シリーズ集計をまとめて更新する。
 - 削除条件は表示ラベルと純粋関数を一致させ、実際の削除前に対象件数を提示する。
-- 通知は権限拒否や未対応環境を通常の分岐として扱う。
+- extension未配置、NicoCache_nl停止、システム通知未対応を通常の分岐として扱い、UI状態・GUIログ・通知音で判断できるようにする。
 - サムネイル失敗時は共通フォールバックを使う。
 
 ## テスト
@@ -63,6 +66,7 @@
 - `tests/watch-history.spec.ts`: 実IndexedDBを使う全タブ、フィルター、統計、シリーズ、削除、入出力、DB管理、通知UI。
 - `tests/watch-history-filter.test.ts`: 履歴フィルターと集計。
 - `tests/watch-history-delete-modal.test.ts`: 条件付き削除ルール。
+- `tests/watch-history-series-alert-extension.test.ts`: IndexedDBとextension状態の統合規則。
 
 ```powershell
 cd local/features

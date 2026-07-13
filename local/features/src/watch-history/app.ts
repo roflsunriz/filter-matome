@@ -56,6 +56,13 @@ import {
   type DeleteOperator,
 } from "@/watch-history/history-delete-rules";
 import { filterSeriesStats } from "@/watch-history/series-filter";
+import {
+  getSeriesAlertExtensionStatus,
+  mergeSeriesAlertStates,
+  requestSeriesAlertCheck,
+  sendSeriesAlertTestNotification,
+  syncSeriesAlertsToExtension,
+} from "@/watch-history/series-alert-extension-client";
 
 /**
  * 視聴履歴アプリケーションクラス
@@ -79,7 +86,7 @@ class WatchHistoryApp {
   private seriesFilter: SeriesFilterCondition = {};
   private seriesAlerts: SeriesAlert[] = [];
   private selectedSeries: SeriesStats | null = null;
-  private alertCheckInterval: number | null = null;
+  private alertUIUpdateInterval: number | null = null;
 
   // データベース管理関連
   private persistenceStatus: PersistenceStatus | null = null;
@@ -218,6 +225,7 @@ class WatchHistoryApp {
       "series-alert-list",
       "series-alert-loading",
       "series-alert-empty-state",
+      "series-alert-extension-status",
       // モーダル関連
       "series-alert-modal",
       "series-alert-modal-close",
@@ -258,10 +266,6 @@ class WatchHistoryApp {
       // 手動アラートチェック
       "manual-alert-check-btn",
       "notification-permission-btn",
-      // 通知権限モーダル
-      "notification-permission-modal",
-      "notification-permission-modal-close",
-      "test-notification-after-setup",
     ];
 
     for (const id of elementIds) {
@@ -538,7 +542,7 @@ class WatchHistoryApp {
     );
     this.elements["notification-permission-btn"]?.addEventListener(
       "click",
-      this.guardEvent(() => this.checkNotificationPermission()),
+      this.guardEvent(() => this.testExtensionNotification()),
     );
 
     // シリーズアラートモーダル
@@ -642,26 +646,6 @@ class WatchHistoryApp {
       (e) => {
         if (e.target === this.elements["database-management-modal"]) {
           this.closeDatabaseManagementModal();
-        }
-      },
-    );
-
-    // 通知権限モーダル
-    this.elements["notification-permission-modal-close"]?.addEventListener(
-      "click",
-      this.guardEvent(() => this.closeNotificationPermissionModal()),
-    );
-    this.elements["test-notification-after-setup"]?.addEventListener(
-      "click",
-      this.guardEvent(() => this.testNotificationAfterSetup()),
-    );
-
-    // 通知権限モーダルオーバーレイクリック
-    this.elements["notification-permission-modal"]?.addEventListener(
-      "click",
-      (e) => {
-        if (e.target === this.elements["notification-permission-modal"]) {
-          this.closeNotificationPermissionModal();
         }
       },
     );
@@ -2325,15 +2309,10 @@ class WatchHistoryApp {
    * シリーズアラートタブを初期化する
    */
   private async initializeSeriesAlertTab(): Promise<void> {
-    if (this.seriesAlerts.length === 0) {
-      await this.loadSeriesAlertData();
-    }
+    await this.loadSeriesAlertData();
+    await this.synchronizeSeriesAlertsWithExtension();
     this.updateSeriesAlertUI();
-    this.startAlertCheck();
     this.startAlertUIUpdater();
-
-    // 通知権限をチェックして必要に応じて案内を表示
-    this.checkNotificationPermissionOnTab();
   }
 
   /**
@@ -2379,6 +2358,79 @@ class WatchHistoryApp {
     } finally {
       this.showSeriesAlertLoading(false);
     }
+  }
+
+  /**
+   * IndexedDBとNicoCache_nl extensionのアラート状態を双方向同期する。
+   */
+  private async synchronizeSeriesAlertsWithExtension(): Promise<boolean> {
+    try {
+      const extensionStatus = await getSeriesAlertExtensionStatus();
+      const mergedAlerts = mergeSeriesAlertStates(
+        this.seriesAlerts,
+        extensionStatus.alerts,
+      );
+      for (const alert of mergedAlerts) {
+        const local = this.seriesAlerts.find((item) => item.id === alert.id);
+        if (!local || alert.updatedAt > local.updatedAt) {
+          const result = await watchHistoryDB.saveSeriesAlert(alert);
+          if (!result.success) {
+            throw new Error(result.error || "IndexedDBへの同期に失敗しました");
+          }
+        }
+      }
+      this.seriesAlerts = mergedAlerts;
+      const syncedStatus = await syncSeriesAlertsToExtension(mergedAlerts);
+      this.updateSeriesAlertExtensionStatus(
+        syncedStatus.notificationAvailable
+          ? "常駐通知: 有効"
+          : "常駐通知: GUIログ/通知音",
+        syncedStatus.lastError ? "error" : "success",
+      );
+      return true;
+    } catch (error) {
+      logger.warn("シリーズアラートextension同期エラー:", error);
+      this.updateSeriesAlertExtensionStatus("常駐通知: 未接続", "error");
+      return false;
+    }
+  }
+
+  /**
+   * UIで変更した現在のアラート一覧をextensionへ反映する。
+   */
+  private async pushSeriesAlertsToExtension(
+    showFailureToast = true,
+  ): Promise<boolean> {
+    try {
+      const status = await syncSeriesAlertsToExtension(this.seriesAlerts);
+      this.updateSeriesAlertExtensionStatus(
+        status.notificationAvailable
+          ? "常駐通知: 有効"
+          : "常駐通知: GUIログ/通知音",
+        status.lastError ? "error" : "success",
+      );
+      return true;
+    } catch (error) {
+      logger.warn("シリーズアラートextension送信エラー:", error);
+      this.updateSeriesAlertExtensionStatus("常駐通知: 未接続", "error");
+      if (showFailureToast) {
+        this.showToast(
+          "NicoCache_nl extensionへ同期できません。拡張の配置と再起動を確認してください",
+          "error",
+        );
+      }
+      return false;
+    }
+  }
+
+  private updateSeriesAlertExtensionStatus(
+    message: string,
+    state: "success" | "error",
+  ): void {
+    const status = this.elements["series-alert-extension-status"];
+    if (!status) return;
+    status.textContent = message;
+    status.dataset.state = state;
   }
 
   /**
@@ -2698,6 +2750,7 @@ class WatchHistoryApp {
    */
   private async refreshSeriesAlertData(): Promise<void> {
     await this.loadSeriesAlertData();
+    await this.synchronizeSeriesAlertsWithExtension();
     this.updateSeriesAlertUI();
     this.showToast("シリーズアラートデータを更新しました", "success");
   }
@@ -2706,12 +2759,6 @@ class WatchHistoryApp {
    * シリーズアラートモーダルを開く
    */
   private openSeriesAlertModal(): void {
-    // 通知権限をチェック
-    if ("Notification" in window && Notification.permission === "denied") {
-      this.openNotificationPermissionModal();
-      return;
-    }
-
     // シリーズ選択肢を更新
     this.updateSeriesSelectOptions();
     this.elements["series-alert-modal"]?.classList.remove("hidden");
@@ -2795,6 +2842,7 @@ class WatchHistoryApp {
         this.updateSeriesAlertUI();
         this.closeSeriesAlertModal();
         this.showToast("シリーズアラートを追加しました", "success");
+        await this.pushSeriesAlertsToExtension();
       } else {
         this.showToast("シリーズアラートの保存に失敗しました", "error");
       }
@@ -2990,6 +3038,7 @@ class WatchHistoryApp {
           `アラートを${updatedAlert.enabled ? "有効" : "無効"}にしました`,
           "success",
         );
+        await this.pushSeriesAlertsToExtension();
       } else {
         this.showToast("アラートの更新に失敗しました", "error");
       }
@@ -3013,6 +3062,7 @@ class WatchHistoryApp {
         this.seriesAlerts = this.seriesAlerts.filter((a) => a.id !== alert.id);
         this.updateSeriesAlertUI();
         this.showToast("アラートを削除しました", "success");
+        await this.pushSeriesAlertsToExtension();
       } else {
         this.showToast("アラートの削除に失敗しました", "error");
       }
@@ -3396,177 +3446,16 @@ class WatchHistoryApp {
   }
 
   /**
-   * アラートチェックを開始する
-   */
-  private startAlertCheck(): void {
-    if (this.alertCheckInterval) {
-      clearInterval(this.alertCheckInterval);
-    }
-
-    // 1分間隔でアラートをチェック（テスト用）
-    this.alertCheckInterval = setInterval(
-      () => {
-        void this.checkSeriesAlerts();
-      },
-      1 * 60 * 1000,
-    );
-
-    // 初回チェック
-    void this.checkSeriesAlerts();
-  }
-
-  /**
    * アラートUIの定期更新を開始する
    */
   private startAlertUIUpdater(): void {
+    if (this.alertUIUpdateInterval !== null) return;
     // 10秒間隔でUIを更新（残り時間表示を更新）
-    setInterval(() => {
+    this.alertUIUpdateInterval = window.setInterval(() => {
       if (this.elements["series-alert-tab"]?.classList.contains("active")) {
         this.updateSeriesAlertUI();
       }
     }, 10 * 1000);
-  }
-
-  /**
-   * シリーズアラートをチェックする
-   */
-  private async checkSeriesAlerts(): Promise<void> {
-    try {
-      const alertsResult = await watchHistoryDB.getAlertsToCheck();
-      if (alertsResult.success && alertsResult.data) {
-        const alertsToCheck = alertsResult.data;
-
-        for (const alert of alertsToCheck) {
-          await this.checkSingleAlert(alert);
-        }
-      }
-    } catch (error) {
-      logger.error("アラートチェックエラー:", error);
-    }
-  }
-
-  /**
-   * 単一のアラートをチェックする
-   */
-  private async checkSingleAlert(alert: SeriesAlert): Promise<boolean> {
-    try {
-      // 実際のシリーズチェック機能を実装
-      const hasNewVideo = await this.checkForNewSeriesVideo(alert);
-
-      const now = Date.now();
-      const updatedAlert = {
-        ...alert,
-        lastCheckedAt: now,
-        nextCheckAt: now + alert.checkInterval,
-        updatedAt: now,
-      };
-
-      await watchHistoryDB.saveSeriesAlert(updatedAlert);
-
-      // アラートリストも更新
-      const index = this.seriesAlerts.findIndex((a) => a.id === alert.id);
-      if (index !== -1) {
-        this.seriesAlerts[index] = updatedAlert;
-      }
-
-      // 新しい動画が見つかった場合は通知
-      if (hasNewVideo) {
-        this.showSeriesNotification(alert);
-      }
-
-      return hasNewVideo;
-    } catch (error) {
-      logger.error("個別アラートチェックエラー:", error);
-      return false;
-    }
-  }
-
-  /**
-   * シリーズの新しい動画をチェックする
-   */
-  private async checkForNewSeriesVideo(alert: SeriesAlert): Promise<boolean> {
-    try {
-      // 1. 該当シリーズの最新動画を取得
-      const seriesVideosResult = await watchHistoryDB.getSeriesVideos(
-        alert.seriesId,
-      );
-      if (
-        !seriesVideosResult.success ||
-        !seriesVideosResult.data ||
-        seriesVideosResult.data.length === 0
-      ) {
-        return false;
-      }
-
-      // 2. 最新の動画からシリーズ情報を取得
-      const latestVideo = seriesVideosResult.data[0];
-      if (!latestVideo.series || !latestVideo.series.video.next) {
-        return false;
-      }
-
-      const nextVideo = latestVideo.series.video.next;
-
-      // 3. 前回チェック時の動画IDと比較
-      if (nextVideo.id !== alert.lastVideoId) {
-        // 新しい動画が見つかった！
-        // アラート情報を更新
-        const updatedAlert = {
-          ...alert,
-          lastVideoId: nextVideo.id,
-          lastVideoTitle: nextVideo.title,
-          updatedAt: Date.now(),
-        };
-        await watchHistoryDB.saveSeriesAlert(updatedAlert);
-
-        // アラートリストも更新
-        const index = this.seriesAlerts.findIndex((a) => a.id === alert.id);
-        if (index !== -1) {
-          this.seriesAlerts[index] = updatedAlert;
-        }
-
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      logger.error("シリーズ動画チェックエラー:", error);
-      return false;
-    }
-  }
-
-  /**
-   * シリーズ通知を表示する（ブラウザ通知のみ）
-   */
-  private showSeriesNotification(alert: SeriesAlert): void {
-    // ブラウザ通知のみ
-    if ("Notification" in window) {
-      if (Notification.permission === "granted") {
-        new Notification(`🎬 ${alert.seriesTitle}`, {
-          body: `新しい動画「${alert.lastVideoTitle}」のネクストエピソードが投稿されました！`,
-          icon: getIconPath("notifications"),
-          tag: `series-${alert.seriesId}`,
-          requireInteraction: true,
-        });
-      } else if (Notification.permission === "default") {
-        Notification.requestPermission()
-          .then((permission) => {
-            if (permission === "granted") {
-              new Notification(`🎬 ${alert.seriesTitle}`, {
-                body: `新しい動画「${alert.lastVideoTitle}」のネクストエピソードが投稿されました！`,
-                icon: getIconPath("notifications"),
-                tag: `series-${alert.seriesId}`,
-                requireInteraction: true,
-              });
-            }
-          })
-          .catch((error) => {
-            logger?.error("Notification permission request failed:", error);
-          });
-      }
-    } else {
-      // ブラウザ通知が利用できない場合のフォールバック
-      logger.warn?.("ブラウザ通知が利用できません");
-    }
   }
 
   /**
@@ -3584,221 +3473,41 @@ class WatchHistoryApp {
         this.showToast("有効なアラートがありません", "info");
         return;
       }
-
-      // ブラウザ通知の権限を確認
-      if ("Notification" in window && Notification.permission === "default") {
-        await Notification.requestPermission();
-      }
-
-      this.showToast("アラートチェックを開始します...", "info");
-
-      let checkedCount = 0;
-      let notificationCount = 0;
-
-      for (const alert of enabledAlerts) {
-        const hasNewVideo = await this.checkSingleAlert(alert);
-        checkedCount++;
-
-        // 実際のチェック結果に基づいて通知カウント
-        if (hasNewVideo) {
-          notificationCount++;
-        }
-      }
-
-      this.updateSeriesAlertUI();
-
-      const notificationStatus =
-        "Notification" in window
-          ? Notification.permission === "granted"
-            ? "ブラウザ通知有効"
-            : "ブラウザ通知無効"
-          : "ブラウザ通知未対応";
-
+      if (!(await this.pushSeriesAlertsToExtension())) return;
+      const accepted = await requestSeriesAlertCheck();
       this.showToast(
-        `${checkedCount}件のアラートをチェックしました。${notificationCount}件の新しい動画が見つかりました。（${notificationStatus}）`,
-        "success",
+        accepted
+          ? `${enabledAlerts.length}件のアラート確認をextensionへ依頼しました`
+          : "extensionは既にアラートを確認中です",
+        accepted ? "success" : "info",
       );
     } catch (error) {
       logger.error("手動アラートチェックエラー:", error);
-      this.showToast("アラートチェックに失敗しました", "error");
+      this.updateSeriesAlertExtensionStatus("常駐通知: 未接続", "error");
+      this.showToast("extensionへアラート確認を依頼できませんでした", "error");
     }
   }
 
   /**
-   * 通知権限を確認・要求する
+   * extensionからOS通知をテスト送信する。
    */
-  private async checkNotificationPermission(): Promise<void> {
+  private async testExtensionNotification(): Promise<void> {
     try {
-      if (!("Notification" in window)) {
-        this.showToast(
-          "このブラウザはデスクトップ通知に対応していません",
-          "error",
-        );
-        return;
-      }
-
-      const permission = Notification.permission;
-
-      if (permission === "granted") {
-        this.showToast("ブラウザ通知は既に許可されています", "success");
-        // テスト通知を送信
-        new Notification("🎬 シリーズアラート", {
-          body: "通知権限が正常に動作しています！",
-          icon: getIconPath("notifications"),
-          tag: "permission-test",
-        });
-      } else if (permission === "denied") {
-        // 拒否されている場合は詳細な案内モーダルを表示
-        this.openNotificationPermissionModal();
-      } else {
-        // 'default' の場合
-        this.showToast("ブラウザ通知の許可を要求します...", "info");
-        const result = await Notification.requestPermission();
-
-        if (result === "granted") {
-          this.showToast("ブラウザ通知が許可されました！", "success");
-          // テスト通知を送信
-          new Notification("🎬 シリーズアラート", {
-            body: "通知権限が正常に設定されました！",
-            icon: getIconPath("notifications"),
-            tag: "permission-granted",
-          });
-        } else {
-          // 拒否された場合も案内モーダルを表示
-          this.openNotificationPermissionModal();
-        }
-      }
+      const displayed = await sendSeriesAlertTestNotification();
+      this.updateSeriesAlertExtensionStatus(
+        displayed ? "常駐通知: 有効" : "常駐通知: GUIログ/通知音",
+        "success",
+      );
+      this.showToast(
+        displayed
+          ? "extensionからテスト通知を送信しました"
+          : "システム通知を利用できないため、GUIログと通知音でテストしました",
+        "success",
+      );
     } catch (error) {
-      logger.error("通知権限確認エラー:", error);
-      this.showToast("通知権限の確認に失敗しました", "error");
-    }
-  }
-
-  /**
-   * 通知権限案内モーダルを開く
-   */
-  private openNotificationPermissionModal(): void {
-    this.elements["notification-permission-modal"]?.classList.remove("hidden");
-
-    // ブラウザ別の説明を強調表示
-    this.highlightCurrentBrowserInstructions();
-  }
-
-  /**
-   * 通知権限案内モーダルを閉じる
-   */
-  private closeNotificationPermissionModal(): void {
-    this.elements["notification-permission-modal"]?.classList.add("hidden");
-  }
-
-  /**
-   * 設定後の通知テストを実行する
-   */
-  private async testNotificationAfterSetup(): Promise<void> {
-    try {
-      if (!("Notification" in window)) {
-        this.showToast(
-          "このブラウザはデスクトップ通知に対応していません",
-          "error",
-        );
-        return;
-      }
-
-      const permission = Notification.permission;
-
-      if (permission === "granted") {
-        // テスト通知を送信
-        new Notification("🎬 シリーズアラート", {
-          body: "通知設定が正常に動作しています！設定完了です。",
-          icon: getIconPath("notifications"),
-          tag: "setup-test",
-        });
-        this.showToast("通知テストが送信されました！", "success");
-
-        // 成功したらモーダルを閉じる
-        setTimeout(() => {
-          this.closeNotificationPermissionModal();
-        }, 1000);
-      } else if (permission === "denied") {
-        this.showToast(
-          "まだ通知が拒否されています。上記の手順に従って設定を変更してください",
-          "error",
-        );
-      } else {
-        // 'default' の場合は再度許可を求める
-        this.showToast("通知の許可を要求します...", "info");
-        const result = await Notification.requestPermission();
-
-        if (result === "granted") {
-          new Notification("🎬 シリーズアラート", {
-            body: "通知設定が正常に完了しました！",
-            icon: getIconPath("notifications"),
-            tag: "setup-complete",
-          });
-          this.showToast("通知設定が完了しました！", "success");
-
-          // 成功したらモーダルを閉じる
-          setTimeout(() => {
-            this.closeNotificationPermissionModal();
-          }, 1000);
-        } else {
-          this.showToast(
-            "通知が拒否されました。上記の手順に従って手動で設定してください",
-            "error",
-          );
-        }
-      }
-    } catch (error) {
-      logger.error("通知テストエラー:", error);
-      this.showToast("通知テストに失敗しました", "error");
-    }
-  }
-
-  /**
-   * タブ移動時の通知権限チェックを行う
-   */
-  private checkNotificationPermissionOnTab(): void {
-    // シリーズアラートタブに移動したときに通知権限をチェック
-    if ("Notification" in window && Notification.permission === "denied") {
-      // 少し遅延してからモーダルを表示（タブ切り替えアニメーション後）
-      setTimeout(() => {
-        this.showToast(
-          "ブラウザ通知が拒否されています。シリーズアラートを利用するには通知の許可が必要です",
-          "error",
-        );
-      }, 500);
-    }
-  }
-
-  /**
-   * 現在のブラウザに適した説明を強調表示する
-   */
-  private highlightCurrentBrowserInstructions(): void {
-    // すべてのブラウザタブをリセット
-    document.querySelectorAll(".browser-tab").forEach((tab) => {
-      tab.classList.remove("current-browser");
-    });
-
-    // ブラウザを検出
-    const userAgent = navigator.userAgent;
-    let currentBrowser = "";
-
-    if (userAgent.includes("Chrome") && !userAgent.includes("Edg")) {
-      currentBrowser = "chrome";
-    } else if (userAgent.includes("Edg")) {
-      currentBrowser = "chrome"; // EdgeもChrome系なので同じ手順
-    } else if (userAgent.includes("Firefox")) {
-      currentBrowser = "firefox";
-    } else if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) {
-      currentBrowser = "safari";
-    } else {
-      currentBrowser = "chrome"; // デフォルトはChrome系
-    }
-
-    // 該当するブラウザの説明を強調表示
-    const currentTab = document.getElementById(`${currentBrowser}-tab`);
-    if (currentTab) {
-      currentTab.classList.add("current-browser");
+      logger.error("extension通知テストエラー:", error);
+      this.updateSeriesAlertExtensionStatus("常駐通知: 未接続", "error");
+      this.showToast("extensionから通知を送信できませんでした", "error");
     }
   }
 

@@ -84,6 +84,8 @@ jobs:
           cp extensions/nlMediaInfo.class release/NicoCache_nl/extensions/ || echo "Warning: nlMediaInfo.class not found"
           cp extensions/FilterMatomeCacheControl.java release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeCacheControl.java not found"
           cp extensions/FilterMatomeCacheControl.class release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeCacheControl.class not found"
+          cp extensions/FilterMatomeSeriesAlerts.java release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeSeriesAlerts.java not found"
+          cp extensions/FilterMatomeSeriesAlerts.class release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeSeriesAlerts.class not found"
           cp extensions/NicochartInfoProxy.java release/NicoCache_nl/extensions/ || echo "Warning: NicochartInfoProxy.java not found"
           cp extensions/NicochartInfoProxy.class release/NicoCache_nl/extensions/ || echo "Warning: NicochartInfoProxy.class not found"
 

@@ -417,40 +417,6 @@ export interface SeriesFilterCondition {
   };
 }
 
-/**
- * シリーズアラート通知結果
- */
-export interface SeriesAlertNotification {
-  /** アラートID */
-  alertId: string;
-  /** シリーズID */
-  seriesId: number;
-  /** シリーズタイトル */
-  seriesTitle: string;
-  /** 新しい動画ID */
-  newVideoId: string;
-  /** 新しい動画タイトル */
-  newVideoTitle: string;
-  /** 通知日時 */
-  notifiedAt: number;
-  /** 通知されたかどうか */
-  notified: boolean;
-}
-
-/**
- * シリーズアラート設定
- */
-export interface SeriesAlertConfig {
-  /** デフォルトのチェック間隔（ミリ秒） */
-  defaultCheckInterval: number;
-  /** 最大アラート数 */
-  maxAlerts: number;
-  /** 通知を有効にするかどうか */
-  enableNotifications: boolean;
-  /** アラート音を鳴らすかどうか */
-  enableSound: boolean;
-}
-
 // ===== マイグレーション・永続化関連型 =====
 
 /**

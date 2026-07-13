@@ -220,6 +220,34 @@ async function seedDatabase(page: Page): Promise<void> {
 }
 
 async function openApp(page: Page): Promise<void> {
+  let extensionAlerts: unknown[] = [];
+  await page.route(
+    "https://www.nicovideo.jp/cache/watch-history-series-alerts/**",
+    async (route) => {
+      const action = new URL(route.request().url()).pathname.split("/").pop();
+      if (action === "config") {
+        const body = route.request().postDataJSON() as { alerts?: unknown[] };
+        extensionAlerts = body.alerts ?? [];
+      }
+      const response =
+        action === "check-now"
+          ? { accepted: true }
+          : action === "test-notification"
+            ? { displayed: true }
+            : {
+                schemaVersion: 1,
+                notificationAvailable: true,
+                checking: false,
+                lastRunAt: 0,
+                lastError: "",
+                alerts: extensionAlerts,
+              };
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(response),
+      });
+    },
+  );
   await page.route(
     "https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html",
     fulfillDocument,
@@ -236,24 +264,6 @@ async function openApp(page: Page): Promise<void> {
         (window as unknown as { openedUrl?: string }).openedUrl = url;
         return null;
       },
-    });
-    class FakeNotification {
-      static permission: NotificationPermission = "granted";
-      static async requestPermission(): Promise<NotificationPermission> {
-        return FakeNotification.permission;
-      }
-      constructor(title: string) {
-        (
-          window as unknown as { notificationTitles?: string[] }
-        ).notificationTitles ??= [];
-        (
-          window as unknown as { notificationTitles: string[] }
-        ).notificationTitles.push(title);
-      }
-    }
-    Object.defineProperty(window, "Notification", {
-      configurable: true,
-      value: FakeNotification,
     });
   });
   await seedDatabase(page);
@@ -593,7 +603,7 @@ test("各タブ・シリーズ・アラートの静的および動的ボタン�
   await page.locator("#series-alert-modal-close").click();
   await page.locator("#notification-permission-btn").click();
   await expect(page.locator("#toast-container")).toContainText(
-    "ブラウザ通知は既に許可されています",
+    "extensionからテスト通知を送信しました",
   );
   await page.locator("#manual-alert-check-btn").click();
   await expect(page.locator("#toast-container")).toContainText(
@@ -667,7 +677,7 @@ test("削除モーダルの全条件演算子・キャンセル・確定・個�
   await expect(page.locator(".history-item")).toHaveCount(2);
 });
 
-test("インポート・エクスポート・DB管理・通知モーダルの全操作が機能する", async ({
+test("インポート・エクスポート・DB管理・常駐通知の全操作が機能する", async ({
   page,
 }) => {
   await openApp(page);
@@ -748,20 +758,12 @@ test("インポート・エクスポート・DB管理・通知モーダルの全
     /hidden/,
   );
 
-  await page.evaluate(() => {
-    Object.defineProperty(Notification, "permission", {
-      configurable: true,
-      value: "denied",
-    });
-  });
   await page.locator("#series-alert-tab").click();
-  await page.locator("#notification-permission-btn").click();
-  await expect(page.locator("#notification-permission-modal")).not.toHaveClass(
-    /hidden/,
+  await expect(page.locator("#series-alert-extension-status")).toHaveText(
+    "常駐通知: 有効",
   );
-  await page.locator("#test-notification-after-setup").click();
-  await page.locator("#notification-permission-modal-close").click();
-  await expect(page.locator("#notification-permission-modal")).toHaveClass(
-    /hidden/,
+  await page.locator("#notification-permission-btn").click();
+  await expect(page.locator("#toast-container")).toContainText(
+    "extensionからテスト通知を送信しました",
   );
 });

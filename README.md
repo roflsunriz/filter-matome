@@ -95,7 +95,7 @@ winget install Google.Chrome
 ### 視聴履歴 (watch-history)
 - **無制限履歴保存**: ニコニコ動画の50件制限を突破
 - **高度な統計**: 日別視聴状況・時間帯別視聴状況
-- **シリーズ追跡**: 新規投稿の自動通知・シリーズナビゲーション
+- **シリーズ追跡**: NicoCache_nl常駐extensionによるページ非表示時の新規投稿通知・シリーズナビゲーション
 - **検索・フィルタ**: 強力な検索・ソート機能
 - **メモ機能**: 履歴にメモを残せる
 - **インポート/エクスポート**: データの移行・バックアップ
@@ -187,7 +187,8 @@ nlFilters/
 └── 105_premium_hide.txt            # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
 
 extensions/
-└── FilterMatomeCacheControl.java/.class # MP4等を保持したままHLSだけを削除・削除予約するサーバーAPI
+├── FilterMatomeCacheControl.java/.class # MP4等を保持したままHLSだけを削除・削除予約するサーバーAPI
+└── FilterMatomeSeriesAlerts.java/.class # シリーズ新着の定期確認とOS通知
 
 docs/resources/            # USAGE.mdで使われる画像リソース
 ```

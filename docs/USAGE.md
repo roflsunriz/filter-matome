@@ -25,19 +25,14 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
         `scripts` フォルダは便利なスクリプトがひとまとめになっているが使わないなら必ずしもコピー必須ではない
 
-3. NicoCache_nlを再起動する
-
-        Stop-Process -Name java -Force
-        Stop-Process -Name javaw -Force
-        Set-Location $env:NICOCACHE_HOME
-        Start-Process pwsh -ArgumentList "-WindowStyle Hidden -File `"$env:NICOCACHE_HOME\RunNicoCache.ps1`""
+3. NicoCache_nlをGUIまたは通常の終了手段で終了し、`RunNicoCache.ps1`または`NicoCache_nl Starter.bat`から再起動する
 
 ### クリーンインストール手順
 
 `C:\NicoCache_nl`にインストールしたとする  
 
 1. `C:\NicoCache_nl`フォルダを開く  
-2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `FilterMatomeCacheControl.class`, `NicochartInfoProxy.class`, `nlMediaInfo.class`を削除する
+2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `FilterMatomeCacheControl.class`, `FilterMatomeSeriesAlerts.class`, `NicochartInfoProxy.class`, `nlMediaInfo.class`を削除する
 3. `local`フォルダにある`background-images`, `features`, `images`, フォルダ, `mime.types`, `list.js` のシンボリックリンクを削除する  
 4. `scripts`フォルダを削除する  
 5. `nlFilters`フォルダの `100_features.txt`, `101_disable_official_function.txt`, `105_premium_hide.txt`, `nlFilters_編集ガイド.md`を削除する
@@ -68,6 +63,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 | `downloadThruFFmpeg.class` | キャッシュ動画から動画または音声を書き出す | mlink-video-controllerとキャッシュ一覧の「保存:動画」「保存:音声」で使用。別途`ffmpeg`コマンドが必要 |
 | `ExtUtil.class` | 拡張機能向けの共通処理を提供する補助クラス | 単独で操作する機能ではない。他の `.class` と一緒に配置する |
 | `FilterMatomeCacheControl.class` | filter-matome向けにHLSキャッシュの一括削除と削除予約をJSON APIで提供する | 完了済み・停止済みHLSは削除し、ダウンロード中HLSは完了または中断後に削除する。MP4・FLV・SWFは削除しない |
+| `FilterMatomeSeriesAlerts.class` | watch-historyのアラート設定を保持し、NicoCache_nlの60秒定期イベントからシリーズ新着を確認してOS通知を表示する | NicoCache_nlが起動していればwatch-historyやブラウザを閉じても動作する |
 | `NicochartInfoProxy.class` | video-playerが通常の動画情報を取得できない場合だけ、サーバー側からnicochart.jpの公開情報を取得する | 接続先と動画IDを制限した読み取り専用処理。PACや`genCerts.bat` / `genCerts.sh`の変更は不要 |
 | `nlMediaInfo.class` | キャッシュファイルを`mediainfo --Output=JSON`で解析してJSONを返す | movie-infoのMediaInfo表示で使用。別途`mediainfo`コマンドが必要 |
 
@@ -99,6 +95,16 @@ X-Filter-Matome-Cache-Control: 1
 
 リクエスト全体の状態は `not_found`、`pending`、`completed`、`partial`、`failed` のいずれかとなる。NicoCache_nlを再起動すると処理中の削除予約は失われるため、`pending` の間はNicoCache_nlを終了しない。
 
+#### watch-history常駐シリーズアラート
+
+`FilterMatomeSeriesAlerts`は、watch-historyのシリーズアラートタブを開いたときにIndexedDBの設定をNicoCache_nlへ同期する。以後はNicoCache_nlが約60秒ごとに期限到来を確認し、対象動画の公開ウォッチページから次動画を検出する。ログインCookieやブラウザの通知権限には依存しない。
+
+- Windowsなどシステムトレイ通知を利用できる環境ではOS通知を表示し、通知をクリックすると新着動画を開く。
+- システムトレイ通知を利用できない環境では、NicoCache_nl GUIの`Series Alerts`タブへ記録し、可能なら通知音を鳴らす。
+- 設定と最終確認状態は`NicoCache_nl/data/filter-matome-series-alerts.json`へ原子的に保存する。破損を検出した場合は同じ場所へ`.corrupt-<時刻>`付きで退避する。
+- NicoCache_nlを停止している間は確認できない。再起動後、期限を過ぎたアラートは次の定期処理で確認する。
+- 初回導入時はwatch-historyのシリーズアラートタブを一度開き、`常駐通知: 有効`または`常駐通知: GUIログ/通知音`と表示されることを確認する。`通知テスト`で実際の通知経路を確認できる。
+
 #### 配置と更新
 
 1. 配布物の `extensions/` にある `.class` と `.java` を、ディレクトリ構造を変えずにNicoCache_nlの `extensions/` へ上書きコピーする。
@@ -120,6 +126,7 @@ X-Filter-Matome-Cache-Control: 1
 4. 更新後にだけ失敗する場合は、古い `.class` の残存を確認してから、標準手順で `extensions/` を再度上書きする。
 5. `NicochartInfoProxy`が失敗してもvideo-playerはキャッシュ再生を継続する。詳細はNicoCache_nlの警告ログで `NicochartInfoProxy` を確認する。
 6. HLS削除が `pending` のままの場合は対象動画のキャッシュが継続中か確認する。完了または中断後、最大約60秒の定期再確認で削除される。
+7. シリーズアラートが`常駐通知: 未接続`の場合は、`FilterMatomeSeriesAlerts.class`が配置されているか、起動ログに`FilterMatomeSeriesAlerts`があるか確認してNicoCache_nlを再起動する。
 
 ---
 
@@ -277,7 +284,7 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 
 シリーズタブでは投稿者が設定した動画シリーズのナビゲーションが利用可能。  
 
-シリーズアラートでは視聴履歴のページを開いている限り、新規投稿されたシリーズの新規動画を自動通知する設定が可能。（視聴履歴のページを閉じると動作しない）`新規アラート追加`で追加、`手動チェック`で新規動画がないかチェック、`通知権限確認`でブラウザの通知権限の動作確認。  
+シリーズアラートでは`新規アラート追加`で対象と間隔を設定すると、NicoCache_nlの常駐extensionがページやブラウザを閉じていても新規動画を定期確認する。`手動チェック`で即時確認を依頼でき、`通知テスト`でOS通知またはGUIログ・通知音の経路を確認できる。NicoCache_nlを停止している間は確認されない。
 
 `データベース管理`では、より大容量の履歴を保存するためのデータベース永続化と、旧データからの自動マイグレーションなどの設定が可能。  
  

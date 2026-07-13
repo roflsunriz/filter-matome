@@ -802,7 +802,9 @@
             <div class="series-alert-header">
               <div class="series-alert-title">
                 <h2>シリーズアラート管理</h2>
-                <p>シリーズの新規投稿をアラートで知らせます</p>
+                <p>
+                  NicoCache_nlの常駐extensionが定期確認し、ページを閉じていても通知します
+                </p>
               </div>
               <div class="series-alert-actions">
                 <button id="add-series-alert-btn" class="btn btn-primary">
@@ -836,7 +838,7 @@
                     alt="notification"
                     loading="lazy"
                   />
-                  通知権限確認
+                  通知テスト
                 </button>
                 <button id="series-alert-refresh-btn" class="btn btn-icon">
                   <img
@@ -854,6 +856,12 @@
               <div class="series-alert-count">
                 <span id="series-alert-count" class="content-count"
                   >0 件のアラート</span
+                >
+                <span
+                  id="series-alert-extension-status"
+                  class="series-alert-extension-status"
+                  data-state="error"
+                  >常駐通知: 未確認</span
                 >
               </div>
 
@@ -1411,91 +1419,6 @@
                     >マイグレーション実行前にバックアップを作成</span
                   >
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 通知権限案内モーダル -->
-      <div class="modal hidden" id="notification-permission-modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 id="notification-permission-title">
-              🔔 ブラウザ通知の許可が必要です
-            </h2>
-            <button
-              class="modal-close"
-              id="notification-permission-modal-close"
-            >
-              <img
-                class="material-icon icon-dark"
-                data-style="outlined"
-                data-icon="close"
-                alt="close"
-                loading="lazy"
-              />
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="notification-permission-info">
-              <p class="permission-description">
-                シリーズアラートの通知を受け取るには、ブラウザの通知許可が必要です。
-                現在、通知が拒否されているため、手動で設定を変更してください。
-              </p>
-
-              <div class="browser-instructions">
-                <h3>📋 ブラウザ設定の変更方法</h3>
-
-                <div class="browser-tab" id="chrome-tab">
-                  <h4>🌐 Chrome / Edge</h4>
-                  <ol>
-                    <li>アドレスバーの左側にある🔒アイコンをクリック</li>
-                    <li>「通知」を「許可」に変更</li>
-                    <li>ページをリロード</li>
-                  </ol>
-                  <p class="alternative-method">
-                    <strong>または：</strong><br />
-                    設定 → プライバシーとセキュリティ → サイトの設定 → 通知 →
-                    このサイトを許可リストに追加
-                  </p>
-                </div>
-
-                <div class="browser-tab" id="firefox-tab">
-                  <h4>🦊 Firefox</h4>
-                  <ol>
-                    <li>アドレスバーの左側にある🔒アイコンをクリック</li>
-                    <li>「通知を送信」を「許可」に変更</li>
-                    <li>ページをリロード</li>
-                  </ol>
-                  <p class="alternative-method">
-                    <strong>または：</strong><br />
-                    設定 → プライバシーとセキュリティ → 許可設定 → 通知 →
-                    このサイトを許可
-                  </p>
-                </div>
-
-                <div class="browser-tab" id="safari-tab">
-                  <h4>🧭 Safari</h4>
-                  <ol>
-                    <li>Safari → 設定 → Webサイト → 通知</li>
-                    <li>このサイトを「許可」に変更</li>
-                    <li>ページをリロード</li>
-                  </ol>
-                </div>
-              </div>
-
-              <div class="permission-test-section">
-                <h3>✅ 設定確認</h3>
-                <p>
-                  設定を変更した後、下のボタンで通知が正常に動作するか確認できます。
-                </p>
-                <button
-                  id="test-notification-after-setup"
-                  class="btn btn-primary"
-                >
-                  🔔 通知テスト
-                </button>
               </div>
             </div>
           </div>

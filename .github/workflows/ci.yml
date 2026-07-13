@@ -92,6 +92,8 @@ jobs:
             extensions/CustomCacheReturner.*
             extensions/downloadThruFFmpeg.*
             extensions/ExtUtil.*
+            extensions/FilterMatomeSeriesAlerts*
+            extensions/FilterMatomeCacheControl.*
           retention-days: 7
 
   # ─────────────────────────────────────────────
@@ -154,6 +156,10 @@ jobs:
             "extensions/downloadThruFFmpeg.class"
             "extensions/ExtUtil.java"
             "extensions/ExtUtil.class"
+            "extensions/FilterMatomeSeriesAlerts.java"
+            "extensions/FilterMatomeSeriesAlerts.class"
+            "extensions/FilterMatomeCacheControl.java"
+            "extensions/FilterMatomeCacheControl.class"
           )
 
           for file in "${important_files[@]}"; do

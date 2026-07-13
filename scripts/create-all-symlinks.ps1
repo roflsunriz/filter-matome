@@ -135,6 +135,7 @@ $relativeMappings = @(
     @{ SourceRel = 'extensions\downloadThruFFmpeg.class';               LinkRel = 'extensions\downloadThruFFmpeg.class' }
     @{ SourceRel = 'extensions\ExtUtil.class';                          LinkRel = 'extensions\ExtUtil.class' }
     @{ SourceRel = 'extensions\FilterMatomeCacheControl.class';         LinkRel = 'extensions\FilterMatomeCacheControl.class' }
+    @{ SourceRel = 'extensions\FilterMatomeSeriesAlerts.class';         LinkRel = 'extensions\FilterMatomeSeriesAlerts.class' }
     @{ SourceRel = 'extensions\NicochartInfoProxy.class';               LinkRel = 'extensions\NicochartInfoProxy.class' }
     @{ SourceRel = 'extensions\nlMediaInfo.class';                      LinkRel = 'extensions\nlMediaInfo.class' }
     @{ SourceRel = 'nico-cache-gui-launcher.bat';                      LinkRel = 'nico-cache-gui-launcher.bat' }
