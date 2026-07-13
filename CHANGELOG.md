@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - comment-filter2 のルール入力画面で一致プレビューをアコーディオン化し、必要なときだけテスト入力欄と結果を展開できるようにした。
+- 共通ヘッダーの「その他」メニューから video-player へ移動できるよう、キャッシュ管理リンクの直後に導線を追加した。
 
 ## [#231] - 2026-07-13
 
