@@ -214,6 +214,7 @@ test("正規表現の一致、未一致、入力エラーをリアルタイム�
   const ui = page.locator("#cf2-shadow-host");
   await ui.locator('.cf2-sidebar-item[data-cf2-view="rules"]').click();
   await ui.locator("#cf2-pattern-input").fill("荒らし|スパム");
+  await ui.locator(".cf2-regex-preview-header").click();
   await ui
     .locator("#cf2-regex-test-input")
     .fill("通常コメント、荒らし、そしてスパムです");

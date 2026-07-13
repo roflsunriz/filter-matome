@@ -93,7 +93,7 @@ export const mainUITemplate = `
       <div class="cf2-view-header">
         <div>
           <h2>コメントコマンド</h2>
-          <p>コメント種別ごとに許可する表示コマンドを設定します。</p>
+          <p>コメント種別ごとに上書きするコマンドを設定します。</p>
         </div>
       </div>
       
@@ -245,18 +245,20 @@ export const mainUITemplate = `
               <div id="cf2-regex-warnings" class="cf2-regex-warnings"></div>
               <div id="cf2-regex-suggestions" class="cf2-regex-suggestions"></div>
             </div>
-            <div class="cf2-regex-preview">
-              <div class="cf2-section-header cf2-regex-preview-header">
+            <details class="cf2-regex-preview">
+              <summary class="cf2-section-header cf2-regex-preview-header">
                 ${getIconSVG(ICONS.visibility)}
                 <div class="cf2-section-title">一致プレビュー</div>
                 <span id="cf2-regex-preview-count" class="cf2-preview-count">未テスト</span>
+              </summary>
+              <div class="cf2-regex-preview-content">
+                <label for="cf2-regex-test-input" class="cf2-input-label">テスト用の文字列</label>
+                <textarea id="cf2-regex-test-input" class="cf2-test-textarea" placeholder="例: このコメントには荒らしという文字が含まれます"></textarea>
+                <div id="cf2-regex-preview-result" class="cf2-regex-preview-result" aria-live="polite">
+                  パターンとテスト文字列を入力すると、一致箇所を確認できます。
+                </div>
               </div>
-              <label for="cf2-regex-test-input" class="cf2-input-label">テスト用の文字列</label>
-              <textarea id="cf2-regex-test-input" class="cf2-test-textarea" placeholder="例: このコメントには荒らしという文字が含まれます"></textarea>
-              <div id="cf2-regex-preview-result" class="cf2-regex-preview-result" aria-live="polite">
-                パターンとテスト文字列を入力すると、一致箇所を確認できます。
-              </div>
-            </div>
+            </details>
           </div>
 
           <!-- ユーザーIDルール入力 -->
@@ -433,7 +435,7 @@ export const mainUITemplate = `
       <div class="cf2-view-header">
         <div>
           <h2>データ管理</h2>
-          <p>ルールのバックアップ、復元、旧バージョンからの移行を行います。</p>
+          <p>ルールのバックアップ、復元、旧バージョンからの移行を行います。「レガシーインポート」は旧comment-filterの設定ファイルをインポートします。</p>
         </div>
       </div>
       <div class="cf2-button-group">
@@ -471,7 +473,7 @@ export const mainUITemplate = `
         <div class="cf2-toggle-container">
           <div class="cf2-toggle-label" title="CommentFilterLogger.javaにフィルターログを送信する機能を有効/無効にします">
             ${getIconSVG(ICONS.info)}
-            <span>ログ送信</span>
+            <span>ログ送信（NicoCache_nlの拡張機能に送信）</span>
           </div>
           <div id="cf2-log-toggle" class="cf2-toggle active">
             <div class="cf2-toggle-slider"></div>

@@ -221,7 +221,11 @@ p { margin-bottom: 0; color: var(--cf2-muted); }
 .cf2-toggle.active .cf2-toggle-slider { transform: translateX(18px); }
 
 .cf2-regex-preview, .cf2-regex-analysis { margin-top: 16px; padding: 14px; background: var(--cf2-bg); border-radius: 8px; }
-.cf2-regex-preview-header { margin-bottom: 10px; }
+.cf2-regex-preview-header { cursor: pointer; user-select: none; }
+.cf2-regex-preview-header::-webkit-details-marker { display: none; }
+.cf2-regex-preview-header::after { content: "›"; margin-left: 8px; color: var(--cf2-muted); font-size: 20px; line-height: 1; transform: rotate(90deg); transition: transform .16s ease; }
+.cf2-regex-preview:not([open]) .cf2-regex-preview-header::after { transform: rotate(0deg); }
+.cf2-regex-preview-content { padding-top: 10px; }
 .cf2-preview-count { margin-left: auto; color: var(--cf2-muted); font-size: 12px; }
 .cf2-regex-preview-result { min-height: 42px; margin-top: 10px; padding: 10px; color: var(--cf2-muted); border-left: 2px solid var(--cf2-border); overflow-wrap: anywhere; }
 .cf2-regex-preview-result mark { color: #0d1b36; background: var(--cf2-warning); border-radius: 2px; }

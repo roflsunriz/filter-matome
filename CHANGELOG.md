@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- comment-filter2 のルール入力画面で一致プレビューをアコーディオン化し、必要なときだけテスト入力欄と結果を展開できるようにした。
+
 ## [#231] - 2026-07-13
 
 ### Added
