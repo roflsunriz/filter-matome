@@ -5,22 +5,65 @@
 
 ## Environment
 
-- `local/features/src/` には、各プロジェクトのソースコードがあります。
-- `local/background-images/` は mlink-video-controller で使われる背景画像です。
-- `local/images/` は local/features/src/docs/comment-filter2 で使われる使い方を説明するための画像があります。
-- `local/features/src/common/` には、共通ライブラリのソースコードがあります。マテリアルデザインアイコンのヘルパー、コモンヘッダー、共通ロガー、共通トースト通知もあります。
-- `local/features/src/types/` には、各プロジェクトの型定義があります。
-- `local/features/dist/` には、ビルド済みのファイルがあります。
-- `nlFilters/` には、各プロジェクトのフィルターがあります。NicoCache_nl専用DSLフィルターです。NicoCache_nlはローカルプロキシサーバーで、ニコニコ動画のコンテンツをローカルにキャッシュして視聴できます。nlFiltersを使用するとNicoCache_nlでスクリプトやCSSを追加でき、特定のHTMLを置き換えることもできます。
-- `resources/` には、USAGE.mdで使われる画像リソースがあります。
-- `scripts/` にはNicoCache_nl用のスクリプトがあります。
-- ビルドするときには `local/features/` に移動して `bun run build` を実行してください。
-- `comment-filter2` には video-player と連携するための `video-player-bridge.ts` があります。
-- `mlink-video-controller` には各モジュールのソースコードがあります。`modules` フォルダと `module-handlers` フォルダには各モジュールのソースコードがあります。モジュールの読み込みと管理は `module-handlers` フォルダにあります。モジュールの設定は `settings-manager.ts` と `settings-ui.ts` で管理されています。
-- 各プロジェクトのルートに README.md があります。各プロジェクトの説明と編集ガイドが書かれているため、編集前に確認してください。変更後は README.md を更新してください。
-- `local/features/scripts/build.ts` がBun bundlerによる単一バンドル、Worker、Service Worker、静的HTMLの生成を一元管理します。
-- 個別ビルドはありません。どのプロジェクトを更新した場合も `bun run build` で全成果物を生成してください。
-- `extensions/` には NicoCache_nl 用Java拡張のソースとコンパイル済みクラスがあります。コンパイルには、このリポジトリに含まれない NicoCache_nl 本体のソースとJDKが必要です。`C:\NicoCache_nl\src\` を利用できる環境ではコンパイルできますが、このリポジトリだけで完結するビルドではありません。
+### 作業前に確認する文書
+
+- リポジトリ全体の用途と導入方法はルートの `README.md`、更新方法は `how-to-update.md`、開発規約は `CONTRIBUTING.md` を確認する。
+- TypeScript機能群を変更する前に `local/features/README.md` を確認し、対象ディレクトリに `README.md` がある場合はその編集ガイドも確認する。`api-info/` と `runtime/` には個別READMEがないため、参照元と実装を確認して責務を判断する。
+- `nlFilters/` を変更する前に `nlFilters/nlFilters_編集ガイド.md` を確認する。
+- `scripts/` のスクリプトを変更または実行する前に、対応する `scripts/README.*.md` を確認する。
+- ユーザー操作、構成、設定、ビルド手順、外部連携が変わる場合は、対象README、`how-to-update.md`、`docs/`、`CHANGELOG.md` の更新要否を確認する。
+
+### リポジトリ構成
+
+- `local/features/` はBunとTypeScriptで実装された主要機能群である。ソースは `src/`、テストは `tests/`、ビルド定義は `scripts/`、生成物は `dist/` に置かれる。
+- `local/background-images/` は `mlink-video-controller` から選択できる背景画像である。ブラウザーからはNicoCache_nl経由で `/local/background-images/` として参照される。
+- `nlFilters/` はNicoCache_nl専用DSLのフィルターである。JavaScriptやCSSの挿入、レスポンス本文の置換などを行う。`100_features.txt` が `local/features/dist/features.js` をニコニコ動画側へ読み込む主要フィルターである。
+- `docs/` はMkDocsで公開する利用者向け文書、`docs/resources/` は文書内の画像、`cover-images/` はルートREADMEの機能プレビュー画像である。
+- `scripts/` はシンボリックリンク作成、Java拡張のビルド、動画変換、ドキュメント生成などの補助スクリプトである。用途の異なるスクリプトが混在するため、名前だけで判断して実行しない。
+- `extensions/` はNicoCache_nl用Java拡張の `.java` と対応する `.class` を管理する。TypeScriptのBunビルドには含まれない。コンパイルにはJDKと、このリポジトリに含まれないNicoCache_nl本体が必要である。
+- `.github/workflows/` はCI、ドキュメント公開、リリース生成の正式な自動化定義である。ビルド、検証、配布物を変更するときは併せて確認する。
+
+### `local/features/src/` の構成
+
+- `features.ts`: URLに応じて各機能を読み込むブラウザー側のエントリーポイント。
+- `api-info/`: NicoCache_nlおよびニコニコ動画関連APIの仕様メモとレスポンス例。
+- `cache-data-manager/`: NicoCache_nlのキャッシュ一覧、検索、削除などを扱う管理UI。
+- `comment-filter2/`: コメント取得、フィルタリング、設定UI。`integrations/video-player-bridge.ts` が `video-player` との連携境界である。
+- `common/`: Material Design Icons、共通ヘッダー、ロガー、トースト、APIクライアントなど、複数機能で共有する実装。
+- `mlink-video-controller/`: 視聴ページの操作パネルと機能モジュール群。`modules/` が個別機能、`module-handlers/` が読み込み・設定UIなどの管理を担当する。
+- `movie-info/`: キャッシュ、サムネイル、MediaInfo、視聴API情報を集約するダッシュボード。
+- `mylist2/`: 独自マイリストのUI、永続化、インポート・エクスポート、Service Worker。
+- `runtime/`: ページコンテキストで処理を実行するためのランタイム境界。
+- `types/`: グローバル型と各機能で共有する型定義。
+- `video-player/`: ローカルキャッシュ動画のスタンドアロンプレイヤー、コメント描画、再生制御。
+- `watch-history/`: 視聴履歴SPA、視聴追跡、検索、統計、データ移行。
+
+`common/`、`types/`、`runtime/`、`features.ts` の変更は複数機能へ波及する。利用元を検索し、関連する単体テストとPlaywrightテストをまとめて確認する。
+
+### TypeScript機能群のセットアップ、ビルド、検証
+
+- 作業ディレクトリは `local/features/` である。
+- Bunの要求バージョンは `package.json` の `packageManager`、依存関係の固定状態は `bun.lock` を正とする。初回セットアップまたは依存関係変更時は `bun install` を実行する。
+- 個別プロジェクト用のビルドはない。どの機能を変更した場合も、次の標準コマンドで全体を検証する。
+
+```powershell
+cd local/features
+bun run format
+bun run lint
+bun run type-check
+bun run test
+bun run build
+```
+
+- `bun run test:unit` はBunによる単体テストだけを実行する短縮確認である。`bun run test` は単体テストに加えて、`package.json` で列挙された `tests/*.spec.ts` のPlaywrightテストをヘッドレスChromiumで実行する。
+- `local/features/tests/fixtures/` は実ページ相当のテストfixture、`local/features/test-results/` はPlaywrightの一時生成物である。`test-results/` は編集またはコミットしない。
+- `local/features/scripts/build.ts` は、ビルド開始時に `dist/` を削除してから、`src/features.ts` の単一バンドル、comment-filter2のWorker、mylist2のService Worker、mylist2・movie-info・video-player・watch-historyの静的HTMLを一括生成し、必要ファイルが揃っていることも検証する。
+- `local/features/dist/` はGit管理外の生成物であり、手編集しない。`bun run build` で再生成する。
+
+### ドキュメントとJava拡張のビルド
+
+- MkDocs文書はリポジトリ直下で `mkdocs build --strict` を実行して検証する。初回セットアップでは `python -m pip install -r requirements-docs.txt` が必要で、生成先の `.mkdocs-build/` はGit管理外である。
+- Java拡張はBunビルドとは別系統である。変更時は `scripts/README.auto-build-extensions.md` と対象ソースの依存関係を確認し、利用可能なNicoCache_nl本体とJDKがある場合に限ってコンパイルする。既存の `.class` をソースと無関係に上書きしない。
 
 ## NicoCache_nl連携の制約
 

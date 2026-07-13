@@ -7,7 +7,6 @@ on:
     paths:
       - "docs/**"
       - "docs/resources/**"
-      - "local/images/**"
       - "README.md"
       - "mkdocs.yml"
       - "requirements-docs.txt"
