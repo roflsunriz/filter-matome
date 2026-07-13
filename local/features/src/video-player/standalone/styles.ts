@@ -1,10 +1,12 @@
 import { MINIMAL_DARK_THEME_ROOT } from "@/common/visual-theme";
+import { materialIconsStyles } from "@/common/material-icons";
 
 const page = (selector: string, declarations: string): string =>
   `${selector} { ${declarations} }`;
 
 export const STANDALONE_PAGE_STYLES = [
   MINIMAL_DARK_THEME_ROOT,
+  materialIconsStyles,
   page(
     "html, body",
     "margin: 0; min-height: 100%; background: var(--nc-bg); color: var(--nc-text);",
@@ -39,6 +41,35 @@ export const STANDALONE_PAGE_STYLES = [
   page(
     ".nc-header__breadcrumbs",
     "display: flex; align-items: center; gap: 8px; overflow: hidden; color: var(--nc-muted); font-size: 0.78rem; white-space: nowrap;",
+  ),
+  page(".nc-video-navigation", "display: grid; gap: 6px; max-width: 720px;"),
+  page(
+    ".nc-video-navigation__label",
+    "color: var(--nc-muted); font-size: 0.78rem;",
+  ),
+  page(
+    ".nc-video-navigation__controls",
+    "display: flex; align-items: stretch; gap: 8px; min-width: 0;",
+  ),
+  page(
+    ".nc-video-navigation__input",
+    "box-sizing: border-box; min-width: 0; flex: 1 1 auto; min-height: 40px; padding: 8px 12px; background: var(--nc-surface); border: 1px solid var(--nc-border); border-radius: var(--nc-radius-sm); color: var(--nc-text); font: inherit;",
+  ),
+  page(
+    ".nc-video-navigation__input::placeholder",
+    "color: var(--nc-muted); opacity: 0.8;",
+  ),
+  page(
+    ".nc-video-navigation__submit",
+    "display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 14px; border: 1px solid transparent; border-radius: var(--nc-radius-sm); background: var(--nc-primary); color: var(--nc-primary-contrast); font: inherit; font-weight: 700; cursor: pointer;",
+  ),
+  page(
+    ".nc-video-navigation__submit:hover",
+    "background: var(--nc-primary-hover);",
+  ),
+  page(
+    ".nc-video-navigation__message",
+    "min-height: 1.35em; margin: 0; color: var(--nc-danger); font-size: 0.78rem;",
   ),
   page(
     ".nc-header__title",
@@ -140,5 +171,6 @@ export const STANDALONE_PAGE_STYLES = [
   ),
   "@media (max-width: 960px) { .standalone-player-wrapper { flex-direction: column; } .standalone-player-wrapper .comment-container { width: 100%; min-width: 0; max-height: 360px; } }",
   "@media (max-width: 640px) { .nc-standalone-page { gap: 16px; padding-bottom: 24px; } .nc-header, .nc-main, .nc-description { width: min(100% - 24px, 1440px); } .nc-player-surface, .nc-info-card, .nc-description { padding: 12px; } .nc-stat-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }",
+  "@media (max-width: 480px) { .nc-video-navigation__controls { flex-direction: column; } .nc-video-navigation__submit { width: 100%; } }",
   "@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }",
 ].join("\n");

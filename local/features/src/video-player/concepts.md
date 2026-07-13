@@ -29,6 +29,7 @@
 
 - <code>standalone/index.html</code> で共通ライブラリ（<code>../common/index.ts</code>）と <code>standalone/main.ts</code> を読み込む。
 - <code>createStandaloneLayout</code> がレイアウト（ヘッダー、プレイヤー領域、情報カード、関連動画、説明文）を組み立てる。
+- パンくずリスト直下の <code>video-navigation.ts</code> は動画URLまたは <code>videoId</code> から <code>[a-z]{2}\d+</code> を抽出し、<code>index.html?videoId=...</code> へ遷移する。
 - <code>StandalonePlayer</code> は <code>UrlManager</code>・<code>CommentSystem</code>・<code>PlayerControlsShadow</code> など既存モジュールを再利用し、Bunが生成する <code>features.js</code> に統合される。
 - <code>assignWatchContext</code> で <code>window.NicoCache_nl.watch</code> に <code>videoId</code> と <code>apiData</code> を再設定し、既存の共通機能（コメントフィルター等）が同じインターフェースで利用できるようにする。
 

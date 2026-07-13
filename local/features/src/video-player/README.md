@@ -8,6 +8,8 @@
 
 統計欄には連続再生と繰り返し再生のチェック項目を並べて表示します。両方が有効な場合は繰り返し再生を優先し、繰り返し再生が無効な場合だけ次のシリーズ動画へ遷移します。
 
+パンくずリストの直下には動画指定ナビゲーションを表示します。動画URLまたは `videoId`（例: `sm12345678`）を入力すると、`[a-z]{2}\d+` に一致する動画IDを抽出して `index.html?videoId=xxx` へ遷移します。入力値から動画IDを取得できない場合は、その場でエラーを表示します。
+
 ## HTML配信位置
 
 - ソース: `src/video-player/standalone/index.html`
@@ -147,6 +149,11 @@ database-manager.ts ─── データベース統合管理
 - **機能**: 隠し video/HLS による候補URLの並列実再生プローブ、再生準備確認、候補失敗時のフォールバック、コメント読み込みの非同期補助化
 - **補足**: コメントサーバが利用不可・低速でも、コメント読み込み失敗は再生失敗として扱わず動画再生を継続します。すべての再生プローブが失敗した場合は、キャッシュデータが存在しないことをモーダルダイアログで通知します。
 - **編集タイミング**: 再生開始速度改善、フォールバック戦略変更、HLS/MP4再生処理変更
+
+#### `standalone/video-navigation.ts` - 動画指定ナビゲーション
+- **役割**: パンくずリスト直下の動画URL・`videoId` 入力とスタンドアロンページ遷移
+- **機能**: 動画ID抽出、入力エラー表示、共通Material Design Iconsを使用した再生ボタン
+- **編集タイミング**: 動画指定フォームの表示や遷移ルールを変更するとき
 
 #### `core/comment-fetcher.ts` - コメントAPI取得
 - **役割**: ニコニコ動画コメントAPI連携
@@ -447,5 +454,5 @@ const stats = await dbManager.getDatabaseStats();
 - スタンドアロンページは src/video-player/standalone 配下で構成され、standalone/main.ts が StandalonePlayer を初期化して動画・コメント・メタ情報を描画します。
 - メタ情報を取得できない動画では、タイトルを動画IDへフォールバックしてローカルキャッシュ再生を試行します。
 - ルーティングロジックは src/video-player/router/watch-page-router.ts に切り出されており、無料動画は公式プレイヤーをそのまま利用します。削除・視聴不可動画を検出した場合は既存の deletedVideoPlayer インターフェース経由でスタンドアロン deleted モードを開きます。
-- レイアウトやスタイルを変更する場合は standalone/layout.ts と standalone/styles.ts を編集してください。
+- レイアウトやスタイルを変更する場合は standalone/layout.ts と standalone/styles.ts を編集してください。動画指定フォームの動作は standalone/video-navigation.ts で管理します。
 - プレーヤー表示枠は動画メタデータの videoWidth/videoHeight から実動画比率へ更新し、全画面表示では画面内に収まる動画矩形を中央配置します。

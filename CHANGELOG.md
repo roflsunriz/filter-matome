@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- 【video-player】パンくずリスト直下から動画URLまたは `videoId` を指定して再生できるよう、動画ID抽出付きの入力欄と共通Material Design Iconsの再生ボタンを追加した。
+
 ### Changed
 
 - comment-filter2 のルール入力画面で一致プレビューをアコーディオン化し、必要なときだけテスト入力欄と結果を展開できるようにした。

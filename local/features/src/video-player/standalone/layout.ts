@@ -1,6 +1,10 @@
 import { STANDALONE_PAGE_STYLES } from "@/video-player/standalone/styles";
 import { applyStyles } from "@/video-player/utils/dom-utils";
 import { headerAdjustments } from "@/video-player/standalone/header-adjustments";
+import {
+  createVideoNavigation,
+  type VideoNavigationElements,
+} from "@/video-player/standalone/video-navigation";
 
 export interface StandaloneLayout {
   root: HTMLElement;
@@ -16,6 +20,7 @@ export interface StandaloneLayout {
   ownerLink: HTMLAnchorElement;
   seriesList: HTMLElement;
   infoCard: HTMLElement;
+  videoNavigation: VideoNavigationElements;
 }
 
 export interface StandaloneLayoutOptions {
@@ -72,6 +77,7 @@ export const createStandaloneLayout = (
   header.className = "nc-header";
 
   const breadcrumbs = createBreadcrumbs();
+  const videoNavigation = createVideoNavigation();
 
   const title = document.createElement("h1");
   title.className = "nc-header__title";
@@ -80,7 +86,7 @@ export const createStandaloneLayout = (
   const metaList = document.createElement("div");
   metaList.className = "nc-header__meta";
 
-  header.append(breadcrumbs, title, metaList);
+  header.append(breadcrumbs, videoNavigation.form, title, metaList);
 
   const main = document.createElement("main");
   main.className = "nc-main";
@@ -195,5 +201,6 @@ export const createStandaloneLayout = (
     ownerLink,
     seriesList,
     infoCard,
+    videoNavigation,
   };
 };

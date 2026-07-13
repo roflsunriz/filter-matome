@@ -524,7 +524,8 @@ const addTargetBlankToLinks = (container: HTMLElement): void => {
 
 const getVideoIdFromQuery = (): string | null => {
   const params = new URLSearchParams(window.location.search);
-  return params.get("videoId");
+  const videoId = params.get("videoId");
+  return videoId?.trim() || null;
 };
 
 const getStandaloneModeFromQuery = (): "normal" | "deleted" => {
@@ -1038,11 +1039,14 @@ export const startStandalonePlayer = async (): Promise<void> => {
   const videoId = getVideoIdFromQuery();
   const mode = getStandaloneModeFromQuery();
   const layout = createStandaloneLayout({ mode });
+  if (videoId) {
+    layout.videoNavigation.input.value = videoId;
+  }
 
   if (!videoId) {
     layout.title.textContent = "動画IDが指定されていません";
     layout.description.textContent =
-      "URLに videoId パラメーターを指定してください。";
+      "パンくずリスト下の入力欄に動画URLまたはvideoIdを指定してください。";
     return;
   }
 
