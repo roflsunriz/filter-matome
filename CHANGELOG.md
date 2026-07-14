@@ -4,16 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [#233] - 2026-07-14
 
 ### Added
 
+- 【カバー画像】主要機能のREADMEプレビューを現行UIに合わせて更新し、リリース時に表示される機能紹介画像を刷新した。
 - 【運用スクリプト】NicoCache_nl以外のJavaプロセスを誤って終了しないよう、`-jar ...\NicoCache_nl.jar`の指紋があるPIDだけを特定し、正常終了を待ってから確認付きで強制終了できる`stop-nicocache.ps1`を追加した。CUI版や自動処理ではGUI終了経路と対話確認を個別に省略できる。
 - 【watch-history/extensions】視聴履歴ページやブラウザを閉じていてもシリーズ新着を確認できるよう、アラート設定を同期してNicoCache_nlの60秒定期イベントから公開ウォッチページを確認し、OS通知またはGUIログ・通知音を出す`FilterMatomeSeriesAlerts`拡張を追加した。通知クリックから新着動画を開け、設定は`data/`へ原子的に永続化する。
 - 【extensions】`FilterMatomeSeriesAlerts`が内部クラスを生成しない構成にし、配置が必要な生成物を単一の`.class`ファイルにまとめた。
 
 ### Changed
 
+- 【開発者向け】実際の構成と更新内容に追従できるよう、watch-history、nlFilter、スクリプト、各機能のREADMEと関連ドキュメントを整理し、重複・陳腐化した補助説明を削除または更新した。
+- 【CI/ドキュメント】リリースとドキュメント公開のワークフローを現行の検証・公開構成に合わせて更新し、開発者向けのNicoCache_nl連携規則と変更履歴の運用を明文化した。
 - 【開発者向け】NicoCache_nlの終了・再起動で安全な経路を一貫して選べるよう、`AGENTS.md`を`stop-nicocache.ps1`中心の対象確認、正常終了、CUI-only、確認付き強制終了、起動後確認の順に再編した。
 - 【watch-history】ページ内タイマーとNotifications APIによるシリーズ確認を常駐extensionへ移し、シリーズアラート画面をextension管理データの完全なフロントエンドへ変更した。追加・有効化・削除・手動確認・インポート／エクスポートはextension APIへ直接行い、旧IndexedDBアラートだけを初回起動時に移行する。
 - 【watch-history】4,000行を超えていたSPA実装を、入口、共通状態、履歴一覧、ダッシュボード、シリーズ、削除、DB管理の責務別モジュールへ分割し、各ファイルを1,000行以下に整理した。
