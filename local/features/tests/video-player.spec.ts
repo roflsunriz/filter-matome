@@ -10,6 +10,11 @@ const fixtureEntry = join(
   "fixtures",
   "video-player-layout-entry.ts",
 );
+const fullscreenFixtureEntry = join(
+  import.meta.dirname,
+  "fixtures",
+  "video-player-fullscreen-entry.ts",
+);
 const nicochartFixtureEntry = join(
   import.meta.dirname,
   "fixtures",
@@ -122,6 +127,57 @@ test("背景切替トグルが mlink の背景変数を固定レイヤーへ反�
     storedMode: "default",
     content: "none",
   });
+});
+
+test("ボタン外でネイティブ全画面を解除しても通常表示のクラスへ戻る", async ({
+  page,
+}) => {
+  await page.route(
+    "https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html?videoId=sm9",
+    fulfillPlayerDocument,
+  );
+  await page.goto(
+    "https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html?videoId=sm9",
+  );
+  await page.evaluate(() => {
+    window.logger = {
+      debug: () => undefined,
+      info: () => undefined,
+      warn: () => undefined,
+      error: () => undefined,
+    };
+  });
+  await page.addScriptTag({
+    content: buildFixtureBundle(fullscreenFixtureEntry),
+  });
+  await page.evaluate(() => window.createFullscreenPlayerForTest());
+
+  const fullscreenButton = page.locator(
+    "player-controls-shadow >> #fullscreen",
+  );
+  await fullscreenButton.click({ force: true });
+
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.className))
+    .toContain("custom-player");
+  await expect(page.locator("html")).toHaveClass(/fullscreen-active/);
+  await expect(page.locator("body")).toHaveClass(/nc-fullscreen-active/);
+  await expect(page.locator(".custom-player")).toHaveClass(
+    /nc-fullscreen-player/,
+  );
+
+  await page.evaluate(() => document.exitFullscreen());
+
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement))
+    .toBeNull();
+  await expect(page.locator("html")).not.toHaveClass(/fullscreen-active/);
+  await expect(page.locator("body")).not.toHaveClass(
+    /nc-fullscreen-active/,
+  );
+  await expect(page.locator(".custom-player")).not.toHaveClass(
+    /nc-fullscreen-player/,
+  );
 });
 
 test("NicoCache_nl経由のnicochart動画情報をApiDataへ変換する", async ({

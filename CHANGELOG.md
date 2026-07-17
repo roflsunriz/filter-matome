@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#234.1] - 2026-07-17
+
+### Fixed
+
+- 【video-player】ESCキーでネイティブ全画面を解除した際にフォールバック用の全画面クラスが残り、プレイヤーがビューポート全体へ拡大されたままになる問題を、ブラウザーの全画面状態変更イベントに合わせて独自クラスを同期するよう修正した。
+
+### Changed
+
+- 【features】`package.json` の `version` を `234.1` に更新した。
+- 【README】latest バッジを `#234.1` に更新した。
+
 ## [#234] - 2026-07-17
 
 ### Changed

@@ -1925,6 +1925,16 @@ export class PlayerControlsShadow extends HTMLElement {
       !!doc.webkitFullscreenElement ||
       !!doc.msFullscreenElement;
 
+    // ESCキーによるネイティブ全画面解除では exitFullscreen() の完了処理を
+    // 通らないため、ブラウザーが通知する状態を独自の全画面クラスへ同期する。
+    const playerContainer = this.closest(".custom-player");
+    document.documentElement.classList.toggle(
+      "fullscreen-active",
+      isFullScreen,
+    );
+    document.body.classList.toggle("nc-fullscreen-active", isFullScreen);
+    playerContainer?.classList.toggle("nc-fullscreen-player", isFullScreen);
+
     // フルスクリーンボタンのアイコンを更新
     const fullscreenBtn = this.shadow.querySelector("#fullscreen");
     if (fullscreenBtn) {
