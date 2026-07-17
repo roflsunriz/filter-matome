@@ -6,7 +6,7 @@
       "name": "filter-matome-features",
       "dependencies": {
         "@material-design-icons/svg": "^0.14.15",
-        "comment-overlay": "4.0.0",
+        "comment-overlay": "4.1.4",
         "dompurify": "^3.4.11",
         "fflate": "^0.8.3",
         "hls.js": "^1.6.16",
@@ -99,7 +99,7 @@
 
     "brace-expansion": ["brace-expansion@5.0.7", "", { "dependencies": { "balanced-match": "^4.0.2" } }, "sha512-7oFy703dxfY3/NLxC1fh2SUCQ0H9rmAY+5EpDVfXjUTTs+HEwR2nYaqLv+GWcTsumwxPfiz6CzCNkwXwBUwqCA=="],
 
-    "comment-overlay": ["comment-overlay@4.0.0", "", {}, "sha512-X2e46se/8JN4lTJQLifLt9rNemH4QIGoKHvUX1GjiwFy6D+Ffd0/FtbqNQjBwDO3C+ZBU1zUJgVpDCkyLFgAUg=="],
+    "comment-overlay": ["comment-overlay@4.1.4", "", {}, "sha512-D6n+hSTtssI3PEAz+ZFUxc2Lzg0gORbGq7xN9H6x4Em6yodIKJfd5eBvlFWckzGE2500jU+nIQJpgthSyk0Y2g=="],
 
     "cross-spawn": ["cross-spawn@7.0.6", "", { "dependencies": { "path-key": "^3.1.0", "shebang-command": "^2.0.0", "which": "^2.0.1" } }, "sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA=="],
 

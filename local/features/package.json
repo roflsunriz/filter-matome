@@ -22,7 +22,7 @@
     "typescript": "6.0.2",
     "typescript-eslint": "8.63.0"
   },
-  "version": "233",
+  "version": "234",
   "description": "Enhancing scripts for Niconico",
   "main": "index.js",
   "directories": {
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@material-design-icons/svg": "^0.14.15",
-    "comment-overlay": "4.0.0",
+    "comment-overlay": "4.1.4",
     "dompurify": "^3.4.11",
     "fflate": "^0.8.3",
     "hls.js": "^1.6.16",

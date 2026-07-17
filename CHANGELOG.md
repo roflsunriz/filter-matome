@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [#234] - 2026-07-17
+
+### Changed
+
+- 【video-player】固定コメントの可変高配置・幅フィットと、横流れコメントの4秒横断式・動画終端3秒前への表示時刻上限を反映し、ニコニコ動画公式プレイヤーに近いコメント描画にするため `comment-overlay` を v4.1.4 へ更新した。
+- 【features】`package.json` の `version` を `234` に更新した。
+- 【README】latest バッジを `#234` に更新した。
+
 ## [#233] - 2026-07-14
 
 ### Added
