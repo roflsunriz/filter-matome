@@ -36,12 +36,24 @@ const commonBuildOptions = {
   outdir: outDir,
   root: projectRoot,
   target: "browser" as const,
-  splitting: false,
   sourcemap: "linked" as const,
-  minify: false,
+  minify: true,
   keepNames: true,
   packages: "bundle" as const,
 };
+
+const featureEntrypoints = [
+  "src/cache-data-manager/main.ts",
+  "src/comment-filter2/index.ts",
+  "src/common/index.ts",
+  "src/mlink-video-controller/index.ts",
+  "src/movie-info/index.ts",
+  "src/mylist2/index.ts",
+  "src/video-player/index.ts",
+  "src/video-player/standalone/main.ts",
+  "src/watch-history/app.ts",
+  "src/watch-history/watch-tracker.ts",
+] as const;
 
 async function copyHtmlPages(): Promise<void> {
   for (const page of htmlPages) {
@@ -56,6 +68,12 @@ async function assertOutputContract(): Promise<void> {
   const requiredFiles = [
     "features.js",
     "features.js.map",
+    ...featureEntrypoints.flatMap((entrypoint) => {
+      const relativeEntry = entrypoint
+        .replace(/^src\//, "")
+        .replace(/\.ts$/, "");
+      return [`entries/${relativeEntry}.js`, `entries/${relativeEntry}.js.map`];
+    }),
     "workers/comment-filter-worker.js",
     "workers/comment-filter-worker.js.map",
     "workers/json-comment-filter-worker.js",
@@ -93,8 +111,20 @@ async function build(): Promise<void> {
       ...commonBuildOptions,
       entrypoints: [resolve(projectRoot, "src/features.ts")],
       format: "iife",
+      splitting: false,
       naming: { entry: "features.js" },
       loader: { ".svg": "text" },
+    }),
+    Bun.build({
+      ...commonBuildOptions,
+      root: resolve(projectRoot, "src"),
+      entrypoints: featureEntrypoints.map((entrypoint) =>
+        resolve(projectRoot, entrypoint),
+      ),
+      format: "esm",
+      splitting: false,
+      naming: { entry: "entries/[dir]/[name].js" },
+      loader: { ".svg": "text", ".css": "text" },
     }),
     Bun.build({
       ...commonBuildOptions,
@@ -109,12 +139,14 @@ async function build(): Promise<void> {
         ),
       ],
       format: "esm",
+      splitting: false,
       naming: { entry: "workers/[name].js" },
     }),
     Bun.build({
       ...commonBuildOptions,
       entrypoints: [resolve(projectRoot, "src/mylist2/service-worker.ts")],
       format: "iife",
+      splitting: false,
       naming: { entry: "mylist-service-worker.js" },
     }),
   ]);

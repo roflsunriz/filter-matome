@@ -8,7 +8,7 @@ declare const self: ServiceWorkerGlobalScope;
 console.debug("Service Worker script loaded");
 console.debug("Current location:", self.location.href);
 
-const CACHE_NAME = "custom-mylist2-v2";
+const CACHE_NAME = "custom-mylist2-v3";
 const CACHE_URLS = [
   "/local/features/dist/features.js",
   "/local/features/dist/pages/mylist2/index.html",

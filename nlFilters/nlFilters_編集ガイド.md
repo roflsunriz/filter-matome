@@ -14,7 +14,7 @@
 | `101_disable_official_function.txt` | 公式プレイヤーの競合機能を無効化 |
 | `105_premium_hide.txt` | プレミアム勧誘要素を非表示 |
 
-`features.js`にはcommon、mlink-video-controller、comment-filter2、video-player、watch-trackerなどが統合されています。実際に起動する機能は、バンドル内のページルーターがホスト名、URL、ローカルHTMLの`data-feature-page`から判定します。
+`features.js`はページ判定用の軽量ブートストラップです。ホスト名、URL、ローカルHTMLの`data-feature-page`を判定し、common、mlink-video-controller、comment-filter2、video-player、watch-trackerなど必要なエントリーだけを遅延読み込みします。
 
 ## nlFilter基本構文
 
@@ -34,7 +34,7 @@ Replace<
 
 ## JavaScript機能を追加する場合
 
-新しい個別バンドルとscript挿入用nlFilterは作りません。
+新しいscript挿入用nlFilterは作りません。機能エントリーは`local/features/scripts/build.ts`の一括ビルドへ追加します。
 
 1. `local/features/src/`へ機能を実装する
 2. 明示的な`start*()`関数を公開する

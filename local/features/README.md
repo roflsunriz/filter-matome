@@ -2,9 +2,9 @@
 
 ## 概要
 
-`local/features/` は、NicoCache_nlからニコニコ動画へ配信するブラウザー機能をBunとTypeScriptで管理するワークスペースです。すべての機能は `src/features.ts` を入口とする `dist/features.js` にまとめられ、`nlFilters/100_features.txt` から読み込まれます。
+`local/features/` は、NicoCache_nlからニコニコ動画へ配信するブラウザー機能をBunとTypeScriptで管理するワークスペースです。`nlFilters/100_features.txt` が `dist/features.js` の軽量ブートストラップを読み込み、ページ判定後に必要な機能だけを `entries/` から遅延読み込みします。
 
-個別バンドルはありません。変更したプロジェクトにかかわらず、全体ビルドと関連テストを実行してください。
+生成物は機能別に分割されますが、個別ビルド用コマンドはありません。変更したプロジェクトにかかわらず、全体ビルドと関連テストを実行してください。
 
 ## ディレクトリ構成
 
@@ -77,6 +77,7 @@ bun run build
 dist/
 ├── features.js
 ├── features.js.map
+├── entries/             # ページ・機能別の遅延ロード入口
 ├── workers/
 │   ├── comment-filter-worker.js
 │   └── json-comment-filter-worker.js

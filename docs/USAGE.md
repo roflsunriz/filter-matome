@@ -172,7 +172,7 @@ New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Targe
 
 ### 100_features.txt
 
-全ブラウザ機能を含む`features.js`をニコニコ動画全体に1回挿入するフィルタ。ページルーターがURLに応じて共通機能、mlink-video-controller、comment-filter2、video-player、watch-trackerを起動する。
+ページ判定用の軽量`features.js`をニコニコ動画全体に1回挿入するフィルタ。ページルーターがURLに応じて必要な共通機能、mlink-video-controller、comment-filter2、video-player、watch-trackerの分割ファイルだけを遅延読み込みして起動する。
 
 #### HTMLページの配信URL
 
