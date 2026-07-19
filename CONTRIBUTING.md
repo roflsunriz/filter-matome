@@ -50,7 +50,7 @@ filter-matomeプロジェクトへの貢献に興味を持っていただき、�
    ```bash
    # features モジュール
    cd local/features
-   bun error-check
+   bun run error-check
    ```
 
 
@@ -59,7 +59,7 @@ filter-matomeプロジェクトへの貢献に興味を持っていただき、�
 ### コーディング規約
 
 #### TypeScript
-- TypeScript 5.9.2 の最新機能を積極的に使用
+- `local/features/package.json`で固定したTypeScriptを使用
 - 型安全性を最優先に考慮
 - ESLint + TypeCheck + Prettier の設定に従う
 
@@ -117,12 +117,15 @@ docs: READMEの導入手順を更新
 ### 自動テスト
 ```bash
 cd local/features
-bun run lint    # 静的解析
-bun run type-check    # 型チェック
-bun error-check    # エラーチェック(ESLintとTypeCheck)
+bun run format:check # Prettier差分
+bun run lint         # 静的解析
+bun run type-check   # 型チェック
+bun run test:unit    # 単体テスト
+bun run test:e2e     # Playwright E2E
+bun run build        # 全機能ビルド
 ```
 
-Playwrightでの自動テスト
+すべてをCIと同じ順序で実行する場合は`bun run verify`を使用します。
 
 ## 📋 プルリクエストのガイドライン
 

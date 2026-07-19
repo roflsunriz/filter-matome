@@ -46,7 +46,7 @@ local/features/
 - `www.nicovideo.jp/watch/<動画ID>`: comment-filter2、video-playerのルーター、watch-historyの追跡処理を起動する。
 - cache-data-manager: NicoCache_nlが生成するHTMLから呼ばれる `window.makeCacheList` を登録する。
 
-SPA遷移は `MutationObserver` と `popstate` でも再判定します。ページ判定を変更すると複数機能の起動条件へ波及するため、`runtime/` と `features.ts` を併せて確認してください。
+SPA遷移は `runtime/navigation.ts` がHistory APIと`popstate`・`hashchange`を単一イベントへ変換して再判定します。ページ判定を変更すると複数機能の起動条件へ波及するため、`runtime/` と `features.ts` を併せて確認してください。
 
 ## セットアップと検証
 
@@ -63,11 +63,13 @@ bun run build
 ```
 
 - `bun run test:unit`: Bun単体テストのみ。
+- `bun run test:e2e`: `package.json` で列挙したPlaywrightテストのみ。
 - `bun run test`: 単体テストと `package.json` で列挙したPlaywrightテスト。
 - `bun run build`: 全ブラウザー機能、Worker、Service Worker、静的HTMLを一括生成。
 - `bun run error-check`: 型チェックとlintの短縮コマンド。
+- `bun run verify`: format差分、lint、型、単体・E2E、ビルドをCI相当の順序で一括検証。
 
-`bun run format` は `src/**/*.ts` を書き換えます。実行後は差分を確認してください。テスト方針とfixtureの扱いは [tests/README.md](tests/README.md) を参照してください。
+`bun run format` は`src/`、`tests/`、`scripts/`とルートのTypeScriptを整形し、`bun run format:check`は書き換えず差分だけを検出します。実行後は差分を確認してください。CIとリリースは`bun install --frozen-lockfile`を使い、`bun.lock`にない依存解決を拒否します。テスト方針とfixtureの扱いは [tests/README.md](tests/README.md) を参照してください。
 
 ## ビルド成果物
 

@@ -92,7 +92,9 @@ describe("FilterMatomeCacheControl API client", () => {
   test("explains a missing extension on HTTP 404", async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = (() =>
-      Promise.resolve(new Response("Not Found", { status: 404 }))) as typeof fetch;
+      Promise.resolve(
+        new Response("Not Found", { status: 404 }),
+      )) as typeof fetch;
 
     try {
       await expect(removeCacheForVideo("sm9")).rejects.toThrow(

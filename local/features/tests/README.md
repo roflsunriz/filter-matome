@@ -6,11 +6,13 @@
 
 ```powershell
 bun run test:unit
+bun run test:e2e
 bun run test
 bun run benchmark:comment-filter
 ```
 
 - `test:unit`: `scripts/test-unit.ts` が `tests/*.test.ts` を実行する。
+- `test:e2e`: `package.json` で列挙した `*.spec.ts` をPlaywrightのヘッドレスChromiumで実行する。
 - `test`: 単体テストに続けて、`package.json` で列挙した `*.spec.ts` をPlaywrightのヘッドレスChromiumで実行する。
 - `test-results/`: Playwrightの一時生成物。編集・コミットしない。
 - `benchmark:comment-filter`: 2,000コメントと1,000ルールの固定データでJSONフィルターコアを計測する。性能変更の前後を同じ端末・同じBunバージョンで比較する。

@@ -205,6 +205,8 @@ bun run test
 bun run build
 ```
 
+CIと同じ検証をまとめて実行する場合は`bun run verify`を使用します。CI・リリースでは`bun install --frozen-lockfile`により`bun.lock`との差分を拒否します。
+
 `features.js`はページ判定用の軽量ブートストラップで、必要な機能だけを`entries/`から遅延読み込みします。生成は単一の`bun run build`で一括して行います。
 構成、生成物、プロジェクト別READMEは [`local/features/README.md`](local/features/README.md) を参照してください。
 
