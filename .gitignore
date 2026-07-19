@@ -30,6 +30,7 @@ scripts/config.json
 
 # dist
 local/features/dist/
+benchmarks/comment-filter-core/rust/target/
 
 # MkDocs
 .mkdocs-build/

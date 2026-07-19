@@ -10,6 +10,7 @@
     "lint": "eslint src/**/*.ts",
     "format": "prettier --write src/**/*.ts",
     "benchmark:comment-filter": "bun tests/comment-filter2-performance.bench.ts",
+    "benchmark:comment-filter-prototypes": "bun ../../benchmarks/comment-filter-core/benchmark.ts",
     "test:unit": "bun scripts/test-unit.ts",
     "test": "bun run test:unit && playwright test tests/mlink-video-controller.spec.ts tests/watch-history.spec.ts tests/mylist2.spec.ts tests/comment-filter2.spec.ts tests/movie-info.spec.ts tests/cache-data-manager.spec.ts tests/video-player.spec.ts",
     "error-check": "bun run type-check && bun run lint"
