@@ -1,5 +1,6 @@
 import type { CacheInfoResponse } from "@/types/video-types";
 import { URLS } from "@/video-player/config/constants";
+import { addNavigationListener } from "@/runtime/navigation";
 
 type CacheInfoEntry = {
   preferred?: unknown;
@@ -359,26 +360,9 @@ const installSpaNavigationListener = (onChange: () => void): void => {
 
   spaNavigationListenerInstalled = true;
 
-  const trigger = (): void => {
+  addNavigationListener(() => {
     onChange();
-  };
-
-  const wrapHistoryMethod = (method: "pushState" | "replaceState"): void => {
-    const original = history[method];
-    history[method] = function (
-      this: History,
-      ...args: Parameters<History["pushState"]>
-    ): ReturnType<History["pushState"]> {
-      const result = original.apply(this, args);
-      setTimeout(trigger, 0);
-      return result;
-    } as History["pushState"];
-  };
-
-  // SPA遷移を検知するためhistory APIをフックする
-  wrapHistoryMethod("pushState");
-  wrapHistoryMethod("replaceState");
-  window.addEventListener("popstate", trigger);
+  });
 };
 
 const requestWatchPageRouting = (

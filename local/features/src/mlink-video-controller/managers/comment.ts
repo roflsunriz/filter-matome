@@ -4,6 +4,7 @@ import {
   CommentSearchResult,
   CommentSearchOptions,
 } from "@/types/mlink-video-controller-types";
+import { addNavigationListener } from "@/runtime/navigation";
 
 export class CommentManager {
   private static instance: CommentManager;
@@ -169,71 +170,12 @@ export class CommentManager {
       }
     };
 
-    // popstateイベント（戻る/進むボタン）を監視
-    const popstateListener = () => {
-      setTimeout(checkUrl, 100); // DOM更新を待つ
-    };
-    window.addEventListener("popstate", popstateListener);
-
-    // =============================================
-    // 🚀 pushState/replaceState フック (SPA遷移対策)
-    // =============================================
-    const patchHistoryMethod = (type: "pushState" | "replaceState") => {
-      type HistoryMethod = History["pushState"]; // pushState と replaceState は同じシグネチャ
-
-      // インデックスアクセスで型が落ちるため一旦キャスト
-      const historyObj = history as History & {
-        pushState: HistoryMethod;
-        replaceState: HistoryMethod;
-      };
-
-      const original: HistoryMethod = historyObj[type];
-      if (!original) return;
-
-      historyObj[type] = (...args: Parameters<HistoryMethod>) => {
-        const result = original.apply(historyObj, args);
-        // カスタムイベントを発火
-        window.dispatchEvent(new Event("ml-location-change"));
-        return result;
-      };
-    };
-
-    const win = window as Window & {
-      __mlink_comment_history_patched?: boolean;
-    };
-
-    if (!win.__mlink_comment_history_patched) {
-      patchHistoryMethod("pushState");
-      patchHistoryMethod("replaceState");
-
-      // popstate でも同じイベントを呼ぶ
-      window.addEventListener("popstate", () => {
-        window.dispatchEvent(new Event("ml-location-change"));
-      });
-
-      win.__mlink_comment_history_patched = true;
-    }
-
-    // カスタムイベントでURL変更を検知
-    const locationChangeListener = () => {
+    const removeNavigationListener = addNavigationListener(() => {
       setTimeout(checkUrl, 100);
-    };
-    window.addEventListener("ml-location-change", locationChangeListener);
-
-    // MutationObserver でもDOM更新を検知（後方互換）
-    const observer = new MutationObserver(() => {
-      setTimeout(checkUrl, 100); // DOM更新を待つ
-    });
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
     });
 
-    // クリーンアップ関数を記録（データ変更通知とは切り離す）
     this.cleanupHandlers.push(() => {
-      window.removeEventListener("popstate", popstateListener);
-      window.removeEventListener("ml-location-change", locationChangeListener);
-      observer.disconnect();
+      removeNavigationListener();
     });
   }
 

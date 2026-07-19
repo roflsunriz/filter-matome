@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【runtime】SPA遷移のたびに複数機能がHistory APIを重ねて上書きし、URL確認用の全DOM監視を常駐させる負荷をなくすため、`pushState`、`replaceState`、`popstate`、`hashchange`を単一の`filter-matome:navigation`イベントへ集約した。mlink、comment-filter2、video-player、watch-historyは共通イベントを購読し、追跡対象外へ移動したwatch-historyトラッカーを破棄する。
 - 【features】全ページで全機能とHLS再生ライブラリを解析する負荷を減らすため、`features.js`をページ判定用の軽量ブートストラップへ変更し、各機能を独立したminify済みES Modulesとして必要時だけ読み込む構成に変更した。NicoCache_nl固定の`list.js`経路は、同期登録した遅延プロキシーからcache-data-managerを読み込むことで互換性を維持する。
 - 【comment-filter2】コメントコマンド適用時に、設定したコマンドと同じカテゴリーだけを置換して他の既存コマンドを保持する方式をデフォルトに変更し、従来どおり全コマンドを除去してから上書きする方式をトグルで選択可能にした。既存設定はデフォルトのオフへ自動移行し、両フィルターエンジンとモックcanvasへ渡るコメント列を自動テストで確認する。
 - 【comment-filter2】複雑な正規表現を全コメントへ総当たりする負荷を減らすため、ECMAScript正規表現ASTから全分岐に必ず現れる安全なリテラルを抽出し、ルール間でレアな候補から最終判定対象を逆引きする索引を追加した。抽出不能な構文とUnicode case-foldingは通常評価へ戻し、動的なルール切替・追加・削除と置換後本文のモックcanvas反映を自動テストで保証する。

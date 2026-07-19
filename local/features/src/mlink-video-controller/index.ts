@@ -2,6 +2,7 @@ import "@/mlink-video-controller/panels/link-video";
 import { CommentApiCache } from "@/mlink-video-controller/managers/comment-api-cache";
 import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
+import { addNavigationListener } from "@/runtime/navigation";
 
 class PanelManager {
   private panel: HTMLElement | null = null;
@@ -148,34 +149,12 @@ class PanelManager {
   }
 
   private setupUrlWatching() {
-    // 既存のフックを保存してチェーン呼び出し可能にする
-    const existingPushState = history.pushState.bind(history);
-    const existingReplaceState = history.replaceState.bind(history);
-
-    // History API をフック（SPA対応）
-    history.pushState = (...args: Parameters<typeof history.pushState>) => {
-      // 既存のフック（他モジュールが設定したもの）を呼び出し
-      existingPushState(...args);
-      // URL変更を処理
-      setTimeout(() => this.handleUrlChange(), 100);
-    };
-
-    history.replaceState = (
-      ...args: Parameters<typeof history.replaceState>
-    ) => {
-      // 既存のフック（他モジュールが設定したもの）を呼び出し
-      existingReplaceState(...args);
-      // URL変更を処理
-      setTimeout(() => this.handleUrlChange(), 100);
-    };
-
-    // popstateイベント（戻る/進むボタン）
-    window.addEventListener("popstate", () => {
+    addNavigationListener(() => {
       setTimeout(() => this.handleUrlChange(), 100);
     });
 
     window.logger?.info(
-      "[MlinkVideoController] SPA navigation hooks initialized (chaining compatible)",
+      "[MlinkVideoController] centralized SPA navigation listener initialized",
     );
   }
 

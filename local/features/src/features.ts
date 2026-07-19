@@ -4,6 +4,10 @@ import {
   isNiconicoPage,
   isWatchPage,
 } from "@/runtime/page-context";
+import {
+  addNavigationListener,
+  installNavigationMonitor,
+} from "@/runtime/navigation";
 
 type CacheDataManagerModule = typeof import("@/cache-data-manager/main");
 type CommentFilterModule = typeof import("@/comment-filter2/index");
@@ -156,18 +160,10 @@ function startRuntime(): void {
 
   const activate = (): void => {
     void activateCurrentPage().catch(reportActivationError);
-    let currentUrl = window.location.href;
-    const observer = new MutationObserver(() => {
-      if (window.location.href === currentUrl) {
-        return;
-      }
-      currentUrl = window.location.href;
+    addNavigationListener(() => {
       void activateCurrentPage().catch(reportActivationError);
     });
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener("popstate", () => {
-      void activateCurrentPage().catch(reportActivationError);
-    });
+    installNavigationMonitor();
   };
 
   if (document.readyState === "loading") {

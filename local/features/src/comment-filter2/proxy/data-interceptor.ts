@@ -7,20 +7,18 @@ import {
   CF2Thread,
   toCompatibleGlobalData,
 } from "@/types/filter-types";
+import { addNavigationListener } from "@/runtime/navigation";
 
 // グローバル型定義は types/global.d.ts で管理されています
 const COMMENT_FILTER_BYPASS_FLAG = "__commentFilter2Bypass";
 
 export class DataInterceptor {
   private originalFetch: typeof fetch;
-  private originalPushState: typeof history.pushState;
-  private originalReplaceState: typeof history.replaceState;
   private currentSmid: string | null = null;
+  private removeNavigationListener: (() => void) | null = null;
 
   constructor() {
     this.originalFetch = window.fetch.bind(window);
-    this.originalPushState = history.pushState.bind(history);
-    this.originalReplaceState = history.replaceState.bind(history);
     this.setupInterception();
     this.setupSPANavigation();
     this.initializeGlobalData();
@@ -52,29 +50,7 @@ export class DataInterceptor {
    * SPA ナビゲーション対応セットアップ（他モジュールのフックと共存可能）
    */
   private setupSPANavigation(): void {
-    // 既存のフックを保存してチェーン呼び出し可能にする
-    const existingPushState = history.pushState.bind(history);
-    const existingReplaceState = history.replaceState.bind(history);
-
-    // History API をフック（既存フックを呼び出した後に処理）
-    history.pushState = (...args: Parameters<typeof history.pushState>) => {
-      // 既存のフック（他モジュールが設定したもの）を呼び出し
-      existingPushState(...args);
-      // pushState 後に SMID を更新
-      setTimeout(() => void this.updateCurrentSmid(), 100);
-    };
-
-    history.replaceState = (
-      ...args: Parameters<typeof history.replaceState>
-    ) => {
-      // 既存のフック（他モジュールが設定したもの）を呼び出し
-      existingReplaceState(...args);
-      // replaceState 後に SMID を更新
-      setTimeout(() => void this.updateCurrentSmid(), 100);
-    };
-
-    // popstate イベント（ブラウザの戻る/進む）
-    window.addEventListener("popstate", () => {
+    this.removeNavigationListener = addNavigationListener(() => {
       setTimeout(() => void this.updateCurrentSmid(), 100);
     });
 
@@ -89,6 +65,7 @@ export class DataInterceptor {
   private async updateCurrentSmid(): Promise<void> {
     const newSmid = await this.extractSmidFromCurrentUrl();
     if (newSmid !== this.currentSmid) {
+      const previousSmid = this.currentSmid;
       this.currentSmid = newSmid;
 
       // グローバルデータも更新
@@ -102,7 +79,7 @@ export class DataInterceptor {
       // SMID変更イベントを発火
       window.dispatchEvent(
         new CustomEvent(CONSTANTS.EVENTS.SMID_CHANGED, {
-          detail: { smid: newSmid, previousSmid: this.currentSmid },
+          detail: { smid: newSmid, previousSmid },
         }),
       );
 
@@ -359,8 +336,8 @@ export class DataInterceptor {
    */
   public disable(): void {
     window.fetch = this.originalFetch;
-    history.pushState = this.originalPushState;
-    history.replaceState = this.originalReplaceState;
+    this.removeNavigationListener?.();
+    this.removeNavigationListener = null;
     window.logger?.info("[CommentFilter2] All hooks disabled");
   }
 

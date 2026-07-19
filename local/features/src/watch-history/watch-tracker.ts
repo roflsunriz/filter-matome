@@ -17,6 +17,7 @@ import {
 import { NicoApiData } from "@/types/common-types";
 import { watchHistoryDB } from "@/watch-history/database";
 import { logger } from "@/common/logger";
+import { addNavigationListener } from "@/runtime/navigation";
 
 const WATCH_PAGE_PATH_REGEX = /^\/watch\/[a-z]{2}\d+$/;
 const VIDEO_ID_IN_PATH_REGEX = /[a-z]{2}\d+/;
@@ -997,23 +998,17 @@ export function startWatchTracker(): void {
 
   void initializeWatchTracker();
 
-  let currentUrl = location.href;
-  const observer = new MutationObserver(() => {
-    if (location.href === currentUrl) {
-      return;
-    }
-    currentUrl = location.href;
-
+  addNavigationListener(() => {
     if (isWatchPageLocation() || isStandalonePlayerLocation()) {
       setTimeout(() => {
         void initializeWatchTracker();
       }, 1000);
+      return;
     }
-  });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
+    if (watchTracker) {
+      void watchTracker.destroy();
+      watchTracker = null;
+    }
   });
 
   window.addEventListener("beforeunload", () => {
