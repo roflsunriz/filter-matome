@@ -151,7 +151,7 @@ export class SubstringMatcher {
       this.caseSensitivePatterns.push({ pattern, outputId });
       this.caseSensitiveOutputs.push([ruleIndex]);
     } else {
-      const normalized = pattern.toLocaleLowerCase();
+      const normalized = pattern.toLowerCase();
       const existing = this.caseInsensitiveIds.get(normalized);
       if (existing !== undefined) {
         this.caseInsensitiveOutputs[existing].push(ruleIndex);
@@ -200,7 +200,7 @@ export class SubstringMatcher {
     }
 
     if (this.caseInsensitiveMachine) {
-      const haystack = lowercaseText ?? text.toLocaleLowerCase();
+      const haystack = lowercaseText ?? text.toLowerCase();
       const matches = this.caseInsensitiveMachine.search(haystack);
       for (const outputId of matches) {
         for (const ruleIndex of this.caseInsensitiveOutputs[outputId]) {

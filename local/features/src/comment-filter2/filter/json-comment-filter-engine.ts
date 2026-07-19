@@ -18,6 +18,12 @@ import {
   isPlainLiteralPattern,
 } from "@/comment-filter2/filter/rule-indexer";
 import {
+  canUsePlainLiteralPrefilter,
+  extractRequiredLiteralTokens,
+  selectRequiredTokens,
+  type RequiredTokenRuleCandidate,
+} from "@/comment-filter2/filter/required-token-extractor";
+import {
   computeThreadNicoruStats,
   ThreadNicoruStats,
 } from "@/comment-filter2/filter/thread-nicoru-stats";
@@ -31,8 +37,9 @@ export interface PreparedJsonRule {
   index: number;
   compiledRegex?: RegExp;
   isUserRule: boolean;
-  hasLiteralPrefilter: boolean;
+  hasCandidatePrefilter: boolean;
   literalMatchIsFinal: boolean;
+  requiredToken?: string;
   normalizedNicoruCond?: NormalizedNicoruCond;
 }
 
@@ -91,7 +98,8 @@ export function prepareJsonRules(
   const evaluationRules: PreparedJsonRule[] = [];
   const userIdRuleIndexes = new Map<string, number[]>();
   const substringMatcher = new SubstringMatcher();
-  let hasLiteralPatterns = false;
+  const requiredTokenCandidates: RequiredTokenRuleCandidate[] = [];
+  let hasCandidatePatterns = false;
 
   for (const rule of rules) {
     if (rule.enabled === false) {
@@ -110,7 +118,7 @@ export function prepareJsonRules(
       index,
       compiledRegex: undefined,
       isUserRule,
-      hasLiteralPrefilter: false,
+      hasCandidatePrefilter: false,
       literalMatchIsFinal: false,
       normalizedNicoruCond: normalizeNicoruCondition(rule.nicoru_cond),
     };
@@ -125,15 +133,27 @@ export function prepareJsonRules(
       const flags = rule.flags || "gi";
       preparedRule.compiledRegex = getRegex(regexCache, rule.pattern, flags);
 
-      if (isPlainLiteralPattern(rule.pattern)) {
+      if (
+        isPlainLiteralPattern(rule.pattern) &&
+        canUsePlainLiteralPrefilter(rule.pattern, flags)
+      ) {
         const isCaseSensitive = !flags.includes("i");
         substringMatcher.add(rule.pattern, index, isCaseSensitive);
-        preparedRule.hasLiteralPrefilter = true;
+        preparedRule.hasCandidatePrefilter = true;
         preparedRule.literalMatchIsFinal = canUseLiteralMatchAsFinal(
           rule.pattern,
           flags,
         );
-        hasLiteralPatterns = true;
+        hasCandidatePatterns = true;
+      } else if (!isPlainLiteralPattern(rule.pattern)) {
+        const tokens = extractRequiredLiteralTokens(rule.pattern, flags);
+        if (tokens.length > 0) {
+          requiredTokenCandidates.push({
+            ruleIndex: index,
+            tokens,
+            caseSensitive: !flags.includes("i"),
+          });
+        }
       }
     }
 
@@ -152,7 +172,24 @@ export function prepareJsonRules(
     }
   }
 
-  if (hasLiteralPatterns) {
+  const selectedRequiredTokens = selectRequiredTokens(requiredTokenCandidates);
+  for (const candidate of requiredTokenCandidates) {
+    const requiredToken = selectedRequiredTokens.get(candidate.ruleIndex);
+    if (requiredToken === undefined) {
+      continue;
+    }
+    const preparedRule = preparedRules[candidate.ruleIndex];
+    preparedRule.hasCandidatePrefilter = true;
+    preparedRule.requiredToken = requiredToken;
+    substringMatcher.add(
+      requiredToken,
+      candidate.ruleIndex,
+      candidate.caseSensitive,
+    );
+    hasCandidatePatterns = true;
+  }
+
+  if (hasCandidatePatterns) {
     substringMatcher.build();
   }
 
@@ -161,8 +198,8 @@ export function prepareJsonRules(
     exemptionRules,
     evaluationRules,
     userIdRuleIndexes,
-    substringMatcher: hasLiteralPatterns ? substringMatcher : null,
-    needsLowercase: hasLiteralPatterns
+    substringMatcher: hasCandidatePatterns ? substringMatcher : null,
+    needsLowercase: hasCandidatePatterns
       ? substringMatcher.needsLowercaseText()
       : false,
   };
@@ -235,9 +272,9 @@ function applyRulesToComment({
   const matcher = preparedRules.substringMatcher;
   const originalBody = originalComment.body ?? "";
   const lowercaseBody = preparedRules.needsLowercase
-    ? originalBody.toLocaleLowerCase()
+    ? originalBody.toLowerCase()
     : undefined;
-  const literalCandidateIndexes = matcher
+  const candidateIndexes = matcher
     ? matcher.matchSet(originalBody, lowercaseBody)
     : new Set<number>();
 
@@ -253,7 +290,7 @@ function applyRulesToComment({
         preparedRule,
         originalBody,
         activeUserRuleIndexes,
-        literalCandidateIndexes,
+        candidateIndexes,
         regexCache,
       })
     ) {
@@ -283,7 +320,7 @@ function applyRulesToComment({
         preparedRule,
         originalBody,
         activeUserRuleIndexes,
-        literalCandidateIndexes,
+        candidateIndexes,
         regexCache,
       })
     ) {
@@ -374,7 +411,7 @@ interface PreparedRuleTargetOptions {
   preparedRule: PreparedJsonRule;
   originalBody: string;
   activeUserRuleIndexes: Set<number>;
-  literalCandidateIndexes: Set<number>;
+  candidateIndexes: Set<number>;
   regexCache: Map<string, RegExp>;
 }
 
@@ -382,7 +419,7 @@ function doesPreparedRuleTargetComment({
   preparedRule,
   originalBody,
   activeUserRuleIndexes,
-  literalCandidateIndexes,
+  candidateIndexes,
   regexCache,
 }: PreparedRuleTargetOptions): boolean {
   const rule = preparedRule.rule;
@@ -396,8 +433,8 @@ function doesPreparedRuleTargetComment({
   }
 
   if (
-    preparedRule.hasLiteralPrefilter &&
-    !literalCandidateIndexes.has(preparedRule.index)
+    preparedRule.hasCandidatePrefilter &&
+    !candidateIndexes.has(preparedRule.index)
   ) {
     return false;
   }
@@ -688,14 +725,7 @@ function canUseLiteralMatchAsFinal(pattern: string, flags: string): boolean {
     return false;
   }
 
-  if (!flags.includes("i")) {
-    return true;
-  }
-
-  return (
-    Array.from(pattern).every((char) => char.codePointAt(0)! <= 0x7f) ||
-    pattern.toLocaleLowerCase() === pattern.toLocaleUpperCase()
-  );
+  return canUsePlainLiteralPrefilter(pattern, flags);
 }
 
 function resetRegexLastIndex(regex: RegExp): void {

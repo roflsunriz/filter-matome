@@ -2,6 +2,15 @@ import { UIManager } from "@/comment-filter2/components/ui-manager";
 import { FilterStorage } from "@/comment-filter2/storage/indexed-db";
 import type { NgRuleJson } from "@/types/filter-types";
 
+declare global {
+  interface Window {
+    CommentFilter2Test: {
+      seedAndStart: () => Promise<void>;
+      mockCanvasBodies: string[];
+    };
+  }
+}
+
 const initialRules: NgRuleJson[] = [
   {
     pattern: "荒らし|スパム",
@@ -44,8 +53,52 @@ async function seedAndStart(): Promise<void> {
     },
   });
 
+  const mockCanvas = document.createElement("canvas");
+  mockCanvas.id = "cf2-test-comment-canvas";
+  mockCanvas.width = 640;
+  mockCanvas.height = 360;
+  document.body.append(mockCanvas);
+  window.CommentFilter2Test.mockCanvasBodies = [];
+  const mockContext = mockCanvas.getContext("2d");
+  if (!mockContext) {
+    throw new Error("2D mock canvas context is unavailable");
+  }
+  const nativeFillText = mockContext.fillText.bind(mockContext);
+  mockContext.fillText = (
+    text: string,
+    x: number,
+    y: number,
+    maxWidth?: number,
+  ): void => {
+    window.CommentFilter2Test.mockCanvasBodies.push(text);
+    if (maxWidth === undefined) {
+      nativeFillText(text, x, y);
+    } else {
+      nativeFillText(text, x, y, maxWidth);
+    }
+  };
+
+  const renderFilteredCommentsToMockCanvas = (): void => {
+    mockContext.clearRect(0, 0, mockCanvas.width, mockCanvas.height);
+    window.CommentFilter2Test.mockCanvasBodies = [];
+    const comments =
+      window.CommentFilter2Data?.filteredData?.data.threads.flatMap(
+        (thread) => thread.comments,
+      ) ?? [];
+    for (const [index, comment] of comments.entries()) {
+      if (
+        comment.body.length === 0 ||
+        comment.commands?.includes("invisible")
+      ) {
+        continue;
+      }
+      mockContext.fillText(comment.body, 8, 24 + index * 24);
+    }
+  };
+
   const manager = new UIManager(
     () => {
+      renderFilteredCommentsToMockCanvas();
       window.dispatchEvent(new CustomEvent("cf2:test-filter-applied"));
     },
     () => Boolean(window.videoPlayer),
@@ -127,5 +180,5 @@ Object.assign(window, {
     info: () => undefined,
     warning: () => undefined,
   },
-  CommentFilter2Test: { seedAndStart },
+  CommentFilter2Test: { seedAndStart, mockCanvasBodies: [] },
 });

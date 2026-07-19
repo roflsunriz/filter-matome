@@ -31,6 +31,7 @@
     "test": "tests"
   },
   "dependencies": {
+    "@eslint-community/regexpp": "4.12.2",
     "@material-design-icons/svg": "^0.14.15",
     "comment-overlay": "4.1.4",
     "dompurify": "^3.4.11",

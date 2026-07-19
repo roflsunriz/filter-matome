@@ -261,3 +261,83 @@ test("フォームからルールを追加・削除し、概要集計へ反映�
   await ui.locator('.cf2-sidebar-item[data-cf2-view="overview"]').click();
   await expect(ui.locator("#cf2-cockpit-rule-count")).toHaveText("2");
 });
+
+test("動的なルール種別とアクション切替を初期状態まで確実に戻す", async ({
+  page,
+}) => {
+  const ui = page.locator("#cf2-shadow-host");
+  await ui.locator('.cf2-sidebar-item[data-cf2-view="rules"]').click();
+
+  await ui.locator('input[name="cf2-rule-type"][value="userId"]').check();
+  await expect(ui.locator("#cf2-regex-inputs")).toBeHidden();
+  await expect(ui.locator("#cf2-userid-inputs")).toBeVisible();
+  await expect(ui.locator("#cf2-replace-action-label")).toBeHidden();
+  await expect(
+    ui.locator('input[name="cf2-action-type"][value="hide"]'),
+  ).toBeChecked();
+
+  await ui.locator('input[name="cf2-rule-type"][value="regex"]').check();
+  await ui.locator('input[name="cf2-action-type"][value="replace"]').check();
+  await expect(ui.locator("#cf2-replace-input-group")).toBeVisible();
+  await ui.locator("#cf2-pattern-input").fill("dynamic.*comment");
+  await ui.locator("#cf2-replace-input").fill("変更済み");
+
+  await ui.locator("#cf2-clear-form").click();
+  await expect(ui.locator("#cf2-pattern-input")).toHaveValue("");
+  await expect(ui.locator("#cf2-replace-input")).toHaveValue("");
+  await expect(ui.locator("#cf2-replace-input-group")).toBeHidden();
+  await expect(
+    ui.locator('input[name="cf2-rule-type"][value="regex"]'),
+  ).toBeChecked();
+  await expect(
+    ui.locator('input[name="cf2-action-type"][value="hide"]'),
+  ).toBeChecked();
+});
+
+test("追加・適用・削除のたびに変化したコメントをモックcanvasへ追加する", async ({
+  page,
+}) => {
+  const ui = page.locator("#cf2-shadow-host");
+  await ui.locator('.cf2-sidebar-item[data-cf2-view="rules"]').click();
+  await ui.locator("#cf2-pattern-input").fill("通常.*コメント");
+  await ui.locator('input[name="cf2-action-type"][value="replace"]').check();
+  await ui.locator("#cf2-replace-input").fill("canvasへ反映済み");
+  await ui.locator("#cf2-add-rule").click();
+  await expect(ui.locator("#cf2-rule-count-text")).toHaveText("3件");
+
+  const firstApplied = page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        window.addEventListener("cf2:test-filter-applied", () => resolve(), {
+          once: true,
+        });
+      }),
+  );
+  await ui.locator('.cf2-sidebar-item[data-cf2-view="overview"]').click();
+  await ui.locator("#cf2-cockpit-apply").click();
+  await firstApplied;
+  await expect(page.locator("#cf2-test-comment-canvas")).toBeAttached();
+  expect(
+    await page.evaluate(() => window.CommentFilter2Test.mockCanvasBodies),
+  ).toEqual(["canvasへ反映済み"]);
+
+  await ui.locator('.cf2-sidebar-item[data-cf2-view="rules"]').click();
+  await ui.locator("#cf2-format-library").click();
+  await ui.locator('.cf2-rule-delete[data-index="2"]').click();
+  await expect(ui.locator("#cf2-rule-count-text")).toHaveText("2件");
+
+  const secondApplied = page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        window.addEventListener("cf2:test-filter-applied", () => resolve(), {
+          once: true,
+        });
+      }),
+  );
+  await ui.locator('.cf2-sidebar-item[data-cf2-view="overview"]').click();
+  await ui.locator("#cf2-cockpit-apply").click();
+  await secondApplied;
+  expect(
+    await page.evaluate(() => window.CommentFilter2Test.mockCanvasBodies),
+  ).toEqual(["通常コメント"]);
+});

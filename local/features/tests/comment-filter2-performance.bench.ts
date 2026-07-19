@@ -2,6 +2,11 @@ import {
   filterJsonThread,
   prepareJsonRules,
 } from "../src/comment-filter2/filter/json-comment-filter-engine";
+import {
+  isPlainLiteralPattern,
+  SubstringMatcher,
+} from "../src/comment-filter2/filter/rule-indexer";
+import { canUsePlainLiteralPrefilter } from "../src/comment-filter2/filter/required-token-extractor";
 import type {
   CF2Comment,
   CF2Thread,
@@ -10,8 +15,8 @@ import type {
 
 const COMMENT_COUNT = 2_000;
 const RULE_COUNT = 1_000;
-const WARMUP_ROUNDS = 1;
-const MEASURED_ROUNDS = 5;
+const WARMUP_ROUNDS = 5;
+const MEASURED_ROUNDS = 10;
 
 function createComment(index: number): CF2Comment {
   return {
@@ -90,15 +95,50 @@ const thread: CF2Thread = {
   ),
 };
 const regexCache = new Map<string, RegExp>();
-const preparedRules = prepareJsonRules(createRules(), "sm9", regexCache);
+const rules = createRules();
+const preparedRules = prepareJsonRules(rules, "sm9", regexCache);
+const baselineRegexCache = new Map<string, RegExp>();
+const baselinePreparedRules = prepareJsonRules(
+  rules,
+  "sm9",
+  baselineRegexCache,
+);
+const baselineMatcher = new SubstringMatcher();
+let baselineHasPatterns = false;
+for (const preparedRule of baselinePreparedRules.rules) {
+  if (preparedRule.requiredToken !== undefined) {
+    preparedRule.hasCandidatePrefilter = false;
+  }
+  const pattern = preparedRule.rule.pattern;
+  const flags = preparedRule.rule.flags || "gi";
+  if (
+    pattern &&
+    isPlainLiteralPattern(pattern) &&
+    canUsePlainLiteralPrefilter(pattern, flags)
+  ) {
+    baselineMatcher.add(pattern, preparedRule.index, !flags.includes("i"));
+    baselineHasPatterns = true;
+  }
+}
+if (baselineHasPatterns) {
+  baselineMatcher.build();
+}
+baselinePreparedRules.substringMatcher = baselineHasPatterns
+  ? baselineMatcher
+  : null;
+baselinePreparedRules.needsLowercase = baselineMatcher.needsLowercaseText();
 
-function runRound(): number {
+function runRound(
+  selectedPreparedRules = preparedRules,
+  selectedRegexCache = regexCache,
+): number {
   const startedAt = performance.now();
   const result = filterJsonThread({
     thread,
-    preparedRules,
+    preparedRules: selectedPreparedRules,
     settings: null,
-    regexCache,
+    regexCache: selectedRegexCache,
+    collectLogs: false,
   });
 
   if (result.comments.length !== COMMENT_COUNT) {
@@ -110,13 +150,25 @@ function runRound(): number {
 
 for (let round = 0; round < WARMUP_ROUNDS; round += 1) {
   runRound();
+  runRound(baselinePreparedRules, baselineRegexCache);
 }
 
 const durations = Array.from({ length: MEASURED_ROUNDS }, runRound);
+const baselineDurations = Array.from({ length: MEASURED_ROUNDS }, () =>
+  runRound(baselinePreparedRules, baselineRegexCache),
+);
 const average =
   durations.reduce((total, duration) => total + duration, 0) / durations.length;
+const baselineAverage =
+  baselineDurations.reduce((total, duration) => total + duration, 0) /
+  baselineDurations.length;
 const sortedDurations = durations.toSorted((left, right) => left - right);
+const sortedBaselineDurations = baselineDurations.toSorted(
+  (left, right) => left - right,
+);
 const median = sortedDurations[Math.floor(sortedDurations.length / 2)];
+const baselineMedian =
+  sortedBaselineDurations[Math.floor(sortedBaselineDurations.length / 2)];
 
 console.log(
   JSON.stringify(
@@ -124,9 +176,15 @@ console.log(
       comments: COMMENT_COUNT,
       rules: RULE_COUNT,
       measuredRounds: MEASURED_ROUNDS,
-      averageMs: Number(average.toFixed(2)),
-      medianMs: Number(median.toFixed(2)),
-      roundsMs: durations.map((duration) => Number(duration.toFixed(2))),
+      baselineLiteralOnly: {
+        averageMs: Number(baselineAverage.toFixed(2)),
+        medianMs: Number(baselineMedian.toFixed(2)),
+      },
+      requiredTokenIndex: {
+        averageMs: Number(average.toFixed(2)),
+        medianMs: Number(median.toFixed(2)),
+      },
+      medianSpeedup: Number((baselineMedian / median).toFixed(2)),
     },
     null,
     2,

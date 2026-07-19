@@ -147,7 +147,7 @@ describe("comment-filter2 nicoru exclusion", () => {
       id: "thread-single-pass",
       fork: "main",
       commentCount: 1,
-      comments: [createComment("1", "ordinary", 0)],
+      comments: [createComment("1", "never ordinary match", 0)],
     };
 
     filterJsonThread({

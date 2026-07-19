@@ -17,6 +17,12 @@ import {
   isPlainLiteralPattern,
 } from "@/comment-filter2/filter/rule-indexer";
 import {
+  canUsePlainLiteralPrefilter,
+  extractRequiredLiteralTokens,
+  selectRequiredTokens,
+  type RequiredTokenRuleCandidate,
+} from "@/comment-filter2/filter/required-token-extractor";
+import {
   computeThreadNicoruStats,
   ThreadNicoruStats,
 } from "@/comment-filter2/filter/thread-nicoru-stats";
@@ -28,7 +34,8 @@ export interface PreparedRule {
   index: number;
   compiledRegex?: RegExp;
   isUserIdRule: boolean;
-  hasLiteralPrefilter: boolean;
+  hasCandidatePrefilter: boolean;
+  requiredToken?: string;
   minRequiredNicoru?: number;
 }
 
@@ -117,7 +124,8 @@ export function prepareRules(
   const preparedRules: PreparedRule[] = [];
   const userIdRuleIndexes = new Map<string, number[]>();
   const substringMatcher = new SubstringMatcher();
-  let hasLiteralPatterns = false;
+  const requiredTokenCandidates: RequiredTokenRuleCandidate[] = [];
+  let hasCandidatePatterns = false;
 
   for (const rule of rules) {
     if (!shouldApplyRule(rule, currentSmid)) {
@@ -131,7 +139,7 @@ export function prepareRules(
       index,
       compiledRegex: undefined,
       isUserIdRule: isValidUserRule,
-      hasLiteralPrefilter: false,
+      hasCandidatePrefilter: false,
       minRequiredNicoru:
         typeof rule.nicoru === "number" ? rule.nicoru : undefined,
     };
@@ -146,26 +154,55 @@ export function prepareRules(
       const flags = rule.regexFlags || "gi";
       preparedRule.compiledRegex = getRegex(regexCache, rule.regex, flags);
 
-      if (isPlainLiteralPattern(rule.regex)) {
+      if (
+        isPlainLiteralPattern(rule.regex) &&
+        canUsePlainLiteralPrefilter(rule.regex, flags)
+      ) {
         const isCaseSensitive = !flags.includes("i");
         substringMatcher.add(rule.regex, index, isCaseSensitive);
-        preparedRule.hasLiteralPrefilter = true;
-        hasLiteralPatterns = true;
+        preparedRule.hasCandidatePrefilter = true;
+        hasCandidatePatterns = true;
+      } else if (!isPlainLiteralPattern(rule.regex)) {
+        const tokens = extractRequiredLiteralTokens(rule.regex, flags);
+        if (tokens.length > 0) {
+          requiredTokenCandidates.push({
+            ruleIndex: index,
+            tokens,
+            caseSensitive: !flags.includes("i"),
+          });
+        }
       }
     }
 
     preparedRules.push(preparedRule);
   }
 
-  if (hasLiteralPatterns) {
+  const selectedRequiredTokens = selectRequiredTokens(requiredTokenCandidates);
+  for (const candidate of requiredTokenCandidates) {
+    const requiredToken = selectedRequiredTokens.get(candidate.ruleIndex);
+    if (requiredToken === undefined) {
+      continue;
+    }
+    const preparedRule = preparedRules[candidate.ruleIndex];
+    preparedRule.hasCandidatePrefilter = true;
+    preparedRule.requiredToken = requiredToken;
+    substringMatcher.add(
+      requiredToken,
+      candidate.ruleIndex,
+      candidate.caseSensitive,
+    );
+    hasCandidatePatterns = true;
+  }
+
+  if (hasCandidatePatterns) {
     substringMatcher.build();
   }
 
   return {
     rules: preparedRules,
     userIdRuleIndexes,
-    substringMatcher: hasLiteralPatterns ? substringMatcher : null,
-    needsLowercase: hasLiteralPatterns
+    substringMatcher: hasCandidatePatterns ? substringMatcher : null,
+    needsLowercase: hasCandidatePatterns
       ? substringMatcher.needsLowercaseText()
       : false,
   };
@@ -390,17 +427,17 @@ function applyRulesToComment({
   const matcher = preparedRules.substringMatcher;
   const getBodyText = (): string => processedComment.body ?? "";
   let lowercaseBody = preparedRules.needsLowercase
-    ? getBodyText().toLocaleLowerCase()
+    ? getBodyText().toLowerCase()
     : undefined;
-  let literalCandidateIndexes = matcher
+  let candidateIndexes = matcher
     ? new Set<number>(matcher.match(getBodyText(), lowercaseBody))
     : new Set<number>();
 
-  const refreshLiteralCandidates = (): void => {
+  const refreshCandidates = (): void => {
     lowercaseBody = preparedRules.needsLowercase
-      ? getBodyText().toLocaleLowerCase()
+      ? getBodyText().toLowerCase()
       : undefined;
-    literalCandidateIndexes = matcher
+    candidateIndexes = matcher
       ? new Set<number>(matcher.match(getBodyText(), lowercaseBody))
       : new Set<number>();
   };
@@ -444,8 +481,8 @@ function applyRulesToComment({
     }
 
     if (
-      preparedRule.hasLiteralPrefilter &&
-      !literalCandidateIndexes.has(preparedRule.index)
+      preparedRule.hasCandidatePrefilter &&
+      !candidateIndexes.has(preparedRule.index)
     ) {
       continue;
     }
@@ -489,9 +526,9 @@ function applyRulesToComment({
         hasEmptyNicoruRule = true;
       }
       if (matcher) {
-        refreshLiteralCandidates();
+        refreshCandidates();
       } else if (preparedRules.needsLowercase) {
-        lowercaseBody = getBodyText().toLocaleLowerCase();
+        lowercaseBody = getBodyText().toLowerCase();
       }
     }
   }

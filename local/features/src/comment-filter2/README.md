@@ -10,7 +10,7 @@
 
 - `index.ts`: 初期化、ショートカット、イベント購読、`window.CommentFilter2Instance`。
 - `proxy/data-interceptor.ts`: `fetch` とHistory APIを監視し、元コメント応答と動画IDを捕捉。
-- `filter/`: 現行JSONルール、互換ルール、純粋なフィルターエンジン、Worker、索引、ニコる統計。
+- `filter/`: 現行JSONルール、互換ルール、純粋なフィルターエンジン、Worker、Aho–Corasick候補索引、安全な必須トークン抽出、ニコる統計。
 - `storage/indexed-db.ts`: `CommentFilter2DB` のスキーマ、マイグレーション、整合性検証、バックアップ・復旧。
 - `components/ui-manager.ts`: 概要、ルール、コマンド、データ、設定のUIと操作。
 - `integrations/video-player-bridge.ts`: フィルター済みコメントをvideo-playerへ同期する境界。
@@ -23,6 +23,8 @@
 2. `cf2:data-updated` または `cf2:smid-changed` を受けて、UI管理層が保存済み設定とルールを読む。
 3. JSONフィルターがスレッドごとにルールを適用する。大量データはWorkerへ分割し、失敗時はメインスレッドへフォールバックする。
 4. フィルター済みデータをグローバルストアへ戻し、`VideoPlayerBridge` が差分を確認してvideo-playerへ通知する。
+
+正規表現ルールはECMAScript ASTから全分岐に必ず含まれるリテラルを抽出し、コメント本文に候補があるルールだけを最終判定します。安全な候補を証明できないルール、インライン修飾子、Unicodeの大文字小文字同一視で曖昧になる部分は索引化せず、通常の`RegExp`評価へフォールバックします。
 
 内部取得で `bypassCommentFilter` が指定された要求は置換しません。movie-infoやコメントJSON保存が元レスポンスを取得するための契約なので維持してください。
 
@@ -54,6 +56,7 @@
 ## テスト
 
 - `tests/comment-filter2.spec.ts`: UI、実IndexedDB、ルールCRUD、即時適用、正規表現プレビュー。
+- `tests/comment-filter2-required-token-index.test.ts`: 必須トークン抽出、候補索引なしとの結果同値性、Unicode境界、正規表現評価回数。
 - `tests/comment-filter2-nicoru-exclusion.test.ts`: ニコる条件と免除ルール。
 - `tests/comment-data-bypass.test.ts`: フィルターを迂回する内部取得契約。
 
