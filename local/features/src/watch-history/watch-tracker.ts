@@ -61,6 +61,9 @@ export class WatchTracker {
   private currentEntry: WatchHistoryEntry | null = null;
   private videoElement: HTMLVideoElement | null = null;
   private progressTimer: number | null = null;
+  private videoRetryTimer: number | null = null;
+  private timeUpdateTimer: number | null = null;
+  private destroyed = false;
   private startTime: number = 0;
   private isWatching: boolean = false;
   private previousTime: number = 0; // 前回の再生位置
@@ -69,6 +72,30 @@ export class WatchTracker {
   private readonly COMPLETION_THRESHOLD = 0.95; // 95%完走とみなす
   private readonly REPEAT_DETECTION_THRESHOLD = 5; // 5秒以上の後戻りで繰り返し再生と判定
   private readonly SESSION_RECORD_INTERVAL = 10000; // 10秒以内の重複記録を防ぐ
+  private readonly handleLoadedMetadata = (): void => {
+    if (!this.progressTimer) this.startProgressTracking();
+  };
+  private readonly handlePlay = (): void => {
+    if (!this.videoElement) return;
+    this.emitWatchEvent("resume", this.videoElement.currentTime);
+  };
+  private readonly handlePause = (): void => {
+    if (!this.videoElement) return;
+    this.emitWatchEvent("pause", this.videoElement.currentTime);
+    void this.recordCurrentSession();
+  };
+  private readonly handleEnded = (): void => {
+    void this.handleVideoEnded();
+  };
+  private readonly onTimeUpdateEvent = (): void => {
+    if (this.timeUpdateTimer !== null) {
+      clearTimeout(this.timeUpdateTimer);
+    }
+    this.timeUpdateTimer = window.setTimeout(() => {
+      this.timeUpdateTimer = null;
+      if (!this.destroyed) void this.handleTimeUpdate();
+    }, 1000);
+  };
 
   constructor() {
     void this.initialize();
@@ -81,6 +108,7 @@ export class WatchTracker {
     try {
       // データベースを初期化
       await watchHistoryDB.initialize();
+      if (this.destroyed) return;
 
       // 動画IDを取得
       this.currentVideoId = this.extractVideoId();
@@ -101,6 +129,7 @@ export class WatchTracker {
       // 動画メタデータを取得
 
       await this.fetchVideoMetadata();
+      if (this.destroyed) return;
 
       // 視聴追跡を開始
 
@@ -207,7 +236,7 @@ export class WatchTracker {
    * 視聴追跡を開始する
    */
   private async startWatching(): Promise<void> {
-    if (!this.currentEntry) {
+    if (this.destroyed || !this.currentEntry) {
       window?.logger.error("[WatchTracker] 視聴エントリが設定されていません");
       return;
     }
@@ -219,7 +248,11 @@ export class WatchTracker {
         "[WatchTracker] video要素が見つかりません。後で再試行します。",
       );
       // 5秒後に再試行
-      setTimeout(() => {
+      if (this.videoRetryTimer !== null) {
+        clearTimeout(this.videoRetryTimer);
+      }
+      this.videoRetryTimer = window.setTimeout(() => {
+        this.videoRetryTimer = null;
         void this.startWatching();
       }, 5000);
       return;
@@ -332,13 +365,10 @@ export class WatchTracker {
   private setupVideoEventListeners(): void {
     if (!this.videoElement) return;
 
-    // メタデータ読込完了
-    this.videoElement.addEventListener("loadedmetadata", () => {
-      // 二重開始防止
-      if (!this.progressTimer) {
-        this.startProgressTracking();
-      }
-    });
+    this.videoElement.addEventListener(
+      "loadedmetadata",
+      this.handleLoadedMetadata,
+    );
 
     // 既にメタデータが読み込まれている場合（readyState >= 1）にも即時開始する
     if (this.videoElement.readyState >= 1 && !this.progressTimer) {
@@ -346,33 +376,31 @@ export class WatchTracker {
     }
 
     // 再生開始
-    this.videoElement.addEventListener("play", () => {
-      this.emitWatchEvent("resume", this.videoElement!.currentTime);
-    });
+    this.videoElement.addEventListener("play", this.handlePlay);
+    this.videoElement.addEventListener("pause", this.handlePause);
+    this.videoElement.addEventListener("ended", this.handleEnded);
+    this.videoElement.addEventListener("timeupdate", this.onTimeUpdateEvent);
+  }
 
-    // 一時停止
-    this.videoElement.addEventListener("pause", () => {
-      const currentTime = this.videoElement!.currentTime;
-      this.emitWatchEvent("pause", currentTime);
-
-      // 一時停止時にも現在の視聴セッションを記録
-      void this.recordCurrentSession();
-    });
-
-    // 終了
-    this.videoElement.addEventListener("ended", () => {
-      void this.handleVideoEnded();
-    });
-
-    // 時間更新（デバウンス処理）
-    let timeUpdateTimeout: number | null = null;
-    this.videoElement.addEventListener("timeupdate", () => {
-      if (timeUpdateTimeout) clearTimeout(timeUpdateTimeout);
-
-      timeUpdateTimeout = setTimeout(() => {
-        void this.handleTimeUpdate();
-      }, 1000); // 1秒デバウンス
-    });
+  /** video要素へ登録したリスナーとデバウンスタイマーを解除する。 */
+  private removeVideoEventListeners(): void {
+    if (this.videoElement) {
+      this.videoElement.removeEventListener(
+        "loadedmetadata",
+        this.handleLoadedMetadata,
+      );
+      this.videoElement.removeEventListener("play", this.handlePlay);
+      this.videoElement.removeEventListener("pause", this.handlePause);
+      this.videoElement.removeEventListener("ended", this.handleEnded);
+      this.videoElement.removeEventListener(
+        "timeupdate",
+        this.onTimeUpdateEvent,
+      );
+    }
+    if (this.timeUpdateTimer !== null) {
+      clearTimeout(this.timeUpdateTimer);
+      this.timeUpdateTimer = null;
+    }
   }
 
   /**
@@ -598,14 +626,21 @@ export class WatchTracker {
    * 破棄処理
    */
   public async destroy(): Promise<void> {
+    if (this.destroyed) return;
+    this.destroyed = true;
     logger.debug("[WatchTracker] 破棄処理を開始します");
 
-    // 進捗追跡を先に停止
-    this.stopWatching();
+    if (this.videoRetryTimer !== null) {
+      clearTimeout(this.videoRetryTimer);
+      this.videoRetryTimer = null;
+    }
+    this.removeVideoEventListeners();
 
     // 破棄時は重複記録防止を無効化して確実に記録
     this.lastSessionRecordTime = 0;
-    await this.recordCurrentSession();
+    const recordPromise = this.recordCurrentSession();
+    this.stopWatching();
+    await recordPromise;
 
     this.currentEntry = null;
     this.videoElement = null;
@@ -620,14 +655,20 @@ export class WatchTracker {
    * 同期的な破棄処理（beforeunload用）
    */
   public destroySync(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     logger.debug("[WatchTracker] 同期的な破棄処理を開始します");
 
-    // 進捗追跡を先に停止
-    this.stopWatching();
+    if (this.videoRetryTimer !== null) {
+      clearTimeout(this.videoRetryTimer);
+      this.videoRetryTimer = null;
+    }
+    this.removeVideoEventListeners();
 
     // 破棄時は重複記録防止を無効化して確実に記録
     this.lastSessionRecordTime = 0;
     this.recordCurrentSessionSync();
+    this.stopWatching();
 
     this.currentEntry = null;
     this.videoElement = null;
@@ -969,8 +1010,10 @@ export class WatchTracker {
 }
 
 let watchTracker: WatchTracker | null = null;
+let navigationRetryTimer: number | null = null;
+let trackerGeneration = 0;
 
-async function initializeWatchTracker(): Promise<void> {
+async function initializeWatchTracker(generation: number): Promise<void> {
   // 視聴ページまたはスタンドアロンプレイヤーかチェック
   const isWatchPage = isWatchPageLocation();
   const isStandalonePlayer = isStandalonePlayerLocation();
@@ -980,7 +1023,16 @@ async function initializeWatchTracker(): Promise<void> {
 
   // 既存のトラッカーがあれば破棄
   if (watchTracker) {
-    await watchTracker.destroy();
+    const previousTracker = watchTracker;
+    watchTracker = null;
+    await previousTracker.destroy();
+  }
+
+  if (
+    generation !== trackerGeneration ||
+    (!isWatchPageLocation() && !isStandalonePlayerLocation())
+  ) {
+    return;
   }
 
   // 新しいトラッカーを作成
@@ -996,18 +1048,25 @@ export function startWatchTracker(): void {
   }
   started = true;
 
-  void initializeWatchTracker();
+  void initializeWatchTracker(++trackerGeneration);
 
   addNavigationListener(() => {
+    const generation = ++trackerGeneration;
+    if (navigationRetryTimer !== null) {
+      clearTimeout(navigationRetryTimer);
+      navigationRetryTimer = null;
+    }
     if (isWatchPageLocation() || isStandalonePlayerLocation()) {
-      setTimeout(() => {
-        void initializeWatchTracker();
+      navigationRetryTimer = window.setTimeout(() => {
+        navigationRetryTimer = null;
+        void initializeWatchTracker(generation);
       }, 1000);
       return;
     }
     if (watchTracker) {
-      void watchTracker.destroy();
+      const previousTracker = watchTracker;
       watchTracker = null;
+      void previousTracker.destroy();
     }
   });
 

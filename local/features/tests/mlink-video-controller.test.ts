@@ -116,4 +116,14 @@ describe("mlink-video-controller structure", () => {
     );
     expect(panelSource).not.toContain("useCapture = true で早期にキャッチ");
   });
+
+  test("uses the shared SPA lifecycle and cancels pending tag work", () => {
+    const watchPageModule = readControllerFile("modules/watch-page-module.ts");
+
+    expect(watchPageModule).toContain("async onSPANavigate()");
+    expect(watchPageModule).toContain("cancelTagCounterRetry()");
+    expect(watchPageModule).toContain("updateTagCounterDebounced?.cancel()");
+    expect(watchPageModule).not.toContain("pageObserver");
+    expect(watchPageModule).not.toContain("setupPageObserver");
+  });
 });

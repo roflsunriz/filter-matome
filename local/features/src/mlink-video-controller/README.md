@@ -35,6 +35,8 @@
 
 新しいモジュールは `ModuleConfig` と `ModuleInstance` の契約を実装し、`module-registry.ts` へ登録してください。IDは永続設定のキーになるため、変更時は `settings-normalizer.ts` に明示的な移行を追加します。
 
+watchページ間のSPA遷移は共通navigationイベントから`ModuleManager`が`onSPANavigate()`を呼ぶ。各モジュールはURL検出専用の全DOM監視を追加せず、このライフサイクルでObserverと保留中タイマーを破棄してから再初期化します。
+
 ## 設定とデータ
 
 - モジュール有効状態・設定: `localStorage` の `nicoVideoController_moduleSettings`。

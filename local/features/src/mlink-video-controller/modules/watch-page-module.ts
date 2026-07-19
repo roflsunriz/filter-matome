@@ -7,6 +7,8 @@ import {
 } from "@/types/module-types";
 import { createMaterialIcon } from "@/common/material-icons";
 
+type CancelableCallback = (() => void) & { cancel(): void };
+
 export const watchPageModuleConfig: ModuleConfig = {
   id: "watch_page",
   name: "タグカウンター",
@@ -30,14 +32,11 @@ export class WatchPageModule implements ModuleInstance {
 
   // タグカウンター用のMutationObserver
   private tagObserver: MutationObserver | null = null;
-  private updateTagCounterDebounced: (() => void) | null = null;
+  private updateTagCounterDebounced: CancelableCallback | null = null;
+  private tagRetryTimer: number | null = null;
+  private resolveTagRetry: (() => void) | null = null;
   private readonly tagLinkSelector =
     'a[data-anchor-area="tags"][data-anchor-href^="/tag/"], a[data-anchor-area="tags"][href*="/tag/"], a[href^="/tag/"], a[href^="https://www.nicovideo.jp/tag/"]';
-
-  // ページ遷移監視用
-  private pageObserver: MutationObserver | null = null;
-  private currentVideoId: string | null = null;
-  private pageTransitionDebounced: (() => void) | null = null;
 
   constructor() {
     localStorage.removeItem(this.LEGACY_SETTINGS_KEY);
@@ -62,13 +61,10 @@ export class WatchPageModule implements ModuleInstance {
         return;
       }
 
-      // ページ遷移監視を開始
-      this.setupPageObserver();
-
-      await this.initializeTagCounter();
-
       this.isInitialized = true;
+      await this.initializeTagCounter();
     } catch (error) {
+      this.destroy();
       window.logger.error("[WatchPageModule] 初期化エラー:", error);
       throw error;
     }
@@ -78,20 +74,16 @@ export class WatchPageModule implements ModuleInstance {
    * モジュール破棄
    */
   destroy(): void {
-    if (!this.isInitialized) return;
-
-    // ページObserverを停止・破棄
-    if (this.pageObserver) {
-      this.pageObserver.disconnect();
-      this.pageObserver = null;
-    }
-
-    // デバウンス関数をクリア
-    this.pageTransitionDebounced = null;
-
     this.destroyTagCounter();
 
     this.isInitialized = false;
+  }
+
+  /** 共通SPA遷移イベントから、遷移先のタグDOMへ付け直す。 */
+  async onSPANavigate(): Promise<void> {
+    if (!this.isInitialized || !this.isWatchPage()) return;
+    this.destroyTagCounter();
+    await this.initializeTagCounter();
   }
 
   /**
@@ -159,6 +151,7 @@ export class WatchPageModule implements ModuleInstance {
    * タグカウンター破棄
    */
   private destroyTagCounter(): void {
+    this.cancelTagCounterRetry();
     // タグカウンター本体を削除
     const tagCounter = document.getElementById("TagItemsCounter");
     if (tagCounter) {
@@ -177,7 +170,8 @@ export class WatchPageModule implements ModuleInstance {
       this.tagObserver = null;
     }
 
-    // デバウンス関数をクリア
+    // デバウンスタイマーをクリア
+    this.updateTagCounterDebounced?.cancel();
     this.updateTagCounterDebounced = null;
   }
 
@@ -185,7 +179,9 @@ export class WatchPageModule implements ModuleInstance {
    * タグカウンター再試行機能
    */
   private retryTagCounter(option: { videoID: string }): Promise<void> {
+    this.cancelTagCounterRetry();
     return new Promise((resolve, reject) => {
+      this.resolveTagRetry = resolve;
       let retryCount = 0;
       const maxRetryCount = 40;
       const retryInterval = 700;
@@ -198,20 +194,36 @@ export class WatchPageModule implements ModuleInstance {
         if (
           this.insertTagCounter({ element, videoID: option.videoID, tagLength })
         ) {
+          this.resolveTagRetry = null;
           resolve();
           return;
         }
 
         retryCount++;
         if (retryCount < maxRetryCount) {
-          setTimeout(attempt, retryInterval);
+          this.tagRetryTimer = window.setTimeout(() => {
+            this.tagRetryTimer = null;
+            attempt();
+          }, retryInterval);
         } else {
+          this.resolveTagRetry = null;
           reject(new Error("タグカウンター設置の最大再試行回数に達しました"));
         }
       };
 
       attempt();
     });
+  }
+
+  /** 未完了のタグDOM探索を停止し、待機中の初期化を解放する。 */
+  private cancelTagCounterRetry(): void {
+    if (this.tagRetryTimer !== null) {
+      clearTimeout(this.tagRetryTimer);
+      this.tagRetryTimer = null;
+    }
+    const resolve = this.resolveTagRetry;
+    this.resolveTagRetry = null;
+    resolve?.();
   }
 
   /**
@@ -418,6 +430,11 @@ export class WatchPageModule implements ModuleInstance {
     return { title, videoId };
   }
 
+  private getCurrentVideoId(): string | null {
+    const videoIDMatch = /s[mo]\d+/.exec(window.location.pathname);
+    return videoIDMatch ? videoIDMatch[0] : null;
+  }
+
   // ラジアルセレクター機能は独立モジュール（WatchBackgroundSelectorModule）に移行済み
 
   /**
@@ -487,6 +504,23 @@ export class WatchPageModule implements ModuleInstance {
     });
   }
 
+  /** 呼び出し待ちを明示的に破棄できるデバウンス関数を作る。 */
+  private debounce(func: () => void, wait: number): CancelableCallback {
+    let timeout: number | null = null;
+    const debounced = (() => {
+      if (timeout !== null) clearTimeout(timeout);
+      timeout = window.setTimeout(() => {
+        timeout = null;
+        func();
+      }, wait);
+    }) as CancelableCallback;
+    debounced.cancel = () => {
+      if (timeout !== null) clearTimeout(timeout);
+      timeout = null;
+    };
+    return debounced;
+  }
+
   /**
    * タグカウンター表示を更新
    */
@@ -550,89 +584,5 @@ export class WatchPageModule implements ModuleInstance {
 
     // ボタンのtitle属性を更新（ホバー時の表示）
     shareButton.setAttribute("title", `${currentVideoInfo.title}を共有`);
-  }
-
-  /**
-   * デバウンス関数
-   */
-  private debounce(func: () => void, wait: number): () => void {
-    let timeout: number | null = null;
-
-    return () => {
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-
-      timeout = setTimeout(() => {
-        func();
-        timeout = null;
-      }, wait);
-    };
-  }
-
-  /**
-   * ページ遷移監視Observer設定
-   */
-  private setupPageObserver(): void {
-    // 現在の動画IDを記録
-    this.currentVideoId = this.getCurrentVideoId();
-
-    // デバウンス関数を作成（200ms間隔でページ遷移処理）
-    this.pageTransitionDebounced = this.debounce(() => {
-      this.handlePageTransition();
-    }, 200);
-
-    // ページ遷移を監視（DOM変更のみ検知、処理はデバウンス）
-    this.pageObserver = new MutationObserver(() => {
-      const newVideoId = this.getCurrentVideoId();
-
-      // 動画IDが変更された場合（ページ遷移）
-      if (newVideoId && newVideoId !== this.currentVideoId) {
-        this.currentVideoId = newVideoId;
-
-        // デバウンスで処理を遅延実行
-        if (this.pageTransitionDebounced) {
-          this.pageTransitionDebounced();
-        }
-      }
-    });
-
-    // URLの変更を監視
-    this.pageObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-  }
-
-  /**
-   * ページ遷移時の処理
-   */
-  private handlePageTransition(): void {
-    window.logger.info("[WatchPageModule] ページ遷移を検知しました");
-
-    // 即座に古い要素を削除
-    this.destroyTagCounter();
-
-    setTimeout(async () => {
-      try {
-        // 念のため再度削除を実行
-        this.destroyTagCounter();
-        // 新しいページで再初期化
-        await this.initializeTagCounter();
-      } catch (error) {
-        window.logger.error(
-          "[WatchPageModule] ページ遷移時のタグカウンター再初期化失敗:",
-          error,
-        );
-      }
-    }, 500); // 少し遅延させてDOMの更新を待つ
-  }
-
-  /**
-   * 現在の動画IDを取得
-   */
-  private getCurrentVideoId(): string | null {
-    const videoIDMatch = /s[mo]\d+/.exec(window.location.pathname);
-    return videoIDMatch ? videoIDMatch[0] : null;
   }
 }

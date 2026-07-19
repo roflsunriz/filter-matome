@@ -19,4 +19,26 @@ describe("watch-history app structure", () => {
 
     expect(oversizedModules).toEqual([]);
   });
+
+  test("tracker teardown removes video listeners and pending timers", () => {
+    const source = readFileSync(
+      join(watchHistoryRoot, "watch-tracker.ts"),
+      "utf8",
+    );
+
+    for (const eventName of [
+      "loadedmetadata",
+      "play",
+      "pause",
+      "ended",
+      "timeupdate",
+    ]) {
+      expect(source).toMatch(
+        new RegExp(`removeEventListener\\(\\s*\"${eventName}\"`),
+      );
+    }
+    expect(source).toContain("clearTimeout(this.videoRetryTimer)");
+    expect(source).toContain("clearTimeout(this.timeUpdateTimer)");
+    expect(source).toContain("generation !== trackerGeneration");
+  });
 });
