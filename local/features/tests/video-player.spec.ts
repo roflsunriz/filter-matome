@@ -25,16 +25,20 @@ const commentPostFixtureEntry = join(
   "fixtures",
   "video-player-comment-post-entry.ts",
 );
-const harajukuStyle = readFileSync(
-  join(
-    projectRoot,
-    "src",
-    "mlink-video-controller",
-    "modules",
-    "watch-harajuku-style.css",
-  ),
-  "utf8",
-);
+const harajukuStyle = [1, 2, 3, 4]
+  .map((part) =>
+    readFileSync(
+      join(
+        projectRoot,
+        "src",
+        "mlink-video-controller",
+        "modules",
+        `watch-harajuku-style-${part}.css`,
+      ),
+      "utf8",
+    ),
+  )
+  .join("\n");
 
 const buildFixtureBundle = (entryPath = fixtureEntry): string => {
   const tempDirectory = mkdtempSync(join(tmpdir(), "video-player-test-"));

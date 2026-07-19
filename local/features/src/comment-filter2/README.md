@@ -11,8 +11,8 @@
 - `index.ts`: 初期化、ショートカット、イベント購読、`window.CommentFilter2Instance`。
 - `proxy/data-interceptor.ts`: `fetch` と共通SPA遷移イベントを監視し、元コメント応答と動画IDを捕捉。
 - `filter/`: 現行JSONルール、互換ルール、純粋なフィルターエンジン、Worker、Aho–Corasick候補索引、安全な必須トークン抽出、ニコる統計。
-- `storage/indexed-db.ts`: `CommentFilter2DB` のスキーマ、マイグレーション、整合性検証、バックアップ・復旧。
-- `components/ui-manager.ts`: 概要、ルール、コマンド、データ、設定のUIと操作。
+- `storage/indexed-db-core.ts`, `storage/indexed-db.ts`: `CommentFilter2DB` の基本CRUD・入出力と、診断・修復・マイグレーション。
+- `components/ui-manager-core.ts`, `components/ui-manager-interactions.ts`, `components/ui-manager.ts`: UI生成と基本状態、動的フォーム操作、正規表現分析・JSONルール編集。
 - `integrations/video-player-bridge.ts`: フィルター済みコメントをvideo-playerへ同期する境界。
 - `templates/`, `styles/`: Shadow DOM用テンプレートとスタイル。
 - `utils/`: JSON/JSONL/CSV変換、旧形式移行、サニタイズ、正規表現診断、ログ。

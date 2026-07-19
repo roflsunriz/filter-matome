@@ -1,0 +1,780 @@
+:root {
+    --hy-bg: #fff;
+    --hy-page: #fff;
+    --hy-panel: #fff;
+    --hy-panel-2: #f2f2f2;
+    --hy-border: #b7b7b7;
+    --hy-border-dark: #8d8d8d;
+    --hy-text: #222;
+    --hy-muted: #666;
+    --hy-link: #0645ad;
+    --hy-link-hover: #c00;
+    --hy-blue: #1f76c2;
+    --hy-header: #202020;
+    --hy-header-2: #4b4b4b;
+    --hy-player: #111;
+    --hy-radius: 0;
+    --hy-shadow: none;
+    --hy-gap: 8px;
+    --hy-width: min(1540px, calc(100vw - clamp(24px, 4vw, 48px)));
+    --hy-sidebar-width: clamp(320px, 30vw, 460px);
+    --hy-stat-date-width: clamp(132px, 38%, 176px);
+    --hy-stat-height: 60px;
+    --hy-owner-height: 88px;
+    --hy-owner-gap: 8px;
+    --hy-sidebar-header-height: 25px;
+    --hy-title-row-height: 34px;
+    --hy-detail-summary-height: 28px;
+    --hy-detail-expanded-height: clamp(180px, 26vh, 260px);
+    --hy-tag-strip-max-height: clamp(44px, 8vh, 64px);
+    --hy-sidebar-tag-search-header-height: 42px;
+    --hy-sidebar-tag-search-height: clamp(152px, 22vh, 240px);
+    --hy-sidebar-recommend-height: clamp(196px, 30vh, 320px);
+    --hy-title-to-detail-gap: 4px;
+    --hy-detail-to-tags-gap: 4px;
+    --hy-tags-to-player-gap: 12px;
+    --hy-details-panel-offset: 30px;
+    --hy-details-expanded-to-tags-gap: 6px;
+    --hy-pre-player-height: calc(
+      var(--hy-title-row-height) +
+      var(--hy-title-to-detail-gap) +
+      var(--hy-detail-summary-height) +
+      var(--hy-detail-to-tags-gap) +
+      var(--hy-tag-strip-max-height) +
+      var(--hy-tags-to-player-gap)
+    );
+    --hy-expanded-tags-top: calc(
+      var(--hy-title-row-height) +
+      var(--hy-title-to-detail-gap) +
+      var(--hy-details-panel-offset) +
+      var(--hy-detail-expanded-height) +
+      var(--hy-details-expanded-to-tags-gap)
+    );
+    --hy-expanded-pre-player-height: calc(
+      var(--hy-expanded-tags-top) +
+      var(--hy-tag-strip-max-height) +
+      var(--hy-tags-to-player-gap)
+    );
+    --hy-player-width: calc(var(--hy-width) - var(--hy-sidebar-width) - var(--hy-gap));
+    --hy-watch-sidebar-panel-height: min(100%, calc(var(--hy-pre-player-height) + var(--watch-player-height, 60vh) + 49px));
+  }
+
+  :root[data-hy-theme="light"] {
+    --hy-bg: #fff;
+    --hy-page: #fff;
+    --hy-panel: #fff;
+    --hy-panel-2: #f2f2f2;
+    --hy-border: #b7b7b7;
+    --hy-border-dark: #8d8d8d;
+    --hy-text: #222;
+    --hy-muted: #666;
+    --hy-link: #0645ad;
+    --hy-link-hover: #c00;
+    --hy-player: #111;
+    color-scheme: light;
+  }
+
+  :root[data-hy-theme="dark"] {
+    --hy-bg: #151515;
+    --hy-page: #1b1b1b;
+    --hy-panel: #202020;
+    --hy-panel-2: #2a2a2a;
+    --hy-border: #555;
+    --hy-border-dark: #777;
+    --hy-text: #e8e8e8;
+    --hy-muted: #aaa;
+    --hy-link: #8dbbff;
+    --hy-link-hover: #ff9a9a;
+    --hy-player: #050505;
+    color-scheme: dark;
+  }
+
+  html,
+  body {
+    background: transparent !important;
+    color: var(--hy-text) !important;
+    font-family: "Arial", "Helvetica", "Meiryo", "MS PGothic", sans-serif !important;
+    font-size: 12px !important;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: transparent !important;
+  }
+
+  a,
+  [data-anchor],
+  button[data-element-name],
+  .c_textOnLayer\.accentAzure {
+    color: var(--hy-link) !important;
+  }
+
+  a:hover,
+  [data-anchor]:hover,
+  button[data-element-name]:hover {
+    color: var(--hy-link-hover) !important;
+    text-decoration: underline !important;
+  }
+
+  #CommonHeader {
+    position: static !important;
+    width: 100% !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .HarajukuThemeButton {
+    position: absolute !important;
+    right: 6px !important;
+    top: -30px !important;
+    z-index: 30 !important;
+    width: 64px !important;
+    height: 24px !important;
+    min-width: 64px !important;
+    padding: 0 !important;
+    border: 1px solid #777 !important;
+    border-radius: 12px !important;
+    background: linear-gradient(#fff, #d8d8d8) !important;
+    color: #111 !important;
+    font-family: "MS PGothic", "Meiryo", sans-serif !important;
+    font-size: 13px !important;
+    font-weight: bold !important;
+    line-height: 22px !important;
+    text-align: center !important;
+    text-shadow: 0 1px 0 #fff !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    box-shadow: inset 0 1px rgba(255, 255, 255, .85), 0 1px 1px rgba(0, 0, 0, .25) !important;
+    overflow: hidden !important;
+  }
+
+  .HarajukuThemeButton:hover {
+    border-color: #555 !important;
+    background: linear-gradient(#fff, #cfcfcf) !important;
+    text-decoration: none !important;
+  }
+
+  :root[data-hy-theme="dark"] .HarajukuThemeButton {
+    border-color: #666 !important;
+    background: linear-gradient(#3a3a3a, #202020) !important;
+    color: #eee !important;
+    text-shadow: 0 -1px 0 #000 !important;
+  }
+
+  .HarajukuThemeButton-sun,
+  .HarajukuThemeButton-moon {
+    position: absolute !important;
+    top: 0 !important;
+    z-index: 1 !important;
+    width: 24px !important;
+    height: 22px !important;
+    color: inherit !important;
+    line-height: 22px !important;
+    text-align: center !important;
+    pointer-events: none !important;
+  }
+
+  .HarajukuThemeButton-sun {
+    left: 4px !important;
+  }
+
+  .HarajukuThemeButton-moon {
+    right: 4px !important;
+  }
+
+  .HarajukuThemeButton-knob {
+    position: absolute !important;
+    left: 3px !important;
+    top: 3px !important;
+    z-index: 2 !important;
+    width: 18px !important;
+    height: 18px !important;
+    border: 1px solid #777 !important;
+    border-radius: 50% !important;
+    background: linear-gradient(#fff, #dcdcdc) !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .35) !important;
+    pointer-events: none !important;
+  }
+
+  :root[data-hy-theme="dark"] .HarajukuThemeButton-knob {
+    left: 41px !important;
+    border-color: #222 !important;
+    background: linear-gradient(#f5f5f5, #aaa) !important;
+  }
+
+  .HarajukuBackgroundPriorityButton {
+    position: absolute !important;
+    right: 76px !important;
+    top: -30px !important;
+    z-index: 30 !important;
+    width: 64px !important;
+    height: 24px !important;
+    min-width: 64px !important;
+    padding: 0 !important;
+    border: 1px solid #777 !important;
+    border-radius: 12px !important;
+    background: linear-gradient(#fff, #d8d8d8) !important;
+    color: #111 !important;
+    font-family: "MS PGothic", "Meiryo", sans-serif !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+    line-height: 22px !important;
+    text-align: center !important;
+    text-shadow: 0 1px 0 #fff !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    box-shadow: inset 0 1px rgba(255, 255, 255, .85), 0 1px 1px rgba(0, 0, 0, .25) !important;
+    overflow: hidden !important;
+  }
+
+  .HarajukuBackgroundPriorityButton:hover {
+    border-color: #555 !important;
+    background: linear-gradient(#fff, #cfcfcf) !important;
+    text-decoration: none !important;
+  }
+
+  :root[data-hy-theme="dark"] .HarajukuBackgroundPriorityButton {
+    border-color: #666 !important;
+    background: linear-gradient(#3a3a3a, #202020) !important;
+    color: #eee !important;
+    text-shadow: 0 -1px 0 #000 !important;
+  }
+
+  .HarajukuBackgroundPriorityButton-colorSchemeIcon,
+  .HarajukuBackgroundPriorityButton-backgroundIcon {
+    position: absolute !important;
+    top: 5px !important;
+    z-index: 0 !important;
+    width: 14px !important;
+    height: 14px !important;
+    border-radius: 50% !important;
+    box-sizing: border-box !important;
+    pointer-events: none !important;
+  }
+
+  .HarajukuBackgroundPriorityButton-colorSchemeIcon {
+    left: 8px !important;
+    border: 1px solid #555 !important;
+    background: linear-gradient(90deg, #111 0 50%, #fff 50% 100%) !important;
+  }
+
+  .HarajukuBackgroundPriorityButton-backgroundIcon {
+    right: 8px !important;
+    border: 1px solid rgba(0, 0, 0, .35) !important;
+    background: conic-gradient(#f44336, #ffeb3b, #4caf50, #03a9f4, #3f51b5, #e91e63, #f44336) !important;
+  }
+
+  :root[data-hy-theme="dark"] .HarajukuBackgroundPriorityButton-colorSchemeIcon {
+    border-color: #aaa !important;
+  }
+
+  :root[data-hy-theme="dark"] .HarajukuBackgroundPriorityButton-backgroundIcon {
+    border-color: rgba(255, 255, 255, .55) !important;
+  }
+
+  .HarajukuBackgroundPriorityButton-knob {
+    position: absolute !important;
+    left: 1px !important;
+    top: 1px !important;
+    z-index: 10 !important;
+    width: 22px !important;
+    height: 22px !important;
+    border: 1px solid #777 !important;
+    border-radius: 50% !important;
+    background: linear-gradient(#fff, #dcdcdc) !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .35) !important;
+    pointer-events: none !important;
+  }
+
+  :root[data-hy-background-priority="background-image"] .HarajukuBackgroundPriorityButton-knob {
+    left: 41px !important;
+  }
+
+  :root[data-hy-theme="dark"] .HarajukuBackgroundPriorityButton-knob {
+    border-color: #222 !important;
+    background: linear-gradient(#f5f5f5, #aaa) !important;
+  }
+
+  #CommonHeader a[href^="https://www.nicovideo.jp?"] {
+    position: absolute !important;
+    left: calc((100vw - var(--hy-width)) / 2 + 8px) !important;
+    top: 48px !important;
+    z-index: 30 !important;
+    width: 40px !important;
+    height: 40px !important;
+    overflow: visible !important;
+    filter: brightness(0) contrast(1.25) !important;
+  }
+
+  #CommonHeader a,
+  #CommonHeader button,
+  #CommonHeader [class*="common-header"] {
+    font-size: 12px !important;
+  }
+
+  #CommonHeader a:hover {
+    text-decoration: none !important;
+  }
+
+  #CommonHeader::before {
+    content: none !important;
+  }
+
+  #CommonHeader::after {
+    content: none !important;
+  }
+
+  #root > div > header {
+    position: absolute !important;
+    left: 50% !important;
+    top: 42px !important;
+    transform: translateX(-50%) !important;
+    z-index: 20 !important;
+    width: var(--hy-width) !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    color: var(--hy-text) !important;
+    overflow: visible !important;
+  }
+
+  #root > div > header a[title="ニコニコ動画"] {
+    position: absolute !important;
+    left: 58px !important;
+    top: 10px !important;
+    width: 190px !important;
+    height: 42px !important;
+    filter: grayscale(1) contrast(1.4) !important;
+    overflow: visible !important;
+  }
+
+  #root > div > header a[title="ニコニコ動画"] > * {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  #root > div > header a[title="ニコニコ動画"]::before {
+    content: none !important;
+  }
+
+  #root > div > header a[title="ニコニコ動画"]::after {
+    content: "ニコニコ動画(原宿)\A NICO NICO DOUGA";
+    white-space: pre;
+    position: absolute;
+    left: -8px;
+    top: -2px;
+    color: #111;
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: 0;
+  }
+
+  #root > div > header::before {
+    content: none !important;
+  }
+
+  #root > div > header form[role="search"],
+  [data-scope="combobox"][data-part="control"],
+  input[role="combobox"] {
+    border-radius: var(--hy-radius) !important;
+    background: #fff !important;
+  }
+
+  #root > div > header form[role="search"] {
+    border: 1px solid #aaa !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .15) !important;
+  }
+
+  #root > div > header > button[aria-label*="サイドメニュー"] {
+    display: none !important;
+  }
+
+  #root > div > header form[role="search"] {
+    position: absolute !important;
+    left: clamp(280px, 20vw, 300px) !important;
+    top: 6px !important;
+    width: clamp(260px, calc(var(--hy-width) - 440px), 450px) !important;
+    height: 31px !important;
+    min-width: 0 !important;
+    max-width: 450px !important;
+    display: flex !important;
+    overflow: visible !important;
+    align-items: stretch !important;
+    border: 1px solid #9a9a9a !important;
+    background: #fff !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .18) !important;
+  }
+
+  #root > div > header form[role="search"]::before {
+    content: "キーワード";
+    display: flex;
+    flex: 0 0 78px;
+    align-items: center;
+    justify-content: center;
+    height: 31px;
+    box-sizing: border-box;
+    padding: 0;
+    margin-right: 0;
+    background: linear-gradient(#484848, #151515);
+    border-right: 1px solid #111;
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 31px;
+    white-space: nowrap;
+    text-shadow: 0 -1px 0 #000;
+  }
+
+  #root > div > header form[role="search"]::after {
+    content: none !important;
+  }
+
+  #root > div > header input[role="combobox"] {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 31px !important;
+    padding: 0 8px !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+    line-height: 31px !important;
+  }
+
+  #root > div > header form[role="search"] button[aria-label="検索"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 31px !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    border-left: 1px solid #aaa !important;
+    background: linear-gradient(#f9f9f9, #d8d8d8) !important;
+    line-height: 1 !important;
+    vertical-align: top !important;
+  }
+
+  #root > div > header form[role="search"] button[aria-label="検索"] svg {
+    display: block !important;
+    flex: 0 0 auto !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin: 0 !important;
+  }
+
+  #root > div > header > div:last-child {
+    display: none !important;
+  }
+
+  input,
+  textarea,
+  select {
+    color: #111 !important;
+    background: #fff !important;
+    border-radius: 0 !important;
+    font-family: inherit !important;
+  }
+
+  #root button,
+  #root [role="button"],
+  #root [data-part="trigger"],
+  #root .Pressable {
+    border-radius: var(--hy-radius) !important;
+    font-family: inherit !important;
+  }
+
+  #root main {
+    display: block !important;
+    background: transparent !important;
+    margin-top: 0 !important;
+  }
+
+  main section[class*="grid-template-areas"] {
+    --watch-player-width: var(--hy-player-width) !important;
+    --watch-sidebar-width: var(--hy-sidebar-width) !important;
+    width: var(--hy-width) !important;
+    grid-template-columns: var(--hy-player-width) var(--hy-sidebar-width) !important;
+    grid-template-areas:
+      "player sidebar"
+      "bottom sidebar"
+      "bottom sidebar" !important;
+    position: relative !important;
+    margin: 54px auto 0 !important;
+    padding: var(--hy-pre-player-height) 0 48px !important;
+    column-gap: var(--hy-gap) !important;
+    row-gap: 8px !important;
+  }
+
+  [data-styling-name="fullscreen-target"],
+  .PlayerPresenter {
+    background: var(--hy-player) !important;
+  }
+
+  .PlayerPresenter {
+    border: 1px solid #000 !important;
+    box-shadow: var(--hy-shadow) !important;
+    gap: 0 !important;
+  }
+
+  .PlayerPresenter::before {
+    content: none !important;
+  }
+
+  .PlayerPresenter video {
+    background: #000 !important;
+  }
+
+  .PlayerPresenter canvas {
+    background: transparent !important;
+  }
+
+  .PlayerPresenter a[href*="koken.nicovideo.jp"],
+  .PlayerPresenter a[href*="koken.nicovideo.jp"] * {
+    display: none !important;
+  }
+
+  .PlayerPresenter > div:first-child {
+    background: #000 !important;
+    border: 4px solid #111 !important;
+    border-bottom: 0 !important;
+  }
+
+  .PlayerPresenter > div:first-child::before {
+    content: none !important;
+  }
+
+  .PlayerPresenter [aria-label*="video - currentTime"],
+  .PlayerPresenter [aria-label="volume"] {
+    background: #2f94dd !important;
+  }
+
+  .PlayerPresenter [aria-label*="video - currentTime"]:hover,
+  .PlayerPresenter [aria-label="volume"]:hover,
+  .PlayerPresenter [class*="surfaceAccentAzure"],
+  .PlayerPresenter [class*="primaryAzure"] {
+    background: #2f94dd !important;
+  }
+
+  .PlayerPresenter [role="slider"] {
+    accent-color: #2f94dd !important;
+  }
+
+  .PlayerPresenter [role="progressbar"] {
+    background: #777 !important;
+  }
+
+  .PlayerPresenter button {
+    color: #eee !important;
+  }
+
+  .PlayerPresenter button svg {
+    fill: #eee !important;
+    filter: drop-shadow(0 -1px 0 #000) !important;
+  }
+
+  .PlayerPresenter > div:nth-child(2) {
+    min-height: 40px !important;
+    height: 40px !important;
+    padding: 4px !important;
+    background: linear-gradient(#eee, #cfcfcf) !important;
+    border-top: 1px solid #000 !important;
+    color: var(--hy-text) !important;
+  }
+
+  .PlayerPresenter > div:nth-child(2) button {
+    min-height: 30px !important;
+    height: 30px !important;
+    border: 1px solid #aaa !important;
+    background: linear-gradient(#fff, #ddd) !important;
+    color: #222 !important;
+    box-shadow: inset 0 1px rgba(255, 255, 255, .9) !important;
+    font-weight: bold !important;
+  }
+
+  .PlayerPresenter > div:nth-child(2) button:hover {
+    background: linear-gradient(#52b7ff, #1f86d0) !important;
+    border-color: #0966a8 !important;
+    color: #fff !important;
+    text-decoration: none !important;
+  }
+
+  .PlayerPresenter > div:nth-child(2) button:hover svg {
+    fill: #fff !important;
+  }
+
+  [aria-label="動画プレーヤー設定"],
+  [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"],
+  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
+  [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"],
+  [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] {
+    position: absolute !important;
+    left: calc(var(--hy-player-width) + var(--hy-gap)) !important;
+    right: auto !important;
+    top: 0 !important;
+    width: var(--hy-sidebar-width) !important;
+    height: var(--hy-watch-sidebar-panel-height) !important;
+    max-height: var(--hy-watch-sidebar-panel-height) !important;
+    padding-top: 0 !important;
+    transform: none !important;
+    z-index: 60 !important;
+  }
+
+  #root [aria-label="動画プレーヤー設定"][aria-label="動画プレーヤー設定"] > section[class][class],
+  #root [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section[class][class],
+  #root [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section[class][class],
+  #root [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] > section[class][class],
+  #root [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section[class][class] {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    margin-top: 0 !important;
+    transform: none !important;
+  }
+
+  [aria-label="動画プレーヤー設定"] > section > div,
+  [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section > div,
+  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section > div,
+  [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] > section > div,
+  [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section > div {
+    min-height: 0 !important;
+  }
+
+  [aria-label="動画プレーヤー設定"] > button[aria-label="Close"],
+  [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] button[aria-label="Close"],
+  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] button[aria-label="Close"],
+  [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] button[aria-label="Close"],
+  [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] button[aria-label="Close"] {
+    position: absolute !important;
+    top: 0.5lh !important;
+    right: 0.5lh !important;
+    left: auto !important;
+    z-index: 5 !important;
+    pointer-events: auto !important;
+  }
+
+  [aria-label="NG設定"][class*="z_docked"][class*="w_watchSidebar"] > section > header,
+  [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"] > section > header,
+  [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"] > section > header,
+  [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section > header {
+    position: relative !important;
+    z-index: 4 !important;
+  }
+
+  button[aria-label="コメント投稿ボタン"] {
+    background: linear-gradient(#4aa3e6, #1e72b8) !important;
+    border-color: #0c4f88 !important;
+    color: #fff !important;
+    width: 56px !important;
+    min-width: 56px !important;
+    height: 32px !important;
+  }
+
+  .PlayerPresenter > div:nth-child(2) button[aria-label="コマンド"],
+  .PlayerPresenter > div:nth-child(2) button[aria-label="コメント投稿ボタン"] {
+    height: 32px !important;
+    min-height: 32px !important;
+    align-self: center !important;
+  }
+
+  .PlayerPresenter > div:nth-child(2) button[aria-label="コマンド"] {
+    width: 32px !important;
+    min-width: 32px !important;
+    padding: 7px !important;
+  }
+
+  .PlayerPresenter > div:nth-child(2) div:has(> textarea[placeholder="コメントを入力"]) {
+    border-left: 0 !important;
+  }
+
+  .PlayerPresenter textarea[placeholder="コメントを入力"] {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 6px 8px !important;
+    border: 1px solid #999 !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    box-sizing: border-box !important;
+    line-height: 18px !important;
+    overflow: hidden !important;
+    background: #fff !important;
+    color: #111 !important;
+    font-size: 13px !important;
+  }
+
+  .PlayerPresenter input[placeholder="コマンド"] {
+    width: 0 !important;
+    min-width: 0 !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    align-self: center !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"],
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="sidebar"] {
+    color: var(--hy-text) !important;
+  }
+
+  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] {
+    font-size: 12px !important;
+  }
+
+  section[class*="grid-template-areas"] section,
+  section[class*="grid-template-areas"] aside,
+  section[class*="grid-template-areas"] [class*="surfaceHighEm"] {
+    background: var(--hy-panel) !important;
+    border-radius: var(--hy-radius) !important;
+    border-color: var(--hy-border) !important;
+    color: var(--hy-text) !important;
+  }
+
+  section[class*="grid-template-areas"] section[class*="surfaceHighEm"] {
+    border: 1px solid var(--hy-border) !important;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .08) !important;
+  }
+
+  section[class*="grid-template-areas"] section > header,
+  div[class*="grid-area_"][class*="sidebar"] section > header {
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 10px !important;
+    background: linear-gradient(#fdfdfd, #e1e1e1) !important;
+    border-bottom: 1px solid var(--hy-border) !important;
+    color: #111 !important;
+    font-size: 13px !important;
+    font-weight: bold !important;
+    text-shadow: 0 1px 0 #fff !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div > div:first-child {
+    position: relative !important;
+    height: calc(var(--watch-player-height) + 49px) !important;
+    background: var(--hy-panel) !important;
+    border: 1px solid var(--hy-border) !important;
+    border-radius: var(--hy-radius) !important;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .08) !important;
+    min-height: 0 !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div > div:first-child::before {
+    content: none !important;
+  }
+
+  div[class*="grid-area_"][class*="sidebar"] > div > div:first-child::after {
+    content: none !important;
+  }

@@ -1,0 +1,591 @@
+      <main class="main-content">
+        <!-- タブナビゲーション -->
+        <nav class="tab-nav">
+          <div class="tab-buttons">
+            <button id="history-tab" class="tab-btn active">
+              <img
+                class="material-icon icon-dark"
+                data-style="outlined"
+                data-icon="history"
+                alt="history"
+                loading="lazy"
+              />
+              履歴
+            </button>
+            <button id="stats-tab" class="tab-btn">
+              <img
+                class="material-icon icon-dark"
+                data-style="outlined"
+                data-icon="bar_chart"
+                alt="stats"
+                loading="lazy"
+              />
+              統計
+            </button>
+            <button id="series-tab" class="tab-btn">
+              <img
+                class="material-icon icon-dark"
+                data-style="outlined"
+                data-icon="video_library"
+                alt="series"
+                loading="lazy"
+              />
+              シリーズ
+            </button>
+            <button id="series-alert-tab" class="tab-btn">
+              <img
+                class="material-icon icon-dark"
+                data-style="outlined"
+                data-icon="notifications"
+                alt="alerts"
+                loading="lazy"
+              />
+              シリーズアラート
+            </button>
+          </div>
+          <details class="management-menu">
+            <summary class="btn btn-secondary">
+              <img
+                class="material-icon icon-white"
+                data-style="outlined"
+                data-icon="more_horiz"
+                alt=""
+                loading="lazy"
+              />
+              管理
+            </summary>
+            <div class="tab-actions">
+              <button id="export-btn" class="btn btn-secondary">
+                <img
+                  class="material-icon icon-white"
+                  data-style="outlined"
+                  data-icon="file_download"
+                  alt="export"
+                  loading="lazy"
+                />
+                エクスポート
+              </button>
+              <button id="import-btn" class="btn btn-secondary">
+                <img
+                  class="material-icon icon-white"
+                  data-style="outlined"
+                  data-icon="file_upload"
+                  alt="import"
+                  loading="lazy"
+                />
+                インポート
+              </button>
+              <button id="database-management-btn" class="btn btn-secondary">
+                <img
+                  class="material-icon icon-white"
+                  data-style="outlined"
+                  data-icon="storage"
+                  alt="database"
+                  loading="lazy"
+                />
+                データベース管理
+              </button>
+              <input
+                type="file"
+                id="import-file"
+                accept=".json"
+                style="display: none"
+              />
+            </div>
+          </details>
+        </nav>
+
+        <!-- 履歴タブ -->
+        <div id="history-content" class="tab-content active">
+          <div class="history-layout">
+            <!-- 左サイドバー -->
+            <aside class="sidebar">
+              <div class="library-section">
+                <h3 class="section-title">ライブラリ</h3>
+                <button
+                  class="library-link active"
+                  type="button"
+                  id="library-all"
+                >
+                  すべての履歴
+                </button>
+                <button
+                  class="library-link"
+                  type="button"
+                  id="library-in-progress"
+                >
+                  途中から
+                </button>
+                <button
+                  class="library-link"
+                  type="button"
+                  id="library-completed"
+                >
+                  完走済み
+                </button>
+              </div>
+
+              <!-- ソート項目 -->
+              <div class="sort-section">
+                <h3 class="section-title">ソート</h3>
+                <div class="sort-controls primary-sort-controls">
+                  <div class="sort-item">
+                    <button
+                      id="sort-watchedAt"
+                      class="sort-btn active"
+                      data-sort="watchedAt"
+                    >
+                      <img
+                        class="material-icon icon-dark"
+                        data-style="outlined"
+                        data-icon="schedule"
+                        alt="schedule"
+                        loading="lazy"
+                      />
+                      視聴日時
+                      <img
+                        class="sort-order-icon material-icon icon-dark"
+                        data-style="outlined"
+                        data-icon="arrow_downward"
+                        alt="arrow_downward"
+                        loading="lazy"
+                      />
+                    </button>
+                  </div>
+                  <details class="advanced-sort-menu">
+                    <summary>詳細な並び順</summary>
+                    <div class="sort-controls advanced-sort-controls">
+                      <div class="sort-item">
+                        <button
+                          id="sort-title"
+                          class="sort-btn"
+                          data-sort="title"
+                        >
+                          <img
+                            class="material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="title"
+                            alt="title"
+                            loading="lazy"
+                          />
+                          タイトル
+                          <img
+                            class="sort-order-icon material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="arrow_downward"
+                            alt="arrow_downward"
+                            loading="lazy"
+                          />
+                        </button>
+                      </div>
+                      <div class="sort-item">
+                        <button
+                          id="sort-ownerName"
+                          class="sort-btn"
+                          data-sort="ownerName"
+                        >
+                          <img
+                            class="material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="person"
+                            alt="person"
+                            loading="lazy"
+                          />
+                          投稿者
+                          <img
+                            class="sort-order-icon material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="arrow_downward"
+                            alt="arrow_downward"
+                            loading="lazy"
+                          />
+                        </button>
+                      </div>
+                      <div class="sort-item">
+                        <button
+                          id="sort-lengthSec"
+                          class="sort-btn"
+                          data-sort="lengthSec"
+                        >
+                          <img
+                            class="material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="timer"
+                            alt="timer"
+                            loading="lazy"
+                          />
+                          再生時間
+                          <img
+                            class="sort-order-icon material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="arrow_downward"
+                            alt="arrow_downward"
+                            loading="lazy"
+                          />
+                        </button>
+                      </div>
+                      <div class="sort-item">
+                        <button
+                          id="sort-watchCount"
+                          class="sort-btn"
+                          data-sort="watchCount"
+                        >
+                          <img
+                            class="material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="repeat"
+                            alt="repeat"
+                            loading="lazy"
+                          />
+                          視聴回数
+                          <img
+                            class="sort-order-icon material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="arrow_downward"
+                            alt="arrow_downward"
+                            loading="lazy"
+                          />
+                        </button>
+                      </div>
+                      <div class="sort-item">
+                        <button
+                          id="sort-viewCount"
+                          class="sort-btn"
+                          data-sort="viewCount"
+                        >
+                          <img
+                            class="material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="visibility"
+                            alt="visibility"
+                            loading="lazy"
+                          />
+                          再生数
+                          <img
+                            class="sort-order-icon material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="arrow_downward"
+                            alt="arrow_downward"
+                            loading="lazy"
+                          />
+                        </button>
+                      </div>
+                      <div class="sort-item">
+                        <button
+                          id="sort-commentCount"
+                          class="sort-btn"
+                          data-sort="commentCount"
+                        >
+                          <img
+                            class="material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="comment"
+                            alt="comment"
+                            loading="lazy"
+                          />
+                          コメント数
+                          <img
+                            class="sort-order-icon material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="arrow_downward"
+                            alt="arrow_downward"
+                            loading="lazy"
+                          />
+                        </button>
+                      </div>
+                      <div class="sort-item">
+                        <button
+                          id="sort-mylistCount"
+                          class="sort-btn"
+                          data-sort="mylistCount"
+                        >
+                          <img
+                            class="material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="bookmark"
+                            alt="bookmark"
+                            loading="lazy"
+                          />
+                          マイリスト数
+                          <img
+                            class="sort-order-icon material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="arrow_downward"
+                            alt="arrow_downward"
+                            loading="lazy"
+                          />
+                        </button>
+                      </div>
+                      <div class="sort-item">
+                        <button
+                          id="sort-likeCount"
+                          class="sort-btn"
+                          data-sort="likeCount"
+                        >
+                          <img
+                            class="material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="thumb_up"
+                            alt="thumb_up"
+                            loading="lazy"
+                          />
+                          いいね数
+                          <img
+                            class="sort-order-icon material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="arrow_downward"
+                            alt="arrow_downward"
+                            loading="lazy"
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+
+              <!-- フィルタ項目 -->
+              <details class="filter-section">
+                <summary class="section-title">詳細な絞り込み</summary>
+                <div class="filter-controls">
+                  <label class="filter-item filter-checkbox-item">
+                    <input
+                      type="checkbox"
+                      id="filter-completed"
+                      class="filter-checkbox"
+                    />
+                    <span class="filter-label">完走済みのみ</span>
+                  </label>
+                  <div class="filter-item">
+                    <label class="filter-label">投稿者</label>
+                    <select id="filter-owner" class="filter-select">
+                      <option value="">すべて</option>
+                    </select>
+                  </div>
+                  <div class="filter-item">
+                    <label class="filter-label">視聴期間</label>
+                    <div class="date-range">
+                      <div class="date-range-row">
+                        <input
+                          type="date"
+                          id="filter-date-start"
+                          class="filter-date"
+                        />
+                      </div>
+                      <div class="date-range-row">
+                        <span>〜</span>
+                        <input
+                          type="date"
+                          id="filter-date-end"
+                          class="filter-date"
+                        />
+                      </div>
+                      <div class="date-range-row">
+                        <button
+                          id="clear-date-range"
+                          class="btn btn-sm btn-clear"
+                        >
+                          <img
+                            class="material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="clear"
+                            alt="clear"
+                            loading="lazy"
+                          />
+                          視聴期間クリア
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="filter-item">
+                    <label class="filter-label">投稿期間</label>
+                    <div class="date-range">
+                      <div class="date-range-row">
+                        <input
+                          type="date"
+                          id="filter-uploaded-date-start"
+                          class="filter-date"
+                        />
+                      </div>
+                      <div class="date-range-row">
+                        <span>〜</span>
+                        <input
+                          type="date"
+                          id="filter-uploaded-date-end"
+                          class="filter-date"
+                        />
+                      </div>
+                      <div class="date-range-row">
+                        <button
+                          id="clear-uploaded-date-range"
+                          class="btn btn-sm btn-clear"
+                        >
+                          <img
+                            class="material-icon icon-dark"
+                            data-style="outlined"
+                            data-icon="clear"
+                            alt="clear"
+                            loading="lazy"
+                          />
+                          投稿期間クリア
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <!-- 削除設定 -->
+              <div class="delete-section sidebar-management-link">
+                <div class="delete-controls">
+                  <button
+                    id="open-history-delete-modal-btn"
+                    class="btn btn-danger btn-full"
+                  >
+                    <img
+                      class="material-icon icon-white"
+                      data-style="outlined"
+                      data-icon="delete_forever"
+                      alt="delete_forever"
+                      loading="lazy"
+                    />
+                    履歴を管理・削除
+                  </button>
+                </div>
+              </div>
+
+              <!-- 統計概要 -->
+              <div class="stats-summary">
+                <h3 class="section-title">統計</h3>
+                <div class="stats-item">
+                  <span class="stats-label">総視聴動画数</span>
+                  <span id="stats-total-videos" class="stats-value">-</span>
+                </div>
+                <div class="stats-item">
+                  <span class="stats-label">総視聴時間</span>
+                  <span id="stats-total-time" class="stats-value">-</span>
+                </div>
+                <div class="stats-item">
+                  <span class="stats-label">完走率</span>
+                  <span id="stats-completion-rate" class="stats-value">-</span>
+                </div>
+              </div>
+            </aside>
+
+            <!-- 右アイテム欄 -->
+            <section class="content-area">
+              <div class="history-query-bar">
+                <div class="search-section">
+                  <div class="search-input-container">
+                    <img
+                      class="material-icon icon-dark search-icon"
+                      data-style="outlined"
+                      data-icon="search"
+                      alt=""
+                      loading="lazy"
+                    />
+                    <input
+                      type="text"
+                      id="search-input"
+                      placeholder="タイトル・投稿者・タグ・メモを検索"
+                      class="search-input"
+                      aria-label="視聴履歴を検索"
+                    />
+                    <button
+                      id="search-clear"
+                      class="search-clear"
+                      aria-label="検索をクリア"
+                    >
+                      <img
+                        class="material-icon icon-dark"
+                        data-style="outlined"
+                        data-icon="clear"
+                        alt=""
+                        loading="lazy"
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="content-header">
+                <div class="content-info">
+                  <span id="content-count" class="content-count"
+                    >0 件の動画</span
+                  >
+                  <div
+                    id="active-filter-chips"
+                    class="active-filter-chips"
+                    aria-live="polite"
+                  ></div>
+                </div>
+                <div class="content-actions">
+                  <button id="refresh-btn" class="btn btn-icon">
+                    <img
+                      class="material-icon icon-dark"
+                      data-style="outlined"
+                      data-icon="refresh"
+                      alt="refresh"
+                      loading="lazy"
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div id="history-list" class="history-list">
+                <!-- 動画アイテムがここに動的に追加される -->
+              </div>
+
+              <nav
+                id="history-pagination"
+                class="history-pagination hidden"
+                aria-label="視聴履歴のページ"
+              >
+                <button
+                  id="history-page-previous"
+                  type="button"
+                  class="btn btn-secondary"
+                >
+                  前へ
+                </button>
+                <span id="history-page-status" aria-live="polite"
+                  >1 / 1 ページ</span
+                >
+                <button
+                  id="history-page-next"
+                  type="button"
+                  class="btn btn-secondary"
+                >
+                  次へ
+                </button>
+                <label class="history-page-size-label">
+                  表示件数
+                  <select id="history-page-size" class="form-select">
+                    <option value="25">25</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                  </select>
+                </label>
+              </nav>
+
+              <div id="loading" class="loading hidden">
+                <div class="loading-spinner"></div>
+                <span>読み込み中...</span>
+              </div>
+
+              <div id="empty-state" class="empty-state hidden">
+                <div class="empty-icon">
+                  <img
+                    class="material-icon icon-dark"
+                    data-style="outlined"
+                    data-icon="movie_creation"
+                    alt="movie_creation"
+                    loading="lazy"
+                  />
+                </div>
+                <h3>視聴履歴はありません</h3>
+                <p>ニコニコ動画を視聴すると、ここに履歴が表示されます</p>
+              </div>
+            </section>
+          </div>
+        </div>
+

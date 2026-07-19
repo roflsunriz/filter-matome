@@ -1,21 +1,23 @@
 import {
-  ModuleInstance,
-  ModuleConfig,
-  ModuleStatus,
-  PageType as ModulePageType,
   ModuleCategory,
+  ModuleConfig,
+  ModuleInstance,
+  PageType as ModulePageType,
+  ModuleStatus,
 } from "@/types/module-types";
 import {
   Keyword,
   PageType,
-  NicovideoSelectors,
-  UrlPatterns,
-  UpdateItem,
   ThumbnailsFilterGlobal,
+  UpdateItem,
 } from "@/types/thumbnails-filter-types";
 // import { ToastrInstance } from '@/types/toastr-types';
 import { createMaterialIcon } from "../../common/material-icons";
 import { isWatchLikePage } from "../utils/page-detect";
+import {
+  NICOVIDEO_SELECTORS,
+  URL_PATTERNS,
+} from "./thumbnail-filter-selectors";
 
 export const thumbnailsFilterModuleConfig: ModuleConfig = {
   id: "thumbnails_filter",
@@ -115,52 +117,6 @@ class HideVideoSettings {
     return title.toLowerCase().includes(keyword.toLowerCase());
   }
 }
-
-// ニコニコ動画のセレクター定数
-const NICOVIDEO_SELECTORS: NicovideoSelectors = {
-  VIDEO_ELEMENTS: {
-    watch: [
-      'a[data-anchor-page="watch"][data-anchor-area="playlist"]',
-      'a[data-anchor-page="watch"][data-anchor-area="nicoad_videos"]',
-      'a[data-anchor-page="watch"]',
-    ].join(","),
-    top: ".NC-VideoCard",
-    ranking: ".NC-Card",
-    tag: ".item[data-video-item]",
-    search:
-      '.item[data-video-item], [data-decoration-video-id][data-anchor-page="search"]',
-    other: "",
-  },
-  TITLE_ELEMENTS: {
-    watch: {
-      playlist: "h2",
-      nicoad: "p",
-      default: "h2",
-    },
-    top: ".NC-CardTitle",
-    ranking: ".NC-CardTitle",
-    tag: ".itemTitle a",
-    search:
-      '.itemTitle a, a[data-anchor-page="search"][href*="/watch/"].fw_bold',
-    other: "",
-  },
-  PARENT_ELEMENTS: {
-    watch: "",
-    top: ".NC-Card",
-    ranking: ".NC-Card",
-    tag: ".item",
-    search: '.item, [data-decoration-video-id][data-anchor-page="search"]',
-    other: "",
-  },
-};
-
-const URL_PATTERNS: UrlPatterns = {
-  WATCH: "/watch/",
-  TAG: "/tag/",
-  SEARCH: "/search/",
-  RANKING: "/ranking",
-  VIDEO_TOP: "/video_top",
-};
 
 // UI管理クラス
 class HideVideoUI {

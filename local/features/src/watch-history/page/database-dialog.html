@@ -1,0 +1,228 @@
+      <!-- データベース管理モーダル -->
+      <div id="database-management-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content large">
+          <div class="modal-header">
+            <h3 class="modal-title">データベース管理</h3>
+            <button id="db-management-modal-close" class="modal-close">
+              <img
+                class="material-icon icon-dark"
+                data-style="outlined"
+                data-icon="close"
+                alt="close"
+                loading="lazy"
+              />
+            </button>
+          </div>
+          <div class="modal-body">
+            <!-- 永続化状態セクション -->
+            <div class="db-management-section">
+              <h4>ストレージ永続化</h4>
+              <div class="persistence-status">
+                <div class="persistence-info">
+                  <div class="persistence-badge" id="persistence-badge">
+                    <img
+                      class="material-icon icon-white"
+                      data-style="outlined"
+                      data-icon="storage"
+                      alt="storage"
+                      loading="lazy"
+                    />
+                    <span id="persistence-status-text">確認中...</span>
+                  </div>
+                  <div class="persistence-details">
+                    <div class="storage-usage">
+                      <div class="storage-usage-bar">
+                        <div
+                          id="storage-usage-fill"
+                          class="storage-usage-fill"
+                          style="width: 0%"
+                        ></div>
+                      </div>
+                      <div class="storage-usage-text">
+                        <span id="storage-usage-text">0 B / 0 B (0%)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="persistence-actions">
+                  <button id="request-persistence-btn" class="btn btn-primary">
+                    <img
+                      class="material-icon icon-white"
+                      data-style="outlined"
+                      data-icon="lock"
+                      alt="lock"
+                      loading="lazy"
+                    />
+                    永続化を要求
+                  </button>
+                  <button
+                    id="refresh-persistence-btn"
+                    class="btn btn-secondary"
+                  >
+                    <img
+                      class="material-icon icon-white"
+                      data-style="outlined"
+                      data-icon="refresh"
+                      alt="refresh"
+                      loading="lazy"
+                    />
+                    更新
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- マイグレーション進捗セクション -->
+            <div class="db-management-section">
+              <h4>マイグレーション</h4>
+              <div class="migration-status">
+                <div
+                  id="migration-progress-container"
+                  class="migration-progress-container hidden"
+                >
+                  <div class="migration-progress-info">
+                    <div class="migration-current-task">
+                      <span id="migration-current-task"
+                        >マイグレーション実行中...</span
+                      >
+                    </div>
+                    <div class="migration-progress-bar">
+                      <div
+                        id="migration-progress-fill"
+                        class="migration-progress-fill"
+                        style="width: 0%"
+                      ></div>
+                    </div>
+                    <div class="migration-progress-text">
+                      <span id="migration-progress-text">0 / 0 (0%)</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="migration-actions">
+                  <button id="run-migration-btn" class="btn btn-primary">
+                    <img
+                      class="material-icon icon-white"
+                      data-style="outlined"
+                      data-icon="upgrade"
+                      alt="upgrade"
+                      loading="lazy"
+                    />
+                    マイグレーション実行
+                  </button>
+                  <button id="check-migration-btn" class="btn btn-secondary">
+                    <img
+                      class="material-icon icon-white"
+                      data-style="outlined"
+                      data-icon="check"
+                      alt="check"
+                      loading="lazy"
+                    />
+                    状態確認
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- バックアップ管理セクション -->
+            <div class="db-management-section">
+              <h4>バックアップ管理</h4>
+              <div class="backup-management">
+                <div class="backup-actions">
+                  <button id="create-backup-btn" class="btn btn-primary">
+                    <img
+                      class="material-icon icon-white"
+                      data-style="outlined"
+                      data-icon="backup"
+                      alt="backup"
+                      loading="lazy"
+                    />
+                    バックアップ作成
+                  </button>
+                  <button id="refresh-backups-btn" class="btn btn-secondary">
+                    <img
+                      class="material-icon icon-white"
+                      data-style="outlined"
+                      data-icon="refresh"
+                      alt="refresh"
+                      loading="lazy"
+                    />
+                    更新
+                  </button>
+                </div>
+                <div class="backup-list">
+                  <div class="backup-list-header">
+                    <h5>利用可能なバックアップ</h5>
+                  </div>
+                  <div id="backup-list-container" class="backup-list-container">
+                    <div class="backup-list-empty">
+                      <span>バックアップがありません</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 設定セクション -->
+            <div class="db-management-section">
+              <h4>設定</h4>
+              <div class="db-management-settings">
+                <div class="setting-item">
+                  <label class="setting-label">
+                    <input
+                      type="checkbox"
+                      id="auto-migration-checkbox"
+                      class="setting-checkbox"
+                    />
+                    自動マイグレーション
+                  </label>
+                  <span class="setting-description"
+                    >データベース更新時に自動でマイグレーションを実行</span
+                  >
+                </div>
+                <div class="setting-item">
+                  <label class="setting-label">
+                    <input
+                      type="checkbox"
+                      id="auto-persist-checkbox"
+                      class="setting-checkbox"
+                    />
+                    自動永続化
+                  </label>
+                  <span class="setting-description"
+                    >データベース初期化時に自動で永続化を要求</span
+                  >
+                </div>
+                <div class="setting-item">
+                  <label class="setting-label">
+                    <input
+                      type="checkbox"
+                      id="auto-backup-checkbox"
+                      class="setting-checkbox"
+                    />
+                    自動バックアップ
+                  </label>
+                  <span class="setting-description"
+                    >マイグレーション前に自動でバックアップを作成</span
+                  >
+                </div>
+                <div class="setting-item">
+                  <label class="setting-label">
+                    <input
+                      type="checkbox"
+                      id="backup-before-migration-checkbox"
+                      class="setting-checkbox"
+                    />
+                    マイグレーション前バックアップ
+                  </label>
+                  <span class="setting-description"
+                    >マイグレーション実行前にバックアップを作成</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- トースト通知 -->

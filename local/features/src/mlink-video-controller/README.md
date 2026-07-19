@@ -46,6 +46,8 @@ watchページ間のSPA遷移は共通navigationイベントから`ModuleManager
 
 保存形式を変更するときは、設定UI、インポート・エクスポート、正規化、初期値、テストを同時に更新してください。
 
+設定UIは一覧・各機能設定を`settings-ui-core.ts`、入出力・背景画像モーダルを`settings-ui.ts`へ分けています。背景画像の基本CRUDは`background-image-storage-core.ts`、保守と入出力は`background-image-settings.ts`が担当し、原宿表示のメタデータ読取とCSS、パネルのキー保護も専用ファイルへ分離しています。
+
 ## 主な連携境界
 
 - `services/nico-video-player.ts`: 対象ページの動画要素と再生状態を優先して操作する。

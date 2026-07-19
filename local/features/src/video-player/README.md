@@ -13,14 +13,15 @@ NicoCache_nlのローカルキャッシュを再生するスタンドアロン�
 
 - `index.ts`: ウォッチページルーターの多重起動防止。
 - `router/watch-page-router.ts`: URLの動画ID、視聴可否、ローカルキャッシュを確認し、公式・ローカル再生を選択。
-- `standalone/`: 静的ページのレイアウト、動画情報、再生本体、スタイル、再生終了時の設定。
+- `standalone/`: 静的ページのレイアウト、APIデータ正規化、動画ソース検証、再生本体、スタイル、再生終了時の設定。
 - `core/comment-fetcher.ts`: コメント取得。
 - `core/comment-poster.ts`: 視聴ページから投稿先を取得し、投稿キーAPIとnvComment APIを接続する型付き投稿クライアント。
 - `core/comment-system.ts`: コメント一覧とプレイヤー連携。
 - `core/comment-overlay-comment-system.ts`: `comment-overlay` を使う描画。
 - `core/nicochart-*`: ウォッチページから情報を取得できない場合のnicochartフォールバック。
 - `core/database-manager.ts`, `core/migration-manager.ts`, `config/database-config.ts`: 設定DBのスキーマ、移行、バックアップ、クリーンアップ。
-- `ui/`: Web Components、再生コントロール、コメント一覧、背景モード、設定保存。
+- `ui/player-controls-view.ts`, `ui/player-controls-events.ts`, `ui/player-controls.ts`: 再生コントロールのShadow DOM表示、イベント配線、全画面・ライフサイクル。
+- `ui/`: 上記に加え、コメント一覧、背景モード、設定保存などのUI部品。
 - `ui/comment-post-form.ts`: 75文字制限、公式風コマンドパレット、投稿状態を扱うShadow DOMフォーム。
 - `utils/`: DOM待機、IndexedDB設定、通知。
 - `concepts.md`: プレイヤー設計上の補足。

@@ -15,6 +15,11 @@ import {
   HeaderModule,
   headerModuleConfig,
 } from "@/mlink-video-controller/modules/header-module";
+import { BackgroundImageSettings } from "@/mlink-video-controller/modules/background-image-settings";
+import {
+  WatchHarajukuModule,
+  watchHarajukuModuleConfig,
+} from "@/mlink-video-controller/modules/watch-harajuku-module";
 
 Object.assign(window, {
   MlinkTabControllers: {
@@ -31,5 +36,8 @@ Object.assign(window, {
     thumbnailsFilterModuleConfig,
     HeaderModule,
     headerModuleConfig,
+    BackgroundImageSettings,
+    WatchHarajukuModule,
+    watchHarajukuModuleConfig,
   },
 });

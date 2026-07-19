@@ -16,7 +16,8 @@
 - `components/manager-refactored.ts`: UIから利用する操作の調停。
 - `components/selector.ts`: 他ページからマイリストを選択して動画を追加するUI。
 - `services/`: マイリスト、動画、キーワード、設定、入出力、Google Drive、DB管理、外部API。
-- `ui/`: 画面本体、モーダル、イベント、一括操作、仮想スクロール、アクションメニュー。
+- `ui/mylist-ui-core.ts`, `ui/mylist-ui-rendering.ts`, `ui/mylist-ui-events.ts`, `ui/ui-refactored.ts`: 一覧基盤、項目描画、イベント配線、詳細・設定モーダル。
+- `ui/`: 上記に加え、一括操作、仮想スクロール、アクションメニューなどのUI部品。
 - `utils/linkify.ts`: 動画リンク、ローカルプレイヤーURL、説明文の安全なリンク化。
 - `service-worker.ts`: 本体ファイルとサムネイルのキャッシュ戦略。
 

@@ -13,7 +13,7 @@
     "benchmark:comment-filter": "bun tests/comment-filter2-performance.bench.ts",
     "benchmark:comment-filter-prototypes": "bun ../../benchmarks/comment-filter-core/benchmark.ts",
     "test:unit": "bun scripts/test-unit.ts",
-    "test:e2e": "playwright test tests/mlink-video-controller.spec.ts tests/watch-history.spec.ts tests/mylist2.spec.ts tests/comment-filter2.spec.ts tests/movie-info.spec.ts tests/cache-data-manager.spec.ts tests/video-player.spec.ts",
+    "test:e2e": "playwright test tests/mlink-video-controller.spec.ts tests/mlink-video-controller-lifecycle.spec.ts tests/watch-history.spec.ts tests/watch-tracker.spec.ts tests/mylist2.spec.ts tests/comment-filter2.spec.ts tests/movie-info.spec.ts tests/cache-data-manager.spec.ts tests/video-player.spec.ts",
     "test": "bun run test:unit && bun run test:e2e",
     "error-check": "bun run type-check && bun run lint",
     "verify": "bun run format:check && bun run lint && bun run type-check && bun run test && bun run build"

@@ -50,6 +50,19 @@ function extractTemplateBody(source: string, exportName: string): string {
     .replaceAll(/\$\{[^}]+\}/g, "");
 }
 
+function buildSettingsStyles(): string {
+  return [
+    ["styles/settings-layout.ts", "settingsLayoutStyles"],
+    ["styles/settings-modules.ts", "settingsModulesStyles"],
+    ["styles/settings-dialogs.ts", "settingsDialogsStyles"],
+    ["styles/settings-responsive.ts", "settingsResponsiveStyles"],
+  ]
+    .map(([path, exportName]) =>
+      extractTemplateBody(readControllerFile(path), exportName),
+    )
+    .join("\n");
+}
+
 async function buildControllerBundle(): Promise<string> {
   const tempDirectory = mkdtempSync(join(tmpdir(), "filter-matome-test-"));
   const outputPath = join(tempDirectory, "controller.js");
@@ -709,10 +722,7 @@ test("heatmap settings modal opens from module settings and applies values", asy
     readControllerFile("templates/settings.ts"),
     "settingsTemplate",
   );
-  const settingsCss = extractTemplateBody(
-    readControllerFile("styles/settings.ts"),
-    "settingsStyles",
-  );
+  const settingsCss = buildSettingsStyles();
 
   await page.evaluate(
     ({ html, css }) => {
@@ -947,46 +957,4 @@ test("heatmap settings modal opens from module settings and applies values", asy
   });
 
   expect(moduleCalls).toEqual(["color:default", "smooth:false", "mode:fab"]);
-});
-
-test("module settings import/export normalization drops legacy and unknown module ids", async ({
-  page,
-}) => {
-  await page.setContent(buildTestDocument("<main></main>"));
-  await page.addScriptTag({ content: await buildControllerBundle() });
-
-  const normalized = await page.evaluate(() => {
-    const { normalizeModuleSettingsForRegistry } = (
-      window as unknown as {
-        MlinkTabControllers: {
-          normalizeModuleSettingsForRegistry: (
-            settings: unknown,
-            validModuleIds: string[],
-          ) => Record<string, unknown>;
-        };
-      }
-    ).MlinkTabControllers;
-
-    return normalizeModuleSettingsForRegistry(
-      {
-        nico_info_highlight: { enabled: true, config: { migrated: true } },
-        daily_lottery_highlight: { enabled: false },
-        removed_legacy_module: { enabled: true },
-        heatmap: { enabled: true, config: { displayMode: "overlay" } },
-        malformed_module: { enabled: "yes" },
-      },
-      ["daily_lottery_highlight", "heatmap"],
-    );
-  });
-
-  expect(normalized).toEqual({
-    daily_lottery_highlight: {
-      enabled: true,
-      config: { migrated: true },
-    },
-    heatmap: {
-      enabled: true,
-      config: { displayMode: "overlay" },
-    },
-  });
 });

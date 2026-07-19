@@ -30,10 +30,13 @@ bun run benchmark:comment-filter
 - `cache-data-manager.spec.ts`: `tempList`・`cacheList` を使う一覧、検索、絞り込み、ソート、詳細、削除、一括操作。
 - `comment-filter2.spec.ts`: 実IndexedDBを使う設定UI、ルールCRUD、即時適用、正規表現プレビュー。
 - `mlink-video-controller.spec.ts`: パネル、各タブ、モジュール設定、インポート・正規化、主要UI操作。
+- `mlink-video-controller-lifecycle.spec.ts`: 設定正規化、背景画像CRUD、原宿UIの生成・操作・破棄。
 - `movie-info.spec.ts`: 基本4ソース、任意コメント取得、部分失敗、JSON・コピー・ダウンロード操作。
 - `mylist2.spec.ts`: 実IndexedDBを使うマイリスト・動画・設定・詳細・一括操作。
 - `video-player.spec.ts`: スタンドアロンUIと背景モードなどのブラウザー統合。
 - `watch-history.spec.ts`: 実IndexedDBを使う履歴・統計・シリーズ・削除・入出力・DB管理。
+- `watch-tracker.spec.ts`: 動的video要素の記録とSPA離脱時の監視解除。
+- `source-file-size.test.ts`: TypeScript、CSS、HTMLが責務分割の上限を超えていないことを検証する。
 - `*.test.ts`: フィルター、削除条件、URL生成、API正規化、設定判断など、DOMから分離できる境界値と回帰。
 
 ## 追加・変更時の原則

@@ -11,6 +11,12 @@ import {
 } from "@/video-player/ui/templates";
 import type { ApiData } from "@/types/index";
 import type { HlsConstructor, HlsInstance } from "@/types/video-types";
+import {
+  createVideoSourceProbe,
+  waitForFirstReadyProbe,
+  type VideoSourceProbe,
+} from "@/video-player/standalone/source-probe";
+import { MISSING_CACHE_DIALOG_STYLES } from "./missing-cache-dialog-styles";
 
 const ensureCustomElements = (): void => {
   if (!customElements.get("player-controls-shadow")) {
@@ -20,93 +26,7 @@ const ensureCustomElements = (): void => {
 
 let playerStylesInjected = false;
 let missingCacheDialogStylesInjected = false;
-const SOURCE_PROBE_TIMEOUT_MS = 5000;
 const VIDEO_READY_TIMEOUT_MS = 8000;
-const MISSING_CACHE_DIALOG_STYLES = `
-.vp-missing-cache-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(0, 0, 0, 0.62);
-}
-
-.vp-missing-cache-dialog {
-  width: min(520px, 100%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 8px;
-  background: #1f2329;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-  color: #f4f7fb;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-.vp-missing-cache-dialog__header {
-  padding: 18px 20px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.vp-missing-cache-dialog__title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.vp-missing-cache-dialog__body {
-  display: grid;
-  gap: 10px;
-  padding: 16px 20px 18px;
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-.vp-missing-cache-dialog__body p {
-  margin: 0;
-}
-
-.vp-missing-cache-dialog__meta {
-  padding: 10px 12px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #dce6f2;
-  overflow-wrap: anywhere;
-}
-
-.vp-missing-cache-dialog__actions {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 20px 18px;
-}
-
-.vp-missing-cache-dialog__button {
-  min-width: 88px;
-  min-height: 36px;
-  border: 0;
-  border-radius: 6px;
-  background: #4f9cff;
-  color: #ffffff;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.vp-missing-cache-dialog__button:hover,
-.vp-missing-cache-dialog__button:focus-visible {
-  background: #72b0ff;
-  outline: 2px solid rgba(255, 255, 255, 0.75);
-  outline-offset: 2px;
-}
-`;
-
-interface VideoSourceProbe {
-  url: string;
-  ready: Promise<string>;
-  cleanup: () => void;
-}
 
 export interface StandalonePlayerOptions {
   mount: HTMLElement;
@@ -437,122 +357,17 @@ export class StandalonePlayer {
     title: string,
   ): Promise<string | null> {
     const candidates = await this.urlManager.getCandidateUrls(videoId);
-    const probes = candidates.map((url) => this.createVideoSourceProbe(url));
+    const probes = candidates.map((url) =>
+      createVideoSourceProbe(url, (video, sourceUrl, onError) =>
+        this.attachProbeSource(video, sourceUrl, onError),
+      ),
+    );
 
     try {
       return await this.playFirstReadyFallback(probes, title);
     } finally {
       probes.forEach((probe) => probe.cleanup());
     }
-  }
-
-  private createVideoSourceProbe(url: string): VideoSourceProbe {
-    const probeVideo = document.createElement("video");
-    probeVideo.preload = "metadata";
-    probeVideo.muted = true;
-    probeVideo.playsInline = true;
-    probeVideo.crossOrigin = "anonymous";
-    probeVideo.style.position = "fixed";
-    probeVideo.style.width = "1px";
-    probeVideo.style.height = "1px";
-    probeVideo.style.opacity = "0";
-    probeVideo.style.pointerEvents = "none";
-    probeVideo.style.left = "-10px";
-    probeVideo.style.top = "-10px";
-
-    let active = true;
-    let hls: HlsInstance | null = null;
-    let timeoutId: number | null = null;
-    let settled = false;
-    let resolveReady: (readyUrl: string) => void = () => {};
-    let rejectReady: (error: Error) => void = () => {};
-
-    const cleanup = (): void => {
-      active = false;
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-      probeVideo.removeEventListener("loadedmetadata", handleReady);
-      probeVideo.removeEventListener("canplay", handleReady);
-      probeVideo.removeEventListener("error", handleError);
-      hls?.destroy();
-      hls = null;
-      probeVideo.pause();
-      probeVideo.removeAttribute("src");
-      probeVideo.load();
-      probeVideo.remove();
-    };
-
-    const settleReady = (): void => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      resolveReady(url);
-    };
-
-    const settleError = (error: Error): void => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      cleanup();
-      rejectReady(error);
-    };
-
-    function handleReady(): void {
-      settleReady();
-    }
-
-    function handleError(): void {
-      const mediaError = probeVideo.error;
-      settleError(
-        new Error(
-          mediaError?.message ||
-            `動画ソースの実再生プローブに失敗しました: code=${mediaError?.code ?? "unknown"}`,
-        ),
-      );
-    }
-
-    const ready = new Promise<string>((resolve, reject) => {
-      resolveReady = resolve;
-      rejectReady = reject;
-    });
-
-    timeoutId = window.setTimeout(() => {
-      settleError(
-        new Error(`動画ソースの実再生プローブがタイムアウトしました: ${url}`),
-      );
-    }, SOURCE_PROBE_TIMEOUT_MS);
-
-    probeVideo.addEventListener("loadedmetadata", handleReady, { once: true });
-    probeVideo.addEventListener("canplay", handleReady, { once: true });
-    probeVideo.addEventListener("error", handleError, { once: true });
-    document.body.appendChild(probeVideo);
-
-    void this.attachProbeSource(probeVideo, url, settleError)
-      .then((probeHls) => {
-        if (!active) {
-          probeHls?.destroy();
-          return;
-        }
-        hls = probeHls;
-      })
-      .catch((error) => {
-        if (!active) {
-          return;
-        }
-        settleError(
-          error instanceof Error
-            ? error
-            : new Error(
-                `動画ソースの実再生プローブに失敗しました: ${String(error)}`,
-              ),
-        );
-      });
-
-    return { url, ready, cleanup };
   }
 
   private async attachProbeSource(
@@ -583,48 +398,12 @@ export class StandalonePlayer {
     return null;
   }
 
-  private async waitForFirstReadyProbe(
-    probes: VideoSourceProbe[],
-  ): Promise<string | null> {
-    if (probes.length === 0) {
-      return null;
-    }
-
-    return new Promise((resolve) => {
-      let pendingCount = probes.length;
-      let resolved = false;
-
-      probes.forEach((probe) => {
-        void probe.ready
-          .then((url) => {
-            if (resolved) {
-              return;
-            }
-            resolved = true;
-            resolve(url);
-          })
-          .catch((error) => {
-            window.logger.warn(
-              `動画ソースの実再生プローブに失敗しました: ${probe.url}`,
-              error,
-            );
-          })
-          .finally(() => {
-            pendingCount--;
-            if (!resolved && pendingCount === 0) {
-              resolve(null);
-            }
-          });
-      });
-    });
-  }
-
   private async playFirstReadyFallback(
     probes: VideoSourceProbe[],
     title: string,
   ): Promise<string | null> {
     while (probes.length > 0) {
-      const url = await this.waitForFirstReadyProbe(probes);
+      const url = await waitForFirstReadyProbe(probes);
       if (!url) {
         return null;
       }

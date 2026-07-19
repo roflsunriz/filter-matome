@@ -9,6 +9,7 @@ import { BackgroundImageSettings } from "@/mlink-video-controller/modules/backgr
 import { BackgroundImageItem } from "@/types/background-image-types";
 import { createMaterialIcon } from "@/common/material-icons";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
+import { injectGlobalBackgroundStyles } from "./background-selector-styles";
 
 export const watchBackgroundSelectorModuleConfig: ModuleConfig = {
   id: "watch_background_selector",
@@ -61,7 +62,7 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
       }
 
       // 【最優先】グローバル背景スタイルを即座に注入
-      this.injectGlobalBackgroundCSS();
+      injectGlobalBackgroundStyles();
 
       // 背景描画用のShadow DOMホストを確実に用意
       this.ensureShadowInfrastructure();
@@ -703,59 +704,6 @@ export class WatchBackgroundSelectorModule implements ModuleInstance {
           error,
         );
       });
-  }
-
-  /**
-   * グローバル背景スタイルを注入（bodyへの適用用）
-   */
-  private injectGlobalBackgroundCSS(): void {
-    // 既存のスタイルがあるかチェック
-    const existingStyle = document.getElementById(
-      "watch-background-global-styles",
-    );
-    if (existingStyle) {
-      return;
-    }
-
-    const style = document.createElement("style");
-    style.id = "watch-background-global-styles";
-    style.textContent = `
-      @charset "utf-8";
-
-      /*-------------------------
-       * グローバル背景スタイル（CSS変数定義）
-       *-------------------------*/
-      :root {
-        /*scroll, fixed, local*/
-        /*background-attachment*/
-        --bg-att: fixed;
-        /*normal, multiply, screen, overlay, darken, lighten, color-dodge, color-burn, hard-light,*/
-        /*soft-light, difference, exclusion, hue, saturation, color, luminosity*/
-        /*background-blend-mode*/
-        --bg-bl-m: normal;
-        /*border-box, padding-box, content-box, text*/
-        /*background-clip*/
-        --bg-cl: initial;
-        /*color keywords, rgb, hex, hsl, currentcolor, transparent*/
-        /*background-color*/
-        --bg-col: black;
-        /*url, gradient, element, image, cross-fade, image-set*/
-        /*background-image*/
-        --bg-img: initial;
-        /*border-box, padding-box, content-box*/
-        /*background-origin*/
-        --bg-org: initial;
-        /*top, bottom, left, right, center, percentage, length, multiple images, offsets*/
-        /*background-position*/
-        --bg-pos: center;
-        /*repeat-x, repeat-y, repeat, space, round, no-repeat*/
-        --bg-rep: no-repeat;
-        /*cover, contain, width, width height, multiple images*/
-        --bg-siz: cover;
-      }
-    `;
-
-    document.head.appendChild(style);
   }
 
   /**

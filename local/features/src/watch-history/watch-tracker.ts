@@ -10,14 +10,11 @@ import {
   WatchLogEntry,
   WatchEvent,
   WatchEventType,
-  VideoStats,
-  SeriesInfo,
-  SeriesVideoInfo,
 } from "@/types/watch-history-types";
-import { NicoApiData } from "@/types/common-types";
 import { watchHistoryDB } from "@/watch-history/database";
 import { logger } from "@/common/logger";
 import { addNavigationListener } from "@/runtime/navigation";
+import { WatchMetadataExtractor } from "@/watch-history/metadata-extractor";
 
 const WATCH_PAGE_PATH_REGEX = /^\/watch\/[a-z]{2}\d+$/;
 const VIDEO_ID_IN_PATH_REGEX = /[a-z]{2}\d+/;
@@ -57,6 +54,9 @@ const isWatchPageLocation = (loc: Location = location): boolean => {
  * 視聴追跡クラス
  */
 export class WatchTracker {
+  private readonly metadataExtractor = new WatchMetadataExtractor(
+    () => this.videoElement,
+  );
   private currentVideoId: string | null = null;
   private currentEntry: WatchHistoryEntry | null = null;
   private videoElement: HTMLVideoElement | null = null;
@@ -182,18 +182,30 @@ export class WatchTracker {
         this.currentEntry = {
           ...existingResult.data,
           // メタデータを更新
-          title: this.extractTitle(apiData) || existingResult.data.title,
-          ownerId: this.extractOwnerId(apiData) || existingResult.data.ownerId,
+          title:
+            this.metadataExtractor.extractTitle(apiData) ||
+            existingResult.data.title,
+          ownerId:
+            this.metadataExtractor.extractOwnerId(apiData) ||
+            existingResult.data.ownerId,
           ownerName:
-            this.extractOwnerName(apiData) || existingResult.data.ownerName,
+            this.metadataExtractor.extractOwnerName(apiData) ||
+            existingResult.data.ownerName,
           lengthSec:
-            this.extractLengthSec(apiData) || existingResult.data.lengthSec,
-          stats: this.extractStats(apiData) || existingResult.data.stats,
-          tags: this.extractTags(apiData) || existingResult.data.tags,
+            this.metadataExtractor.extractLengthSec(apiData) ||
+            existingResult.data.lengthSec,
+          stats:
+            this.metadataExtractor.extractStats(apiData) ||
+            existingResult.data.stats,
+          tags:
+            this.metadataExtractor.extractTags(apiData) ||
+            existingResult.data.tags,
           thumbnailUrl:
-            this.extractThumbnailUrl(apiData) ||
+            this.metadataExtractor.extractThumbnailUrl(apiData) ||
             existingResult.data.thumbnailUrl,
-          series: this.extractSeries(apiData) || existingResult.data.series,
+          series:
+            this.metadataExtractor.extractSeries(apiData) ||
+            existingResult.data.series,
           // 視聴情報を更新
           watchedAt: now,
           lastPosition: 0,
@@ -205,21 +217,23 @@ export class WatchTracker {
         // 新規エントリを作成
         this.currentEntry = {
           videoId: this.currentVideoId,
-          title: this.extractTitle(apiData) || "タイトル不明",
-          ownerId: this.extractOwnerId(apiData) || "unknown",
-          ownerName: this.extractOwnerName(apiData) || "投稿者不明",
-          lengthSec: this.extractLengthSec(apiData) || 0,
+          title: this.metadataExtractor.extractTitle(apiData) || "タイトル不明",
+          ownerId: this.metadataExtractor.extractOwnerId(apiData) || "unknown",
+          ownerName:
+            this.metadataExtractor.extractOwnerName(apiData) || "投稿者不明",
+          lengthSec: this.metadataExtractor.extractLengthSec(apiData) || 0,
           watchedAt: now,
           firstWatchedAt: now,
           lastPosition: 0,
           completed: false,
           watchCount: 1,
           watchLogs: [],
-          stats: this.extractStats(apiData),
-          tags: this.extractTags(apiData) || [],
-          thumbnailUrl: this.extractThumbnailUrl(apiData) || "",
+          stats: this.metadataExtractor.extractStats(apiData),
+          tags: this.metadataExtractor.extractTags(apiData) || [],
+          thumbnailUrl:
+            this.metadataExtractor.extractThumbnailUrl(apiData) || "",
           memo: "",
-          series: this.extractSeries(apiData),
+          series: this.metadataExtractor.extractSeries(apiData),
         };
       }
 
@@ -783,230 +797,6 @@ export class WatchTracker {
       logger.error("[WatchTracker] 同期的視聴セッション記録エラー:", error);
     }
   }
-
-  // ===== メタデータ抽出メソッド =====
-
-  /**
-   * タイトルを抽出する
-   */
-  private extractTitle(apiData: NicoApiData): string | null {
-    try {
-      // 複数の可能性を試す
-      const videoData = apiData.video as {
-        title?: string;
-        name?: string;
-        [key: string]: unknown;
-      };
-      return (
-        videoData?.title ||
-        videoData?.name ||
-        document.querySelector("h1.VideoTitle")?.textContent ||
-        document.title.replace(" - ニコニコ動画", "") ||
-        null
-      );
-    } catch (error) {
-      window?.logger.warn("タイトル抽出エラー:", error);
-      return null;
-    }
-  }
-
-  /**
-   * 投稿者IDを抽出する
-   */
-  private extractOwnerId(apiData: NicoApiData): string | null {
-    try {
-      const ownerData = apiData.owner as {
-        id?: string | number;
-        [key: string]: unknown;
-      };
-      const channelData = apiData.channel as {
-        id?: string | number;
-        [key: string]: unknown;
-      };
-      const videoData = apiData.video as {
-        owner?: { id?: string | number; [key: string]: unknown };
-        [key: string]: unknown;
-      };
-
-      const id =
-        ownerData?.id || channelData?.id || videoData?.owner?.id || null;
-      return id ? String(id) : null;
-    } catch (error) {
-      window?.logger.warn("投稿者ID抽出エラー:", error);
-      return null;
-    }
-  }
-
-  /**
-   * 投稿者名を抽出する
-   */
-  private extractOwnerName(apiData: NicoApiData): string | null {
-    try {
-      const ownerData = apiData.owner as {
-        nickname?: string;
-        [key: string]: unknown;
-      };
-      const channelData = apiData.channel as {
-        name?: string;
-        [key: string]: unknown;
-      };
-      const videoData = apiData.video as {
-        owner?: { nickname?: string; [key: string]: unknown };
-        [key: string]: unknown;
-      };
-
-      return (
-        ownerData?.nickname ||
-        channelData?.name ||
-        videoData?.owner?.nickname ||
-        document.querySelector(".VideoOwner-name")?.textContent ||
-        null
-      );
-    } catch (error) {
-      window?.logger.warn("投稿者名抽出エラー:", error);
-      return null;
-    }
-  }
-
-  /**
-   * 動画長を抽出する
-   */
-  private extractLengthSec(apiData: NicoApiData): number | null {
-    try {
-      const videoData = apiData.video as {
-        duration?: number;
-        length?: number;
-        [key: string]: unknown;
-      };
-      return (
-        videoData?.duration ||
-        videoData?.length ||
-        this.videoElement?.duration ||
-        0
-      );
-    } catch (error) {
-      window?.logger.warn("動画長抽出エラー:", error);
-      return null;
-    }
-  }
-
-  /**
-   * 統計情報を抽出する
-   */
-  private extractStats(apiData: NicoApiData): VideoStats | null {
-    try {
-      const videoData = apiData.video as {
-        count?: {
-          view?: number;
-          comment?: number;
-          mylist?: number;
-          like?: number;
-          [key: string]: unknown;
-        };
-        registeredAt?: string;
-        [key: string]: unknown;
-      };
-
-      return {
-        viewCount: videoData?.count?.view || 0,
-        commentCount: videoData?.count?.comment || 0,
-        mylistCount: videoData?.count?.mylist || 0,
-        likeCount: videoData?.count?.like || 0,
-        uploadedAt: videoData?.registeredAt
-          ? new Date(videoData.registeredAt).getTime()
-          : Date.now(),
-      };
-    } catch (error) {
-      window?.logger.warn("統計情報抽出エラー:", error);
-      return null;
-    }
-  }
-
-  /**
-   * タグを抽出する
-   */
-  private extractTags(apiData: NicoApiData): string[] | null {
-    try {
-      const tagData = apiData.tag as {
-        items?: { name?: string; [key: string]: unknown }[];
-        [key: string]: unknown;
-      };
-      return (
-        tagData?.items?.map((tag) => tag.name || "") ||
-        Array.from(document.querySelectorAll(".VideoTag")).map(
-          (el) => el.textContent || "",
-        ) ||
-        []
-      );
-    } catch (error) {
-      window?.logger.warn("タグ抽出エラー:", error);
-      return null;
-    }
-  }
-
-  /**
-   * サムネイルURLを抽出する
-   */
-  private extractThumbnailUrl(apiData: NicoApiData): string | null {
-    try {
-      const videoData = apiData.video as {
-        thumbnail?: { url?: string; [key: string]: unknown };
-        thumbnailUrl?: string;
-        [key: string]: unknown;
-      };
-
-      return (
-        videoData?.thumbnail?.url ||
-        videoData?.thumbnailUrl ||
-        document
-          .querySelector('meta[property="og:image"]')
-          ?.getAttribute("content") ||
-        null
-      );
-    } catch (error) {
-      window?.logger.warn("サムネイルURL抽出エラー:", error);
-      return null;
-    }
-  }
-
-  /**
-   * シリーズ情報を抽出する
-   */
-  private extractSeries(apiData: NicoApiData): SeriesInfo | null {
-    try {
-      const seriesData = apiData.series as {
-        id?: number;
-        title?: string;
-        description?: string;
-        thumbnailUrl?: string;
-        video?: {
-          prev?: unknown;
-          next?: unknown;
-          first?: unknown;
-        };
-        [key: string]: unknown;
-      };
-
-      if (!seriesData || !seriesData.id) {
-        return null;
-      }
-
-      return {
-        id: seriesData.id,
-        title: seriesData.title || "",
-        description: seriesData.description || "",
-        thumbnailUrl: seriesData.thumbnailUrl || "",
-        video: {
-          prev: seriesData.video?.prev as SeriesVideoInfo | null,
-          next: seriesData.video?.next as SeriesVideoInfo | null,
-          first: seriesData.video?.first as SeriesVideoInfo | null,
-        },
-      };
-    } catch (error) {
-      window?.logger.warn("シリーズ情報抽出エラー:", error);
-      return null;
-    }
-  }
 }
 
 let watchTracker: WatchTracker | null = null;
@@ -1014,14 +804,12 @@ let navigationRetryTimer: number | null = null;
 let trackerGeneration = 0;
 
 async function initializeWatchTracker(generation: number): Promise<void> {
-  // 視聴ページまたはスタンドアロンプレイヤーかチェック
   const isWatchPage = isWatchPageLocation();
   const isStandalonePlayer = isStandalonePlayerLocation();
   if (!isWatchPage && !isStandalonePlayer) {
     return;
   }
 
-  // 既存のトラッカーがあれば破棄
   if (watchTracker) {
     const previousTracker = watchTracker;
     watchTracker = null;

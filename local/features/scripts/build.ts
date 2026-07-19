@@ -1,5 +1,6 @@
 import { mkdir, rm } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
+import { composeWatchHistoryDocument } from "./watch-history-document";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const outDir = resolve(projectRoot, "dist");
@@ -60,7 +61,12 @@ async function copyHtmlPages(): Promise<void> {
     const source = resolve(projectRoot, page.source);
     const output = resolve(outDir, page.output);
     await mkdir(dirname(output), { recursive: true });
-    await Bun.write(output, Bun.file(source));
+    await Bun.write(
+      output,
+      page.source === "src/watch-history/index.html"
+        ? composeWatchHistoryDocument(projectRoot)
+        : Bun.file(source),
+    );
   }
 }
 

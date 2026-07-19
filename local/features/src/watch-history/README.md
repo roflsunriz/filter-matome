@@ -5,14 +5,15 @@
 ウォッチページとスタンドアロンvideo-playerの実際のメディア再生を追跡し、IndexedDBへ視聴履歴を保存します。専用SPAでは履歴検索、フィルター、統計、シリーズ、アラート、メモ、削除、入出力、DB管理を提供します。
 
 - 配信URL: `https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html`
-- HTML生成元: `index.html`
+- HTML生成元: `index.html` と `page/*.html`（`scripts/watch-history-document.ts`で合成）
 - SPA入口: `startWatchHistoryApp()`
 - 追跡入口: `startWatchTracker()`
 
 ## 構成
 
-- `watch-tracker.ts`: 動画ID・メタデータ取得、動画要素監視、進捗とセッション記録。
-- `database.ts`: 履歴、統計、シリーズ、入出力、DB操作。インデックスカーソルによるページ取得と、旧IndexedDBアラートの一度限りの移行も扱う。
+- `watch-tracker.ts`, `metadata-extractor.ts`: 動画要素の監視・進捗記録と、API・DOMからのメタデータ正規化。
+- `database-core.ts`, `database-query.ts`, `database.ts`: 基本CRUD、ページング・検索・入出力、統計・シリーズ・DB管理。旧IndexedDBアラートの一度限りの移行も扱う。
+- `page/*.html`: 履歴、統計・シリーズ、モーダル、DB管理のHTML断片。
 - `migration-manager.ts`: バージョン移行、永続化要求、バックアップ、設定。
 - `app.ts`: SPAの入口、DOM初期化、イベント配線、設定読込。
 - `app-base.ts`: SPA全体で共有する状態、共通UI操作、機能間の抽象境界。
@@ -45,7 +46,7 @@
 - `watchHistory`: 動画IDをキーにした履歴、統計、タグ、シリーズ、メモ、視聴ログ。
 - DBバージョン3以降のIndexedDBにはシリーズアラートを保存しない。既存DBの`seriesAlerts`はextensionへの初回移行後に空にする。
 - シリーズアラートの正本: NicoCache_nlの`data/filter-matome-series-alerts.json`。
-- 視聴履歴DBのバージョン、インデックス、移行は `database.ts` と `migration-manager.ts` を正とする。
+- 視聴履歴DBのバージョン、インデックス、移行は `database-core.ts`、`database-query.ts`、`database.ts` と `migration-manager.ts` を正とする。
 
 初期化後にスキーマを検証し、破損時はバックアップと再作成の方針に従います。型を任意化して旧データを放置せず、入出力形式を含めて明示的に移行してください。
 
@@ -75,6 +76,7 @@
 - `tests/watch-history-delete-modal.test.ts`: 条件付き削除ルール。
 - `tests/watch-history-series-alert-extension.test.ts`: 旧IndexedDB・インポートデータをextensionの正本へ移す統合規則。
 - `tests/watch-history-app-structure.test.ts`: SPA実装ファイルを1,000行以下に保つ構造制約。
+- `tests/source-file-size.test.ts`: TypeScript、CSS、HTMLの責務肥大化を検出する全体構造制約。
 
 ```powershell
 cd local/features

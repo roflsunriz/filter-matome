@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【開発者向け】巨大化していたcomment-filter2、mlink-video-controller、mylist2、video-player、watch-historyのUI・IndexedDB・メタデータ・再生処理・CSS・HTMLを責務別モジュールへ分割し、各ソースファイルを1,000行以下に整理した。背景設定、原宿UI、視聴トラッカーの動的回帰テストと、上限超過を検出する構造テストも追加した。
 - 【CI/開発者向け】依存解決の再現性とローカル検証との差をなくすため、CI・リリースのBun導入を`--frozen-lockfile`へ変更し、TypeScript全体のPrettier差分検査とPlaywright Chromium E2Eを独立ジョブとして必須化した。ローカルには`format:check`、`test:e2e`、全検証をまとめる`verify`を追加した。
 - 【watch-history】大量の履歴を一度にDOMへ展開しないよう、一覧を25・50・100件単位のページ表示へ変更した。IndexedDBにはインデックスカーソルで指定範囲だけを保持するページ取得APIを追加し、一覧取得済みデータを統計計算へ再利用して重複する全件読み込みも削減した。
 - 【runtime】SPA遷移のたびに複数機能がHistory APIを重ねて上書きし、URL確認用の全DOM監視を常駐させる負荷をなくすため、`pushState`、`replaceState`、`popstate`、`hashchange`を単一の`filter-matome:navigation`イベントへ集約した。mlink、comment-filter2、video-player、watch-historyは共通イベントを購読し、追跡対象外へ移動したwatch-historyトラッカーを破棄する。

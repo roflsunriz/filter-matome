@@ -89,7 +89,10 @@ describe("mlink-video-controller structure", () => {
   test("keeps heatmap controls in module settings", () => {
     const playbackTemplate = readControllerFile("templates/playback.ts");
     const registry = readControllerFile("module-handlers/module-registry.ts");
-    const settingsUi = readControllerFile("module-handlers/settings-ui.ts");
+    const settingsUi = [
+      readControllerFile("module-handlers/settings-ui-core.ts"),
+      readControllerFile("module-handlers/settings-ui.ts"),
+    ].join("\n");
     const heatmapModuleExists = existsSync(
       join(controllerRoot, "modules", "heatmap-module.ts"),
     );
@@ -109,8 +112,12 @@ describe("mlink-video-controller structure", () => {
   });
 
   test("keeps panel input key protection out of the capture phase", () => {
-    const panelSource = readControllerFile("panels/link-video.ts");
+    const panelSource = [
+      readControllerFile("panels/link-video.ts"),
+      readControllerFile("panels/panel-keyboard-and-availability.ts"),
+    ].join("\n");
 
+    expect(panelSource).toContain("setupKeyPropagationPrevention(this.shadow)");
     expect(panelSource).toContain(
       "入力欄自身のハンドラを動かした後、外側への伝搬だけを止める",
     );

@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { composeWatchHistoryDocument } from "../scripts/watch-history-document";
 
 const projectRoot = join(import.meta.dirname, "..");
 const watchHistoryRoot = join(projectRoot, "src", "watch-history");
@@ -151,7 +152,7 @@ function buildAppBundle(): string {
 }
 
 function buildDocument(): string {
-  return readFileSync(join(watchHistoryRoot, "index.html"), "utf8").replace(
+  return composeWatchHistoryDocument(projectRoot).replace(
     /<script src="\/local\/features\/dist\/features\.js"><\/script>/,
     "",
   );
