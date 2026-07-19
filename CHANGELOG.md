@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#235] - 2026-07-20
+
 ### Added
 
 - 【watch-history】視聴履歴とシリーズアラートをGoogle DriveへZIPで保存し、Drive上のwatch-history用バックアップを選択して現在の履歴へマージできるエクスポート・インポート機能を追加した。
@@ -16,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【features】`package.json`の`version`を`235`へ更新した。
+- 【README】latestバッジを`#235`へ更新した。
+- 【開発環境】Visual Studioが生成する`.vs/`をGit管理対象外へ追加した。
 - 【common/mylist2/watch-history】Google Identity Services認証、`drive.file` API、ZIP圧縮・展開を`common/google-drive-backup-service.ts`へ共通化し、機能ごとの保存フォルダーとファイル接頭辞を設定して利用する構成へ変更した。
 - 【開発者向け】巨大化していたcomment-filter2、mlink-video-controller、mylist2、video-player、watch-historyのUI・IndexedDB・メタデータ・再生処理・CSS・HTMLを責務別モジュールへ分割し、各ソースファイルを1,000行以下に整理した。背景設定、原宿UI、視聴トラッカーの動的回帰テストと、上限超過を検出する構造テストも追加した。
 - 【CI/開発者向け】依存解決の再現性とローカル検証との差をなくすため、CI・リリースのBun導入を`--frozen-lockfile`へ変更し、TypeScript全体のPrettier差分検査とPlaywright Chromium E2Eを独立ジョブとして必須化した。ローカルには`format:check`、`test:e2e`、全検証をまとめる`verify`を追加した。
