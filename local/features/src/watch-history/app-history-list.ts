@@ -1,8 +1,5 @@
 import { logger } from "@/common/logger";
-import {
-  createMaterialIcon,
-  ICONS,
-} from "@/common/material-icons";
+import { createMaterialIcon, ICONS } from "@/common/material-icons";
 import {
   normalizeThumbnailUrl,
   THUMBNAIL_ERROR_HANDLER,
@@ -16,10 +13,13 @@ export abstract class WatchHistoryHistoryListApp extends WatchHistoryAppBase {
     const historyList = this.elements["history-list"];
     if (!historyList) return;
 
+    const pageEntries = this.getHistoryPageEntries();
+
     // 空の場合の処理
     if (this.filteredEntries.length === 0) {
       historyList.innerHTML = "";
       this.showEmptyState(true);
+      this.updateHistoryPagination();
       return;
     }
 
@@ -27,7 +27,7 @@ export abstract class WatchHistoryHistoryListApp extends WatchHistoryAppBase {
 
     // アイテムを生成
     try {
-      const items = this.filteredEntries.map((e) => this.createHistoryItem(e));
+      const items = pageEntries.map((e) => this.createHistoryItem(e));
       historyList.innerHTML = items.join("");
     } catch (err) {
       logger.error("履歴アイテム生成で例外:", err);
@@ -59,7 +59,7 @@ export abstract class WatchHistoryHistoryListApp extends WatchHistoryAppBase {
           ) {
             return;
           }
-          this.showVideoDetail(this.filteredEntries[index]);
+          this.showVideoDetail(pageEntries[index]);
         }),
       );
 
@@ -69,7 +69,7 @@ export abstract class WatchHistoryHistoryListApp extends WatchHistoryAppBase {
         "click",
         this.guardEvent((e) => {
           e.stopPropagation();
-          void this.deleteHistoryEntry(this.filteredEntries[index]);
+          void this.deleteHistoryEntry(pageEntries[index]);
         }),
       );
       const resumeBtn = item.querySelector(".history-resume-btn");
@@ -77,7 +77,7 @@ export abstract class WatchHistoryHistoryListApp extends WatchHistoryAppBase {
         "click",
         this.guardEvent((e) => {
           e.stopPropagation();
-          this.openHistoryVideo(this.filteredEntries[index]);
+          this.openHistoryVideo(pageEntries[index]);
         }),
       );
     });
@@ -92,6 +92,88 @@ export abstract class WatchHistoryHistoryListApp extends WatchHistoryAppBase {
         }),
       );
     });
+
+    this.updateHistoryPagination();
+  }
+
+  /** 現在ページに含まれる履歴だけを返す。 */
+  protected getHistoryPageEntries(): WatchHistoryEntry[] {
+    const totalPages = Math.max(
+      1,
+      Math.ceil(this.filteredEntries.length / this.config.pageSize),
+    );
+    this.config.currentPage = Math.min(
+      Math.max(1, this.config.currentPage),
+      totalPages,
+    );
+    const offset = (this.config.currentPage - 1) * this.config.pageSize;
+    return this.filteredEntries.slice(offset, offset + this.config.pageSize);
+  }
+
+  /** 件数表示に使う現在ページの範囲を返す。 */
+  protected getHistoryPageRange(): {
+    start: number;
+    end: number;
+    total: number;
+  } {
+    const total = this.filteredEntries.length;
+    if (total === 0) return { start: 0, end: 0, total };
+    const pageEntries = this.getHistoryPageEntries();
+    const start = (this.config.currentPage - 1) * this.config.pageSize + 1;
+    return { start, end: start + pageEntries.length - 1, total };
+  }
+
+  /** 前後のページへ移動する。 */
+  protected changeHistoryPage(delta: number): void {
+    const totalPages = Math.max(
+      1,
+      Math.ceil(this.filteredEntries.length / this.config.pageSize),
+    );
+    const nextPage = Math.min(
+      totalPages,
+      Math.max(1, this.config.currentPage + delta),
+    );
+    if (nextPage === this.config.currentPage) return;
+    this.config.currentPage = nextPage;
+    this.updateHistoryList();
+    this.updateContentCount();
+    this.saveConfig();
+    this.elements["history-content"]?.scrollIntoView({ block: "start" });
+  }
+
+  /** 1ページの表示件数を変更する。 */
+  protected changeHistoryPageSize(event: Event): void {
+    const select = event.currentTarget as HTMLSelectElement;
+    const pageSize = Number(select.value);
+    if (![25, 50, 100].includes(pageSize)) return;
+    this.config.pageSize = pageSize;
+    this.config.currentPage = 1;
+    this.updateHistoryList();
+    this.updateContentCount();
+    this.saveConfig();
+  }
+
+  /** ページ送りUIを現在の件数へ同期する。 */
+  private updateHistoryPagination(): void {
+    const pagination = this.elements["history-pagination"];
+    const previous = this.elements[
+      "history-page-previous"
+    ] as HTMLButtonElement;
+    const next = this.elements["history-page-next"] as HTMLButtonElement;
+    const status = this.elements["history-page-status"];
+    const pageSize = this.elements["history-page-size"] as HTMLSelectElement;
+    if (!pagination || !previous || !next || !status || !pageSize) return;
+
+    const totalPages = Math.max(
+      1,
+      Math.ceil(this.filteredEntries.length / this.config.pageSize),
+    );
+    this.config.currentPage = Math.min(this.config.currentPage, totalPages);
+    pagination.classList.toggle("hidden", this.filteredEntries.length === 0);
+    previous.disabled = this.config.currentPage <= 1;
+    next.disabled = this.config.currentPage >= totalPages;
+    status.textContent = `${this.config.currentPage} / ${totalPages} ページ`;
+    pageSize.value = String(this.config.pageSize);
   }
 
   /**
@@ -253,6 +335,7 @@ export abstract class WatchHistoryHistoryListApp extends WatchHistoryAppBase {
     });
 
     if (mode === "in-progress") {
+      this.config.currentPage = 1;
       this.filteredEntries = this.entries.filter((entry) => !entry.completed);
       this.updateHistoryList();
       this.updateContentCount();

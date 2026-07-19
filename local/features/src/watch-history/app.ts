@@ -38,6 +38,11 @@ class WatchHistoryApp extends WatchHistoryDatabaseAdminApp {
       "loading",
       "empty-state",
       "content-count",
+      "history-pagination",
+      "history-page-previous",
+      "history-page-next",
+      "history-page-status",
+      "history-page-size",
       "refresh-btn",
       "export-btn",
       "import-btn",
@@ -179,6 +184,18 @@ class WatchHistoryApp extends WatchHistoryDatabaseAdminApp {
     this.elements["search-clear"]?.addEventListener(
       "click",
       this.guardEvent(() => this.clearSearch()),
+    );
+    this.elements["history-page-previous"]?.addEventListener(
+      "click",
+      this.guardEvent(() => this.changeHistoryPage(-1)),
+    );
+    this.elements["history-page-next"]?.addEventListener(
+      "click",
+      this.guardEvent(() => this.changeHistoryPage(1)),
+    );
+    this.elements["history-page-size"]?.addEventListener(
+      "change",
+      this.guardEvent((event) => this.changeHistoryPageSize(event)),
     );
 
     // ソート
@@ -564,6 +581,13 @@ class WatchHistoryApp extends WatchHistoryDatabaseAdminApp {
             ...(parsed as Partial<HistoryViewConfig>),
           };
         }
+        if (![25, 50, 100].includes(this.config.pageSize)) {
+          this.config.pageSize = 50;
+        }
+        this.config.currentPage = Math.max(
+          1,
+          Math.trunc(this.config.currentPage || 1),
+        );
         // ===== 読み込んだ検索テキストをサニタイズします =====
         const txt = (this.config.filter.searchText ?? "").trim().toLowerCase();
         if (!txt || txt === "null" || txt === "undefined") {
@@ -571,6 +595,7 @@ class WatchHistoryApp extends WatchHistoryDatabaseAdminApp {
         } else {
           this.config.filter.searchText = txt;
         }
+        this.lastAppliedFilterKey = JSON.stringify(this.config.filter);
       } catch (error) {
         logger.warn("設定読み込みエラー:", error);
       }
@@ -663,7 +688,7 @@ class WatchHistoryApp extends WatchHistoryDatabaseAdminApp {
       }
 
       // 統計データを取得
-      const statsResult = await watchHistoryDB.calculateStats();
+      const statsResult = await watchHistoryDB.calculateStats(this.entries);
       if (statsResult.success && statsResult.data) {
         this.stats = statsResult.data;
       }
@@ -683,6 +708,12 @@ class WatchHistoryApp extends WatchHistoryDatabaseAdminApp {
       totalEntries: this.entries.length,
       filter: this.config.filter,
     });
+
+    const filterKey = JSON.stringify(this.config.filter);
+    if (filterKey !== this.lastAppliedFilterKey) {
+      this.config.currentPage = 1;
+      this.lastAppliedFilterKey = filterKey;
+    }
 
     this.filteredEntries = filterHistoryEntries(
       this.entries,

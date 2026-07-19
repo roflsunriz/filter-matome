@@ -285,7 +285,11 @@ export abstract class WatchHistoryDashboardApp extends WatchHistoryHistoryListAp
   protected updateContentCount(): void {
     const contentCount = this.elements["content-count"];
     if (contentCount) {
-      contentCount.textContent = `${this.filteredEntries.length} 件の動画`;
+      const range = this.getHistoryPageRange();
+      contentCount.textContent =
+        range.total > this.config.pageSize
+          ? `${range.total} 件中 ${range.start}–${range.end} 件を表示`
+          : `${range.total} 件の動画`;
     }
   }
 
@@ -511,6 +515,8 @@ export abstract class WatchHistoryDashboardApp extends WatchHistoryHistoryListAp
       this.config.sortBy = sortBy;
       this.config.sortOrder = "desc";
     }
+
+    this.config.currentPage = 1;
 
     this.updateSortUI();
     await this.loadData();

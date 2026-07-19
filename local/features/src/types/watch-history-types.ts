@@ -243,6 +243,14 @@ export interface HistoryViewConfig {
   currentPage: number;
 }
 
+/** IndexedDBから取得した視聴履歴の1ページ分。 */
+export interface WatchHistoryPage {
+  entries: WatchHistoryEntry[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
 // ===== 統計関連型 =====
 
 /**

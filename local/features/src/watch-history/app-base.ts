@@ -22,6 +22,7 @@ import type {
 export abstract class WatchHistoryAppBase {
   protected entries: WatchHistoryEntry[] = [];
   protected filteredEntries: WatchHistoryEntry[] = [];
+  protected lastAppliedFilterKey = JSON.stringify({});
   protected config: HistoryViewConfig = {
     sortBy: "watchedAt",
     sortOrder: "desc",

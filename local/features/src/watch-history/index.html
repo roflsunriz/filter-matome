@@ -548,6 +548,38 @@
                 <!-- 動画アイテムがここに動的に追加される -->
               </div>
 
+              <nav
+                id="history-pagination"
+                class="history-pagination hidden"
+                aria-label="視聴履歴のページ"
+              >
+                <button
+                  id="history-page-previous"
+                  type="button"
+                  class="btn btn-secondary"
+                >
+                  前へ
+                </button>
+                <span id="history-page-status" aria-live="polite"
+                  >1 / 1 ページ</span
+                >
+                <button
+                  id="history-page-next"
+                  type="button"
+                  class="btn btn-secondary"
+                >
+                  次へ
+                </button>
+                <label class="history-page-size-label">
+                  表示件数
+                  <select id="history-page-size" class="form-select">
+                    <option value="25">25</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                  </select>
+                </label>
+              </nav>
+
               <div id="loading" class="loading hidden">
                 <div class="loading-spinner"></div>
                 <span>読み込み中...</span>

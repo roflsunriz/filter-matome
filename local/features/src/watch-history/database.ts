@@ -25,6 +25,7 @@ import type {
   PersistenceStatus,
   MigrationProgress,
   DatabaseManagementConfig,
+  WatchHistoryPage,
 } from "@/types/watch-history-types";
 import { logger } from "@/common/logger";
 import { migrationManager } from "@/watch-history/migration-manager";
@@ -425,15 +426,165 @@ export class WatchHistoryDatabase {
   }
 
   /**
-   * 統計データを計算する
+   * 履歴を1ページ分だけ取得する。
+   *
+   * IndexedDBのインデックスで表現できるソートではカーソルを使い、
+   * ページ外のエントリを配列へ展開しない。複合フィルタ時は一致件数を
+   * 数えるため全カーソルを走査するが、保持するのは対象ページだけにする。
    */
-  async calculateStats(): Promise<DBResult<OverallStats>> {
-    const entriesResult = await this.getAllEntries();
-    if (!entriesResult.success || !entriesResult.data) {
-      return { success: false, error: "統計計算用データ取得失敗" };
+  async getEntriesPage(
+    offset: number,
+    limit: number,
+    sortBy: SortBy = "watchedAt",
+    sortOrder: SortOrder = "desc",
+    filter?: FilterCondition,
+  ): Promise<DBResult<WatchHistoryPage>> {
+    if (!this.db) {
+      return { success: false, error: "データベース未初期化" };
     }
 
-    const entries = entriesResult.data;
+    const safeOffset = Number.isFinite(offset)
+      ? Math.max(0, Math.trunc(offset))
+      : 0;
+    const safeLimit = Number.isFinite(limit)
+      ? Math.max(1, Math.trunc(limit))
+      : 1;
+    const indexName = this.getPagingIndexName(sortBy);
+
+    // IndexedDBのインデックスで順序を保証できない項目は、従来の
+    // ソート結果を利用してからページ範囲だけを返す。
+    if (!indexName) {
+      const allResult = await this.getAllEntries(sortBy, sortOrder, filter);
+      if (!allResult.success || !allResult.data) {
+        return { success: false, error: allResult.error ?? "取得失敗" };
+      }
+      return {
+        success: true,
+        data: {
+          entries: allResult.data.slice(safeOffset, safeOffset + safeLimit),
+          total: allResult.data.length,
+          offset: safeOffset,
+          limit: safeLimit,
+        },
+      };
+    }
+
+    try {
+      const transaction = this.db.transaction(
+        [this.config.storeName],
+        "readonly",
+      );
+      const store = transaction.objectStore(this.config.storeName);
+      const source: IDBIndex | IDBObjectStore = store.index(indexName);
+      const direction: IDBCursorDirection =
+        sortOrder === "asc" ? "next" : "prev";
+
+      if (!filter) {
+        const totalPromise = new Promise<number>((resolve, reject) => {
+          const request = store.count();
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () =>
+            reject(
+              new Error(WatchHistoryDatabase.toErrorMessage(request.error)),
+            );
+        });
+        const entriesPromise = new Promise<WatchHistoryEntry[]>(
+          (resolve, reject) => {
+            const entries: WatchHistoryEntry[] = [];
+            let advanced = safeOffset === 0;
+            const request = source.openCursor(null, direction);
+            request.onerror = () =>
+              reject(
+                new Error(WatchHistoryDatabase.toErrorMessage(request.error)),
+              );
+            request.onsuccess = () => {
+              const cursor = request.result;
+              if (!cursor) {
+                resolve(entries);
+                return;
+              }
+              if (!advanced) {
+                advanced = true;
+                cursor.advance(safeOffset);
+                return;
+              }
+              entries.push(cursor.value as WatchHistoryEntry);
+              if (entries.length >= safeLimit) {
+                resolve(entries);
+                return;
+              }
+              cursor.continue();
+            };
+          },
+        );
+        const [total, entries] = await Promise.all([
+          totalPromise,
+          entriesPromise,
+        ]);
+        return {
+          success: true,
+          data: {
+            entries,
+            total,
+            offset: safeOffset,
+            limit: safeLimit,
+          },
+        };
+      }
+
+      const page = await new Promise<WatchHistoryPage>((resolve, reject) => {
+        const entries: WatchHistoryEntry[] = [];
+        let matchingCount = 0;
+        const request = source.openCursor(null, direction);
+
+        request.onerror = () =>
+          reject(new Error(WatchHistoryDatabase.toErrorMessage(request.error)));
+        request.onsuccess = () => {
+          const cursor = request.result;
+          if (!cursor) {
+            resolve({
+              entries,
+              total: matchingCount,
+              offset: safeOffset,
+              limit: safeLimit,
+            });
+            return;
+          }
+
+          const entry = cursor.value as WatchHistoryEntry;
+          const matches = this.matchesFilter(entry, filter);
+          if (matches) {
+            if (matchingCount >= safeOffset && entries.length < safeLimit) {
+              entries.push(entry);
+            }
+            matchingCount += 1;
+          }
+          cursor.continue();
+        };
+      });
+
+      return { success: true, data: page };
+    } catch (error) {
+      return { success: false, error: `ページ取得失敗: ${String(error)}` };
+    }
+  }
+
+  /**
+   * 統計データを計算する
+   */
+  async calculateStats(
+    sourceEntries?: readonly WatchHistoryEntry[],
+  ): Promise<DBResult<OverallStats>> {
+    let entries: WatchHistoryEntry[];
+    if (sourceEntries) {
+      entries = [...sourceEntries];
+    } else {
+      const entriesResult = await this.getAllEntries();
+      if (!entriesResult.success || !entriesResult.data) {
+        return { success: false, error: "統計計算用データ取得失敗" };
+      }
+      entries = entriesResult.data;
+    }
 
     try {
       // 基本統計
@@ -592,67 +743,61 @@ export class WatchHistoryDatabase {
     entries: WatchHistoryEntry[],
     filter: FilterCondition,
   ): WatchHistoryEntry[] {
-    return entries.filter((entry) => {
-      // ===== 検索テキストフィルタ =====
-      // 空文字列や "null" / "undefined" といった無効値は無視する
-      const rawSearch = (filter.searchText ?? "").trim().toLowerCase();
-      if (rawSearch && rawSearch !== "null" && rawSearch !== "undefined") {
-        const searchTargets = [
-          entry.title,
-          entry.ownerName,
-          (entry.tags ?? []).join(" "),
-          entry.memo,
-        ]
-          .join(" ")
-          .toLowerCase();
+    return entries.filter((entry) => this.matchesFilter(entry, filter));
+  }
 
-        if (!searchTargets.includes(rawSearch)) {
-          return false;
-        }
-      }
+  private matchesFilter(
+    entry: WatchHistoryEntry,
+    filter: FilterCondition,
+  ): boolean {
+    // ===== 検索テキストフィルタ =====
+    // 空文字列や "null" / "undefined" といった無効値は無視する
+    const rawSearch = (filter.searchText ?? "").trim().toLowerCase();
+    if (rawSearch && rawSearch !== "null" && rawSearch !== "undefined") {
+      const searchTargets = [
+        entry.title,
+        entry.ownerName,
+        (entry.tags ?? []).join(" "),
+        entry.memo,
+      ]
+        .join(" ")
+        .toLowerCase();
 
-      // 投稿者フィルタ
-      const ownerIdFilter =
-        filter.ownerId && String(filter.ownerId).trim().toLowerCase();
-      if (
-        ownerIdFilter &&
-        ownerIdFilter !== "null" &&
-        ownerIdFilter !== "undefined"
-      ) {
-        if (String(entry.ownerId).toLowerCase() !== ownerIdFilter) {
-          return false;
-        }
-      }
+      if (!searchTargets.includes(rawSearch)) return false;
+    }
 
-      // 完走フィルタ
-      if (filter.completedOnly && !entry.completed) {
-        return false;
-      }
+    const ownerIdFilter =
+      filter.ownerId && String(filter.ownerId).trim().toLowerCase();
+    if (
+      ownerIdFilter &&
+      ownerIdFilter !== "null" &&
+      ownerIdFilter !== "undefined" &&
+      String(entry.ownerId).toLowerCase() !== ownerIdFilter
+    ) {
+      return false;
+    }
 
-      // 日付範囲フィルタ
-      if (filter.dateRange) {
-        const watchedAt = entry.watchedAt;
-        if (
-          watchedAt < filter.dateRange.start ||
-          watchedAt > filter.dateRange.end
-        ) {
-          return false;
-        }
-      }
+    if (filter.completedOnly && !entry.completed) return false;
 
-      if (filter.uploadedDateRange) {
-        const uploadedAt = entry.stats?.uploadedAt;
-        if (
-          uploadedAt === undefined ||
-          uploadedAt < filter.uploadedDateRange.start ||
-          uploadedAt > filter.uploadedDateRange.end
-        ) {
-          return false;
-        }
-      }
+    if (
+      filter.dateRange &&
+      (entry.watchedAt < filter.dateRange.start ||
+        entry.watchedAt > filter.dateRange.end)
+    ) {
+      return false;
+    }
 
-      return true;
-    });
+    const uploadedAt = entry.stats?.uploadedAt;
+    if (
+      filter.uploadedDateRange &&
+      (uploadedAt === undefined ||
+        uploadedAt < filter.uploadedDateRange.start ||
+        uploadedAt > filter.uploadedDateRange.end)
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -725,6 +870,18 @@ export class WatchHistoryDatabase {
         return sortOrder === "asc" ? result : -result;
       }
     });
+  }
+
+  /** カーソルページングに利用できるIndexedDBインデックス名を返す。 */
+  private getPagingIndexName(sortBy: SortBy): string | null {
+    switch (sortBy) {
+      case "watchedAt":
+      case "firstWatchedAt":
+      case "title":
+        return sortBy;
+      default:
+        return null;
+    }
   }
 
   /**

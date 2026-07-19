@@ -501,6 +501,84 @@ test("履歴の検索・全ソート・全フィルタ・動的詳細操作が�
   );
 });
 
+test("大量の履歴をページ単位で描画し検索時に先頭へ戻る", async ({ page }) => {
+  await openApp(page);
+
+  await page.evaluate(async (template) => {
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open("NicoWatchHistory");
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const database = request.result;
+        const transaction = database.transaction("watchHistory", "readwrite");
+        const store = transaction.objectStore("watchHistory");
+        for (let index = 0; index < 53; index += 1) {
+          store.put({
+            ...template,
+            videoId: `smpage${index}`,
+            title: `ページング動画 ${index}`,
+            watchedAt: template.watchedAt - (index + 1) * 1_000,
+            firstWatchedAt: template.firstWatchedAt - (index + 1) * 1_000,
+          });
+        }
+        transaction.oncomplete = () => {
+          database.close();
+          resolve();
+        };
+        transaction.onerror = () => reject(transaction.error);
+      };
+    });
+  }, entries[0]);
+
+  await page.locator("#refresh-btn").click();
+  expect(
+    await page.evaluate(async () => {
+      const testApi = (
+        window as unknown as {
+          WatchHistoryTest: {
+            getEntriesPage(
+              offset: number,
+              limit: number,
+              sortBy: "watchedAt",
+              sortOrder: "desc",
+            ): Promise<{
+              success: boolean;
+              data?: { entries: unknown[]; total: number };
+            }>;
+          };
+        }
+      ).WatchHistoryTest;
+      const result = await testApi.getEntriesPage(50, 10, "watchedAt", "desc");
+      return {
+        success: result.success,
+        pageCount: result.data?.entries.length,
+        total: result.data?.total,
+      };
+    }),
+  ).toEqual({ success: true, pageCount: 6, total: 56 });
+  await expect(page.locator(".history-item")).toHaveCount(50);
+  await expect(page.locator("#content-count")).toHaveText(
+    "56 件中 1–50 件を表示",
+  );
+  await expect(page.locator("#history-page-status")).toHaveText("1 / 2 ページ");
+
+  await page.locator("#history-page-next").click();
+  await expect(page.locator(".history-item")).toHaveCount(6);
+  await expect(page.locator("#content-count")).toHaveText(
+    "56 件中 51–56 件を表示",
+  );
+  await expect(page.locator("#history-page-next")).toBeDisabled();
+
+  await page.locator("#history-page-size").selectOption("25");
+  await expect(page.locator(".history-item")).toHaveCount(25);
+  await expect(page.locator("#history-page-status")).toHaveText("1 / 3 ページ");
+
+  await page.locator("#history-page-next").click();
+  await page.locator("#search-input").fill("ページング動画 52");
+  await expect(page.locator(".history-item")).toHaveCount(1);
+  await expect(page.locator("#history-page-status")).toHaveText("1 / 1 ページ");
+});
+
 test("サムネイル欠落時と画像読込失敗時にフォールバックを表示する", async ({
   page,
 }) => {
@@ -708,9 +786,7 @@ test("各タブ・シリーズ・アラートの静的および動的ボタン�
   await expect(page.locator(".alert-status")).toHaveText("無効");
 });
 
-test("削除前に開始した再取得の応答でアラートが復活しない", async ({
-  page,
-}) => {
+test("削除前に開始した再取得の応答でアラートが復活しない", async ({ page }) => {
   const extension = await openApp(page);
   await page.locator("#series-alert-tab").click();
   await expect(page.locator("#series-alert-extension-status")).toHaveText(
