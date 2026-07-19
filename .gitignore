@@ -11,6 +11,7 @@ playwright.config.ts
 __pycache__/
 
 # コードスペース
+.vs/
 .vscode/
 .cursor/
 *.code-workspace
