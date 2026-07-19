@@ -120,6 +120,18 @@ export class VideoService {
     });
   }
 
+  async getAllVideos(): Promise<DBVideo[]> {
+    const database = await this.db.initDB();
+    const transaction = database.transaction(["videos"], "readonly");
+    const store = transaction.objectStore("videos");
+
+    return new Promise<DBVideo[]>((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result as DBVideo[]);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
+    });
+  }
+
   sortVideos(videos: DBVideo[], sortType: string): DBVideo[] {
     const [type, order] = sortType.split("_");
     const isAsc = order === "asc";

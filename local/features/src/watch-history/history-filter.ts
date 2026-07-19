@@ -20,6 +20,32 @@ function normalizeOptionalText(value?: string): string | undefined {
   return normalized;
 }
 
+function splitSearchTerms(value?: string): string[] {
+  return (normalizeOptionalText(value) ?? "")
+    .toLowerCase()
+    .split(/\s+/u)
+    .filter(Boolean);
+}
+
+export function matchesHistorySearch(
+  entry: WatchHistoryEntry,
+  searchText?: string,
+): boolean {
+  const searchTerms = splitSearchTerms(searchText);
+  if (searchTerms.length === 0) return true;
+
+  const target = [
+    entry.title,
+    entry.ownerName,
+    (entry.tags ?? []).join(" "),
+    entry.memo,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return searchTerms.every((term) => target.includes(term));
+}
+
 export function cleanHistoryFilter(filter: FilterCondition): FilterCondition {
   const cleaned: FilterCondition = { ...filter };
   cleaned.searchText = normalizeOptionalText(filter.searchText);
@@ -44,19 +70,8 @@ export function filterHistoryEntries(
   entries: readonly WatchHistoryEntry[],
   filter: FilterCondition,
 ): WatchHistoryEntry[] {
-  const searchText = normalizeOptionalText(filter.searchText)?.toLowerCase();
   return entries.filter((entry) => {
-    if (searchText) {
-      const targets = [
-        entry.title,
-        entry.ownerName,
-        (entry.tags ?? []).join(" "),
-        entry.memo,
-      ]
-        .join(" ")
-        .toLowerCase();
-      if (!targets.includes(searchText)) return false;
-    }
+    if (!matchesHistorySearch(entry, filter.searchText)) return false;
     if (filter.ownerId && String(entry.ownerId) !== String(filter.ownerId)) {
       return false;
     }

@@ -424,6 +424,9 @@ test("履歴の検索・全ソート・全フィルタ・動的詳細操作が�
   await expect(page.locator(".history-item")).toHaveCount(1);
   await page.locator("#search-clear").click();
   await expect(page.locator(".history-item")).toHaveCount(3);
+  await page.locator("#search-input").fill("アルファ テスト");
+  await expect(page.locator(".history-item")).toHaveCount(1);
+  await page.locator("#search-clear").click();
 
   await page.locator(".advanced-sort-menu summary").click();
   for (const sortButton of await page.locator(".sort-btn").all()) {

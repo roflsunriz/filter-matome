@@ -16,6 +16,17 @@ export class BatchOperations {
   private loadVideos: () => Promise<void>;
   private virtualScrollManager: VirtualScrollManager | null;
 
+  private getSingleSourceMylistId(
+    videos: readonly DBVideo[],
+    keywords: readonly KeywordInfo[],
+  ): number | null {
+    const sourceIds = new Set([
+      ...videos.map((video) => video.mylistId),
+      ...keywords.map((keyword) => keyword.mylistId),
+    ]);
+    return sourceIds.size === 1 ? ([...sourceIds][0] ?? null) : null;
+  }
+
   constructor(
     manager: Mylist2Manager,
     modalService: ModalService,
@@ -81,19 +92,20 @@ export class BatchOperations {
     const targetMylistId = await this.modalService.showMylistSelectModal(
       "移動",
       await this.manager.getAllMylists(),
-      this.eventHandlers.getCurrentMylist(),
+      this.getSingleSourceMylistId(videos, keywords),
     );
     if (!targetMylistId) return;
 
     // 動画の移動
     for (const video of videos) {
+      if (video.mylistId === targetMylistId) continue;
       await this.manager.addVideo(targetMylistId, video);
       await this.manager.deleteVideo(video.id);
     }
 
     // キーワードの移動
     for (const keyword of keywords) {
-      if (keyword.id !== undefined) {
+      if (keyword.id !== undefined && keyword.mylistId !== targetMylistId) {
         await this.manager.moveKeyword(keyword.id, targetMylistId);
       }
     }
@@ -112,17 +124,19 @@ export class BatchOperations {
     const targetMylistId = await this.modalService.showMylistSelectModal(
       "コピー",
       await this.manager.getAllMylists(),
-      this.eventHandlers.getCurrentMylist(),
+      this.getSingleSourceMylistId(videos, keywords),
     );
     if (!targetMylistId) return;
 
     // 動画のコピー
     for (const video of videos) {
+      if (video.mylistId === targetMylistId) continue;
       await this.manager.addVideo(targetMylistId, video);
     }
 
     // キーワードのコピー
     for (const keyword of keywords) {
+      if (keyword.mylistId === targetMylistId) continue;
       await this.manager.addKeyword(targetMylistId, keyword.keyword);
     }
 

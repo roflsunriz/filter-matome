@@ -172,7 +172,10 @@ export class EventHandlers {
   }
 
   // キーワード操作ハンドラー
-  async handleKeywordMove(event: Event): Promise<void> {
+  async handleKeywordMove(
+    event: Event,
+    sourceMylistId?: number,
+  ): Promise<void> {
     if (!event.target) return;
 
     const target = event.target as HTMLElement;
@@ -191,11 +194,10 @@ export class EventHandlers {
 
     try {
       const mylists = await this.manager.getAllMylists();
-      const currentMylistId = this.getCurrentMylistId();
       const targetMylistId = await this.modalService.showMylistSelectModal(
         "移動",
         mylists,
-        currentMylistId,
+        sourceMylistId ?? this.getCurrentMylistId(),
         keywordText,
       );
       if (!targetMylistId) return;
@@ -213,7 +215,10 @@ export class EventHandlers {
     }
   }
 
-  async handleKeywordCopy(event: Event): Promise<void> {
+  async handleKeywordCopy(
+    event: Event,
+    sourceMylistId?: number,
+  ): Promise<void> {
     if (!event.target) return;
 
     const target = event.target as HTMLElement;
@@ -227,11 +232,10 @@ export class EventHandlers {
 
     try {
       const mylists = await this.manager.getAllMylists();
-      const currentMylistId = this.getCurrentMylistId();
       const targetMylistId = await this.modalService.showMylistSelectModal(
         "コピー",
         mylists,
-        currentMylistId,
+        sourceMylistId ?? this.getCurrentMylistId(),
         keywordText,
       );
       if (!targetMylistId) return;
@@ -323,14 +327,17 @@ export class EventHandlers {
   }
 
   // 動画移動メソッド
-  async moveVideo(videoItem: HTMLElement, videoTitle: string): Promise<void> {
+  async moveVideo(
+    videoItem: HTMLElement,
+    videoTitle: string,
+    sourceMylistId?: number,
+  ): Promise<void> {
     try {
       const mylists = await this.manager.getAllMylists();
-      const currentMylistId = this.getCurrentMylistId();
       const targetMylistId = await this.modalService.showMylistSelectModal(
         "移動",
         mylists,
-        currentMylistId,
+        sourceMylistId ?? this.getCurrentMylistId(),
         videoTitle,
       );
       if (!targetMylistId) return;
@@ -359,14 +366,17 @@ export class EventHandlers {
   }
 
   // 動画コピーメソッド
-  async copyVideo(videoItem: HTMLElement, videoTitle: string): Promise<void> {
+  async copyVideo(
+    videoItem: HTMLElement,
+    videoTitle: string,
+    sourceMylistId?: number,
+  ): Promise<void> {
     try {
       const mylists = await this.manager.getAllMylists();
-      const currentMylistId = this.getCurrentMylistId();
       const targetMylistId = await this.modalService.showMylistSelectModal(
         "コピー",
         mylists,
-        currentMylistId,
+        sourceMylistId ?? this.getCurrentMylistId(),
         videoTitle,
       );
       if (!targetMylistId) return;
@@ -408,7 +418,13 @@ export class EventHandlers {
       return null;
     }
 
-    const currentMylistId = this.getCurrentMylistId();
+    const compositeId = videoItem.dataset.compositeId;
+    const compositeMylistId = compositeId
+      ? Number.parseInt(compositeId.split("_", 1)[0] ?? "", 10)
+      : Number.NaN;
+    const currentMylistId = Number.isFinite(compositeMylistId)
+      ? compositeMylistId
+      : this.getCurrentMylistId();
     if (currentMylistId === null) {
       window.logger.error("現在のマイリストIDが設定されていません");
       return null;

@@ -86,6 +86,10 @@ export class Mylist2Manager {
     return this.videoService.getVideos(mylistId);
   }
 
+  async getAllVideos(): Promise<VideoInfo[]> {
+    return this.videoService.getAllVideos();
+  }
+
   sortVideos(videos: VideoInfo[], sortType: string): VideoInfo[] {
     return this.videoService.sortVideos(videos, sortType);
   }
@@ -112,6 +116,10 @@ export class Mylist2Manager {
 
   async getKeywords(mylistId: number): Promise<KeywordInfo[]> {
     return this.keywordService.getKeywords(mylistId);
+  }
+
+  async getAllKeywords(): Promise<KeywordInfo[]> {
+    return this.keywordService.getAllKeywords();
   }
 
   async deleteKeyword(keywordId: number): Promise<void> {

@@ -51,6 +51,23 @@ const seed = {
       description: "ベータの説明",
       memo: "検索用メモ",
     },
+    {
+      id: "2_sm300",
+      originalId: "sm300",
+      mylistId: 2,
+      title: "横断限定ゲーム",
+      viewCount: 300,
+      commentCount: 30,
+      mylistCount: 15,
+      thumbnailUrl: pixel,
+      uploadedAt: 3000,
+      addedAt: 1000,
+      authorName: "投稿者C",
+      length: 360,
+      tags: ["ゲーム"],
+      description: "別マイリストだけにある説明",
+      memo: "移動先のメモ",
+    },
   ],
   keywords: [
     { id: 1, mylistId: 1, keyword: "テストキーワード", addedAt: 1500 },
@@ -224,6 +241,30 @@ test("検索クリアボタンが入力欄の右端内側に揃う", async ({ pa
   }
 });
 
+test("動画検索範囲の選択欄が画面幅に応じて検索欄の右または下に収まる", async ({
+  page,
+}) => {
+  for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 375, height: 600 },
+  ]) {
+    await page.setViewportSize(viewport);
+    const inputBox = await page.locator("#videoSearchInput").boundingBox();
+    const scopeBox = await page.locator("#videoSearchScope").boundingBox();
+    expect(inputBox).not.toBeNull();
+    expect(scopeBox).not.toBeNull();
+    if (!inputBox || !scopeBox) throw new Error("動画検索UIが見つかりません");
+
+    if (viewport.width > 720) {
+      expect(scopeBox.x).toBeGreaterThanOrEqual(inputBox.x + inputBox.width);
+      expect(Math.abs(scopeBox.y - inputBox.y)).toBeLessThan(1);
+    } else {
+      expect(scopeBox.y).toBeGreaterThanOrEqual(inputBox.y + inputBox.height);
+    }
+    expect(scopeBox.x + scopeBox.width).toBeLessThanOrEqual(viewport.width);
+  }
+});
+
 test("マイリスト検索・作成・ソート・設定・テーマが動作する", async ({
   page,
 }) => {
@@ -294,6 +335,14 @@ test("動画検索・ソート・詳細表示・選択状態が同期する", as
   await page.getByTitle("動画検索クリア").click();
   await expect(page.locator(".video-item:not(.keyword-item)")).toHaveCount(2);
 
+  for (const searchText of ["料理", "アルファの説明", "sm100"]) {
+    await page.getByPlaceholder("動画を検索...").fill(searchText);
+    await expect(page.locator(".video-item:not(.keyword-item)")).toHaveCount(1);
+  }
+  await page.getByPlaceholder("動画を検索...").fill("アルファ 料理");
+  await expect(page.locator(".video-item:not(.keyword-item)")).toHaveCount(1);
+  await page.getByTitle("動画検索クリア").click();
+
   await page.locator("#videoSortType").selectOption("title_asc");
   await expect(page.locator("#videoSortType")).toHaveValue("title_asc");
 
@@ -341,6 +390,27 @@ test("動画検索・ソート・詳細表示・選択状態が同期する", as
     "aria-hidden",
     "true",
   );
+});
+
+test("動画検索の範囲を全マイリストへ切り替えられる", async ({ page }) => {
+  const searchInput = page.getByPlaceholder("動画を検索...");
+  const searchScope = page.locator("#videoSearchScope");
+
+  await expect(searchScope).toHaveValue("selected");
+  await searchInput.fill("横断限定");
+  await expect(page.locator(".video-item:not(.keyword-item)")).toHaveCount(0);
+
+  await searchScope.selectOption("all");
+  await expect(page.locator(".video-item:not(.keyword-item)")).toHaveCount(1);
+  await expect(page.getByText("横断限定ゲーム", { exact: true })).toBeVisible();
+
+  await page.locator(".video-item:not(.keyword-item) .video-select").check();
+  await page.locator('[data-batch-action="move"]').click();
+  await expect(page.locator("#targetMylist option")).toHaveText(["料理動画"]);
+  await page.locator("#cancelAction").click();
+
+  await searchScope.selectOption("selected");
+  await expect(page.locator(".video-item:not(.keyword-item)")).toHaveCount(0);
 });
 
 test("一括操作5種が対応する確認UIを開いてキャンセルできる", async ({

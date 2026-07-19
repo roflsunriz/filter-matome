@@ -53,6 +53,19 @@ describe("watch-history filter responsibilities", () => {
     expect(filterHistoryEntries(source, { searchText: "missing" })).toEqual([]);
   });
 
+  test("space-separated terms match across different metadata fields", () => {
+    const source = [entry()];
+    expect(
+      filterHistoryEntries(source, { searchText: "alpha music" }),
+    ).toHaveLength(1);
+    expect(
+      filterHistoryEntries(source, { searchText: "creator メモ" }),
+    ).toEqual([]);
+    expect(
+      filterHistoryEntries(source, { searchText: "alpha missing" }),
+    ).toEqual([]);
+  });
+
   test("owner, completion, watch range and upload range compose", () => {
     const source = [
       entry({ completed: true }),

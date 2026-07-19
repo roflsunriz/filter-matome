@@ -6,6 +6,10 @@
 import "@/types/global.d.ts";
 import type { DBVideo } from "@/types/video-types";
 import type { KeywordInfo } from "@/types/mylist-types";
+import {
+  matchesKeywordSearch,
+  matchesVideoSearch,
+} from "@/mylist2/video-search";
 
 /** 仮想スクロールで扱うアイテムの共通型 */
 export type VirtualScrollItem =
@@ -136,15 +140,9 @@ export class VirtualScrollManager {
 
     this.filteredItems = this.items.filter((item) => {
       if (item.type === "video") {
-        const video = item.data;
-        return (
-          video.title.toLowerCase().includes(this.filterText) ||
-          video.authorName.toLowerCase().includes(this.filterText) ||
-          (video.memo?.toLowerCase().includes(this.filterText) ?? false)
-        );
+        return matchesVideoSearch(item.data, this.filterText);
       } else {
-        const keyword = item.data;
-        return keyword.keyword.toLowerCase().includes(this.filterText);
+        return matchesKeywordSearch(item.data, this.filterText);
       }
     });
   }

@@ -50,6 +50,18 @@ export class KeywordService {
     });
   }
 
+  async getAllKeywords(): Promise<KeywordInfo[]> {
+    const database = await this.db.initDB();
+    const transaction = database.transaction(["keywords"], "readonly");
+    const store = transaction.objectStore("keywords");
+
+    return new Promise<KeywordInfo[]>((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result as KeywordInfo[]);
+      request.onerror = () => reject(new Error(this.toMessage(request.error)));
+    });
+  }
+
   // キーワードを削除
   async deleteKeyword(keywordId: number): Promise<void> {
     const database = await this.db.initDB();

@@ -192,6 +192,9 @@ export class Mylist2ManagerUI extends Mylist2UIEvents {
       "videoSearchInput",
     ) as HTMLInputElement;
     const videoSearchClear = document.getElementById("videoSearchClear");
+    const videoSearchScope = document.getElementById(
+      "videoSearchScope",
+    ) as HTMLSelectElement | null;
 
     if (videoSearchInput) {
       videoSearchInput.addEventListener("input", () => {
@@ -205,6 +208,11 @@ export class Mylist2ManagerUI extends Mylist2UIEvents {
         this.filterVideos("");
       });
     }
+
+    videoSearchScope?.addEventListener("change", () => {
+      this.virtualScrollManager.deselectAll();
+      void this.loadVideos();
+    });
   }
 
   // マイリストの検索フィルター

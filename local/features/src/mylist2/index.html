@@ -153,25 +153,31 @@
             <option value="availability_desc">利用不可</option>
           </select>
           <!-- 動画検索エリア -->
-          <div class="search-container">
-            <input
-              type="text"
-              id="videoSearchInput"
-              placeholder="動画を検索..."
-            />
-            <button
-              id="videoSearchClear"
-              class="search-clear-btn"
-              title="動画検索クリア"
-            >
-              <img
-                class="material-icon icon-white"
-                data-style="outlined"
-                data-icon="clear"
-                alt="clear"
-                loading="lazy"
+          <div class="video-search-controls">
+            <div class="search-container">
+              <input
+                type="text"
+                id="videoSearchInput"
+                placeholder="動画を検索..."
               />
-            </button>
+              <button
+                id="videoSearchClear"
+                class="search-clear-btn"
+                title="動画検索クリア"
+              >
+                <img
+                  class="material-icon icon-white"
+                  data-style="outlined"
+                  data-icon="clear"
+                  alt="clear"
+                  loading="lazy"
+                />
+              </button>
+            </div>
+            <select id="videoSearchScope" aria-label="動画検索の範囲">
+              <option value="selected">選択マイリストのみ</option>
+              <option value="all">全マイリスト横断検索</option>
+            </select>
           </div>
         </div>
         <div class="selection-action-bar" aria-hidden="true">

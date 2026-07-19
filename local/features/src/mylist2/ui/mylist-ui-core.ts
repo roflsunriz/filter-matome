@@ -5,6 +5,7 @@ import type {
   KeywordInfo,
   MylistInfo,
   VideoLinkTarget,
+  VideoSearchScope,
 } from "@/types/mylist-types";
 import { DBVideo as VideoInfo } from "@/types/video-types";
 
@@ -311,9 +312,23 @@ export abstract class Mylist2UICore {
         ? videoSortTypeElement.value
         : "uploadedAt_desc";
 
-      // 動画とキーワードを取得
-      const videos = await this.manager.getVideos(this.currentMylistId);
-      const keywords = await this.manager.getKeywords(this.currentMylistId);
+      const searchScopeElement = document.getElementById(
+        "videoSearchScope",
+      ) as HTMLSelectElement | null;
+      const searchScope: VideoSearchScope =
+        searchScopeElement?.value === "all" ? "all" : "selected";
+
+      // 検索範囲に応じて動画とキーワードを取得
+      const [videos, keywords] =
+        searchScope === "all"
+          ? await Promise.all([
+              this.manager.getAllVideos(),
+              this.manager.getAllKeywords(),
+            ])
+          : await Promise.all([
+              this.manager.getVideos(this.currentMylistId),
+              this.manager.getKeywords(this.currentMylistId),
+            ]);
 
       // ソートを適用
       const sortedVideos = this.sortVideos(videos, sortType);
@@ -528,21 +543,32 @@ export abstract class Mylist2UICore {
     actionMenu.registerHandlers({
       move: async (ctx: ActionMenuContext) => {
         if (ctx.type === "video") {
-          await this.eventHandlers.moveVideo(ctx.element, ctx.data.title);
+          await this.eventHandlers.moveVideo(
+            ctx.element,
+            ctx.data.title,
+            ctx.data.mylistId,
+          );
         } else {
           const keywordId = ctx.data.id;
           if (keywordId !== undefined) {
             const event = { target: ctx.element } as unknown as Event;
-            await this.eventHandlers.handleKeywordMove(event);
+            await this.eventHandlers.handleKeywordMove(
+              event,
+              ctx.data.mylistId,
+            );
           }
         }
       },
       copy: async (ctx: ActionMenuContext) => {
         if (ctx.type === "video") {
-          await this.eventHandlers.copyVideo(ctx.element, ctx.data.title);
+          await this.eventHandlers.copyVideo(
+            ctx.element,
+            ctx.data.title,
+            ctx.data.mylistId,
+          );
         } else {
           const event = { target: ctx.element } as unknown as Event;
-          await this.eventHandlers.handleKeywordCopy(event);
+          await this.eventHandlers.handleKeywordCopy(event, ctx.data.mylistId);
         }
       },
       delete: async (ctx: ActionMenuContext) => {

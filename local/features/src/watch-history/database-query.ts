@@ -21,6 +21,7 @@ import type {
   WatchHistoryPage,
   WatchLogEntry,
 } from "@/types/watch-history-types";
+import { matchesHistorySearch } from "./history-filter";
 import { WatchHistoryDatabaseCore } from "./database-core";
 
 export abstract class WatchHistoryQueryDatabase extends WatchHistoryDatabaseCore {
@@ -365,20 +366,7 @@ export abstract class WatchHistoryQueryDatabase extends WatchHistoryDatabaseCore
     filter: FilterCondition,
   ): boolean {
     // ===== 検索テキストフィルタ =====
-    // 空文字列や "null" / "undefined" といった無効値は無視する
-    const rawSearch = (filter.searchText ?? "").trim().toLowerCase();
-    if (rawSearch && rawSearch !== "null" && rawSearch !== "undefined") {
-      const searchTargets = [
-        entry.title,
-        entry.ownerName,
-        (entry.tags ?? []).join(" "),
-        entry.memo,
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      if (!searchTargets.includes(rawSearch)) return false;
-    }
+    if (!matchesHistorySearch(entry, filter.searchText)) return false;
 
     const ownerIdFilter =
       filter.ownerId && String(filter.ownerId).trim().toLowerCase();

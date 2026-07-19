@@ -36,6 +36,9 @@ export interface KeywordInfo {
  */
 export type VideoLinkTarget = "official" | "local";
 
+/** 動画検索で読み込むマイリストの範囲。 */
+export type VideoSearchScope = "selected" | "all";
+
 /**
  * buildVideoUrl でローカルプレーヤーへのルーティング判定に使うコンテキスト。
  * videoId だけでは判定できない条件（投稿者名・タイトル）を補完する。

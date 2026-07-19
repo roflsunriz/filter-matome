@@ -258,6 +258,12 @@ body {
   background: var(--cml2-surface);
 }
 .video-filter-bar select { width: 100%; }
+.video-search-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  gap: 8px;
+  min-width: 0;
+}
 
 .selection-action-bar {
   display: flex;
@@ -547,6 +553,7 @@ input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
   .mylist-sidebar-footer { grid-template-columns: 1fr; padding-inline: 8px; }
   .sidebar-footer-action { min-height: 34px; }
   .video-filter-bar { grid-template-columns: 1fr; gap: 7px; padding: 8px; }
+  .video-search-controls { grid-template-columns: 1fr; gap: 7px; }
   .selection-action-bar { overflow-x: auto; }
   .selection-action-bar button { flex: 0 0 auto; }
   .video-item { grid-template-columns: 18px 88px minmax(0, 1fr); gap: 8px; padding-inline: 8px; }
