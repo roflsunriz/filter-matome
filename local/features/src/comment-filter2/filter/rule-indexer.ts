@@ -184,6 +184,10 @@ export class SubstringMatcher {
   }
 
   match(text: string, lowercaseText?: string): number[] {
+    return Array.from(this.matchSet(text, lowercaseText));
+  }
+
+  matchSet(text: string, lowercaseText?: string): Set<number> {
     const resultSet = new Set<number>();
 
     if (this.caseSensitiveMachine) {
@@ -205,7 +209,7 @@ export class SubstringMatcher {
       }
     }
 
-    return Array.from(resultSet);
+    return resultSet;
   }
 
   hasPatterns(): boolean {

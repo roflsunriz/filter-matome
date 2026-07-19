@@ -169,6 +169,7 @@ export class JsonCommentFilter {
         preparedRules,
         settings: this.settings,
         regexCache: this.regexCache,
+        collectLogs: Boolean(this.settings?.logToCommentFilterLogger),
       });
 
       this.captureLogEvents(logs, currentSmid);

@@ -32,11 +32,14 @@ export interface PreparedJsonRule {
   compiledRegex?: RegExp;
   isUserRule: boolean;
   hasLiteralPrefilter: boolean;
+  literalMatchIsFinal: boolean;
   normalizedNicoruCond?: NormalizedNicoruCond;
 }
 
 export interface PreparedJsonRuleSet {
   rules: PreparedJsonRule[];
+  exemptionRules: PreparedJsonRule[];
+  evaluationRules: PreparedJsonRule[];
   userIdRuleIndexes: Map<string, number[]>;
   substringMatcher: SubstringMatcher | null;
   needsLowercase: boolean;
@@ -58,6 +61,7 @@ export interface FilterJsonThreadArgs {
   preparedRules: PreparedJsonRuleSet;
   settings: Settings | null | undefined;
   regexCache: Map<string, RegExp>;
+  collectLogs?: boolean;
 }
 
 export interface FilterJsonThreadResult {
@@ -83,6 +87,8 @@ export function prepareJsonRules(
   regexCache: Map<string, RegExp>,
 ): PreparedJsonRuleSet {
   const preparedRules: PreparedJsonRule[] = [];
+  const exemptionRules: PreparedJsonRule[] = [];
+  const evaluationRules: PreparedJsonRule[] = [];
   const userIdRuleIndexes = new Map<string, number[]>();
   const substringMatcher = new SubstringMatcher();
   let hasLiteralPatterns = false;
@@ -105,6 +111,7 @@ export function prepareJsonRules(
       compiledRegex: undefined,
       isUserRule,
       hasLiteralPrefilter: false,
+      literalMatchIsFinal: false,
       normalizedNicoruCond: normalizeNicoruCondition(rule.nicoru_cond),
     };
 
@@ -122,11 +129,27 @@ export function prepareJsonRules(
         const isCaseSensitive = !flags.includes("i");
         substringMatcher.add(rule.pattern, index, isCaseSensitive);
         preparedRule.hasLiteralPrefilter = true;
+        preparedRule.literalMatchIsFinal = canUseLiteralMatchAsFinal(
+          rule.pattern,
+          flags,
+        );
         hasLiteralPatterns = true;
       }
     }
 
     preparedRules.push(preparedRule);
+
+    if (
+      rule.action.type === "unspecified" &&
+      preparedRule.normalizedNicoruCond
+    ) {
+      exemptionRules.push(preparedRule);
+      if (preparedRule.normalizedNicoruCond.mode === "include") {
+        evaluationRules.push(preparedRule);
+      }
+    } else if (rule.action.type !== "unspecified") {
+      evaluationRules.push(preparedRule);
+    }
   }
 
   if (hasLiteralPatterns) {
@@ -135,6 +158,8 @@ export function prepareJsonRules(
 
   return {
     rules: preparedRules,
+    exemptionRules,
+    evaluationRules,
     userIdRuleIndexes,
     substringMatcher: hasLiteralPatterns ? substringMatcher : null,
     needsLowercase: hasLiteralPatterns
@@ -148,9 +173,14 @@ export function filterJsonThread({
   preparedRules,
   settings,
   regexCache,
+  collectLogs = true,
 }: FilterJsonThreadArgs): FilterJsonThreadResult {
   const logs: JsonRuleMatchEvent[] = [];
   const threadContext = buildJsonThreadContext(thread.comments, preparedRules);
+  const commandPolicy = prepareForkCommandPolicy(
+    thread.fork,
+    settings?.commandSettings ?? null,
+  );
 
   const comments = thread.comments
     .map((comment) =>
@@ -158,10 +188,9 @@ export function filterJsonThread({
         originalComment: comment,
         preparedRules,
         threadContext,
-        threadFork: thread.fork,
-        commandSettings: settings?.commandSettings ?? null,
+        commandPolicy,
         regexCache,
-        logCollector: logs,
+        logCollector: collectLogs ? logs : null,
       }),
     )
     .filter((comment): comment is CF2Comment => comment !== null);
@@ -176,18 +205,16 @@ interface ApplyJsonRuleOptions {
   originalComment: CF2Comment;
   preparedRules: PreparedJsonRuleSet;
   threadContext: JsonThreadProcessingContext;
-  threadFork: ForkType;
-  commandSettings: CommandSettings | null;
+  commandPolicy: ForkCommandPolicy;
   regexCache: Map<string, RegExp>;
-  logCollector: JsonRuleMatchEvent[];
+  logCollector: JsonRuleMatchEvent[] | null;
 }
 
 function applyRulesToComment({
   originalComment,
   preparedRules,
   threadContext,
-  threadFork,
-  commandSettings,
+  commandPolicy,
   regexCache,
   logCollector,
 }: ApplyJsonRuleOptions): CF2Comment | null {
@@ -200,7 +227,6 @@ function applyRulesToComment({
   const numericNicoruCount = toNumber(originalComment.nicoruCount) ?? 0;
   let hasIncludeNicoruRule = false;
   let includeNicoruRuleMatched = false;
-  let excludeNicoruRuleMatched = false;
 
   const userRuleIndexes =
     preparedRules.userIdRuleIndexes.get(originalComment.userId) ?? [];
@@ -212,10 +238,10 @@ function applyRulesToComment({
     ? originalBody.toLocaleLowerCase()
     : undefined;
   const literalCandidateIndexes = matcher
-    ? new Set<number>(matcher.match(originalBody, lowercaseBody))
+    ? matcher.matchSet(originalBody, lowercaseBody)
     : new Set<number>();
 
-  for (const preparedRule of preparedRules.rules) {
+  for (const preparedRule of preparedRules.exemptionRules) {
     const rule = preparedRule.rule;
 
     if (threadContext.nicoruIneligibleRuleIndexes.has(preparedRule.index)) {
@@ -240,16 +266,12 @@ function applyRulesToComment({
       : true;
 
     if (rule.action.type === "unspecified" && normalizedCond && nicoruMatches) {
-      logCollector.push({
-        comment: originalComment,
-        rule,
-        hidden: false,
-      });
+      collectRuleLog(logCollector, originalComment, rule, false);
       return processedComment;
     }
   }
 
-  for (const preparedRule of preparedRules.rules) {
+  for (const preparedRule of preparedRules.evaluationRules) {
     const rule = preparedRule.rule;
 
     if (threadContext.nicoruIneligibleRuleIndexes.has(preparedRule.index)) {
@@ -279,19 +301,8 @@ function applyRulesToComment({
           hasIncludeNicoruRule = true;
           if (nicoruMatches) {
             includeNicoruRuleMatched = true;
-            logCollector.push({
-              comment: originalComment,
-              rule,
-              hidden: false,
-            });
+            collectRuleLog(logCollector, originalComment, rule, false);
           }
-        } else if (nicoruMatches) {
-          excludeNicoruRuleMatched = true;
-          logCollector.push({
-            comment: originalComment,
-            rule,
-            hidden: false,
-          });
         }
       }
       continue;
@@ -315,11 +326,12 @@ function applyRulesToComment({
         getRegex(regexCache, rule.pattern ?? "", rule.flags || "gi"),
     );
 
-    logCollector.push({
-      comment: originalComment,
+    collectRuleLog(
+      logCollector,
+      originalComment,
       rule,
-      hidden: actionResult.type === "hide",
-    });
+      actionResult.type === "hide",
+    );
 
     if (actionResult.type === "hide") {
       shouldHideComment = true;
@@ -340,17 +352,14 @@ function applyRulesToComment({
     }
   }
 
-  const shouldApplyCommandSettings = excludeNicoruRuleMatched
-    ? false
-    : hasIncludeNicoruRule
-      ? includeNicoruRuleMatched
-      : true;
+  const shouldApplyCommandSettings = hasIncludeNicoruRule
+    ? includeNicoruRuleMatched
+    : true;
 
   if (shouldApplyCommandSettings) {
     processedComment.commands = applyForkCommandSettings(
       processedComment.commands,
-      threadFork,
-      commandSettings,
+      commandPolicy,
     );
   }
 
@@ -393,17 +402,17 @@ function doesPreparedRuleTargetComment({
     return false;
   }
 
+  if (preparedRule.literalMatchIsFinal) {
+    return true;
+  }
+
   const reusableRegex =
     preparedRule.compiledRegex ??
     getRegex(regexCache, rule.pattern, rule.flags || "gi");
-  if (reusableRegex.global) {
-    reusableRegex.lastIndex = 0;
-  }
+  resetRegexLastIndex(reusableRegex);
 
   const matched = reusableRegex.test(originalBody);
-  if (reusableRegex.global) {
-    reusableRegex.lastIndex = 0;
-  }
+  resetRegexLastIndex(reusableRegex);
 
   return matched;
 }
@@ -610,13 +619,9 @@ function executeAction(
 
   if (action.type === "replace" && rule.pattern) {
     const regex = compiledRegex;
-    if (regex.global) {
-      regex.lastIndex = 0;
-    }
+    resetRegexLastIndex(regex);
     const newText = text.replace(regex, action.replacement);
-    if (regex.global) {
-      regex.lastIndex = 0;
-    }
+    resetRegexLastIndex(regex);
     return { type: "replace", newText };
   }
 
@@ -625,16 +630,10 @@ function executeAction(
 
 function applyForkCommandSettings(
   commands: string[],
-  threadFork: ForkType,
-  commandSettings: CommandSettings | null,
+  commandPolicy: ForkCommandPolicy,
 ): string[] {
-  const forcedCommands = getForcedCommandsForFork(threadFork, commandSettings);
-
   const sanitizedCommands = sanitizeCommentCommands(commands);
-  const allowedCommands = getAllowedCommandsForFork(
-    threadFork,
-    commandSettings,
-  );
+  const { allowedCommands, forcedCommands } = commandPolicy;
 
   const filteredCommands = allowedCommands
     ? sanitizedCommands.filter((command) => {
@@ -658,6 +657,51 @@ function applyForkCommandSettings(
   });
 
   return enforceCommandSettings(filteredCommands, filteredForcedCommands);
+}
+
+interface ForkCommandPolicy {
+  allowedCommands: Set<string> | null;
+  forcedCommands: string[];
+}
+
+function prepareForkCommandPolicy(
+  threadFork: ForkType,
+  commandSettings: CommandSettings | null,
+): ForkCommandPolicy {
+  return {
+    allowedCommands: getAllowedCommandsForFork(threadFork, commandSettings),
+    forcedCommands: getForcedCommandsForFork(threadFork, commandSettings),
+  };
+}
+
+function collectRuleLog(
+  logCollector: JsonRuleMatchEvent[] | null,
+  comment: CF2Comment,
+  rule: NgRuleJson,
+  hidden: boolean,
+): void {
+  logCollector?.push({ comment, rule, hidden });
+}
+
+function canUseLiteralMatchAsFinal(pattern: string, flags: string): boolean {
+  if (flags.includes("y")) {
+    return false;
+  }
+
+  if (!flags.includes("i")) {
+    return true;
+  }
+
+  return (
+    Array.from(pattern).every((char) => char.codePointAt(0)! <= 0x7f) ||
+    pattern.toLocaleLowerCase() === pattern.toLocaleUpperCase()
+  );
+}
+
+function resetRegexLastIndex(regex: RegExp): void {
+  if (regex.global || regex.sticky) {
+    regex.lastIndex = 0;
+  }
 }
 
 function getAllowedCommandsForFork(

@@ -50,6 +50,7 @@ ctx.onmessage = (event: MessageEvent<ProcessRequest>) => {
         preparedRules,
         settings: effectiveSettings,
         regexCache,
+        collectLogs: Boolean(effectiveSettings?.logToCommentFilterLogger),
       });
       processedThreads.push({ ...thread, comments });
       allLogs.push(...logs);
