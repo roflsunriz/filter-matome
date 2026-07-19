@@ -32,6 +32,7 @@ local/features/
 | `src/movie-info/` | 動画・キャッシュ・API情報ダッシュボード | [README](src/movie-info/README.md) |
 | `src/mylist2/` | 独自マイリストの管理SPA | [README](src/mylist2/README.md) |
 | `src/runtime/` | 配信ページ判定と起動境界 | [README](src/runtime/README.md) |
+| `src/sandbox/` | 外部配布物を隔離したAPI調査。ダウンロード物はビルド・Git管理外 | [README](src/sandbox/README.md) |
 | `src/types/` | グローバル型と機能横断の型定義 | [README](src/types/README.md) |
 | `src/video-player/` | ウォッチページ連携とローカル動画プレイヤー | [README](src/video-player/README.md) |
 | `src/watch-history/` | 視聴追跡と履歴管理SPA | [README](src/watch-history/README.md) |

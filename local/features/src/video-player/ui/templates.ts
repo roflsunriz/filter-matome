@@ -31,6 +31,7 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
     --fullscreen-video-top: 0px;
     --fullscreen-video-width: 100vw;
     --fullscreen-video-height: 100vh;
+    --fullscreen-comment-form-height: 82px;
     background: #000;
     color: white;
     font-family: Arial, sans-serif;
@@ -49,6 +50,18 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
     justify-content: center;
     align-items: center;
     min-height: 180px;
+  }
+
+  .custom-player > .video-comment-post-form {
+    position: relative;
+    z-index: 10000;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
+    padding: 10px 12px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0 0 10px 10px;
+    background: #1a2029;
   }
     
   #video-element {
@@ -97,6 +110,38 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
     display: block !important;
     z-index: 2147483647 !important;
     overflow: visible !important;
+  }
+
+  .custom-player:fullscreen > .video-comment-post-form,
+  html.fullscreen-active .custom-player.nc-fullscreen-player > .video-comment-post-form,
+  body.nc-fullscreen-active .custom-player.nc-fullscreen-player > .video-comment-post-form {
+    position: fixed !important;
+    left: var(--fullscreen-video-left) !important;
+    bottom: 0 !important;
+    z-index: 10000 !important;
+    width: var(--fullscreen-video-width) !important;
+    margin: 0 !important;
+    border-radius: 8px !important;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      visibility 0.2s ease;
+  }
+
+  .custom-player:fullscreen:has(player-controls-shadow.controls-visible, player-controls-shadow.always-visible) > .video-comment-post-form,
+  html.fullscreen-active .custom-player.nc-fullscreen-player:has(player-controls-shadow.controls-visible, player-controls-shadow.always-visible) > .video-comment-post-form,
+  body.nc-fullscreen-active .custom-player.nc-fullscreen-player:has(player-controls-shadow.controls-visible, player-controls-shadow.always-visible) > .video-comment-post-form,
+  .custom-player:fullscreen > .video-comment-post-form:focus-within,
+  html.fullscreen-active .custom-player.nc-fullscreen-player > .video-comment-post-form:focus-within,
+  body.nc-fullscreen-active .custom-player.nc-fullscreen-player > .video-comment-post-form:focus-within {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
   }
 
   /* 全画面時のビデオコンテナスタイル - ネイティブAPI + フォールバック */
@@ -154,13 +199,13 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
   html.fullscreen-active .custom-player.nc-fullscreen-player .comment-overlay-layer,
   body.nc-fullscreen-active .custom-player.nc-fullscreen-player .comment-overlay-layer {
     position: absolute !important;
-    top: var(--fullscreen-video-top) !important;
-    left: var(--fullscreen-video-left) !important;
-    width: var(--fullscreen-video-width) !important;
-    height: var(--fullscreen-video-height) !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
     max-width: none !important;
     max-height: none !important;
-    aspect-ratio: var(--video-aspect-ratio) !important;
+    aspect-ratio: inherit !important;
     pointer-events: none !important;
     display: block !important;
     z-index: 1001 !important; /* video(z-index:1) の上 / controls(2000) の下 */
@@ -171,7 +216,7 @@ export const CUSTOM_PLAYER_SHADOW_STYLES = `
   html.fullscreen-active .custom-player.nc-fullscreen-player player-controls-shadow,
   body.nc-fullscreen-active .custom-player.nc-fullscreen-player player-controls-shadow {
     position: fixed !important;
-    bottom: 0 !important;
+    bottom: var(--fullscreen-comment-form-height, 82px) !important;
     left: 0 !important;
     right: 0 !important;
     width: 100vw !important;

@@ -1032,6 +1032,19 @@ const assignWatchContext = (videoId: string, apiData: ApiData): void => {
 type VideoInfoResult = {
   apiData: ApiData;
   source: "watch-page" | "nicochart";
+  isPremium: boolean;
+};
+
+const hasPremiumSession = (serverContext: unknown): boolean => {
+  if (!serverContext || typeof serverContext !== "object") {
+    return false;
+  }
+  const sessionUser = (serverContext as Record<string, unknown>)["sessionUser"];
+  return (
+    typeof sessionUser === "object" &&
+    sessionUser !== null &&
+    (sessionUser as Record<string, unknown>)["type"] === "premium"
+  );
 };
 
 const fetchVideoInfoWithFallback = async (
@@ -1043,6 +1056,7 @@ const fetchVideoInfoWithFallback = async (
       return {
         apiData: toApiData(result.apiData, videoId),
         source: "watch-page",
+        isPremium: hasPremiumSession(result.serverContext),
       };
     }
     window.logger.warn(
@@ -1057,7 +1071,7 @@ const fetchVideoInfoWithFallback = async (
 
   try {
     const apiData = await fetchNicochartVideoInfo(videoId);
-    return apiData ? { apiData, source: "nicochart" } : null;
+    return apiData ? { apiData, source: "nicochart", isPremium: false } : null;
   } catch (error) {
     window.logger.warn("nicochart.jpの動画情報取得に失敗しました", error);
     return null;
@@ -1122,7 +1136,7 @@ export const startStandalonePlayer = async (): Promise<void> => {
       throw new Error("ウォッチページの取得に失敗しました");
     }
 
-    const { apiData, source } = videoInfo;
+    const { apiData, source, isPremium } = videoInfo;
     layout.title.textContent = apiData.video.title;
     document.title = "video-player - " + apiData.video.title;
 
@@ -1145,6 +1159,7 @@ export const startStandalonePlayer = async (): Promise<void> => {
     await player.initialize(videoId, {
       apiData,
       enableComments: source === "watch-page",
+      isPremium,
     });
 
     // 繰り返し再生を優先し、無効な場合だけ次の動画へ自動遷移する。

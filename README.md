@@ -174,6 +174,7 @@ local/
   │   ├── movie-info/           # 動画/API情報ダッシュボード
   │   ├── mylist2/              # マイリスト2
   │   ├── runtime/              # 配信ページ判定と起動境界
+  │   ├── sandbox/              # 外部バンドルを隔離してAPI契約を調査する領域
   │   ├── types/                # 共通型定義
   │   ├── video-player/         # ローカル動画プレイヤー
   │   └── watch-history/        # 視聴履歴SPAと視聴追跡

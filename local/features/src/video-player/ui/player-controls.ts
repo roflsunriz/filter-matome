@@ -27,6 +27,7 @@ export class PlayerControlsShadow extends HTMLElement {
   private isVolumeDragging: boolean = false;
   private volumeSaveTimer: number | null = null;
   private lastMutedIconState: boolean | null = null;
+  private companionPanelActive = false;
 
   // コメント設定関連
   private commentOpacity: number = PLAYER_SETTINGS.COMMENT.OPACITY.DEFAULT;
@@ -308,7 +309,7 @@ export class PlayerControlsShadow extends HTMLElement {
       /* 全画面時のホスト要素スタイル */
       :host(.fullscreen-active) {
         position: fixed !important;
-        bottom: 0 !important;
+        bottom: var(--fullscreen-comment-form-height, 82px) !important;
         left: 0 !important;
         right: 0 !important;
         width: 100vw !important;
@@ -1446,6 +1447,7 @@ export class PlayerControlsShadow extends HTMLElement {
       settingsMenu.classList.toggle("visible", this.isSettingsOpen);
 
       if (this.isSettingsOpen) {
+        this.showControls();
         // 現在の全画面状態を確認して表示モードを設定
         const doc = document as ExtendedDocument;
         const isFullScreen =
@@ -2050,6 +2052,15 @@ export class PlayerControlsShadow extends HTMLElement {
     this.classList.remove("controls-visible");
   }
 
+  setCompanionPanelActive(active: boolean): void {
+    this.companionPanelActive = active;
+    if (active) {
+      this.showControls();
+      return;
+    }
+    this.hideControlsWithDelay();
+  }
+
   /**
    * プレイヤー再生（外部から呼ばれる）
    */
@@ -2084,6 +2095,7 @@ export class PlayerControlsShadow extends HTMLElement {
     // 参照のクリア
     this.video = null;
     this.commentSystem = null;
+    this.companionPanelActive = false;
   }
 
   private ensureInitialized(): void {
@@ -2175,7 +2187,11 @@ export class PlayerControlsShadow extends HTMLElement {
    */
   private hideControlsWithDelay(): void {
     // 常に表示モードの場合は非表示にしない
-    if (this.classList.contains("always-visible")) {
+    if (
+      this.classList.contains("always-visible") ||
+      this.companionPanelActive ||
+      this.isSettingsOpen
+    ) {
       return;
     }
 

@@ -167,7 +167,7 @@ export class CommentSystem {
       apiResponse,
     );
     this.hasReceivedFilteredData = true;
-    this.sourceComments = apiResponse.data.threads
+    const incomingComments = apiResponse.data.threads
       .flatMap((thread) =>
         thread.comments.map((comment) => ({
           ...comment,
@@ -178,6 +178,7 @@ export class CommentSystem {
         ...(comment as unknown as Comment),
         vposMs: comment.vpos * 10,
       }));
+    this.sourceComments = this.mergeLocalPosts(incomingComments);
 
     // 既存のAPIフェッチがあればキャンセル
     if (this.abortController) {
@@ -297,6 +298,46 @@ export class CommentSystem {
     });
   }
 
+  private mergeLocalPosts(incomingComments: Comment[]): Comment[] {
+    const localPosts = this.sourceComments.filter(
+      (comment) => comment.isLocalPost === true,
+    );
+    if (localPosts.length === 0) {
+      return incomingComments;
+    }
+
+    const unmatchedLocalPosts = new Set(localPosts);
+    const mergedComments = incomingComments.map((incomingComment) => {
+      const localPost = localPosts.find((candidate) =>
+        this.isSameComment(candidate, incomingComment),
+      );
+      if (!localPost) {
+        return incomingComment;
+      }
+      unmatchedLocalPosts.delete(localPost);
+      return {
+        ...incomingComment,
+        isMyPost: true,
+        isLocalPost: true,
+      };
+    });
+
+    return [...mergedComments, ...unmatchedLocalPosts];
+  }
+
+  private isSameComment(left: Comment, right: Comment): boolean {
+    if (left.id && right.id) {
+      return left.id === right.id;
+    }
+    return (
+      typeof left.no === "number" &&
+      typeof right.no === "number" &&
+      left.no === right.no &&
+      left.body === right.body &&
+      left.vposMs === right.vposMs
+    );
+  }
+
   /**
    * コメントの表示/非表示を切り替え
    */
@@ -320,8 +361,10 @@ export class CommentSystem {
       // any/unknown型の利用を避けるため型アサーションを明確化
       const currentComments = this.commentList.getComments();
       const nextComments: Comment[] = [...currentComments, enrichedComment];
+      this.sourceComments = [...this.sourceComments, enrichedComment];
       this.commentList.addComments(nextComments);
       this.overlay.load(nextComments);
+      this.commentList.updateTime((this.videoElement?.currentTime ?? 0) * 1000);
     }
   }
 
@@ -373,7 +416,6 @@ export class CommentSystem {
       this.commentContainer.remove();
       this.commentContainer = null;
     }
-
     // イベントリスナーの削除
     if (this.videoElement) {
       if (this._timeUpdateHandler) {

@@ -92,6 +92,7 @@ export class CommentList extends HTMLElement {
       }
 
       .comment-item {
+        box-sizing: border-box;
         padding: 8px 12px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         cursor: pointer;
@@ -108,6 +109,17 @@ export class CommentList extends HTMLElement {
         background: rgba(0, 123, 255, 0.2);
         border-left: 3px solid #007bff;
         padding-left: 9px;
+      }
+
+      .comment-item.own-comment {
+        border: 2px solid #ffd400;
+        padding: 6px 10px;
+      }
+
+      .comment-item.own-comment.active {
+        border: 2px solid #ffd400;
+        padding: 6px 10px;
+        background: rgba(255, 212, 0, 0.12);
       }
 
       .comment-time {
@@ -270,7 +282,9 @@ export class CommentList extends HTMLElement {
     this.comments.forEach((comment) => {
       const item = document.createElement("div");
       item.className = "comment-item";
+      item.classList.toggle("own-comment", comment.isLocalPost === true);
       item.dataset.vpos = comment.vposMs.toString();
+      item.dataset.localPost = String(comment.isLocalPost === true);
 
       const time = this.formatTime(comment.vposMs / 1000);
       item.innerHTML = `

@@ -28,6 +28,8 @@ export interface CommentData {
   fork?: string;
   threadId?: string;
   isMyPost?: boolean;
+  /** 現在のページで投稿に成功したコメント。一時的な強調表示だけに使用する。 */
+  isLocalPost?: boolean;
 }
 
 /**

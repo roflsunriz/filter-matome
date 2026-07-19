@@ -38,6 +38,17 @@ interface CommentOverlayMeta {
   threadId?: string;
   date?: number;
   userIdHash?: string;
+  isMyPost?: boolean;
+}
+
+interface RenderableOverlayComment {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  isScrolling: boolean;
+  staticWidthScale: number;
+  draw(context: CanvasRenderingContext2D, interpolatedX?: number | null): void;
 }
 
 interface CommentOverlayRenderer {
@@ -53,7 +64,7 @@ interface CommentOverlayRenderer {
     vposMs: number,
     commands?: string[],
     meta?: CommentOverlayMeta | null,
-  ): unknown;
+  ): RenderableOverlayComment | null;
   settings: RendererSettings;
   performInitialSync(frameTimeMs?: number): void;
   draw(): void;
@@ -79,8 +90,13 @@ export class CommentOverlayCommentSystem {
     this.container = container;
 
     const customPlayer = container.querySelector(".custom-player");
+    const videoContainer = customPlayer?.querySelector(".video-container");
     const playerRoot =
-      customPlayer instanceof HTMLElement ? customPlayer : container;
+      videoContainer instanceof HTMLElement
+        ? videoContainer
+        : customPlayer instanceof HTMLElement
+          ? customPlayer
+          : container;
 
     if (window.getComputedStyle(playerRoot).position === "static") {
       playerRoot.style.position = "relative";
@@ -215,13 +231,50 @@ export class CommentOverlayCommentSystem {
     for (const comment of this.comments) {
       const vposMs = this.toVposMs(comment);
       const commands = this.collectCommands(comment);
-      this.renderer.addComment(
+      const renderedComment = this.renderer.addComment(
         comment.body,
         vposMs,
         commands,
         this.buildCommentMeta(comment),
       );
+      if (comment.isLocalPost === true && renderedComment) {
+        this.addOwnCommentBorder(renderedComment);
+      }
     }
+
+    this.renderer.performInitialSync();
+    this.renderer.draw();
+  }
+
+  private addOwnCommentBorder(comment: RenderableOverlayComment): void {
+    const drawComment = comment.draw.bind(comment);
+    comment.draw = (
+      context: CanvasRenderingContext2D,
+      interpolatedX: number | null = null,
+    ): void => {
+      drawComment(context, interpolatedX);
+
+      const scale = comment.isScrolling ? 1 : comment.staticWidthScale;
+      const width = comment.width * scale;
+      const height = comment.height * scale;
+      const baseX = interpolatedX ?? comment.x;
+      const x = baseX + (comment.width - width) / 2;
+      const padding = 4;
+
+      context.save();
+      context.globalAlpha = 1;
+      context.shadowColor = "transparent";
+      context.shadowBlur = 0;
+      context.strokeStyle = "#ffd400";
+      context.lineWidth = 2;
+      context.strokeRect(
+        x - padding,
+        comment.y - padding,
+        width + padding * 2,
+        height + padding * 2,
+      );
+      context.restore();
+    };
   }
 
   private buildCommentMeta(comment: Comment): CommentOverlayMeta {
@@ -245,6 +298,7 @@ export class CommentOverlayCommentSystem {
       ...(typeof comment.userId === "string" && comment.userId.length > 0
         ? { userIdHash: comment.userId }
         : {}),
+      ...(comment.isLocalPost === true ? { isMyPost: true } : {}),
     };
   }
 

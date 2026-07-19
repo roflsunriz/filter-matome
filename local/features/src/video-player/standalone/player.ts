@@ -3,6 +3,8 @@ import { ToastManager } from "@/video-player/utils/toast";
 import { applyStyles } from "@/video-player/utils/dom-utils";
 import { PlayerControlsShadow } from "@/video-player/ui/player-controls";
 import { CommentSystem } from "@/video-player/core/comment-system";
+import { CommentPoster } from "@/video-player/core/comment-poster";
+import { CommentPostForm } from "@/video-player/ui/comment-post-form";
 import {
   CUSTOM_PLAYER_SHADOW_HTML,
   CUSTOM_PLAYER_SHADOW_STYLES,
@@ -114,6 +116,7 @@ export interface StandalonePlayerInitOptions {
   apiData?: ApiData;
   displayTitle?: string;
   enableComments?: boolean;
+  isPremium?: boolean;
 }
 
 export class StandalonePlayer {
@@ -121,11 +124,13 @@ export class StandalonePlayer {
   private readonly urlManager = new UrlManager();
   private readonly toastManager = new ToastManager();
   private readonly commentSystem = new CommentSystem();
+  private readonly commentPoster = new CommentPoster();
 
   private playerControls: PlayerControlsShadow | null = null;
   private videoElement: HTMLVideoElement | null = null;
   private videoContainer: HTMLElement | null = null;
   private customPlayerContainer: HTMLElement | null = null;
+  private commentPostForm: CommentPostForm | null = null;
   private hlsConstructor: HlsConstructor | null = null;
   private hlsConstructorPromise: Promise<HlsConstructor | null> | null = null;
   private hls: HlsInstance | null = null;
@@ -172,8 +177,9 @@ export class StandalonePlayer {
     options: StandalonePlayerInitOptions = {},
   ): Promise<void> {
     this.enableComments = options.enableComments !== false;
+    const commentVideoId = options.apiData?.video.id ?? videoId;
 
-    this.preparePlayerShell();
+    this.preparePlayerShell(commentVideoId, options.isPremium === true);
 
     const displayTitle =
       options.displayTitle ?? options.apiData?.video.title ?? videoId;
@@ -182,13 +188,15 @@ export class StandalonePlayer {
 
     // コメント取得は再生可否に影響させない。コメントサーバが利用不可・低速でも動画再生を優先する。
     if (this.enableComments) {
-      void this.loadComments(videoId);
+      void this.loadComments(commentVideoId);
     }
 
     await playback;
   }
 
-  private preparePlayerShell(): void {
+  private preparePlayerShell(videoId: string, isPremium: boolean): void {
+    this.commentPostForm?.remove();
+    this.commentPostForm = null;
     this.mount.innerHTML = "";
 
     if (!playerStylesInjected) {
@@ -232,6 +240,7 @@ export class StandalonePlayer {
           this.videoElement,
           wrapper, // 親コンテナを新しいラッパーに変更
         );
+        this.setupCommentPostForm(videoId, isPremium);
       } catch (error) {
         window.logger.error("コメントシステムの初期化に失敗しました", error);
       }
@@ -266,6 +275,56 @@ export class StandalonePlayer {
     this.setupHoverControls();
     this.setupResponsiveHandlers();
     this.setupVideoReplayHandlers();
+  }
+
+  private setupCommentPostForm(videoId: string, isPremium: boolean): void {
+    if (!this.customPlayerContainer || !this.videoElement) {
+      return;
+    }
+
+    const form = new CommentPostForm();
+    form.className = "video-comment-post-form";
+    form.setPremiumColorsEnabled(isPremium);
+    form.setSubmitHandler(async ({ body, commands }) => {
+      const posted = await this.commentPoster.post({
+        videoId,
+        body,
+        commands,
+        vposMs: (this.videoElement?.currentTime ?? 0) * 1000,
+      });
+      this.commentSystem.addComment({
+        id: posted.id,
+        no: posted.no,
+        body: posted.body,
+        commands: posted.commands,
+        userId: "",
+        isMyPost: true,
+        isLocalPost: true,
+        vpos: Math.round(posted.vposMs / 10),
+        vposMs: posted.vposMs,
+        fork: "main",
+      });
+      return posted;
+    });
+
+    const setInteractionActive = (active: boolean): void => {
+      this.playerControls?.setCompanionPanelActive(active);
+    };
+    const releaseInteractionIfIdle = (): void => {
+      window.setTimeout(() => {
+        setInteractionActive(form.matches(":hover, :focus-within"));
+      });
+    };
+    form.addEventListener("mouseenter", () => setInteractionActive(true));
+    form.addEventListener("mouseleave", releaseInteractionIfIdle);
+    form.addEventListener("focusin", () => setInteractionActive(true));
+    form.addEventListener("focusout", releaseInteractionIfIdle);
+
+    this.customPlayerContainer.append(form);
+    this.commentPostForm = form;
+    requestAnimationFrame(() => {
+      this.updateFullscreenCommentFormHeight();
+    });
   }
 
   private async playWithCustomSource(
@@ -881,8 +940,25 @@ export class StandalonePlayer {
   }
 
   private refreshFullscreenLayout(): void {
+    this.updateFullscreenCommentFormHeight();
     this.updateVideoAspectRatio();
     this.commentSystem.resize();
+  }
+
+  private updateFullscreenCommentFormHeight(): void {
+    if (!this.customPlayerContainer || !this.commentPostForm) {
+      return;
+    }
+
+    const height = Math.ceil(
+      this.commentPostForm.getBoundingClientRect().height,
+    );
+    if (height > 0) {
+      this.customPlayerContainer.style.setProperty(
+        "--fullscreen-comment-form-height",
+        `${height}px`,
+      );
+    }
   }
 
   private clearFullscreenLayoutTimers(): void {
@@ -983,6 +1059,9 @@ export class StandalonePlayer {
     if (this.standaloneWrapper) {
       this.resizeObserver.observe(this.standaloneWrapper);
     }
+    if (this.commentPostForm) {
+      this.resizeObserver.observe(this.commentPostForm);
+    }
   }
 
   /**
@@ -1015,6 +1094,7 @@ export class StandalonePlayer {
   private handleResize(): void {
     // デバウンス相当のため、requestAnimationFrameを使用
     requestAnimationFrame(() => {
+      this.updateFullscreenCommentFormHeight();
       this.updateVideoAspectRatio();
       this.adjustLayout();
     });
@@ -1044,6 +1124,9 @@ export class StandalonePlayer {
    * リソースのクリーンアップ（イベントリスナーの削除など）
    */
   private cleanup(): void {
+    this.commentPostForm?.remove();
+    this.commentPostForm = null;
+
     // ResizeObserverのクリーンアップ
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
