@@ -12,22 +12,15 @@ import {
 import type {
   DailyStats,
   HourlyStats,
-  ImportConfig,
   SortBy,
   WatchHistoryEntry,
-  WatchHistoryExportData,
 } from "@/types/watch-history-types";
 import { watchHistoryDB } from "@/watch-history/database";
 import { calculateFavoriteVideos } from "@/watch-history/history-filter";
-import {
-  getSeriesAlertExtensionStatus,
-  mergeSeriesAlertStates,
-  replaceSeriesAlertsInExtension,
-} from "@/watch-history/series-alert-extension-client";
-import { WatchHistoryHistoryListApp } from "@/watch-history/app-history-list";
+import { WatchHistoryBackupApp } from "@/watch-history/app-backup";
 
 /** 統計、フィルター、入出力、動画詳細、メモ編集を提供する。 */
-export abstract class WatchHistoryDashboardApp extends WatchHistoryHistoryListApp {
+export abstract class WatchHistoryDashboardApp extends WatchHistoryBackupApp {
   protected updateStats(): void {
     if (!this.stats) return;
 
@@ -613,100 +606,6 @@ export abstract class WatchHistoryDashboardApp extends WatchHistoryHistoryListAp
       this.showToast("データ更新に失敗しました", "error");
     } finally {
       this.showLoading(false);
-    }
-  }
-
-  /**
-   * エクスポートを処理する
-   */
-  protected async handleExport(): Promise<void> {
-    try {
-      const result = await watchHistoryDB.exportData();
-      if (result.success && result.data) {
-        const extensionStatus = await getSeriesAlertExtensionStatus();
-        result.data.seriesAlerts = extensionStatus.alerts;
-        this.applySeriesAlertExtensionStatus(extensionStatus);
-        const blob = new Blob([JSON.stringify(result.data, null, 2)], {
-          type: "application/json",
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-
-        // 年月日時分秒を含むファイル名を生成（コロンを避けるため）
-        const now = new Date();
-        const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
-        const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, ""); // HHMMSS
-        a.download = `nico-watch-history-${dateStr}-${timeStr}.json`;
-
-        a.click();
-        URL.revokeObjectURL(url);
-        this.showToast("エクスポートが完了しました", "success");
-      }
-    } catch (error) {
-      logger.error("エクスポートエラー:", error);
-      this.showToast("エクスポートに失敗しました", "error");
-    }
-  }
-
-  /**
-   * インポートを処理する
-   */
-  protected handleImport(): void {
-    const fileInput = this.elements["import-file"] as HTMLInputElement;
-    if (fileInput) {
-      fileInput.click();
-    }
-  }
-
-  /**
-   * インポートファイルを処理する
-   */
-  protected async handleImportFile(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text) as WatchHistoryExportData;
-
-      // 後方互換性のため、seriesAlertsが存在しない場合は空配列を設定
-      if (!data.seriesAlerts) {
-        data.seriesAlerts = [];
-      }
-
-      const config: ImportConfig = {
-        duplicateHandling: "merge",
-        maxEntries: 10000,
-      };
-
-      const result = await watchHistoryDB.importData(data, config);
-      if (result.success && result.data !== undefined) {
-        let importedAlertCount = 0;
-        if (data.seriesAlerts.length > 0) {
-          const current = await getSeriesAlertExtensionStatus();
-          const merged = mergeSeriesAlertStates(
-            current.alerts,
-            data.seriesAlerts,
-          );
-          const updated = await replaceSeriesAlertsInExtension(merged);
-          this.seriesAlerts = updated.alerts;
-          this.applySeriesAlertExtensionStatus(updated);
-          importedAlertCount = data.seriesAlerts.length;
-        }
-        this.showToast(
-          `${result.data}件の履歴と${importedAlertCount}件のシリーズアラートをインポートしました`,
-          "success",
-        );
-        await this.refreshData();
-        await this.refreshSeriesAlertData();
-      }
-    } catch (error) {
-      logger.error("インポートエラー:", error);
-      this.showToast("インポートに失敗しました", "error");
-    } finally {
-      input.value = "";
     }
   }
 

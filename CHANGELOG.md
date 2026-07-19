@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【watch-history】視聴履歴とシリーズアラートをGoogle DriveへZIPで保存し、Drive上のwatch-history用バックアップを選択して現在の履歴へマージできるエクスポート・インポート機能を追加した。
 - 【mylist2】複数のマイリストから目的の動画を探せるよう、動画検索欄の右側に「選択マイリストのみ」と「全マイリスト横断検索」の範囲切替を追加した。
 - 【video-player】ローカルキャッシュ再生中にもニコニコ動画へコメントを投稿できるよう、動画直下・動画全幅の投稿フォームを追加した。パレット、選択済みコマンド、本文、投稿ボタンを一行に並べ、公式と同じサイズ・位置・通常色・プレミアム色のボタン選択からコマンドを自動生成する。全画面では投稿フォームを画面最下部、その直上にプレイヤーコントローラを配置して表示を連動し、パレット本体をコントローラより手前に表示する。投稿成功時は一覧と流れるコメントを即時更新して、このページで投稿したコメントを再読み込みまで黄色い矩形枠で示す。公式視聴ページと同じ投稿キー取得・nvComment送信・184補完を行い、未ログイン、投稿禁止、レート制限、CAPTCHA要求は理由と次の操作を表示する。
 - 【開発者向け】公式公開バンドルを製品コードやGit管理から分離してコメント投稿APIを再調査できるよう、`local/features/src/sandbox` に取得スクリプト、隔離規則、確認済みAPI契約を追加した。
@@ -15,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【common/mylist2/watch-history】Google Identity Services認証、`drive.file` API、ZIP圧縮・展開を`common/google-drive-backup-service.ts`へ共通化し、機能ごとの保存フォルダーとファイル接頭辞を設定して利用する構成へ変更した。
 - 【開発者向け】巨大化していたcomment-filter2、mlink-video-controller、mylist2、video-player、watch-historyのUI・IndexedDB・メタデータ・再生処理・CSS・HTMLを責務別モジュールへ分割し、各ソースファイルを1,000行以下に整理した。背景設定、原宿UI、視聴トラッカーの動的回帰テストと、上限超過を検出する構造テストも追加した。
 - 【CI/開発者向け】依存解決の再現性とローカル検証との差をなくすため、CI・リリースのBun導入を`--frozen-lockfile`へ変更し、TypeScript全体のPrettier差分検査とPlaywright Chromium E2Eを独立ジョブとして必須化した。ローカルには`format:check`、`test:e2e`、全検証をまとめる`verify`を追加した。
 - 【watch-history】大量の履歴を一度にDOMへ展開しないよう、一覧を25・50・100件単位のページ表示へ変更した。IndexedDBにはインデックスカーソルで指定範囲だけを保持するページ取得APIを追加し、一覧取得済みデータを統計計算へ再利用して重複する全件読み込みも削減した。

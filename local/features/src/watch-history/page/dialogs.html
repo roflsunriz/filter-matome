@@ -292,3 +292,42 @@
         </div>
       </div>
 
+      <!-- Google Driveバックアップ選択モーダル -->
+      <div id="google-drive-import-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title">Google Driveからインポート</h3>
+            <button id="google-drive-import-modal-close" class="modal-close">
+              <img
+                class="material-icon icon-dark"
+                data-style="outlined"
+                data-icon="close"
+                alt="close"
+                loading="lazy"
+              />
+            </button>
+          </div>
+          <div class="modal-body">
+            <label class="form-label" for="google-drive-backup-select">
+              復元するバックアップ
+            </label>
+            <select
+              id="google-drive-backup-select"
+              class="form-select"
+              size="6"
+            ></select>
+            <p class="history-delete-note">
+              現在の履歴とマージし、同じ動画の視聴回数・ログを統合します。
+            </p>
+            <div class="modal-actions">
+              <button id="google-drive-import-confirm" class="btn btn-primary">
+                インポート
+              </button>
+              <button id="google-drive-import-cancel" class="btn btn-secondary">
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>

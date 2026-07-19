@@ -287,6 +287,8 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 
 シリーズアラートでは`新規アラート追加`で対象と間隔を設定すると、NicoCache_nlの常駐extensionがページやブラウザを閉じていても新規動画を定期確認する。`手動チェック`で即時確認を依頼でき、`通知テスト`でOS通知またはGUIログ・通知音の経路を確認できる。NicoCache_nlを停止している間は確認されない。
 
+画面上部の`管理`から、視聴履歴とシリーズアラートをローカルJSONへエクスポート・インポートできる。`Google Driveへエクスポート`では`Watch History Backups`フォルダーへZIPで保存し、`Google Driveからインポート`では一覧から選んだバックアップを現在の履歴へマージする。Google Drive連携はユーザー操作時だけ認証し、この機能が作成したファイルへアクセスする`drive.file`権限を使用する。
+
 `データベース管理`では、より大容量の履歴を保存するためのデータベース永続化と、旧データからの自動マイグレーションなどの設定が可能。  
  
 
@@ -366,6 +368,10 @@ URL は `https://www.nicovideo.jp/local/background.jpg` のように、`local` �
 **mylist2**
 
 mylist2 > 「マイリスト設定」 > 「エクスポート」
+
+**watch-history**
+
+watch-history > 「管理」 > 「エクスポート」または「Google Driveへエクスポート」
 
 **comment-filter2**
 

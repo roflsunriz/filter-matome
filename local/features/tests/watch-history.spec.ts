@@ -4,6 +4,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { composeWatchHistoryDocument } from "../scripts/watch-history-document";
+import { verifyWatchHistoryGoogleDriveBackup } from "./watch-history-google-drive-test-helper";
 
 const projectRoot = join(import.meta.dirname, "..");
 const watchHistoryRoot = join(projectRoot, "src", "watch-history");
@@ -961,4 +962,11 @@ test("インポート・エクスポート・DB管理・常駐通知の全操作
   await expect(page.locator("#toast-container")).toContainText(
     "extensionからテスト通知を送信しました",
   );
+});
+
+test("Google DriveへZIPを保存し、選択したバックアップを履歴へマージできる", async ({
+  page,
+}) => {
+  await openApp(page);
+  await verifyWatchHistoryGoogleDriveBackup(page, entries[0], now);
 });

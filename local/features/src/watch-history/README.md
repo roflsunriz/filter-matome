@@ -18,7 +18,8 @@
 - `app.ts`: SPAの入口、DOM初期化、イベント配線、設定読込。
 - `app-base.ts`: SPA全体で共有する状態、共通UI操作、機能間の抽象境界。
 - `app-history-list.ts`: 履歴一覧と視聴ログ表示。
-- `app-dashboard.ts`: 統計、フィルター、入出力、動画詳細、メモ編集。
+- `app-backup.ts`: ローカルJSONとGoogle Drive ZIPの入出力。
+- `app-dashboard.ts`: 統計、フィルター、動画詳細、メモ編集。
 - `app-series.ts`: シリーズ一覧とextension管理のシリーズアラートUI。
 - `app-delete.ts`: 履歴削除モーダルとシリーズ内ナビゲーション。
 - `app-database-admin.ts`: IndexedDBの永続化、移行、バックアップ、診断UI。
@@ -55,7 +56,8 @@
 - タイトル・投稿者・タグ・メモを対象に、空白区切りの各語をAND条件で照合する検索、日付・完了状態フィルター、複数ソート。履歴一覧は25・50・100件単位でページ表示する。
 - 履歴、統計、シリーズ、シリーズアラートの各タブ。
 - 動画詳細、メモ編集、個別削除、全削除、複数条件による削除。
-- JSONインポート・エクスポート。
+- ローカルJSONのインポート・エクスポート。
+- `common/google-drive-backup-service.ts`を使ったGoogle DriveへのZIPエクスポートと、Drive上のバックアップを選択して現在の履歴へマージするインポート。バックアップは`Watch History Backups`フォルダーへ`NicoWatchHistory_*.zip`として保存する。
 - 永続化要求、手動移行、バックアップ作成・復元、健全性確認。
 - `FilterMatomeSeriesAlerts` extensionによる常駐シリーズ確認とOS通知。システム通知が使えない場合はNicoCache_nl GUIログと通知音へフォールバックする。
 
@@ -65,13 +67,14 @@
 
 - 追跡間隔や完了条件変更では、短時間再生、シーク、リピート、動画切替、ページ離脱を確認する。
 - DB変更では移行、バックアップ、インポート、統計、シリーズ集計をまとめて更新する。
+- Google Drive変更ではmylist2と共有する認証・ZIP・Drive API境界を確認し、watch-history用のフォルダーとファイル接頭辞だけを対象にする。
 - 削除条件は表示ラベルと純粋関数を一致させ、実際の削除前に対象件数を提示する。
 - extension未配置、NicoCache_nl停止、システム通知未対応を通常の分岐として扱い、UI状態・GUIログ・通知音で判断できるようにする。
 - サムネイル失敗時は共通フォールバックを使う。
 
 ## テスト
 
-- `tests/watch-history.spec.ts`: 実IndexedDBを使う全タブ、フィルター、統計、シリーズ、削除、入出力、DB管理、通知UI。
+- `tests/watch-history.spec.ts`: 実IndexedDBを使う全タブ、フィルター、統計、シリーズ、削除、ローカルおよびGoogle Drive入出力、DB管理、通知UI。
 - `tests/watch-history-filter.test.ts`: 履歴フィルターと集計。
 - `tests/watch-history-delete-modal.test.ts`: 条件付き削除ルール。
 - `tests/watch-history-series-alert-extension.test.ts`: 旧IndexedDB・インポートデータをextensionの正本へ移す統合規則。

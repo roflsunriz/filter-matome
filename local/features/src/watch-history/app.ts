@@ -47,6 +47,13 @@ class WatchHistoryApp extends WatchHistoryDatabaseAdminApp {
       "export-btn",
       "import-btn",
       "import-file",
+      "google-drive-export-btn",
+      "google-drive-import-btn",
+      "google-drive-import-modal",
+      "google-drive-import-modal-close",
+      "google-drive-backup-select",
+      "google-drive-import-confirm",
+      "google-drive-import-cancel",
       "history-tab",
       "stats-tab",
       "history-content",
@@ -294,6 +301,37 @@ class WatchHistoryApp extends WatchHistoryDatabaseAdminApp {
     this.elements["import-file"]?.addEventListener(
       "change",
       this.guardEvent((ev) => this.handleImportFile(ev)),
+    );
+    this.elements["google-drive-export-btn"]?.addEventListener(
+      "click",
+      this.guardEvent(() => this.handleGoogleDriveExport()),
+    );
+    this.elements["google-drive-import-btn"]?.addEventListener(
+      "click",
+      this.guardEvent(() => this.openGoogleDriveImport()),
+    );
+    this.elements["google-drive-import-confirm"]?.addEventListener(
+      "click",
+      this.guardEvent(() => this.confirmGoogleDriveImport()),
+    );
+    this.elements["google-drive-import-modal-close"]?.addEventListener(
+      "click",
+      this.guardEvent(() => this.closeGoogleDriveImport()),
+    );
+    this.elements["google-drive-import-cancel"]?.addEventListener(
+      "click",
+      this.guardEvent(() => this.closeGoogleDriveImport()),
+    );
+    this.elements["google-drive-import-modal"]?.addEventListener(
+      "click",
+      this.guardEvent((event) => {
+        if (
+          event.target instanceof HTMLElement &&
+          event.target.classList.contains("modal-overlay")
+        ) {
+          this.closeGoogleDriveImport();
+        }
+      }),
     );
 
     // 削除機能

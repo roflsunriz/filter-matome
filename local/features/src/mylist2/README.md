@@ -15,7 +15,8 @@
 - `components/database.ts`: `Mylist2DB` のスキーマ、移行、永続化要求、健全性検証、バックアップ。
 - `components/manager-refactored.ts`: UIから利用する操作の調停。
 - `components/selector.ts`: 他ページからマイリストを選択して動画を追加するUI。
-- `services/`: マイリスト、動画、キーワード、設定、入出力、Google Drive、DB管理、外部API。
+- `services/`: マイリスト、動画、キーワード、設定、入出力、DB管理、外部API。
+- `common/google-drive-backup-service.ts`: watch-historyと共有するGoogle Drive認証、ZIP入出力、Drive API境界。
 - `ui/mylist-ui-core.ts`, `ui/mylist-ui-rendering.ts`, `ui/mylist-ui-events.ts`, `ui/ui-refactored.ts`: 一覧基盤、項目描画、イベント配線、詳細・設定モーダル。
 - `ui/`: 上記に加え、一括操作、仮想スクロール、アクションメニューなどのUI部品。
 - `utils/linkify.ts`: 動画リンク、ローカルプレイヤーURL、説明文の安全なリンク化。

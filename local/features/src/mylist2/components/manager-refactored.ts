@@ -21,7 +21,7 @@ import { KeywordService } from "@/mylist2/services/keyword-service";
 import { ImportExportService } from "@/mylist2/services/import-export-service";
 import { SettingsService } from "@/mylist2/services/settings-service";
 import { DatabaseManagementService } from "@/mylist2/services/database-management-service";
-import { GoogleDriveService } from "@/mylist2/services/google-drive-service";
+import { GoogleDriveBackupService } from "@/common/google-drive-backup-service";
 
 export class Mylist2Manager {
   private db: Mylist2DB;
@@ -32,7 +32,7 @@ export class Mylist2Manager {
   private importExportService: ImportExportService;
   private settingsService: SettingsService;
   private databaseManagementService: DatabaseManagementService;
-  private googleDriveService: GoogleDriveService;
+  private googleDriveService: GoogleDriveBackupService;
 
   constructor() {
     this.db = new Mylist2DB();
@@ -46,7 +46,13 @@ export class Mylist2Manager {
     );
     this.settingsService = new SettingsService(this.db);
     this.databaseManagementService = new DatabaseManagementService(this.db);
-    this.googleDriveService = new GoogleDriveService();
+    this.googleDriveService = new GoogleDriveBackupService({
+      backupFolderName: "Mylist2 Backups",
+      fileNamePrefix: "Mylist2_",
+      accessTokenStorageKey: "mylist2_google_access_token",
+      clientIdStorageKey: "mylist2_google_client_id",
+      multipartBoundaryPrefix: "mylist2",
+    });
   }
 
   // データベースへのアクセスを提供するpublicメソッド

@@ -29,27 +29,38 @@ type TokenClient = {
   requestAccessToken: (opts: { prompt?: string }) => void;
 };
 
+export interface GoogleDriveBackupServiceOptions {
+  backupFolderName: string;
+  fileNamePrefix: string;
+  accessTokenStorageKey: string;
+  clientIdStorageKey: string;
+  multipartBoundaryPrefix: string;
+}
+
 /**
  * Google Drive 連携（ブラウザのみ、バックエンド無し）
  * - 認可: Google Identity Services (Token Client)
  * - 権限: drive.file（本アプリが作成したファイル/フォルダに限定）
  * - 圧縮: fflate を動的インポート（bun管理）
  */
-export class GoogleDriveService {
+export class GoogleDriveBackupService {
   private accessToken: string | null = null;
   private accessTokenExpireAt = 0;
   private clientId: string | null = null;
   private readonly scope = "https://www.googleapis.com/auth/drive.file";
-  private readonly backupFolderName = "Mylist2 Backups";
+  private readonly options: GoogleDriveBackupServiceOptions;
   private readonly defaultClientId =
     "757779940916-u31ia8oafa998j6qqavdpqjjn988it8b.apps.googleusercontent.com";
   private fflateModulePromise: Promise<FflateHelpers> | null = null;
-  private readonly accessTokenStorageKey = "mylist2_google_access_token";
 
-  constructor(clientIdFromConfig?: string | null) {
+  constructor(
+    options: GoogleDriveBackupServiceOptions,
+    clientIdFromConfig?: string | null,
+  ) {
+    this.options = options;
     this.clientId =
       clientIdFromConfig ||
-      localStorage.getItem("mylist2_google_client_id") ||
+      localStorage.getItem(this.options.clientIdStorageKey) ||
       this.defaultClientId;
     this.loadStoredAccessToken();
   }
@@ -71,12 +82,12 @@ export class GoogleDriveService {
 
   setClientId(clientId: string): void {
     this.clientId = clientId;
-    localStorage.setItem("mylist2_google_client_id", clientId);
+    localStorage.setItem(this.options.clientIdStorageKey, clientId);
   }
 
   private loadStoredAccessToken(): void {
     try {
-      const raw = localStorage.getItem(this.accessTokenStorageKey);
+      const raw = localStorage.getItem(this.options.accessTokenStorageKey);
       if (!raw) return;
       const parsed: unknown = JSON.parse(raw);
       if (typeof parsed !== "object" || parsed === null) return;
@@ -102,7 +113,10 @@ export class GoogleDriveService {
         accessToken: token,
         accessTokenExpireAt: expireAt,
       };
-      localStorage.setItem(this.accessTokenStorageKey, JSON.stringify(data));
+      localStorage.setItem(
+        this.options.accessTokenStorageKey,
+        JSON.stringify(data),
+      );
     } catch {
       // ignore
     }
@@ -245,7 +259,7 @@ export class GoogleDriveService {
   private async ensureBackupFolder(): Promise<string> {
     // 既存フォルダ検索（同名が複数ある可能性は低い前提で先頭を使用）
     const q = encodeURIComponent(
-      `name = '${this.backupFolderName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+      `name = '${this.options.backupFolderName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
     );
     const found = await this.fetchDrive<{
       files?: Array<{ id: string; name: string }>;
@@ -258,7 +272,7 @@ export class GoogleDriveService {
 
     // 作成
     const meta = {
-      name: this.backupFolderName,
+      name: this.options.backupFolderName,
       mimeType: "application/vnd.google-apps.folder",
     };
     const created = await this.fetchDrive<{ id: string }>(
@@ -318,7 +332,7 @@ export class GoogleDriveService {
 
       // multipart/related でアップロード
       const metadata = { name: zipFileName, parents: [folderId] };
-      const boundary = `mylist2_${Math.random().toString(36).slice(2)}`;
+      const boundary = `${this.options.multipartBoundaryPrefix}_${Math.random().toString(36).slice(2)}`;
       const bodyBlob = await this.buildMultipartBody(
         metadata,
         zipBlob,
@@ -366,7 +380,11 @@ export class GoogleDriveService {
     );
     const files = Array.isArray(res.files) ? res.files : [];
     return files
-      .filter((f) => /.zip$/.test(f.name) && /^Mylist2_/.test(f.name))
+      .filter(
+        (file) =>
+          /.zip$/.test(file.name) &&
+          file.name.startsWith(this.options.fileNamePrefix),
+      )
       .sort((a, b) =>
         (b.modifiedTime || "").localeCompare(a.modifiedTime || ""),
       );

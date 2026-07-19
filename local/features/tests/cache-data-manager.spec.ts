@@ -249,35 +249,47 @@ test("検索結果モーダル、ページ送り、カード操作、詳細モ�
 test("個別削除と一括操作が確認後に更新される", async ({ page }) => {
   await openApp(page, createSeed(8));
 
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("本当に削除しますか？");
+  const dialogMessages: string[] = [];
+  page.on("dialog", async (dialog) => {
+    dialogMessages.push(dialog.message());
+    if (dialog.message().includes("公開状態を一括確認しますか？")) {
+      await dialog.dismiss();
+      return;
+    }
     await dialog.accept();
   });
   await page.locator(".video-card .card-more").first().click();
   await page.locator(".video-card .delete-btn").first().click();
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("HLSキャッシュを削除しました");
-    await dialog.accept();
-  });
+  await expect
+    .poll(() => dialogMessages)
+    .toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("本当に削除しますか？"),
+        expect.stringContaining("HLSキャッシュを削除しました"),
+      ]),
+    );
   await expect(page.locator(".result-count")).toHaveText("8 件");
 
   await page.locator(".bulk-actions").click();
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("テンポラリ動画を一括削除しますか？");
-    await dialog.accept();
-  });
   await page.locator("#deleteTemporaryBtn").click();
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("テンポラリ動画を 1 件削除しました");
-    await dialog.accept();
-  });
+  await expect
+    .poll(() => dialogMessages)
+    .toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("テンポラリ動画を一括削除しますか？"),
+        expect.stringContaining("テンポラリ動画を 1 件削除しました"),
+      ]),
+    );
   await expect(page.locator(".result-count")).toHaveText("7 件");
 
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("公開状態を一括確認しますか？");
-    await dialog.dismiss();
-  });
   await page.locator("#checkAvailabilityBtn").click();
+  await expect
+    .poll(() => dialogMessages)
+    .toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("公開状態を一括確認しますか？"),
+      ]),
+    );
   await expect(page.locator(".global-progress")).toBeHidden();
 });
 

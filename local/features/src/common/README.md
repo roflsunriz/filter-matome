@@ -20,6 +20,7 @@
 - `cache-removal.ts`: `FilterMatomeCacheControl` APIの削除・削除予約・状態確認。
 - `video-navigation.ts`, `video-navigation-styles.ts`: 動画ID・URL入力とキャッシュ検索の共通UI。
 - `indexed-db-emergency-backup.ts`: 破損したIndexedDBを再作成する前の緊急退避。
+- `google-drive-backup-service.ts`: Google Identity Services、`drive.file`権限、ZIP圧縮を使う機能共通のGoogle Driveバックアップ基盤。
 - `index.ts`: 共通副作用の起動入口。
 
 ## 設計境界
@@ -29,6 +30,7 @@
 - DOMやAPIから得る `unknown` は、共通境界で検証してから機能固有型へ渡す。
 - 表示用HTML、動画説明、検索結果は、DOMPurifyまたはDOM APIで安全に組み立てる。
 - アイコンは `material-icons.ts` のヘルパーを使い、各プロジェクトへSVGを重複埋め込みしない。
+- Google Driveの保存フォルダー名、対象ファイル接頭辞、認証情報の保存キー、multipart boundary接頭辞は利用機能から明示し、サービス側に特定機能の既定値を持たせない。
 
 ## グローバル互換API
 
@@ -48,6 +50,7 @@
 - キャッシュ検索・削除変更: cache-data-manager、video-player、mlink-video-controllerを確認する。
 - テーマやアイコン変更: 狭幅、低高さ、高DPI、フォーカス表示、長い翻訳文を確認する。
 - IndexedDB復旧変更: データを退避できない場合に無条件削除しないことを確認する。
+- Google Drive変更: mylist2とwatch-historyのフォルダー・ファイル絞り込み、認証、ZIP入出力をまとめて確認する。
 
 ## テスト
 
