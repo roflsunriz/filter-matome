@@ -26,24 +26,16 @@ import {
   LegacyCommentFilterSettings,
 } from "@/comment-filter2/utils/legacy-converter";
 import { saveIndexedDBEmergencyBackup } from "@/common/indexed-db-emergency-backup";
+import {
+  createDefaultCommandSettings,
+  DEFAULT_CLEAR_EXISTING_COMMANDS,
+} from "@/comment-filter2/utils/command-settings";
 
 export class FilterStorage {
   private db: IDBDatabase | null = null;
   private dbName: string = CONSTANTS.DB_CONFIG.NAME;
   private dbVersion: number = 3; // バージョンアップ（JSON形式対応）
   private useJsonFormat: boolean = true; // 新形式を使用するかどうか
-
-  /**
-   * デフォルトのコマンド設定（プレミアム色を含む基本設定）
-   */
-  private getDefaultCommandSettings(): CommandSettings {
-    return {
-      owner: ["medium", "defont", "naka"],
-      main: ["medium", "defont", "naka"],
-      easy: ["medium", "defont", "naka"],
-      normal: ["medium", "defont", "naka"],
-    };
-  }
 
   /**
    * データベースを初期化（マイグレーション対応）
@@ -527,6 +519,7 @@ export class FilterStorage {
       const request = store.put({
         key: "main",
         ...settings,
+        clearExistingCommands: settings.clearExistingCommands === true,
         useJsonFormat:
           settings.useJsonFormat !== undefined
             ? settings.useJsonFormat
@@ -554,7 +547,7 @@ export class FilterStorage {
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(
         [CONSTANTS.DB_CONFIG.STORES.SETTINGS],
-        "readonly",
+        "readwrite",
       );
       const store = transaction.objectStore(
         CONSTANTS.DB_CONFIG.STORES.SETTINGS,
@@ -573,7 +566,11 @@ export class FilterStorage {
             isEnabled: Boolean(obj.isEnabled),
             commandSettings:
               (obj.commandSettings as CommandSettings) ||
-              this.getDefaultCommandSettings(),
+              createDefaultCommandSettings(),
+            clearExistingCommands:
+              obj.clearExistingCommands !== undefined
+                ? obj.clearExistingCommands === true
+                : DEFAULT_CLEAR_EXISTING_COMMANDS,
             logToCommentFilterLogger:
               obj.logToCommentFilterLogger !== undefined
                 ? Boolean(obj.logToCommentFilterLogger)
@@ -583,13 +580,27 @@ export class FilterStorage {
                 ? Boolean(obj.useJsonFormat)
                 : true, // デフォルトで新形式を使用
           };
-          resolve(settings);
+          if (obj.clearExistingCommands === undefined) {
+            const migrationRequest = store.put({
+              ...obj,
+              key: "main",
+              clearExistingCommands: DEFAULT_CLEAR_EXISTING_COMMANDS,
+            });
+            transaction.oncomplete = () => resolve(settings);
+            migrationRequest.onerror = () =>
+              reject(
+                new Error("Failed to migrate command replacement mode setting"),
+              );
+          } else {
+            resolve(settings);
+          }
         } else {
           // デフォルト設定を返す
           resolve({
             debugMode: false,
             isEnabled: true,
-            commandSettings: this.getDefaultCommandSettings(),
+            commandSettings: createDefaultCommandSettings(),
+            clearExistingCommands: DEFAULT_CLEAR_EXISTING_COMMANDS,
             logToCommentFilterLogger: true,
             useJsonFormat: true, // デフォルトで新形式を使用
           });
@@ -1128,7 +1139,7 @@ export class FilterStorage {
       let settingsRepaired = false;
 
       if (!settings.commandSettings) {
-        settings.commandSettings = this.getDefaultCommandSettings();
+        settings.commandSettings = createDefaultCommandSettings();
         settingsRepaired = true;
       }
 

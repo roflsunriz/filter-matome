@@ -1,7 +1,4 @@
-import {
-  CONSTANTS,
-  DEFAULT_FORK_COMMANDS,
-} from "@/comment-filter2/utils/constants";
+import { CONSTANTS } from "@/comment-filter2/utils/constants";
 import {
   sanitizeCommentBody,
   sanitizeCommentCommands,
@@ -699,65 +696,13 @@ function applyForkCommandSettings(
   settings: Settings | null | undefined,
 ): string[] {
   const sanitizedCommands = sanitizeCommentCommands(commands);
-  const allowedCommands = getAllowedCommandsForFork(threadFork, settings);
-
-  const filteredCommands = allowedCommands
-    ? sanitizedCommands.filter((command) => {
-        if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
-          return true;
-        }
-
-        return allowedCommands.has(command.toLowerCase());
-      })
+  const existingCommands = settings?.clearExistingCommands
+    ? []
     : sanitizedCommands;
-
-  const forcedCommands = getForcedCommandsForFork(threadFork, settings).filter(
-    (command) => {
-      if (!allowedCommands) {
-        return true;
-      }
-
-      if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
-        return true;
-      }
-
-      return allowedCommands.has(command.toLowerCase());
-    },
+  return enforceCommandSettings(
+    existingCommands,
+    getForcedCommandsForFork(threadFork, settings),
   );
-
-  return enforceCommandSettings(filteredCommands, forcedCommands);
-}
-
-function getAllowedCommandsForFork(
-  threadFork: ForkType,
-  settings: Settings | null | undefined,
-): Set<string> | null {
-  const commandSettings = settings?.commandSettings;
-  const defaultCommands = DEFAULT_FORK_COMMANDS[threadFork]?.map((command) =>
-    command.toLowerCase(),
-  );
-
-  const toLowercaseSet = (commands: string[] | undefined): Set<string> =>
-    new Set(
-      (commands ?? defaultCommands ?? []).map((command) =>
-        command.toLowerCase(),
-      ),
-    );
-
-  if (!commandSettings) {
-    return defaultCommands ? new Set(defaultCommands) : null;
-  }
-
-  switch (threadFork) {
-    case CONSTANTS.FORK_TYPES.OWNER:
-      return toLowercaseSet(commandSettings.owner);
-    case CONSTANTS.FORK_TYPES.MAIN:
-      return toLowercaseSet(commandSettings.main);
-    case CONSTANTS.FORK_TYPES.EASY:
-      return toLowercaseSet(commandSettings.easy);
-    default:
-      return defaultCommands ? new Set(defaultCommands) : null;
-  }
 }
 
 function getForcedCommandsForFork(

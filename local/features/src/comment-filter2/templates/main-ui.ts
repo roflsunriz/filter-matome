@@ -96,6 +96,21 @@ export const mainUITemplate = `
           <p>コメント種別ごとに上書きするコマンドを設定します。</p>
         </div>
       </div>
+
+      <div class="cf2-command-apply-mode">
+        <div class="cf2-toggle-container">
+          <div class="cf2-toggle-label">
+            ${getIconSVG(ICONS.clear)}
+            <div>
+              <strong>既存コマンドをすべて除去してから適用</strong>
+              <div class="cf2-help-text">オフでは設定したコマンドと同じカテゴリーだけを置換し、その他の既存コマンドを保持します。</div>
+            </div>
+          </div>
+          <button id="cf2-clear-commands-toggle" class="cf2-toggle" type="button" role="switch" aria-checked="false" aria-label="既存コマンドをすべて除去してから適用">
+            <span class="cf2-toggle-slider"></span>
+          </button>
+        </div>
+      </div>
       
       <div class="cf2-command-grid">
         <!-- 投稿者コメント -->
@@ -577,6 +592,7 @@ export const UI_ELEMENTS = {
   OWNER_COMMANDS: "cf2-owner-commands",
   MAIN_COMMANDS: "cf2-main-commands",
   EASY_COMMANDS: "cf2-easy-commands",
+  CLEAR_COMMANDS_TOGGLE: "cf2-clear-commands-toggle",
   SAVE_COMMANDS_BTN: "cf2-save-commands",
   RESET_COMMANDS_BTN: "cf2-reset-commands",
 } as const;

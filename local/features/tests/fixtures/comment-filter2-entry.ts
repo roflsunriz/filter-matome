@@ -7,6 +7,8 @@ declare global {
     CommentFilter2Test: {
       seedAndStart: () => Promise<void>;
       mockCanvasBodies: string[];
+      mockCanvasCommands: string[][];
+      readStoredClearExistingCommands: () => Promise<boolean | undefined>;
     };
   }
 }
@@ -36,22 +38,43 @@ async function deleteDatabase(): Promise<void> {
   });
 }
 
+async function saveLegacySettingsWithoutCommandMode(): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const openRequest = indexedDB.open("CommentFilter2DB");
+    openRequest.onerror = () => reject(openRequest.error);
+    openRequest.onsuccess = () => {
+      const db = openRequest.result;
+      const transaction = db.transaction("settings", "readwrite");
+      transaction.onerror = () => {
+        db.close();
+        reject(transaction.error);
+      };
+      transaction.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+      transaction.objectStore("settings").put({
+        key: "main",
+        debugMode: false,
+        isEnabled: true,
+        logToCommentFilterLogger: false,
+        commandSettings: {
+          owner: ["medium", "red"],
+          main: ["medium", "blue"],
+          easy: ["small"],
+          normal: ["medium"],
+        },
+      });
+    };
+  });
+}
+
 async function seedAndStart(): Promise<void> {
   await deleteDatabase();
   const storage = new FilterStorage();
   await storage.initialize();
   await storage.saveJsonRules(initialRules);
-  await storage.saveSettings({
-    debugMode: false,
-    isEnabled: true,
-    logToCommentFilterLogger: false,
-    commandSettings: {
-      owner: ["medium", "red"],
-      main: ["medium", "blue"],
-      easy: ["small"],
-      normal: ["medium"],
-    },
-  });
+  await saveLegacySettingsWithoutCommandMode();
 
   const mockCanvas = document.createElement("canvas");
   mockCanvas.id = "cf2-test-comment-canvas";
@@ -59,6 +82,7 @@ async function seedAndStart(): Promise<void> {
   mockCanvas.height = 360;
   document.body.append(mockCanvas);
   window.CommentFilter2Test.mockCanvasBodies = [];
+  window.CommentFilter2Test.mockCanvasCommands = [];
   const mockContext = mockCanvas.getContext("2d");
   if (!mockContext) {
     throw new Error("2D mock canvas context is unavailable");
@@ -81,6 +105,7 @@ async function seedAndStart(): Promise<void> {
   const renderFilteredCommentsToMockCanvas = (): void => {
     mockContext.clearRect(0, 0, mockCanvas.width, mockCanvas.height);
     window.CommentFilter2Test.mockCanvasBodies = [];
+    window.CommentFilter2Test.mockCanvasCommands = [];
     const comments =
       window.CommentFilter2Data?.filteredData?.data.threads.flatMap(
         (thread) => thread.comments,
@@ -92,6 +117,9 @@ async function seedAndStart(): Promise<void> {
       ) {
         continue;
       }
+      window.CommentFilter2Test.mockCanvasCommands.push([
+        ...(comment.commands ?? []),
+      ]);
       mockContext.fillText(comment.body, 8, 24 + index * 24);
     }
   };
@@ -106,6 +134,32 @@ async function seedAndStart(): Promise<void> {
   // UIManagerのコンストラクター内初期化（IndexedDB接続・設定読込）の完了を待つ。
   await new Promise((resolve) => setTimeout(resolve, 50));
   await manager.show();
+}
+
+async function readStoredClearExistingCommands(): Promise<boolean | undefined> {
+  return new Promise((resolve, reject) => {
+    const openRequest = indexedDB.open("CommentFilter2DB");
+    openRequest.onerror = () => reject(openRequest.error);
+    openRequest.onsuccess = () => {
+      const db = openRequest.result;
+      const transaction = db.transaction("settings", "readonly");
+      const request = transaction.objectStore("settings").get("main");
+      request.onerror = () => {
+        db.close();
+        reject(request.error);
+      };
+      request.onsuccess = () => {
+        const value = request.result as
+          { clearExistingCommands?: unknown } | undefined;
+        db.close();
+        resolve(
+          typeof value?.clearExistingCommands === "boolean"
+            ? value.clearExistingCommands
+            : undefined,
+        );
+      };
+    };
+  });
 }
 
 Object.assign(window, {
@@ -143,7 +197,7 @@ Object.assign(window, {
                 no: 2,
                 vposMs: 1000,
                 body: "通常コメント",
-                commands: [],
+                commands: ["small", "red", "ue", "184"],
                 userId: "user-2",
                 isPremium: false,
                 score: 0,
@@ -180,5 +234,10 @@ Object.assign(window, {
     info: () => undefined,
     warning: () => undefined,
   },
-  CommentFilter2Test: { seedAndStart, mockCanvasBodies: [] },
+  CommentFilter2Test: {
+    seedAndStart,
+    mockCanvasBodies: [],
+    mockCanvasCommands: [],
+    readStoredClearExistingCommands,
+  },
 });

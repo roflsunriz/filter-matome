@@ -1,7 +1,4 @@
-import {
-  CONSTANTS,
-  DEFAULT_FORK_COMMANDS,
-} from "@/comment-filter2/utils/constants";
+import { CONSTANTS } from "@/comment-filter2/utils/constants";
 import {
   sanitizeCommentBody,
   sanitizeCommentCommands,
@@ -214,10 +211,7 @@ export function filterJsonThread({
 }: FilterJsonThreadArgs): FilterJsonThreadResult {
   const logs: JsonRuleMatchEvent[] = [];
   const threadContext = buildJsonThreadContext(thread.comments, preparedRules);
-  const commandPolicy = prepareForkCommandPolicy(
-    thread.fork,
-    settings?.commandSettings ?? null,
-  );
+  const commandPolicy = prepareForkCommandPolicy(thread.fork, settings);
 
   const comments = thread.comments
     .map((comment) =>
@@ -670,44 +664,27 @@ function applyForkCommandSettings(
   commandPolicy: ForkCommandPolicy,
 ): string[] {
   const sanitizedCommands = sanitizeCommentCommands(commands);
-  const { allowedCommands, forcedCommands } = commandPolicy;
-
-  const filteredCommands = allowedCommands
-    ? sanitizedCommands.filter((command) => {
-        if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
-          return true;
-        }
-        return allowedCommands.has(command.toLowerCase());
-      })
+  const existingCommands = commandPolicy.clearExistingCommands
+    ? []
     : sanitizedCommands;
-
-  const filteredForcedCommands = forcedCommands.filter((command) => {
-    if (!allowedCommands) {
-      return true;
-    }
-
-    if (/^#[0-9A-Fa-f]{6}$/.test(command)) {
-      return true;
-    }
-
-    return allowedCommands.has(command.toLowerCase());
-  });
-
-  return enforceCommandSettings(filteredCommands, filteredForcedCommands);
+  return enforceCommandSettings(existingCommands, commandPolicy.forcedCommands);
 }
 
 interface ForkCommandPolicy {
-  allowedCommands: Set<string> | null;
   forcedCommands: string[];
+  clearExistingCommands: boolean;
 }
 
 function prepareForkCommandPolicy(
   threadFork: ForkType,
-  commandSettings: CommandSettings | null,
+  settings: Settings | null | undefined,
 ): ForkCommandPolicy {
   return {
-    allowedCommands: getAllowedCommandsForFork(threadFork, commandSettings),
-    forcedCommands: getForcedCommandsForFork(threadFork, commandSettings),
+    forcedCommands: getForcedCommandsForFork(
+      threadFork,
+      settings?.commandSettings ?? null,
+    ),
+    clearExistingCommands: settings?.clearExistingCommands === true,
   };
 }
 
@@ -731,38 +708,6 @@ function canUseLiteralMatchAsFinal(pattern: string, flags: string): boolean {
 function resetRegexLastIndex(regex: RegExp): void {
   if (regex.global || regex.sticky) {
     regex.lastIndex = 0;
-  }
-}
-
-function getAllowedCommandsForFork(
-  threadFork: ForkType,
-  commandSettings: CommandSettings | null,
-): Set<string> | null {
-  const defaultCommands =
-    DEFAULT_FORK_COMMANDS[threadFork]?.map((command) =>
-      command.toLowerCase(),
-    ) ?? [];
-
-  const normalizeCommands = (
-    commands: readonly string[] | undefined,
-  ): Set<string> =>
-    new Set(
-      (commands ?? defaultCommands).map((command) => command.toLowerCase()),
-    );
-
-  if (!commandSettings) {
-    return new Set(defaultCommands);
-  }
-
-  switch (threadFork) {
-    case CONSTANTS.FORK_TYPES.OWNER:
-      return normalizeCommands(commandSettings.owner);
-    case CONSTANTS.FORK_TYPES.MAIN:
-      return normalizeCommands(commandSettings.main);
-    case CONSTANTS.FORK_TYPES.EASY:
-      return normalizeCommands(commandSettings.easy);
-    default:
-      return new Set(defaultCommands);
   }
 }
 

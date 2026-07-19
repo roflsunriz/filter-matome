@@ -33,6 +33,7 @@
 - DB名: `CommentFilter2DB`。
 - 主なストア: 互換ルールの `rules`、設定の `settings`、現行JSONルールの `json_rules`。
 - 現行ルールはJSON形式を正とし、旧NGWord、CSV、JSONLはインポート・移行境界として扱う。
+- コマンド適用方式は既定で同カテゴリー置換とし、全除去モードは明示的に有効化する。設定項目がない既存DBは同カテゴリー置換へ移行する。
 - スキーマの実バージョンと移行処理は `FilterStorage` を正とする。
 - 初期化失敗やスキーマ不整合時は、読めるデータを緊急バックアップしてから一度だけ再作成を試みる。
 
@@ -56,6 +57,7 @@
 ## テスト
 
 - `tests/comment-filter2.spec.ts`: UI、実IndexedDB、ルールCRUD、即時適用、正規表現プレビュー。
+- `tests/comment-filter2-command-settings.test.ts`: 既存コマンドの同カテゴリー置換と全除去を、JSON・互換両エンジンで比較する。
 - `tests/comment-filter2-required-token-index.test.ts`: 必須トークン抽出、候補索引なしとの結果同値性、Unicode境界、正規表現評価回数。
 - `tests/comment-filter2-nicoru-exclusion.test.ts`: ニコる条件と免除ルール。
 - `tests/comment-data-bypass.test.ts`: フィルターを迂回する内部取得契約。

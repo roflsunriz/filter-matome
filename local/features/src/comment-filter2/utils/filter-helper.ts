@@ -6,6 +6,7 @@ import {
   Settings,
   CommentFilter2GlobalData,
 } from "@/types/filter-types";
+import { DEFAULT_CLEAR_EXISTING_COMMANDS } from "@/comment-filter2/utils/command-settings";
 
 /**
  * グローバルデータを取得
@@ -38,6 +39,7 @@ export async function getFilterSettings(): Promise<Settings> {
         easy: [],
         normal: [],
       },
+      clearExistingCommands: DEFAULT_CLEAR_EXISTING_COMMANDS,
     };
     return defaultSettings;
   }

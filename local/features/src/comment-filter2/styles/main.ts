@@ -215,10 +215,11 @@ p { margin-bottom: 0; color: var(--cf2-muted); }
 
 .cf2-toggle-container { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .cf2-toggle-label { display: flex; align-items: center; gap: 8px; }
-.cf2-toggle { position: relative; width: 42px; height: 24px; flex: none; background: var(--cf2-border); border-radius: 999px; cursor: pointer; transition: background-color .16s ease; }
+.cf2-toggle { position: relative; width: 42px; height: 24px; flex: none; padding: 0; border: 0; background: var(--cf2-border); border-radius: 999px; cursor: pointer; transition: background-color .16s ease; }
 .cf2-toggle-slider { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: var(--cf2-text); border-radius: 50%; transition: transform .16s ease; }
 .cf2-toggle.active { background: var(--cf2-primary); }
 .cf2-toggle.active .cf2-toggle-slider { transform: translateX(18px); }
+.cf2-command-apply-mode { margin-bottom: 16px; padding: 12px 14px; border: 1px solid var(--cf2-border); border-radius: 8px; }
 
 .cf2-regex-preview, .cf2-regex-analysis { margin-top: 16px; padding: 14px; background: var(--cf2-bg); border-radius: 8px; }
 .cf2-regex-preview-header { cursor: pointer; user-select: none; }

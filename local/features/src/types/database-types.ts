@@ -63,6 +63,7 @@ export interface IndexedDBSettingsItem {
   key: string; // 設定キー
   debugMode: boolean; // デバッグモード
   isEnabled: boolean; // 有効/無効
+  clearExistingCommands: boolean; // 適用前に既存コマンドを全除去するか
   commandSettings: {
     // コマンド設定
     owner: string[];

@@ -28,6 +28,11 @@ import {
 } from "@/comment-filter2/utils/regex-analyzer";
 import type { RegexAnalysisResult } from "@/types/regex-analyzer-types";
 import { getIconSVG, ICONS } from "@/common/material-icons";
+import { DEFAULT_CLEAR_EXISTING_COMMANDS } from "@/comment-filter2/utils/command-settings";
+import {
+  CONSTANTS,
+  DEFAULT_FORK_COMMANDS,
+} from "@/comment-filter2/utils/constants";
 // CSSスタイルを直接インポート
 
 // グローバル型定義は既に globalTypes.ts で定義済み
@@ -55,6 +60,7 @@ export class UIManager {
       easy: [],
       normal: [],
     },
+    clearExistingCommands: DEFAULT_CLEAR_EXISTING_COMMANDS,
   };
 
   constructor(
@@ -264,6 +270,9 @@ export class UIManager {
     );
     this.safeAddEventListener(UI_ELEMENTS.RESET_COMMANDS_BTN, "click", () =>
       this.resetCommandSettings(),
+    );
+    this.safeAddEventListener(UI_ELEMENTS.CLEAR_COMMANDS_TOGGLE, "click", () =>
+      this.toggleClearExistingCommands(),
     );
     this.safeAddEventListener(UI_ELEMENTS.COCKPIT_APPLY, "click", () =>
       this.applyFromCockpit(),
@@ -653,6 +662,20 @@ export class UIManager {
         input.value = commands.length > 0 ? commands.join(",") : "";
       }
     });
+
+    const clearCommandsToggle = this.container?.querySelector(
+      `#${UI_ELEMENTS.CLEAR_COMMANDS_TOGGLE}`,
+    );
+    if (clearCommandsToggle) {
+      clearCommandsToggle.classList.toggle(
+        CSS_CLASSES.TOGGLE_ACTIVE,
+        this.currentSettings.clearExistingCommands,
+      );
+      clearCommandsToggle.setAttribute(
+        "aria-checked",
+        String(this.currentSettings.clearExistingCommands),
+      );
+    }
   }
 
   /**
@@ -753,6 +776,13 @@ export class UIManager {
     return sanitizeCommentCommands(commands);
   }
 
+  /** コマンド適用前に既存コマンドを全除去するモードを切り替える。 */
+  private toggleClearExistingCommands(): void {
+    this.currentSettings.clearExistingCommands =
+      !this.currentSettings.clearExistingCommands;
+    this.updateCommandFields();
+  }
+
   /**
    * コマンド設定をデフォルトに戻す
    */
@@ -763,156 +793,15 @@ export class UIManager {
 
     try {
       // 明示的にデフォルト設定をロード
+      const defaultCommands = DEFAULT_FORK_COMMANDS[CONSTANTS.FORK_TYPES.MAIN];
       this.currentSettings.commandSettings = {
-        owner: [
-          "big",
-          "medium",
-          "small",
-          "defont",
-          "gothic",
-          "mincho",
-          "ue",
-          "naka",
-          "shita",
-          "white",
-          "red",
-          "pink",
-          "orange",
-          "yellow",
-          "green",
-          "cyan",
-          "blue",
-          "purple",
-          "black",
-          "white2",
-          "red2",
-          "pink2",
-          "orange2",
-          "yellow2",
-          "green2",
-          "cyan2",
-          "blue2",
-          "purple2",
-          "black2",
-          "_live",
-          "invisible",
-          "full",
-          "ender",
-          "patissier",
-          "ca",
-        ],
-        main: [
-          "big",
-          "medium",
-          "small",
-          "defont",
-          "gothic",
-          "mincho",
-          "ue",
-          "naka",
-          "shita",
-          "white",
-          "red",
-          "pink",
-          "orange",
-          "yellow",
-          "green",
-          "cyan",
-          "blue",
-          "purple",
-          "black",
-          "white2",
-          "red2",
-          "pink2",
-          "orange2",
-          "yellow2",
-          "green2",
-          "cyan2",
-          "blue2",
-          "purple2",
-          "black2",
-          "_live",
-          "invisible",
-          "full",
-          "ender",
-          "patissier",
-          "ca",
-        ],
-        easy: [
-          "big",
-          "medium",
-          "small",
-          "defont",
-          "gothic",
-          "mincho",
-          "ue",
-          "naka",
-          "shita",
-          "white",
-          "red",
-          "pink",
-          "orange",
-          "yellow",
-          "green",
-          "cyan",
-          "blue",
-          "purple",
-          "black",
-          "white2",
-          "red2",
-          "pink2",
-          "orange2",
-          "yellow2",
-          "green2",
-          "cyan2",
-          "blue2",
-          "purple2",
-          "black2",
-          "_live",
-          "invisible",
-          "full",
-          "ender",
-          "patissier",
-          "ca",
-        ],
-        normal: [
-          "big",
-          "medium",
-          "small",
-          "defont",
-          "gothic",
-          "mincho",
-          "ue",
-          "naka",
-          "shita",
-          "white",
-          "red",
-          "pink",
-          "orange",
-          "yellow",
-          "green",
-          "cyan",
-          "blue",
-          "purple",
-          "black",
-          "white2",
-          "red2",
-          "pink2",
-          "orange2",
-          "yellow2",
-          "green2",
-          "cyan2",
-          "blue2",
-          "purple2",
-          "black2",
-          "_live",
-          "invisible",
-          "full",
-          "ender",
-          "patissier",
-          "ca",
-        ],
+        owner: [...defaultCommands],
+        main: [...defaultCommands],
+        easy: [...defaultCommands],
+        normal: [...defaultCommands],
       };
+      this.currentSettings.clearExistingCommands =
+        DEFAULT_CLEAR_EXISTING_COMMANDS;
 
       // 設定を保存してUIを更新
       await this.storage.saveSettings(this.currentSettings);

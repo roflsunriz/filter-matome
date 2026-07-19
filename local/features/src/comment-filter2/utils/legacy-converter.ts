@@ -6,6 +6,7 @@ import {
   CommandSettings,
   UnknownData,
 } from "@/types/filter-types";
+import { DEFAULT_CLEAR_EXISTING_COMMANDS } from "@/comment-filter2/utils/command-settings";
 
 /**
  * レガシー設定データの型定義
@@ -60,6 +61,7 @@ export class LegacyConverter {
       debugMode: legacyData.DEBUG || false,
       isEnabled: true, // レガシーデータでは常に有効とみなす
       commandSettings: this.convertCommandSettings(legacyData, conversionLog),
+      clearExistingCommands: DEFAULT_CLEAR_EXISTING_COMMANDS,
     };
 
     conversionLog.push(`基本設定を変換しました: DEBUG=${settings.debugMode}`);

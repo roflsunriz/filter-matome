@@ -156,6 +156,10 @@ test("概要ダッシュボードが保存済みルールを集計し、画面�
   await ui.locator('.cf2-sidebar-item[data-cf2-view="commands"]').click();
   await expect(ui.locator('[data-cf2-panel="commands"]')).toBeVisible();
   await expect(ui.locator("#cf2-main-commands")).toHaveValue("medium,blue");
+  await expect(ui.locator("#cf2-clear-commands-toggle")).toHaveAttribute(
+    "aria-checked",
+    "false",
+  );
 
   await ui.locator('.cf2-sidebar-item[data-cf2-view="data"]').click();
   await expect(ui.locator('[data-cf2-panel="data"]')).toBeVisible();
@@ -164,6 +168,59 @@ test("概要ダッシュボードが保存済みルールを集計し、画面�
   await ui.locator('.cf2-sidebar-item[data-cf2-view="settings"]').click();
   await expect(ui.locator('[data-cf2-panel="settings"]').first()).toBeVisible();
   await expect(ui.locator("#cf2-reload-btn")).toHaveCount(0);
+});
+
+test("コマンド適用方式を同カテゴリー置換と全除去からの上書きで切り替える", async ({
+  page,
+}) => {
+  const ui = page.locator("#cf2-shadow-host");
+  expect(
+    await page.evaluate(() =>
+      window.CommentFilter2Test.readStoredClearExistingCommands(),
+    ),
+  ).toBe(false);
+
+  const applyAndReadCommands = async (): Promise<string[]> => {
+    const applied = page.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          window.addEventListener("cf2:test-filter-applied", () => resolve(), {
+            once: true,
+          });
+        }),
+    );
+    await ui.locator("#cf2-cockpit-apply").click();
+    await applied;
+    return page.evaluate(
+      () =>
+        window.CommentFilter2Data?.filteredData?.data.threads[0]?.comments[1]
+          ?.commands ?? [],
+    );
+  };
+
+  expect(await applyAndReadCommands()).toEqual(["ue", "184", "medium", "blue"]);
+  expect(
+    await page.evaluate(() => window.CommentFilter2Test.mockCanvasCommands),
+  ).toEqual([["ue", "184", "medium", "blue"]]);
+
+  await ui.locator('.cf2-sidebar-item[data-cf2-view="commands"]').click();
+  const toggle = ui.locator("#cf2-clear-commands-toggle");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-checked", "true");
+  await ui.locator("#cf2-save-commands").click();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        window.CommentFilter2Test.readStoredClearExistingCommands(),
+      ),
+    )
+    .toBe(true);
+
+  await ui.locator('.cf2-sidebar-item[data-cf2-view="overview"]').click();
+  expect(await applyAndReadCommands()).toEqual(["medium", "blue"]);
+  expect(
+    await page.evaluate(() => window.CommentFilter2Test.mockCanvasCommands),
+  ).toEqual([["medium", "blue"]]);
 });
 
 test("概要の今すぐ適用がコメントを再処理して表示側へ同期する", async ({

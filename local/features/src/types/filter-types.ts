@@ -170,6 +170,7 @@ export interface Settings {
   debugMode: boolean;
   isEnabled: boolean;
   commandSettings: CommandSettings;
+  clearExistingCommands: boolean;
   logToCommentFilterLogger?: boolean; // CommentFilterLogger.javaへのログ送信を有効にするか
 }
 
