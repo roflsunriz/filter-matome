@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- 【開発者向け】ログイン済みChromeへraw CDPで接続して公式watchページが読み込んだJavaScriptだけを隔離保存し、外部通信を遮断した一時BrowserContextの検証と、公式コードを実行しない機能シグナル静的解析を行える研究用サンドボックスを追加した。
+
 ## [#235] - 2026-07-20
 
 ### Added
