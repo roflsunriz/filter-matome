@@ -13,7 +13,7 @@
 | `mlink-video-controller/` | 公式視聴ページの操作パネルと機能モジュール |
 | `movie-info/` | キャッシュ・サムネイル・MediaInfo・視聴API情報の表示 |
 | `mylist2/` | 独自マイリストSPA、永続化、Service Worker |
-| `runtime/` | 配信ページ判定と起動境界 |
+| `runtime/` | 配信ページ判定、起動境界、同期serverContext書き換え |
 | `sandbox/` | 外部公開バンドルをプロダクションコードから隔離してAPI契約を調査する領域 |
 | `types/` | グローバル型と機能横断の型定義 |
 | `video-player/` | ローカルキャッシュ再生、コメント取得・描画・投稿、視聴ページルーター |

@@ -79,6 +79,8 @@ bun run build
 dist/
 ├── features.js
 ├── features.js.map
+├── server-context-override.js      # 公式コードより先に同期実行
+├── server-context-override.js.map
 ├── entries/             # ページ・機能別の遅延ロード入口
 ├── workers/
 │   ├── comment-filter-worker.js

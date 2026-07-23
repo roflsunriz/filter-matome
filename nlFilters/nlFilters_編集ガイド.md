@@ -11,7 +11,7 @@
 | ファイル名 | 役割 |
 |---|---|
 | `100_features.txt` | `dist/features.js`をニコニコ動画全体へ1回挿入 |
-| `101_disable_official_function.txt` | 公式プレイヤーの競合機能を無効化 |
+| `101_disable_official_function.txt` | 公式プレイヤーの競合機能を無効化し、serverContextの設定JSONを保持 |
 | `105_premium_hide.txt` | プレミアム勧誘要素を非表示 |
 
 `features.js`はページ判定用の軽量ブートストラップです。ホスト名、URL、ローカルHTMLの`data-feature-page`を判定し、common、mlink-video-controller、comment-filter2、video-player、watch-trackerなど必要なエントリーだけを遅延読み込みします。
@@ -35,6 +35,8 @@ Replace<
 ## JavaScript機能を追加する場合
 
 新しいscript挿入用nlFilterは作りません。機能エントリーは`local/features/scripts/build.ts`の一括ビルドへ追加します。
+
+例外として、公式コードがメタタグを読む前に同期実行する必要がある `server-context-override.js` は、`101_disable_official_function.txt` が `server-context` の直後へ defer なしで挿入します。同フィルターには設定JSONだけを置き、パス走査、型検証、通信保護などの実装を埋め込まないでください。
 
 1. `local/features/src/`へ機能を実装する
 2. 明示的な`start*()`関数を公開する

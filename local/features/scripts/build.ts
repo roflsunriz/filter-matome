@@ -74,6 +74,8 @@ async function assertOutputContract(): Promise<void> {
   const requiredFiles = [
     "features.js",
     "features.js.map",
+    "server-context-override.js",
+    "server-context-override.js.map",
     ...featureEntrypoints.flatMap((entrypoint) => {
       const relativeEntry = entrypoint
         .replace(/^src\//, "")
@@ -120,6 +122,15 @@ async function build(): Promise<void> {
       splitting: false,
       naming: { entry: "features.js" },
       loader: { ".svg": "text" },
+    }),
+    Bun.build({
+      ...commonBuildOptions,
+      entrypoints: [
+        resolve(projectRoot, "src/runtime/server-context-override-entry.ts"),
+      ],
+      format: "iife",
+      splitting: false,
+      naming: { entry: "server-context-override.js" },
     }),
     Bun.build({
       ...commonBuildOptions,

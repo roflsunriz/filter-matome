@@ -7,6 +7,97 @@
 # 基本的な機能を提供するための下準備。
 # 実質的な機能はmlink-video-controllerで提供している。
 
+# serverContext書き換え用プレースホルダー。
+# このReplaceには設定値だけを置き、書き換えとコメント投稿保護のロジックは
+# TypeScript製のserver-context-override.jsへ集約する。
+# enabledがfalseの項目は変更しない。変更する項目だけtrueにしてvalueを設定する。
+# valueは文字列、数値、真偽値、null、配列、オブジェクトを使用できる。
+# 未知のプロパティは保持し、動画種別によって対象パスが存在しない場合はその項目だけ無視する。
+# sessionUser.typeを書き換えても、nvCommentの通常コメント投稿では書き換え前の会員種別を使う。
+# regular・未ログインではpremiumフラグを無効化してプレミアム専用色を除き、
+# 最初からpremiumの場合は投稿本文を変更しない。
+# publicUrl.*は公式クライアントの接続先なので、変更時は接続先を確認すること。
+# 認証状態や視聴権限などサーバー側で検証される値を変えても、権限は付与されない。
+[Replace]
+Name = serverContext項目別書き換え用プレースホルダー
+FullURL = https?://www\.nicovideo\.jp/watch/.+
+Match<
+(<meta name="server-context" content="[^"]*"\s*/?>)
+>
+Replace<
+$1
+<script id="filter-matome-server-context-overrides" type="application/json">
+{
+  "urgentNotice.uni": { "enabled": false, "value": null },
+  "urgentNotice.video": { "enabled": false, "value": null },
+  "i18n.language": { "enabled": false, "value": null },
+  "i18n.switch": { "enabled": false, "value": null },
+  "tracking.nicosid": { "enabled": false, "value": null },
+  "serverTime": { "enabled": false, "value": null },
+  "publicUrl.ads": { "enabled": false, "value": null },
+  "publicUrl.adsResource": { "enabled": false, "value": null },
+  "publicUrl.channelTool": { "enabled": false, "value": null },
+  "publicUrl.auditionApi": { "enabled": false, "value": null },
+  "publicUrl.commonHeaderRoot": { "enabled": false, "value": null },
+  "publicUrl.commonMuteApi": { "enabled": false, "value": null },
+  "publicUrl.creatorSupportFrontend": { "enabled": false, "value": null },
+  "publicUrl.feedApi": { "enabled": false, "value": null },
+  "publicUrl.follo": { "enabled": false, "value": null },
+  "publicUrl.gift": { "enabled": false, "value": null },
+  "publicUrl.hiroba": { "enabled": false, "value": null },
+  "publicUrl.hirobaApi": { "enabled": false, "value": null },
+  "publicUrl.mjkApi": { "enabled": false, "value": null },
+  "publicUrl.nanime": { "enabled": false, "value": null },
+  "publicUrl.nicoAccount": { "enabled": false, "value": null },
+  "publicUrl.nicoAd": { "enabled": false, "value": null },
+  "publicUrl.nicoAdApi": { "enabled": false, "value": null },
+  "publicUrl.nicoChannel": { "enabled": false, "value": null },
+  "publicUrl.nicoChannelPublicApi": { "enabled": false, "value": null },
+  "publicUrl.nicoCommons": { "enabled": false, "value": null },
+  "publicUrl.nicoCommonsApi": { "enabled": false, "value": null },
+  "publicUrl.nicoDic": { "enabled": false, "value": null },
+  "publicUrl.nicoDicApi": { "enabled": false, "value": null },
+  "publicUrl.nicoft": { "enabled": false, "value": null },
+  "publicUrl.nicoftApi": { "enabled": false, "value": null },
+  "publicUrl.nicoInfo": { "enabled": false, "value": null },
+  "publicUrl.nicoKoken": { "enabled": false, "value": null },
+  "publicUrl.nicoLive": { "enabled": false, "value": null },
+  "publicUrl.nicoLive2": { "enabled": false, "value": null },
+  "publicUrl.nicoLiveBroadcast": { "enabled": false, "value": null },
+  "publicUrl.nicoNews": { "enabled": false, "value": null },
+  "publicUrl.nicoSeiga": { "enabled": false, "value": null },
+  "publicUrl.nicoSpweb": { "enabled": false, "value": null },
+  "publicUrl.nicoVideo": { "enabled": false, "value": null },
+  "publicUrl.nicoVideoEmbed": { "enabled": false, "value": null },
+  "publicUrl.nicoVideoExt": { "enabled": false, "value": null },
+  "publicUrl.nicoVideoResource": { "enabled": false, "value": null },
+  "publicUrl.nvapi": { "enabled": false, "value": null },
+  "publicUrl.nvLogger": { "enabled": false, "value": null },
+  "publicUrl.personalFrameApi": { "enabled": false, "value": null },
+  "publicUrl.premiumApi": { "enabled": false, "value": null },
+  "publicUrl.qa": { "enabled": false, "value": null },
+  "publicUrl.recommendLog": { "enabled": false, "value": null },
+  "publicUrl.site": { "enabled": false, "value": null },
+  "publicUrl.stella": { "enabled": false, "value": null },
+  "publicUrl.sugoiSearchSuggestApi": { "enabled": false, "value": null },
+  "publicUrl.upload": { "enabled": false, "value": null },
+  "publicUrl.wktk": { "enabled": false, "value": null },
+  "sessionUser": { "enabled": false, "value": null },
+  "sessionUser.id": { "enabled": false, "value": null },
+  "sessionUser.nickname": { "enabled": false, "value": null },
+  "sessionUser.allowSensitiveContents": { "enabled": false, "value": null },
+  "sessionUser.icons.50x50": { "enabled": false, "value": null },
+  "sessionUser.icons.150x150": { "enabled": false, "value": null },
+  "sessionUser.type": { "enabled": true, "value": "premium" },
+  "videoTotalSummary.video": { "enabled": false, "value": null },
+  "videoTotalSummary.view": { "enabled": false, "value": null },
+  "videoTotalSummary.comment": { "enabled": false, "value": null },
+  "hrc": { "enabled": false, "value": null }
+}
+</script>
+<script src="/local/features/dist/server-context-override.js" charset="utf-8"></script>
+>
+
 # 公式の再生速度調整を無効化
 [Replace]
 Name = 公式プレイヤーの再生速度調整機能無効化（nimg用）
