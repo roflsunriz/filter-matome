@@ -41,7 +41,7 @@ filter-matomeでは公式の会員・購入権利を偽装せず、認可済み�
 | 前回位置から再生 | 制限あり | 利用可能 | 同上 |
 | 映像の左右反転 | 制限あり | 利用可能 | 同上とプレイヤー状態処理 |
 | シーク時ストーリーボード | 制限あり | データがある場合に利用 | `PlayerSeekBar-DV9Bs-dx.js` |
-| 画質・音質 | サーバーが返す利用可否に従う | 選択肢が増える場合がある | `PlayerOptionPresenter-BlPrwg0n.js` |
+| 画質・音質 | サーバーが返す利用可否に従う | 選択肢が増える場合がある | `quality-audio-delivery.md`、`PlayerOptionPresenter-BlPrwg0n.js` |
 
 再生速度については公式コードをloopbackからimportし、外部HTTP要求が `BlockedByClient` になること、隔離BrowserContextであることも同時に確認した。未ログインと一般では1.5倍以上が `available: false`、プレミアムでは全8段階が `available: true` になった。
 
