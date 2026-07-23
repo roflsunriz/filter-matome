@@ -33,6 +33,25 @@ interface ResponseBody {
   base64Encoded: boolean;
 }
 
+interface NavigationResult {
+  frameId: string;
+}
+
+interface NetworkResourceResult {
+  resource: {
+    success: boolean;
+    httpStatusCode?: number;
+    stream?: string;
+    netErrorName?: string;
+  };
+}
+
+interface IoReadResult {
+  data: string;
+  base64Encoded?: boolean;
+  eof: boolean;
+}
+
 interface CapturedResponse {
   url: string;
   status: number;
@@ -52,6 +71,8 @@ interface CaptureManifestFile {
 const DEFAULT_CDP_ENDPOINT = "http://127.0.0.1:9222";
 const DEFAULT_WATCH_URL = "https://www.nicovideo.jp/watch/sm9";
 const DEFAULT_SETTLE_MS = 8_000;
+const WATCH_ASSET_BASE =
+  "https://resource.video.nimg.jp/web/scripts/nvpc_next/assets/";
 const SCRIPT_DIRECTORY = dirname(fileURLToPath(import.meta.url));
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -82,6 +103,29 @@ const isResponseBody = (value: unknown): value is ResponseBody =>
   isRecord(value) &&
   typeof value.body === "string" &&
   typeof value.base64Encoded === "boolean";
+
+const isNavigationResult = (value: unknown): value is NavigationResult =>
+  isRecord(value) && typeof value.frameId === "string";
+
+const isNetworkResourceResult = (
+  value: unknown,
+): value is NetworkResourceResult =>
+  isRecord(value) &&
+  isRecord(value.resource) &&
+  typeof value.resource.success === "boolean" &&
+  (value.resource.httpStatusCode === undefined ||
+    typeof value.resource.httpStatusCode === "number") &&
+  (value.resource.stream === undefined ||
+    typeof value.resource.stream === "string") &&
+  (value.resource.netErrorName === undefined ||
+    typeof value.resource.netErrorName === "string");
+
+const isIoReadResult = (value: unknown): value is IoReadResult =>
+  isRecord(value) &&
+  typeof value.data === "string" &&
+  (value.base64Encoded === undefined ||
+    typeof value.base64Encoded === "boolean") &&
+  typeof value.eof === "boolean";
 
 const isOfficialScriptUrl = (url: string): boolean => {
   let parsed: URL;
@@ -148,6 +192,115 @@ const waitForLoad = (client: RawCdpClient, timeoutMs: number): Promise<void> =>
 const eventParams = (event: CdpEvent): Record<string, unknown> =>
   event.params ?? {};
 
+const extractDependencyNames = (source: string): string[] => {
+  const dependencies = new Set<string>();
+  const pattern =
+    /(?:from\s*|import\s*\()\s*["'`]\.\/(?<name>[a-zA-Z0-9_.-]+\.js)["'`]/g;
+  for (const match of source.matchAll(pattern)) {
+    const name = match.groups?.name;
+    if (name) {
+      dependencies.add(name);
+    }
+  }
+  return [...dependencies];
+};
+
+const readCdpStream = async (
+  client: RawCdpClient,
+  handle: string,
+): Promise<Uint8Array> => {
+  const chunks: Uint8Array[] = [];
+  try {
+    let eof = false;
+    while (!eof) {
+      const result = await client.send<unknown>("IO.read", { handle });
+      if (!isIoReadResult(result)) {
+        throw new Error("IO.readの応答形式が不正です。");
+      }
+      chunks.push(
+        result.base64Encoded
+          ? Uint8Array.from(Buffer.from(result.data, "base64"))
+          : new TextEncoder().encode(result.data),
+      );
+      eof = result.eof;
+    }
+  } finally {
+    await client.send("IO.close", { handle }).catch(() => undefined);
+  }
+  return Uint8Array.from(
+    Buffer.concat(chunks.map((chunk) => Buffer.from(chunk))),
+  );
+};
+
+const crawlScriptDependencies = async (
+  client: RawCdpClient,
+  frameId: string,
+  captured: Map<string, CapturedResponse>,
+): Promise<string[]> => {
+  const queue: string[] = [];
+  const queued = new Set<string>();
+  const failures: string[] = [];
+
+  const enqueueFromSource = (source: string): void => {
+    for (const dependency of extractDependencyNames(source)) {
+      const url = `${WATCH_ASSET_BASE}${dependency}`;
+      if (!captured.has(url) && !queued.has(url)) {
+        queued.add(url);
+        queue.push(url);
+      }
+    }
+  };
+  for (const response of captured.values()) {
+    enqueueFromSource(new TextDecoder().decode(response.body));
+  }
+
+  while (queue.length > 0) {
+    const url = queue.shift();
+    if (!url || captured.has(url)) {
+      continue;
+    }
+    const loaded = await client
+      .send<unknown>("Network.loadNetworkResource", {
+        frameId,
+        url,
+        options: {
+          disableCache: true,
+          includeCredentials: false,
+        },
+      })
+      .catch((error: unknown) => {
+        failures.push(
+          `${url}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        return null;
+      });
+    if (loaded === null) {
+      continue;
+    }
+    if (
+      !isNetworkResourceResult(loaded) ||
+      !loaded.resource.success ||
+      !loaded.resource.stream
+    ) {
+      const detail = isNetworkResourceResult(loaded)
+        ? (loaded.resource.netErrorName ?? "streamなし")
+        : "応答形式不正";
+      failures.push(`${url}: ${detail}`);
+      continue;
+    }
+
+    const body = await readCdpStream(client, loaded.resource.stream);
+    captured.set(url, {
+      url,
+      status: loaded.resource.httpStatusCode ?? 200,
+      mimeType: "text/javascript",
+      body,
+    });
+    enqueueFromSource(new TextDecoder().decode(body));
+  }
+  return failures;
+};
+
 const main = async (): Promise<void> => {
   const cdpEndpoint = parseArgument("cdp") ?? DEFAULT_CDP_ENDPOINT;
   const watchUrl = validateWatchUrl(parseArgument("url") ?? DEFAULT_WATCH_URL);
@@ -191,6 +344,7 @@ const main = async (): Promise<void> => {
     const candidates = new Map<string, Omit<CapturedResponse, "body">>();
     const captured = new Map<string, CapturedResponse>();
     const bodyTasks = new Set<Promise<void>>();
+    let crawlFailures: string[] = [];
 
     const unsubscribe = pageClient.subscribe((event) => {
       if (event.method === "Network.responseReceived") {
@@ -258,13 +412,23 @@ const main = async (): Promise<void> => {
       });
 
       const loaded = waitForLoad(pageClient, 45_000);
-      await pageClient.send("Page.navigate", { url: watchUrl });
+      const navigation = await pageClient.send<unknown>("Page.navigate", {
+        url: watchUrl,
+      });
+      if (!isNavigationResult(navigation)) {
+        throw new Error("Page.navigateの応答形式が不正です。");
+      }
       await loaded;
       await new Promise((resolve) => setTimeout(resolve, settleMs));
 
       while (bodyTasks.size > 0) {
         await Promise.allSettled([...bodyTasks]);
       }
+      crawlFailures = await crawlScriptDependencies(
+        pageClient,
+        navigation.frameId,
+        captured,
+      );
     } finally {
       unsubscribe();
       pageClient.close();
@@ -298,6 +462,11 @@ const main = async (): Promise<void> => {
       protocolVersion: version["Protocol-Version"],
       authenticationMaterialStored: false,
       htmlStored: false,
+      dependencyCrawl: {
+        enabled: true,
+        includeCredentials: false,
+        failures: crawlFailures,
+      },
       files,
     };
     await writeFile(

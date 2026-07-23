@@ -14,6 +14,8 @@
     "benchmark:comment-filter-prototypes": "bun ../../benchmarks/comment-filter-core/benchmark.ts",
     "sandbox:capture-official": "bun scripts/sandbox/capture-official-watch-bundle.ts",
     "sandbox:analyze-official": "bun scripts/sandbox/analyze-official-watch-bundle.ts",
+    "sandbox:observe-membership": "bun scripts/sandbox/observe-membership-context.ts",
+    "sandbox:run-membership": "bun scripts/sandbox/run-offline-membership-sandbox.ts",
     "sandbox:verify-offline": "bun scripts/sandbox/verify-offline-cdp-sandbox.ts",
     "sandbox:type-check": "tsc --noEmit -p scripts/sandbox/tsconfig.json",
     "test:unit": "bun scripts/test-unit.ts",

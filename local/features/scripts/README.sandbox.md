@@ -1,13 +1,15 @@
 # 公式バンドル研究用スクリプト
 
-`scripts/sandbox/` は、`src/sandbox/` に隔離する公式公開バンドルをraw CDPで取得し、外部通信を遮断した一時BrowserContextを検証し、公式コードを実行せず静的解析するための開発者向けツールです。
+`scripts/sandbox/` は、`src/sandbox/` に隔離する公式公開バンドルをraw CDPで取得し、外部通信を遮断した一時BrowserContextを検証し、静的解析と対象を限定した隔離実行を行うための開発者向けツールです。
 
 ## スクリプト
 
-- `capture-official-watch-bundle.ts`: `http://127.0.0.1:9222` のChrome DevTools Protocolへ直接接続し、一時タブでwatchページが読み込んだ `resource.video.nimg.jp/web/scripts/nvpc_next/assets/` の公式JavaScriptだけを `src/sandbox/official-watch-bundle/` へ保存する。
+- `capture-official-watch-bundle.ts`: `http://127.0.0.1:9222` のChrome DevTools Protocolへ直接接続し、一時タブでwatchページが読み込んだ `resource.video.nimg.jp/web/scripts/nvpc_next/assets/` の公式JavaScriptと、そこから参照される同一CDNのES Module依存関係だけを `src/sandbox/official-watch-bundle/` へ保存する。依存関係の取得にはCookieを送らない。
 - `verify-offline-cdp-sandbox.ts`: 一時BrowserContextのHTTP、HTTPS、WebSocket、FTPを遮断し、CookieとWeb Storageが空であることを確認する。
 - `analyze-official-watch-bundle.ts`: 最新captureを実行せず、機能語と参照ドメインだけを集計する。
-- `raw-cdp-client.ts`: 上記3スクリプトで共有する、依存パッケージを使わないCDP WebSocketクライアント。
+- `observe-membership-context.ts`: 既存ログインセッションとCookieを継承しない一時BrowserContextで同じwatchページを開き、個人識別子を保存せず会員区分と動画権利フラグだけを比較する。
+- `run-offline-membership-sandbox.ts`: 公式CDNから隔離済みのES Modulesをloopbackだけ許可した一時BrowserContextで実行し、実コードの会員分岐を比較する。
+- `raw-cdp-client.ts`: 各スクリプトで共有する、依存パッケージを使わないCDP WebSocketクライアント。
 
 ## 実行
 
@@ -15,6 +17,8 @@
 
 ```powershell
 bun run sandbox:capture-official
+bun run sandbox:observe-membership
+bun run sandbox:run-membership
 bun run sandbox:verify-offline
 bun run sandbox:analyze-official
 ```
