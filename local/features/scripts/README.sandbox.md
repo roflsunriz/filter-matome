@@ -8,7 +8,9 @@
 - `verify-offline-cdp-sandbox.ts`: 一時BrowserContextのHTTP、HTTPS、WebSocket、FTPを遮断し、CookieとWeb Storageが空であることを確認する。
 - `analyze-official-watch-bundle.ts`: 最新captureを実行せず、機能語と参照ドメインだけを集計する。
 - `observe-membership-context.ts`: 既存ログインセッションとCookieを継承しない一時BrowserContextで同じwatchページを開き、個人識別子を保存せず会員区分と動画権利フラグだけを比較する。
+- `observe-seek-preview.ts`: 同じBrowserContextの一時タブで公式シークバーをホバーし、query stringと個人識別子を除外してStoryboardの取得経路、数値メタデータ、表示結果を記録する。
 - `run-offline-membership-sandbox.ts`: 公式CDNから隔離済みのES Modulesをloopbackだけ許可した一時BrowserContextで実行し、実コードの会員分岐を比較する。
+- `run-offline-seek-preview-sandbox.ts`: 外部通信を遮断した一時BrowserContextで公式Storyboardモデルとレンダラーを実行し、時刻からスプライトセルへの変換とCSS描画を確認する。
 - `raw-cdp-client.ts`: 各スクリプトで共有する、依存パッケージを使わないCDP WebSocketクライアント。
 
 ## 実行
@@ -18,7 +20,9 @@
 ```powershell
 bun run sandbox:capture-official
 bun run sandbox:observe-membership
+bun run sandbox:observe-seek-preview
 bun run sandbox:run-membership
+bun run sandbox:run-seek-preview
 bun run sandbox:verify-offline
 bun run sandbox:analyze-official
 ```
