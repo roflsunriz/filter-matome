@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+
+- push前監査で検出された既知の依存脆弱性を解消するため、安全版へ依存関係とロックファイルを更新した。
+
+### Changed
+
+- 作業開始時の共通指針見落としを防ぐため、調査やコマンド実行より前に `COMMON-AGENTS.md` を先頭から末尾まで読み、EOFを確認する必須ゲートを追加した。
+
 ### Added
 
 - 【開発者向け】ログイン済みChromeへraw CDPで接続して公式watchページが読み込んだJavaScriptだけを隔離保存し、外部通信を遮断した一時BrowserContextの検証と、公式コードを実行しない機能シグナル静的解析を行える研究用サンドボックスを追加した。
