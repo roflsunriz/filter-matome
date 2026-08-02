@@ -19,18 +19,22 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 /** NicoCache_nlのpropertiesを文字コード・コメントを維持して編集するプラグイン。 */
 public final class ConfigEditorPlugin implements ToolPlugin {
+    private static final String TEST_PLATFORM_PROPERTY = "filterMatome.toolbox.test.platform";
     @Override
     public PluginDescriptor descriptor() {
         return new PluginDescriptor("config-editor", "設定エディタ", "propertiesの追加・編集・削除とdefaults辞書の表示", true, true);
@@ -41,7 +45,11 @@ public final class ConfigEditorPlugin implements ToolPlugin {
         return "設定エディタ\n\n"
                 + "UTF-8、Windows-31J、EUC-JPを自動判定し、既存コメントと順序を保って保存します。\n"
                 + "保存前に .bak-<時刻> のバックアップを作成し、temporary fileから原子的に置き換えます。\n"
-                + "既定の設定ファイルは --repo-root/config.properties、defaults辞書は --repo-root/defaults です。";
+                + "GUIの設定ファイル初期値はWindowsでは %LOCALAPPDATA%/NicoCache_nl/config.properties、"
+                + "Linuxでは ~/.config/NicoCache_nl/config.properties、"
+                + "macOSでは ~/Library/Application Support/NicoCache_nl/config.properties です。\n"
+                + "defaults辞書は設定ファイルと同じフォルダーのdefaultsから読み込みます。"
+                + "CLIでは対象を --config で明示できます。";
     }
 
     @Override
@@ -51,7 +59,9 @@ public final class ConfigEditorPlugin implements ToolPlugin {
 
     @Override
     public int run(CommandRequest request, PluginContext context) throws Exception {
-        Path path = Path.of(request.value("config", context.repo("config.properties").toString()));
+        Path path = Path.of(request.value("config", defaultConfigPath().toString()));
+        Path defaultsPath = Path.of(request.value("defaults",
+                path.toAbsolutePath().normalize().getParent().resolve("defaults").toString()));
         PropertiesDocument document = PropertiesDocument.load(path);
         String action = request.action().isBlank() ? "list" : request.action().toLowerCase();
         switch (action) {
@@ -61,8 +71,7 @@ public final class ConfigEditorPlugin implements ToolPlugin {
                 }
             }
             case "available", "defaults" -> {
-                Map<String, PropertiesDocument.Setting> available = PropertiesDocument.loadDefaults(
-                        Path.of(request.value("defaults", context.repo("defaults").toString())));
+                Map<String, PropertiesDocument.Setting> available = PropertiesDocument.loadDefaults(defaultsPath);
                 for (PropertiesDocument.Setting setting : available.values()) {
                     context.log().info(setting.key() + "=" + setting.value() + " [" + setting.source() + "]");
                 }
@@ -71,9 +80,7 @@ public final class ConfigEditorPlugin implements ToolPlugin {
                 String key = request.value("key", "").trim();
                 if (key.isBlank()) throw new IllegalArgumentException("--key が必要です。");
                 String value = request.value("value", "");
-                PropertiesDocument.Setting defaultSetting = PropertiesDocument.loadDefaults(
-                                Path.of(request.value("defaults", context.repo("defaults").toString())))
-                        .get(key);
+                PropertiesDocument.Setting defaultSetting = PropertiesDocument.loadDefaults(defaultsPath).get(key);
                 if (value.isBlank() && defaultSetting != null) value = defaultSetting.value();
                 document.set(key, value, defaultSetting == null ? "" : defaultSetting.comment());
                 Path backup = document.save();
@@ -92,7 +99,34 @@ public final class ConfigEditorPlugin implements ToolPlugin {
         return 0;
     }
 
-    private static final class ConfigPanel extends JPanel {
+    /** OSの標準的なユーザー設定領域にあるNicoCache_nl設定ファイルを返す。 */
+    public static Path defaultConfigPath() {
+        String platform = System.getProperty(TEST_PLATFORM_PROPERTY, System.getProperty("os.name", ""));
+        return defaultConfigPath(platform, System.getenv("LOCALAPPDATA"), System.getenv("XDG_CONFIG_HOME"),
+                System.getProperty("user.home", "."));
+    }
+
+    static Path defaultConfigPath(String platform, String localAppData, String xdgConfigHome, String userHome) {
+        String normalizedPlatform = platform == null ? "" : platform.toLowerCase(Locale.ROOT);
+        Path home = Path.of(userHome == null || userHome.isBlank() ? "." : userHome)
+                .toAbsolutePath().normalize();
+        if (normalizedPlatform.contains("win")) {
+            Path local = localAppData == null || localAppData.isBlank()
+                    ? home.resolve("AppData").resolve("Local")
+                    : Path.of(localAppData);
+            return local.resolve("NicoCache_nl").resolve("config.properties");
+        }
+        if (normalizedPlatform.contains("mac") || normalizedPlatform.contains("darwin")) {
+            return home.resolve("Library").resolve("Application Support")
+                    .resolve("NicoCache_nl").resolve("config.properties");
+        }
+        Path configHome = xdgConfigHome == null || xdgConfigHome.isBlank()
+                ? home.resolve(".config")
+                : Path.of(xdgConfigHome);
+        return configHome.resolve("NicoCache_nl").resolve("config.properties");
+    }
+
+    static final class ConfigPanel extends JPanel {
         private final PluginContext context;
         private final JTextField pathField = new JTextField();
         private final DefaultTableModel model = new DefaultTableModel(new Object[]{"キー", "値", "説明", "defaults元"}, 0) {
@@ -103,10 +137,16 @@ public final class ConfigEditorPlugin implements ToolPlugin {
         private Map<String, PropertiesDocument.Setting> defaults = Map.of();
 
         private ConfigPanel(PluginContext context) {
+            this(context, defaultConfigPath());
+        }
+
+        ConfigPanel(PluginContext context, Path initialConfigPath) {
             super(new BorderLayout(8, 8));
             this.context = context;
             setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            pathField.setText(context.repo("config.properties").toString());
+            pathField.setName("config-editor-path");
+            pathField.setText(initialConfigPath.toString());
+            pathField.setColumns(40);
             build();
             load();
         }
@@ -211,13 +251,76 @@ public final class ConfigEditorPlugin implements ToolPlugin {
         }
 
         private void showDefaults() {
-            StringBuilder text = new StringBuilder();
-            defaults.values().forEach(setting -> text.append(setting.key()).append('=').append(setting.value())
-                    .append(" [").append(setting.source()).append("]\n"));
-            JTextField unused = new JTextField();
-            unused.setVisible(false);
-            JOptionPane.showMessageDialog(this, new JScrollPane(new javax.swing.JTextArea(text.toString(), 20, 70)),
-                    "defaults辞書", JOptionPane.INFORMATION_MESSAGE);
+            JTable defaultsTable = createDefaultsTable();
+            JPanel dialogPanel = new JPanel(new BorderLayout(5, 5));
+            dialogPanel.add(new JLabel("値をダブルクリックすると設定一覧へ入力します。"), BorderLayout.NORTH);
+            JScrollPane scroll = new JScrollPane(defaultsTable);
+            scroll.setPreferredSize(new Dimension(760, 420));
+            dialogPanel.add(scroll, BorderLayout.CENTER);
+            JOptionPane.showMessageDialog(this, dialogPanel, "defaults辞書", JOptionPane.INFORMATION_MESSAGE);
+        }
+
+        JTable createDefaultsTable() {
+            DefaultTableModel defaultsModel = new DefaultTableModel(new Object[]{"キー", "値", "説明", "defaults元"}, 0) {
+                @Override public boolean isCellEditable(int row, int column) { return false; }
+            };
+            defaults.values().forEach(setting -> defaultsModel.addRow(new Object[]{setting.key(), setting.value(),
+                    setting.comment(), setting.source()}));
+            JTable defaultsTable = new JTable(defaultsModel);
+            defaultsTable.setName("config-editor-defaults-table");
+            defaultsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            defaultsTable.setAutoCreateRowSorter(true);
+            defaultsTable.setFillsViewportHeight(true);
+            defaultsTable.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent event) {
+                    if (event.getClickCount() != 2 || !SwingUtilities.isLeftMouseButton(event)) {
+                        return;
+                    }
+                    int viewRow = defaultsTable.rowAtPoint(event.getPoint());
+                    int viewColumn = defaultsTable.columnAtPoint(event.getPoint());
+                    if (viewRow < 0 || viewColumn != 1) {
+                        return;
+                    }
+                    int modelRow = defaultsTable.convertRowIndexToModel(viewRow);
+                    applyDefault(new PropertiesDocument.Setting(
+                            String.valueOf(defaultsModel.getValueAt(modelRow, 0)),
+                            String.valueOf(defaultsModel.getValueAt(modelRow, 1)),
+                            String.valueOf(defaultsModel.getValueAt(modelRow, 2)),
+                            String.valueOf(defaultsModel.getValueAt(modelRow, 3))));
+                }
+            });
+            return defaultsTable;
+        }
+
+        JTable settingsTable() {
+            return table;
+        }
+
+        String configPath() {
+            return pathField.getText();
+        }
+
+        private void applyDefault(PropertiesDocument.Setting setting) {
+            for (int row = 0; row < model.getRowCount(); row++) {
+                if (setting.key().equals(String.valueOf(model.getValueAt(row, 0)).trim())) {
+                    model.setValueAt(setting.value(), row, 1);
+                    model.setValueAt(setting.comment(), row, 2);
+                    model.setValueAt(setting.source(), row, 3);
+                    int viewRow = table.convertRowIndexToView(row);
+                    if (viewRow >= 0) {
+                        table.setRowSelectionInterval(viewRow, viewRow);
+                    }
+                    context.log().info("defaultsの値を入力しました: " + setting.key());
+                    return;
+                }
+            }
+            model.addRow(new Object[]{setting.key(), setting.value(), setting.comment(), setting.source()});
+            int viewRow = table.convertRowIndexToView(model.getRowCount() - 1);
+            if (viewRow >= 0) {
+                table.setRowSelectionInterval(viewRow, viewRow);
+            }
+            context.log().info("defaultsの値を入力しました: " + setting.key());
         }
     }
 }

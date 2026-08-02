@@ -3,7 +3,6 @@ package jp.roflsunriz.filtermatome.toolbox;
 import jp.roflsunriz.filtermatome.toolbox.plugins.ConfigEditorPlugin;
 import jp.roflsunriz.filtermatome.toolbox.plugins.DeveloperPlugin;
 import jp.roflsunriz.filtermatome.toolbox.plugins.MediaPlugin;
-import jp.roflsunriz.filtermatome.toolbox.plugins.NicoCachePlugin;
 import jp.roflsunriz.filtermatome.toolbox.plugins.UpdaterPlugin;
 
 import java.io.IOException;
@@ -29,7 +28,6 @@ public final class PluginManager implements AutoCloseable {
         register(new MediaPlugin());
         register(new ConfigEditorPlugin());
         register(new UpdaterPlugin());
-        register(new NicoCachePlugin());
         register(new DeveloperPlugin());
         if (!Files.isDirectory(context.paths().pluginsDir())) {
             return;

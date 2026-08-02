@@ -34,7 +34,7 @@ class IntegrationPluginManagerTest {
         try (PluginManager manager = new PluginManager(context)) {
             manager.discover();
 
-            assertEquals(6, manager.all().size());
+            assertEquals(5, manager.all().size());
             assertNotNull(manager.find("media"));
             assertNotNull(manager.find("external-test"));
             CommandRequest request = TestSupport.request("ping", List.of(), Map.of(), false, false, true, true, null);

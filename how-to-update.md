@@ -18,8 +18,8 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test
 
 GUIを表示できないCIやサーバーではGUI E2Eだけスキップされます。CLI E2E、組み込みプラグイン、外部プラグインSPI、ローカルHTTPによるETag更新テストはヘッドレスで実行されます。
 
-JavaToolboxのE2Eは、`@TempDir`配下にアプリルート、データルート、リポジトリ、ユーザーホームを作る隔離フィクスチャです。ffmpeg/ffprobe・Java/javac・setxなどは偽コマンド、更新APIと動画タイトルAPIはlocalhostのHTTPサーバーへ差し替えるため、実機のNicoCache_nl、証明書ストア、Windowsレジストリ、Firefoxプロファイル、外部GitHubへ接続しません。旧`nicocache-utility.py`の起動、強制停止、本体ビルド、拡張コンパイル、JAVA_HOME、管理画面、Webリンクまで同じ隔離環境で確認します。OSにシンボリックリンク作成権限がない場合も、リンク作成の拒否と既存通常ファイルの保護を検証します。
+JavaToolboxのE2Eは、`@TempDir`配下にデータディレクトリ、リポジトリ、ユーザーホームを作る隔離フィクスチャです。ffmpeg/ffprobeなどの外部コマンドは偽実装、更新APIと動画タイトルAPIはlocalhostのHTTPサーバーへ差し替えるため、実機の設定、証明書ストア、Windowsレジストリ、Firefoxプロファイル、外部GitHubへ接続しません。メディア、設定編集、更新、開発者向け操作を同じ隔離環境で確認し、OSにシンボリックリンク作成権限がない場合も安全な拒否と既存通常ファイルの保護を検証します。
 
-変換やNicoCache操作を行う場合は、対象パスを明示し、最初に`--dry-run`で予定を確認してください。失敗時はアプリデータディレクトリの設定バックアップと、各処理の`.bak-*`／`.part`を確認して復旧します。
+変換や設定編集を行う場合は、対象パスを明示し、最初に`--dry-run`で予定を確認してください。失敗時はアプリデータディレクトリの設定バックアップと、各処理の`.bak-*`／`.part`を確認して復旧します。NicoCache_nl本体の管理操作は本体側の案内に従ってください。
 
 リリースアーカイブ作成時は、`scripts/java-toolbox/target`の開発用生成物を除去し、実行JARだけを同じパスへコピーします。配布物の検証では、アーカイブ内のJARが存在し、`--list-plugins`と`--headless --self-test`を実行できることを確認します。

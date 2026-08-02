@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * 実機のffmpeg、Java、レジストリ、証明書ストアを呼ばずに外部コマンド境界を検証する偽実装。
+ * 実機のffmpeg、ffprobeを呼ばずに外部コマンド境界を検証する偽実装。
  * テスト用ラッパーから呼び出され、受け取った引数をログへ残して最小限の成果物を生成する。
  */
 public final class FakeExternalTool {
@@ -33,10 +33,6 @@ public final class FakeExternalTool {
         switch (kind) {
             case "ffprobe" -> fakeFfprobe(command);
             case "ffmpeg" -> fakeFfmpeg(command);
-            case "javac" -> fakeJavac(command);
-            case "java", "reg", "certutil", "setx", "powershell", "mmc", "rundll32", "explorer", "net" -> {
-                // 成功終了だけで、実機のプロセス・レジストリ・証明書ストアは変更しない。
-            }
             default -> throw new IllegalArgumentException("未対応の偽コマンドです: " + kind);
         }
     }
@@ -85,19 +81,6 @@ public final class FakeExternalTool {
                 "#EXTM3U\n#EXT-X-MAP:URI=\"init01" + extension + "\"\n#EXTINF:1,\n001" + extension
                         + "\n#EXT-X-ENDLIST\n",
                 StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-    }
-
-    private static void fakeJavac(List<String> command) throws IOException {
-        int destinationIndex = command.indexOf("-d");
-        if (destinationIndex < 0 || destinationIndex + 1 >= command.size()) {
-            throw new IllegalArgumentException("偽javacに-dがありません: " + command);
-        }
-        Path destination = Path.of(command.get(destinationIndex + 1));
-        String source = command.get(command.size() - 1);
-        String fileName = Path.of(source).getFileName().toString().replaceFirst("\\.java$", ".class");
-        Files.createDirectories(destination);
-        Files.writeString(destination.resolve(fileName), "fake class", StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     private static void appendLog(String kind, List<String> command) throws IOException {

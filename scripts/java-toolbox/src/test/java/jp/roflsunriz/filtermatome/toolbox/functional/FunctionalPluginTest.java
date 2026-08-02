@@ -7,7 +7,6 @@ import jp.roflsunriz.filtermatome.toolbox.TestSupport;
 import jp.roflsunriz.filtermatome.toolbox.plugins.ConfigEditorPlugin;
 import jp.roflsunriz.filtermatome.toolbox.plugins.DeveloperPlugin;
 import jp.roflsunriz.filtermatome.toolbox.plugins.MediaPlugin;
-import jp.roflsunriz.filtermatome.toolbox.plugins.NicoCachePlugin;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -73,14 +72,12 @@ class FunctionalPluginTest {
     }
 
     @Test
-    void developerAndNicoCacheOperationsDoNotMutateWithoutExplicitExecution() throws Exception {
+    void developerOperationsDoNotMutateWithoutExplicitExecution() throws Exception {
         Path repo = Files.createDirectories(temp.resolve("repo"));
         Files.writeString(repo.resolve("AGENTS.md"), "source");
         Files.createDirectories(repo.resolve("scripts"));
         Path existingLinkName = Files.writeString(repo.resolve("CLAUDE.md"), "keep");
-        Path dataRoot = Files.createDirectories(temp.resolve("nico-data"));
         PluginContext context = TestSupport.context(temp.resolve("data"), repo);
-        List<String> logs = TestSupport.captureLogs(context.log());
 
         CommandRequest linkDryRun = TestSupport.request("link", List.of(), Map.of(
                 "source", "AGENTS.md", "link-name", "new-link.md"), false, false, true, false, null);
@@ -92,12 +89,5 @@ class FunctionalPluginTest {
                 false, false, false, true, null);
         assertThrows(IOException.class, () -> new DeveloperPlugin().run(regularFile, context));
         assertEquals("keep", Files.readString(existingLinkName));
-
-        CommandRequest linksDryRun = TestSupport.request("links", List.of(), Map.of(
-                "app-root", repo.toString(), "data-root", dataRoot.toString(), "source-root", repo.toString()),
-                false, false, true, true, null);
-        assertEquals(0, new NicoCachePlugin().run(linksDryRun, context));
-        assertFalse(Files.exists(dataRoot.resolve("scripts")));
-        assertTrue(logs.stream().anyMatch(line -> line.contains("DRY-RUN:")));
     }
 }

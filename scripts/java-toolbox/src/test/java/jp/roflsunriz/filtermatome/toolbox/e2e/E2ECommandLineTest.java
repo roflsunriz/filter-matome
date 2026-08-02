@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class E2ECommandLineTest {
@@ -27,6 +28,7 @@ class E2ECommandLineTest {
         assertTrue(list.output().contains("media\t"));
         assertTrue(list.output().contains("config-editor\t"));
         assertTrue(list.output().contains("developer\t"));
+        assertFalse(list.output().contains("nicocache\t"), "NicoCache管理はJavaToolboxから削除されています。");
 
         ProcessResult selfTest = TestSupport.runMain(List.of("--headless", "--self-test", "--data-dir", data.toString(),
                 "--repo-root", repo.toString()), temp);
