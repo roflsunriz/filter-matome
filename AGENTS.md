@@ -93,31 +93,26 @@ bun run build
 
 ## NicoCache_nl本体の変更とビルド
 
-- NicoCache_nl本体のソースは `C:\NicoCache_nl\src\` にあるが、このリポジトリの管理対象外であり、他のメンテナーによる更新で上書きされる。ユーザーからNicoCache_nl本体の変更を依頼された場合も、原則として `src\` を直接編集しない。
-- NicoCache_nl本体の変更が必要な場合は、`C:\NicoCache_nl\` 直下に変更対象だけを含むオーバーレイJavaソースと専用ビルドスクリプトを用意する。正式版への取り込みを依頼できるよう、変更理由、再現手順、修正内容、検証結果を含む日本語の依頼文案も作成する。外部のメンテナーへ実際に送信する場合は、別途ユーザーの許可を得る。
-- `C:\NicoCache_nl\ajax-rm-domand-cache-reset\` は既存のオーバーレイソースの一例である。正式版へ取り込まれた後などには削除されることがあるため、使用前に存在と対象バージョンを確認する。
-- 対応する `C:\NicoCache_nl\build-ajax-rm-domand-cache-reset.ps1` は、JDKの `javac` と `jar` を使い、ベースソースのコンパイル、オーバーレイのコンパイル、`NicoCache_nl.jar` の再生成まで行う。単なる差分コンパイルではないため、実行前に対象ソース、生成先、復旧方法を確認する。
-- 通常ビルドでは、`C:\NicoCache_nl\build-ant.ps1` はApache Ant、`C:\NicoCache_nl\build-javac.ps1` はJDKの `javac` と `jar` および `manifest-nl.mf` に依存する。どちらも `C:\NicoCache_nl\src\` と `NicoCache_nl.jar` を更新するため、ユーザーが依頼したビルドまたは検証の範囲でのみ実行する。
-- オーバーレイ、ビルドスクリプト、実行ファイルは環境によって存在しない場合がある。記載されたパスを無条件に仮定せず、毎回存在を確認する。
+- NicoCache_nl本体のソースは `C:\NicoCache_nl\src\` にある。
 
 ## NicoCache_nlの起動・終了・再起動・デバッグ
 
 ### 終了
 
-- NicoCache_nlを終了するときは、GUI、CUI、デバッグ用途を問わず、原則としてリポジトリルートの `C:\filter-matome\stop-nicocache.ps1` を使用する。スクリプトは `java.exe` / `javaw.exe` という名前だけでは対象にせず、コマンドラインの独立した `-jar ...\NicoCache_nl.jar` 引数を指紋としてPIDを限定し、操作直前と強制終了直前に作成時刻と指紋を再確認する。
-- 実際に終了する前に `& "C:\filter-matome\stop-nicocache.ps1" -ListOnly` を実行し、表示されたPID、実行ファイル、指紋が意図したNicoCache_nlであることを確認する。対象確認だけで十分な調査では、終了操作へ進まない。
-- GUI版の通常終了では `& "C:\filter-matome\stop-nicocache.ps1"` を使用する。スクリプトはNicoCache_nl本体のWindows終了通知経路から内部 `shutdown()` を呼び、既定で最大65秒待つ。GUIを手作業で閉じる操作や、独自のWindowsメッセージ送信で代替しない。
-- CUI版として起動している場合、GUI操作が不都合な場合、またはGUIのない非対話環境では `-SkipGuiShutdown` を指定できる。この指定は正常終了経路を省略して強制終了の判定へ進むため、用途を確認せず既定値として付けない。
-- 通常終了できない場合は、スクリプトが表示する強制終了確認を経由する。確認の既定値は「いいえ」である。ユーザーが強制終了を明示的に許可した場合に限って「はい」を選ぶ。
-- `-Force` は強制終了の対話確認を省略する。ユーザーが現在の依頼で非対話の強制終了を明示的に許可した場合に限り使用する。CUI-onlyの完全非対話実行は `-SkipGuiShutdown -Force` とするが、単に確認を避ける目的では使用しない。
-- `-WhatIf` は対象と操作内容の確認に利用できる。`-ListOnly`、`-WhatIf`、通常終了、強制終了の結果を混同せず、実際にプロセスが終了したことをスクリプトの結果で確認する。
-- `stop-nicocache.ps1` が存在しない、構文エラーになる、対象を特定できない、または終了に失敗した場合は、その状態を報告して原因を調査する。`Stop-Process -Name java`、`Stop-Process -Name javaw`、`taskkill /IM java.exe` など、名前だけで全Javaプロセスを終了する方法へフォールバックしない。
+- 本体はプロキシーポートと別に、`127.0.0.1`だけでランダムポートを待ち受ける。
+- ポートとBearerトークンはユーザーデータの`data/nicocache-control.properties`にある。
+- Authorization: Bearer <data/nicocache-control.properties の token>
+- `/api/control/graceful-shutdown` POST `202`、`{"status":"stopping"}`
+- `/api/control/force-shutdown` POST `202`、`{"status":"forcing"}`
+- 認証なし・トークン不一致は401、未知のパスは404を返す。
 
 ### 起動と再起動
 
-- 起動には `C:\NicoCache_nl\RunNicoCache.ps1` または `C:\NicoCache_nl\NicoCache_nl Starter.bat` を使用する。実行前に対象ファイルが存在することを確認する。
-- 再起動では、まず上記の終了手順を完了し、対象PIDが終了したことを確認してから起動する。旧プロセスが残っている、強制終了が拒否された、または終了結果が不明な状態で新しいNicoCache_nlを重ねて起動しない。
-- 起動後は `& "C:\filter-matome\stop-nicocache.ps1" -ListOnly` などで新しいPIDと指紋を確認し、必要に応じて対象のローカル配信やログも確認する。起動したというコマンド結果だけで再起動成功と判断しない。
+`NICO_APP_ROOT` の
+java -jar .\NicoCacheLauncher.jar --headless --start
+java -jar .\NicoCacheLauncher.jar --headless --status
+java -jar .\NicoCacheLauncher.jar --headless --stop
+java -jar .\NicoCacheLauncher.jar --headless --check-data-root
 
 ### デバッグ
 
