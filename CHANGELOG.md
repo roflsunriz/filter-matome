@@ -11,11 +11,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【scripts】Python、PowerShell、バッチへ分散していたメディア変換、properties編集、GitHub更新、NicoCache管理の導線を、GUIとヘッドレスで共通利用できるJava Toolboxへ統合した。プラグインJAR、READMEヘルプ辞書、実行時パス解決を採用し、OSやリポジトリの固定パスに依存しない構成にした。
 - 【scripts/Java Toolbox】JUnit 5による単体・機能・結合・E2Eテストを追加し、CLI、GUIタブ、ヘッドレスプラグイン、外部プラグインSPI、ETag付き更新、空白入りパス、キャンセルを自動検証できるようにした。
 - 【scripts/Java Toolbox】実機から切り離した一時ディレクトリで`Main`を子プロセス起動し、全組み込みアクションの成果物、バックアップ、`.part` cleanup、確認拒否、外部コマンド引数、localhost更新APIを検証する隔離E2Eフィクスチャを追加した。
+- 【scripts/Java Toolbox】`nicocache-utility.py`の全25メニューを、起動・強制停止・NicoCache本体ビルド・拡張コンパイル・JAVA_HOME、証明書、プロキシ、Firefox、タスク、管理画面、Webリンクまで移植し、隔離E2EとヘッドレスGUI部品テストを追加した。
 - 【release/CI】Java ToolboxをJDK 17で自動テスト・パッケージ化し、ビルド済み実行JARをリリースアーカイブとCIアーティファクトへ同梱するようにした。通常利用者はMavenやBunでのビルドなしに起動できる。
 
 ### Changed
 
-- 【scripts】既存出力の無確認上書き、シェルによるパス分割、Python GUI依存、固定されたWindowsパスをJava共通基盤から排除し、ドライラン、バックアップ、原子的保存、明示的な副作用確認を標準化した。Java Toolboxで完全に代替できた旧スクリプトと説明書を削除し、未移行のWindows固有メニューを持つ`nicocache-utility.py`とMkDocs用フックだけを残した。
+- 【scripts】既存出力の無確認上書き、シェルによるパス分割、Python GUI依存、固定されたWindowsパスをJava共通基盤から排除し、ドライラン、バックアップ、原子的保存、明示的な副作用確認を標準化した。全メニューをJava Toolboxへ移行したため、`nicocache-utility.py`と専用READMEを削除し、用途が異なるMkDocs用フックだけを残した。
 - 【scripts/Java Toolbox】JSONの整数を条件演算子の数値昇格で`Double`へ変換していたためリリースIDが`42.0`になる不具合を修正し、整数を`Long`として保持するようにした。nullの安全なファイル名も`untitled`へ正規化し、更新APIのエンドポイントを設定で差し替えられるようにした。
 - 【scripts/Java Toolbox】メディアの動画情報APIを設定可能なエンドポイントへ分離し、`open --dry-run`、NicoCache停止対象の`-jar`指紋／明示PID、診断時の外部ツール差し替えを追加して、隔離検証と安全な自動運用を可能にした。
 

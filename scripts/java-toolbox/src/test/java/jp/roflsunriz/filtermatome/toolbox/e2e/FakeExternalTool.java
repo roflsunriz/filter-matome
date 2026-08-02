@@ -34,7 +34,7 @@ public final class FakeExternalTool {
             case "ffprobe" -> fakeFfprobe(command);
             case "ffmpeg" -> fakeFfmpeg(command);
             case "javac" -> fakeJavac(command);
-            case "java", "reg", "certutil" -> {
+            case "java", "reg", "certutil", "setx", "powershell", "mmc", "rundll32", "explorer", "net" -> {
                 // 成功終了だけで、実機のプロセス・レジストリ・証明書ストアは変更しない。
             }
             default -> throw new IllegalArgumentException("未対応の偽コマンドです: " + kind);

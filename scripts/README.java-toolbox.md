@@ -35,7 +35,7 @@ mvn verify
 java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
 ```
 
-テストはJUnit 5で、単体（CLI・JSON・properties・ファイル安全性・プロセス制御）、機能（組み込みプラグインのヘッドレス操作）、結合（ServiceLoader外部JAR・ローカルHTTPのETag更新）、E2E（実際の`Main`子プロセス、全組み込みアクション、成功／拒否／バックアップ／`.part`／副作用、GUIタブ構築）を検証します。E2Eの外部コマンドは偽実装が引数と生成物を記録し、更新・動画情報APIはlocalhostのHTTPサーバーだけを使うため、実機のNicoCache設定、証明書ストア、レジストリ、Firefoxプロファイル、GitHubへ触れません。シンボリックリンク権限がないOSでは、作成成功ではなく安全な拒否と既存ファイル保護を検証します。GUIを表示できない環境ではGUI E2Eだけ自動的にスキップし、CLI E2Eは実行します。全検証には`mvn verify`を使用してください。
+テストはJUnit 5で、単体（CLI・JSON・properties・ファイル安全性・プロセス制御）、機能（組み込みプラグインのヘッドレス操作）、結合（ServiceLoader外部JAR・ローカルHTTPのETag更新）、E2E（実際の`Main`子プロセス、全組み込みアクション、成功／拒否／バックアップ／`.part`／副作用、GUIタブ構築とGUI操作部品）を検証します。E2Eの外部コマンドは偽実装が引数と生成物を記録し、更新・動画情報APIはlocalhostのHTTPサーバーだけを使うため、実機のNicoCache設定、証明書ストア、レジストリ、Firefoxプロファイル、GitHubへ触れません。シンボリックリンク権限がないOSでは、作成成功ではなく安全な拒否と既存ファイル保護を検証します。GUIを表示できない環境では実ウィンドウのGUI E2Eだけ自動的にスキップし、ヘッドレスGUI構築とCLI E2Eは実行します。全検証には`mvn verify`を使用してください。
 
 プラグイン一覧と自己診断:
 
@@ -65,6 +65,14 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
 java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
   --headless --plugin nicocache --action links --source-root "/path/to/filter-matome" \
   --data-root "/path/to/NicoCache_nl" --dry-run
+
+# 旧nicocache-utility.pyのヘッドレス起動・NicoCacheBuild実行
+java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+  --headless --plugin nicocache --action launch-headless \
+  --app-root "/path/to/NicoCache_nl" --yes
+java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+  --headless --plugin nicocache --action build-java-apps \
+  --app-root "/path/to/NicoCache_nl" --dry-run
 ```
 
 削除、停止、リネーム、リンク再作成、拡張コンパイル、上書きなど副作用のある操作は、`--yes`、`--force`、`--overwrite`を明示しない限り実行しません。
@@ -80,11 +88,20 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
 - `media`: 10秒／60秒切り出し、FastStart、HLS、H.264／HEVC／AV1変換、キャッシュ動画リネーム
 - `config-editor`: properties編集とdefaults辞書
 - `updater`: GitHub Releases API、ETag、`.part`ダウンロード
-- `nicocache`: 診断、起動・停止、シンボリックリンク、Java拡張コンパイル
+- `nicocache`: 旧`nicocache-utility.py`の全25メニュー相当（診断・権限確認、ヘッドレス／GUI起動、安全停止・強制停止、リンク、拡張／NicoCache本体ビルド、Java環境、証明書、Windows／Firefoxプロキシ、タスク、管理画面、Webページ）
 - `developer`: `create-claude-link`相当の安全な相対リンク作成と依存関係診断
 
-完全にJava Toolboxへ移行できた旧スクリプトは削除しました。MkDocsのビルドフックと、Java Toolboxにまだ含まれていないWindows固有のメニューを持つ`nicocache-utility.py`は互換経路として残しています。新しい自動処理ではJava Toolboxを使用してください。
+`nicocache-utility.py`の全メニューをJava Toolboxへ移行したため、旧Pythonスクリプトと専用READMEは削除しました。MkDocsのビルドフックなど、用途が異なるスクリプトは残しています。新しい自動処理ではJava Toolboxを使用してください。
+
+旧メニューのヘッドレス対応は次のアクションへ対応します。
+
+- 起動・停止・ビルド: `launch-headless`、`launch-gui`、`stop`、`force-stop`、`build-java-apps`、`compile-java-files`
+- Java・証明書: `java-version`、`set-java-home`、`generate-certificates`、`certificate-add`／`certificate-delete`／`certificate-renew`
+- プロキシ・タスク: `proxy-set`／`proxy-remove`／`proxy-check`、`firefox-proxy`、`task-install`
+- 画面・Web: `open-environment`、`open-proxy-settings`、`open-certificate-manager`、`open-task-scheduler`、`open-uploader`／`open-wiki`／`open-bbs`／`open-bouncycastle`／`open-adoptium`
+
+`build-java-apps`は`NicoCacheBuild.jar`があればJavaだけで実行します。旧来の`build-javac.ps1`しかない環境では、`--powershell`で指定したPowerShell実装へ明示的に委譲します。`set-java-home`はWindowsではユーザー環境変数へ設定し、macOS／Linuxではバックアップ付きの`~/.config/filter-matome/java-home.env`を生成します（生成後にshellでsourceしてください）。
 
 ## OS固有機能
 
-シンボリックリンク、証明書ストア、レジストリ、タスクスケジューラーはOSの権限・仕様に依存します。ホストとメディア／設定／更新処理はプラットフォーム非依存ですが、NicoCacheのOS固有操作は診断で利用可否を判定し、通常ファイルを削除して置き換えることはありません。
+シンボリックリンク、証明書ストア、レジストリ、タスクスケジューラー、Windows管理画面はOSの権限・仕様に依存します。ホストとメディア／設定／更新処理、NicoCacheBuild.jar経由の本体ビルド、Java環境ファイル生成はプラットフォーム非依存です。NicoCacheのOS固有操作は診断で利用可否を判定し、通常ファイルを削除して置き換えることはありません。
