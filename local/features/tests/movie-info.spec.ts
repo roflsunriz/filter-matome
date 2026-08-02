@@ -139,7 +139,7 @@ test("動画ID入力、基本データ取得、概要状態、全ソース切替
     "panel-watch-api",
     "panel-cache-info",
     "panel-thumb-info",
-    "panel-media-info",
+    "panel-gpac",
     "panel-comments",
   ]) {
     await page.locator(`[data-panel-target="${panelId}"]`).click();

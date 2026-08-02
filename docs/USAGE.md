@@ -32,7 +32,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 `C:\NicoCache_nl`にインストールしたとする  
 
 1. `C:\NicoCache_nl`フォルダを開く  
-2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `FilterMatomeCacheControl.class`, `FilterMatomeSeriesAlerts.class`, `NicochartInfoProxy.class`, `nlMediaInfo.class`を削除する
+2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `FilterMatomeCacheControl.class`, `FilterMatomeSeriesAlerts.class`, `NicochartInfoProxy.class`, `nlMediaInfo.class`, `nlMediaInfo$CommandResult.class`, `nlMediaInfo$StreamCollector.class`, `nlGpac.class`を削除する
 3. `local`フォルダにある`background-images`, `features`, `images`, フォルダ, `mime.types`, `list.js` のシンボリックリンクを削除する  
 4. `scripts`フォルダを削除する  
 5. `nlFilters`フォルダの `100_features.txt`, `101_disable_official_function.txt`, `105_premium_hide.txt`, `nlFilters_編集ガイド.md`を削除する
@@ -65,9 +65,9 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 | `FilterMatomeCacheControl.class` | filter-matome向けにHLSキャッシュの一括削除と削除予約をJSON APIで提供する | 完了済み・停止済みHLSは削除し、ダウンロード中HLSは完了または中断後に削除する。MP4・FLV・SWFは削除しない |
 | `FilterMatomeSeriesAlerts.class` | watch-historyのアラート設定を保持し、NicoCache_nlの60秒定期イベントからシリーズ新着を確認してOS通知を表示する | NicoCache_nlが起動していればwatch-historyやブラウザを閉じても動作する |
 | `NicochartInfoProxy.class` | video-playerが通常の動画情報を取得できない場合だけ、サーバー側からnicochart.jpの公開情報を取得する | 接続先と動画IDを制限した読み取り専用処理。PACや`genCerts.bat` / `genCerts.sh`の変更は不要 |
-| `nlMediaInfo.class` | キャッシュファイルを`mediainfo --Output=JSON`で解析してJSONを返す。CMAF/Domandの`.hls`はFFmpegで一時MP4へリマックスしてから解析するため、セグメント単位ではなく映像・音声の実体仕様を取得できる | movie-infoのMediaInfo表示で使用。別途`mediainfo`と`ffmpeg`コマンドが必要 |
+| `nlGpac.class` | キャッシュファイルまたはHLS/CMAFプレイリストをGPACの`inspect:xml:stats:allp`で全期間解析し、映像・音声の仕様を一つのJSONへまとめて返す。HLSマスターは最高帯域の品質を選択する | movie-infoのGPAC表示と`/cache/gpac?<動画ID>`で使用。GPACの`gpac.exe`が必要 |
 
-`nlMediaInfo.class`のCMAF/Domand解析では、`master.m3u8`は解析結果ではなくローカルセグメントをたどるための入力としてだけ使用する。FFmpegは再エンコードせず`-c copy`で一時MP4を作成し、MediaInfoがそのMP4を解析した後、一時ファイルを削除する。元のキャッシュは変更しない。保存済みキャッシュだけを対象にするため、FFmpegへ許可するプロトコルも`file,crypto,data`に限定している。セグメント欠落やFFmpeg未導入の場合は、推測した不完全な仕様を返さずMediaInfo取得を失敗させ、ログに原因を記録する。
+`nlGpac.class`はキャッシュを変更せず、通常のメディアファイルはそのまま、`.hls`ディレクトリはローカルの`master.m3u8`を入力としてGPACへ渡す。HLS/CMAFでもセグメントごとの結果を返さず、GPACが全期間を消費して得たPIDの解像度、Codec、ビットレート、フレーム数、時間、音声サンプルレート、チャンネル数などをまとめる。キャッシュ解析で意図せず外部配信へ接続しないよう、プレイリストにHTTP等のリモートURLが含まれる場合は解析を拒否する。GPACの実行ファイルは、`-Dgpac.path=...`、`GPAC_PATH`環境変数、`C:\PathArea\GPAC\gpac.exe`、ユーザーの`%LOCALAPPDATA%\Programs\GPAC\gpac.exe`、`C:\Program Files\GPAC\gpac.exe`、最後にPATHの順で探索する。
 
 #### HLSキャッシュ削除API
 
@@ -119,13 +119,13 @@ X-Filter-Matome-Cache-Control: 1
     - 拡張機能はNicoCache_nlと同じJavaプロセス内で動作し、ローカルファイルの読み取りや外部コマンドの起動、ネットワーク通信を行える。信頼できる配布元の `.class` だけを配置する。
     - `.java`だけを更新しても動作は変わらない。通常利用者は配布済みの `.class` を使用し、自分で再コンパイルしない。
     - 一部の拡張だけを任意に抜くと、対応する画面機能が404や取得失敗になる。基本的には配布物の一式を使用する。
-    - `downloadThruFFmpeg.class`と`nlMediaInfo.class`は外部コマンドを呼び出すため、`ffmpeg`と`mediainfo`がPATHから実行できることを確認する。通常ファイルだけを解析する場合でも`mediainfo`は必要で、CMAF/Domandの`.hls`を解析する場合は`ffmpeg`も必要。
+    - `downloadThruFFmpeg.class`は従来どおり`ffmpeg`を使用する。`nlGpac.class`はGPACを外部プロセスとして呼び出すため、`gpac.exe`をPATHへ追加するか、`C:\PathArea\GPAC`やユーザー領域へ導入して`GPAC_PATH`または`-Dgpac.path=...`で指定する。
 
 #### 動作しない場合
 
 1. `.class`が `NicoCache_nl/extensions/` 直下にあることを確認する。サブフォルダへ移動しない。
 2. NicoCache_nlを再起動し、起動ログに対象拡張の読み込み失敗やJavaバージョンのエラーがないか確認する。
-3. 保存・MediaInfo機能の場合は、PowerShellなどで `ffmpeg -version` と `mediainfo --Version` の両方が成功するか確認する。通常ファイルのMediaInfoだけなら`mediainfo --Version`で足りる。
+3. 保存機能では`ffmpeg -version`、GPAC機能では`gpac -h`または導入先の`gpac.exe -h`が成功するか確認する。GPACがPATHにない場合は、設定した`GPAC_PATH`または`C:\PathArea\GPAC\gpac.exe`の実体を確認する。
 4. 更新後にだけ失敗する場合は、古い `.class` の残存を確認してから、標準手順で `extensions/` を再度上書きする。
 5. `NicochartInfoProxy`が失敗してもvideo-playerはキャッシュ再生を継続する。詳細はNicoCache_nlの警告ログで `NicochartInfoProxy` を確認する。
 6. HLS削除が `pending` のままの場合は対象動画のキャッシュが継続中か確認する。完了または中断後、最大約60秒の定期再確認で削除される。
@@ -407,7 +407,7 @@ watch-history > 「管理」 > 「エクスポート」または「Google Drive�
 - [Apache Ant (Javaビルドツール)](https://ant.apache.org/bindownload.cgi)
 - [Adoptium OpenJDK (Java Development Kit)](https://adoptium.net/temurin/releases/?version=17&os=windows&package=jdk&arch=x64)
 - [BouncyCastle (暗号化ライブラリ)](https://www.bouncycastle.org/latest_releases.html)
-- [MediaInfo (メディア情報表示)](https://mediaarea.net/en/MediaInfo/Download/Windows)
+- [GPAC (メディア解析)](https://gpac.io/downloads/gpac-nightly-builds/)
 - [WinMerge (ファイル差分比較)](https://winmerge.org/?lang=ja)
 
 ### コミュニティ

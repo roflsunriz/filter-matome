@@ -126,7 +126,7 @@ winget install Google.Chrome
 - **NGワード・NG正規表現**: コメントのNGワード・NG正規表現
 
 ### マルチリンクビデオコントローラー (mlink-video-controller)
-- **リンク提供**: mylist2, comment-filter2, watch-history, mylist2への追加ボタン、動画非表示設定、ニコニコ動画関連サービスへのリンク、キャッシュリスト、キャッシュ情報、nlMediaInfo, 音声保存、動画保存、コメント保存、キャッシュ削除
+- **リンク提供**: mylist2, comment-filter2, watch-history, mylist2への追加ボタン、動画非表示設定、ニコニコ動画関連サービスへのリンク、キャッシュリスト、キャッシュ情報、nlGpac, 音声保存、動画保存、コメント保存、キャッシュ削除
 - **再生速度調整**: 再生速度の調整
 - **多彩なコントロールボタン**: 再生・一時停止・次の動画・前の動画・繰り返し再生・シークバー・5秒スキップ・10秒スキップ・30秒スキップ・60秒スキップ
 - **コメント検索**: コメントの検索
@@ -144,7 +144,7 @@ winget install Google.Chrome
 - **キャッシュ操作**: テンポラリ動画の一括削除や個別操作を提供
 
 ### 動画/API情報ダッシュボード (movie-info)
-- **横断取得**: cache/info、getthumbinfo、MediaInfo、watch apiDataを並列取得
+- **横断取得**: cache/info、getthumbinfo、GPACメディア解析、watch apiDataを並列取得
 - **コメント取得**: 必要時だけ全フォークコメントを取得し、プレビューとフルJSON保存を提供
 - **エラー表示**: 一部API取得失敗時も成功したパネルを表示し、失敗元と確認ポイントを整理
 
@@ -307,7 +307,7 @@ NicoCache_nl はキャッシュデータマネージャを `C:\NicoCache_nl\loca
 - [Python](https://www.python.org/downloads/)
 - [Powershell](https://learn.microsoft.com/ja-jp/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5#msi)
 - [WinMerge](https://winmerge.org/?lang=ja)
-- [MediaInfo CLI](https://mediaarea.net/ja/MediaInfo/Download/Windows)
+- [GPAC](https://gpac.io/downloads/gpac-nightly-builds/)
 
 ## 📄 ライセンス
 

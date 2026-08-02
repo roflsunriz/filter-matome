@@ -80,7 +80,7 @@ export interface ThumbInfo {
   raw: Record<string, string>;
 }
 
-export interface MediaInfoTrack extends Record<string, unknown> {
+export interface GpacTrack extends Record<string, unknown> {
   "@type"?: string;
   Format?: string;
   Duration?: string;
@@ -91,17 +91,17 @@ export interface MediaInfoTrack extends Record<string, unknown> {
   Channels?: string;
 }
 
-export interface MediaInfoItem {
+export interface GpacItem {
   creatingLibrary?: Record<string, unknown>;
   media?: {
     "@ref"?: string;
-    track?: MediaInfoTrack[];
+    track?: GpacTrack[];
     [key: string]: unknown;
   } & Record<string, unknown>;
   [key: string]: unknown;
 }
 
-export type MediaInfoResponse = MediaInfoItem | MediaInfoItem[];
+export type GpacResponse = GpacItem;
 
 export interface CommentPreview {
   note: string;
@@ -116,7 +116,7 @@ export interface DashboardState {
   apiData: NicoApiData | null;
   cacheInfo: CacheEntry | null;
   thumbInfo: ThumbInfo | null;
-  mediaInfo: MediaInfoResponse | null;
+  gpacInfo: GpacResponse | null;
   commentPreview: CommentPreview | null;
 }
 

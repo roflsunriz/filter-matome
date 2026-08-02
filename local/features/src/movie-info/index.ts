@@ -8,7 +8,7 @@ import { ICONS } from "@/common/material-icons";
 import {
   fetchCacheInfo,
   fetchCommentsWithApi,
-  fetchMediaInfo,
+  fetchGpacInfo,
   fetchThumbInfo,
   fetchWatchApiData,
 } from "@/movie-info/api-clients";
@@ -20,7 +20,7 @@ import type {
   CacheEntry,
   CommentPreview,
   ErrorModalItem,
-  MediaInfoResponse,
+  GpacResponse,
   ThumbInfo,
   ThumbTagInfo,
   DownloadDescriptor,
@@ -282,45 +282,44 @@ const buildApiSummary = (apiData: NicoApiData): HTMLElement => {
   return container;
 };
 
-const buildMediaSummary = (mediaInfo: MediaInfoResponse): HTMLElement => {
-  const entries = Array.isArray(mediaInfo) ? mediaInfo : [mediaInfo];
+const buildGpacSummary = (gpacInfo: GpacResponse): HTMLElement => {
   const container = document.createElement("div");
   container.className = "summary-container";
   const header = document.createElement("div");
   header.className = "video-meta";
-  header.textContent = "MediaInfo項目数: " + String(entries.length);
+  const tracks = Array.isArray(gpacInfo.media?.track)
+    ? gpacInfo.media.track
+    : [];
+  header.textContent = "GPACストリーム数: " + String(tracks.length);
   container.appendChild(header);
 
-  entries.slice(0, 3).forEach((item, index) => {
-    const media = item?.media;
-    const trackEntries = media?.track;
-    const tracks = Array.isArray(trackEntries) ? trackEntries : [];
-    const videoTracks = tracks.filter(
-      (track) => track && track["@type"] === "Video",
-    );
-    const audioTracks = tracks.filter(
-      (track) => track && track["@type"] === "Audio",
-    );
-    const refCandidate = media ? media["@ref"] : undefined;
-    const refValue = typeof refCandidate === "string" ? refCandidate : "-";
-    const formatCandidate = tracks.length > 0 ? tracks[0]?.Format : undefined;
-    const formatValue =
-      typeof formatCandidate === "string" ? formatCandidate : "-";
-    const grid = createSummaryGrid([
-      { label: "参照" + String(index + 1), value: refValue },
-      { label: "Video", value: String(videoTracks.length) + "本" },
-      { label: "Audio", value: String(audioTracks.length) + "本" },
-      { label: "Format", value: formatValue },
-    ]);
-    container.appendChild(grid);
-  });
-
-  if (entries.length > 3) {
-    const more = document.createElement("div");
-    more.className = "video-meta";
-    more.textContent = "...他" + String(entries.length - 3) + "件";
-    container.appendChild(more);
-  }
+  const media = gpacInfo.media;
+  const videoTracks = tracks.filter((track) => track?.["@type"] === "Video");
+  const audioTracks = tracks.filter((track) => track?.["@type"] === "Audio");
+  const generalTrack = tracks.find((track) => track?.["@type"] === "General");
+  const video = videoTracks[0];
+  const audio = audioTracks[0];
+  const refCandidate = media?.["@ref"];
+  const refValue = typeof refCandidate === "string" ? refCandidate : "-";
+  const width = typeof video?.Width === "string" ? video.Width : "-";
+  const height = typeof video?.Height === "string" ? video.Height : "-";
+  const resolution =
+    width !== "-" && height !== "-" ? width + " × " + height : "-";
+  const formatCandidate =
+    video?.Format ?? audio?.Format ?? generalTrack?.Format;
+  const formatValue =
+    typeof formatCandidate === "string" ? formatCandidate : "-";
+  const videoBitrate =
+    typeof video?.BitRate === "string" ? video.BitRate + " bps" : "-";
+  const grid = createSummaryGrid([
+    { label: "参照", value: refValue },
+    { label: "解像度", value: resolution },
+    { label: "Video", value: String(videoTracks.length) + "本" },
+    { label: "Audio", value: String(audioTracks.length) + "本" },
+    { label: "Video bitrate", value: videoBitrate },
+    { label: "Format", value: formatValue },
+  ]);
+  container.appendChild(grid);
   return container;
 };
 
@@ -395,7 +394,7 @@ type PanelMap = {
   watch: PanelController;
   cache: PanelController;
   thumb: PanelController;
-  media: PanelController;
+  gpac: PanelController;
   comments: PanelController;
 };
 
@@ -453,8 +452,8 @@ export function startMovieInfo(): void {
       thumb: new PanelController(
         document.getElementById("panel-thumb-info") as HTMLElement,
       ),
-      media: new PanelController(
-        document.getElementById("panel-media-info") as HTMLElement,
+      gpac: new PanelController(
+        document.getElementById("panel-gpac") as HTMLElement,
       ),
       comments: new PanelController(
         document.getElementById("panel-comments") as HTMLElement,
@@ -465,7 +464,7 @@ export function startMovieInfo(): void {
       watch: "panel-watch-api",
       cache: "panel-cache-info",
       thumb: "panel-thumb-info",
-      media: "panel-media-info",
+      gpac: "panel-gpac",
       comments: "panel-comments",
     } as const;
     type SourceKey = keyof typeof sourcePanelIds;
@@ -583,20 +582,20 @@ export function startMovieInfo(): void {
       panels.cache.setSummaryContent(null);
       panels.thumb.setStatus("loading", "サムネイル情報を取得中です...");
       panels.thumb.setSummaryContent(null);
-      panels.media.setStatus("loading", "MediaInfoを取得中です...");
-      panels.media.setSummaryContent(null);
+      panels.gpac.setStatus("loading", "GPACを取得中です...");
+      panels.gpac.setSummaryContent(null);
       panels.watch.setDownloadDescriptor(null);
       panels.cache.setDownloadDescriptor(null);
       panels.thumb.setDownloadDescriptor(null);
-      panels.media.setDownloadDescriptor(null);
+      panels.gpac.setDownloadDescriptor(null);
 
       const failures: ErrorModalItem[] = [];
-      const [apiDataResult, cacheInfoResult, thumbInfoResult, mediaInfoResult] =
+      const [apiDataResult, cacheInfoResult, thumbInfoResult, gpacResult] =
         await Promise.allSettled([
           fetchWatchApiData(videoId),
           fetchCacheInfo(videoId),
           fetchThumbInfo(videoId),
-          fetchMediaInfo(videoId),
+          fetchGpacInfo(videoId),
         ]);
 
       if (apiDataResult.status === "fulfilled") {
@@ -668,26 +667,26 @@ export function startMovieInfo(): void {
         });
       }
 
-      if (mediaInfoResult.status === "fulfilled") {
-        const mediaInfo = mediaInfoResult.value;
-        panels.media.setStatus("success", "MediaInfoを取得しました");
-        panels.media.setSummaryContent(buildMediaSummary(mediaInfo));
-        panels.media.setJsonData(mediaInfo);
-        panels.media.setDownloadDescriptor(
+      if (gpacResult.status === "fulfilled") {
+        const gpacInfo = gpacResult.value;
+        panels.gpac.setStatus("success", "GPACを取得しました");
+        panels.gpac.setSummaryContent(buildGpacSummary(gpacInfo));
+        panels.gpac.setJsonData(gpacInfo);
+        panels.gpac.setDownloadDescriptor(
           createJsonDownloadDescriptor(
             currentVideoId,
-            "media-info",
-            () => mediaInfo,
+            "gpac-info",
+            () => gpacInfo,
           ),
         );
       } else {
-        const message = toFailureMessage(mediaInfoResult.reason);
-        panels.media.setStatus("error", "MediaInfo取得失敗: " + message);
+        const message = toFailureMessage(gpacResult.reason);
+        panels.gpac.setStatus("error", "GPAC取得失敗: " + message);
         failures.push({
-          label: "cache/mediainfo",
+          label: "cache/gpac",
           message,
           action:
-            "対象動画のメディア情報が生成済みか、NicoCache_nl の mediainfo エンドポイントが応答しているかを確認してください。",
+            "対象動画のキャッシュが存在するか、NicoCache_nlのgpacエンドポイントとGPAC実行ファイルが利用できるかを確認してください。",
         });
       }
 

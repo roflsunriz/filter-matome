@@ -3,7 +3,7 @@ import type { IntegratedNicoData, NicoApiData } from "@/types/common-types";
 import type {
   CacheEntry,
   CacheInfoResponse,
-  MediaInfoResponse,
+  GpacResponse,
   ThumbInfo,
   ThumbOwnerInfo,
   ThumbTagInfo,
@@ -11,7 +11,7 @@ import type {
 
 const CACHE_INFO_ENDPOINT = "https://www.nicovideo.jp/cache/info/v2?";
 const THUMB_INFO_ENDPOINT = "https://ext.nicovideo.jp/api/getthumbinfo/";
-const MEDIA_INFO_ENDPOINT = "https://www.nicovideo.jp/cache/mediainfo?";
+const GPAC_ENDPOINT = "https://www.nicovideo.jp/cache/gpac?";
 
 const toErrorMessage = (error: unknown): string => {
   if (error instanceof Error && error.message) {
@@ -170,28 +170,23 @@ export const fetchThumbInfo = async (videoId: string): Promise<ThumbInfo> => {
   }
 };
 
-export const fetchMediaInfo = async (
-  videoId: string,
-): Promise<MediaInfoResponse> => {
-  const url = MEDIA_INFO_ENDPOINT + encodeURIComponent(videoId);
+export const fetchGpacInfo = async (videoId: string): Promise<GpacResponse> => {
+  const url = GPAC_ENDPOINT + encodeURIComponent(videoId);
   try {
     const response = await window.commonHelper.fetchRequest(url);
     if (!response.ok) {
-      throw new Error("MediaInfo API error: " + response.status);
+      throw new Error("GPAC API error: " + response.status);
     }
     const rawText = await response.text();
     const trimmed = rawText.trim();
     if (!trimmed) {
-      throw new Error("MediaInfoのレスポンスが空でした");
+      throw new Error("GPACのレスポンスが空でした");
     }
-    const data = JSON.parse(trimmed) as MediaInfoResponse;
-    if (Array.isArray(data)) {
-      return data.map((item) => ({ ...item }));
-    }
+    const data = JSON.parse(trimmed) as GpacResponse;
     return { ...data };
   } catch (error: unknown) {
     const message = toErrorMessage(error);
-    window.logger?.error?.("[movie-info] MediaInfo fetch failed", message);
+    window.logger?.error?.("[movie-info] GPAC fetch failed", message);
     throw new Error(message);
   }
 };

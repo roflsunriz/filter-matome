@@ -12,7 +12,7 @@
 
 - `/cache/info/v2?<動画ID>`: NicoCache_nlのキャッシュ情報。
 - `ext.nicovideo.jp/api/getthumbinfo/<動画ID>`: サムネイル情報。
-- `/cache/mediainfo?<動画ID>`: ローカル動画のMediaInfo JSON。
+- `/cache/gpac?<動画ID>`: ローカル動画をGPACで解析したJSON。HLS/CMAFは最高帯域の品質を選び、セグメント単位ではなく映像・音声のPID仕様をまとめて返す。
 - `window.commonHelper.fetchWatchPage`: ウォッチページの `apiData`。
 - `window.commonHelper.fetchNicoDataWithComments`: ユーザー操作時だけ取得するコメント統合データ。
 

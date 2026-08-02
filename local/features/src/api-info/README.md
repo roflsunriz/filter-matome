@@ -9,7 +9,7 @@ NicoCache_nlとニコニコ動画関連APIについて、実装時に確認し�
 - `cache-info-api.md`: NicoCache_nlのキャッシュ情報API。
 - `ext-thumb-info-api.md`: ニコニコ動画のサムネイル情報API。
 - `nico-watch-api.md`: ウォッチページと `apiData` の取得に関するメモ。
-- `nl-media-info-json.md`: NicoCache_nlのMediaInfo JSON。
+- `nl-gpac-json.md`: NicoCache_nlのGPAC解析JSON。
 - `nv-comment-api.md`: コメントAPIの要求・応答構造。
 - `nv-comment-api-snippet.md`: コメントAPIの調査用抜粋。
 

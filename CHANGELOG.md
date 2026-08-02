@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- 【extensions/nlMediaInfo】CMAF/DomandのHLSキャッシュをセグメントごとにMediaInfoへ渡して有用な動画仕様を取得できなかった問題を、ローカルのHLSを一時MP4へリマックスしてから解析するよう修正し、解像度・ビットレート・フレーム情報などの映像・音声の実体仕様を確認できるようにした。
+- 【extensions/nlGpac】セグメントごとのMediaInfo解析でCMAF/Domandの実体仕様を確認できなかった問題を解消するため、旧`nlMediaInfo`拡張を削除してGPACの全期間PID解析へ置き換え、`/cache/gpac?<動画ID>`とmovie-infoへ解像度、ビットレート、フレーム、音声仕様をまとめて接続した。
 
 ### Security
 

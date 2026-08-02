@@ -36,7 +36,7 @@
           <button class="source-tab" type="button" data-panel-target="panel-watch-api" aria-selected="false">Watch API <span class="tab-state" data-source-state="watch">未取得</span></button>
           <button class="source-tab" type="button" data-panel-target="panel-cache-info" aria-selected="false">Cache <span class="tab-state" data-source-state="cache">未取得</span></button>
           <button class="source-tab" type="button" data-panel-target="panel-thumb-info" aria-selected="false">Thumb <span class="tab-state" data-source-state="thumb">未取得</span></button>
-          <button class="source-tab" type="button" data-panel-target="panel-media-info" aria-selected="false">MediaInfo <span class="tab-state" data-source-state="media">未取得</span></button>
+          <button class="source-tab" type="button" data-panel-target="panel-gpac" aria-selected="false">GPAC <span class="tab-state" data-source-state="gpac">未取得</span></button>
           <button class="source-tab" type="button" data-panel-target="panel-comments" aria-selected="false">コメント <span class="tab-state" data-source-state="comments">未取得</span></button>
         </nav>
 
@@ -54,7 +54,7 @@
               <button type="button" data-overview-target="panel-watch-api"><span>Watch API</span><strong data-source-summary="watch">未取得</strong></button>
               <button type="button" data-overview-target="panel-cache-info"><span>Cache</span><strong data-source-summary="cache">未取得</strong></button>
               <button type="button" data-overview-target="panel-thumb-info"><span>Thumb</span><strong data-source-summary="thumb">未取得</strong></button>
-              <button type="button" data-overview-target="panel-media-info"><span>MediaInfo</span><strong data-source-summary="media">未取得</strong></button>
+              <button type="button" data-overview-target="panel-gpac"><span>GPAC</span><strong data-source-summary="gpac">未取得</strong></button>
               <button type="button" data-overview-target="panel-comments"><span>Comments</span><strong data-source-summary="comments">任意取得</strong></button>
             </div>
           </article>
@@ -74,9 +74,9 @@
             <div class="panel-layout"><div class="panel-body"><p class="panel-status" data-role="status"></p><div class="panel-summary" data-role="summary"></div></div><aside class="panel-actions" aria-label="Thumb APIの操作"><h3>このデータを使う</h3><button class="show-json-btn" data-role="show-json" type="button" hidden disabled>Raw JSONを表示</button><button data-role="copy" type="button" disabled>JSONコピー</button><button data-role="download" type="button" disabled>ダウンロード</button></aside></div>
           </article>
 
-          <article id="panel-media-info" class="info-panel" data-source-panel hidden>
-            <header class="panel-header"><div><p class="section-kicker">SOURCE</p><h2>MediaInfo <span>mediainfo JSON</span></h2></div></header>
-            <div class="panel-layout"><div class="panel-body"><p class="panel-status" data-role="status"></p><div class="panel-summary" data-role="summary"></div></div><aside class="panel-actions" aria-label="MediaInfoの操作"><h3>このデータを使う</h3><button class="show-json-btn" data-role="show-json" type="button" hidden disabled>Raw JSONを表示</button><button data-role="copy" type="button" disabled>JSONコピー</button><button data-role="download" type="button" disabled>ダウンロード</button></aside></div>
+          <article id="panel-gpac" class="info-panel" data-source-panel hidden>
+            <header class="panel-header"><div><p class="section-kicker">SOURCE</p><h2>GPAC <span>gpac inspect JSON</span></h2></div></header>
+            <div class="panel-layout"><div class="panel-body"><p class="panel-status" data-role="status"></p><div class="panel-summary" data-role="summary"></div></div><aside class="panel-actions" aria-label="GPACの操作"><h3>このデータを使う</h3><button class="show-json-btn" data-role="show-json" type="button" hidden disabled>Raw JSONを表示</button><button data-role="copy" type="button" disabled>JSONコピー</button><button data-role="download" type="button" disabled>ダウンロード</button></aside></div>
           </article>
 
           <article id="panel-comments" class="info-panel" data-source-panel hidden>

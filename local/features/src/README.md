@@ -11,7 +11,7 @@
 | `comment-filter2/` | コメント取得の捕捉、フィルタリング、設定UI |
 | `common/` | 共通ヘッダー、APIクライアント、ログ、通知、動画ナビゲーション |
 | `mlink-video-controller/` | 公式視聴ページの操作パネルと機能モジュール |
-| `movie-info/` | キャッシュ・サムネイル・MediaInfo・視聴API情報の表示 |
+| `movie-info/` | キャッシュ・サムネイル・GPAC解析・視聴API情報の表示 |
 | `mylist2/` | 独自マイリストSPA、永続化、Service Worker |
 | `runtime/` | 配信ページ判定、起動境界、同期serverContext書き換え |
 | `sandbox/` | 外部公開バンドルをプロダクションコードから隔離してAPI契約を調査する領域 |
