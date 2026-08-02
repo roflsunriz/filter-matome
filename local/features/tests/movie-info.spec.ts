@@ -153,6 +153,20 @@ test("動画ID入力、基本データ取得、概要状態、全ソース切替
   await expect(page.locator("#panel-thumb-info")).toBeVisible();
   await expect(page.locator("#panel-thumb-info .tag-chip")).toHaveCount(2);
 
+  await page.locator('[data-panel-target="panel-gpac"]').click();
+  const gpacPanel = page.locator("#panel-gpac");
+  await expect(gpacPanel).toContainText("1,920 × 1,080 px");
+  await expect(gpacPanel).toContainText("5 Mbps");
+  await expect(gpacPanel).toContainText("60 fps");
+  await expect(gpacPanel).toContainText("BT.709");
+  await expect(gpacPanel).toContainText("48,000 Hz");
+  await expect(gpacPanel).toContainText("stereo");
+  await expect(gpacPanel.locator(".gpac-stream-card")).toHaveCount(4);
+  await expect(
+    gpacPanel.locator(".gpac-stream-card[data-track-type=scene]"),
+  ).toContainText("SceneType");
+  await expect(gpacPanel.locator(".gpac-properties[open]")).toHaveCount(4);
+
   await page.locator('[data-panel-target="panel-watch-api"]').click();
   const description = page.locator(
     "#panel-watch-api .movie-description-content",
@@ -197,6 +211,18 @@ test("狭幅でも共通動画指定と検索結果の操作が画面内に収�
   ).toBeVisible();
   await expect(page.locator("#load-data-btn")).toBeVisible();
   await expect(page.locator("#fetch-comments-btn")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});
+
+test("GPAC詳細仕様が狭幅でも横にはみ出さない", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await loadVideo(page);
+  await page.locator('[data-panel-target="panel-gpac"]').click();
+  await expect(page.locator("#panel-gpac .gpac-stream-card")).toHaveCount(4);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,

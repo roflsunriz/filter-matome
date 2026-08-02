@@ -67,7 +67,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 | `NicochartInfoProxy.class` | video-playerが通常の動画情報を取得できない場合だけ、サーバー側からnicochart.jpの公開情報を取得する | 接続先と動画IDを制限した読み取り専用処理。PACや`genCerts.bat` / `genCerts.sh`の変更は不要 |
 | `nlGpac.class` | キャッシュファイルまたはHLS/CMAFプレイリストをGPACの`inspect:xml:stats:allp`で全期間解析し、映像・音声の仕様を一つのJSONへまとめて返す。HLSマスターは最高帯域の品質を選択する | movie-infoのGPAC表示と`/cache/gpac?<動画ID>`で使用。GPACの`gpac.exe`が必要 |
 
-`nlGpac.class`は単一クラスで完結し、キャッシュを変更せず、通常のメディアファイルはそのまま、`.hls`ディレクトリはローカルの`master.m3u8`を入力としてGPACへ渡す。HLS/CMAFでもセグメントごとの結果を返さず、GPACが全期間を消費して得たPIDの解像度、Codec、ビットレート、フレーム数、時間、音声サンプルレート、チャンネル数などをまとめる。キャッシュ解析で意図せず外部配信へ接続しないよう、プレイリストにHTTP等のリモートURLが含まれる場合は解析を拒否する。GPACの実行ファイルは、`-Dgpac.path=...`、`GPAC_PATH`環境変数、`C:\PathArea\GPAC\gpac.exe`、ユーザーの`%LOCALAPPDATA%\Programs\GPAC\gpac.exe`、`C:\Program Files\GPAC\gpac.exe`、最後にPATHの順で探索する。
+`nlGpac.class`は単一クラスで完結し、キャッシュを変更せず、通常のメディアファイルはそのまま、`.hls`ディレクトリはローカルの`master.m3u8`を入力としてGPACへ渡す。HLS/CMAFでもセグメントごとの結果を返さず、GPACが全期間を消費して得たPIDの解像度、Codec、ビットレート、フレーム数、時間、音声サンプルレート、チャンネル数などをまとめる。movie-infoのGPACビューでは、これらに加えてコンテナ入力、GPACバージョン、品質選択、色空間、ピクセル形式、アスペクト比、チャンネル配置などをストリーム別に表示し、GPACが返した未知の属性も全属性表で確認できる。キャッシュ解析で意図せず外部配信へ接続しないよう、プレイリストにHTTP等のリモートURLが含まれる場合は解析を拒否する。GPACの実行ファイルは、`-Dgpac.path=...`、`GPAC_PATH`環境変数、`C:\PathArea\GPAC\gpac.exe`、ユーザーの`%LOCALAPPDATA%\Programs\GPAC\gpac.exe`、`C:\Program Files\GPAC\gpac.exe`、最後にPATHの順で探索する。
 
 #### HLSキャッシュ削除API
 

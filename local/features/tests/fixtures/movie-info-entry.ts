@@ -6,7 +6,7 @@ import type {
   NicoApiData,
 } from "@/types/common-types";
 
-type FailureSource = "watch" | "cache" | "thumb" | "media" | "comments";
+type FailureSource = "watch" | "cache" | "thumb" | "gpac" | "comments";
 
 const apiData: NicoApiData = {
   comment: {
@@ -161,20 +161,83 @@ Object.assign(window, {
         failIfSelected("thumb");
         return new Response(thumbXml, { status: 200 });
       }
-      failIfSelected("media");
+      failIfSelected("gpac");
       return new Response(
-        JSON.stringify([
-          {
-            media: {
-              "@ref": "sm100.mp4",
-              track: [
-                { "@type": "General", Format: "MPEG-4" },
-                { "@type": "Video", Format: "AVC" },
-                { "@type": "Audio", Format: "AAC" },
-              ],
-            },
+        JSON.stringify({
+          creatingLibrary: {
+            name: "GPAC",
+            version: "GPAC-26.07-test",
+            url: "https://gpac.io",
           },
-        ]),
+          media: {
+            "@ref": "sm100.mp4",
+            Input: "sm100.mp4",
+            InputType: "media file",
+            track: [
+              {
+                "@type": "General",
+                Format: "GPAC inspect",
+                FileName: "sm100.mp4",
+                StreamCount: "4",
+                VideoCount: "1",
+                AudioCount: "1",
+                OtherCount: "1",
+                DurationSeconds: "319",
+                OverallBitRate: "5128000",
+                FileSize: "1048576",
+                MediaDataSize: "203161600",
+                GpacInspection: "inspect:xml:stats:allp",
+                GpacQuality: "direct",
+              },
+              {
+                "@type": "Video",
+                Format: "AVC",
+                Codec: "avc1.640028",
+                CodecID: "avc1",
+                Profile: "High",
+                Level: "4.0",
+                Width: "1920",
+                Height: "1080",
+                PixelFormat: "yuv420p",
+                ColorSpace: "BT.709",
+                ColorRange: "limited",
+                ColorPrimaries: "BT.709",
+                TransferCharacteristics: "BT.709",
+                MatrixCoefficients: "BT.709",
+                FrameRate: "60",
+                FrameCount: "19140",
+                BitRate: "5000000",
+                Maxrate: "5500000",
+                DurationSeconds: "319",
+                StreamSize: "199136000",
+              },
+              {
+                "@type": "Audio",
+                Format: "MPEG-4 AAC Audio",
+                Codec: "mp4a.40.2",
+                SampleRate: "48000",
+                Channels: "2",
+                ChannelLayout: "stereo",
+                BitRate: "128000",
+                FrameCount: "14954",
+                DurationSeconds: "319",
+                StreamSize: "5100000",
+                Language: "jpn",
+              },
+              {
+                "@type": "Scene",
+                Format: "GPAC Scene",
+                SceneType: "metadata",
+                DurationSeconds: "319",
+              },
+            ],
+          },
+          gpac: {
+            tool: "GPAC-26.07-test",
+            analysis: "full-duration PID inspection",
+            quality: "direct media input",
+          },
+        }),
         { status: 200 },
       );
     },

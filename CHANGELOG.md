@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【movie-info】GPACビューを強化し、コンテナ・解析条件、再生時間、解像度、ビットレート、フレーム、色、音声、その他のPID属性をストリーム別に確認できる詳細表示を追加した。
 - 作業開始時の共通指針見落としを防ぐため、調査やコマンド実行より前に `COMMON-AGENTS.md` を先頭から末尾まで読み、EOFを確認する必須ゲートを追加した。
 
 ### Added

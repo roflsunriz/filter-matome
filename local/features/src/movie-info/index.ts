@@ -14,13 +14,13 @@ import {
 } from "@/movie-info/api-clients";
 import { headerAdjustments } from "@/movie-info/header-adjustments";
 import { renderDescriptionHtml } from "@/movie-info/description-html";
+import { buildGpacSummary } from "@/movie-info/gpac-summary";
 import { applyMovieInfoDashboardStyles } from "@/movie-info/styles";
 import { PanelController, showMovieInfoErrorModal } from "@/movie-info/ui";
 import type {
   CacheEntry,
   CommentPreview,
   ErrorModalItem,
-  GpacResponse,
   ThumbInfo,
   ThumbTagInfo,
   DownloadDescriptor,
@@ -279,47 +279,6 @@ const buildApiSummary = (apiData: NicoApiData): HTMLElement => {
   descriptionBlock.appendChild(descriptionContent);
   meta.appendChild(descriptionBlock);
   container.appendChild(meta);
-  return container;
-};
-
-const buildGpacSummary = (gpacInfo: GpacResponse): HTMLElement => {
-  const container = document.createElement("div");
-  container.className = "summary-container";
-  const header = document.createElement("div");
-  header.className = "video-meta";
-  const tracks = Array.isArray(gpacInfo.media?.track)
-    ? gpacInfo.media.track
-    : [];
-  header.textContent = "GPACストリーム数: " + String(tracks.length);
-  container.appendChild(header);
-
-  const media = gpacInfo.media;
-  const videoTracks = tracks.filter((track) => track?.["@type"] === "Video");
-  const audioTracks = tracks.filter((track) => track?.["@type"] === "Audio");
-  const generalTrack = tracks.find((track) => track?.["@type"] === "General");
-  const video = videoTracks[0];
-  const audio = audioTracks[0];
-  const refCandidate = media?.["@ref"];
-  const refValue = typeof refCandidate === "string" ? refCandidate : "-";
-  const width = typeof video?.Width === "string" ? video.Width : "-";
-  const height = typeof video?.Height === "string" ? video.Height : "-";
-  const resolution =
-    width !== "-" && height !== "-" ? width + " × " + height : "-";
-  const formatCandidate =
-    video?.Format ?? audio?.Format ?? generalTrack?.Format;
-  const formatValue =
-    typeof formatCandidate === "string" ? formatCandidate : "-";
-  const videoBitrate =
-    typeof video?.BitRate === "string" ? video.BitRate + " bps" : "-";
-  const grid = createSummaryGrid([
-    { label: "参照", value: refValue },
-    { label: "解像度", value: resolution },
-    { label: "Video", value: String(videoTracks.length) + "本" },
-    { label: "Audio", value: String(audioTracks.length) + "本" },
-    { label: "Video bitrate", value: videoBitrate },
-    { label: "Format", value: formatValue },
-  ]);
-  container.appendChild(grid);
   return container;
 };
 
