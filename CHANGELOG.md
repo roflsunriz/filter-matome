@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- 【scripts】Python、PowerShell、バッチへ分散していたメディア変換、properties編集、GitHub更新、NicoCache管理の導線を、GUIとヘッドレスで共通利用できるJava Toolboxへ統合した。プラグインJAR、READMEヘルプ辞書、実行時パス解決を採用し、OSやリポジトリの固定パスに依存しない構成にした。
+
+### Changed
+
+- 【scripts】既存出力の無確認上書き、シェルによるパス分割、Python GUI依存、固定されたWindowsパスをJava共通基盤から排除し、ドライラン、バックアップ、原子的保存、明示的な副作用確認を標準化した。既存スクリプトは移行期間の互換経路として維持する。
+
 ### Fixed
 
 - 【extensions/nlGpac】セグメントごとのMediaInfo解析でCMAF/Domandの実体仕様を確認できなかった問題を解消するため、旧`nlMediaInfo`拡張を削除してGPACの全期間PID解析へ置き換え、`/cache/gpac?<動画ID>`とmovie-infoへ解像度、ビットレート、フレーム、音声仕様をまとめて接続した。

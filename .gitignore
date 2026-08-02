@@ -32,6 +32,8 @@ scripts/config.json
 # dist
 local/features/dist/
 benchmarks/comment-filter-core/rust/target/
+scripts/java-toolbox/target/
+scripts/java-toolbox/.test-data/
 
 # MkDocs
 .mkdocs-build/
