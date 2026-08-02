@@ -65,7 +65,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 | `FilterMatomeCacheControl.class` | filter-matome向けにHLSキャッシュの一括削除と削除予約をJSON APIで提供する | 完了済み・停止済みHLSは削除し、ダウンロード中HLSは完了または中断後に削除する。MP4・FLV・SWFは削除しない |
 | `FilterMatomeSeriesAlerts.class` | watch-historyのアラート設定を保持し、NicoCache_nlの60秒定期イベントからシリーズ新着を確認してOS通知を表示する | NicoCache_nlが起動していればwatch-historyやブラウザを閉じても動作する |
 | `NicochartInfoProxy.class` | video-playerが通常の動画情報を取得できない場合だけ、サーバー側からnicochart.jpの公開情報を取得する | 接続先と動画IDを制限した読み取り専用処理。PACや`genCerts.bat` / `genCerts.sh`の変更は不要 |
-| `nlMediaInfo.class` | キャッシュファイルを`mediainfo --Output=JSON`で解析してJSONを返す | movie-infoのMediaInfo表示で使用。別途`mediainfo`コマンドが必要 |
+| `nlMediaInfo.class` | キャッシュファイルを`mediainfo --Output=JSON`で解析してJSONを返す。CMAF/Domandの`.hls`は`master.m3u8`を入口に解析する | movie-infoのMediaInfo表示で使用。別途`mediainfo`コマンドが必要 |
 
 #### HLSキャッシュ削除API
 

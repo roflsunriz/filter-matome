@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- 【extensions/nlMediaInfo】CMAF/DomandのHLSキャッシュをディレクトリ全体でMediaInfoへ渡してセグメントごとのJSONになっていた問題を、`master.m3u8`を解析入口にするよう修正し、映像・音声の全体仕様を確認できるようにした。
+
 ### Security
 
 - push前監査で検出された既知の依存脆弱性を解消するため、安全版へ依存関係とロックファイルを更新した。

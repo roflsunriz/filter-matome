@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,23 +25,21 @@ import javax.swing.JScrollPane;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/**
- * MediaInfo‚ðŒÄ‚Ño‚·‚¾‚¯
- */
+/** Calls MediaInfo and returns its JSON response. */
 public class nlMediaInfo implements Extension2, Processor {
-	
-	public static final int REVISION = 170202;
+	public static final int REVISION = 260802;
 	public static final String VER_STRING = "nlMediaInfo_"+REVISION;
 	public static final String LOG_PREFIX = "MediaInfo";
 	public static final String PROP_DEBUG = "MediaInfoDebug";
-	
+	private static final String MASTER_PLAYLIST_NAME = "master.m3u8";
+
 	private static final String[] PROCESSOR_SUPPORTED_METHODS = { "GET" };
 	private static final Pattern PROCESSOR_SUPPORTED_PATTERN = Pattern.compile(
 			"^https?://www\\.nicovideo\\.jp/cache/mediainfo\\?([a-z]{2}\\d+(low)?(?:\\[\\w+,\\d+,\\d+\\]\\w*\\.(?:flv|mp4))?)");
-	
+
 	private static JTextArea logArea;
 	private static final int MAX_LOG_LENGTH = 100000;
-	
+
 	// Extension2 interface
 	public void registerExtensions(ExtensionManager mgr) {
 		mgr.registerProcessor(this);
@@ -52,7 +51,7 @@ public class nlMediaInfo implements Extension2, Processor {
 			logArea.setWrapStyleWord(true);
 			logArea.setFont(new java.awt.Font("MS Gothic", java.awt.Font.PLAIN, 12));
 			JScrollPane scrollPane = new JScrollPane(logArea);
-			NLMain.addTab("MediaInfo", null, scrollPane, "MediaInfoo—Í");
+			NLMain.addTab("MediaInfo", null, scrollPane, "MediaInfoãƒ­ã‚°");
 		}
 	}
 	
@@ -79,8 +78,8 @@ public class nlMediaInfo implements Extension2, Processor {
 		if (m.find()) {
 			String altid = m.group(1);
 			VideoDescriptor video = Cache.getPreferredCachedVideo(altid);
-			File cacheFile = new Cache(video).getCacheFile();
-			if (cacheFile != null) {
+			if (video != null) {
+				File cacheFile = new Cache(video).getCacheFile();
 				String html = getMediaInfoJSON(cacheFile);
 				if (html != null) {
 					StringResource r = new StringResource(html);
@@ -94,7 +93,16 @@ public class nlMediaInfo implements Extension2, Processor {
 	}
 	
 	private String getMediaInfoJSON(File cacheFile) {
-		String[] cmdarray = { "mediainfo", "--Output=JSON", cacheFile.getPath() };
+		File mediaInfoInput = resolveMediaInfoInput(cacheFile);
+		if (mediaInfoInput == null) {
+			logError("MediaInfo input not found: "
+					+ (cacheFile == null ? "null" : cacheFile.getPath()));
+			return null;
+		}
+
+		String[] cmdarray = {
+			"mediainfo", "--Output=JSON", mediaInfoInput.getPath()
+		};
 		Process proc = null;
 		InputStreamReader in = null;
 		try {
@@ -112,7 +120,7 @@ public class nlMediaInfo implements Extension2, Processor {
 					"[%s] MediaInfo result for %s:\n%s\n" +
 					"----------------------------------------\n",
 					new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()),
-					cacheFile.getName(),
+					mediaInfoInput.getPath(),
 					result
 				);
 				
@@ -130,6 +138,7 @@ public class nlMediaInfo implements Extension2, Processor {
 		} catch (IOException e) {
 			logError("IO Error: " + e.getMessage());
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			logError("Execution interrupted: " + e.getMessage());
 		} finally {
 			if (proc != null) {
@@ -137,6 +146,53 @@ public class nlMediaInfo implements Extension2, Processor {
 				CloseUtil.close(proc.getOutputStream());
 				CloseUtil.close(proc.getErrorStream());
 				proc.destroy();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Resolve a CMAF/Domand cache directory to its master playlist so that
+	 * MediaInfo analyzes the complete HLS presentation instead of each segment.
+	 * Legacy HLS directories without a master playlist keep the old fallback.
+	 */
+	private static File resolveMediaInfoInput(File cacheFile) {
+		if (cacheFile == null || !cacheFile.exists()) {
+			return null;
+		}
+		if (!cacheFile.isDirectory()) {
+			return cacheFile;
+		}
+
+		File directMasterPlaylist = new File(cacheFile, MASTER_PLAYLIST_NAME);
+		if (directMasterPlaylist.isFile()) {
+			return directMasterPlaylist;
+		}
+
+		File nestedMasterPlaylist = resolveMasterPlaylist(cacheFile);
+		return nestedMasterPlaylist == null ? cacheFile : nestedMasterPlaylist;
+	}
+
+	private static File resolveMasterPlaylist(File directory) {
+		File[] children = directory.listFiles();
+		if (children == null) {
+			return null;
+		}
+		Arrays.sort(children, (left, right) ->
+				left.getName().compareToIgnoreCase(right.getName()));
+		for (File child : children) {
+			if (child.isFile()
+					&& MASTER_PLAYLIST_NAME.equalsIgnoreCase(child.getName())) {
+				return child;
+			}
+		}
+		for (File child : children) {
+			if (!child.isDirectory()) {
+				continue;
+			}
+			File nestedMasterPlaylist = resolveMasterPlaylist(child);
+			if (nestedMasterPlaylist != null) {
+				return nestedMasterPlaylist;
 			}
 		}
 		return null;
