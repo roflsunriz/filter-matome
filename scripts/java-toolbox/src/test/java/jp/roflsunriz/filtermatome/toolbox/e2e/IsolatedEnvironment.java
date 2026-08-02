@@ -72,7 +72,7 @@ public final class IsolatedEnvironment {
         String classpath = quote(windows, System.getProperty("java.class.path"));
         String className = FakeExternalTool.class.getName();
         String content = windows
-                ? "@echo off\r\n\"" + TestSupport.javaExecutable().toAbsolutePath() + "\" -cp \""
+                ? "@echo off\r\nchcp 65001 >nul\r\n\"" + TestSupport.javaExecutable().toAbsolutePath() + "\" -cp \""
                 + System.getProperty("java.class.path") + "\" " + className + " " + kind + " %*\r\n"
                 + "exit /b %ERRORLEVEL%\r\n"
                 : "#!/bin/sh\nexec " + java + " -cp " + classpath + " " + className + " " + kind + " \"$@\"\n";

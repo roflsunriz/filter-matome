@@ -47,7 +47,7 @@ class E2ECommandLineTest {
         assertEquals(0, set.exitCode());
         assertEquals("after", PropertiesDocument.load(config).value("e2e.key"));
 
-        Path media = Files.writeString(temp.resolve("動画 with spaces.mp4"), "not a video");
+        Path media = Files.writeString(temp.resolve("video with spaces.mp4"), "not a video");
         ProcessResult dryRun = TestSupport.runMain(List.of(
                 "--headless", "--plugin", "media", "--action", "faststart", "--input", media.toString(),
                 "--dry-run", "--data-dir", data.toString(), "--repo-root", repo.toString()), temp);

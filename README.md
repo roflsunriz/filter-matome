@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/roflsunriz/filter-matome.svg)](https://github.com/roflsunriz/filter-matome/releases)
-[![Latest Version](https://img.shields.io/badge/latest-%23235-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
+[![Latest Version](https://img.shields.io/badge/latest-%23236-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
 
 **filter-matome**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
 
@@ -222,22 +222,9 @@ CIと同じ検証をまとめて実行する場合は`bun run verify`を使用�
 
 `scripts/` のメディア変換、設定編集、更新、開発者向け操作をまとめたGUI・ヘッドレス対応のJavaアプリです。リリースアーカイブにはビルド済みJARを同梱しているため、利用者はMavenやBunでビルドする必要がありません。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。開発補助プラグインでは、Windowsの`C:\filter-matome`と`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値にして、旧`create-all-symlinks.ps1`／`create-listjs-symlink.ps1`相当のリンクをGUI・ヘッドレスで安全に作成できます。導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md) を参照してください。`nicocache-utility.py`と専用READMEは削除済みで、NicoCache_nlの管理操作は本体側の機能を使用します。用途が異なるMkDocs用フックなどは残しています。
 
-### NicoCache_nlの安全な終了
+### NicoCache_nlの終了・再起動
 
-リポジトリルートの`stop-nicocache.ps1`は、コマンドラインに`-jar ...\NicoCache_nl.jar`がある`java.exe` / `javaw.exe`のPIDだけを特定して終了するWindows用スクリプトです。プロセス名だけでJavaプロセスを一括終了しません。
-
-```powershell
-# 対象の確認だけを行う
-.\stop-nicocache.ps1 -ListOnly
-
-# NicoCache_nlの正常終了を試みる
-.\stop-nicocache.ps1
-
-# GUI操作と対話確認を省略し、指紋に一致したPIDだけを強制終了する
-.\stop-nicocache.ps1 -SkipGuiShutdown -Force
-```
-
-GUI版ではNicoCache_nl本体の正常終了処理を呼び、既定で最大65秒待ちます。応答しない場合やGUIなしで起動している場合は、PIDと指紋を再確認した後に強制終了の確認を表示します。確認の既定値は「いいえ」です。CUI版や自動処理では`-SkipGuiShutdown`でGUI経路を、`-Force`で対話確認を個別に省略できます。どちらを指定しても強制終了直前のPID、作成時刻、指紋の再確認は省略しません。実行内容だけを確認する場合は`-WhatIf`を指定できます。
+NicoCache_nlの終了と再起動は、NicoCache_nl本体に付属するGUIまたは標準ランチャーを使用してください。Java Toolboxはリポジトリのリンク作成、メディア処理、設定編集、更新に集中し、NicoCache_nl本体のプロセス管理は行いません。
 
 ### nlFilter文法
 ```ini

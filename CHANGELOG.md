@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#236] - 2026-08-02
+
+### Fixed
+
+- 【CI・Java Toolbox】macOSの`/private`退避パス、Windowsの8.3短縮パス、WindowsのUTF-8外部コマンド引数をテストで正しく扱い、Linux/macOS/WindowsのヘッドレスE2Eが環境依存で失敗しないようにした。
+- 【CI・release】ビルド成果物でJava Toolboxの実行JARと`nlGpac`の`.java`／`.class`を実在確認してからアーカイブするようにし、削除済みの旧NicoCacheランチャー・停止スクリプトを配布対象から除外した。
+
+### Changed
+
+- 【ドキュメント・運用】最近削除した旧スクリプトとNicoCache本体管理導線の参照をリポジトリ全体で整理し、NicoCache_nl本体の標準ランチャーを使う説明へ統一した。
+
 ### Added
 
 - 【scripts/Java Toolbox】開発補助プラグインへ、旧`create-all-symlinks.ps1`と`create-listjs-symlink.ps1`相当の一括リンク・`list.js`リンクを追加した。Windowsの`C:\filter-matome`／`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値として解決し、通常ファイルを保護したままGUI・ヘッドレスで実行できるようにした。

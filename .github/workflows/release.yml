@@ -67,9 +67,6 @@ jobs:
           cp README.md release/NicoCache_nl/
           cp CHANGELOG.md release/NicoCache_nl/
           cp LICENSE release/NicoCache_nl/
-          cp "nico-cache-nl-starter.bat" release/NicoCache_nl/
-          cp "nico-cache-gui-launcher.bat" release/NicoCache_nl/
-          cp "stop-nicocache.ps1" release/NicoCache_nl/
           cp GUIDE.html release/NicoCache_nl/
 
           # Java Toolboxは実行JARだけを配布し、Mavenの開発用生成物は含めない
@@ -87,23 +84,11 @@ jobs:
           # 空フォルダを確実に含めるため.gitkeepファイルを作成
           touch release/NicoCache_nl/local/cache/.gitkeep || true
 
-          # extensionsフォルダの特定ファイルをコピー（コンパイル不要）
-          cp extensions/CommentFilterLogger.java release/NicoCache_nl/extensions/ || echo "Warning: CommentFilterLogger.java not found"
-          cp extensions/CommentFilterLogger.class release/NicoCache_nl/extensions/ || echo "Warning: CommentFilterLogger.class not found"
-          cp extensions/CustomCacheReturner.java release/NicoCache_nl/extensions/ || echo "Warning: CustomCacheReturner.java not found"
-          cp extensions/CustomCacheReturner.class release/NicoCache_nl/extensions/ || echo "Warning: CustomCacheReturner.class not found"
-          cp extensions/downloadThruFFmpeg.java release/NicoCache_nl/extensions/ || echo "Warning: downloadThruFFmpeg.java not found"
-          cp extensions/downloadThruFFmpeg.class release/NicoCache_nl/extensions/ || echo "Warning: downloadThruFFmpeg.class not found"
-          cp extensions/ExtUtil.java release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.java not found"
-          cp extensions/ExtUtil.class release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.class not found"
-          cp extensions/nlGpac.java release/NicoCache_nl/extensions/ || echo "Warning: nlGpac.java not found"
-          cp extensions/nlGpac.class release/NicoCache_nl/extensions/ || echo "Warning: nlGpac.class not found"
-          cp extensions/FilterMatomeCacheControl.java release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeCacheControl.java not found"
-          cp extensions/FilterMatomeCacheControl.class release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeCacheControl.class not found"
-          cp extensions/FilterMatomeSeriesAlerts.java release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeSeriesAlerts.java not found"
-          cp extensions/FilterMatomeSeriesAlerts.class release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeSeriesAlerts.class not found"
-          cp extensions/NicochartInfoProxy.java release/NicoCache_nl/extensions/ || echo "Warning: NicochartInfoProxy.java not found"
-          cp extensions/NicochartInfoProxy.class release/NicoCache_nl/extensions/ || echo "Warning: NicochartInfoProxy.class not found"
+          # 現在の拡張機能だけを配布する。削除済みの旧補助クラスは再収録しない。
+          cp extensions/*.java release/NicoCache_nl/extensions/
+          cp extensions/*.class release/NicoCache_nl/extensions/
+          test -f release/NicoCache_nl/extensions/nlGpac.java
+          test -f release/NicoCache_nl/extensions/nlGpac.class
 
           # 開発用ファイルを除外（ただし、開発環境構築に必要なpackage.json等は保持）
           find release/NicoCache_nl -name "node_modules" -type d -exec rm -rf {} + || true

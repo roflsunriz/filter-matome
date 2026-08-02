@@ -25,7 +25,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
         `scripts` フォルダにはビルド済みJava ToolboxのJARが含まれる。Java Toolboxを使わない場合はコピー必須ではない
 
-3. NicoCache_nlをGUIまたは通常の終了手段で終了する。Windowsで終了対象を安全に限定したい場合は、リポジトリルートの`stop-nicocache.ps1`を使用する。その後、`RunNicoCache.ps1`または`NicoCache_nl Starter.bat`から再起動する
+3. NicoCache_nl本体のGUIまたは標準の終了手段で終了し、本体に付属する標準ランチャーから再起動する。Java ToolboxはNicoCache_nl本体のプロセス管理を行わない
 
 ### クリーンインストール手順
 

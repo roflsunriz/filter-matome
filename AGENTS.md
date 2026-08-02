@@ -30,7 +30,7 @@ Get-Content -Raw -LiteralPath .\COMMON-AGENTS.md
 - `nlFilters/` はNicoCache_nl専用DSLのフィルターである。JavaScriptやCSSの挿入、レスポンス本文の置換などを行う。`100_features.txt` が `local/features/dist/features.js` をニコニコ動画側へ読み込む主要フィルターである。
 - `docs/` はMkDocsで公開する利用者向け文書、`docs/resources/` は文書内の画像、`cover-images/` はルートREADMEの機能プレビュー画像である。
 - `scripts/` はシンボリックリンク作成、Java拡張のビルド、動画変換、ドキュメント生成などの補助スクリプトである。用途の異なるスクリプトが混在するため、名前だけで判断して実行しない。
-- `stop-nicocache.ps1` は、`NicoCache_nl.jar` の指紋があるPIDだけを対象に、正常終了、応答待ち、確認付き強制終了を行うWindows用の終了スクリプトである。NicoCache_nlの終了と再起動ではこのスクリプトを標準経路として使用する。
+- NicoCache_nlの終了と再起動は、本体に付属するGUIまたは標準ランチャーを使用する。リポジトリには本体プロセス管理用のスクリプトを含めない。
 - `extensions/` はNicoCache_nl用Java拡張の `.java` と対応する `.class` を管理する。TypeScriptのBunビルドには含まれない。コンパイルにはJDKと、このリポジトリに含まれないNicoCache_nl本体が必要である。各拡張は常に単一の実行クラスファイルだけで完結させ、内部クラス・補助クラス・匿名クラスなどの追加 `.class` を生成しない。Java変更後はコンパイル先に拡張名の追加 `.class` がないことを確認する。
 - `.github/workflows/` はCI、ドキュメント公開、リリース生成の正式な自動化定義である。ビルド、検証、配布物を変更するときは併せて確認する。
 
@@ -146,7 +146,6 @@ java -jar .\NicoCacheLauncher.jar --headless --check-data-root
 - `genCerts.bat`, `genCerts.sh`, `NicoCacheCA.jar`: 認証局とサイト証明書の生成手段。詳細は `documents\Readme_CA.txt` を確認する。
 - `NicoCache_nl.jar`: プロキシー実行本体。`.sig` は対応する署名ファイル。
 - `NicoCache_nl Starter.bat`, `NicoCache_nl.bat`, `NicoCache_nl.sh`, `RunNicoCache.ps1`: GUIまたはコンソールから本体を起動するスクリプト。
-- `nico-cache-gui-launcher.bat`, `nico-cache-nl-starter.bat`: このリポジトリの同名スクリプトを参照するシンボリックリンク。
 - `NicoCacheGUI_native.dll`, `NicoCacheGUI_native64.dll`: NicoCacheGUIのネイティブライブラリ。
 - `nlFilter_sys.txt`: システム用nlFilter。
 - `NICO_DATA_ROOT\proxy.pac`: プロキシー自動構成ファイル。`NICO_APP_ROOT\proxy_sample.pac`: サンプル。

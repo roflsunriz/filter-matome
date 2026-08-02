@@ -143,6 +143,13 @@ jobs:
         working-directory: scripts/java-toolbox
         run: mvn --batch-mode verify
 
+      - name: Verify packaged artifacts
+        shell: bash
+        run: |
+          test -f scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
+          test -f extensions/nlGpac.class
+          test -f extensions/nlGpac.java
+
       - name: Archive build artifacts
         uses: actions/upload-artifact@v4
         if: success()
@@ -151,14 +158,7 @@ jobs:
           path: |
             local/features/dist/
             scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
-            extensions/CommentFilterLogger.*
-            extensions/CustomCacheReturner.*
-            extensions/downloadThruFFmpeg.*
-            extensions/ExtUtil.*
-            extensions/FilterMatomeSeriesAlerts*
-            extensions/FilterMatomeCacheControl.*
-            extensions/nlGpac.class
-            extensions/nlGpac.java
+            extensions/
           retention-days: 7
 
   # ─────────────────────────────────────────────

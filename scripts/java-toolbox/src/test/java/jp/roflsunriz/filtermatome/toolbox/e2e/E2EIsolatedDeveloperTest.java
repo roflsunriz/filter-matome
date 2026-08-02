@@ -118,7 +118,7 @@ class E2EIsolatedDeveloperTest {
         force.add("--force");
         force.add("--yes");
         assertSuccess(environment.run(force));
-        assertEquals(environment.repo().resolve("AGENTS.md").toAbsolutePath().normalize(),
+        assertEquals(environment.repo().resolve("AGENTS.md").toRealPath(),
                 environment.repo().resolve("CLAUDE.md").toRealPath());
     }
 
