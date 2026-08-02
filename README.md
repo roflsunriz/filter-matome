@@ -213,7 +213,7 @@ CIと同じ検証をまとめて実行する場合は`bun run verify`を使用�
 
 ### scripts の Java Toolbox
 
-`scripts/` のPython／PowerShell／バッチをまとめて利用するGUI・ヘッドレス対応のJavaアプリを [`scripts/java-toolbox`](scripts/java-toolbox) に追加しています。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。導入、ヘッドレス実行、外部プラグインの追加方法は [`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md) を参照してください。
+`scripts/` のPython／PowerShell／バッチをまとめて利用するGUI・ヘッドレス対応のJavaアプリを [`scripts/java-toolbox`](scripts/java-toolbox) に追加しています。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md) を参照してください。
 
 ### NicoCache_nlの安全な終了
 

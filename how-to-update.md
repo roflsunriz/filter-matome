@@ -7,13 +7,15 @@
 
 ## scripts Java Toolboxの更新
 
-`scripts/java-toolbox` は独立したMavenプロジェクトです。JDK 17以上で次を実行し、GUI起動、`--list-plugins`、`--headless --self-test`の順に確認します。
+`scripts/java-toolbox` は独立したMavenプロジェクトです。JDK 17以上で次を実行し、4層の自動テスト、GUI起動、`--list-plugins`、`--headless --self-test`の順に確認します。
 
 ```bash
 cd scripts/java-toolbox
-mvn package
+mvn verify
 java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --list-plugins
 java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test --data-dir ./toolbox-data
 ```
+
+GUIを表示できないCIやサーバーではGUI E2Eだけスキップされます。CLI E2E、組み込みプラグイン、外部プラグインSPI、ローカルHTTPによるETag更新テストはヘッドレスで実行されます。
 
 変換やNicoCache操作を行う場合は、対象パスを明示し、最初に`--dry-run`で予定を確認してください。失敗時はアプリデータディレクトリの設定バックアップと、各処理の`.bak-*`／`.part`を確認して復旧します。

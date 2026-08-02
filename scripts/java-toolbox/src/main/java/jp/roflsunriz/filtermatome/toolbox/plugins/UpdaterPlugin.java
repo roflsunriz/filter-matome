@@ -78,7 +78,8 @@ public final class UpdaterPlugin implements ToolPlugin {
                           CancellationToken token) throws Exception {
         HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(20)).build();
         String tokenValue = resolveToken(context);
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(API_URL))
+        String apiUrl = context.config().get("updater.apiUrl", API_URL).trim();
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(apiUrl))
                 .timeout(Duration.ofSeconds(30))
                 .header("Accept", "application/vnd.github+json")
                 .header("X-GitHub-Api-Version", "2022-11-28")

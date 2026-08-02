@@ -181,8 +181,10 @@ public final class Json {
         }
         String number = text.substring(start, index);
         try {
-            return number.contains(".") || number.contains("e") || number.contains("E")
-                    ? Double.parseDouble(number) : Long.parseLong(number);
+            if (number.contains(".") || number.contains("e") || number.contains("E")) {
+                return Double.parseDouble(number);
+            }
+            return Long.parseLong(number);
         } catch (NumberFormatException exception) {
             throw error("数値が不正です: " + number);
         }

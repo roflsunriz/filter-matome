@@ -19,6 +19,7 @@ public final class MainWindow {
     private final PluginManager manager;
     private final PluginContext context;
     private final JFrame frame = new JFrame("filter-matome Toolbox");
+    private final JTabbedPane tabs = new JTabbedPane();
     private final JTextArea globalLog = new JTextArea();
 
     public MainWindow(PluginManager manager, PluginContext context) {
@@ -32,7 +33,6 @@ public final class MainWindow {
         frame.setMinimumSize(new Dimension(760, 520));
         frame.setSize(1120, 760);
 
-        JTabbedPane tabs = new JTabbedPane();
         for (ToolPlugin plugin : manager.all()) {
             PluginDescriptor descriptor = plugin.descriptor();
             tabs.addTab(descriptor.name(), plugin.createView(context));
@@ -87,5 +87,10 @@ public final class MainWindow {
 
     public void close() {
         frame.dispose();
+    }
+
+    /** GUIスモークテストや外部診断から、実際に構築されたタブ数を確認する。 */
+    public int tabCount() {
+        return tabs.getTabCount();
     }
 }

@@ -20,9 +20,12 @@ JDK 17以上とMavenが必要です。
 
 ```bash
 cd scripts/java-toolbox
+mvn test
 mvn package
 java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
 ```
+
+テストはJUnit 5で、単体（CLI・JSON・properties・ファイル安全性・プロセス制御）、機能（組み込みプラグインのヘッドレス操作）、結合（ServiceLoader外部JAR・ローカルHTTPのETag更新）、E2E（実際の`Main`子プロセスとGUIタブ構築）を検証します。GUIを表示できない環境ではGUI E2Eだけ自動的にスキップし、CLI E2Eは実行します。全検証には`mvn verify`を使用してください。
 
 プラグイン一覧と自己診断:
 

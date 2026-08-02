@@ -9,10 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - 【scripts】Python、PowerShell、バッチへ分散していたメディア変換、properties編集、GitHub更新、NicoCache管理の導線を、GUIとヘッドレスで共通利用できるJava Toolboxへ統合した。プラグインJAR、READMEヘルプ辞書、実行時パス解決を採用し、OSやリポジトリの固定パスに依存しない構成にした。
+- 【scripts/Java Toolbox】JUnit 5による単体・機能・結合・E2Eテストを追加し、CLI、GUIタブ、ヘッドレスプラグイン、外部プラグインSPI、ETag付き更新、空白入りパス、キャンセルを自動検証できるようにした。
 
 ### Changed
 
 - 【scripts】既存出力の無確認上書き、シェルによるパス分割、Python GUI依存、固定されたWindowsパスをJava共通基盤から排除し、ドライラン、バックアップ、原子的保存、明示的な副作用確認を標準化した。既存スクリプトは移行期間の互換経路として維持する。
+- 【scripts/Java Toolbox】JSONの整数を条件演算子の数値昇格で`Double`へ変換していたためリリースIDが`42.0`になる不具合を修正し、整数を`Long`として保持するようにした。nullの安全なファイル名も`untitled`へ正規化し、更新APIのエンドポイントを設定で差し替えられるようにした。
 
 ### Fixed
 

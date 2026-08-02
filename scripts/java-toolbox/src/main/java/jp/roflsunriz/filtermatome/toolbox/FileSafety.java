@@ -94,6 +94,9 @@ public final class FileSafety {
     }
 
     public static String safeFileName(String value) {
+        if (value == null) {
+            return "untitled";
+        }
         String normalized = INVALID_NAME.matcher(value).replaceAll("_").replaceAll("\\s+", " ").trim();
         if (normalized.isEmpty()) {
             return "untitled";
