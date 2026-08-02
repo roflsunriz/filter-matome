@@ -22,8 +22,10 @@ class E2EIsolatedMediaTest {
     @Test
     void everyMediaActionRunsAgainstFakeToolsInAnIsolatedDirectory() throws Exception {
         IsolatedEnvironment environment = new IsolatedEnvironment(temp);
-        Path inputDirectory = Files.createDirectories(environment.root().resolve("入力 動画"));
-        Path outputDirectory = Files.createDirectories(environment.root().resolve("出力"));
+        // Windowsのcmd.exeラッパーを通る外部コマンド境界では、ディレクトリ名の
+        // コードページ変換に依存しないようASCII名を使う。空白入りパスは引き続き検証する。
+        Path inputDirectory = Files.createDirectories(environment.root().resolve("input videos"));
+        Path outputDirectory = Files.createDirectories(environment.root().resolve("output"));
         Path ffmpeg = environment.tool("ffmpeg");
         Path ffprobe = environment.tool("ffprobe");
 

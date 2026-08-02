@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- 【CI・Java Toolbox】macOSの`/private`退避パス、Windowsの8.3短縮パス、WindowsのUTF-8外部コマンド引数をテストで正しく扱い、Linux/macOS/WindowsのヘッドレスE2Eが環境依存で失敗しないようにした。
+- 【CI・Java Toolbox】macOSの`/private`退避パス、Windowsの8.3短縮パス、Windowsの`cmd.exe`ラッパーをテストで安定して扱い、Linux/macOS/WindowsのヘッドレスE2Eが環境依存で失敗しないようにした。
 - 【CI・release】ビルド成果物でJava Toolboxの実行JARと`nlGpac`の`.java`／`.class`を実在確認してからアーカイブするようにし、削除済みの旧NicoCacheランチャー・停止スクリプトを配布対象から除外した。
 
 ### Changed
