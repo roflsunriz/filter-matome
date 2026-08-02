@@ -58,16 +58,26 @@ public final class TestSupport {
 
     public static ProcessResult runMain(List<String> arguments, Path workingDirectory)
             throws IOException, InterruptedException {
+        return runMain(arguments, workingDirectory, Map.of(), Map.of());
+    }
+
+    public static ProcessResult runMain(List<String> arguments, Path workingDirectory,
+                                        Map<String, String> environment,
+                                        Map<String, String> systemProperties)
+            throws IOException, InterruptedException {
         List<String> command = new ArrayList<>();
         command.add(javaExecutable().toString());
+        command.add("-Dfile.encoding=UTF-8");
+        systemProperties.forEach((key, value) -> command.add("-D" + key + "=" + value));
         command.add("-cp");
         command.add(System.getProperty("java.class.path"));
         command.add(Main.class.getName());
         command.addAll(arguments);
-        Process process = new ProcessBuilder(command)
+        ProcessBuilder builder = new ProcessBuilder(command)
                 .directory(workingDirectory.toFile())
-                .redirectErrorStream(true)
-                .start();
+                .redirectErrorStream(true);
+        builder.environment().putAll(environment);
+        Process process = builder.start();
         String output;
         try (var stream = process.getInputStream()) {
             output = new String(stream.readAllBytes(), StandardCharsets.UTF_8);

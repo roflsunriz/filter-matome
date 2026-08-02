@@ -53,6 +53,8 @@ import java.util.regex.Pattern;
 
 /** ffmpeg/ffprobeを利用する動画系スクリプトの統合プラグイン。 */
 public final class MediaPlugin implements ToolPlugin {
+    private static final String WATCH_API_URL = "https://www.nicovideo.jp/api/watch/v3_guest";
+    private static final String LEGACY_API_URL = "https://ext.nicovideo.jp/api/getthumbinfo";
     private static final Set<String> VIDEO_EXTENSIONS = Set.of(
             ".mp4", ".mkv", ".mov", ".avi", ".wmv", ".flv", ".ts", ".m2ts", ".webm");
     private static final Pattern VIDEO_ID = Pattern.compile("((?:sm|so|nm)\\d+)", Pattern.CASE_INSENSITIVE);
@@ -68,6 +70,7 @@ public final class MediaPlugin implements ToolPlugin {
                 + "対応アクション: cut10, cut60, faststart, hls, convert, rename\n"
                 + "ffmpeg/ffprobeはPATHから自動検出します。設定画面がない環境では "
                 + "--ffmpeg PATH --ffprobe PATH またはアプリ設定 tools.ffmpeg/tools.ffprobe を利用できます。\n\n"
+                + "リネームの動画情報APIは media.watchApiUrl / media.legacyApiUrl で変更できます。\n\n"
                 + "既定では既存ファイルを上書きせず、--overwrite を明示した場合だけ上書きします。"
                 + "GUIでは上書き前に確認を表示し、変換途中のファイルは作業先に限定します。";
     }
@@ -89,7 +92,8 @@ public final class MediaPlugin implements ToolPlugin {
         String action = request.action().toLowerCase(Locale.ROOT);
         String ffmpeg = request.value("ffmpeg", context.config().get("tools.ffmpeg", "ffmpeg"));
         String ffprobe = request.value("ffprobe", context.config().get("tools.ffprobe", "ffprobe"));
-        boolean needsProbe = action.equals("hls") || action.equals("rename") || request.value("mode", "").equals("adaptive");
+        boolean needsProbe = action.equals("hls") || action.equals("rename")
+                || request.value("mode", "").toLowerCase(Locale.ROOT).equals("adaptive");
         if (!request.dryRun() || (needsProbe && !request.dryRun())) {
             ensureTool(ffmpeg, "ffmpeg", context);
             if (needsProbe) {
@@ -246,6 +250,8 @@ public final class MediaPlugin implements ToolPlugin {
         }
         int failures = 0;
         HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).build();
+        String watchApiUrl = context.config().get("media.watchApiUrl", WATCH_API_URL);
+        String legacyApiUrl = context.config().get("media.legacyApiUrl", LEGACY_API_URL);
         for (Path input : inputs) {
             if (token.isCancelled()) {
                 return 130;
@@ -257,7 +263,7 @@ public final class MediaPlugin implements ToolPlugin {
             }
             String id = matcher.group(1).toLowerCase();
             MediaInfo info = request.dryRun() ? new MediaInfo("", "", true, 0, 192_000) : probeInfo(input, ffprobe);
-            String title = fetchTitle(http, id, context);
+            String title = fetchTitle(http, id, context, watchApiUrl, legacyApiUrl);
             if (title == null || title.isBlank()) {
                 context.log().warn("タイトルを取得できないためスキップ: " + input.getFileName());
                 continue;
@@ -496,10 +502,11 @@ public final class MediaPlugin implements ToolPlugin {
         Files.writeString(output.resolve("master.m3u8"), content);
     }
 
-    private static String fetchTitle(HttpClient client, String videoId, PluginContext context) {
+    private static String fetchTitle(HttpClient client, String videoId, PluginContext context,
+                                     String watchApiUrl, String legacyApiUrl) {
         try {
             String track = UUID.randomUUID().toString().replace("-", "") + "_" + System.currentTimeMillis();
-            URI uri = URI.create("https://www.nicovideo.jp/api/watch/v3_guest/" + videoId + "?actionTrackId=" + track);
+            URI uri = URI.create(joinEndpoint(watchApiUrl, videoId) + "?actionTrackId=" + track);
             HttpRequest request = HttpRequest.newBuilder(uri)
                     .timeout(Duration.ofSeconds(20))
                     .header("Accept", "application/json")
@@ -508,7 +515,7 @@ public final class MediaPlugin implements ToolPlugin {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 context.log().warn("動画情報APIがHTTP " + response.statusCode() + "を返しました。旧APIへフォールバックします: " + videoId);
-                return fetchLegacyTitle(client, videoId);
+                return fetchLegacyTitle(client, videoId, legacyApiUrl);
             }
             Map<String, Object> root = Json.object(Json.parse(response.body()));
             Map<String, Object> data = Json.object(root.get("data"));
@@ -519,13 +526,13 @@ public final class MediaPlugin implements ToolPlugin {
             return Json.string(video.get("title"), null);
         } catch (Exception exception) {
             context.log().warn("動画情報APIに失敗したため旧APIへフォールバックします: " + videoId + " (" + exception.getMessage() + ")");
-            return fetchLegacyTitle(client, videoId);
+            return fetchLegacyTitle(client, videoId, legacyApiUrl);
         }
     }
 
-    private static String fetchLegacyTitle(HttpClient client, String videoId) {
+    private static String fetchLegacyTitle(HttpClient client, String videoId, String legacyApiUrl) {
         try {
-            HttpRequest request = HttpRequest.newBuilder(URI.create("https://ext.nicovideo.jp/api/getthumbinfo/" + videoId))
+            HttpRequest request = HttpRequest.newBuilder(URI.create(joinEndpoint(legacyApiUrl, videoId)))
                     .timeout(Duration.ofSeconds(20))
                     .header("User-Agent", "filter-matome-toolbox/0.1")
                     .GET().build();
@@ -538,6 +545,14 @@ public final class MediaPlugin implements ToolPlugin {
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    private static String joinEndpoint(String base, String suffix) {
+        String normalized = base == null ? "" : base.trim();
+        if (normalized.endsWith("/")) {
+            return normalized + suffix;
+        }
+        return normalized + "/" + suffix;
     }
 
     private record MediaInfo(String videoCodec, String audioCodec, boolean hasAudio, int bandwidth,

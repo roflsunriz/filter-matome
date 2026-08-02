@@ -48,6 +48,9 @@ public final class Main {
                 }
                 if (options.guiSmoke()) {
                     MainWindow window = new MainWindow(manager, context);
+                    if (window.tabCount() != manager.all().size()) {
+                        throw new IllegalStateException("GUIタブ数とプラグイン数が一致しません。");
+                    }
                     window.close();
                     context.log().info("GUIスモーク構築に成功しました。");
                     return;

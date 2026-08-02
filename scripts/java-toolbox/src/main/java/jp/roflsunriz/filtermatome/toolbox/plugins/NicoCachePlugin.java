@@ -45,6 +45,7 @@ public final class NicoCachePlugin implements ToolPlugin {
                 + "アプリケーションルートとデータルートを固定パスから推測せず、引数・設定・config.propertiesから解決します。\n"
                 + "リンク作成は既存の通常ファイルを削除せず、同一リンクだけをスキップします。\n"
                 + "停止・リンク再作成・コンパイルはヘッドレスでは --yes、上書きは --force を明示してください。\n"
+                + "停止は対象JARの -jar 指紋を確認し、隔離運用などでPIDを確定できる場合は --pid PID --yes を指定できます。\n"
                 + "管理者権限や証明書ストア、タスクスケジューラーなどOS固有の操作は診断結果へ明示し、"
                 + "別OSで無理に実行しません。";
     }
@@ -59,9 +60,9 @@ public final class NicoCachePlugin implements ToolPlugin {
         Roots roots = roots(request, context);
         String action = request.action().isBlank() ? "diagnose" : request.action().toLowerCase();
         return switch (action) {
-            case "diagnose", "check" -> diagnose(roots, context);
+            case "diagnose", "check" -> diagnose(roots, request, context);
             case "launch", "start" -> launch(roots, request, context);
-            case "stop" -> stop(request, context);
+            case "stop" -> stop(roots, request, context);
             case "links", "create-links", "symlinks" -> createLinks(roots, request, context);
             case "build", "build-extensions" -> buildExtensions(roots, request, context);
             case "java-version" -> javaVersion(request, context);
@@ -75,7 +76,7 @@ public final class NicoCachePlugin implements ToolPlugin {
         };
     }
 
-    private static int diagnose(Roots roots, PluginContext context) {
+    private static int diagnose(Roots roots, CommandRequest request, PluginContext context) {
         context.log().info("アプリケーションルート: " + roots.appRoot());
         context.log().info("データルート: " + roots.dataRoot());
         checkPath(context, "NicoCache_nl.jar", roots.appRoot().resolve("NicoCache_nl.jar"));
@@ -83,7 +84,11 @@ public final class NicoCachePlugin implements ToolPlugin {
         checkPath(context, "extensions", roots.dataRoot().resolve("extensions"));
         checkPath(context, "local", roots.dataRoot().resolve("local"));
         checkPath(context, "nlFilters", roots.dataRoot().resolve("nlFilters"));
-        for (String tool : List.of("java", "javac", "ffmpeg", "ffprobe")) {
+        for (String tool : List.of(
+                request.value("java", context.config().get("tools.java", "java")),
+                request.value("javac", context.config().get("tools.javac", "javac")),
+                request.value("ffmpeg", context.config().get("tools.ffmpeg", "ffmpeg")),
+                request.value("ffprobe", context.config().get("tools.ffprobe", "ffprobe")))) {
             try {
                 ProcessResult result = context.processes().capture(List.of(tool, "-version"), null);
                 context.log().info(tool + (result.succeeded() ? " は利用可能です" : " は利用できません"));
@@ -122,11 +127,25 @@ public final class NicoCachePlugin implements ToolPlugin {
         return 0;
     }
 
-    private static int stop(CommandRequest request, PluginContext context) throws InterruptedException {
+    private static int stop(Roots roots, CommandRequest request, PluginContext context) throws InterruptedException {
         if (!request.confirmed()) throw new IllegalArgumentException("停止には --yes が必要です。");
-        List<ProcessHandle> targets = ProcessHandle.allProcesses()
-                .filter(handle -> handle.info().commandLine().orElse("").contains("NicoCache_nl.jar"))
-                .toList();
+        Path expectedJar = Path.of(request.value("jar", roots.appRoot().resolve("NicoCache_nl.jar").toString()))
+                .toAbsolutePath().normalize();
+        List<ProcessHandle> targets;
+        String pid = request.value("pid", "").trim();
+        if (!pid.isBlank()) {
+            long requestedPid;
+            try {
+                requestedPid = Long.parseLong(pid);
+            } catch (NumberFormatException exception) {
+                throw new IllegalArgumentException("--pidには数値を指定してください。", exception);
+            }
+            targets = ProcessHandle.of(requestedPid).filter(ProcessHandle::isAlive).stream().toList();
+        } else {
+            targets = ProcessHandle.allProcesses()
+                    .filter(handle -> isNicoCacheProcess(handle, expectedJar))
+                    .toList();
+        }
         if (targets.isEmpty()) {
             context.log().info("NicoCache_nlの対象プロセスは見つかりませんでした。");
             return 0;
@@ -148,6 +167,25 @@ public final class NicoCachePlugin implements ToolPlugin {
             }
         }
         return 0;
+    }
+
+    private static boolean isNicoCacheProcess(ProcessHandle handle, Path expectedJar) {
+        String normalizedJar = expectedJar.toString().replace('\\', '/');
+        var arguments = handle.info().arguments();
+        if (arguments.isPresent()) {
+            String[] values = arguments.get();
+            for (int index = 0; index + 1 < values.length; index++) {
+                if (values[index].equalsIgnoreCase("-jar")
+                        && values[index + 1].replace('\\', '/').equalsIgnoreCase(normalizedJar)) {
+                    return true;
+                }
+            }
+        }
+        String commandLine = handle.info().commandLine().orElse("");
+        String normalizedCommand = commandLine.replace('\\', '/');
+        return normalizedCommand.contains("-jar " + normalizedJar)
+                || normalizedCommand.contains("-jar \"" + normalizedJar + "\"")
+                || normalizedCommand.contains("-jar '" + normalizedJar + "'");
     }
 
     private static int createLinks(Roots roots, CommandRequest request, PluginContext context) throws IOException {
@@ -293,7 +331,7 @@ public final class NicoCachePlugin implements ToolPlugin {
         Path cert = Files.isRegularFile(roots.dataRoot().resolve("certs/ca.cer"))
                 ? roots.dataRoot().resolve("certs/ca.cer") : roots.appRoot().resolve("certs/ca.cer");
         if (action.equals("certificate-delete")) {
-            List<String> command = List.of("certutil.exe", "-delstore", "ROOT", "NicoCache_nl CA");
+            List<String> command = List.of(request.value("certutil", "certutil.exe"), "-delstore", "ROOT", "NicoCache_nl CA");
             if (request.dryRun()) {
                 context.log().info("DRY-RUN: " + ProcessRunner.format(command));
                 return 0;
@@ -301,9 +339,9 @@ public final class NicoCachePlugin implements ToolPlugin {
             return context.processes().run(command, roots.appRoot(), context.log(), new jp.roflsunriz.filtermatome.toolbox.CancellationToken()).exitCode();
         }
         if (!Files.isRegularFile(cert)) throw new IOException("ca.cerが見つかりません: " + cert);
-        List<String> add = List.of("certutil.exe", "-addstore", "ROOT", cert.toString());
+        List<String> add = List.of(request.value("certutil", "certutil.exe"), "-addstore", "ROOT", cert.toString());
         if (action.equals("certificate-renew")) {
-            List<String> delete = List.of("certutil.exe", "-delstore", "ROOT", "NicoCache_nl CA");
+            List<String> delete = List.of(request.value("certutil", "certutil.exe"), "-delstore", "ROOT", "NicoCache_nl CA");
             if (request.dryRun()) {
                 context.log().info("DRY-RUN: " + ProcessRunner.format(delete));
                 context.log().info("DRY-RUN: " + ProcessRunner.format(add));
@@ -323,9 +361,9 @@ public final class NicoCachePlugin implements ToolPlugin {
         String key = "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
         String url = request.value("proxy-url", "http://127.0.0.1:8080/proxy.pac");
         List<String> command = switch (action) {
-            case "proxy-set" -> List.of("reg.exe", "ADD", key, "/f", "/v", "AutoConfigURL", "/t", "REG_SZ", "/d", url);
-            case "proxy-remove" -> List.of("reg.exe", "DELETE", key, "/v", "AutoConfigURL", "/f");
-            default -> List.of("reg.exe", "QUERY", key, "/v", "AutoConfigURL");
+            case "proxy-set" -> List.of(request.value("reg", "reg.exe"), "ADD", key, "/f", "/v", "AutoConfigURL", "/t", "REG_SZ", "/d", url);
+            case "proxy-remove" -> List.of(request.value("reg", "reg.exe"), "DELETE", key, "/v", "AutoConfigURL", "/f");
+            default -> List.of(request.value("reg", "reg.exe"), "QUERY", key, "/v", "AutoConfigURL");
         };
         if (!action.equals("proxy-check") && !request.confirmed() && !request.dryRun()) {
             throw new IllegalArgumentException("プロキシ設定変更には --yes が必要です。");
@@ -382,16 +420,24 @@ public final class NicoCachePlugin implements ToolPlugin {
     }
 
     private static int openUrl(CommandRequest request, PluginContext context) throws Exception {
+        String url = request.value("url", "https://nicocache.jpn.org/");
+        if (request.dryRun()) {
+            context.log().info("DRY-RUN: ブラウザーで開く " + url);
+            return 0;
+        }
         if (request.flag("headless") || !Desktop.isDesktopSupported()) {
             throw new IOException("GUIブラウザーを開けないため、ヘッドレス実行ではopenを利用できません。");
         }
-        String url = request.value("url", "https://nicocache.jpn.org/");
         Desktop.getDesktop().browse(URI.create(url));
         context.log().info("ブラウザーで開きました: " + url);
         return 0;
     }
 
     private static boolean isWindows() {
+        String testPlatform = System.getProperty("filterMatome.toolbox.test.platform", "").trim();
+        if (!testPlatform.isBlank()) {
+            return testPlatform.equalsIgnoreCase("windows");
+        }
         return System.getProperty("os.name", "").toLowerCase().contains("win");
     }
 

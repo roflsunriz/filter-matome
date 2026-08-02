@@ -14,24 +14,28 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GraphicsEnvironment;
 
 public final class MainWindow {
     private final PluginManager manager;
     private final PluginContext context;
-    private final JFrame frame = new JFrame("filter-matome Toolbox");
+    private final JFrame frame;
     private final JTabbedPane tabs = new JTabbedPane();
     private final JTextArea globalLog = new JTextArea();
 
     public MainWindow(PluginManager manager, PluginContext context) {
         this.manager = manager;
         this.context = context;
+        this.frame = GraphicsEnvironment.isHeadless() ? null : new JFrame("filter-matome Toolbox");
         build();
     }
 
     private void build() {
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setMinimumSize(new Dimension(760, 520));
-        frame.setSize(1120, 760);
+        if (frame != null) {
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setMinimumSize(new Dimension(760, 520));
+            frame.setSize(1120, 760);
+        }
 
         for (ToolPlugin plugin : manager.all()) {
             PluginDescriptor descriptor = plugin.descriptor();
@@ -77,16 +81,22 @@ public final class MainWindow {
         JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tabs, logPanel);
         split.setResizeWeight(0.78);
 
-        frame.add(toolbar, BorderLayout.NORTH);
-        frame.add(split, BorderLayout.CENTER);
+        if (frame != null) {
+            frame.add(toolbar, BorderLayout.NORTH);
+            frame.add(split, BorderLayout.CENTER);
+        }
     }
 
     public void show() {
-        SwingUtilities.invokeLater(() -> frame.setVisible(true));
+        if (frame != null) {
+            SwingUtilities.invokeLater(() -> frame.setVisible(true));
+        }
     }
 
     public void close() {
-        frame.dispose();
+        if (frame != null) {
+            frame.dispose();
+        }
     }
 
     /** GUIスモークテストや外部診断から、実際に構築されたタブ数を確認する。 */

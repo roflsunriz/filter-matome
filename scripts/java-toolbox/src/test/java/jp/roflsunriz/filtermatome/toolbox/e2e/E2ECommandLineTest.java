@@ -33,6 +33,10 @@ class E2ECommandLineTest {
         assertEquals(0, selfTest.exitCode());
         assertTrue(selfTest.output().contains("[INFO]"));
 
+        ProcessResult headlessGui = TestSupport.runMain(List.of("--headless", "--gui-smoke", "--data-dir",
+                data.toString(), "--repo-root", repo.toString()), temp);
+        assertEquals(0, headlessGui.exitCode(), headlessGui.output());
+
         Path config = temp.resolve("e2e.properties");
         ProcessResult set = TestSupport.runMain(List.of(
                 "--headless", "--plugin", "config-editor", "--action", "set", "--config", config.toString(),
