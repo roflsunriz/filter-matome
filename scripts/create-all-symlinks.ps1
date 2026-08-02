@@ -12,7 +12,7 @@
   リンク元のルートフォルダ（既定: C:\filter-matome）
 
 .PARAMETER TargetRoot
-  リンク先のルートフォルダ（既定: C:\NicoCache_nl）
+  リンク先のルートフォルダ（既定: C:\NicoCache_nl\config.properties の userDataRoot）
 
 .PARAMETER DryRun
   実際にはリンクを作成せず、作成予定のリンク一覧を表示します。
@@ -36,7 +36,7 @@ param(
     [string]$SourceRoot = 'C:\filter-matome',
 
     [Alias('t')]
-    [string]$TargetRoot = 'C:\NicoCache_nl',
+    [string]$TargetRoot = '',
 
     [switch]$DryRun,
     [Alias('f')]
@@ -90,6 +90,33 @@ if (-not $targetSpecified) {
 }
 
 $SourceRoot = $SourceRoot.TrimEnd('\')
+
+function Resolve-DefaultTargetRoot {
+    param([string]$ApplicationRoot)
+
+    $configPath = Join-Path $ApplicationRoot 'config.properties'
+    if (Test-Path -LiteralPath $configPath) {
+        $configuredLine = Get-Content -LiteralPath $configPath -ErrorAction SilentlyContinue |
+            Where-Object { $_ -match '^\s*userDataRoot\s*[:=]\s*(.+?)\s*$' } |
+            Select-Object -First 1
+        if ($configuredLine -and $configuredLine -match '^\s*userDataRoot\s*[:=]\s*(.+?)\s*$') {
+            $configuredRoot = $Matches[1].Trim().Replace('\/', '\')
+            if ([System.IO.Path]::IsPathRooted($configuredRoot)) {
+                return $configuredRoot.TrimEnd('\')
+            }
+            return (Join-Path $ApplicationRoot $configuredRoot).TrimEnd('\')
+        }
+    }
+
+    if ($env:USERPROFILE) {
+        return (Join-Path $env:USERPROFILE 'Documents\NicoCache_nl').TrimEnd('\')
+    }
+    return (Join-Path $ApplicationRoot 'NicoCache_nl').TrimEnd('\')
+}
+
+if (-not $targetSpecified) {
+    $TargetRoot = Resolve-DefaultTargetRoot -ApplicationRoot 'C:\NicoCache_nl'
+}
 $TargetRoot = $TargetRoot.TrimEnd('\')
 
 Write-Host "リンク元: $SourceRoot" -ForegroundColor Cyan
@@ -141,7 +168,7 @@ $relativeMappings = @(
     @{ SourceRel = 'extensions\FilterMatomeCacheControl.class';         LinkRel = 'extensions\FilterMatomeCacheControl.class' }
     @{ SourceRel = 'extensions\FilterMatomeSeriesAlerts.class';         LinkRel = 'extensions\FilterMatomeSeriesAlerts.class' }
     @{ SourceRel = 'extensions\NicochartInfoProxy.class';               LinkRel = 'extensions\NicochartInfoProxy.class' }
-    @{ SourceRel = 'extensions\nlMediaInfo.class';                      LinkRel = 'extensions\nlMediaInfo.class' }
+    @{ SourceRel = 'extensions\nlGpac.class';                           LinkRel = 'extensions\nlGpac.class' }
     @{ SourceRel = 'local\features\dist\features.js';                  LinkRel = 'local\list.js' }
 )
 

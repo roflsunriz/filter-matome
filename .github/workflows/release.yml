@@ -39,7 +39,7 @@ jobs:
         working-directory: local/features
         run: bun run build
 
-      # nl-media-info は features に統合済みのため個別ビルドは不要
+      # nlGpac はリポジトリ内のコンパイル済みクラスを配布するため個別ビルドは不要
 
       - name: Create release archive
         shell: bash
@@ -75,8 +75,8 @@ jobs:
           cp extensions/downloadThruFFmpeg.class release/NicoCache_nl/extensions/ || echo "Warning: downloadThruFFmpeg.class not found"
           cp extensions/ExtUtil.java release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.java not found"
           cp extensions/ExtUtil.class release/NicoCache_nl/extensions/ || echo "Warning: ExtUtil.class not found"
-          cp extensions/nlMediaInfo.java release/NicoCache_nl/extensions/ || echo "Warning: nlMediaInfo.java not found"
-          cp extensions/nlMediaInfo.class release/NicoCache_nl/extensions/ || echo "Warning: nlMediaInfo.class not found"
+          cp extensions/nlGpac.java release/NicoCache_nl/extensions/ || echo "Warning: nlGpac.java not found"
+          cp extensions/nlGpac.class release/NicoCache_nl/extensions/ || echo "Warning: nlGpac.class not found"
           cp extensions/FilterMatomeCacheControl.java release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeCacheControl.java not found"
           cp extensions/FilterMatomeCacheControl.class release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeCacheControl.class not found"
           cp extensions/FilterMatomeSeriesAlerts.java release/NicoCache_nl/extensions/ || echo "Warning: FilterMatomeSeriesAlerts.java not found"

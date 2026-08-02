@@ -153,20 +153,23 @@ public class nlGpac implements Extension2, Processor {
 		}
 
 		try {
-			CommandResult result = runCommand(buildGpacCommand(analysisInput, manifestInput));
-			if (result.exitCode != 0 || result.stdout.trim().isEmpty()) {
-				logError("GPAC failed with exit code " + result.exitCode + ": "
+			Map<String, Object> result = runCommand(
+					buildGpacCommand(analysisInput, manifestInput));
+			int exitCode = ((Integer) result.get("exitCode")).intValue();
+			String stdout = (String) result.get("stdout");
+			if (exitCode != 0 || stdout.trim().isEmpty()) {
+				logError("GPAC failed with exit code " + exitCode + ": "
 						+ summarizeProcessError(result));
 				return null;
 			}
-			if (result.stdoutTruncated) {
+			if (Boolean.TRUE.equals(result.get("stdoutTruncated"))) {
 				logError("GPAC output exceeded " + MAX_PROCESS_OUTPUT_LENGTH
 						+ " characters and was rejected as incomplete");
 				return null;
 			}
 
 			String json = normalizeInspectXml(
-					result.stdout, cacheFile, analysisInput, manifestInput);
+					stdout, cacheFile, analysisInput, manifestInput);
 			if (json == null) {
 				return null;
 			}
@@ -363,7 +366,8 @@ public class nlGpac implements Extension2, Processor {
 				new InputSource(new StringReader(xml)));
 		NodeList pidNodes = document.getElementsByTagName("PIDConfigure");
 		List<String> summaries = extractPidSummaries(xml);
-		List<TrackData> tracks = new ArrayList<TrackData>();
+		List<LinkedHashMap<String, String>> tracks =
+				new ArrayList<LinkedHashMap<String, String>>();
 		String tool = "";
 		for (int index = 0; index < pidNodes.getLength(); index++) {
 			Node node = pidNodes.item(index);
@@ -371,10 +375,11 @@ public class nlGpac implements Extension2, Processor {
 				continue;
 			}
 			String summary = index < summaries.size() ? summaries.get(index) : "";
-			TrackData track = TrackData.fromElement((Element) node, summary);
+			LinkedHashMap<String, String> track = buildTrackProperties(
+					(Element) node, summary);
 			tracks.add(track);
-			if (tool.isEmpty() && !track.properties.getOrDefault("tool", "").isEmpty()) {
-				tool = track.properties.get("tool");
+			if (tool.isEmpty() && !track.getOrDefault("tool", "").isEmpty()) {
+				tool = track.get("tool");
 			}
 		}
 		if (tracks.isEmpty()) {
@@ -403,32 +408,108 @@ public class nlGpac implements Extension2, Processor {
 		return summaries;
 	}
 
+	private static LinkedHashMap<String, String> buildTrackProperties(
+			Element element, String summaryText) {
+		LinkedHashMap<String, String> properties =
+				new LinkedHashMap<String, String>();
+		NamedNodeMap attributes = element.getAttributes();
+		for (int index = 0; index < attributes.getLength(); index++) {
+			Node attribute = attributes.item(index);
+			properties.put(attribute.getNodeName(), attribute.getNodeValue());
+		}
+
+		Map<String, String> summary = parseSummary(summaryText);
+		String type = mapStreamType(properties.get("StreamType"));
+		LinkedHashMap<String, String> result =
+				new LinkedHashMap<String, String>();
+		result.put("@type", type);
+		result.putAll(properties);
+
+		long summaryFrameCount = parseLong(summary.get("frames"));
+		long summaryTotalSize = parseLong(summary.get("size"));
+		double summaryDuration = parseFraction(summary.get("duration"));
+		long summaryAverageBitrate = parseLong(summary.get("avgBitrate"));
+		long summaryMaxBitrate = parseLong(summary.get("maxBitrate"));
+		if (summaryFrameCount > 0) {
+			result.put("NumFrames", String.valueOf(summaryFrameCount));
+		}
+		if (summaryTotalSize > 0) {
+			result.put("MediaDataSize", String.valueOf(summaryTotalSize));
+		}
+		if (summaryAverageBitrate > 0
+				&& parseLong(properties.get("Bitrate")) == 0) {
+			result.put("Bitrate", String.valueOf(summaryAverageBitrate));
+		}
+		if (summaryMaxBitrate > 0 && parseLong(properties.get("Maxrate")) == 0) {
+			result.put("Maxrate", String.valueOf(summaryMaxBitrate));
+		}
+
+		String bitrate = result.remove("Bitrate");
+		if (bitrate != null && !bitrate.isEmpty()) {
+			result.put("BitRate", bitrate);
+		}
+		putAlias(result, "NumFrames", "FrameCount");
+		putAlias(result, "NumChannels", "Channels");
+		putAlias(result, "FPS", "FrameRate");
+		putAlias(result, "MediaDataSize", "StreamSize");
+		putAlias(result, "ServiceWidth", "Width");
+		putAlias(result, "ServiceHeight", "Height");
+		String format = firstNonEmpty(
+				properties.get("CodecID"), properties.get("Codec"),
+				properties.get("StreamType"));
+		if (format != null) {
+			result.put("Format", format);
+		}
+
+		double duration = summaryDuration > 0
+				? summaryDuration : parseFraction(properties.get("Duration"));
+		if (duration > 0) {
+			if (summaryDuration > 0) {
+				result.put("MeasuredDuration", formatDecimal(summaryDuration));
+			}
+			result.put("DurationSeconds", formatDecimal(duration));
+		}
+		if ("Video".equals(type) && !result.containsKey("FPS")
+				&& summaryFrameCount > 0 && duration > 0) {
+			String frameRate = formatDecimal(summaryFrameCount / duration);
+			result.put("FPS", frameRate);
+			result.put("FrameRate", frameRate);
+		}
+		return result;
+	}
+
 	private static String buildJson(
 			File originalInput,
 			File analysisInput,
 			boolean manifestInput,
 			String tool,
-			List<TrackData> tracks) {
-		List<LinkedHashMap<String, String>> jsonTracks = new ArrayList<LinkedHashMap<String, String>>();
+			List<LinkedHashMap<String, String>> tracks) {
 		int videoCount = 0;
 		int audioCount = 0;
 		int otherCount = 0;
 		long totalBitrate = 0;
 		long totalMediaDataSize = 0;
 		double durationSeconds = 0;
-		for (TrackData track : tracks) {
-			LinkedHashMap<String, String> jsonTrack = track.toJsonProperties();
-			jsonTracks.add(jsonTrack);
-			if ("Video".equals(jsonTrack.get("@type"))) {
+		for (LinkedHashMap<String, String> track : tracks) {
+			if ("Video".equals(track.get("@type"))) {
 				videoCount++;
-			} else if ("Audio".equals(jsonTrack.get("@type"))) {
+			} else if ("Audio".equals(track.get("@type"))) {
 				audioCount++;
 			} else {
 				otherCount++;
 			}
-			totalBitrate += track.getEffectiveBitrate();
-			totalMediaDataSize += track.getEffectiveMediaDataSize();
-			durationSeconds = Math.max(durationSeconds, track.getEffectiveDuration());
+			long bitrate = parseLong(track.get("BitRate"));
+			if (bitrate == 0) {
+				bitrate = parseLong(track.get("Bitrate"));
+			}
+			totalBitrate += bitrate;
+			long mediaDataSize = parseLong(track.get("StreamSize"));
+			if (mediaDataSize == 0) {
+				mediaDataSize = parseLong(track.get("MediaDataSize"));
+			}
+			totalMediaDataSize += mediaDataSize;
+			durationSeconds = Math.max(durationSeconds,
+					parseFraction(track.get("DurationSeconds")));
 		}
 
 		LinkedHashMap<String, String> general = new LinkedHashMap<String, String>();
@@ -471,7 +552,7 @@ public class nlGpac implements Extension2, Processor {
 		appendJsonProperty(json, "InputType", manifestInput ? "HLS/DASH manifest" : "media file", false);
 		json.append(",\"track\":[");
 		appendJsonMap(json, general);
-		for (LinkedHashMap<String, String> track : jsonTracks) {
+		for (LinkedHashMap<String, String> track : tracks) {
 			json.append(',');
 			appendJsonMap(json, track);
 		}
@@ -596,7 +677,7 @@ public class nlGpac implements Extension2, Processor {
 				.replaceAll("\\.$", "");
 	}
 
-	private static CommandResult runCommand(List<String> command)
+	private static Map<String, Object> runCommand(List<String> command)
 			throws IOException, InterruptedException {
 		ProcessBuilder processBuilder = new ProcessBuilder(command)
 				.redirectErrorStream(false);
@@ -607,12 +688,20 @@ public class nlGpac implements Extension2, Processor {
 			processBuilder.directory(executable.getParentFile());
 		}
 		Process process = processBuilder.start();
-		StreamCollector stdout = new StreamCollector(
-				process.getInputStream(), MAX_PROCESS_OUTPUT_LENGTH);
-		StreamCollector stderr = new StreamCollector(
-				process.getErrorStream(), MAX_PROCESS_ERROR_LENGTH);
-		Thread stdoutThread = new Thread(stdout, "nlGpac-stdout");
-		Thread stderrThread = new Thread(stderr, "nlGpac-stderr");
+		StringBuilder stdoutContent = new StringBuilder();
+		StringBuilder stderrContent = new StringBuilder();
+		boolean[] stdoutTruncated = { false };
+		boolean[] stderrTruncated = { false };
+		IOException[] stdoutError = { null };
+		IOException[] stderrError = { null };
+		InputStream stdoutInput = process.getInputStream();
+		InputStream stderrInput = process.getErrorStream();
+		Thread stdoutThread = new Thread(() -> collectStream(
+				stdoutInput, MAX_PROCESS_OUTPUT_LENGTH, stdoutContent,
+				stdoutTruncated, stdoutError), "nlGpac-stdout");
+		Thread stderrThread = new Thread(() -> collectStream(
+				stderrInput, MAX_PROCESS_ERROR_LENGTH, stderrContent,
+				stderrTruncated, stderrError), "nlGpac-stderr");
 		stdoutThread.setDaemon(true);
 		stderrThread.setDaemon(true);
 		stdoutThread.start();
@@ -629,15 +718,19 @@ public class nlGpac implements Extension2, Processor {
 			}
 			stdoutThread.join();
 			stderrThread.join();
-			if (stdout.error != null) {
-				throw stdout.error;
+			if (stdoutError[0] != null) {
+				throw stdoutError[0];
 			}
-			if (stderr.error != null) {
-				throw stderr.error;
+			if (stderrError[0] != null) {
+				throw stderrError[0];
 			}
-			return new CommandResult(
-					process.exitValue(), stdout.content.toString(), stderr.content.toString(),
-					stdout.truncated);
+			Map<String, Object> result = new LinkedHashMap<String, Object>();
+			result.put("exitCode", Integer.valueOf(process.exitValue()));
+			result.put("stdout", stdoutContent.toString());
+			result.put("stderr", stderrContent.toString());
+			result.put("stdoutTruncated", Boolean.valueOf(stdoutTruncated[0]));
+			result.put("stderrTruncated", Boolean.valueOf(stderrTruncated[0]));
+			return result;
 		} finally {
 			if (process.isAlive()) {
 				process.destroy();
@@ -645,167 +738,84 @@ public class nlGpac implements Extension2, Processor {
 		}
 	}
 
-	private static String summarizeProcessError(CommandResult result) {
-		String message = result.stderr.trim();
+	private static void collectStream(
+			InputStream input,
+			int maxLength,
+			StringBuilder content,
+			boolean[] truncated,
+			IOException[] error) {
+		try (InputStreamReader reader = new InputStreamReader(
+				input, StandardCharsets.UTF_8)) {
+			char[] buffer = new char[4096];
+			for (int length; (length = reader.read(buffer)) != -1;) {
+				if (content.length() < maxLength) {
+					int remaining = Math.min(length, maxLength - content.length());
+					content.append(buffer, 0, remaining);
+					if (remaining < length) {
+						truncated[0] = true;
+					}
+				} else {
+					truncated[0] = true;
+				}
+			}
+		} catch (IOException e) {
+			error[0] = e;
+		}
+	}
+
+	private static String summarizeProcessError(Map<String, Object> result) {
+		String message = ((String) result.get("stderr")).trim();
 		if (message.isEmpty()) {
-			message = result.stdout.trim();
+			message = ((String) result.get("stdout")).trim();
 		}
 		return message.length() > 2000 ? message.substring(0, 2000) + "..." : message;
 	}
 
-	private static final class TrackData {
-		private final LinkedHashMap<String, String> properties;
-		private final String type;
-		private final long summaryFrameCount;
-		private final long summaryTotalSize;
-		private final double summaryDuration;
-		private final long summaryAverageBitrate;
-		private final long summaryMaxBitrate;
-
-		private TrackData(LinkedHashMap<String, String> properties, String type) {
-			this.properties = properties;
-			this.type = type;
-			String summary = properties.get("_gpacSummary");
-			this.summaryFrameCount = parseLong(summaryValue(summary, "frames"));
-			this.summaryTotalSize = parseLong(summaryValue(summary, "size"));
-			this.summaryDuration = parseFraction(summaryValue(summary, "duration"));
-			this.summaryAverageBitrate = parseLong(summaryValue(summary, "avgBitrate"));
-			this.summaryMaxBitrate = parseLong(summaryValue(summary, "maxBitrate"));
+	private static Map<String, String> parseSummary(String text) {
+		LinkedHashMap<String, String> summary =
+				new LinkedHashMap<String, String>();
+		Matcher frames = SUMMARY_FRAME_COUNT_PATTERN.matcher(text);
+		Matcher size = SUMMARY_TOTAL_SIZE_PATTERN.matcher(text);
+		Matcher duration = SUMMARY_DURATION_PATTERN.matcher(text);
+		Matcher bitrate = SUMMARY_BITRATE_PATTERN.matcher(text);
+		if (frames.find()) {
+			summary.put("frames", frames.group(1));
 		}
-
-		private static TrackData fromElement(Element element, String summaryText) {
-			LinkedHashMap<String, String> properties = new LinkedHashMap<String, String>();
-			NamedNodeMap attributes = element.getAttributes();
-			for (int index = 0; index < attributes.getLength(); index++) {
-				Node attribute = attributes.item(index);
-				properties.put(attribute.getNodeName(), attribute.getNodeValue());
-			}
-			properties.put("_gpacSummary", parseSummary(summaryText));
-			return new TrackData(properties, mapStreamType(properties.get("StreamType")));
+		if (size.find()) {
+			summary.put("size", size.group(1));
 		}
-
-		private LinkedHashMap<String, String> toJsonProperties() {
-			LinkedHashMap<String, String> result = new LinkedHashMap<String, String>();
-			result.put("@type", type);
-			result.putAll(properties);
-			result.remove("_gpacSummary");
-			if (summaryFrameCount > 0) {
-				result.put("NumFrames", String.valueOf(summaryFrameCount));
-			}
-			if (summaryTotalSize > 0) {
-				result.put("MediaDataSize", String.valueOf(summaryTotalSize));
-			}
-			if (summaryAverageBitrate > 0 && parseLong(properties.get("Bitrate")) == 0) {
-				result.put("Bitrate", String.valueOf(summaryAverageBitrate));
-			}
-			if (summaryMaxBitrate > 0 && parseLong(properties.get("Maxrate")) == 0) {
-				result.put("Maxrate", String.valueOf(summaryMaxBitrate));
-			}
-			String bitrate = result.remove("Bitrate");
-			if (bitrate != null && !bitrate.isEmpty()) {
-				result.put("BitRate", bitrate);
-			}
-			putAlias(result, result, "NumFrames", "FrameCount");
-			putAlias(result, result, "NumChannels", "Channels");
-			putAlias(result, result, "FPS", "FrameRate");
-			putAlias(result, result, "MediaDataSize", "StreamSize");
-			putAlias(result, result, "ServiceWidth", "Width");
-			putAlias(result, result, "ServiceHeight", "Height");
-			String format = firstNonEmpty(
-					properties.get("CodecID"), properties.get("Codec"),
-					properties.get("StreamType"));
-			if (format != null) {
-				result.put("Format", format);
-			}
-			double duration = getEffectiveDuration();
-			if (duration > 0) {
-				if (summaryDuration > 0) {
-					result.put("MeasuredDuration", formatDecimal(summaryDuration));
-				}
-				result.put("DurationSeconds", formatDecimal(duration));
-			}
-			if ("Video".equals(type) && !result.containsKey("FPS")
-					&& summaryFrameCount > 0 && duration > 0) {
-				String frameRate = formatDecimal(summaryFrameCount / duration);
-				result.put("FPS", frameRate);
-				result.put("FrameRate", frameRate);
-			}
-			return result;
+		if (duration.find()) {
+			double seconds = Integer.parseInt(duration.group(1)) * 3600.0
+					+ Integer.parseInt(duration.group(2)) * 60.0
+					+ Double.parseDouble(duration.group(3));
+			summary.put("duration", formatDecimal(seconds));
 		}
-
-		private long getEffectiveBitrate() {
-			long attributeValue = parseLong(properties.get("Bitrate"));
-			return attributeValue > 0 ? attributeValue : summaryAverageBitrate;
+		if (bitrate.find()) {
+			double multiplier = "Mbps".equalsIgnoreCase(bitrate.group(3))
+					? 1000000.0 : 1000.0;
+			summary.put("avgBitrate", formatDecimal(
+					Double.parseDouble(bitrate.group(1)) * multiplier));
+			summary.put("maxBitrate", formatDecimal(
+					Double.parseDouble(bitrate.group(2)) * multiplier));
 		}
+		return summary;
+	}
 
-		private long getEffectiveMediaDataSize() {
-			long attributeValue = parseLong(properties.get("MediaDataSize"));
-			return summaryTotalSize > 0 ? summaryTotalSize : attributeValue;
+	private static void putAlias(
+			Map<String, String> result, String sourceName, String aliasName) {
+		String value = result.get(sourceName);
+		if (value != null && !value.isEmpty() && !result.containsKey(aliasName)) {
+			result.put(aliasName, value);
 		}
+	}
 
-		private double getEffectiveDuration() {
-			return summaryDuration > 0
-					? summaryDuration : parseFraction(properties.get("Duration"));
-		}
-
-		private static String parseSummary(String text) {
-			Matcher frames = SUMMARY_FRAME_COUNT_PATTERN.matcher(text);
-			Matcher size = SUMMARY_TOTAL_SIZE_PATTERN.matcher(text);
-			Matcher duration = SUMMARY_DURATION_PATTERN.matcher(text);
-			Matcher bitrate = SUMMARY_BITRATE_PATTERN.matcher(text);
-			StringBuilder summary = new StringBuilder();
-			if (frames.find()) {
-				summary.append("frames=").append(frames.group(1)).append(';');
-			}
-			if (size.find()) {
-				summary.append("size=").append(size.group(1)).append(';');
-			}
-			if (duration.find()) {
-				double seconds = Integer.parseInt(duration.group(1)) * 3600.0
-						+ Integer.parseInt(duration.group(2)) * 60.0
-						+ Double.parseDouble(duration.group(3));
-				summary.append("duration=").append(formatDecimal(seconds)).append(';');
-			}
-			if (bitrate.find()) {
-				double multiplier = "Mbps".equalsIgnoreCase(bitrate.group(3))
-						? 1000000.0 : 1000.0;
-				summary.append("avgBitrate=").append(formatDecimal(
-						Double.parseDouble(bitrate.group(1)) * multiplier)).append(';');
-				summary.append("maxBitrate=").append(formatDecimal(
-						Double.parseDouble(bitrate.group(2)) * multiplier)).append(';');
-			}
-			return summary.toString();
-		}
-
-		private static String summaryValue(String summary, String key) {
-			String prefix = key + "=";
-			for (String value : summary.split(";")) {
-				if (value.startsWith(prefix)) {
-					return value.substring(prefix.length());
-				}
-			}
-			return "";
-		}
-
-		private static void putAlias(
-				Map<String, String> result,
-				Map<String, String> source,
-				String sourceName,
-				String aliasName) {
-			String value = source.get(sourceName);
-			if (value != null && !value.isEmpty() && !result.containsKey(aliasName)) {
-				result.put(aliasName, value);
+	private static String firstNonEmpty(String... values) {
+		for (String value : values) {
+			if (value != null && !value.isEmpty()) {
+				return value;
 			}
 		}
-
-		private static String firstNonEmpty(String... values) {
-			for (String value : values) {
-				if (value != null && !value.isEmpty()) {
-					return value;
-				}
-			}
-			return null;
-		}
+		return null;
 	}
 
 	private static String mapStreamType(String streamType) {
@@ -822,54 +832,6 @@ public class nlGpac implements Extension2, Processor {
 			return "Text";
 		}
 		return "Other";
-	}
-
-	private static final class CommandResult {
-		private final int exitCode;
-		private final String stdout;
-		private final String stderr;
-		private final boolean stdoutTruncated;
-
-		private CommandResult(
-				int exitCode, String stdout, String stderr, boolean stdoutTruncated) {
-			this.exitCode = exitCode;
-			this.stdout = stdout;
-			this.stderr = stderr;
-			this.stdoutTruncated = stdoutTruncated;
-		}
-	}
-
-	private static final class StreamCollector implements Runnable {
-		private final InputStream input;
-		private final int maxLength;
-		private final StringBuilder content = new StringBuilder();
-		private IOException error;
-		private boolean truncated;
-
-		private StreamCollector(InputStream input, int maxLength) {
-			this.input = input;
-			this.maxLength = maxLength;
-		}
-
-		public void run() {
-			try (InputStreamReader reader = new InputStreamReader(
-					input, StandardCharsets.UTF_8)) {
-				char[] buffer = new char[4096];
-				for (int length; (length = reader.read(buffer)) != -1;) {
-					if (content.length() < maxLength) {
-						int remaining = Math.min(length, maxLength - content.length());
-						content.append(buffer, 0, remaining);
-						if (remaining < length) {
-							truncated = true;
-						}
-					} else {
-						truncated = true;
-					}
-				}
-			} catch (IOException e) {
-				error = e;
-			}
-		}
 	}
 
 	private void logGpacResult(File originalInput, File analysisInput, String result) {

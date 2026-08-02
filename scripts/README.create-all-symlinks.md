@@ -2,11 +2,11 @@
 
 ## 概要
 `create-all-symlinks.ps1` は、`filter-matome` 配下の必要ファイル・フォルダを `NicoCache_nl` 側へシンボリックリンクとして一括作成する PowerShell スクリプトです。  
-既定では `C:\filter-matome` をリンク元、`C:\NicoCache_nl` をリンク先として動作します。
+既定では `C:\filter-matome` をリンク元、`C:\NicoCache_nl\config.properties` の `userDataRoot` をリンク先として動作します。現在の設定が `C:\Users\UserName\Documents\NicoCache_nl` の場合は、その配下へリンクを作成します。
 
 ## 主な機能
 - リンク定義に基づく一括作成（`scripts`、`local`、`nlFilters`、`extensions` など）
-- `extensions` の同梱拡張8種（`FilterMatomeSeriesAlerts.class`を含む）をNicoCache_nlへリンク
+- `extensions` の同梱拡張8種（`nlGpac.class`を含む）をNicoCache_nlへリンク
 - 既存リンクの判定（同一ターゲットなら再作成せずスキップ）
 - `--force` による既存シンボリックリンクの再作成
 - `--dry-run` による作成予定一覧の確認
@@ -15,7 +15,7 @@
 ## 必要環境
 - Windows 10/11
 - PowerShell 7.0 以上
-- リンク先ディレクトリ（既定: `C:\NicoCache_nl`）が存在していること
+- リンク先ディレクトリ（既定: `config.properties` の `userDataRoot`、設定がない場合は `%USERPROFILE%\Documents\NicoCache_nl`）が存在していること
 - 実作成時は管理者権限が必要
 
 ## 使い方

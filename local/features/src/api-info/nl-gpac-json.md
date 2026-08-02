@@ -2,7 +2,7 @@
 
 APIエンドポイント: `https://www.nicovideo.jp/cache/gpac?{video_id}`
 
-`extensions/nlGpac.class`が、キャッシュされた通常のメディアファイルまたはHLS/CMAFのプレイリストをGPACで解析して返すJSONです。MediaInfoやFFmpegは使用しません。
+`extensions/nlGpac.class`単体が、キャッシュされた通常のメディアファイルまたはHLS/CMAFのプレイリストをGPACで解析して返すJSONです。MediaInfoやFFmpegは使用しません。
 
 HLS/CMAFのディレクトリは`master.m3u8`（なければ曖昧でない単一の`.m3u8`）を入力にし、GPACの`dashin`で最高帯域の映像品質と依存する音声を選択します。`inspect:xml:stats:allp`で全期間のPIDプロパティと統計を取得するため、セグメントごとの配列ではなく、`General`・`Video`・`Audio`などのストリームを一つのレスポンスにまとめます。
 

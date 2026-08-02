@@ -31,7 +31,7 @@ Get-Content -Raw -LiteralPath .\COMMON-AGENTS.md
 - `docs/` はMkDocsで公開する利用者向け文書、`docs/resources/` は文書内の画像、`cover-images/` はルートREADMEの機能プレビュー画像である。
 - `scripts/` はシンボリックリンク作成、Java拡張のビルド、動画変換、ドキュメント生成などの補助スクリプトである。用途の異なるスクリプトが混在するため、名前だけで判断して実行しない。
 - `stop-nicocache.ps1` は、`NicoCache_nl.jar` の指紋があるPIDだけを対象に、正常終了、応答待ち、確認付き強制終了を行うWindows用の終了スクリプトである。NicoCache_nlの終了と再起動ではこのスクリプトを標準経路として使用する。
-- `extensions/` はNicoCache_nl用Java拡張の `.java` と対応する `.class` を管理する。TypeScriptのBunビルドには含まれない。コンパイルにはJDKと、このリポジトリに含まれないNicoCache_nl本体が必要である。
+- `extensions/` はNicoCache_nl用Java拡張の `.java` と対応する `.class` を管理する。TypeScriptのBunビルドには含まれない。コンパイルにはJDKと、このリポジトリに含まれないNicoCache_nl本体が必要である。各拡張は常に単一の実行クラスファイルだけで完結させ、内部クラス・補助クラス・匿名クラスなどの追加 `.class` を生成しない。Java変更後はコンパイル先に拡張名の追加 `.class` がないことを確認する。
 - `.github/workflows/` はCI、ドキュメント公開、リリース生成の正式な自動化定義である。ビルド、検証、配布物を変更するときは併せて確認する。
 
 ### `local/features/src/` の構成
@@ -42,7 +42,7 @@ Get-Content -Raw -LiteralPath .\COMMON-AGENTS.md
 - `comment-filter2/`: コメント取得、フィルタリング、設定UI。`integrations/video-player-bridge.ts` が `video-player` との連携境界である。
 - `common/`: Material Design Icons、共通ヘッダー、ロガー、トースト、APIクライアントなど、複数機能で共有する実装。
 - `mlink-video-controller/`: 視聴ページの操作パネルと機能モジュール群。`modules/` が個別機能、`module-handlers/` が読み込み・設定UIなどの管理を担当する。
-- `movie-info/`: キャッシュ、サムネイル、MediaInfo、視聴API情報を集約するダッシュボード。
+- `movie-info/`: キャッシュ、サムネイル、GPAC解析、視聴API情報を集約するダッシュボード。
 - `mylist2/`: 独自マイリストのUI、永続化、インポート・エクスポート、Service Worker。
 - `runtime/`: ページコンテキストで処理を実行するためのランタイム境界。
 - `types/`: グローバル型と各機能で共有する型定義。
@@ -76,14 +76,20 @@ bun run build
 - MkDocs文書はリポジトリ直下で `mkdocs build --strict` を実行して検証する。初回セットアップでは `python -m pip install -r requirements-docs.txt` が必要で、生成先の `.mkdocs-build/` はGit管理外である。
 - Java拡張はBunビルドとは別系統である。変更時は `scripts/README.auto-build-extensions.md` と対象ソースの依存関係を確認し、利用可能なNicoCache_nl本体とJDKがある場合に限ってコンパイルする。既存の `.class` をソースと無関係に上書きしない。
 
+## NicoCache_nlの現行パスモデル
+
+- 以下では、アプリケーション本体のルートを `NICO_APP_ROOT`、実行時にNicoCache_nlが使用するユーザーデータルートを `NICO_DATA_ROOT` と表記する。現在の環境ではそれぞれ `C:\NicoCache_nl` と `C:\Users\UserName\Documents\NicoCache_nl` である。
+- `NICO_DATA_ROOT` は `C:\NicoCache_nl\config.properties` の `userDataRoot` で設定され、起動時の `nicocache.userDataRoot` システムプロパティやランチャー指定があればそちらが優先される。ポータブル起動や開発起動ではアプリケーションルートがデータルートになる場合もあるため、パスを推測せず毎回設定と `NicoCachePaths.dataRoot()` を確認する。
+- `extensions`、`local`、`cache`、`certs`、`data`、`nlFilters`、`NicoCacheGUI.property` などの実行時データは `NICO_DATA_ROOT` 配下にある。`NICO_APP_ROOT` はソース、JAR、設定、起動スクリプトなど本体側のファイルを置くルートであり、両者を混同しない。
+
 ## NicoCache_nl連携の制約
 
 - ブラウザー側の `window.NicoCache_nl.watch` と、NicoCache_nl本体が提供する `/cache/*` HTTP APIを区別する。
-- `window.NicoCache_nl.watch` は `C:\NicoCache_nl\local\nllib_watch.js` が提供する互換ヘルパーであり、ニコニコ動画の `server-response` メタ情報や視聴ページの `fetch` レスポンスに依存する。ニコニコ動画側の構造変更へすぐ追従できない場合があるため、第一の情報源にはしない。
+- `window.NicoCache_nl.watch` は `NICO_DATA_ROOT\local\nllib_watch.js` が提供する互換ヘルパーであり、ニコニコ動画の `server-response` メタ情報や視聴ページの `fetch` レスポンスに依存する。ニコニコ動画側の構造変更へすぐ追従できない場合があるため、第一の情報源にはしない。
 - 現在の動画IDはURLまたは呼び出し元から明示された値を優先し、再生状態は `HTMLMediaElement` など対象ページの実体を優先する。`window.NicoCache_nl.watch` は、それらから取得できない情報のフォールバックとして、存在確認、型確認、失敗時処理を入れて使用する。
 - `/cache/*` はNicoCache_nl本体のHTTP APIである。ローカルキャッシュ固有の状態や操作には利用してよい。例として `https://www.nicovideo.jp/cache/info/v2` があり、実装は `C:\NicoCache_nl\src\dareka\processor\impl\CacheDirProcessor.java` にある。利用前に実装、既存のAPI仕様メモ、エラー形式を確認する。
-- このリポジトリの成果物は、主に `C:\NicoCache_nl` 側に作成されたシンボリックリンクから参照される。例えば `C:\NicoCache_nl\nlFilters\100_features.txt` は `C:\filter-matome\nlFilters\100_features.txt` を参照する。リンクは双方向ではないため、作成、置換、削除の前に `LinkType` と `Target` を確認する。
-- NicoCache_nlをプロキシーとして起動し、対象のローカル配信が有効な場合、`C:\NicoCache_nl\local\` 配下は `https://www.nicovideo.jp/local/` 配下として配信される。
+- このリポジトリの成果物は、主に `NICO_DATA_ROOT` 側に作成されたシンボリックリンクから参照される。例えば `NICO_DATA_ROOT\nlFilters\100_features.txt` は `C:\filter-matome\nlFilters\100_features.txt` を参照する。リンクは双方向ではないため、作成、置換、削除の前に `LinkType` と `Target` を確認する。
+- NicoCache_nlをプロキシーとして起動し、対象のローカル配信が有効な場合、`NICO_DATA_ROOT\local\` 配下は `https://www.nicovideo.jp/local/` 配下として配信される。
 
 ## NicoCache_nl本体の変更とビルド
 
@@ -115,36 +121,39 @@ bun run build
 
 ### デバッグ
 
-- デバッグ時は、変更前の値を記録してから `C:\NicoCache_nl\NicoCacheGUI.property` の `DebugMode=false` を `DebugMode=true` に変更し、上記の終了・再起動手順を使う。同ファイルの `DebugLog` で指定されたログが出力される。
+- デバッグ時は、変更前の値を記録してから `NICO_DATA_ROOT\NicoCacheGUI.property`（現在は `C:\Users\UserName\Documents\NicoCache_nl\NicoCacheGUI.property`）の `DebugMode=false` を `DebugMode=true` に変更し、上記の終了・再起動手順を使う。ログファイルは `NICO_APP_ROOT\debug.log` など同ファイルの `DebugLog` で指定された場所へ出力される。
 - 検証後は、ユーザーから継続指定がない限り `DebugMode` を元の値へ戻し、同じ終了・再起動手順で反映する。ログに秘密情報や個人情報が含まれる可能性を考慮し、内容を無制限に出力またはコミットしない。
 
-## `C:\NicoCache_nl` の主要パス
+## NicoCache_nlの主要パス
+
+- `NICO_APP_ROOT`（現在は `C:\NicoCache_nl`）: `src\`、`NicoCache_nl.jar`、`lib\`、`defaults\`、`documents\`、`config.properties`、`build-*.ps1`、起動スクリプトなど、本体・開発・起動に必要なファイル。
+- `NICO_DATA_ROOT`（現在は `C:\Users\UserName\Documents\NicoCache_nl`）: `extensions\`、`cache\`、`cvcache\`、`thcache\`、`certs\`、`data\`、`local\`、`nlFilters\`、`list\`、`NicoCacheGUI.property`、`proxy.pac` など、実行時に参照・更新されるユーザーデータ。
 
 - `.externalToolBuilders\`: EclipseのAnt外部ツールビルダー設定。
 - `.settings\`, `.classpath`, `.project`: IDEおよびJavaプロジェクトの設定。
-- `cache\`: 視聴時に作成されるHLSなどの動画キャッシュ。
-- `cvcache\`: `convertedCacheFolder` の既定値であり、ローカル変換されたMP4の保存先。
-- `thcache\`: 動画サムネイルのキャッシュ。
-- `certs\`: `genCerts.bat` または `genCerts.sh` が生成する認証局とサイト証明書の秘密情報。内容を出力またはコミットしない。
-- `data\`: `cors\` と `tlsclient\` など、CORS制御とTLSクライアントに関するデータ。
+- `NICO_DATA_ROOT\cache\`: 視聴時に作成されるHLSなどの動画キャッシュ。
+- `NICO_DATA_ROOT\cvcache\`: `convertedCacheFolder` の既定値であり、ローカル変換されたMP4の保存先。
+- `NICO_DATA_ROOT\thcache\`: 動画サムネイルのキャッシュ。
+- `NICO_DATA_ROOT\certs\`: `genCerts.bat` または `genCerts.sh` が生成する認証局とサイト証明書の秘密情報。内容を出力またはコミットしない。
+- `NICO_DATA_ROOT\data\`: `cors\` と `tlsclient\` など、CORS制御とTLSクライアントに関するデータ。
 - `defaults\`: NicoCache_nlが参照する既定設定群。変更可能な全項目が必ず揃っているとは仮定せず、実装と `config.properties.default` も確認する。
 - `documents\`, `Readme.txt`, `Readme_dms.txt`, `変更点.txt`, `ChangeLog.txt`: NicoCache_nl本体の説明と変更履歴。
-- `extensions\`: NicoCache_nl用Java拡張。`C:\filter-matome\extensions\` の `.class` を参照するシンボリックリンクも配置される。
+- `NICO_DATA_ROOT\extensions\`: NicoCache_nl用Java拡張。`C:\filter-matome\extensions\` の `.class` を参照するシンボリックリンクも配置される。
 - `lib\`: Bouncy Castleなど、NicoCache_nl本体と証明書生成で使用する依存ライブラリ。
 - `link\`, `others\`: 関連Webページなどへのショートカット。
-- `list\`: `NGtitle.txt` などのリストファイル。
-- `local\`: ブラウザーへ配信するJavaScript、CSS、画像、ビルド成果物など。`background-images\`, `features\`, `images\`, `list.js`, `mime.types` にはこのリポジトリを参照するシンボリックリンクが配置される。
-- `nlFilters\`: JavaScript、CSS、画像の追加やHTML置換を行うNicoCache_nl専用DSLフィルター。
-- `scripts\`: `C:\filter-matome\scripts\` を参照するシンボリックリンク。
-- `src\`: NicoCache_nl本体のJavaソースと、ビルドスクリプトが生成するクラスファイルの配置先。
+- `NICO_DATA_ROOT\list\`: `NGtitle.txt` などのリストファイル。
+- `NICO_DATA_ROOT\local\`: ブラウザーへ配信するJavaScript、CSS、画像、ビルド成果物など。`background-images\`, `features\`, `images\`, `list.js`, `mime.types` にはこのリポジトリを参照するシンボリックリンクが配置される。
+- `NICO_DATA_ROOT\nlFilters\`: JavaScript、CSS、画像の追加やHTML置換を行うNicoCache_nl専用DSLフィルター。
+- `NICO_APP_ROOT\scripts\`: `C:\filter-matome\scripts\` を参照するシンボリックリンク。
+- `NICO_APP_ROOT\src\`: NicoCache_nl本体のJavaソースと、ビルドスクリプトが生成するクラスファイルの配置先。
 - `build.xml`, `build-ant.ps1`, `build-javac.ps1`, `manifest-nl.mf`: 通常ビルドの設定とスクリプト。
-- `config.properties`, `config.properties.default`, `NicoCacheGUI.property`: 本体とGUIの設定。
+- `config.properties`, `config.properties.default`: 本体側の設定。`NicoCacheGUI.property` は `NICO_DATA_ROOT` 配下のGUI設定。
 - `genCerts.bat`, `genCerts.sh`, `NicoCacheCA.jar`: 認証局とサイト証明書の生成手段。詳細は `documents\Readme_CA.txt` を確認する。
 - `NicoCache_nl.jar`: プロキシー実行本体。`.sig` は対応する署名ファイル。
 - `NicoCache_nl Starter.bat`, `NicoCache_nl.bat`, `NicoCache_nl.sh`, `RunNicoCache.ps1`: GUIまたはコンソールから本体を起動するスクリプト。
 - `nico-cache-gui-launcher.bat`, `nico-cache-nl-starter.bat`: このリポジトリの同名スクリプトを参照するシンボリックリンク。
 - `NicoCacheGUI_native.dll`, `NicoCacheGUI_native64.dll`: NicoCacheGUIのネイティブライブラリ。
 - `nlFilter_sys.txt`: システム用nlFilter。
-- `proxy.pac`, `proxy_sample.pac`: プロキシー自動構成ファイルとそのサンプル。
+- `NICO_DATA_ROOT\proxy.pac`: プロキシー自動構成ファイル。`NICO_APP_ROOT\proxy_sample.pac`: サンプル。
 
 この一覧は現在の基本構造であり、NicoCache_nlの更新やローカル環境によって変わる。用途が確認できないファイルやフォルダーを推測で変更せず、付属ドキュメント、設定、ソースコード、シンボリックリンクの参照先を確認する。

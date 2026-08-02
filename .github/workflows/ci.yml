@@ -144,6 +144,8 @@ jobs:
             extensions/ExtUtil.*
             extensions/FilterMatomeSeriesAlerts*
             extensions/FilterMatomeCacheControl.*
+            extensions/nlGpac.class
+            extensions/nlGpac.java
           retention-days: 7
 
   # ─────────────────────────────────────────────
@@ -212,6 +214,8 @@ jobs:
             "extensions/FilterMatomeSeriesAlerts.class"
             "extensions/FilterMatomeCacheControl.java"
             "extensions/FilterMatomeCacheControl.class"
+            "extensions/nlGpac.java"
+            "extensions/nlGpac.class"
           )
 
           for file in "${important_files[@]}"; do

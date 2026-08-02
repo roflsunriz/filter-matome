@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - 【extensions/nlGpac】セグメントごとのMediaInfo解析でCMAF/Domandの実体仕様を確認できなかった問題を解消するため、旧`nlMediaInfo`拡張を削除してGPACの全期間PID解析へ置き換え、`/cache/gpac?<動画ID>`とmovie-infoへ解像度、ビットレート、フレーム、音声仕様をまとめて接続した。
+- 【extensions・scripts/create-all-symlinks・release】`nlGpac`を単一の`.class`で完結する構成へ修正し、補助クラスの配置漏れによる解析リクエスト時の`NoClassDefFoundError`と接続切断を防止した。
 
 ### Security
 
