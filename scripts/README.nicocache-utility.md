@@ -5,7 +5,7 @@ NicoCache-Utilityは、NicoCacheの運用・管理を支援するPythonスクリ
 
 ## 主な機能
 - NicoCacheの起動管理（最小化起動、GUI起動）
-- Java環境の設定（JAVA_HOME、ANT_HOME）
+- Java環境の設定（JAVA_HOME）
 - 証明書の管理（生成、登録、更新、削除）
 - プロキシ設定（Windows、Firefox）
 - 拡張機能のコンパイル支援
@@ -14,12 +14,8 @@ NicoCache-Utilityは、NicoCacheの運用・管理を支援するPythonスクリ
 ## 必要環境
 - Windows 10/11
 - Python 3.7以上
-- 以下のPythonパッケージ:
-  - pywin32
-  - psutil
-  - setuptools
 - Java Development Kit (JDK) 17以上
-- Apache Ant
+- `NicoCacheLauncher.jar`、`NicoCacheCA.jar`、`NicoCacheBuild.jar`
 
 ## 使い方
 1. スクリプトを実行します：
@@ -34,7 +30,7 @@ NicoCache-Utilityは、NicoCacheの運用・管理を支援するPythonスクリ
 3. 画面の指示に従って操作を進めます
 
 ## 注意事項
-- 一部の機能は管理者権限が必要です
+   - 一部のWindows連携機能は管理者権限が必要です
 - Java関連の機能を使用する場合は、事前にJDKのインストールが必要です
 - 証明書の操作は慎重に行ってください
 - プロキシ設定を変更する際は、既存の設定をメモしておくことを推奨します

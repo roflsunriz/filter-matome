@@ -1,8 +1,5 @@
 import os
 import subprocess
-import win32con         #pip install pywin32でpywin32をインストールしてください
-import win32process
-import psutil           #pip install psutilでpsutilをインストールしてください
 import sys
 import webbrowser  # 追加
 import glob  # 追加
@@ -20,49 +17,9 @@ def is_admin():
     except:
         return False
 
-def check_package_installed(package_name):
-    try:
-        if package_name == 'pywin32':
-            import win32api
-            return True
-        elif package_name == 'psutil':
-            import psutil
-            return True
-        elif package_name == 'setuptools':
-            import setuptools
-            return True
-        return False
-    except ImportError:
-        return False
-
 def install_required_packages():
-    try:
-        print("\n=== 必要なパッケージのインストール確認 ===")
-        packages = ['pywin32', 'psutil', 'setuptools']
-        need_install = False
-        
-        for package in packages:
-            if not check_package_installed(package):
-                print(f"{package}がインストールされていません。")
-                response = input(f"{package}をインストールしますか？ (y/n): ")
-                
-                if response.lower() == 'y':
-                    print(f"{package}をインストールします...")
-                    subprocess.run([sys.executable, '-m', 'pip', 'install', package], check=True)
-                    print(f"{package}のインストールが完了しました！")
-                else:
-                    print(f"{package}のインストールをスキップしました。")
-                    print("注意: 一部の機能が動作しない可能性があります。")
-                    return False
-                need_install = True
-        
-        if not need_install:
-            print("必要なパッケージは全てインストール済みです！")
-        return True
-                    
-    except Exception as e:
-        print(f"パッケージのインストール中にエラーが発生しました: {e}")
-        return False
+    print("外部Pythonパッケージは使用しません。")
+    return True
 
 def check_admin():
     try:
@@ -115,83 +72,53 @@ def run_with_admin():
 
 def run_nicocache_minimized():
     try:
-        # バッチファイルのパスを取得（ルート基準）
-        batch_path = _root_path("NicoCache_nl.bat")
-        if not os.path.exists(batch_path):
-            print("エラー: NicoCache_nl.batが見つかりません！")
+        root_dir = _root_path()
+        launcher = _root_path("NicoCacheLauncher.jar")
+        if not os.path.exists(launcher):
+            print("エラー: NicoCacheLauncher.jarが見つかりません！")
             return
-        
-        # 最小化状態で起動
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = win32con.SW_MINIMIZE
-        
-        subprocess.Popen(batch_path, 
-                        startupinfo=startupinfo,
-                        creationflags=win32process.CREATE_NEW_CONSOLE)
-        print("NicoCache_nl.batを最小化状態で起動しました！")
+        java = os.environ.get('NICOCACHE_JAVA', 'java')
+        subprocess.Popen([java, '-jar', launcher, '--headless', '--start'],
+                         cwd=root_dir,
+                         creationflags=subprocess.CREATE_NO_WINDOW)
+        print("NicoCacheLauncher.jarから本体を起動しました！")
     except Exception as e:
         print(f"エラーが発生しました: {e}")
 
 def run_nicocache_gui_launcher():
     try:
-        # バッチファイルのパスを取得（ルート基準）
-        batch_path = _root_path("nico-cache-gui-launcher.bat")
-        if not os.path.exists(batch_path):
-            print("エラー: nico-cache-gui-launcher.batが見つかりません！")
+        root_dir = _root_path()
+        launcher = _root_path("NicoCacheLauncher.jar")
+        if not os.path.exists(launcher):
+            print("エラー: NicoCacheLauncher.jarが見つかりません！")
             return
-        
-        # 通常のウィンドウで起動
-        subprocess.Popen(batch_path, creationflags=win32process.CREATE_NEW_CONSOLE)
-        print("nico-cache-gui-launcher.batを起動しました！")
+        java = os.environ.get('NICOCACHE_JAVA', 'javaw')
+        subprocess.Popen([java, '-jar', launcher], cwd=root_dir)
+        print("NicoCacheLauncher.jarのGUIを起動しました！")
     except Exception as e:
         print(f"エラーが発生しました: {e}")
 
-def kill_java_processes():
+def force_stop_nicocache():
     try:
-        # java.exeとjavaw.exeプロセスを探して終了
-        for proc in psutil.process_iter(['pid', 'name']):
-            if proc.info['name'] in ['java.exe', 'javaw.exe']:
-                proc.kill()
-                print(f"プロセス {proc.info['pid']} ({proc.info['name']}) を終了しました")
-        print("すべてのjava.exeおよびjavaw.exeプロセスを終了しました")
+        launcher = _root_path("NicoCacheLauncher.jar")
+        java = os.environ.get('NICOCACHE_JAVA', 'java')
+        result = subprocess.run(
+            [java, '-jar', launcher, '--headless', '--force-stop'],
+            cwd=_root_path(), capture_output=True, text=True)
+        print(result.stdout or result.stderr)
     except Exception as e:
         print(f"エラーが発生しました: {e}")
 
-def run_ant_extract_jar():
+def build_java_apps():
     try:
-        # ルートに移動して実行する
-        root_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir))
-        os.chdir(root_dir)
-        print(f"作業ディレクトリを設定しました: {os.getcwd()}")
-        
-        # build.xmlの存在確認
-        if not os.path.exists('build.xml'):
-            print("エラー: build.xmlが見つかりません！")
+        script = _root_path("build-javac.ps1")
+        if not os.path.exists(script):
+            print("エラー: build-javac.ps1が見つかりません！")
             return
-            
-        # antコマンドの確認
-        print("\n=== Antバージョンの確認 ===")
-        ant_check = subprocess.run(['ant', '-version'], shell=True, capture_output=True, text=True)
-        print(ant_check.stdout)
-        if ant_check.stderr:
-            print("Antエラー:")
-            print(ant_check.stderr)
-
-        print("\n=== ant extract jar の実行 ===")
-        # ant extract jarコマンドを実行（shell=Trueを追加）
-        result = subprocess.run(['ant', 'extract', 'jar'], 
-                              shell=True,
-                              capture_output=True, 
-                              text=True)
-        print("コマンドの出力:")
-        print(result.stdout)
-        if result.stderr:
-            print("エラー出力:")
-            print(result.stderr)
-            
-        # 実行結果のステータスコードを表示
-        print(f"\n実行結果: {'成功' if result.returncode == 0 else '失敗'} (コード: {result.returncode})")
+        result = subprocess.run(
+            ['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+             '-File', script], cwd=_root_path(), text=True)
+        print(f"\n独立Javaアプリのビルド結果: {'成功' if result.returncode == 0 else '失敗'}")
         
     except Exception as e:
         print(f"エラーが発生しました: {e}")
@@ -310,21 +237,6 @@ def set_java_home():
         # JAVA_HOMEを設定
         subprocess.run(['setx', 'JAVA_HOME', latest_jdk], capture_output=True, text=True)
         print(f"JAVA_HOMEを設定しました: {latest_jdk}")
-        print("この設定を反映させるには、コマンドプロンプトを再起動してください。")
-    except Exception as e:
-        print(f"エラーが発生しました: {e}")
-
-def set_ant_home():
-    try:
-        # Antのディレクトリを確認
-        ant_path = "C:\\ant"
-        if not os.path.exists(ant_path):
-            print("エラー: Antのディレクトリが見つかりません！")
-            return
-
-        # ANT_HOMEを設定
-        subprocess.run(['setx', 'ANT_HOME', ant_path], capture_output=True, text=True)
-        print(f"ANT_HOMEを設定しました: {ant_path}")
         print("この設定を反映させるには、コマンドプロンプトを再起動してください。")
     except Exception as e:
         print(f"エラーが発生しました: {e}")
@@ -597,20 +509,18 @@ def open_certificate_manager():
 
 def generate_certificates():
     try:
-        # ルートの genCerts.bat を参照
-        gencerts_path = _root_path("genCerts.bat")
-        
-        # genCerts.batの存在確認
-        if not os.path.exists(gencerts_path):
-            print("エラー: genCerts.batが見つかりません！")
+        root_dir = _root_path()
+        ca_jar = _root_path("NicoCacheCA.jar")
+        targets = _root_path("certificate-targets.txt")
+        if not os.path.exists(ca_jar) or not os.path.exists(targets):
+            print("エラー: NicoCacheCA.jarまたはcertificate-targets.txtが見つかりません！")
             return
-            
         print("\n=== 証明書の生成を開始 ===")
-        
-        # genCerts.batを実行
+        java = os.environ.get('NICOCACHE_JAVA', 'java')
         result = subprocess.run(
-            [gencerts_path],
-            shell=True,
+            [java, '-jar', ca_jar, '--headless',
+             '--targets-file=' + targets],
+            cwd=root_dir,
             capture_output=True,
             text=True
         )
@@ -638,23 +548,19 @@ def open_bouncy_castle():
 
 def create_scheduled_task():
     try:
-        print("\n=== タスクスケジューラーへの登録を開始 ===")
-        
-        # タスクを作成
+        print("\n=== ログオン時タスクの登録を開始 ===")
+        launcher = _root_path("NicoCacheLauncher.jar")
+        java = os.environ.get('NICOCACHE_JAVA', 'java')
         result = subprocess.run(
-            ['SCHTASKS', '/Create', 
-             '/RU', 'Users', 
-             '/SC', 'ONLOGON', 
-             '/TN', 'NicoCache_nl_AutoLaunch', 
-             '/TR', 'powershell.exe cd C:\\NicoCache_nl ; nico-cache-gui-launcher.bat'
-            ],
+            [java, '-jar', launcher, '--headless', '--task-install',
+             '--task-name=NicoCache_nl'],
+            cwd=_root_path(),
             capture_output=True,
             text=True
         )
-        
+
         if result.returncode == 0:
-            print("NicoCache_nl_AutoLaunch が登録されました！")
-            print("タスクスケジューラーで確認してください。")
+            print("NicoCache_nlをログオン時に1回起動するタスクとして登録しました！")
         else:
             print("エラー: タスクの登録に失敗しました。")
             if result.stderr:
@@ -680,36 +586,6 @@ def open_task_scheduler():
             if result.stderr:
                 print(result.stderr)
                 
-    except Exception as e:
-        print(f"エラーが発生しました: {e}")
-
-def show_ant_version():
-    try:
-        # Antのバージョンを確認
-        result = subprocess.run(
-            ['ant', '-version'],
-            shell=True,
-            capture_output=True,
-            text=True
-        )
-        
-        print("\n=== Apache Antのバージョン情報 ===")
-        if result.returncode == 0:
-            print(result.stdout)
-        else:
-            print("エラー: Antのバージョン確認に失敗しました。")
-            print("Antがインストールされているか確認してください。")
-            if result.stderr:
-                print(result.stderr)
-                
-    except Exception as e:
-        print(f"エラーが発生しました: {e}")
-
-def open_apache_ant():
-    try:
-        # Apache Antのダウンロードページを開く
-        webbrowser.open('https://ant.apache.org/bindownload.cgi')
-        print("Apache Antのダウンロードページを開きました！")
     except Exception as e:
         print(f"エラーが発生しました: {e}")
 
@@ -760,50 +636,47 @@ def open_adoptium():
 
 def show_menu():
     print("=== NicoCache Utility ===")
-    print("1. NicoCache_nl.batを最小化状態で起動")
-    print("2. nico-cache-gui-launcher.batを起動")
-    print("3. java.exeとjavaw.exeを強制終了")
-    print("4. ant extract jarを実行")
+    print("1. NicoCacheLauncherから本体をヘッドレス起動")
+    print("2. NicoCacheLauncherのGUIを起動")
+    print("3. NicoCache本体を強制停止")
+    print("4. 独立Javaアプリをビルド")
     print("5. 拡張機能(extensions)をコンパイル")
     print("6. NicoCacheのアップローダーを開く")
     print("7. NicoCacheのWikiを開く")
     print("8. NicoCacheの掲示板を開く")
     print("9. JAVA_HOME環境変数を自動設定")
-    print("10. ANT_HOME環境変数を自動設定")
-    print("11. 環境変数の設定ページを開く")
-    print("12. プロキシ設定をレジストリに追加")
-    print("13. プロキシ設定をレジストリから削除")
-    print("14. プロキシ設定の確認")
-    print("15. Firefoxのプロキシを設定")
-    print("16. Windowsのプロキシ設定画面を開く")
-    print("17. ブラウザ用証明書を更新")
-    print("18. ブラウザ用証明書を削除")
-    print("19. ブラウザ用証明書を新規登録")
-    print("20. 証明書マネージャーを開く")
-    print("21. 証明書を生成")
-    print("22. BouncyCastleのダウンロードページを開く")
-    print("23. 起動時の自動実行タスクを登録")
-    print("24. タスクスケジューラーを開く")
-    print("25. Antのバージョンを表示")
-    print("26. Apache Antのダウンロードページを開く")
-    print("27. JavaとJavacのバージョンを表示")
-    print("28. Eclipse Temurin JDKをダウンロード")
+    print("10. 環境変数の設定ページを開く")
+    print("11. プロキシ設定をレジストリに追加")
+    print("12. プロキシ設定をレジストリから削除")
+    print("13. プロキシ設定の確認")
+    print("14. Firefoxのプロキシを設定")
+    print("15. Windowsのプロキシ設定画面を開く")
+    print("16. ブラウザ用証明書を更新")
+    print("17. ブラウザ用証明書を削除")
+    print("18. ブラウザ用証明書を新規登録")
+    print("19. 証明書マネージャーを開く")
+    print("20. 証明書を生成")
+    print("21. BouncyCastleのダウンロードページを開く")
+    print("22. 起動時の自動実行タスクを登録")
+    print("23. タスクスケジューラーを開く")
+    print("24. JavaとJavacのバージョンを表示")
+    print("25. Eclipse Temurin JDKをダウンロード")
     print("0. 終了")
     print("=====================")
 
 def process_option(option):
     if option == "1":
-        print("NicoCache_nl.batを最小化状態で起動します...")
+        print("NicoCacheLauncherから本体をヘッドレス起動します...")
         run_nicocache_minimized()
     elif option == "2":
-        print("NicoCacheGUILauncher.batを起動します...")
+        print("NicoCacheLauncherのGUIを起動します...")
         run_nicocache_gui_launcher()
     elif option == "3":
         print("java.exeとjavaw.exeを強制終了します...")
-        kill_java_processes()
+        force_stop_nicocache()
     elif option == "4":
-        print("ant extract jarを実行します...")
-        run_ant_extract_jar()
+        print("独立Javaアプリをビルドします...")
+        build_java_apps()
     elif option == "5":
         print("拡張機能(extensions)をコンパイルします...")
         compile_java_files()
@@ -820,60 +693,51 @@ def process_option(option):
         print("JAVA_HOME環境変数を自動設定します...")
         set_java_home()
     elif option == "10":
-        print("ANT_HOME環境変数を自動設定します...")
-        set_ant_home()
-    elif option == "11":
         print("環境変数の設定ページを開きます...")
         open_environment_variables()
-    elif option == "12":
+    elif option == "11":
         print("プロキシ設定をレジストリに追加します...")
         set_proxy_registry()
-    elif option == "13":
+    elif option == "12":
         print("プロキシ設定をレジストリから削除します...")
         remove_proxy_registry()
-    elif option == "14":
+    elif option == "13":
         print("プロキシ設定を確認します...")
         check_proxy_registry()
-    elif option == "15":
+    elif option == "14":
         print("Firefoxのプロキシを設定します...")
         set_firefox_proxy()
-    elif option == "16":
+    elif option == "15":
         print("Windowsのプロキシ設定画面を開きます...")
         open_proxy_settings()
-    elif option == "17":
+    elif option == "16":
         print("ブラウザ用証明書を更新します...")
         renew_certificate()
-    elif option == "18":
+    elif option == "17":
         print("ブラウザ用証明書を削除します...")
         delete_certificate()
-    elif option == "19":
+    elif option == "18":
         print("ブラウザ用証明書を新規登録します...")
         add_certificate()
-    elif option == "20":
+    elif option == "19":
         print("証明書マネージャーを開きます...")
         open_certificate_manager()
-    elif option == "21":
+    elif option == "20":
         print("証明書を生成します...")
         generate_certificates()
-    elif option == "22":
+    elif option == "21":
         print("BouncyCastleのダウンロードページを開きます...")
         open_bouncy_castle()
-    elif option == "23":
+    elif option == "22":
         print("起動時の自動実行タスクを登録します...")
         create_scheduled_task()
-    elif option == "24":
+    elif option == "23":
         print("タスクスケジューラーを開きます...")
         open_task_scheduler()
-    elif option == "25":
-        print("Antのバージョンを確認します...")
-        show_ant_version()
-    elif option == "26":
-        print("Apache Antのダウンロードページを開きます...")
-        open_apache_ant()
-    elif option == "27":
+    elif option == "24":
         print("JavaとJavacのバージョンを確認します...")
         show_java_version()
-    elif option == "28":
+    elif option == "25":
         print("Eclipse Temurin JDKのダウンロードページを開きます...")
         open_adoptium()
     elif option == "0":

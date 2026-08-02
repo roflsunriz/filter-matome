@@ -142,8 +142,6 @@ $relativeMappings = @(
     @{ SourceRel = 'extensions\FilterMatomeSeriesAlerts.class';         LinkRel = 'extensions\FilterMatomeSeriesAlerts.class' }
     @{ SourceRel = 'extensions\NicochartInfoProxy.class';               LinkRel = 'extensions\NicochartInfoProxy.class' }
     @{ SourceRel = 'extensions\nlMediaInfo.class';                      LinkRel = 'extensions\nlMediaInfo.class' }
-    @{ SourceRel = 'nico-cache-gui-launcher.bat';                      LinkRel = 'nico-cache-gui-launcher.bat' }
-    @{ SourceRel = 'nico-cache-nl-starter.bat';                        LinkRel = 'nico-cache-nl-starter.bat' }
     @{ SourceRel = 'local\features\dist\features.js';                  LinkRel = 'local\list.js' }
 )
 
