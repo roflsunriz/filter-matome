@@ -439,6 +439,7 @@ public final class NicoCachePlugin implements ToolPlugin {
                 {"nlFilters/101_disable_official_function.txt", "nlFilters/101_disable_official_function.txt"},
                 {"nlFilters/105_premium_hide.txt", "nlFilters/105_premium_hide.txt"},
                 {"local/features/dist/features.js", "local/list.js"},
+                {"local/features/dist/features.js.map", "local/list.js.map"},
                 {"extensions/CommentFilterLogger.class", "extensions/CommentFilterLogger.class"},
                 {"extensions/CustomCacheReturner.class", "extensions/CustomCacheReturner.class"},
                 {"extensions/downloadThruFFmpeg.class", "extensions/downloadThruFFmpeg.class"},

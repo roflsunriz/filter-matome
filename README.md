@@ -39,7 +39,6 @@
 
 ### 前提条件
 - [NicoCache_nl](https://roflsunriz.github.io/setup-nicocache-nl/) 本体のインストール
-- [Bun 1.3.14](https://bun.com/docs/installation) のインストール
 - [Adoptium Temurin OpenJDK 17 LTS](https://adoptium.net/temurin/releases?version=17&os=any&arch=any)
 ```powershell
 winget install EclipseAdoptium.Temurin.17.JDK
@@ -48,8 +47,6 @@ winget install EclipseAdoptium.Temurin.17.JDK
 ```powershell
 winget install EclipseAdoptium.Temurin.21.JDK
 ```
-- [Apache Ant](https://ant.apache.org/bindownload.cgi)
-- [Bouncy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest) (PKIX/CMS/EAC/PKCS/OCSP/TSP/OPENSSL(bcpkix), Provider(bcprov), ASN.1 Utility Classes(bcutil))
 - 対応ブラウザ: [Firefox](https://www.firefox.com/ja/download/all/desktop-release/)(推奨)
 ```powershell
 winget install Mozilla.Firefox.ja
@@ -58,6 +55,9 @@ winget install Mozilla.Firefox.ja
 ```powershell
 winget install Google.Chrome
 ```
+
+リリースアーカイブには、Java Toolboxのビルド済みJARも
+`scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar` として同梱しています。通常利用ではMaven、Bun、Apache Antのビルド手順は不要です。NicoCache_nl本体の導入に必要なBouncy Castleなどの要件は、NicoCache_nl側の案内に従ってください。
 
 ### インストール手順
 
@@ -81,6 +81,12 @@ winget install Google.Chrome
 3. **設定の有効化**
    - NicoCache_nlを起動
    - ブラウザでハード再読み込み（Ctrl+F5）
+
+4. **Java Toolboxの利用（必要な場合）**
+   ```powershell
+   java -jar C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar --list-plugins
+   ```
+   GUIは引数なし、サーバーや自動処理では`--headless`を付けて起動できます。使える機能と操作例は[`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md)を参照してください。
 
 ### クリーンインストール
 ```bash
@@ -155,6 +161,7 @@ winget install Google.Chrome
 ### 技術スタック
 - **言語**: TypeScript
 - **ビルドツール・ランタイム**: Bun（要求バージョンは `local/features/package.json` を参照）
+- **補助ツール**: Java 17+、Maven（Java Toolboxの開発・テスト時のみ）
 - **静的解析**: ESLint、typescript-eslint
 - **テスト**: Bun test、Playwright
 - **ストレージ**: IndexedDB
@@ -213,7 +220,7 @@ CIと同じ検証をまとめて実行する場合は`bun run verify`を使用�
 
 ### scripts の Java Toolbox
 
-`scripts/` のPython／PowerShell／バッチをまとめて利用するGUI・ヘッドレス対応のJavaアプリを [`scripts/java-toolbox`](scripts/java-toolbox) に追加しています。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md) を参照してください。
+`scripts/` のメディア変換、設定編集、更新、NicoCache管理、開発者向け操作をまとめたGUI・ヘッドレス対応のJavaアプリです。リリースアーカイブにはビルド済みJARを同梱しているため、利用者はMavenやBunでビルドする必要がありません。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md) を参照してください。旧スクリプトのうち完全に置き換えられたものは削除し、Windows固有の未移行機能を含む`nicocache-utility.py`とMkDocs用フックだけを残しています。
 
 ### NicoCache_nlの安全な終了
 

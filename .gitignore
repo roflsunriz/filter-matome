@@ -26,7 +26,7 @@ Thumbs.db
 # 不要画像ファイル
 local/background-images/favorites/
 
-# config
+# 旧アップデーターのローカル設定（作業環境に残っている場合は配布・追跡しない）
 scripts/config.json
 
 # dist

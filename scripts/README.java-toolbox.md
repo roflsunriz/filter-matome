@@ -14,14 +14,23 @@
 
 FFmpeg、FFprobe、JDK、NicoCache_nl本体など、処理そのものに必要な外部実行ファイルは自動インストールせず、実行時に検出して不足理由を表示します。
 
-## ビルドと起動
+## 配布版の利用
 
-JDK 17以上とMavenが必要です。
+GitHubのリリースアーカイブには、ビルド済みの
+`scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar` を同梱しています。JDK 17以上があれば実行でき、通常利用者がMaven、Bun、ソースコードからビルドする必要はありません。
+
+```bash
+java -jar scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
+java -jar scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test --data-dir ./toolbox-data
+```
+
+## 開発用ビルドと起動
+
+ソースから変更・検証する場合だけJDK 17以上とMavenが必要です。
 
 ```bash
 cd scripts/java-toolbox
-mvn test
-mvn package
+mvn verify
 java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
 ```
 
@@ -69,7 +78,7 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
 - `nicocache`: 診断、起動・停止、シンボリックリンク、Java拡張コンパイル
 - `developer`: `create-claude-link`相当の安全な相対リンク作成と依存関係診断
 
-既存のスクリプトは移行期間の互換経路として残しています。新しい自動処理ではJava Toolboxを使用してください。
+完全にJava Toolboxへ移行できた旧スクリプトは削除しました。MkDocsのビルドフックと、Java Toolboxにまだ含まれていないWindows固有のメニューを持つ`nicocache-utility.py`は互換経路として残しています。新しい自動処理ではJava Toolboxを使用してください。
 
 ## OS固有機能
 

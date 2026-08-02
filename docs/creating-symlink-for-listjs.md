@@ -52,25 +52,28 @@ Test-Path "C:\NicoCache_nl\local\list.js"
 
 ---
 
-## 2. スクリプト（`scripts\create-listjs-symlink.ps1`）で簡単に作成する場合
+## 2. Java Toolboxでまとめて作成する場合
 
-このリポジトリには、シンボリックリンク作成を自動化する PowerShell スクリプト `scripts\create-listjs-symlink.ps1` を用意してある。  
-このスクリプトを使うことで、削除やリンク作成、mapファイルの有無チェックもまとめて自動で行える。
+配布アーカイブに含まれるJava Toolboxを使うと、`scripts`、`local`、`nlFilters`、`extensions`、`list.js`のリンクを一括で作成できる。`features.js.map`が存在する場合は`list.js.map`も自動でリンクし、存在しない場合はスキップする。
 
 ### 使い方
 
-**1.** PowerShell でカレントディレクトリをNicoCache_nlのルートディレクトリに移動する。
+**1.** PowerShellまたはターミナルで、Java ToolboxのJARがあることを確認する。
 
 ```powershell
-Set-Location "C:\NicoCache_nl"
+Test-Path "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar"
 ```
 
-**2.** 以下のコマンドを実行する
+**2.** まずdry-runで対象を確認する。
 
 ```powershell
-.\scripts\create-listjs-symlink.ps1
+java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" --headless --plugin nicocache --action links --source-root "C:\filter-matome" --data-root "C:\NicoCache_nl" --dry-run
 ```
 
-対話型のスクリプトなので、Targetを訊かれたらビルド成果物のパスを入力する。既定値で`C:\NicoCache_nl\local\features\dist\features.js`を指定済みなのでそれで良ければEnterで進める。
+**3.** 内容を確認したら、`--yes --force`を付けて実行する。
 
-**3.** スクリプトが自動で `list.js` および `.map` のリンクを作成し、確認情報も表示する。
+```powershell
+java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" --headless --plugin nicocache --action links --source-root "C:\filter-matome" --data-root "C:\NicoCache_nl" --yes --force
+```
+
+管理者権限またはシンボリックリンク作成を許可する開発者モードが必要な場合がある。Java Toolboxは通常ファイルやフォルダを削除して置き換えず、異なる既存リンクも`--force`なしではスキップする。

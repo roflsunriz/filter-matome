@@ -105,10 +105,18 @@ jobs:
   # ─────────────────────────────────────────────
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+          cache-dependency-path: scripts/java-toolbox/pom.xml
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -131,6 +139,10 @@ jobs:
         working-directory: local/features
         run: bun run build
 
+      - name: Test and package Java Toolbox
+        working-directory: scripts/java-toolbox
+        run: mvn --batch-mode verify
+
       - name: Archive build artifacts
         uses: actions/upload-artifact@v4
         if: success()
@@ -138,6 +150,7 @@ jobs:
           name: build-artifacts
           path: |
             local/features/dist/
+            scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
             extensions/CommentFilterLogger.*
             extensions/CustomCacheReturner.*
             extensions/downloadThruFFmpeg.*

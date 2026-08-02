@@ -23,7 +23,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
     !!! note
 
-        `scripts` フォルダは便利なスクリプトがひとまとめになっているが使わないなら必ずしもコピー必須ではない
+        `scripts` フォルダにはビルド済みJava ToolboxのJARが含まれる。Java Toolboxを使わない場合はコピー必須ではない
 
 3. NicoCache_nlをGUIまたは通常の終了手段で終了する。Windowsで終了対象を安全に限定したい場合は、リポジトリルートの`stop-nicocache.ps1`を使用する。その後、`RunNicoCache.ps1`または`NicoCache_nl Starter.bat`から再起動する
 
@@ -263,7 +263,11 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 - `C:\NicoCache_nl\local\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`、`smXXXXXXXX.mp4`、`nmXXXXXXXX.mp4`、`ssXXXXXXXX.mp4`などとし、該当動画IDのページを開く。 
 
 !!! note
-    mp4ファイルを`scripts/convert-to-faststart.ps1`でfaststart変換すると、読み込みから再生開始までの待ち時間が短縮される。
+    mp4ファイルを配布済みJava ToolboxでFastStart変換すると、読み込みから再生開始までの待ち時間が短縮される。通常利用ではMavenなどのビルドは不要。
+
+    ```powershell
+    java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" --headless --plugin media --action faststart --input "C:\NicoCache_nl\cache\movie.mp4" --dry-run
+    ```
 
 !!! note
     動画ファイルを追加した後はNicoCache_nlに認識させるためにNicoCache_nlの再起動が必要。

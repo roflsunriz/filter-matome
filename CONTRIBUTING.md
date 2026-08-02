@@ -18,6 +18,7 @@ filter-matomeプロジェクトへの貢献に興味を持っていただき、�
 ### 前提条件
 - Bun 1.3.8 以上
 - Java Development Kit (JDK) 17 LTS 又は 21 LTS
+- Maven（Java Toolboxの変更・テスト時）
 - Git 2.52.0.windows.1 以上
 
 ### セットアップ手順
@@ -52,6 +53,14 @@ filter-matomeプロジェクトへの貢献に興味を持っていただき、�
    cd local/features
    bun run error-check
    ```
+
+5. **Java Toolboxのテスト**（Java Toolboxを変更した場合）
+   ```bash
+   cd scripts/java-toolbox
+   mvn --batch-mode verify
+   ```
+
+   `scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar` は`mvn verify`で生成されます。利用者向けリリースでは、このビルド済みJARをCIが配布アーカイブへ同梱するため、利用者にMavenの導入やビルドは要求しません。
 
 
 ## 📝 開発ガイドライン
