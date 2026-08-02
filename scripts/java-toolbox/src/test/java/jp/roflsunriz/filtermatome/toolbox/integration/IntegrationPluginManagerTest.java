@@ -42,6 +42,27 @@ class IntegrationPluginManagerTest {
         }
     }
 
+    @Test
+    void routesDeveloperSymlinkActionThroughThePluginManager() throws Exception {
+        Path repo = Files.createDirectories(temp.resolve("repo"));
+        Path target = Files.createDirectories(temp.resolve("target"));
+        Files.createDirectories(repo.resolve("local/features/dist"));
+        Files.writeString(repo.resolve("local/features/dist/features.js"), "features");
+        Files.createDirectories(target.resolve("local"));
+        PluginContext context = TestSupport.context(temp.resolve("data"), repo);
+        var logs = TestSupport.captureLogs(context.log());
+
+        try (PluginManager manager = new PluginManager(context)) {
+            manager.discover();
+            CommandRequest request = TestSupport.request("listjs", List.of(), Map.of(
+                    "source-root", repo.toString(), "target-root", target.toString()),
+                    false, false, true, false, null);
+            assertEquals(0, manager.run("developer", request));
+            assertTrue(logs.stream().anyMatch(line -> line.contains("DRY-RUN:")
+                    && line.contains("list.js")));
+        }
+    }
+
     private static void writePluginJar(Path jar) throws Exception {
         String classEntry = ExternalTestPlugin.class.getName().replace('.', '/') + ".class";
         String serviceEntry = "META-INF/services/jp.roflsunriz.filtermatome.toolbox.ToolPlugin";

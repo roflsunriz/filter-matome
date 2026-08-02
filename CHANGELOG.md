@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【scripts/Java Toolbox】開発補助プラグインへ、旧`create-all-symlinks.ps1`と`create-listjs-symlink.ps1`相当の一括リンク・`list.js`リンクを追加した。Windowsの`C:\filter-matome`／`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値として解決し、通常ファイルを保護したままGUI・ヘッドレスで実行できるようにした。
+- 【scripts/Java Toolbox】シンボリックリンクのOS別既定値、`list.js.map`の条件付き作成、既存リンクの再作成、安全な拒否を単体・機能・結合・隔離E2Eで検証し、Linux/macOSとヘッドレス環境でも実行できるテスト経路を追加した。
 - 【scripts】Python、PowerShell、バッチへ分散していたメディア変換、properties編集、GitHub更新の導線を、GUIとヘッドレスで共通利用できるJava Toolboxへ統合した。プラグインJAR、READMEヘルプ辞書、実行時パス解決を採用し、OSやリポジトリの固定パスに依存しない構成にした。
 - 【scripts/Java Toolbox】JUnit 5による単体・機能・結合・E2Eテストを追加し、CLI、GUIタブ、ヘッドレスプラグイン、外部プラグインSPI、ETag付き更新、空白入りパス、キャンセルを自動検証できるようにした。
 - 【scripts/Java Toolbox】実機から切り離した一時ディレクトリで`Main`を子プロセス起動し、全組み込みアクションの成果物、バックアップ、`.part` cleanup、確認拒否、外部コマンド引数、localhost更新APIを検証する隔離E2Eフィクスチャを追加した。

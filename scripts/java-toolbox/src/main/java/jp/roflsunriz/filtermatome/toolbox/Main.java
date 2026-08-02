@@ -118,6 +118,8 @@ public final class Main {
         System.out.println("GUI:       java -jar filter-matome-toolbox-0.1.0-SNAPSHOT.jar");
         System.out.println("一覧:      java -jar ... --list-plugins");
         System.out.println("ヘッドレス: java -jar ... --headless --plugin media --action hls --input movie.mp4 --dry-run");
+        System.out.println("リンク確認: java -jar ... --headless --plugin developer --action links --dry-run");
+        System.out.println("list.js:   java -jar ... --headless --plugin developer --action listjs --yes");
         System.out.println("共通引数:  --data-dir PATH --plugins-dir PATH --repo-root PATH --output PATH");
         System.out.println("安全引数:  --recursive --overwrite --dry-run --yes");
         System.out.println("現在のロケール: " + Locale.getDefault());

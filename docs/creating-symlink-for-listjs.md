@@ -1,79 +1,76 @@
-### NicoCache_nl 用 `local/list.js` シンボリックリンク作成手順（Windows / PowerShell）
+### NicoCache_nl 用 `local/list.js` シンボリックリンク作成手順
+
+NicoCache_nl はキャッシュデータマネージャーを `local/list.js` という固定名で参照します。Java Toolbox の開発補助プラグインは、Windows・Linux・macOS のいずれでも、ビルド成果物とNicoCache_nl側のファイルを安全にリンクできます。
 
 !!! warning "重要"
-      NicoCache_nl はキャッシュデータマネージャースクリプトを `C:\NicoCache_nl\local\list.js` という「固定のパス・固定のファイル名」で参照する。設定で場所や名前は変更不能。  
-      そのため、ビルド成果物（`C:\NicoCache_nl\local\features\dist\features.js`）へ必ずこの固定パス名でシンボリックリンクを張る必要がある。`.map`ファイルはソースからビルドしたときに生成されるデバッグ用ファイル。リリースには含まれていない。
+      シンボリックリンクの作成にはOSの権限が必要です。既存の通常ファイルやフォルダーは削除されず、既存リンクの再作成には `--force`、実作成には `--yes` が必要です。最初に `--dry-run` で対象を確認してください。
 
----
+## 既定パス
 
-#### 前提
-PowerShell（管理者権限）で実行する。（Windows + R -> 「wt」または「wt.exe」と入力 -> Ctrl + Shift + Enter -> UAC「はい」）
+開発補助プラグインのGUIとCLIは、引数を省略した場合に次のパスを使います。
 
-安全のため、NicoCache_nl を停止させておく。
+| OS | Source | Target |
+| --- | --- | --- |
+| Windows | `C:\filter-matome` | `%LOCALAPPDATA%\NicoCache_nl` |
+| Linux | 現在のリポジトリ | `$XDG_CONFIG_HOME/NicoCache_nl`（未設定時は`~/.config/NicoCache_nl`） |
+| macOS | 現在のリポジトリ | `~/Library/Application Support/NicoCache_nl` |
 
-```powershell
-Set-Location "C:\filter-matome"
-.\stop-nicocache.ps1
-```
+実際の環境が既定値と異なる場合は、`--source-root` と `--target-root` を明示してください。NicoCache_nlのデータルートを別に設定している場合も、Targetには実際に `local`、`nlFilters`、`extensions` が存在するルートを指定します。
 
-`stop-nicocache.ps1`は`-jar ...\NicoCache_nl.jar`の指紋があるPIDだけを対象にし、正常終了できない場合に限って確認後に強制終了する。`Stop-Process -Name java -Force`のような名前指定は、NicoCache_nl以外のJavaプロセスも終了するため使用しない。
+## Java Toolboxで一括作成
 
-- ビルド済みファイルの一例: `C:\NicoCache_nl\local\features\dist\features.js`
-- `C:\NicoCache_nl\local\features\dist\features.js.map`
-
----
-
-## 1. 手動でシンボリックリンクを作成する場合
-
-**1.** 既存の `list.js`（ファイル/リンク）があれば削除しておく。
-
-```powershell
-Remove-Item -Path "C:\NicoCache_nl\local\list.js"
-Remove-Item -Path "C:\NicoCache_nl\local\list.js.map"
-```
-
-**2.** 固定パス名 `C:\NicoCache_nl\local\list.js` に、ビルド成果物へのシンボリックリンクを作成する。
-
-```powershell
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js" -Target "C:\NicoCache_nl\local\features\dist\features.js"
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Target "C:\NicoCache_nl\local\features\dist\features.js.map"
-```
-
-   - `-Path` は必ず `C:\NicoCache_nl\local\list.js`（固定）にする。
-   - `-Target` はあなたの環境でのビルド成果物の実在パスに合わせて調整すること。
-
-**3.** 作成を確認。
-
-```powershell
-Get-Item "C:\NicoCache_nl\local\list.js" | Select-Object Mode, LinkType, Target
-Resolve-Path "C:\NicoCache_nl\local\list.js"
-Test-Path "C:\NicoCache_nl\local\list.js"
-```
-
----
-
-## 2. Java Toolboxでまとめて作成する場合
-
-配布アーカイブに含まれるJava Toolboxを使うと、`scripts`、`local`、`nlFilters`、`extensions`、`list.js`のリンクを一括で作成できる。`features.js.map`が存在する場合は`list.js.map`も自動でリンクし、存在しない場合はスキップする。
-
-### 使い方
-
-**1.** PowerShellまたはターミナルで、Java ToolboxのJARがあることを確認する。
+### 1. JARの確認
 
 ```powershell
 Test-Path "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar"
 ```
 
-**2.** まずdry-runで対象を確認する。
+Linux/macOSでは同じJARを `java -jar` で実行してください。
+
+### 2. 一括リンクの予定確認
+
+`scripts`、`local`、`nlFilters`、`extensions`、`local/list.js`をまとめて確認します。存在しないSource項目はスキップされます。
 
 ```powershell
-java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" --headless --plugin nicocache --action links --source-root "C:\filter-matome" --data-root "C:\NicoCache_nl" --dry-run
+java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
+  --headless --plugin developer --action links `
+  --source-root "C:\filter-matome" --target-root "$env:LOCALAPPDATA\NicoCache_nl" --dry-run
 ```
 
-**3.** 内容を確認したら、`--yes --force`を付けて実行する。
+### 3. 一括リンクの実行
 
 ```powershell
-java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" --headless --plugin nicocache --action links --source-root "C:\filter-matome" --data-root "C:\NicoCache_nl" --yes --force
+java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
+  --headless --plugin developer --action links `
+  --source-root "C:\filter-matome" --target-root "$env:LOCALAPPDATA\NicoCache_nl" --yes --force
 ```
 
-管理者権限またはシンボリックリンク作成を許可する開発者モードが必要な場合がある。Java Toolboxは通常ファイルやフォルダを削除して置き換えず、異なる既存リンクも`--force`なしではスキップする。
+## `list.js` だけを作成
+
+`create-listjs-symlink.ps1` 相当の `listjs` アクションは、指定したJavaScriptと同じ場所に `.map` がある場合だけ `list.js.map` も作成します。`.map` がない場合、既存の `list.js.map` は変更しません。
+
+```powershell
+java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
+  --headless --plugin developer --action listjs `
+  --target "C:\filter-matome\local\features\dist\features.js" `
+  --link-dir "$env:LOCALAPPDATA\NicoCache_nl\local" --dry-run
+
+java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
+  --headless --plugin developer --action listjs `
+  --target "C:\filter-matome\local\features\dist\features.js" `
+  --link-dir "$env:LOCALAPPDATA\NicoCache_nl\local" --yes --force
+```
+
+引数を省略すると、Sourceの `local/features/dist/features.js` をTargetの `local/list.js`へリンクします。
+
+## 確認とトラブルシューティング
+
+Windowsでは次のようにリンクの種類と解決先を確認できます。
+
+```powershell
+Get-Item "$env:LOCALAPPDATA\NicoCache_nl\local\list.js" -Force |
+  Select-Object Mode, LinkType, Target
+Resolve-Path "$env:LOCALAPPDATA\NicoCache_nl\local\list.js"
+```
+
+リンク作成が拒否された場合は、Windowsでは開発者モードまたはシンボリックリンク作成権限、Linux/macOSでは対象ファイルシステムの権限を確認してください。リンク先の親フォルダーは自動作成されないため、NicoCache_nlのディレクトリ構成も確認します。

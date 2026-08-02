@@ -135,24 +135,25 @@ X-Filter-Matome-Cache-Control: 1
 
 ### 1.2 Symlink Setup (Required)
 
-NicoCache_nl はキャッシュデータ用スクリプトを `C:\NicoCache_nl\local\list.js` の固定パス・固定名で参照する。
+NicoCache_nl はキャッシュデータ用スクリプトを、Targetの`local/list.js`という固定名で参照する。ビルド成果物（`local/features/dist/features.js`）へのシンボリックリンクが必要なため、Java Toolboxの開発補助プラグインを使って予定確認と作成を行う。
 
-ビルド成果物（ `local/features/dist/features.js`）へこの固定パス名で**シンボリックリンクを作成**しないと機能しない。
+**要約（Windows / PowerShell）**
 
-**要約（Windows / PowerShell）※管理者権限が必要**
+`--dry-run`は変更せず、`--yes`で実作成、`--force`で既存シンボリックリンクだけを再作成する。既存の通常ファイルやフォルダーは削除されない。
 
-Windows + R -> 「wt」または「wt.exe」と入力 -> Ctrl + Shift + Enter -> UAC「はい」
 ```powershell
-# 既存の list.js / list.js.map を削除
-Remove-Item -Path "C:\NicoCache_nl\local\list.js"
-Remove-Item -Path "C:\NicoCache_nl\local\list.js.map"
+java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
+  --headless --plugin developer --action listjs `
+  --source-root "C:\filter-matome" `
+  --target-root "$env:LOCALAPPDATA\NicoCache_nl" --dry-run
 
-# ビルド成果物へリンクを作成
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js" -Target "C:\NicoCache_nl\local\features\dist\features.js"
-New-Item -ItemType SymbolicLink -Path "C:\NicoCache_nl\local\list.js.map" -Target "C:\NicoCache_nl\local\features\dist\features.js.map"
+java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
+  --headless --plugin developer --action listjs `
+  --source-root "C:\filter-matome" `
+  --target-root "$env:LOCALAPPDATA\NicoCache_nl" --yes --force
 ```
 
-詳細な手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照。
+`links`アクションでは`local`、`nlFilters`、`extensions`、`list.js`を一括作成できる。Linux/macOSでは同じJARをターミナルから実行し、Source/Targetを必要に応じて`--source-root`／`--target-root`で指定する。詳細な手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照。
 
 ---
 

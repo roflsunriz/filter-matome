@@ -162,7 +162,33 @@ jobs:
           retention-days: 7
 
   # ─────────────────────────────────────────────
-  # ジョブ④: 構造・構文バリデーション（Bun/Java 不要・軽量）
+  # ジョブ⑤: Java ToolboxのOS別・ヘッドレス検証
+  # ─────────────────────────────────────────────
+  java-toolbox-platforms:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+          cache-dependency-path: scripts/java-toolbox/pom.xml
+
+      - name: Run Java Toolbox tests
+        working-directory: scripts/java-toolbox
+        run: mvn --batch-mode verify
+
+  # ─────────────────────────────────────────────
+  # ジョブ⑥: 構造・構文バリデーション（Bun/Java 不要・軽量）
   # ─────────────────────────────────────────────
   validate:
     runs-on: ubuntu-latest

@@ -35,7 +35,7 @@ mvn verify
 java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
 ```
 
-テストはJUnit 5で、単体（CLI・JSON・properties・ファイル安全性・プロセス制御）、機能（組み込みプラグインのヘッドレス操作）、結合（ServiceLoader外部JAR・ローカルHTTPのETag更新）、E2E（実際の`Main`子プロセス、組み込み機能の成功／拒否／バックアップ／`.part`／副作用、GUIタブ構築とREADME・defaults辞書の操作部品）を検証します。E2Eの外部コマンドは偽実装が引数と生成物を記録し、更新・動画情報APIはlocalhostのHTTPサーバーだけを使うため、実機の設定、証明書ストア、レジストリ、Firefoxプロファイル、GitHubへ触れません。シンボリックリンク権限がないOSでは、作成成功ではなく安全な拒否と既存ファイル保護を検証します。GUIを表示できない環境では実ウィンドウのGUI E2Eだけ自動的にスキップし、ヘッドレスGUI構築とCLI E2Eは実行します。全検証には`mvn verify`を使用してください。
+テストはJUnit 5で、単体（CLI・JSON・properties・ファイル安全性・OS別パス解決・プロセス制御）、機能（組み込みプラグインのヘッドレス操作）、結合（ServiceLoader外部JAR・開発補助アクション・ローカルHTTPのETag更新）、E2E（実際の`Main`子プロセス、組み込み機能の成功／拒否／バックアップ／`.part`／副作用、シンボリックリンク、GUIタブ構築とREADME・defaults辞書の操作部品）を検証します。E2Eの外部コマンドは偽実装が引数と生成物を記録し、更新・動画情報APIはlocalhostのHTTPサーバーだけを使うため、実機の設定、証明書ストア、レジストリ、Firefoxプロファイル、GitHubへ触れません。シンボリックリンク権限がないOSでは、作成成功ではなく安全な拒否と既存ファイル保護を検証します。GUIを表示できない環境では実ウィンドウのGUI E2Eだけ自動的にスキップし、ヘッドレスGUI構築とCLI E2Eは実行します。全検証には`mvn verify`を使用してください。
 
 プラグイン一覧と自己診断:
 
@@ -60,6 +60,14 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
 # 設定を一覧表示
 java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
   --headless --plugin config-editor --action list --config "/path/to/config.properties"
+
+# リポジトリとNicoCache_nlのリンク予定を確認
+java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+  --headless --plugin developer --action links --dry-run
+
+# list.js と、存在する場合だけ list.js.map をリンク
+java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+  --headless --plugin developer --action listjs --yes --force
 ```
 
 削除、リネーム、リンク再作成、上書きなど副作用のある操作は、`--yes`、`--force`、`--overwrite`を明示しない限り実行しません。NicoCache_nl本体の起動・停止・ビルドなどの管理操作は本体側の機能を使用してください。
@@ -73,10 +81,10 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
 - `media`: 10秒／60秒切り出し、FastStart、HLS、H.264／HEVC／AV1変換、キャッシュ動画リネーム
 - `config-editor`: properties編集とdefaults辞書。GUIの初期設定ファイルはWindowsでは`%LOCALAPPDATA%/NicoCache_nl/config.properties`、Linuxでは`~/.config/NicoCache_nl/config.properties`、macOSでは`~/Library/Application Support/NicoCache_nl/config.properties`です。defaults辞書の値はダブルクリックで設定一覧へ入力できます。
 - `updater`: GitHub Releases API、ETag、`.part`ダウンロード
-- `developer`: `create-claude-link`相当の安全な相対リンク作成と依存関係診断
+- `developer`: `create-claude-link`相当の安全な相対リンク作成、`create-all-symlinks.ps1`相当の一括リンク、`create-listjs-symlink.ps1`相当の`list.js`リンク、依存関係診断
 
 `nicocache-utility.py`と専用READMEは削除済みです。NicoCache_nl本体の管理機能と重複するため、JavaToolboxにはNicoCache管理プラグインを組み込んでいません。MkDocsのビルドフックなど、用途が異なるスクリプトは残しています。
 
 ## OS固有機能
 
-シンボリックリンクなど一部の開発者向け操作はOSの権限・仕様に依存します。メディア／設定／更新処理はプラットフォーム非依存です。NicoCache_nl本体のOS固有操作は本体側の案内に従ってください。
+シンボリックリンクなど一部の開発者向け操作はOSの権限・仕様に依存します。開発補助プラグインのSource初期値はWindowsでは`C:\filter-matome`、Linux/macOSでは現在のリポジトリです。Target初期値はWindowsでは`%LOCALAPPDATA%/NicoCache_nl`、Linuxでは`$XDG_CONFIG_HOME/NicoCache_nl`（未設定時は`~/.config/NicoCache_nl`）、macOSでは`~/Library/Application Support/NicoCache_nl`です。パスは`--source-root`、`--target-root`、`--target`、`--link-dir`で変更できます。通常ファイルを削除せず、既存シンボリックリンクの再作成だけに`--force`を使用します。メディア／設定／更新処理はプラットフォーム非依存です。NicoCache_nl本体のOS固有操作は本体側の案内に従ってください。
