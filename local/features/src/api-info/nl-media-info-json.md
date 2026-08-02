@@ -1,6 +1,6 @@
 APIエンドポイント:https://www.nicovideo.jp/cache/mediainfo?{video_id}
 
-CMAF/Domandの`.hls`キャッシュは、キャッシュディレクトリ全体ではなく`master.m3u8`をMediaInfoの解析入口とする。これにより、映像・音声の全体情報をHLSのトラックとして取得する。以下の「HLS, type1」はディレクトリを直接解析していた旧実装の記録であり、現行実装のレスポンス例ではない。
+CMAF/Domandの`.hls`キャッシュは、`master.m3u8`を解析結果として返すのではなく、ローカルの映像・音声セグメントをFFmpegで一時MP4へリマックスしてからMediaInfoへ渡す。現行実装のレスポンスはセグメントごとの配列ではなく、通常のMP4と同じGeneral/Video/Audioトラックを持つ1件のJSONになる。`@ref`は一時ファイルではなく元のキャッシュを指す。以下のHLS例は、旧実装がディレクトリやプレイリストを直接解析していた時点の採取記録であり、現行実装のレスポンス例ではない。
 
 JSONレスポンス(mp4):
 
@@ -86,7 +86,7 @@ JSONレスポンス(mp4):
 "AlternateGroup":"1"}]}
 }
 
-JSONレスポンス(HLS, type1):
+旧レスポンス記録(HLS, type1; 現行では返さない):
 
 [
 {
@@ -7756,7 +7756,7 @@ JSONレスポンス(HLS, type1):
 }
 ]
 
-JSONレスポンス(HLS, type2):
+旧レスポンス記録(HLS, type2; 現行では返さない):
 [
 {
 "creatingLibrary":{"name":"MediaInfoLib","version":"23.09","url":"https://mediaarea.net/MediaInfo"},

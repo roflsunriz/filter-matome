@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- 【extensions/nlMediaInfo】CMAF/DomandのHLSキャッシュをディレクトリ全体でMediaInfoへ渡してセグメントごとのJSONになっていた問題を、`master.m3u8`を解析入口にするよう修正し、映像・音声の全体仕様を確認できるようにした。
+- 【extensions/nlMediaInfo】CMAF/DomandのHLSキャッシュをセグメントごとにMediaInfoへ渡して有用な動画仕様を取得できなかった問題を、ローカルのHLSを一時MP4へリマックスしてから解析するよう修正し、解像度・ビットレート・フレーム情報などの映像・音声の実体仕様を確認できるようにした。
 
 ### Security
 
