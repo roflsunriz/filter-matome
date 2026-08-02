@@ -156,7 +156,9 @@ export class FilterManager {
       case "temporary":
         return item.isTemp;
       case "unavailable":
-        return item.availabilityStatus === "unavailable";
+        return ["deleted", "private", "unavailable"].includes(
+          item.availabilityStatus ?? "",
+        );
       default:
         return true;
     }
@@ -227,7 +229,11 @@ export class FilterManager {
         statusCounts.complete++;
       }
 
-      if (item.availabilityStatus === "unavailable") {
+      if (
+        ["deleted", "private", "unavailable"].includes(
+          item.availabilityStatus ?? "",
+        )
+      ) {
         statusCounts.unavailable++;
       }
     }

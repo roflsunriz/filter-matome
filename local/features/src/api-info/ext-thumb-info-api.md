@@ -1,5 +1,23 @@
 APIエンドポイント: https://ext.nicovideo.jp/api/getthumbinfo/{video_id}
 
+## 現行クライアントの互換仕様
+
+`ext.nicovideo.jp/api/getthumbinfo` は現在も旧XMLを返す動画がありますが、環境や動画種別によってJSON、HTTPエラー、必要項目の欠落が混在する可能性があります。実装では `common/video-info-api.ts` に取得と正規化を集約し、次の順序で取得します。
+
+1. `https://ext.nicovideo.jp/api/getthumbinfo/{video_id}` を要求する。
+2. XMLまたはJSONの動画情報を共通の `ThumbInfo` へ変換する。
+3. 取得失敗・未知形式・非OKレスポンスの場合は、次の現行Watch APIを試す。
+
+```text
+GET https://www.nicovideo.jp/api/watch/v3_guest/{video_id}?actionTrackId={10文字の英数字}_{UNIXミリ秒}
+X-Frontend-Id: 6
+X-Frontend-Version: 0
+```
+
+Watch APIの成功レスポンスは `meta.status=200` と `data.video` を中心に扱います。`data.video.duration` は秒数を `m:ss` または `h:mm:ss` へ変換し、`count.view`・`count.comment`・`count.mylist`、`thumbnail.url`（なければ`player`/`ogp`）、`registeredAt`、`owner`または`channel`、`tag.items`、`genre.label` を取得します。公式チャンネル動画では `owner` が `null` で `channel` のみ存在する場合があるため、どちらも任意項目です。`isPrivate`、`isDeleted`、`meta.errorCode` は公開状態エラーとして保持します。R18系は `tag.hasR18Tag` とタグ名の両方を確認します。
+
+必須項目を固定せず、タイトル、説明、サムネイル、投稿者、チャンネル、タグ、各カウンター、時間、ジャンルの欠落や `null` を個別に既定値へ正規化します。旧XMLの `<user_*>` と `<ch_*>`、タグの `lock="1"` も同じ `ThumbInfo` に変換します。解析用の `raw` はレスポンス構造を残しつつ、編集キー、アクセストークン、URLクエリの署名キーなどを除去・マスクします。
+
 APIレスポンス(OK):
 <nicovideo_thumb_response status="ok">
 <thumb>

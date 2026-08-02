@@ -16,6 +16,7 @@
 - `css-constants.ts`, `visual-theme.ts`: 共通CSS変数とダークテーマトークン。
 - `thumbnail-fallback.ts`: 欠落・読込失敗時の共通サムネイル。
 - `server-response-parser.ts`: `server-response` メタ情報の安全な解析。
+- `video-info-api.ts`: 旧ext-thumb XMLと現行Watch API JSONを共通の動画情報へ正規化するクライアント。
 - `cache-search-client.ts`, `cache-search-results.ts`: NicoCache_nlキャッシュ検索と結果UI。
 - `cache-removal.ts`: `FilterMatomeCacheControl` APIの削除・削除予約・状態確認。
 - `video-navigation.ts`, `video-navigation-styles.ts`: 動画ID・URL入力とキャッシュ検索の共通UI。
@@ -47,6 +48,7 @@
 
 - 共通ヘッダー変更: 各静的SPAとニコニコ動画上のmlink表示を確認する。
 - 動画ナビゲーション変更: movie-infoとvideo-playerを同時に確認する。
+- 動画情報API変更: movie-info、cache-data-manager、mylist2、video-player、Service Worker、関連スクリプトを同時に確認する。
 - キャッシュ検索・削除変更: cache-data-manager、video-player、mlink-video-controllerを確認する。
 - テーマやアイコン変更: 狭幅、低高さ、高DPI、フォーカス表示、長い翻訳文を確認する。
 - IndexedDB復旧変更: データを退避できない場合に無条件削除しないことを確認する。
@@ -58,6 +60,7 @@
 - `tests/common-server-response-parser.test.ts`
 - `tests/video-player-video-navigation.test.ts`
 - `tests/video-player-cache-search.test.ts`
+- `tests/video-info-api.test.ts`
 - `tests/mlink-video-controller-cache-remove.test.ts`
 - 各プロジェクトのPlaywrightテストに含まれる共通ヘッダー・テーマ・サムネイル確認
 

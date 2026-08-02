@@ -480,7 +480,7 @@ export abstract class Mylist2UICore {
    * video-player ルーティングの API 可用性チェック用クリックハンドラー。
    *
    * data-needs-api-check 属性を持つリンクがクリックされたとき、
-   * getthumbinfo API で公開状態を確認し、削除済み/非公開なら video-player へ遷移する。
+   * 動画情報APIで公開状態を確認し、削除済み/非公開なら video-player へ遷移する。
    * 公開中なら公式プレーヤーへ遷移する。
    */
   protected setupVideoLinkApiCheck(): void {

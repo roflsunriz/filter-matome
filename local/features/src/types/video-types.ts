@@ -99,9 +99,9 @@ export interface DBVideo extends VideoInfo {
   addedAt: number;
   /** ユーザー任意のメモ */
   memo?: string;
-  /** 説明文の取得元 ("thumb"=getthumbinfo, "watch"=視聴ページ) */
+  /** 説明文の取得元 ("thumb"=動画情報API, "watch"=視聴ページ) */
   descriptionSource?: "thumb" | "watch";
-  /** getthumbinfo による公開状態 */
+  /** 動画情報APIによる公開状態 */
   availabilityStatus?: VideoAvailabilityStatus;
   /** 公開状態の最終確認日時 */
   availabilityCheckedAt?: number;

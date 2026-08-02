@@ -6,6 +6,22 @@ import {
   VideoAvailabilityStatus,
 } from "@/types/video-types";
 import { QueueItem } from "@/types/mylist-types";
+import {
+  fetchNicoVideoInfo,
+  isNicoVideoInfoError,
+} from "@/common/video-info-api";
+
+const parseDurationSeconds = (length: string): number => {
+  const parts = length.split(":").map(Number);
+  if (parts.some((part) => !Number.isFinite(part))) return 0;
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+  return parts.length === 1 ? parts[0] : 0;
+};
 
 export class ApiService {
   private apiCache: Map<string, VideoInfo>;
@@ -75,78 +91,21 @@ export class ApiService {
         return cachedData;
       }
 
-      const response = await fetch(
-        `https://ext.nicovideo.jp/api/getthumbinfo/${videoId}`,
-      );
-      const text = await response.text();
-
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(text, "text/xml");
-
-      const errorElement = xml.querySelector("error");
-      if (errorElement) {
-        const description = xml.querySelector("description");
-        throw new Error(
-          description?.textContent || "動画情報の取得に失敗しました",
-        );
-      }
-
-      const thumb = xml.querySelector("thumb");
-      if (!thumb) {
-        throw new Error("動画情報の取得に失敗しました");
-      }
-
-      const lengthElement = thumb.querySelector("length");
-      if (!lengthElement || !lengthElement.textContent) {
-        throw new Error("動画の長さ情報が取得できませんでした");
-      }
-
-      const length = lengthElement.textContent;
-      const [minutes, seconds] = length.split(":").map(Number);
-      const lengthInSeconds = minutes * 60 + seconds;
-
-      const titleElement = thumb.querySelector("title");
-      const descriptionElement = thumb.querySelector("description");
-      const viewCountElement = thumb.querySelector("view_counter");
-      const commentNumElement = thumb.querySelector("comment_num");
-      const mylistCounterElement = thumb.querySelector("mylist_counter");
-      const thumbnailUrlElement = thumb.querySelector("thumbnail_url");
-      const firstRetrieveElement = thumb.querySelector("first_retrieve");
-      const userNicknameElement = thumb.querySelector("user_nickname");
-      const chNameElement = thumb.querySelector("ch_name");
-
-      if (
-        !titleElement ||
-        !viewCountElement ||
-        !commentNumElement ||
-        !mylistCounterElement ||
-        !thumbnailUrlElement ||
-        !firstRetrieveElement
-      ) {
-        throw new Error("必要な動画情報が取得できませんでした");
-      }
-
-      // タグ抽出（ext.getthumbinfo は <tags> 配下に <tag> が並ぶ想定）
-      const tagElements = Array.from(thumb.querySelectorAll("tags tag"));
-      const tags = tagElements
-        .map((t) => (t.textContent || "").trim())
-        .filter(Boolean);
-
+      const info = await fetchNicoVideoInfo(videoId);
+      const uploadedAt = Date.parse(info.firstRetrieve);
       const videoInfo: VideoInfo = {
         id: videoId,
-        title: titleElement.textContent || "不明な動画",
-        viewCount: parseInt(viewCountElement.textContent || "0"),
-        commentCount: parseInt(commentNumElement.textContent || "0"),
-        mylistCount: parseInt(mylistCounterElement.textContent || "0"),
-        thumbnailUrl: thumbnailUrlElement.textContent || "",
-        uploadedAt: new Date(firstRetrieveElement.textContent || "").getTime(),
-        authorName:
-          userNicknameElement?.textContent ||
-          chNameElement?.textContent ||
-          "不明",
-        length: lengthInSeconds,
-        description: descriptionElement?.textContent || "",
-        tags: tags.length > 0 ? tags : undefined,
+        title: info.title || "不明な動画",
+        viewCount: info.viewCounter,
+        commentCount: info.commentNum,
+        mylistCount: info.mylistCounter,
+        thumbnailUrl: info.thumbnailUrl,
+        uploadedAt: Number.isFinite(uploadedAt) ? uploadedAt : Date.now(),
+        authorName: info.owner?.nickname || info.channel?.nickname || "不明",
+        length: parseDurationSeconds(info.length),
+        description: info.description,
+        tags:
+          info.tags.length > 0 ? info.tags.map((tag) => tag.name) : undefined,
       };
 
       this.apiCache.set(videoId, videoInfo);
@@ -174,35 +133,34 @@ export class ApiService {
     }
 
     const checkedAt = Date.now();
-    const response = await fetch(
-      `https://ext.nicovideo.jp/api/getthumbinfo/${videoId}`,
-    );
-    const text = await response.text();
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, "text/xml");
-    const status = xml.documentElement.getAttribute("status");
-
-    if (status === "ok") {
+    try {
+      await fetchNicoVideoInfo(videoId);
       return { videoId, status: "available", checkedAt };
+    } catch (error) {
+      const reason =
+        error instanceof Error ? error.message : "動画情報の取得に失敗しました";
+      const code = isNicoVideoInfoError(error) ? error.code : "UNKNOWN";
+      return {
+        videoId,
+        status: this.classifyUnavailableStatus(code, reason),
+        reason,
+        checkedAt,
+      };
     }
-
-    const reason =
-      xml.querySelector("description")?.textContent?.trim() ||
-      "動画情報の取得に失敗しました";
-
-    return {
-      videoId,
-      status: this.classifyUnavailableStatus(reason),
-      reason,
-      checkedAt,
-    };
   }
 
-  private classifyUnavailableStatus(reason: string): VideoAvailabilityStatus {
-    if (/非公開|private/i.test(reason)) {
+  private classifyUnavailableStatus(
+    code: string,
+    reason: string,
+  ): VideoAvailabilityStatus {
+    if (code === "PRIVATE" || /非公開|private/i.test(reason)) {
       return "private";
     }
-    if (/削除|deleted|not\s*found|存在しません/i.test(reason)) {
+    if (
+      code === "DELETED" ||
+      code === "NOT_FOUND" ||
+      /削除|deleted|not\s*found|存在しません/i.test(reason)
+    ) {
       return "deleted";
     }
     return "unavailable";
@@ -320,7 +278,7 @@ export class ApiService {
 
   /**
    * 視聴ページ経由でリッチHTML説明文を取得する。
-   * getthumbinfo では取得できない完全なHTML（スタイル・リンク等）を返す。
+   * 動画情報APIでは取得できない完全なHTML（スタイル・リンク等）を返す。
    * 取得失敗時は null を返す。
    */
   async fetchRichDescription(videoId: string): Promise<string | null> {

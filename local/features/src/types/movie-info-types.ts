@@ -57,6 +57,7 @@ export interface ThumbOwnerInfo {
 
 export interface ThumbInfo {
   status: "ok" | "fail";
+  source?: "ext-thumb" | "watch-api";
   videoId: string;
   title: string;
   description: string;
@@ -73,11 +74,12 @@ export interface ThumbInfo {
   embeddable: boolean;
   noLivePlay: boolean;
   tags: ThumbTagInfo[];
+  isR18?: boolean;
   genre: string;
   cache?: string | null;
   owner?: ThumbOwnerInfo;
   channel?: ThumbOwnerInfo;
-  raw: Record<string, string>;
+  raw: Record<string, unknown>;
 }
 
 export interface GpacTrack extends Record<string, unknown> {

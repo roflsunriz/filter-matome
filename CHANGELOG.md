@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - 【extensions/nlGpac】セグメントごとのMediaInfo解析でCMAF/Domandの実体仕様を確認できなかった問題を解消するため、旧`nlMediaInfo`拡張を削除してGPACの全期間PID解析へ置き換え、`/cache/gpac?<動画ID>`とmovie-infoへ解像度、ビットレート、フレーム、音声仕様をまとめて接続した。
 - 【extensions・scripts/create-all-symlinks・release】`nlGpac`を単一の`.class`で完結する構成へ修正し、補助クラスの配置漏れによる解析リクエスト時の`NoClassDefFoundError`と接続切断を防止した。
+- 【movie-info・cache-data-manager・mylist2・video-player】動画情報取得を共通クライアントへ集約し、現行Watch APIのJSONと旧ext-thumb XMLを動画種別に依存せず正規化するよう修正した。公式チャンネル、R18フラグ、削除・非公開、欠落項目を含むレスポンスを個別に扱い、既存の公開状態チェックとタイトル・タグ・カウンター表示を維持する。
 
 ### Security
 

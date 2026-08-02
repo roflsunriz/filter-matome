@@ -227,7 +227,7 @@ export class VideoService {
           return;
         }
 
-        // エンリッチ済み(watch)の説明文はgetthumbinfoデータで上書きしない
+        // エンリッチ済み(watch)の説明文は動画情報APIデータで上書きしない
         const keepExistingDescription =
           existingVideo.descriptionSource === "watch" &&
           newInfo.description !== undefined;

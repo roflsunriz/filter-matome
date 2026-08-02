@@ -180,6 +180,11 @@ const buildThumbSummary = (thumb: ThumbInfo): HTMLElement => {
     { label: "コメント", value: formatNumber(thumb.commentNum) },
     { label: "マイリスト", value: formatNumber(thumb.mylistCounter) },
     { label: "ジャンル", value: thumb.genre || "-" },
+    { label: "レーティング", value: thumb.isR18 ? "R-18" : "一般" },
+    {
+      label: "取得元",
+      value: thumb.source === "watch-api" ? "Watch API" : "ext-thumb",
+    },
   ]);
   container.appendChild(primary);
 
@@ -539,7 +544,7 @@ export function startMovieInfo(): void {
       panels.watch.setSummaryContent(null);
       panels.cache.setStatus("loading", "キャッシュ情報を取得中です...");
       panels.cache.setSummaryContent(null);
-      panels.thumb.setStatus("loading", "サムネイル情報を取得中です...");
+      panels.thumb.setStatus("loading", "動画情報を取得中です...");
       panels.thumb.setSummaryContent(null);
       panels.gpac.setStatus("loading", "GPACを取得中です...");
       panels.gpac.setSummaryContent(null);
@@ -605,7 +610,7 @@ export function startMovieInfo(): void {
 
       if (thumbInfoResult.status === "fulfilled") {
         const thumbInfo = thumbInfoResult.value;
-        panels.thumb.setStatus("success", "サムネイル情報を取得しました");
+        panels.thumb.setStatus("success", "動画情報を取得しました");
         panels.thumb.setSummaryContent(buildThumbSummary(thumbInfo));
         panels.thumb.setJsonData(thumbInfo);
         panels.thumb.setDownloadDescriptor(
@@ -617,12 +622,12 @@ export function startMovieInfo(): void {
         );
       } else {
         const message = toFailureMessage(thumbInfoResult.reason);
-        panels.thumb.setStatus("error", "サムネイル情報取得失敗: " + message);
+        panels.thumb.setStatus("error", "動画情報取得失敗: " + message);
         failures.push({
-          label: "getthumbinfo",
+          label: "動画情報API",
           message,
           action:
-            "動画が削除済み・非公開でないか、外部サムネイルAPIへ接続できるかを確認してください。",
+            "動画が削除済み・非公開でないか、動画情報APIへ接続できるかを確認してください。",
         });
       }
 

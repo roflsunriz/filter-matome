@@ -101,7 +101,7 @@ export class FilterSortUI {
           ${createMaterialIcon("refresh", { color: "white", size: "small" })}
           <span>リセット</span>
         </button>
-        <button id="checkAvailabilityBtn" class="check-availability-btn" title="getthumbinfoで公開状態を一括確認">
+        <button id="checkAvailabilityBtn" class="check-availability-btn" title="動画情報APIで公開状態を一括確認">
           ${createMaterialIcon(ICONS.check, { color: "white", size: "small" })}
           <span>公開状態チェック</span>
         </button>

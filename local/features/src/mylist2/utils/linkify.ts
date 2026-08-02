@@ -1,6 +1,10 @@
 import DOMPurify from "dompurify";
 import type { Config as DOMPurifyConfig } from "dompurify";
 
+import {
+  fetchNicoVideoInfo,
+  isNicoVideoInfoError,
+} from "@/common/video-info-api";
 import type { VideoLinkTarget, VideoLinkContext } from "@/types/mylist-types";
 
 // 文字列をHTMLエスケープ
@@ -56,7 +60,7 @@ export const buildVideoUrl = (
 const availabilityCache = new Map<string, boolean>();
 
 /**
- * ext.nicovideo.jp/api/getthumbinfo で動画の公開状態を確認する。
+ * 共通の動画情報APIクライアントで動画の公開状態を確認する。
  * @returns true = 公開中（公式プレーヤーで再生可能）, false = 削除済みまたは非公開, null = 通信失敗などで判定不能
  */
 export const checkVideoAvailability = async (
@@ -66,17 +70,25 @@ export const checkVideoAvailability = async (
   if (cached !== undefined) return cached;
 
   try {
-    const response = await fetch(
-      `https://ext.nicovideo.jp/api/getthumbinfo/${videoId}`,
-    );
-    const text = await response.text();
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, "text/xml");
-    const status = xml.documentElement.getAttribute("status");
-    const available = status === "ok";
-    availabilityCache.set(videoId, available);
-    return available;
+    await fetchNicoVideoInfo(videoId);
+    availabilityCache.set(videoId, true);
+    return true;
   } catch (error) {
+    if (
+      isNicoVideoInfoError(error) &&
+      [
+        "DELETED",
+        "PRIVATE",
+        "NOT_FOUND",
+        "FORBIDDEN",
+        "ACCESS_DENIED",
+        "VIEWER_NOT_ALLOWED",
+        "AGE_RESTRICTED",
+      ].includes(error.code)
+    ) {
+      availabilityCache.set(videoId, false);
+      return false;
+    }
     window.logger?.warn("[mylist2] 動画公開状態の確認に失敗しました:", error);
     return null;
   }

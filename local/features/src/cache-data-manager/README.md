@@ -9,7 +9,7 @@ NicoCache_nlが生成するキャッシュ一覧ページを、検索・絞り�
 ## 入出力境界
 
 - 入力: NicoCache_nlがページへ展開する `window.tempList`、`window.cacheList`、`window.ncversion`。
-- サムネイル詳細: `https://ext.nicovideo.jp/api/getthumbinfo/<動画ID>`。
+- 動画詳細・公開状態: `common/video-info-api.ts` が現行Watch API JSONと旧`ext.nicovideo.jp/api/getthumbinfo/<動画ID>` XMLを互換処理する。
 - キャッシュ削除: `common/cache-removal.ts` を通じて `FilterMatomeCacheControl` APIを利用する。
 - 出力: 一覧DOM、検索結果・詳細モーダル、再生・変換・削除操作。
 - 補助保存: `storage/cache-metadata-db.ts` の `CacheDataManagerMetadata` IndexedDB。
@@ -26,7 +26,7 @@ NicoCache_nlが生成するキャッシュ一覧ページを、検索・絞り�
 - `engines/`: 検索処理。
 - `renderers/`: 固定行高を前提とする仮想スクロール。
 - `coordinators/`: カード操作とAPI結果を結ぶイベント処理。
-- `clients/`: サムネイル情報APIとメモリキャッシュ。
+- `clients/`: 共通動画情報APIとメモリキャッシュ。
 - `storage/`: 補助メタデータ用IndexedDB。
 - `templates/`, `styles/`: HTML断片と画面スタイル。
 

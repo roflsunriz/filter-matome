@@ -1,3 +1,7 @@
+import {
+  fetchNicoVideoInfo,
+  isNicoVideoInfoError,
+} from "@/common/video-info-api";
 import type { CacheInfoResponse } from "@/types/video-types";
 import { URLS } from "@/video-player/config/constants";
 import { addNavigationListener } from "@/runtime/navigation";
@@ -293,23 +297,15 @@ const detectUnavailableWatchPage = (): boolean => {
   return false;
 };
 
-const checkDeletedByThumbInfo = async (videoId: string): Promise<boolean> => {
+const checkDeletedByVideoInfo = async (videoId: string): Promise<boolean> => {
   try {
-    const response = await fetch(
-      `https://ext.nicovideo.jp/api/getthumbinfo/${encodeURIComponent(videoId)}`,
-    );
-    const text = await response.text();
-    const xmlDoc = new DOMParser().parseFromString(text, "text/xml");
-    const status = xmlDoc
-      .querySelector("nicovideo_thumb_response")
-      ?.getAttribute("status");
-    if (status !== "fail") {
-      return false;
-    }
-
-    return xmlDoc.querySelector("code")?.textContent === "DELETED";
+    await fetchNicoVideoInfo(videoId);
+    return false;
   } catch (error) {
-    window.logger.warn("getthumbinfo による削除動画判定に失敗しました", error);
+    if (isNicoVideoInfoError(error)) {
+      return error.code === "DELETED" || error.code === "NOT_FOUND";
+    }
+    window.logger.warn("動画情報APIによる削除動画判定に失敗しました", error);
     return false;
   }
 };
@@ -544,7 +540,7 @@ const routeWatchPageIfNeeded = async (): Promise<void> => {
       if (
         routeDeletedVideo(currentVideoId, {
           isUnavailable: false,
-          isDeleted: await checkDeletedByThumbInfo(currentVideoId),
+          isDeleted: await checkDeletedByVideoInfo(currentVideoId),
         })
       ) {
         return;
@@ -558,7 +554,7 @@ const routeWatchPageIfNeeded = async (): Promise<void> => {
       if (
         routeDeletedVideo(currentVideoId, {
           isUnavailable: false,
-          isDeleted: await checkDeletedByThumbInfo(currentVideoId),
+          isDeleted: await checkDeletedByVideoInfo(currentVideoId),
         })
       ) {
         return;

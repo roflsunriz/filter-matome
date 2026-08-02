@@ -9,6 +9,8 @@ import json
 import concurrent.futures
 import pickle
 import time
+import secrets
+import string
 from multiprocessing import Pool, cpu_count
 from functools import partial
 
@@ -35,18 +37,46 @@ def import_requests():
             sys.exit(1)
 
 def get_video_info(video_id, requests):
+    action_track_id = "".join(
+        secrets.choice(string.ascii_letters + string.digits) for _ in range(10)
+    ) + f"_{int(time.time() * 1000)}"
+    watch_url = (
+        f"https://www.nicovideo.jp/api/watch/v3_guest/{video_id}"
+        f"?actionTrackId={action_track_id}"
+    )
+    try:
+        watch_response = requests.get(
+            watch_url,
+            headers={"X-Frontend-Id": "6", "X-Frontend-Version": "0"},
+            timeout=15,
+        )
+        if watch_response.status_code == 200:
+            watch_data = watch_response.json()
+            video = watch_data.get("data", {}).get("video", {})
+            if video.get("isDeleted") or video.get("isPrivate"):
+                return None
+            title = video.get("title")
+            if title:
+                return title
+    except Exception:
+        pass
+
+    # 現行Watch APIに対応していない環境向けの旧XMLフォールバック。
     url = f"https://ext.nicovideo.jp/api/getthumbinfo/{video_id}"
-    response = requests.get(url)
-    if response.status_code != 200:
+    try:
+        response = requests.get(url, timeout=15)
+        if response.status_code != 200:
+            return None
+
+        root = ET.fromstring(response.content)
+        if root.get('status') != 'ok':
+            return None
+
+        thumb = root.find('.//thumb')
+        title = thumb.findtext('title') if thumb is not None else None
+        return title
+    except Exception:
         return None
-    
-    root = ET.fromstring(response.content)
-    if root.get('status') != 'ok':
-        return None
-    
-    thumb = root.find('.//thumb')
-    title = thumb.find('title').text
-    return title
 
 def get_video_info_ffprobe(file_path):
     try:

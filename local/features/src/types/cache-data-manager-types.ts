@@ -9,7 +9,7 @@ export interface VideoData {
   quality: string;
   isTemp: boolean;
   lastUpdated: number;
-  metadataSource?: "memory" | "getthumbinfo";
+  metadataSource?: "memory" | "video-api";
   availabilityStatus?: VideoAvailabilityStatus;
   availabilityCheckedAt?: number;
   availabilityErrorCode?: string;

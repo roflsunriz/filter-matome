@@ -158,7 +158,9 @@ export class UIBuilder {
     const availabilityBadge = card.querySelector(
       ".availability-badge",
     ) as HTMLElement;
-    const isUnavailable = safe.availabilityStatus === "unavailable";
+    const isUnavailable = ["deleted", "private", "unavailable"].includes(
+      safe.availabilityStatus,
+    );
     availabilityBadge.hidden = !isUnavailable;
     availabilityBadge.title =
       safe.availabilityErrorCode !== undefined
@@ -401,7 +403,7 @@ export class UIBuilder {
       ...entry,
       title: metadata.title || entry.title,
       thumbnailUrl: metadata.thumbnailUrl || entry.thumbnailUrl,
-      metadataSource: "getthumbinfo",
+      metadataSource: "video-api",
       availabilityStatus: metadata.availabilityStatus,
       availabilityCheckedAt: metadata.availabilityCheckedAt,
       availabilityErrorCode: metadata.availabilityErrorCode,
@@ -437,7 +439,7 @@ export class UIBuilder {
   }
 
   private needsThumbInfoFallback(entry: VideoData): boolean {
-    if (entry.metadataSource === "getthumbinfo") return false;
+    if (entry.metadataSource === "video-api") return false;
     return (
       this.isUnknownTitle(entry.title) ||
       entry.thumbnailUrl.trim().length === 0 ||
@@ -476,14 +478,14 @@ export class UIBuilder {
       if (response.thumbnailUrl) {
         entry.thumbnailUrl = response.thumbnailUrl;
       }
-      entry.metadataSource = "getthumbinfo";
+      entry.metadataSource = "video-api";
       entry.availabilityStatus = "available";
       entry.availabilityCheckedAt = Date.now();
       entry.availabilityErrorCode = undefined;
       return;
     }
 
-    entry.availabilityStatus = "unavailable";
+    entry.availabilityStatus = response.availabilityStatus ?? "unavailable";
     entry.availabilityCheckedAt = Date.now();
     entry.availabilityErrorCode = response.errorCode;
   }
@@ -494,7 +496,9 @@ export class UIBuilder {
   ): CachedVideoMetadata {
     const now = Date.now();
     const status =
-      response.status === "ok" ? "available" : ("unavailable" as const);
+      response.status === "ok"
+        ? "available"
+        : (response.availabilityStatus ?? "unavailable");
     return {
       id: entry.baseId,
       title:
@@ -526,7 +530,7 @@ export class UIBuilder {
 
     if (
       !confirm(
-        `getthumbinfoで公開状態を一括確認しますか？\n対象: ${targets.length.toLocaleString()} 件`,
+        `動画情報APIで公開状態を一括確認しますか？\n対象: ${targets.length.toLocaleString()} 件`,
       )
     ) {
       return;
@@ -550,7 +554,7 @@ export class UIBuilder {
             this.updateEntryFromApiResponse(entry, response);
             const metadata = this.createMetadata(entry, response);
             metadataList.push(metadata);
-            if (metadata.availabilityStatus === "unavailable") {
+            if (metadata.availabilityStatus !== "available") {
               unavailableCount++;
             }
           } catch {

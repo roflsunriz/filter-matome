@@ -1,72 +1,83 @@
-import type { APIResponse } from "@/types";
+import {
+  fetchNicoVideoInfo,
+  isNicoVideoInfoError,
+} from "@/common/video-info-api";
+import type { ThumbInfo } from "@/types/movie-info-types";
+import type { APIResponse } from "@/types/cache-data-manager-types";
+import type { VideoAvailabilityStatus } from "@/types/video-types";
+
+const getRawString = (info: ThumbInfo, key: string): string | undefined => {
+  const value = info.raw[key];
+  return typeof value === "string" ? value : undefined;
+};
+
+const classifyUnavailableStatus = (
+  code: string,
+  message: string,
+): VideoAvailabilityStatus => {
+  if (code === "PRIVATE" || /非公開|private/i.test(message)) {
+    return "private";
+  }
+  if (
+    code === "DELETED" ||
+    code === "NOT_FOUND" ||
+    /削除|deleted|not\s*found|存在しません/i.test(message)
+  ) {
+    return "deleted";
+  }
+  return "unavailable";
+};
+
+const errorResponse = (error: unknown): APIResponse => {
+  if (!isNicoVideoInfoError(error)) {
+    throw error;
+  }
+
+  return {
+    status: "error",
+    errorCode: error.code,
+    availabilityStatus: classifyUnavailableStatus(error.code, error.message),
+    description: error.message,
+  };
+};
+
+const successResponse = (info: ThumbInfo): APIResponse => ({
+  status: "ok",
+  availabilityStatus: "available",
+  title: info.title || "タイトル不明",
+  description: info.description || "説明文がありません",
+  duration: info.length || "0:00",
+  views: info.viewCounter,
+  commentCount: info.commentNum,
+  mylistCount: info.mylistCounter,
+  author: info.owner?.nickname || info.channel?.nickname || "投稿者不明",
+  uploadDate: info.firstRetrieve || "不明",
+  thumbnailUrl: info.thumbnailUrl,
+  tags: info.tags.map((tag) => tag.name),
+  fileSize: getRawString(info, "size_high") || "0",
+});
 
 export class APIClient {
-  private baseUrl: string = "https://ext.nicovideo.jp/api/getthumbinfo/";
   private cache: Map<string, APIResponse> = new Map();
 
   public async fetchVideoInfo(
     videoId: string,
     options: { forceRefresh?: boolean } = {},
   ): Promise<APIResponse> {
-    // キャッシュチェック（30分間有効）
     if (!options.forceRefresh && this.cache.has(videoId)) {
       return this.cache.get(videoId)!;
     }
 
-    const response = await fetch(`${this.baseUrl}${videoId}`);
-    if (!response.ok) {
-      throw new Error(`API通信エラー: ${response.status}`);
+    let result: APIResponse;
+    try {
+      const info = await fetchNicoVideoInfo(videoId);
+      result = successResponse(info);
+    } catch (error) {
+      result = errorResponse(error);
     }
 
-    const text = await response.text();
-    // キャッシュ保存と返却を直接行う（中間変数を避ける）
-    this.cache.set(videoId, this.parseResponse(text));
+    this.cache.set(videoId, result);
     setTimeout(() => this.cache.delete(videoId), 30 * 60 * 1000);
-    return this.cache.get(videoId)!;
-  }
-
-  private parseResponse(xmlText: string): APIResponse {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(xmlText, "text/xml");
-
-    // エラータイプを判別
-    const errorCode = doc.querySelector("error code")?.textContent;
-    if (errorCode) {
-      return {
-        status: "error",
-        errorCode: errorCode,
-        availabilityStatus: "unavailable",
-        description:
-          doc.querySelector("error description")?.textContent || "不明なエラー",
-      };
-    }
-
-    const thumb = doc.querySelector("thumb");
-    return {
-      status: "ok",
-      availabilityStatus: "available",
-      title: thumb?.querySelector("title")?.textContent || "タイトル不明",
-      description:
-        thumb?.querySelector("description")?.textContent ||
-        "説明文がありません",
-      duration: thumb?.querySelector("length")?.textContent || "0:00",
-      views:
-        parseInt(thumb?.querySelector("view_counter")?.textContent || "0") || 0,
-      commentCount:
-        parseInt(thumb?.querySelector("comment_num")?.textContent || "0") || 0,
-      mylistCount:
-        parseInt(thumb?.querySelector("mylist_counter")?.textContent || "0") ||
-        0,
-      author:
-        thumb?.querySelector("user_nickname")?.textContent ||
-        doc.querySelector("ch_name")?.textContent ||
-        "投稿者不明",
-      uploadDate: thumb?.querySelector("first_retrieve")?.textContent || "不明",
-      thumbnailUrl: thumb?.querySelector("thumbnail_url")?.textContent || "",
-      tags: Array.from(thumb?.querySelectorAll("tags tag") || []).map(
-        (tag) => tag.textContent?.trim() || "",
-      ),
-      fileSize: thumb?.querySelector("size_high")?.textContent || "0",
-    };
+    return result;
   }
 }

@@ -26,6 +26,10 @@ const cacheMetadata = new Map<string, number>();
 // サムネイル画像のパターンを追加
 const THUMBNAIL_PATTERN = /nicovideo\.jp\/thumb\//;
 
+// 旧ext-thumb XMLと現行Watch API JSONの動画情報リクエスト
+const VIDEO_INFO_API_PATTERN =
+  /(?:ext\.nicovideo\.jp\/api\/getthumbinfo|www\.nicovideo\.jp\/api\/watch\/v3(?:_guest)?)/;
+
 // Service Workerのインストール
 self.addEventListener("install", (event: ExtendableEvent) => {
   console.debug("Service Worker installing...");
@@ -130,21 +134,27 @@ self.addEventListener("fetch", (event: FetchEvent) => {
       }
 
       // 動画情報のAPIリクエストの場合
-      if (url.includes("ext.nicovideo.jp/api/getthumbinfo")) {
+      if (VIDEO_INFO_API_PATTERN.test(url)) {
         return fetch(event.request)
           .then((response) => {
-            // レスポンスをキャッシュに保存
-            const responseToCache = response.clone();
-            void caches.open(CACHE_NAME).then((cache) => {
-              void cache.put(event.request, responseToCache);
-              cacheMetadata.set(url, Date.now());
-            });
+            if (response.ok) {
+              const responseToCache = response.clone();
+              void caches.open(CACHE_NAME).then((cache) => {
+                void cache.put(event.request, responseToCache);
+                cacheMetadata.set(url, Date.now());
+              });
+            }
             return response;
           })
           .catch(() => {
             return new Response(
-              "<error><description>オフライン：動画情報を取得できません</description></error>",
-              { headers: { "Content-Type": "text/xml" } },
+              JSON.stringify({
+                meta: { status: 503, errorCode: "OFFLINE" },
+              }),
+              {
+                status: 503,
+                headers: { "Content-Type": "application/json" },
+              },
             );
           });
       }
