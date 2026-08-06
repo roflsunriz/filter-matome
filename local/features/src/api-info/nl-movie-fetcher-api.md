@@ -92,6 +92,8 @@ CONNECT後に返るサイト証明書は`nicocache.userDataRoot/certs/ca.cer`を
 
 状態は `idle | queued | fetching | canceling | canceled | completed | failed`。`completed` と `total` は子playlistとCMAFリソースの取得数であり、バイト進捗ではない。
 
+GUI起動時は本体の拡張ロガーAPIでNicoCacheGUIへ`nlMovieFetcher`専用タブを追加する。受付、playlist数、CMAFリソース数と進捗、完了・中止・失敗理由を動画ID単位で記録する。署名付きURL、Cookie、`accessRightKey`はログへ出力しない。GUIを使用しない場合も同じ内容を通常ログへ出力する。
+
 拡張は受け付けるURLをHTTPSの `delivery.domand.nicovideo.jp` と `asset.domand.nicovideo.jp` に制限する。署名付きURLはメモリー内だけで扱い、レスポンスやログへ出さない。通信は `listenPort`（既定8080）のNicoCache_nl自身へHTTPプロキシー接続し、復号、キャッシュ名、完了処理を本体の `CmafCachingProcessor` に委譲する。
 
 ## 一覧カードのDOM境界

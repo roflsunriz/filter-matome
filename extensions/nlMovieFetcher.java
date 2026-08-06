@@ -28,7 +28,9 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+import dareka.NLMain;
 import dareka.common.Logger;
+import dareka.common.LoggerHandler;
 import dareka.common.TextUtil;
 import dareka.common.json.Json;
 import dareka.common.json.JsonObject;
@@ -46,7 +48,7 @@ import dareka.processor.StringResource;
  * 視聴権の取得はログイン状態を持つブラウザー側へ任せ、この拡張は署名済みURLだけを扱う。
  */
 public final class nlMovieFetcher implements Extension2, Processor {
-    public static final int REVISION = 26080601;
+    public static final int REVISION = 26080602;
     public static final String VER_STRING = "nlMovieFetcher_" + REVISION;
 
     private static final String API_PREFIX = "/cache/filter-matome/v1/movie-fetcher/";
@@ -81,10 +83,16 @@ public final class nlMovieFetcher implements Extension2, Processor {
     private final ConcurrentHashMap<String, Thread> workers =
             new ConcurrentHashMap<>();
     private volatile SSLSocketFactory proxyTlsSocketFactory;
+    private volatile LoggerHandler extensionLogger;
 
     @Override
     public void registerExtensions(ExtensionManager manager) {
         manager.registerProcessor(this);
+        if (extensionLogger == null) {
+            extensionLogger = NLMain.getExtLogger(
+                    this, "nlMovieFetcher", null, false);
+        }
+        logInfo("拡張を読み込みました (" + VER_STRING + ")");
     }
 
     @Override
@@ -149,11 +157,13 @@ public final class nlMovieFetcher implements Extension2, Processor {
         String videoId = stringValue(body, "videoId");
         String contentUrl = stringValue(body, "contentUrl");
         if (!validVideoId(videoId) || !isAllowedDomandUrl(contentUrl)) {
+            logWarning("不正な取得要求を拒否しました");
             return StringResource.getBadRequest();
         }
         videoId = videoId.toLowerCase(Locale.ROOT);
         Thread previous = workers.get(videoId);
         if (previous != null && previous.isAlive()) {
+            logInfo(videoId + ": 既に取得中です");
             return status(videoId);
         }
 
@@ -165,6 +175,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
         completed.put(jobVideoId, 0);
         totals.put(jobVideoId, 0);
         errors.remove(jobVideoId);
+        logInfo(jobVideoId + ": 取得要求を受け付けました");
         Thread worker = new Thread(
                 () -> runJob(jobVideoId, jobUrl, jobCookie),
                 "nlMovieFetcher-" + jobVideoId);
@@ -182,6 +193,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
         Thread worker = workers.get(videoId);
         if (worker != null && worker.isAlive()) {
             states.put(videoId, "canceling");
+            logInfo(videoId + ": 中止要求を受け付けました");
             worker.interrupt();
         }
         return status(videoId);
@@ -191,39 +203,56 @@ public final class nlMovieFetcher implements Extension2, Processor {
             String videoId, String masterUrl, String deliveryCookie) {
         try {
             states.put(videoId, "fetching");
+            logInfo(videoId + ": master playlistを取得します");
             String master = fetchText(masterUrl, deliveryCookie);
             Set<String> playlists = extractUris(masterUrl, master);
             if (playlists.isEmpty()) {
                 throw new IOException("master playlist has no child playlist");
             }
+            logInfo(videoId + ": media playlistを"
+                    + playlists.size() + "件検出しました");
 
             Set<String> mediaResources = new LinkedHashSet<>();
             totals.put(videoId, playlists.size());
+            int playlistIndex = 0;
             for (String playlistUrl : playlists) {
                 checkCanceled();
                 String media = fetchText(playlistUrl, deliveryCookie);
+                playlistIndex++;
                 completed.merge(videoId, 1, Integer::sum);
                 mediaResources.addAll(extractUris(playlistUrl, media));
+                logInfo(videoId + ": media playlist取得 "
+                        + playlistIndex + "/" + playlists.size());
             }
             if (mediaResources.isEmpty()) {
                 throw new IOException("media playlist has no resources");
             }
             totals.put(videoId, playlists.size() + mediaResources.size());
+            logInfo(videoId + ": CMAFリソースを"
+                    + mediaResources.size() + "件検出しました");
+            int resourceIndex = 0;
             for (String resourceUrl : mediaResources) {
                 checkCanceled();
                 fetchBinary(resourceUrl, deliveryCookie);
+                resourceIndex++;
                 completed.merge(videoId, 1, Integer::sum);
+                if (resourceIndex == 1 || resourceIndex % 10 == 0
+                        || resourceIndex == mediaResources.size()) {
+                    logInfo(videoId + ": CMAFリソース取得 "
+                            + resourceIndex + "/" + mediaResources.size());
+                }
             }
             states.put(videoId, "completed");
-            Logger.info("nlMovieFetcher: completed " + videoId);
+            logInfo(videoId + ": 取得完了");
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             states.put(videoId, "canceled");
+            logInfo(videoId + ": 取得を中止しました");
         } catch (IOException | RuntimeException exception) {
             states.put(videoId, "failed");
-            errors.put(videoId, safeError(exception));
-            Logger.warning("nlMovieFetcher: failed " + videoId + ": "
-                    + exception.getClass().getSimpleName());
+            String error = safeError(exception);
+            errors.put(videoId, error);
+            logWarning(videoId + ": 取得失敗: " + error);
         } finally {
             workers.remove(videoId, Thread.currentThread());
         }
@@ -501,6 +530,24 @@ public final class nlMovieFetcher implements Extension2, Processor {
             return exception.getClass().getSimpleName();
         }
         return message.length() > 160 ? message.substring(0, 160) : message;
+    }
+
+    private void logInfo(String message) {
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.info(message);
+        } else {
+            Logger.info("nlMovieFetcher: " + message);
+        }
+    }
+
+    private void logWarning(String message) {
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.warning(message);
+        } else {
+            Logger.warning("nlMovieFetcher: " + message);
+        }
     }
 
     private Resource json(String body) {

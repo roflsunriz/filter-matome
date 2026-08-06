@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【extensions/nlMovieFetcher】ブラウザー側の交渉失敗とJava側の取得失敗を利用者が共有・診断できるよう、NicoCacheGUIへ専用ログタブを追加した。動画ID、処理段階、件数、進捗、完了・中止・失敗理由を表示し、署名URLやCookieなどの秘密情報は記録しない。
 - 【extensions・movie-fetcher】一覧カードから現行Watch APIとaccess-rights APIで最高利用可能画質・音質を選び、NicoCache_nl本体のDomand/CMAF処理を経由して映像・音声・初期化断片・鍵を最後までキャッシュするnlMovieFetcherを追加した。SPAカード追従、進捗、中止、多言語ラベル、署名URLのホスト制限に対応した。
 - 【開発者向け】旧nlMovieFetcher配布物、2026-07-24版NicoCache_nl、2026-08-06のheadless Chrome実測を突き合わせ、Watch API、access-rights、映像・音声分離CMAF、安定DOM属性、秘密情報を保存しない再調査手順を文書化した。
 
