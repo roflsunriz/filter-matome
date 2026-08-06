@@ -2,6 +2,7 @@ import {
   cancelFetch,
   extractVideoId,
   getFetchStatus,
+  reportFetchError,
   startFetch,
   type MovieFetcherStatus,
 } from "./core";
@@ -144,6 +145,14 @@ async function handleClick(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`[movie-fetcher] ${videoId}: ${message}`);
+    try {
+      await reportFetchError(videoId, message);
+    } catch (reportError) {
+      console.error(
+        `[movie-fetcher] GUIログへの報告に失敗しました`,
+        reportError,
+      );
+    }
     setButtonState(button, {
       videoId,
       status: "failed",

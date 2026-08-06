@@ -206,6 +206,53 @@ test("未ログインでは通常Watch APIからゲスト版へ切り替える",
   expect(watchEndpoints).toEqual(["v3", "v3_guest"]);
 });
 
+test("Watch API失敗をnlMovieFetcherのGUIログへ報告する", async ({ page }) => {
+  let reported: unknown;
+  await page.route(pageUrl, documentRoute);
+  await page.route("**/api/watch/v3/sm9?**", (route) =>
+    route.fulfill({
+      status: 400,
+      contentType: "application/json",
+      body: JSON.stringify({
+        meta: { status: 400, errorCode: "FORBIDDEN" },
+      }),
+    }),
+  );
+  await page.route("**/cache/filter-matome/v1/movie-fetcher/**", (route) => {
+    if (route.request().url().endsWith("/report")) {
+      reported = route.request().postDataJSON();
+      return route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ reported: true }),
+      });
+    }
+    return route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        videoId: "sm9",
+        status: "idle",
+        completed: 0,
+        total: 0,
+      }),
+    });
+  });
+
+  await page.goto(pageUrl);
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(() =>
+    (
+      window as Window & { startMovieFetcherTest?: () => void }
+    ).startMovieFetcherTest?.(),
+  );
+  const button = page.locator(".filter-matome-movie-fetcher");
+  await button.click();
+  await expect(button).toHaveAttribute("data-status", "failed");
+  expect(reported).toEqual({
+    videoId: "sm9",
+    message: "watch API: HTTP 400 (FORBIDDEN)",
+  });
+});
+
 test("SPAで追加されたカードにもボタンを一度だけ付ける", async ({ page }) => {
   await page.route(pageUrl, documentRoute);
   await page.goto(pageUrl);

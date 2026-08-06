@@ -48,7 +48,7 @@ import dareka.processor.StringResource;
  * 視聴権の取得はログイン状態を持つブラウザー側へ任せ、この拡張は署名済みURLだけを扱う。
  */
 public final class nlMovieFetcher implements Extension2, Processor {
-    public static final int REVISION = 26080602;
+    public static final int REVISION = 26080603;
     public static final String VER_STRING = "nlMovieFetcher_" + REVISION;
 
     private static final String API_PREFIX = "/cache/filter-matome/v1/movie-fetcher/";
@@ -56,10 +56,12 @@ public final class nlMovieFetcher implements Extension2, Processor {
     private static final String[] METHODS = { "GET", "POST" };
     private static final Pattern API_URL = Pattern.compile(
             "^https?://www\\.nicovideo\\.jp" + API_PREFIX
-                    + "(capabilities|start|status|cancel)(?:\\?([^#]*))?$",
+                    + "(capabilities|start|status|cancel|report)(?:\\?([^#]*))?$",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern VIDEO_ID = Pattern.compile(
             "^[a-z]{2}[0-9]+$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CLIENT_LOG_URL = Pattern.compile(
+            "https?://\\S+", Pattern.CASE_INSENSITIVE);
     private static final Pattern URI_ATTRIBUTE = Pattern.compile(
             "(?:^|[:,])URI=\\\"([^\\\"]+)\\\"", Pattern.CASE_INSENSITIVE);
     private static final Pattern CURRENT_CMAF_RESOURCE_PATH = Pattern.compile(
@@ -145,7 +147,27 @@ public final class nlMovieFetcher implements Extension2, Processor {
         if ("start".equals(operation)) {
             return start(request, browser);
         }
+        if ("report".equals(operation)) {
+            return report(request, browser);
+        }
         return StringResource.getNotFound();
+    }
+
+    private Resource report(HttpRequestHeader request, Socket browser)
+            throws IOException {
+        JsonObject body = readJsonObject(request, browser);
+        if (body == null) {
+            return StringResource.getBadRequest();
+        }
+        String videoId = stringValue(body, "videoId");
+        String message = safeClientMessage(stringValue(body, "message"));
+        if (!validVideoId(videoId) || message == null) {
+            logWarning("不正なブラウザーログ報告を拒否しました");
+            return StringResource.getBadRequest();
+        }
+        logWarning(videoId.toLowerCase(Locale.ROOT)
+                + ": ブラウザー側取得失敗: " + message);
+        return json("{\"reported\":true}");
     }
 
     private Resource start(HttpRequestHeader request, Socket browser)
@@ -530,6 +552,19 @@ public final class nlMovieFetcher implements Extension2, Processor {
             return exception.getClass().getSimpleName();
         }
         return message.length() > 160 ? message.substring(0, 160) : message;
+    }
+
+    private String safeClientMessage(String message) {
+        if (message == null) {
+            return null;
+        }
+        String safe = CLIENT_LOG_URL.matcher(message).replaceAll("[URL省略]")
+                .replace('\r', ' ').replace('\n', ' ').replace('\t', ' ')
+                .trim();
+        if (safe.isEmpty()) {
+            return null;
+        }
+        return safe.length() > 160 ? safe.substring(0, 160) : safe;
     }
 
     private void logInfo(String message) {

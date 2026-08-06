@@ -259,6 +259,22 @@ export async function startFetch(videoId: string): Promise<MovieFetcherStatus> {
   });
 }
 
+export async function reportFetchError(
+  videoId: string,
+  message: string,
+): Promise<void> {
+  const safeMessage = message
+    .replace(/https?:\/\/\S+/giu, "[URL省略]")
+    .replace(/\s+/gu, " ")
+    .trim()
+    .slice(0, 160);
+  if (!safeMessage) return;
+  await callExtension<{ reported: boolean }>("report", {
+    method: "POST",
+    body: JSON.stringify({ videoId, message: safeMessage }),
+  });
+}
+
 export function getFetchStatus(videoId: string): Promise<MovieFetcherStatus> {
   return callExtension<MovieFetcherStatus>(
     `status?videoId=${encodeURIComponent(videoId)}`,
