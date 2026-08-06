@@ -20,6 +20,7 @@ import {
   WatchHarajukuModule,
   watchHarajukuModuleConfig,
 } from "@/mlink-video-controller/modules/watch-harajuku-module";
+import { LinkManager } from "@/mlink-video-controller/services/link-manager";
 
 Object.assign(window, {
   MlinkTabControllers: {
@@ -39,5 +40,6 @@ Object.assign(window, {
     BackgroundImageSettings,
     WatchHarajukuModule,
     watchHarajukuModuleConfig,
+    LinkManager,
   },
 });

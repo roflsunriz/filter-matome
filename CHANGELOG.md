@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【mlink-video-controller・movie-fetcher】ニコニコ動画から動画取得予約へ直接移動できるよう、filter-matome専用機能リンクへsmartFetcherを追加した。視聴ページから開いた場合は現在の動画IDを予約フォームへ引き継ぐ。
 - 【movie-fetcher・extensions】6年前のsmartFetcher構想を現行Domand/CMAF向けに実装した。開始・停止日時と日／週／月／年の予約、日本の祝日、うるう年と時計補正に耐える次回実行、固定・割合・実測学習の帯域上限、全予約の推定容量判定、優先度、再試行、中止、失敗・完了履歴、再起動復旧を備える。
 - 【movie-fetcher】動画カードに予約ボタンを追加し、動画情報・推定サイズ取得、プリセット、転送設定、予約一覧、実行中状態、履歴を一画面で扱えるレスポンシブな多言語SPAを追加した。
 

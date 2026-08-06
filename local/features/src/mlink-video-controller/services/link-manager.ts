@@ -50,6 +50,12 @@ export class LinkManager {
         icon: getIconPath("history", "outlined"),
         action: "watch-history",
       },
+      {
+        id: "smart-fetcher",
+        title: "smartFetcher",
+        icon: getIconPath("schedule", "outlined"),
+        action: "smart-fetcher",
+      },
     ] as LinkData[],
     services: [
       {
@@ -343,6 +349,15 @@ export class LinkManager {
       "watch-history": () => {
         window.open(
           `https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html`,
+        );
+      },
+      "smart-fetcher": () => {
+        const baseUrl =
+          "https://www.nicovideo.jp/local/features/dist/pages/movie-fetcher/index.html";
+        window.open(
+          videoId
+            ? `${baseUrl}?videoId=${encodeURIComponent(videoId)}`
+            : baseUrl,
         );
       },
     };
