@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- 【extensions・movie-fetcher】現行access-rights APIで必須の`X-Request-With`を送信し、一覧からのDomand取得が`INVALID_PARAMETER`で失敗する問題を修正した。Java拡張が自己プロキシーのHTTPS証明書を検証するときはユーザーデータのローカルCAを使用し、配信取得へ公式サイトの`Origin`と`Referer`を付けて、`PKIX path building failed`またはHTTP 403で停止しないようにした。APIエラーコードをボタンのツールチップとブラウザーコンソールへ表示して、Java GUIログへ到達しない交渉失敗も診断できるようにした。
+- 【extensions・movie-fetcher】現行access-rights APIで必須の`X-Request-With`を送信し、一覧からのDomand取得が`INVALID_PARAMETER`で失敗する問題を修正した。Java拡張が自己プロキシーのHTTPS証明書を検証するときはユーザーデータのローカルCAを使用し、配信取得へ公式サイトの`Origin`、`Referer`と配信対象Cookieだけを付けて、`PKIX path building failed`またはHTTP 403で停止しないようにした。APIエラーコードをボタンのツールチップとブラウザーコンソールへ表示して、Java GUIログへ到達しない交渉失敗も診断できるようにした。
 
 ### Added
 

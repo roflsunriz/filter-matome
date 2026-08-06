@@ -155,12 +155,14 @@ public final class nlMovieFetcher implements Extension2, Processor {
 
         final String jobVideoId = videoId;
         final String jobUrl = contentUrl;
+        final String jobCookie = deliveryCookie(
+                request.getMessageHeader("Cookie"));
         states.put(jobVideoId, "queued");
         completed.put(jobVideoId, 0);
         totals.put(jobVideoId, 0);
         errors.remove(jobVideoId);
         Thread worker = new Thread(
-                () -> runJob(jobVideoId, jobUrl),
+                () -> runJob(jobVideoId, jobUrl, jobCookie),
                 "nlMovieFetcher-" + jobVideoId);
         worker.setDaemon(true);
         workers.put(jobVideoId, worker);
@@ -181,10 +183,11 @@ public final class nlMovieFetcher implements Extension2, Processor {
         return status(videoId);
     }
 
-    private void runJob(String videoId, String masterUrl) {
+    private void runJob(
+            String videoId, String masterUrl, String deliveryCookie) {
         try {
             states.put(videoId, "fetching");
-            String master = fetchText(masterUrl);
+            String master = fetchText(masterUrl, deliveryCookie);
             Set<String> playlists = extractUris(masterUrl, master);
             if (playlists.isEmpty()) {
                 throw new IOException("master playlist has no child playlist");
@@ -194,7 +197,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
             totals.put(videoId, playlists.size());
             for (String playlistUrl : playlists) {
                 checkCanceled();
-                String media = fetchText(playlistUrl);
+                String media = fetchText(playlistUrl, deliveryCookie);
                 completed.merge(videoId, 1, Integer::sum);
                 mediaResources.addAll(extractUris(playlistUrl, media));
             }
@@ -204,7 +207,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
             totals.put(videoId, playlists.size() + mediaResources.size());
             for (String resourceUrl : mediaResources) {
                 checkCanceled();
-                fetchBinary(resourceUrl);
+                fetchBinary(resourceUrl, deliveryCookie);
                 completed.merge(videoId, 1, Integer::sum);
             }
             states.put(videoId, "completed");
@@ -222,16 +225,18 @@ public final class nlMovieFetcher implements Extension2, Processor {
         }
     }
 
-    private String fetchText(String url) throws IOException, InterruptedException {
-        byte[] bytes = fetch(url, MAX_PLAYLIST);
+    private String fetchText(String url, String deliveryCookie)
+            throws IOException, InterruptedException {
+        byte[] bytes = fetch(url, MAX_PLAYLIST, deliveryCookie);
         return new String(bytes, StandardCharsets.UTF_8);
     }
 
-    private void fetchBinary(String url) throws IOException, InterruptedException {
-        fetch(url, -1);
+    private void fetchBinary(String url, String deliveryCookie)
+            throws IOException, InterruptedException {
+        fetch(url, -1, deliveryCookie);
     }
 
-    private byte[] fetch(String url, int maximum)
+    private byte[] fetch(String url, int maximum, String deliveryCookie)
             throws IOException, InterruptedException {
         if (!isAllowedDomandUrl(url)) {
             throw new IOException("playlist contains a disallowed URL");
@@ -253,6 +258,9 @@ public final class nlMovieFetcher implements Extension2, Processor {
         connection.setRequestProperty("Accept", "*/*");
         connection.setRequestProperty("Origin", "https://www.nicovideo.jp");
         connection.setRequestProperty("Referer", "https://www.nicovideo.jp/");
+        if (!deliveryCookie.isEmpty()) {
+            connection.setRequestProperty("Cookie", deliveryCookie);
+        }
         connection.setRequestProperty("Connection", "close");
         try {
             int status = connection.getResponseCode();
@@ -280,6 +288,30 @@ public final class nlMovieFetcher implements Extension2, Processor {
         } finally {
             connection.disconnect();
         }
+    }
+
+    private String deliveryCookie(String header) {
+        if (header == null || header.length() > MAX_REQUEST_BODY
+                || header.indexOf('\r') >= 0 || header.indexOf('\n') >= 0) {
+            return "";
+        }
+        StringBuilder selected = new StringBuilder();
+        for (String part : header.split(";")) {
+            String cookie = part.trim();
+            int separator = cookie.indexOf('=');
+            if (separator <= 0) {
+                continue;
+            }
+            String name = cookie.substring(0, separator).trim();
+            if (!("domand_bid".equals(name) || "nicosid".equals(name))) {
+                continue;
+            }
+            if (selected.length() > 0) {
+                selected.append("; ");
+            }
+            selected.append(cookie);
+        }
+        return selected.toString();
     }
 
     private SSLSocketFactory getProxyTlsSocketFactory() throws IOException {
