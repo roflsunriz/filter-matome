@@ -69,6 +69,8 @@ Java拡張は署名済みURLをNicoCache_nl自身のHTTPプロキシーへ渡す
 CONNECT後に返るサイト証明書は`nicocache.userDataRoot/certs/ca.cer`を信頼元として
 検証し、ホスト名検証は無効化しない。これによりDomandのリクエストを本体の
 キャッシュ処理へ通しつつ、JVM既定ストアにローカルCAがない環境でも接続できる。
+配信playlistと断片には`Origin: https://www.nicovideo.jp`と同サイトの`Referer`を付ける。
+実測ではこの2ヘッダーがない取得は403、同じ署名URLへ両方を付けた取得は200だった。
 
 成功時の `data.contentUrl` は `https://delivery.domand.nicovideo.jp/{hlsbid|shlsbid|hlsext}/...m3u8`。このPOSTをNicoCache_nl経由で行うことで、現行 `CmafCachingProcessor` が動画IDとマスターURLを関連付ける。
 

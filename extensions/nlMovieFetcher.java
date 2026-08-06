@@ -251,6 +251,8 @@ public final class nlMovieFetcher implements Extension2, Processor {
         connection.setRequestProperty("User-Agent", "NicoCache_nl/"
                 + VER_STRING);
         connection.setRequestProperty("Accept", "*/*");
+        connection.setRequestProperty("Origin", "https://www.nicovideo.jp");
+        connection.setRequestProperty("Referer", "https://www.nicovideo.jp/");
         connection.setRequestProperty("Connection", "close");
         try {
             int status = connection.getResponseCode();
