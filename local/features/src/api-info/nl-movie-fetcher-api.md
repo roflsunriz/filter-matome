@@ -60,6 +60,7 @@ Content-Type: application/json
 X-Access-Right-Key: {media.domand.accessRightKey}
 X-Frontend-Id: 6
 X-Frontend-Version: 0
+X-Request-With: https://www.nicovideo.jp
 
 {"outputs":[["video-h264-360p","audio-aac-128kbps"]]}
 ```

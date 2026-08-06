@@ -44,6 +44,7 @@ function documentRoute(route: Route): void {
 
 test("カードからDomand取得を開始し完了状態を表示する", async ({ page }) => {
   let extensionStatus = "idle";
+  let accessRequestWith: string | undefined;
   await page.route(pageUrl, documentRoute);
   await page.route("**/api/watch/v3_guest/sm9?**", (route) =>
     route.fulfill({
@@ -74,8 +75,9 @@ test("カードからDomand取得を開始し完了状態を表示する", async
   );
   await page.route(
     "https://nvapi.nicovideo.jp/v1/watch/sm9/access-rights/hls?**",
-    (route) =>
-      route.fulfill({
+    (route) => {
+      accessRequestWith = route.request().headers()["x-request-with"];
+      return route.fulfill({
         contentType: "application/json",
         body: JSON.stringify({
           data: {
@@ -83,7 +85,8 @@ test("カードからDomand取得を開始し完了状態を表示する", async
               "https://delivery.domand.nicovideo.jp/hlsbid/0123456789abcdef01234567/playlists/variants/0123456789abcdef.m3u8",
           },
         }),
-      }),
+      });
+    },
   );
   await page.route(
     "**/cache/filter-matome/v1/movie-fetcher/**",
@@ -116,6 +119,7 @@ test("カードからDomand取得を開始し完了状態を表示する", async
   await button.click();
   await expect(button).toHaveAttribute("data-status", "completed");
   await expect(button).toHaveAttribute("title", /取得完了/);
+  expect(accessRequestWith).toBe("https://www.nicovideo.jp");
 });
 
 test("SPAで追加されたカードにもボタンを一度だけ付ける", async ({ page }) => {

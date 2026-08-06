@@ -97,10 +97,23 @@ function watchResponseFrom(envelope: WatchEnvelope): WatchResponse | null {
 }
 
 async function readJson<T>(response: Response, label: string): Promise<T> {
-  if (!response.ok) {
-    throw new Error(`${label}: HTTP ${response.status}`);
+  let payload: T;
+  try {
+    payload = (await response.json()) as T;
+  } catch {
+    throw new Error(`${label}: HTTP ${response.status} (invalid JSON)`);
   }
-  return (await response.json()) as T;
+  if (!response.ok) {
+    const record =
+      payload !== null && typeof payload === "object"
+        ? (payload as Record<string, unknown>)
+        : {};
+    const meta = record.meta as Record<string, unknown> | undefined;
+    const errorCode =
+      typeof meta?.errorCode === "string" ? ` (${meta.errorCode})` : "";
+    throw new Error(`${label}: HTTP ${response.status}${errorCode}`);
+  }
+  return payload;
 }
 
 export async function negotiateContentUrl(
@@ -154,6 +167,7 @@ export async function negotiateContentUrl(
         "X-Access-Right-Key": accessRightKey,
         "X-Frontend-Id": FRONTEND_ID,
         "X-Frontend-Version": FRONTEND_VERSION,
+        "X-Request-With": location.origin,
       },
       body: JSON.stringify({ outputs: [[video, audio]] }),
     }),

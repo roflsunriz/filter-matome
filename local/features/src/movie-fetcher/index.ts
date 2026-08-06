@@ -102,7 +102,9 @@ function setButtonState(
           : text("start");
   const progress =
     status.total > 0 ? ` ${status.completed}/${status.total}` : "";
-  button.title = `${label}${progress}`;
+  const error =
+    status.status === "failed" && status.error ? `: ${status.error}` : "";
+  button.title = `${label}${progress}${error}`;
   button.setAttribute("aria-label", button.title);
   button.textContent = status.status === "completed" ? "✓" : active ? "■" : "↓";
 }
@@ -140,12 +142,14 @@ async function handleClick(
     button.disabled = false;
     await monitor(button, videoId);
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[movie-fetcher] ${videoId}: ${message}`);
     setButtonState(button, {
       videoId,
       status: "failed",
       completed: 0,
       total: 0,
-      error: error instanceof Error ? error.message : String(error),
+      error: message,
     });
   } finally {
     button.disabled = false;

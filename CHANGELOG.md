@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- 【movie-fetcher】現行access-rights APIで必須の`X-Request-With`を送信し、一覧からのDomand取得が`INVALID_PARAMETER`で失敗する問題を修正した。APIエラーコードをボタンのツールチップとブラウザーコンソールへ表示して、Java GUIログへ到達しない交渉失敗も診断できるようにした。
+
 ### Added
 
 - 【extensions・movie-fetcher】一覧カードから現行Watch APIとaccess-rights APIで最高利用可能画質・音質を選び、NicoCache_nl本体のDomand/CMAF処理を経由して映像・音声・初期化断片・鍵を最後までキャッシュするnlMovieFetcherを追加した。SPAカード追従、進捗、中止、多言語ラベル、署名URLのホスト制限に対応した。
