@@ -15,6 +15,7 @@ type CommonModule = typeof import("@/common/index");
 type MlinkModule = typeof import("@/mlink-video-controller/index");
 type MovieInfoModule = typeof import("@/movie-info/index");
 type MovieFetcherModule = typeof import("@/movie-fetcher/index");
+type SmartFetcherModule = typeof import("@/movie-fetcher/scheduler-app");
 type MylistModule = typeof import("@/mylist2/index");
 type VideoPlayerRouterModule = typeof import("@/video-player/index");
 type StandalonePlayerModule = typeof import("@/video-player/standalone/main");
@@ -78,6 +79,15 @@ async function activateFeaturePage(
       ]);
       common.startCommon();
       movieInfo.startMovieInfo();
+      return;
+    }
+    case "movie-fetcher": {
+      const [common, smartFetcher] = await Promise.all([
+        loadEntry<CommonModule>("common/index"),
+        loadEntry<SmartFetcherModule>("movie-fetcher/scheduler-app"),
+      ]);
+      common.startCommon();
+      await smartFetcher.startSmartFetcherApp();
       return;
     }
     case "watch-history": {

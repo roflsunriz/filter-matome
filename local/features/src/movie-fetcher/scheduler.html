@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="ja" data-feature-page="movie-fetcher">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>smartFetcher</title>
+    <script src="/local/features/dist/features.js" defer></script>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0e1218;
+        --surface: #171d26;
+        --soft: #202936;
+        --line: #344154;
+        --text: #edf2f8;
+        --muted: #aab5c4;
+        --accent: #78a7ff;
+        --ok: #58c985;
+        --danger: #ff7b78;
+        --warning: #f3bd62;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: linear-gradient(150deg, #121927, #0b0e13 60%);
+        color: var(--text);
+        font:
+          15px/1.55 system-ui,
+          sans-serif;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button {
+        min-height: 38px;
+        padding: 8px 14px;
+        border: 1px solid #668ed0;
+        border-radius: 8px;
+        color: #fff;
+        background: #315f9f;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #3e73b9;
+      }
+      button.secondary {
+        border-color: var(--line);
+        background: var(--soft);
+      }
+      button.danger {
+        border-color: #a84e50;
+        background: #7c3438;
+      }
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+      input,
+      select {
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--text);
+        background: #10161f;
+      }
+      input[type="checkbox"] {
+        width: 18px;
+        min-height: 18px;
+        accent-color: var(--accent);
+      }
+      .app {
+        min-height: 100vh;
+      }
+      main {
+        width: min(1240px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 56px;
+      }
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+      .hero h1 {
+        margin: 4px 0;
+        font-size: clamp(1.7rem, 4vw, 2.65rem);
+      }
+      .eyebrow {
+        margin: 0;
+        color: var(--accent);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .status-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .metric,
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--surface) 94%, transparent);
+        box-shadow: 0 16px 40px #0003;
+      }
+      .metric {
+        padding: 15px;
+      }
+      .metric span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+      .metric strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 1.25rem;
+        overflow-wrap: anywhere;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(300px, 0.78fr) minmax(0, 1.22fr);
+        gap: 18px;
+        align-items: start;
+      }
+      .stack {
+        display: grid;
+        gap: 18px;
+      }
+      .panel {
+        overflow: hidden;
+      }
+      .panel > header {
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+        background: var(--soft);
+      }
+      .panel h2 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+      .panel-body {
+        padding: 18px;
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 13px;
+      }
+      label {
+        display: grid;
+        gap: 5px;
+        min-width: 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+      .full {
+        grid-column: 1/-1;
+      }
+      .form-actions,
+      .row-actions,
+      .presets,
+      .weekdays {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .form-actions {
+        justify-content: flex-end;
+        margin-top: 16px;
+      }
+      .presets {
+        margin-bottom: 14px;
+      }
+      .weekdays label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--text);
+      }
+      .notice {
+        margin: 0 0 14px;
+        padding: 11px 13px;
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--warning);
+        border-radius: 8px;
+        background: #271f13;
+      }
+      .notice.ok {
+        border-left-color: var(--ok);
+        background: #12261c;
+      }
+      .list {
+        display: grid;
+        gap: 10px;
+      }
+      .empty {
+        margin: 0;
+        padding: 24px;
+        text-align: center;
+        color: var(--muted);
+      }
+      .job {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #111821;
+      }
+      .job h3 {
+        margin: 0 0 4px;
+        font-size: 1rem;
+        overflow-wrap: anywhere;
+      }
+      .job p {
+        margin: 3px 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+      .badge {
+        display: inline-flex;
+        margin-inline-end: 6px;
+        padding: 2px 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 0.72rem;
+      }
+      .badge.completed,
+      .credential-ok {
+        color: var(--ok);
+      }
+      .badge.failed,
+      .badge.capacity-rejected {
+        color: var(--danger);
+      }
+      .badge.running {
+        color: var(--accent);
+      }
+      .history {
+        max-height: 480px;
+        overflow: auto;
+      }
+      .toast {
+        position: fixed;
+        inset-inline-end: 20px;
+        inset-block-end: 20px;
+        z-index: 100;
+        max-width: min(420px, calc(100% - 40px));
+        padding: 12px 16px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #101722;
+        box-shadow: 0 18px 44px #0008;
+      }
+      .toast.error {
+        border-color: var(--danger);
+      }
+      [hidden] {
+        display: none !important;
+      }
+      :focus-visible {
+        outline: 3px solid #78a7ff66;
+        outline-offset: 2px;
+      }
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .status-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 560px) {
+        main {
+          width: min(100% - 20px, 1240px);
+          padding-top: 18px;
+        }
+        .hero {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .status-grid,
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+        .job {
+          grid-template-columns: 1fr;
+        }
+        .row-actions {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div id="common-header-container"></div>
+      <main>
+        <header class="hero">
+          <div>
+            <p class="eyebrow">SMART FETCHER</p>
+            <h1 data-i18n="title">動画取得スケジューラー</h1>
+            <p class="muted" data-i18n="subtitle">
+              PCの空き時間と回線枠を使って動画を順番にキャッシュします。
+            </p>
+          </div>
+          <button
+            id="refresh-button"
+            class="secondary"
+            type="button"
+            data-i18n="refresh"
+          >
+            更新
+          </button>
+        </header>
+        <section class="status-grid" aria-label="status">
+          <div class="metric">
+            <span data-i18n="credentials">保存Cookie</span
+            ><strong id="credential-status">—</strong>
+          </div>
+          <div class="metric">
+            <span data-i18n="scheduled">予約</span
+            ><strong id="schedule-count">0</strong>
+          </div>
+          <div class="metric">
+            <span data-i18n="active">実行中</span
+            ><strong id="active-status">—</strong>
+          </div>
+          <div class="metric">
+            <span data-i18n="bandwidth">帯域上限</span
+            ><strong id="bandwidth-status">—</strong>
+          </div>
+        </section>
+        <p id="credential-notice" class="notice" role="status"></p>
+        <div class="form-actions">
+          <button
+            id="clear-credentials-button"
+            class="danger"
+            type="button"
+            data-i18n="clearCredentials"
+          >
+            保存Cookieを削除
+          </button>
+        </div>
+        <div class="layout">
+          <div class="stack">
+            <section class="panel">
+              <header><h2 data-i18n="settings">通信と判定の設定</h2></header>
+              <div class="panel-body">
+                <form id="settings-form" class="form-grid">
+                  <label
+                    ><span data-i18n="timezone">タイムゾーン</span
+                    ><input id="setting-timezone" name="timeZone" required
+                  /></label>
+                  <label
+                    ><span data-i18n="mode">帯域モード</span
+                    ><select id="setting-mode" name="bandwidthMode">
+                      <option value="fixed" data-i18n="fixed">固定速度</option>
+                      <option value="percentage" data-i18n="percentage">
+                        回線速度の割合
+                      </option>
+                      <option value="auto" data-i18n="auto">
+                        実績から自動計測
+                      </option>
+                    </select></label
+                  >
+                  <label
+                    ><span data-i18n="fixedRate">固定速度 (KiB/s)</span
+                    ><input name="fixedKiB" type="number" min="1" required
+                  /></label>
+                  <label
+                    ><span data-i18n="lineRate">回線速度 (MiB/s)</span
+                    ><input
+                      name="lineMiB"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      required
+                  /></label>
+                  <label
+                    ><span data-i18n="share">利用割合 (%)</span
+                    ><input
+                      name="percentage"
+                      type="number"
+                      min="1"
+                      max="100"
+                      required
+                  /></label>
+                  <label
+                    ><span data-i18n="window">既定取得時間 (分)</span
+                    ><input
+                      name="defaultWindowMinutes"
+                      type="number"
+                      min="1"
+                      max="10080"
+                      required
+                  /></label>
+                  <label
+                    ><span data-i18n="safety">容量安全率 (%)</span
+                    ><input
+                      name="safetyPercent"
+                      type="number"
+                      min="100"
+                      max="300"
+                      required
+                  /></label>
+                  <label
+                    ><span data-i18n="calendar">祝日カレンダー</span
+                    ><select name="holidayCalendar">
+                      <option value="japan" data-i18n="japan">
+                        日本の祝日
+                      </option>
+                      <option value="none" data-i18n="none">使用しない</option>
+                    </select></label
+                  >
+                  <div class="form-actions full">
+                    <button type="submit" data-i18n="saveSettings">
+                      設定を保存
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </section>
+            <section class="panel">
+              <header><h2 data-i18n="newSchedule">予約を作成・編集</h2></header>
+              <div class="panel-body">
+                <div class="presets">
+                  <button
+                    type="button"
+                    class="secondary"
+                    data-preset="tonight"
+                    data-i18n="tonight"
+                  >
+                    今夜</button
+                  ><button
+                    type="button"
+                    class="secondary"
+                    data-preset="weekday"
+                    data-i18n="weekdayNights"
+                  >
+                    平日夜</button
+                  ><button
+                    type="button"
+                    class="secondary"
+                    data-preset="weekend"
+                    data-i18n="weekend"
+                  >
+                    週末
+                  </button>
+                </div>
+                <form id="schedule-form" class="form-grid">
+                  <input name="id" type="hidden" />
+                  <label
+                    ><span data-i18n="videoId">動画ID</span
+                    ><input name="videoId" pattern="[A-Za-z]{2}[0-9]+" required
+                  /></label>
+                  <label
+                    ><span data-i18n="titleLabel">タイトル</span
+                    ><input name="title" maxlength="200"
+                  /></label>
+                  <label
+                    ><span data-i18n="start">開始日時</span
+                    ><input name="startAt" type="datetime-local" required
+                  /></label>
+                  <label
+                    ><span data-i18n="stop">停止日時</span
+                    ><input name="stopAt" type="datetime-local" required
+                  /></label>
+                  <label
+                    ><span data-i18n="recurrence">繰り返し</span
+                    ><select name="recurrence">
+                      <option value="once" data-i18n="once">1回</option>
+                      <option value="daily" data-i18n="daily">毎日</option>
+                      <option value="weekly" data-i18n="weekly">毎週</option>
+                      <option value="monthly" data-i18n="monthly">毎月</option>
+                      <option value="yearly" data-i18n="yearly">毎年</option>
+                    </select></label
+                  >
+                  <label
+                    ><span data-i18n="window">取得可能時間 (分)</span
+                    ><input
+                      name="windowMinutes"
+                      type="number"
+                      min="1"
+                      max="10080"
+                      required
+                  /></label>
+                  <label
+                    ><span data-i18n="holidayPolicy">祝日の扱い</span
+                    ><select name="holidayPolicy">
+                      <option value="include" data-i18n="include">
+                        通常どおり
+                      </option>
+                      <option value="exclude" data-i18n="exclude">
+                        祝日を除外
+                      </option>
+                      <option value="only" data-i18n="only">祝日のみ</option>
+                    </select></label
+                  >
+                  <fieldset class="full">
+                    <legend data-i18n="weekdays">曜日</legend>
+                    <div id="weekday-options" class="weekdays"></div>
+                  </fieldset>
+                  <label
+                    ><span data-i18n="estimated">推定サイズ</span
+                    ><input name="estimatedDisplay" readonly
+                  /></label>
+                  <input name="estimatedBytes" type="hidden" />
+                  <label
+                    ><span data-i18n="priority">優先度 (0–9)</span
+                    ><input
+                      name="priority"
+                      type="number"
+                      min="0"
+                      max="9"
+                      value="5"
+                      required
+                  /></label>
+                  <label
+                    ><span data-i18n="retries">再試行回数</span
+                    ><input
+                      name="maxRetries"
+                      type="number"
+                      min="0"
+                      max="10"
+                      value="2"
+                      required
+                  /></label>
+                  <label class="full"
+                    ><span
+                      ><input name="enabled" type="checkbox" checked />
+                      <span data-i18n="enabled">有効</span></span
+                    ></label
+                  >
+                  <div class="form-actions full">
+                    <button
+                      id="inspect-button"
+                      class="secondary"
+                      type="button"
+                      data-i18n="inspect"
+                    >
+                      動画情報とサイズを取得</button
+                    ><button
+                      id="reset-button"
+                      class="secondary"
+                      type="button"
+                      data-i18n="reset"
+                    >
+                      入力を戻す</button
+                    ><button type="submit" data-i18n="saveSchedule">
+                      予約を保存
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </section>
+          </div>
+          <div class="stack">
+            <section class="panel">
+              <header>
+                <h2 data-i18n="scheduleList">スケジュール済み動画</h2>
+              </header>
+              <div id="schedule-list" class="panel-body list"></div>
+            </section>
+            <section class="panel">
+              <header><h2 data-i18n="history">取得履歴</h2></header>
+              <div id="history-list" class="panel-body list history"></div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </body>
+</html>

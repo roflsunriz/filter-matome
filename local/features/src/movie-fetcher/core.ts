@@ -25,11 +25,26 @@ export interface MovieFetcherStatus {
     | "failed";
   completed: number;
   total: number;
+  bytesTransferred?: number;
+  startedAt?: number;
+  finishedAt?: number;
   error?: string;
+}
+
+export interface MovieInspection {
+  videoId: string;
+  title: string;
+  durationSeconds: number;
+  videoIdForDelivery: string;
+  audioIdForDelivery: string;
+  videoBitRate: number;
+  audioBitRate: number;
+  estimatedBytes: number;
 }
 
 type WatchResponse = {
   client?: { watchTrackId?: string };
+  video?: { title?: string; duration?: number };
   media?: {
     domand?: {
       accessRightKey?: string;
@@ -37,6 +52,11 @@ type WatchResponse = {
       audios?: DomandQuality[];
     };
   };
+};
+
+type DeliverySelection = MovieInspection & {
+  accessRightKey: string;
+  watchTrackId: string;
 };
 
 type WatchEnvelope = {
@@ -87,6 +107,16 @@ export function selectBestQuality(
       (right.bitRate ?? -1) - (left.bitRate ?? -1),
   );
   return available[0]?.id ?? null;
+}
+
+function selectBestCandidate(
+  candidates: DomandQuality[] | undefined,
+): (DomandQuality & { id: string }) | null {
+  const id = selectBestQuality(candidates);
+  return id
+    ? (((candidates ?? []).find((candidate) => candidate.id === id) as
+        (DomandQuality & { id: string }) | undefined) ?? null)
+    : null;
 }
 
 export function createActionTrackId(now = Date.now()): string {
@@ -182,10 +212,10 @@ async function requestWatchEnvelope(
   }
 }
 
-export async function negotiateContentUrl(
+async function selectDelivery(
   videoId: string,
   fetcher: typeof fetch = fetch,
-): Promise<string> {
+): Promise<DeliverySelection> {
   const actionTrackId = createActionTrackId();
   const watchEnvelope = await requestWatchEnvelope(
     videoId,
@@ -194,8 +224,8 @@ export async function negotiateContentUrl(
   );
   const watch = watchResponseFrom(watchEnvelope);
   const domand = watch?.media?.domand;
-  const video = selectBestQuality(domand?.videos);
-  const audio = selectBestQuality(domand?.audios);
+  const video = selectBestCandidate(domand?.videos);
+  const audio = selectBestCandidate(domand?.audios);
   const accessRightKey = domand?.accessRightKey;
   if (!video || !audio || !accessRightKey) {
     throw new Error(
@@ -203,25 +233,62 @@ export async function negotiateContentUrl(
     );
   }
 
+  const durationSeconds = Math.max(0, watch?.video?.duration ?? 0);
+  const videoBitRate = Math.max(0, video.bitRate ?? 0);
+  const audioBitRate = Math.max(0, audio.bitRate ?? 0);
+  return {
+    videoId,
+    title: watch?.video?.title ?? videoId,
+    durationSeconds,
+    videoIdForDelivery: video.id,
+    audioIdForDelivery: audio.id,
+    videoBitRate,
+    audioBitRate,
+    estimatedBytes: Math.max(
+      1,
+      Math.ceil((durationSeconds * (videoBitRate + audioBitRate)) / 8),
+    ),
+    accessRightKey,
+    watchTrackId: watch?.client?.watchTrackId ?? actionTrackId,
+  };
+}
+
+export async function inspectVideo(
+  videoId: string,
+  fetcher: typeof fetch = fetch,
+): Promise<MovieInspection> {
+  const {
+    accessRightKey: _accessRightKey,
+    watchTrackId: _watchTrackId,
+    ...info
+  } = await selectDelivery(videoId, fetcher);
+  return info;
+}
+
+export async function negotiateContentUrl(
+  videoId: string,
+  fetcher: typeof fetch = fetch,
+): Promise<string> {
+  const selection = await selectDelivery(videoId, fetcher);
+
   const accessUrl = new URL(
     `https://nvapi.nicovideo.jp/v1/watch/${encodeURIComponent(videoId)}/access-rights/hls`,
   );
-  accessUrl.searchParams.set(
-    "actionTrackId",
-    watch?.client?.watchTrackId ?? actionTrackId,
-  );
+  accessUrl.searchParams.set("actionTrackId", selection.watchTrackId);
   const accessEnvelope = await readJson<AccessRightsEnvelope>(
     await fetcher(accessUrl, {
       method: "POST",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        "X-Access-Right-Key": accessRightKey,
+        "X-Access-Right-Key": selection.accessRightKey,
         "X-Frontend-Id": FRONTEND_ID,
         "X-Frontend-Version": FRONTEND_VERSION,
         "X-Request-With": location.origin,
       },
-      body: JSON.stringify({ outputs: [[video, audio]] }),
+      body: JSON.stringify({
+        outputs: [[selection.videoIdForDelivery, selection.audioIdForDelivery]],
+      }),
     }),
     "access-rights API",
   );

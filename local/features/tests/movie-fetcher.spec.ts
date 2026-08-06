@@ -265,9 +265,19 @@ test("SPAで追加されたカードにもボタンを一度だけ付ける", as
     card.innerHTML = '<a href="/watch/so12345">dynamic</a>';
     document.body.append(card);
   });
-  await expect(page.locator('[data-video-id="so12345"]')).toHaveCount(1);
+  await expect(
+    page.locator('.filter-matome-movie-fetcher[data-video-id="so12345"]'),
+  ).toHaveCount(1);
+  await expect(
+    page.locator('.filter-matome-movie-scheduler[data-video-id="so12345"]'),
+  ).toHaveCount(1);
   await page.evaluate(() =>
     document.body.append(document.createTextNode("update")),
   );
-  await expect(page.locator('[data-video-id="so12345"]')).toHaveCount(1);
+  await expect(
+    page.locator('.filter-matome-movie-fetcher[data-video-id="so12345"]'),
+  ).toHaveCount(1);
+  await expect(
+    page.locator('.filter-matome-movie-scheduler[data-video-id="so12345"]'),
+  ).toHaveCount(1);
 });

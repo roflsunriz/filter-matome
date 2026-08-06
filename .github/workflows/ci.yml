@@ -253,6 +253,10 @@ jobs:
             "extensions/FilterMatomeSeriesAlerts.class"
             "extensions/FilterMatomeCacheControl.java"
             "extensions/FilterMatomeCacheControl.class"
+            "extensions/FilterMatomeSmartFetcher.java"
+            "extensions/FilterMatomeSmartFetcher.class"
+            "extensions/nlMovieFetcher.java"
+            "extensions/nlMovieFetcher.class"
             "extensions/nlGpac.java"
             "extensions/nlGpac.class"
           )

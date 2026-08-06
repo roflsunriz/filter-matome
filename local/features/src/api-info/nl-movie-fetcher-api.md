@@ -37,6 +37,8 @@ X-Frontend-Version: 0
 
 未ログインの隔離プロファイルでは通常版がHTTP 400 `UNAUTHORIZED`、ゲスト版がHTTP 200になった。したがって通常版を先に呼び、HTTP 401またはHTTP 400 `UNAUTHORIZED`の場合だけ、同じqueryとheaderで`/api/watch/v3_guest/{videoId}`へフォールバックする。ログイン中にゲスト版を固定使用するとHTTP 400 `FORBIDDEN`になる環境があるため、認証状態を無視してゲスト版へ固定しない。
 
+2026-08-07のサーバー側再確認では、ブラウザー外から同じWatch APIを直接呼ぶとHTTP 406のHTMLになる経路があった。smartFetcherは通常版・ゲスト版のJSON交渉を優先し、JSONを取得できない場合だけ、同じ保存Cookieで`/watch/{videoId}`を取得してHTMLエスケープ済みの`meta[name="server-response"]`を復元する。本文、Cookie、`accessRightKey`はログへ出さず、復元後も下記と同じ最小フィールドとホスト制限を適用する。2026-08-07の公開`sm9`で、このフォールバックからaccess-rights APIの署名済みDomand URLまで到達することを、ダウンロードを開始しないプローブで確認した。
+
 使用する最小フィールドは次のとおり。
 
 ```ts

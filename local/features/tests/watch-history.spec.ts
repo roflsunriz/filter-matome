@@ -359,6 +359,7 @@ test("共通ヘッダーのリンクが3つのサブメニューに分類され�
         "キャッシュ",
         "video-player",
         "movie-info",
+        "smartFetcher",
         "filter-matome (GitHub)",
       ],
     ],

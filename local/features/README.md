@@ -29,6 +29,7 @@ local/features/
 | `src/comment-filter2/` | コメントAPIの捕捉、ルール適用、設定UI | [README](src/comment-filter2/README.md) |
 | `src/common/` | 共通ヘッダー、ログ、通知、アイコン、API・UI部品 | [README](src/common/README.md) |
 | `src/mlink-video-controller/` | 視聴ページの操作パネルと機能モジュール | [README](src/mlink-video-controller/README.md) |
+| `src/movie-fetcher/` | 動画カードの即時取得と永続スケジューラーSPA | [README](src/movie-fetcher/README.md) |
 | `src/movie-info/` | 動画・キャッシュ・API情報ダッシュボード | [README](src/movie-info/README.md) |
 | `src/mylist2/` | 独自マイリストの管理SPA | [README](src/mylist2/README.md) |
 | `src/runtime/` | 配信ページ判定と起動境界 | [README](src/runtime/README.md) |
@@ -41,7 +42,7 @@ local/features/
 
 `src/features.ts` は一度だけ起動し、`runtime/page-context.ts` の判定結果に応じて機能を初期化します。
 
-- 生成HTMLの `data-feature-page`: mylist2、movie-info、video-player、watch-historyの各SPAを起動する。
+- 生成HTMLの `data-feature-page`: mylist2、movie-fetcher、movie-info、video-player、watch-historyの各SPAを起動する。
 - NicoCache_nlの対象ページ: `common` を起動し、対象ホストでは `mlink-video-controller` を起動する。
 - `www.nicovideo.jp/watch/<動画ID>`: comment-filter2、video-playerのルーター、watch-historyの追跡処理を起動する。
 - cache-data-manager: NicoCache_nlが生成するHTMLから呼ばれる `window.makeCacheList` を登録する。
@@ -88,6 +89,7 @@ dist/
 ├── mylist-service-worker.js
 └── pages/
     ├── movie-info/index.html
+    ├── movie-fetcher/index.html
     ├── mylist2/index.html
     ├── video-player/index.html
     └── watch-history/index.html

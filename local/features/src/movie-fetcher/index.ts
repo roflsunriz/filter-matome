@@ -6,6 +6,7 @@ import {
   startFetch,
   type MovieFetcherStatus,
 } from "./core";
+import { refreshStoredCredentials } from "./scheduler-client";
 
 type MovieFetcherWindow = Window & {
   __filterMatomeMovieFetcherStarted?: boolean;
@@ -13,6 +14,7 @@ type MovieFetcherWindow = Window & {
 
 const runtimeWindow = window as MovieFetcherWindow;
 const BUTTON_CLASS = "filter-matome-movie-fetcher";
+const SCHEDULE_BUTTON_CLASS = "filter-matome-movie-scheduler";
 const CARD_SELECTOR =
   '[data-decoration-video-id], [data-anchor-href*="/watch/"], a[href*="/watch/"]';
 const TERMINAL = new Set(["idle", "canceled", "completed", "failed"]);
@@ -23,60 +25,77 @@ const messages = {
     cancel: "取得を中止",
     done: "取得完了",
     failed: "取得失敗",
+    schedule: "取得を予約",
   },
   en: {
     start: "Cache video",
     cancel: "Cancel download",
     done: "Cached",
     failed: "Download failed",
+    schedule: "Schedule download",
   },
   zh: {
     start: "缓存视频",
     cancel: "取消下载",
     done: "缓存完成",
     failed: "下载失败",
+    schedule: "预约下载",
   },
   hi: {
     start: "वीडियो कैश करें",
     cancel: "डाउनलोड रद्द करें",
     done: "कैश पूर्ण",
     failed: "डाउनलोड विफल",
+    schedule: "डाउनलोड शेड्यूल करें",
   },
   es: {
     start: "Guardar vídeo",
     cancel: "Cancelar descarga",
     done: "Guardado",
     failed: "Error de descarga",
+    schedule: "Programar descarga",
   },
   fr: {
     start: "Mettre en cache",
     cancel: "Annuler",
     done: "Terminé",
     failed: "Échec",
+    schedule: "Planifier",
   },
   ar: {
     start: "تخزين الفيديو",
     cancel: "إلغاء التنزيل",
     done: "اكتمل التخزين",
     failed: "فشل التنزيل",
+    schedule: "جدولة التنزيل",
   },
   pt: {
     start: "Armazenar vídeo",
     cancel: "Cancelar download",
     done: "Concluído",
     failed: "Falha",
+    schedule: "Agendar download",
   },
   bn: {
     start: "ভিডিও ক্যাশ করুন",
     cancel: "ডাউনলোড বাতিল",
     done: "ক্যাশ সম্পূর্ণ",
     failed: "ডাউনলোড ব্যর্থ",
+    schedule: "ডাউনলোডের সময় নির্ধারণ",
   },
   ru: {
     start: "Сохранить видео",
     cancel: "Отменить",
     done: "Сохранено",
     failed: "Ошибка",
+    schedule: "Запланировать",
+  },
+  ur: {
+    start: "ویڈیو محفوظ کریں",
+    cancel: "ڈاؤن لوڈ منسوخ کریں",
+    done: "محفوظ ہو گیا",
+    failed: "ڈاؤن لوڈ ناکام",
+    schedule: "ڈاؤن لوڈ شیڈول کریں",
   },
 } as const;
 
@@ -204,6 +223,24 @@ function decorate(root: ParentNode): void {
     });
     card.classList.add("filter-matome-movie-fetcher-host");
     card.append(button);
+    const scheduleButton = document.createElement("button");
+    scheduleButton.type = "button";
+    scheduleButton.className = SCHEDULE_BUTTON_CLASS;
+    scheduleButton.dataset.videoId = videoId;
+    scheduleButton.title = text("schedule");
+    scheduleButton.setAttribute("aria-label", scheduleButton.title);
+    scheduleButton.textContent = "+";
+    scheduleButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const target = new URL(
+        "/local/features/dist/pages/movie-fetcher/index.html",
+        location.origin,
+      );
+      target.searchParams.set("videoId", videoId);
+      window.open(target, "_blank", "noopener");
+    });
+    card.append(scheduleButton);
   }
 }
 
@@ -219,6 +256,12 @@ function installStyle(): void {
       border-radius: 50%; color: #fff; background: #18181ccc;
       font: 700 18px/1 sans-serif; cursor: pointer;
     }
+    .${SCHEDULE_BUTTON_CLASS} {
+      position: absolute; inset-block-start: 42px; inset-inline-end: 6px;
+      z-index: 3; width: 30px; height: 30px; border: 1px solid #8888;
+      border-radius: 50%; color: #fff; background: #6b4ea0e6;
+      font: 700 18px/1 sans-serif; cursor: pointer;
+    }
     .${BUTTON_CLASS}[data-status="fetching"],
     .${BUTTON_CLASS}[data-status="queued"] { background: #0068b7e6; }
     .${BUTTON_CLASS}[data-status="completed"] { background: #16853be6; }
@@ -232,6 +275,9 @@ export function startMovieFetcher(): void {
   if (runtimeWindow.__filterMatomeMovieFetcherStarted) return;
   runtimeWindow.__filterMatomeMovieFetcherStarted = true;
   installStyle();
+  void refreshStoredCredentials().catch((error: unknown) => {
+    console.warn("[movie-fetcher] Cookieの保存更新に失敗しました", error);
+  });
   decorate(document);
   new MutationObserver((records) => {
     for (const record of records) {

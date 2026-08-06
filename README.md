@@ -34,6 +34,7 @@
 - **コメントヒートマップ**: 盛り上がり箇所を視覚化
 - **キャッシュ一覧管理**: NicoCache_nlのキャッシュ一覧を検索・フィルタ・ソート・削除
 - **動画/API情報ダッシュボード**: 動画IDから複数APIの情報を横断表示
+- **動画取得スケジューラー**: 開始・停止日時、日／週／月／年の繰り返し、祝日、帯域上限、容量判定、再試行、取得履歴をまとめて管理
 
 ## 📦 導入方法
 
@@ -199,6 +200,7 @@ nlFilters/
 extensions/
 ├── FilterMatomeCacheControl.java/.class # MP4等を保持したままHLSだけを削除・削除予約するサーバーAPI
 ├── FilterMatomeSeriesAlerts.java/.class # シリーズ新着の定期確認とOS通知
+├── FilterMatomeSmartFetcher.java/.class  # 永続予約・暗号化Cookie・帯域制御
 └── nlMovieFetcher.java/.class           # 現行Domand/CMAFの一覧取得拡張
 
 docs/resources/            # USAGE.mdで使われる画像リソース

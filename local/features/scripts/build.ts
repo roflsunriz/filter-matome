@@ -24,6 +24,10 @@ const htmlPages = [
     output: "pages/movie-info/index.html",
   },
   {
+    source: "src/movie-fetcher/scheduler.html",
+    output: "pages/movie-fetcher/index.html",
+  },
+  {
     source: "src/video-player/standalone/index.html",
     output: "pages/video-player/index.html",
   },
@@ -50,6 +54,7 @@ const featureEntrypoints = [
   "src/mlink-video-controller/index.ts",
   "src/movie-info/index.ts",
   "src/movie-fetcher/index.ts",
+  "src/movie-fetcher/scheduler-app.ts",
   "src/mylist2/index.ts",
   "src/video-player/index.ts",
   "src/video-player/standalone/main.ts",

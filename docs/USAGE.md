@@ -32,7 +32,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 `C:\NicoCache_nl`にインストールしたとする  
 
 1. `C:\NicoCache_nl`フォルダを開く  
-2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `FilterMatomeCacheControl.class`, `FilterMatomeSeriesAlerts.class`, `NicochartInfoProxy.class`, `nlMediaInfo.class`, `nlMediaInfo$CommandResult.class`, `nlMediaInfo$StreamCollector.class`, `nlGpac.class`, `nlGpac$CommandResult.class`, `nlGpac$StreamCollector.class`, `nlGpac$TrackData.class`を削除する
+2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `FilterMatomeCacheControl.class`, `FilterMatomeSeriesAlerts.class`, `FilterMatomeSmartFetcher.class`, `NicochartInfoProxy.class`, `nlMovieFetcher.class`, `nlMediaInfo.class`, `nlMediaInfo$CommandResult.class`, `nlMediaInfo$StreamCollector.class`, `nlGpac.class`, `nlGpac$CommandResult.class`, `nlGpac$StreamCollector.class`, `nlGpac$TrackData.class`を削除する
 3. `local`フォルダにある`background-images`, `features`, `images`, フォルダ, `mime.types`, `list.js` のシンボリックリンクを削除する  
 4. `scripts`フォルダを削除する  
 5. `nlFilters`フォルダの `100_features.txt`, `101_disable_official_function.txt`, `105_premium_hide.txt`, `nlFilters_編集ガイド.md`を削除する
@@ -64,8 +64,10 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 | `ExtUtil.class` | 拡張機能向けの共通処理を提供する補助クラス | 単独で操作する機能ではない。他の `.class` と一緒に配置する |
 | `FilterMatomeCacheControl.class` | filter-matome向けにHLSキャッシュの一括削除と削除予約をJSON APIで提供する | 完了済み・停止済みHLSは削除し、ダウンロード中HLSは完了または中断後に削除する。MP4・FLV・SWFは削除しない |
 | `FilterMatomeSeriesAlerts.class` | watch-historyのアラート設定を保持し、NicoCache_nlの60秒定期イベントからシリーズ新着を確認してOS通知を表示する | NicoCache_nlが起動していればwatch-historyやブラウザを閉じても動作する |
+| `FilterMatomeSmartFetcher.class` | 動画取得の永続予約、暗号化Cookie、帯域・容量判定、再試行、履歴を管理する | `nlMovieFetcher.class`と組み合わせ、動画取得スケジューラーで使用する |
 | `NicochartInfoProxy.class` | video-playerが通常の動画情報を取得できない場合だけ、サーバー側からnicochart.jpの公開情報を取得する | 接続先と動画IDを制限した読み取り専用処理。PACや`genCerts.bat` / `genCerts.sh`の変更は不要 |
 | `nlGpac.class` | キャッシュファイルまたはHLS/CMAFプレイリストをGPACの`inspect:xml:stats:allp`で全期間解析し、映像・音声の仕様を一つのJSONへまとめて返す。HLSマスターは最高帯域の品質を選択する | movie-infoのGPAC表示と`/cache/gpac?<動画ID>`で使用。GPACの`gpac.exe`が必要 |
+| `nlMovieFetcher.class` | 署名済みDomand playlistの全CMAFリソースをNicoCache_nl経由で取得する | 一覧の即時取得とsmartFetcherの実行エンジンとして使用する |
 
 `nlGpac.class`は単一クラスで完結し、キャッシュを変更せず、通常のメディアファイルはそのまま、`.hls`ディレクトリはローカルの`master.m3u8`を入力としてGPACへ渡す。HLS/CMAFでもセグメントごとの結果を返さず、GPACが全期間を消費して得たPIDの解像度、Codec、ビットレート、フレーム数、時間、音声サンプルレート、チャンネル数などをまとめる。movie-infoのGPACビューでは、これらに加えてコンテナ入力、GPACバージョン、品質選択、色空間、ピクセル形式、アスペクト比、チャンネル配置などをストリーム別に表示し、GPACが返した未知の属性も全属性表で確認できる。キャッシュ解析で意図せず外部配信へ接続しないよう、プレイリストにHTTP等のリモートURLが含まれる場合は解析を拒否する。GPACの実行ファイルは、`-Dgpac.path=...`、`GPAC_PATH`環境変数、`C:\PathArea\GPAC\gpac.exe`、ユーザーの`%LOCALAPPDATA%\Programs\GPAC\gpac.exe`、`C:\Program Files\GPAC\gpac.exe`、最後にPATHの順で探索する。
 
@@ -107,6 +109,14 @@ X-Filter-Matome-Cache-Control: 1
 - 旧版のIndexedDBにあるアラートは、更新後にwatch-historyを最初に開いた時点でextensionへ一度だけ移行される。以後の追加・変更・削除とJSON入出力はIndexedDBを経由しない。
 - NicoCache_nlを停止している間は確認できない。再起動後、期限を過ぎたアラートは次の定期処理で確認する。
 - シリーズアラート画面で`拡張DB: 接続済み・通知有効`または`拡張DB: 接続済み・GUIログ/通知音`と表示されることを確認する。`通知テスト`で実際の通知経路を確認できる。
+
+#### 動画取得スケジューラー
+
+ニコニコ動画の動画カードにあるカレンダーボタンから予約画面を開く。動画情報と推定サイズを取得し、開始・停止日時、1回／日／週／月／年の繰り返し、曜日、祝日、優先度、再試行回数を指定して保存する。設定画面では固定速度、回線速度に対する割合、転送実績からの自動学習を選べる。推定サイズと安全率から期限内に完了できない予約は容量不足として実行されない。
+
+NicoCache_nlが起動している間だけ約60秒ごとに期限を確認する。PC停止中に過ぎた実行枠は失敗履歴へ記録し、次回がある予約は将来へ進める。取得失敗・不完全取得は再試行後に履歴へ残り、次の予約へ自動的に進む。予約画面は `/local/features/dist/pages/movie-fetcher/index.html` から直接開くこともできる。
+
+認証Cookieは許可された4種類だけをAES-GCMで暗号化し、NicoCache_nlの`data/`に状態とは別ファイルで保存する。ログイン中にニコニコ動画を一度開いてから予約画面の「保存Cookie」が保存済みであることを確認する。共有PCではNicoCache_nlのユーザーデータルートを他ユーザーから読めないようにし、不要になった場合は予約画面の「保存Cookieを削除」を実行する。
 
 #### 配置と更新
 

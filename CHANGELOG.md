@@ -8,11 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- 【extensions/nlMovieFetcher】転送済みバイト数と開始・終了時刻を状態APIへ追加し、帯域上限に応じて各レスポンスの読み込みを抑制できるようにした。不完全なリソース取得は完了扱いにせず、smartFetcher側で再試行・失敗記録する。
 - 【mylist2・watch-history】`/local/`配信ではnlFilterによる正本のキャッシュアイコンJS・CSSが自動挿入されず、サムネイルのDOMだけを対応してもアイコンが表示されなかった問題を修正した。両SPAが正本を明示的に読み込み、mylist2はService Workerの旧HTMLキャッシュも更新時に破棄する。
 - 【common・movie-fetcher・extensions】動画情報取得と検索一覧からの取得交渉で常にゲスト用Watch APIを呼び、ログイン中にHTTP 400 `FORBIDDEN`で停止する問題を修正した。通常版を優先し、未ログインを示す`UNAUTHORIZED`の場合だけゲスト版へ切り替える。現行media playlistの`/cache/file/`配下にある音声・映像CMAF URLも固定ホスト・固定パス形状に限定して許可し、Java拡張が`playlist contains a disallowed URL`で停止しないようにした。
 - 【extensions・movie-fetcher】現行access-rights APIで必須の`X-Request-With`を送信し、一覧からのDomand取得が`INVALID_PARAMETER`で失敗する問題を修正した。Java拡張が自己プロキシーのHTTPS証明書を検証するときはユーザーデータのローカルCAを使用し、配信取得へ公式サイトの`Origin`、`Referer`と配信対象Cookieだけを付けて、`PKIX path building failed`またはHTTP 403で停止しないようにした。APIエラーコードをボタンのツールチップとブラウザーコンソールへ表示して、Java GUIログへ到達しない交渉失敗も診断できるようにした。
 
 ### Added
+
+- 【movie-fetcher・extensions】6年前のsmartFetcher構想を現行Domand/CMAF向けに実装した。開始・停止日時と日／週／月／年の予約、日本の祝日、うるう年と時計補正に耐える次回実行、固定・割合・実測学習の帯域上限、全予約の推定容量判定、優先度、再試行、中止、失敗・完了履歴、再起動復旧を備える。
+- 【movie-fetcher】動画カードに予約ボタンを追加し、動画情報・推定サイズ取得、プリセット、転送設定、予約一覧、実行中状態、履歴を一画面で扱えるレスポンシブな多言語SPAを追加した。
 
 - 【mylist2・watch-history】ローカルキャッシュの有無と品質を一覧から判別できるよう、動画サムネイルをNicoCache_nl正本のキャッシュアイコン処理へ接続した。mylist2の一覧、watch-historyの履歴・詳細・シリーズ内動画で表示される。
 - 【extensions/nlMovieFetcher】ブラウザー側の交渉失敗とJava側の取得失敗を利用者が共有・診断できるよう、NicoCacheGUIへ専用ログタブを追加した。動画ID、処理段階、件数、進捗、完了・中止・失敗理由を表示し、署名URLやCookieなどの秘密情報は記録しない。
@@ -25,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Security
 
+- 【extensions/FilterMatomeSmartFetcher】認証に必要なCookie名だけを許可し、AES-GCM暗号文と256ビット鍵を状態JSONとは別の所有者限定ファイルへ保存する。Cookie、署名URL、アクセス権キーは状態APIとログへ返さず、管理画面から保存Cookieだけを削除できる。
 - push前監査で検出された`brace-expansion`のDoS脆弱性を解消するため、overrideとロックファイルを安全版`5.0.9`へ更新した。
 
 ## [#236] - 2026-08-02

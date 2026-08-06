@@ -30,8 +30,10 @@ final class DeveloperSymlinkService {
             new LinkDefinition("extensions/ExtUtil.class", "extensions/ExtUtil.class"),
             new LinkDefinition("extensions/FilterMatomeCacheControl.class", "extensions/FilterMatomeCacheControl.class"),
             new LinkDefinition("extensions/FilterMatomeSeriesAlerts.class", "extensions/FilterMatomeSeriesAlerts.class"),
+            new LinkDefinition("extensions/FilterMatomeSmartFetcher.class", "extensions/FilterMatomeSmartFetcher.class"),
             new LinkDefinition("extensions/NicochartInfoProxy.class", "extensions/NicochartInfoProxy.class"),
             new LinkDefinition("extensions/nlGpac.class", "extensions/nlGpac.class"),
+            new LinkDefinition("extensions/nlMovieFetcher.class", "extensions/nlMovieFetcher.class"),
             new LinkDefinition("local/features/dist/features.js", "local/list.js"));
 
     private DeveloperSymlinkService() {

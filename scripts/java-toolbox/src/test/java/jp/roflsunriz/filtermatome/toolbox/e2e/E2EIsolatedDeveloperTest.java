@@ -137,7 +137,8 @@ class E2EIsolatedDeveloperTest {
         }
         for (String extension : new String[]{"CommentFilterLogger.class", "CustomCacheReturner.class",
                 "downloadThruFFmpeg.class", "ExtUtil.class", "FilterMatomeCacheControl.class",
-                "FilterMatomeSeriesAlerts.class", "NicochartInfoProxy.class", "nlGpac.class"}) {
+                "FilterMatomeSeriesAlerts.class", "FilterMatomeSmartFetcher.class",
+                "NicochartInfoProxy.class", "nlGpac.class", "nlMovieFetcher.class"}) {
             Files.writeString(repo.resolve("extensions").resolve(extension), extension);
         }
         Files.createDirectories(target.resolve("scripts"));

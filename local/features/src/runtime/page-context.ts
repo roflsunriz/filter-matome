@@ -1,5 +1,5 @@
 export type FeaturePage =
-  "mylist" | "movie-info" | "video-player" | "watch-history";
+  "mylist" | "movie-info" | "movie-fetcher" | "video-player" | "watch-history";
 
 const WATCH_PATH_PATTERN = /^\/watch\/([a-z]{2}\d+)(?:\/)?$/i;
 const MLINK_HOSTS = new Set([
@@ -27,6 +27,7 @@ export function getFeaturePage(): FeaturePage | null {
   switch (value) {
     case "mylist":
     case "movie-info":
+    case "movie-fetcher":
     case "video-player":
     case "watch-history":
       return value;
