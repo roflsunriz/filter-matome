@@ -588,6 +588,11 @@ test("サムネイル欠落時と画像読込失敗時にフォールバック�
   page,
 }) => {
   await openApp(page);
+  const cacheIconTarget = page.locator('.history-item[data-video-id="sm100"]');
+  await expect(cacheIconTarget).toHaveAttribute("data-content-id", "sm100");
+  await expect(
+    cacheIconTarget.locator(":scope > .history-thumbnail"),
+  ).toHaveAttribute("href", "https://www.nicovideo.jp/watch/sm100");
   const missingThumbnail = page.locator(
     '.history-item[data-video-id="sm100"] .thumbnail-image',
   );
@@ -612,7 +617,12 @@ test("サムネイル欠落時と画像読込失敗時にフォールバック�
   );
 
   await missingThumbnail.click();
-  await expect(page.locator(".video-detail-thumbnail img")).toHaveAttribute(
+  const detailThumbnail = page.locator(".video-detail-thumbnail");
+  await expect(detailThumbnail).toHaveAttribute(
+    "href",
+    "https://www.nicovideo.jp/watch/sm100",
+  );
+  await expect(detailThumbnail.locator("img")).toHaveAttribute(
     "src",
     /^data:image\/svg\+xml/,
   );
@@ -718,6 +728,11 @@ test("各タブ・シリーズ・アラートの静的および動的ボタン�
   await expect(
     page.locator("#series-detail-videos .series-video-item"),
   ).toHaveCount(2);
+  await expect(
+    page.locator(
+      '#series-detail-videos .series-video-item[data-video-id="sm100"] .video-thumbnail',
+    ),
+  ).toHaveAttribute("href", "https://www.nicovideo.jp/watch/sm100");
   await page.locator("#series-detail-add-alert").click();
   await expect(page.locator("#toast-container")).toContainText(
     "このシリーズのアラートは既に存在します",

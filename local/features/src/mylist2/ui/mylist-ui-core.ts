@@ -454,6 +454,11 @@ export abstract class Mylist2UICore {
         const videoItem = target.closest<HTMLElement>(
           ".video-item:not(.keyword-item)",
         );
+        if (videoItem && target.closest(".video-thumbnail-link")) {
+          e.preventDefault();
+          void this.handleVideoDetailsClick(videoItem);
+          return;
+        }
         if (
           videoItem &&
           !target.closest("a, button, input, select, textarea")
@@ -498,7 +503,11 @@ export abstract class Mylist2UICore {
       e.preventDefault();
 
       const originalText = el.textContent ?? "";
-      el.textContent = `${originalText}（確認中…）`;
+      const canReplaceText = !el.querySelector("img");
+      if (canReplaceText) {
+        el.textContent = `${originalText}（確認中…）`;
+      }
+      el.setAttribute("aria-busy", "true");
       el.style.cursor = "wait";
       el.style.pointerEvents = "none";
 
@@ -511,7 +520,10 @@ export abstract class Mylist2UICore {
               : `https://www.nicovideo.jp/watch/${videoId}`;
           window.open(url, "_blank");
         } finally {
-          el.textContent = originalText;
+          if (canReplaceText) {
+            el.textContent = originalText;
+          }
+          el.removeAttribute("aria-busy");
           el.style.cursor = "";
           el.style.pointerEvents = "";
         }

@@ -754,11 +754,11 @@ export abstract class WatchHistorySeriesApp extends WatchHistoryDashboardApp {
         }
 
         return `
-        <div class="series-video-item" data-video-id="${video.videoId}">
-          <div class="video-thumbnail">
+        <div class="series-video-item" data-video-id="${video.videoId}" data-content-id="${this.escapeHtml(video.videoId)}">
+          <a class="video-thumbnail" href="https://www.nicovideo.jp/watch/${encodeURIComponent(video.videoId)}" target="_blank" rel="noopener noreferrer" aria-label="${this.escapeHtml(video.title)}を開く">
             <img src="${normalizeThumbnailUrl(video.thumbnailUrl)}" alt="${this.escapeHtml(video.title)}" onerror="${THUMBNAIL_ERROR_HANDLER}">
             <div class="video-duration">${this.formatDuration(video.lengthSec)}</div>
-          </div>
+          </a>
           <div class="video-content">
             <h4 class="video-title">${this.escapeHtml(video.title)}</h4>
             <div class="video-meta">

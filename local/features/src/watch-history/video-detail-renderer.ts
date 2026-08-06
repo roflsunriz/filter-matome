@@ -28,9 +28,9 @@ export function createVideoDetailHTML(
 
   return `
       <div class="video-detail-grid">
-        <div class="video-detail-thumbnail">
+        <a class="video-detail-thumbnail" href="https://www.nicovideo.jp/watch/${encodeURIComponent(entry.videoId)}" target="_blank" rel="noopener noreferrer" aria-label="${title}を開く">
           <img src="${thumbnailUrl}" alt="${title}" onerror="${THUMBNAIL_ERROR_HANDLER}">
-        </div>
+        </a>
         <div class="video-detail-info">
           <div class="info-row">
             <span class="info-label">動画ID:</span>

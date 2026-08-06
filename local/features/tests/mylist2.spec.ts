@@ -326,6 +326,18 @@ test("マイリスト検索・作成・ソート・設定・テーマが動作�
 });
 
 test("動画検索・ソート・詳細表示・選択状態が同期する", async ({ page }) => {
+  const cacheIconTarget = page.locator('.video-item[data-id="sm100"]');
+  await expect(cacheIconTarget).toHaveAttribute("data-content-id", "sm100");
+  const thumbnailLink = cacheIconTarget.locator(
+    ":scope > .video-thumbnail-link",
+  );
+  await expect(thumbnailLink).toHaveAttribute(
+    "href",
+    "https://www.nicovideo.jp/watch/sm100",
+  );
+  await expect(thumbnailLink.locator(":scope > .video-thumbnail")).toHaveCount(
+    1,
+  );
   await expect(
     page.locator('.video-item[data-id="sm100"] .video-thumbnail'),
   ).toHaveAttribute("data-fallback-thumbnail", "true");

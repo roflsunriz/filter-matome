@@ -23,6 +23,24 @@ export abstract class Mylist2UIRendering extends Mylist2UICore {
   protected abstract initializeSearchEventListeners(): void;
   protected abstract initializeSettings(): Promise<void>;
 
+  private configureVideoLink(
+    link: HTMLAnchorElement,
+    video: VideoInfo,
+    checkAvailability = true,
+  ): void {
+    const context = { authorName: video.authorName, title: video.title };
+    link.href = buildVideoUrl(video.originalId, context);
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    if (
+      checkAvailability &&
+      needsAvailabilityCheck(video.originalId, context)
+    ) {
+      link.dataset.needsApiCheck = "true";
+      link.dataset.videoId = video.originalId;
+    }
+  }
+
   /**
    * アクショントリガークリック時の処理
    */
@@ -111,26 +129,25 @@ export abstract class Mylist2UIRendering extends Mylist2UICore {
       fallbackElement.tabIndex = 0;
       fallbackElement.setAttribute("role", "button");
       fallbackElement.setAttribute("aria-label", `動画の詳細: ${video.title}`);
-      const linkCtx = { authorName: video.authorName, title: video.title };
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.className = "video-select";
+      const thumbnailLink = document.createElement("a");
+      thumbnailLink.className = "video-thumbnail-link";
+      thumbnailLink.setAttribute("aria-label", `動画を開く: ${video.title}`);
+      this.configureVideoLink(thumbnailLink, video, false);
       const thumbnail = document.createElement("img");
       thumbnail.className = "video-thumbnail";
       setThumbnailSource(thumbnail, video.thumbnailUrl);
       thumbnail.alt = "サムネイル";
+      thumbnailLink.appendChild(thumbnail);
       const info = document.createElement("div");
       info.className = "video-info";
       const title = document.createElement("div");
       title.className = "video-title";
       const titleLink = document.createElement("a");
-      titleLink.href = buildVideoUrl(video.originalId, linkCtx);
-      titleLink.target = "_blank";
+      this.configureVideoLink(titleLink, video);
       titleLink.textContent = video.title;
-      if (needsAvailabilityCheck(video.originalId, linkCtx)) {
-        titleLink.dataset.needsApiCheck = "true";
-        titleLink.dataset.videoId = video.originalId;
-      }
       title.appendChild(titleLink);
       const badge = createAvailabilityBadge(video);
       if (badge) title.appendChild(badge);
@@ -186,9 +203,10 @@ export abstract class Mylist2UIRendering extends Mylist2UICore {
         meta.appendChild(span);
       });
       info.append(title, stats, meta);
-      fallbackElement.append(checkbox, thumbnail, info);
+      fallbackElement.append(checkbox, thumbnailLink, info);
       fallbackElement.dataset.id = video.originalId;
       fallbackElement.dataset.compositeId = video.id;
+      fallbackElement.dataset.contentId = video.originalId;
       return fallbackElement;
     }
 
@@ -204,6 +222,7 @@ export abstract class Mylist2UIRendering extends Mylist2UICore {
     // データの設定
     item.dataset.id = video.originalId;
     item.dataset.compositeId = video.id;
+    item.dataset.contentId = video.originalId;
     item.tabIndex = 0;
     item.setAttribute("role", "button");
     item.setAttribute("aria-label", `動画の詳細: ${video.title}`);
@@ -224,6 +243,13 @@ export abstract class Mylist2UIRendering extends Mylist2UICore {
     }
 
     // サムネイルと基本情報
+    const thumbnailLink = item.querySelector<HTMLAnchorElement>(
+      ".video-thumbnail-link",
+    );
+    if (thumbnailLink) {
+      thumbnailLink.setAttribute("aria-label", `動画を開く: ${video.title}`);
+      this.configureVideoLink(thumbnailLink, video, false);
+    }
     const thumbnailElement = item.querySelector(
       ".video-thumbnail",
     ) as HTMLImageElement;
@@ -240,15 +266,9 @@ export abstract class Mylist2UIRendering extends Mylist2UICore {
         "",
       );
       const titleText = trimmedTitle ? trimmedTitle : "無題";
-      const linkContext = { authorName: video.authorName, title: video.title };
-      titleLink.href = buildVideoUrl(video.originalId, linkContext);
+      this.configureVideoLink(titleLink, video);
       titleLink.textContent = titleText;
       titleLink.className = "video-title-link";
-      titleLink.target = "_blank";
-      if (needsAvailabilityCheck(video.originalId, linkContext)) {
-        titleLink.dataset.needsApiCheck = "true";
-        titleLink.dataset.videoId = video.originalId;
-      }
       titleElement.appendChild(titleLink);
       const badge = createAvailabilityBadge(video);
       if (badge) {

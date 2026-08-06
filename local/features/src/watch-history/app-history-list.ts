@@ -39,6 +39,12 @@ export abstract class WatchHistoryHistoryListApp extends WatchHistoryAppBase {
       item.addEventListener(
         "click",
         this.guardEvent((e) => {
+          if (
+            e.target instanceof HTMLElement &&
+            e.target.closest(".history-thumbnail")
+          ) {
+            e.preventDefault();
+          }
           // アコーディオンのクリックイベントを除外
           if (
             e.target &&
@@ -199,14 +205,14 @@ export abstract class WatchHistoryHistoryListApp extends WatchHistoryAppBase {
         });
 
     return `
-      <div class="history-item" data-video-id="${entry.videoId}">
-        <div class="history-thumbnail">
+      <div class="history-item" data-video-id="${entry.videoId}" data-content-id="${this.escapeHtml(entry.videoId)}">
+        <a class="history-thumbnail" href="https://www.nicovideo.jp/watch/${encodeURIComponent(entry.videoId)}" target="_blank" rel="noopener noreferrer" aria-label="${this.escapeHtml(entry.title)}を開く">
           <img src="${normalizeThumbnailUrl(entry.thumbnailUrl)}"
                alt="${this.escapeHtml(entry.title)}"
                class="thumbnail-image"
                onerror="${THUMBNAIL_ERROR_HANDLER}">
           <div class="video-duration">${this.formatDuration(entry.lengthSec)}</div>
-        </div>
+        </a>
         <div class="history-content">
           <div class="history-header">
             <h3 class="history-title">${this.escapeHtml(entry.title)}</h3>
