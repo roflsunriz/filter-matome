@@ -1,6 +1,8 @@
 package extensions;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -10,12 +12,21 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 import dareka.common.Logger;
 import dareka.common.TextUtil;
@@ -53,6 +64,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
     private static final int MAX_PLAYLIST = 2 * 1024 * 1024;
     private static final int CONNECT_TIMEOUT_MS = 20_000;
     private static final int READ_TIMEOUT_MS = 60_000;
+    private static final String DATA_ROOT_PROPERTY = "nicocache.userDataRoot";
 
     private final ConcurrentHashMap<String, String> states =
             new ConcurrentHashMap<>();
@@ -64,6 +76,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
             new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Thread> workers =
             new ConcurrentHashMap<>();
+    private volatile SSLSocketFactory proxyTlsSocketFactory;
 
     @Override
     public void registerExtensions(ExtensionManager manager) {
@@ -229,6 +242,10 @@ public final class nlMovieFetcher implements Extension2, Processor {
                 new InetSocketAddress("127.0.0.1", listenPort));
         HttpURLConnection connection = (HttpURLConnection)
                 new URL(url).openConnection(proxy);
+        if (connection instanceof HttpsURLConnection) {
+            ((HttpsURLConnection) connection).setSSLSocketFactory(
+                    getProxyTlsSocketFactory());
+        }
         connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
         connection.setReadTimeout(READ_TIMEOUT_MS);
         connection.setRequestProperty("User-Agent", "NicoCache_nl/"
@@ -260,6 +277,44 @@ public final class nlMovieFetcher implements Extension2, Processor {
             }
         } finally {
             connection.disconnect();
+        }
+    }
+
+    private SSLSocketFactory getProxyTlsSocketFactory() throws IOException {
+        SSLSocketFactory current = proxyTlsSocketFactory;
+        if (current != null) {
+            return current;
+        }
+        synchronized (this) {
+            current = proxyTlsSocketFactory;
+            if (current != null) {
+                return current;
+            }
+            String dataRoot = System.getProperty(DATA_ROOT_PROPERTY);
+            if (dataRoot == null || dataRoot.trim().isEmpty()) {
+                throw new IOException(DATA_ROOT_PROPERTY + " is not set");
+            }
+            File certificate = new File(
+                    new File(dataRoot, "certs"), "ca.cer");
+            try (InputStream input = new FileInputStream(certificate)) {
+                Certificate authority = CertificateFactory
+                        .getInstance("X.509").generateCertificate(input);
+                KeyStore trustStore = KeyStore.getInstance(
+                        KeyStore.getDefaultType());
+                trustStore.load(null, null);
+                trustStore.setCertificateEntry("nicocache-local-ca", authority);
+                TrustManagerFactory factory = TrustManagerFactory.getInstance(
+                        TrustManagerFactory.getDefaultAlgorithm());
+                factory.init(trustStore);
+                SSLContext context = SSLContext.getInstance("TLS");
+                context.init(null, factory.getTrustManagers(), null);
+                current = context.getSocketFactory();
+                proxyTlsSocketFactory = current;
+                return current;
+            } catch (GeneralSecurityException exception) {
+                throw new IOException(
+                        "failed to load NicoCache local CA", exception);
+            }
         }
     }
 

@@ -65,6 +65,11 @@ X-Request-With: https://www.nicovideo.jp
 {"outputs":[["video-h264-360p","audio-aac-128kbps"]]}
 ```
 
+Java拡張は署名済みURLをNicoCache_nl自身のHTTPプロキシーへ渡す。HTTPSの
+CONNECT後に返るサイト証明書は`nicocache.userDataRoot/certs/ca.cer`を信頼元として
+検証し、ホスト名検証は無効化しない。これによりDomandのリクエストを本体の
+キャッシュ処理へ通しつつ、JVM既定ストアにローカルCAがない環境でも接続できる。
+
 成功時の `data.contentUrl` は `https://delivery.domand.nicovideo.jp/{hlsbid|shlsbid|hlsext}/...m3u8`。このPOSTをNicoCache_nl経由で行うことで、現行 `CmafCachingProcessor` が動画IDとマスターURLを関連付ける。
 
 実測したmasterは `EXT-X-STREAM-INF` の映像URIと `EXT-X-MEDIA:TYPE=AUDIO` の音声URIを別に持つ。media playlistはtarget duration 6秒、映像54断片・音声54断片だった。実装は個数を固定せず、相対URIを基準URLで解決し、`EXT-X-MAP`、`EXT-X-KEY`、コメントでない全行を重複排除して取得する。
