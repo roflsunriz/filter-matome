@@ -46,7 +46,7 @@ import dareka.processor.StringResource;
  * 視聴権の取得はログイン状態を持つブラウザー側へ任せ、この拡張は署名済みURLだけを扱う。
  */
 public final class nlMovieFetcher implements Extension2, Processor {
-    public static final int REVISION = 260806;
+    public static final int REVISION = 26080601;
     public static final String VER_STRING = "nlMovieFetcher_" + REVISION;
 
     private static final String API_PREFIX = "/cache/filter-matome/v1/movie-fetcher/";
@@ -60,6 +60,10 @@ public final class nlMovieFetcher implements Extension2, Processor {
             "^[a-z]{2}[0-9]+$", Pattern.CASE_INSENSITIVE);
     private static final Pattern URI_ATTRIBUTE = Pattern.compile(
             "(?:^|[:,])URI=\\\"([^\\\"]+)\\\"", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CURRENT_CMAF_RESOURCE_PATH = Pattern.compile(
+            "^/cache/file/[A-Za-z0-9_-]{1,64}=[A-Za-z0-9_-]{1,64}"
+                    + "//(?:audio/[A-Za-z0-9._-]+\\.cmfa"
+                    + "|video/[A-Za-z0-9._-]+\\.cmfv)$");
     private static final int MAX_REQUEST_BODY = 8 * 1024;
     private static final int MAX_PLAYLIST = 2 * 1024 * 1024;
     private static final int CONNECT_TIMEOUT_MS = 20_000;
@@ -404,7 +408,10 @@ public final class nlMovieFetcher implements Extension2, Processor {
             return path != null && (path.startsWith("/hlsbid/")
                     || path.startsWith("/shlsbid/")
                     || path.startsWith("/hlsext/")
-                    || path.matches("/[a-f0-9]{24}/.*"));
+                    || path.matches("/[a-f0-9]{24}/.*")
+                    || ("delivery.domand.nicovideo.jp".equals(host)
+                            && CURRENT_CMAF_RESOURCE_PATH.matcher(path)
+                                    .matches()));
         } catch (IllegalArgumentException exception) {
             return false;
         }

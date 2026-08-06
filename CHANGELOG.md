@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- 【common・movie-fetcher】動画情報取得と検索一覧からの取得交渉で常にゲスト用Watch APIを呼び、ログイン中にHTTP 400 `FORBIDDEN`で停止する問題を修正した。通常版を優先し、未ログインを示す`UNAUTHORIZED`の場合だけゲスト版へ切り替える。
+- 【common・movie-fetcher・extensions】動画情報取得と検索一覧からの取得交渉で常にゲスト用Watch APIを呼び、ログイン中にHTTP 400 `FORBIDDEN`で停止する問題を修正した。通常版を優先し、未ログインを示す`UNAUTHORIZED`の場合だけゲスト版へ切り替える。現行media playlistの`/cache/file/`配下にある音声・映像CMAF URLも固定ホスト・固定パス形状に限定して許可し、Java拡張が`playlist contains a disallowed URL`で停止しないようにした。
 - 【extensions・movie-fetcher】現行access-rights APIで必須の`X-Request-With`を送信し、一覧からのDomand取得が`INVALID_PARAMETER`で失敗する問題を修正した。Java拡張が自己プロキシーのHTTPS証明書を検証するときはユーザーデータのローカルCAを使用し、配信取得へ公式サイトの`Origin`、`Referer`と配信対象Cookieだけを付けて、`PKIX path building failed`またはHTTP 403で停止しないようにした。APIエラーコードをボタンのツールチップとブラウザーコンソールへ表示して、Java GUIログへ到達しない交渉失敗も診断できるようにした。
 
 ### Added

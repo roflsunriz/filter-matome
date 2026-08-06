@@ -79,7 +79,7 @@ CONNECT後に返るサイト証明書は`nicocache.userDataRoot/certs/ca.cer`を
 
 成功時の `data.contentUrl` は `https://delivery.domand.nicovideo.jp/{hlsbid|shlsbid|hlsext}/...m3u8`。このPOSTをNicoCache_nl経由で行うことで、現行 `CmafCachingProcessor` が動画IDとマスターURLを関連付ける。
 
-実測したmasterは `EXT-X-STREAM-INF` の映像URIと `EXT-X-MEDIA:TYPE=AUDIO` の音声URIを別に持つ。media playlistはtarget duration 6秒、映像54断片・音声54断片だった。実装は個数を固定せず、相対URIを基準URLで解決し、`EXT-X-MAP`、`EXT-X-KEY`、コメントでない全行を重複排除して取得する。
+実測したmasterは `EXT-X-STREAM-INF` の映像URIと `EXT-X-MEDIA:TYPE=AUDIO` の音声URIを別に持つ。media playlistはtarget duration 6秒、映像54断片・音声54断片だった。実装は個数を固定せず、相対URIを基準URLで解決し、`EXT-X-MAP`、`EXT-X-KEY`、コメントでない全行を重複排除して取得する。2026-08-06の再実測では、media playlist内の110リソースが`delivery.domand.nicovideo.jp/cache/file/{識別子}//audio/*.cmfa`または`.../video/*.cmfv`を使用した。Java拡張はこの固定ホスト・固定パス形状だけを追加許可し、任意の外部URLは引き続き拒否する。
 
 ## nlMovieFetcherローカルAPI
 
