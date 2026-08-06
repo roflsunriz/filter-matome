@@ -19,7 +19,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 `$env:USERPROFILE\Downloads`にダウンロードしたとする  
   
 1. 7zファイル`filter-matome-.xxx.7z`を7-zipで展開する  
-2. `$env:USERPROFILE\Downloads\filter-matome-.xxx\NicoCache_nl`にある`extensions`, `local`, `scripts`, `nlFilters`を `C:\NicoCache_nl`に上書きコピーする  
+2. `$env:USERPROFILE\Downloads\filter-matome-.xxx\NicoCache_nl`にある`extensions`, `local`, `scripts`, `nlFilters`を `C:\Users\UserName\AppData\Local\NicoCache_nl`に上書きコピーする  
 
     !!! note
 
@@ -29,9 +29,9 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 ### クリーンインストール手順
 
-`C:\NicoCache_nl`にインストールしたとする  
+`C:\Users\UserName\AppData\Local\NicoCache_nl`にインストールしたとする  
 
-1. `C:\NicoCache_nl`フォルダを開く  
+1. `C:\Users\UserName\AppData\Local\NicoCache_nl`フォルダを開く  
 2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `FilterMatomeCacheControl.class`, `FilterMatomeSeriesAlerts.class`, `FilterMatomeSmartFetcher.class`, `NicochartInfoProxy.class`, `nlMovieFetcher.class`, `nlMediaInfo.class`, `nlMediaInfo$CommandResult.class`, `nlMediaInfo$StreamCollector.class`, `nlGpac.class`, `nlGpac$CommandResult.class`, `nlGpac$StreamCollector.class`, `nlGpac$TrackData.class`を削除する
 3. `local`フォルダにある`background-images`, `features`, `images`, フォルダ, `mime.types`, `list.js` のシンボリックリンクを削除する  
 4. `scripts`フォルダを削除する  
@@ -152,12 +152,12 @@ NicoCache_nl はキャッシュデータ用スクリプトを、Targetの`local/
 `--dry-run`は変更せず、`--yes`で実作成、`--force`で既存シンボリックリンクだけを再作成する。既存の通常ファイルやフォルダーは削除されない。
 
 ```powershell
-java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
+java -jar "C:\Users\UserName\AppData\Local\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
   --headless --plugin developer --action listjs `
   --source-root "C:\filter-matome" `
   --target-root "$env:LOCALAPPDATA\NicoCache_nl" --dry-run
 
-java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
+java -jar "C:\Users\UserName\AppData\Local\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
   --headless --plugin developer --action listjs `
   --source-root "C:\filter-matome" `
   --target-root "$env:LOCALAPPDATA\NicoCache_nl" --yes --force
@@ -270,14 +270,14 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 
 #### 任意で用意した動画をコメントを被せて再生
 - [Hohoema](https://github.com/tor4kichi/Hohoema)を使用する方法
-- `C:\NicoCache_nl\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`、`smXXXXXXXX.mp4`、`nmXXXXXXXX.mp4`、`ssXXXXXXXX.mp4`などとし、該当動画IDのページを開く。 
-- `C:\NicoCache_nl\local\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`、`smXXXXXXXX.mp4`、`nmXXXXXXXX.mp4`、`ssXXXXXXXX.mp4`などとし、該当動画IDのページを開く。 
+- `C:\Users\UserName\AppData\Local\NicoCache_nl\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`、`smXXXXXXXX.mp4`、`nmXXXXXXXX.mp4`、`ssXXXXXXXX.mp4`などとし、該当動画IDのページを開く。 
+- `C:\Users\UserName\AppData\Local\NicoCache_nl\local\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`、`smXXXXXXXX.mp4`、`nmXXXXXXXX.mp4`、`ssXXXXXXXX.mp4`などとし、該当動画IDのページを開く。 
 
 !!! note
     mp4ファイルを配布済みJava ToolboxでFastStart変換すると、読み込みから再生開始までの待ち時間が短縮される。通常利用ではMavenなどのビルドは不要。
 
     ```powershell
-    java -jar "C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" --headless --plugin media --action faststart --input "C:\NicoCache_nl\cache\movie.mp4" --dry-run
+    java -jar "C:\Users\UserName\AppData\Local\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" --headless --plugin media --action faststart --input "C:\Users\UserName\AppData\Local\NicoCache_nl\cache\movie.mp4" --dry-run
     ```
 
 !!! note
@@ -340,7 +340,7 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 
 そのうえで、mlink-video-controller の設定タブにある「背景画像設定」から背景画像を指定する。指定方法は URL 指定とファイル選択の 2 種類である。ファイル選択した画像は、IndexedDB に base64 形式で保存される。
 
-URL は `https://www.nicovideo.jp/local/background.jpg` のように、`local` 配下のファイルをそのまま指定するのが最も単純な例である。たとえば `C:\NicoCache_nl\local\background-images\favorites\background1.avif` に画像を置いた場合、URL は `https://www.nicovideo.jp/local/background-images/favorites/background1.avif` になる。さらに、`local` フォルダ内の `hoge` フォルダに `image.jpg` がある場合は、`https://www.nicovideo.jp/local/hoge/image.jpg` になる。`https://www.nicovideo.jp/local/` 以外の外部 URL も指定できるが、読み込み時に外部サーバーへ無用な負荷をかけるおそれがあるため非推奨である。フォルダ構成や指定数に厳密な制限はないが、常識的な範囲で設定することを推奨する。
+URL は `https://www.nicovideo.jp/local/background.jpg` のように、`local` 配下のファイルをそのまま指定するのが最も単純な例である。たとえば `C:\Users\UserName\AppData\Local\NicoCache_nl\local\background-images\favorites\background1.avif` に画像を置いた場合、URL は `https://www.nicovideo.jp/local/background-images/favorites/background1.avif` になる。さらに、`local` フォルダ内の `hoge` フォルダに `image.jpg` がある場合は、`https://www.nicovideo.jp/local/hoge/image.jpg` になる。`https://www.nicovideo.jp/local/` 以外の外部 URL も指定できるが、読み込み時に外部サーバーへ無用な負荷をかけるおそれがあるため非推奨である。フォルダ構成や指定数に厳密な制限はないが、常識的な範囲で設定することを推奨する。
 
 !!! warning "注意事項（nico_wallpaperG併用時）"
     nico_wallpaperGと併用している場合衝突が起きるので、そのときはどちらを優先するかによるが mlink-video-controller にて背景セレクターとマトリックス背景を無効化し、「wp1.css」に以下を追記する。（デフォルトの場合）
