@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- 【mlink-video-controller/原宿風Watch】公式の詳細アコーディオンを操作せず動画説明を確認できるよう、watchページの`server-response`から説明HTMLを事前取得して安全な専用DOMへ描画し、空・短文はコンパクトに、長文は最大高まで伸長した後だけ内部スクロールする表示へ変更した。
+
+
 ## [#236] - 2026-08-02
 
 ### Fixed

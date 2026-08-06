@@ -44,6 +44,8 @@ watchページ間のSPA遷移は共通navigationイベントから`ModuleManager
 - 背景画像: `background-image-settings.ts` がIndexedDB、永続化要求、移行、バックアップ・復旧を管理する。
 - ヒートマップ、ヘッダープライバシー、原宿風表示などには個別のlocalStorage設定がある。
 
+原宿風表示はwatchページの`server-response.data.response.video.description`を投稿者情報と同じ事前取得経路から読み、DOMPurifyで安全化した専用説明欄へ描画します。公式の詳細アコーディオンは表示せず、空または短い説明は最小高、長い説明は上限まで自動伸長し、上限を超えた本文だけを内部スクロールさせます。
+
 保存形式を変更するときは、設定UI、インポート・エクスポート、正規化、初期値、テストを同時に更新してください。
 
 設定UIは一覧・各機能設定を`settings-ui-core.ts`、入出力・背景画像モーダルを`settings-ui.ts`へ分けています。背景画像の基本CRUDは`background-image-storage-core.ts`、保守と入出力は`background-image-settings.ts`が担当し、原宿表示のメタデータ読取とCSS、パネルのキー保護も専用ファイルへ分離しています。

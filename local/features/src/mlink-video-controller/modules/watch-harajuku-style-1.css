@@ -24,8 +24,9 @@
     --hy-owner-gap: 8px;
     --hy-sidebar-header-height: 25px;
     --hy-title-row-height: 34px;
-    --hy-detail-summary-height: 28px;
-    --hy-detail-expanded-height: clamp(180px, 26vh, 260px);
+    --hy-description-min-height: 22px;
+    --hy-description-max-height: clamp(96px, 18vh, 220px);
+    --hy-description-height: var(--hy-description-min-height);
     --hy-tag-strip-max-height: clamp(44px, 8vh, 64px);
     --hy-sidebar-tag-search-header-height: 42px;
     --hy-sidebar-tag-search-height: clamp(152px, 22vh, 240px);
@@ -33,25 +34,11 @@
     --hy-title-to-detail-gap: 4px;
     --hy-detail-to-tags-gap: 4px;
     --hy-tags-to-player-gap: 12px;
-    --hy-details-panel-offset: 30px;
-    --hy-details-expanded-to-tags-gap: 6px;
     --hy-pre-player-height: calc(
       var(--hy-title-row-height) +
       var(--hy-title-to-detail-gap) +
-      var(--hy-detail-summary-height) +
+      var(--hy-description-height) +
       var(--hy-detail-to-tags-gap) +
-      var(--hy-tag-strip-max-height) +
-      var(--hy-tags-to-player-gap)
-    );
-    --hy-expanded-tags-top: calc(
-      var(--hy-title-row-height) +
-      var(--hy-title-to-detail-gap) +
-      var(--hy-details-panel-offset) +
-      var(--hy-detail-expanded-height) +
-      var(--hy-details-expanded-to-tags-gap)
-    );
-    --hy-expanded-pre-player-height: calc(
-      var(--hy-expanded-tags-top) +
       var(--hy-tag-strip-max-height) +
       var(--hy-tags-to-player-gap)
     );

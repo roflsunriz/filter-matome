@@ -7,6 +7,7 @@ import {
 } from "@/types/module-types";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
 import { HarajukuMetadataReader, META_ITEMS } from "./harajuku-metadata";
+import { renderHarajukuDescription } from "./harajuku-description";
 import { createMaterialIcon } from "@/common/material-icons";
 import harajukuBaseStyle from "./watch-harajuku-style-1.css" with { type: "text" };
 import harajukuChromeStyle from "./watch-harajuku-style-2.css" with { type: "text" };
@@ -66,8 +67,10 @@ const SELECTORS = {
     'section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"]',
   detailList:
     'section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type dl',
+  detailSection:
+    'section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type',
   detailContent:
-    'section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header)',
+    'section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header):not(.HarajukuDescription)',
   title:
     'section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:first-child h1',
 } as const;
@@ -84,6 +87,8 @@ export class WatchHarajukuModule implements ModuleInstance {
   private scheduled = false;
   private _isActive = false;
   private ownerApiMetadata: OwnerApiMetadata | null = null;
+  private descriptionHtml: string | null = null;
+  private renderedDescriptionHtml: string | null | undefined;
   private readonly metadataReader = new HarajukuMetadataReader(
     SELECTORS.detailList,
     SELECTORS.bottom,
@@ -109,7 +114,7 @@ export class WatchHarajukuModule implements ModuleInstance {
     this.injectStyle();
     this.setTheme(this.getTheme());
     this.setBackgroundPriority(this.getBackgroundPriority());
-    await this.loadOwnerApiMetadata();
+    await this.loadWatchApiMetadata();
     this.scheduleRender();
     this.startRetryTimer();
     this.startObserver();
@@ -136,12 +141,13 @@ export class WatchHarajukuModule implements ModuleInstance {
     document.querySelectorAll(".HarajukuOwner").forEach((node) => {
       node.remove();
     });
+    document.querySelectorAll(".HarajukuDescription").forEach((node) => {
+      node.remove();
+    });
 
     document.documentElement.removeAttribute("data-hy-theme");
     document.documentElement.removeAttribute("data-hy-background-priority");
-    document.documentElement.style.removeProperty(
-      "--hy-detail-expanded-height",
-    );
+    document.documentElement.style.removeProperty("--hy-description-height");
     document.documentElement.style.removeProperty(
       "--hy-watch-sidebar-panel-height",
     );
@@ -149,6 +155,8 @@ export class WatchHarajukuModule implements ModuleInstance {
 
     this.scheduled = false;
     this.ownerApiMetadata = null;
+    this.descriptionHtml = null;
+    this.renderedDescriptionHtml = undefined;
     this._isActive = false;
   }
 
@@ -176,7 +184,7 @@ export class WatchHarajukuModule implements ModuleInstance {
     document.querySelectorAll(".HarajukuOwner").forEach((node) => {
       node.remove();
     });
-    await this.loadOwnerApiMetadata();
+    await this.loadWatchApiMetadata();
     this.scheduleRender();
     this.startRetryTimer();
   }
@@ -286,8 +294,10 @@ export class WatchHarajukuModule implements ModuleInstance {
     };
   }
 
-  private async loadOwnerApiMetadata(): Promise<void> {
+  private async loadWatchApiMetadata(): Promise<void> {
     this.ownerApiMetadata = null;
+    this.descriptionHtml = null;
+    this.renderedDescriptionHtml = undefined;
     const requestedVideoId = await window.commonHelper.getVideoIdWithFallback();
     const result = await window.commonHelper.fetchWatchPage(
       requestedVideoId ?? undefined,
@@ -298,6 +308,9 @@ export class WatchHarajukuModule implements ModuleInstance {
     }
 
     const apiData = result.apiData as unknown as {
+      video?: {
+        description?: string;
+      };
       owner?: {
         id?: number | string;
         nickname?: string;
@@ -310,6 +323,10 @@ export class WatchHarajukuModule implements ModuleInstance {
         url?: string;
       } | null;
     };
+    this.descriptionHtml =
+      typeof apiData.video?.description === "string"
+        ? apiData.video.description
+        : "";
     const owner = apiData.owner;
     if (owner?.id !== undefined && owner.nickname && owner.iconUrl) {
       const profileHref = `/user/${owner.id}`;
@@ -597,6 +614,38 @@ export class WatchHarajukuModule implements ModuleInstance {
     return chrome;
   }
 
+  private ensureDescription(): HTMLElement | null {
+    const section = document.querySelector<HTMLElement>(
+      SELECTORS.detailSection,
+    );
+    if (!section) {
+      return null;
+    }
+
+    let description = section.querySelector<HTMLElement>(
+      ":scope > .HarajukuDescription",
+    );
+    if (!description) {
+      description = document.createElement("div");
+      description.className = "HarajukuDescription";
+      description.setAttribute("role", "region");
+      description.setAttribute("aria-label", "動画説明文");
+      description.tabIndex = 0;
+      section.prepend(description);
+      this.renderedDescriptionHtml = undefined;
+    }
+
+    if (this.renderedDescriptionHtml !== this.descriptionHtml) {
+      description.dataset.hyState = renderHarajukuDescription(
+        description,
+        this.descriptionHtml,
+      );
+      this.renderedDescriptionHtml = this.descriptionHtml;
+    }
+
+    return description;
+  }
+
   private findCommentListSection(
     root: Element | Document | null | undefined = document,
   ): HTMLElement | null {
@@ -644,10 +693,11 @@ export class WatchHarajukuModule implements ModuleInstance {
   }
 
   private renderChrome(): boolean {
+    const description = this.ensureDescription();
     this.updateLayoutMetrics();
 
     const chrome = this.ensureChrome();
-    if (!chrome) {
+    if (!chrome || !description) {
       return false;
     }
 
@@ -705,47 +755,13 @@ export class WatchHarajukuModule implements ModuleInstance {
     const detailContent = document.querySelector<HTMLElement>(
       SELECTORS.detailContent,
     );
-
-    if (detailContent?.getAttribute("aria-hidden") === "false") {
-      const previousHeight = detailContent.style.height;
-      const previousMinHeight = detailContent.style.minHeight;
-      const previousMaxHeight = detailContent.style.maxHeight;
-      const previousHeightPriority =
-        detailContent.style.getPropertyPriority("height");
-      const previousMinHeightPriority =
-        detailContent.style.getPropertyPriority("min-height");
-      const previousMaxHeightPriority =
-        detailContent.style.getPropertyPriority("max-height");
-      detailContent.style.setProperty("height", "auto", "important");
-      detailContent.style.setProperty("min-height", "0", "important");
-      detailContent.style.setProperty("max-height", "none", "important");
-
-      const detailRect = detailContent.getBoundingClientRect();
-      const borderHeight = detailRect.height - detailContent.clientHeight;
-      const nextDetailHeight = Math.max(
-        detailContent.scrollHeight + Math.max(0, borderHeight),
-        detailRect.height,
-      );
-
-      detailContent.style.setProperty(
-        "height",
-        previousHeight,
-        previousHeightPriority,
-      );
-      detailContent.style.setProperty(
-        "min-height",
-        previousMinHeight,
-        previousMinHeightPriority,
-      );
-      detailContent.style.setProperty(
-        "max-height",
-        previousMaxHeight,
-        previousMaxHeightPriority,
-      );
-
+    const description = document.querySelector<HTMLElement>(
+      ".HarajukuDescription",
+    );
+    if (description) {
       root.style.setProperty(
-        "--hy-detail-expanded-height",
-        this.px(nextDetailHeight),
+        "--hy-description-height",
+        this.px(description.getBoundingClientRect().height),
       );
     }
 
@@ -773,6 +789,7 @@ export class WatchHarajukuModule implements ModuleInstance {
       sidebar,
       sidebarColumn,
       detailContent,
+      description,
       commentListSection,
       ...sidebarExtraPanels,
     ]);

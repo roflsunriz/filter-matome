@@ -1,45 +1,10 @@
-  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > div:has(+ dl):has(> [class*="grid-area_title"]) > svg,
-  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > div:has(+ dl):has(> [class*="grid-area_title"]) > [class*="grid-area_title"],
-  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > dl + div > * > svg,
-  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > dl + div > * > [class*="grid-area_title"] {
-    flex: 0 0 auto !important;
-  }
-
-  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > div:has(+ dl):has(> [class*="grid-area_title"]) > [class*="grid-area_data"],
-  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > dl + div > * > [class*="grid-area_data"] {
-    flex: 1 1 auto !important;
-  }
-
-  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > dl + div > * * {
-    min-width: 0 !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > div:has(> a[data-anchor-area="video_detail"] > img):has([data-element-name="follow_user"]) {
-    display: none !important;
-  }
-
-  section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header) > hr:has(+ div > a[data-anchor-area="video_detail"] > img) {
-    display: none !important;
-  }
-
-  section[class*="grid-template-areas"]:has(div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header)[aria-hidden="false"]) {
-    padding-top: var(--hy-expanded-pre-player-height) !important;
-  }
-
-  section[class*="grid-template-areas"]:has(div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header)[aria-hidden="false"]) div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) {
-    top: var(--hy-expanded-tags-top) !important;
-  }
-
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) {
     position: absolute !important;
     left: 0 !important;
     top: calc(
       var(--hy-title-row-height) +
       var(--hy-title-to-detail-gap) +
-      var(--hy-detail-summary-height) +
+      var(--hy-description-height) +
       var(--hy-detail-to-tags-gap)
     ) !important;
     z-index: 2 !important;
@@ -70,8 +35,8 @@
 
   div[class*="grid-area_"][class*="bottom"] > section:first-of-type {
     margin-top: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
+    max-height: var(--hy-description-max-height) !important;
+    overflow: hidden !important;
   }
 
   div[class*="grid-area_"][class*="bottom"] section:nth-of-type(n+2) {
@@ -777,4 +742,3 @@
     color: #0645ad !important;
     fill: #0645ad !important;
   }
-
