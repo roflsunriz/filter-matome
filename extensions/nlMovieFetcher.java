@@ -303,7 +303,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
                 continue;
             }
             String name = cookie.substring(0, separator).trim();
-            if (!("domand_bid".equals(name) || "nicosid".equals(name))) {
+            if (!"domand_bid".equals(name)) {
                 continue;
             }
             if (selected.length() > 0) {
