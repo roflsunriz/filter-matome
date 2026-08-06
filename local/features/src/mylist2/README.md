@@ -38,7 +38,7 @@ DB名は `Mylist2DB` です。主なストアは次のとおりです。
 
 - `mlink-video-controller/handlers/mylist2.ts`: 視聴中動画をmylist2へ追加する導線。
 - `common/thumbnail-fallback.ts`: サムネイル欠落時の表示。
-- NicoCache_nlの`local/15_cached_link_color.js`と`local/nl_cacheIcon.css`: 動画リンク内のサムネイルへキャッシュ品質アイコンを表示する正本。mylist2は各動画項目の`data-content-id`とサムネイルリンクを連携境界として提供する。
+- NicoCache_nlの`local/15_cached_link_color.js`と`local/nl_cacheIcon.css`: 動画リンク内のサムネイルへキャッシュ品質アイコンを表示する正本。`/local/`配信はnlFilterの自動挿入対象外なので、mylist2のHTMLから正本を明示的に読み込み、各動画項目の`data-content-id`とサムネイルリンクを連携境界として提供する。
 - `common` の共通ヘッダーと通知。
 - ニコニコ動画API: 動画情報更新と公開状態確認。
 - Google Drive: ユーザーが明示的に認証・操作した場合のバックアップ連携。
@@ -51,7 +51,7 @@ DB名は `Mylist2DB` です。主なストアは次のとおりです。
 
 ## Service Worker
 
-`service-worker.ts` は `features.js`、mylist2のHTML、サムネイルをキャッシュします。変更時はキャッシュ名、scope、期限、更新失敗時のフォールバックを確認し、古いキャッシュが無期限に残らないようにします。
+`service-worker.ts` は `features.js`、mylist2のHTML、サムネイルをキャッシュします。キャッシュ世代の更新時は旧`custom-mylist2-*`キャッシュを削除し、新しいWorkerを即時有効化します。変更時はキャッシュ名、scope、期限、更新失敗時のフォールバックを確認し、古いキャッシュが無期限に残らないようにします。
 
 ## 変更時の確認
 

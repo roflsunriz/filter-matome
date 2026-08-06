@@ -4,6 +4,10 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { composeWatchHistoryDocument } from "../scripts/watch-history-document";
+import {
+  expectCacheIconAssetApplied,
+  installCacheIconAssetRoutes,
+} from "./cache-icon-test-helper";
 import { verifyWatchHistoryGoogleDriveBackup } from "./watch-history-google-drive-test-helper";
 
 const projectRoot = join(import.meta.dirname, "..");
@@ -252,6 +256,7 @@ async function openApp(page: Page): Promise<ExtensionRouteController> {
       return { started, release };
     },
   };
+  await installCacheIconAssetRoutes(page);
   await page.route(
     "https://www.nicovideo.jp/cache/watch-history-series-alerts/**",
     async (route) => {
@@ -593,6 +598,10 @@ test("サムネイル欠落時と画像読込失敗時にフォールバック�
   await expect(
     cacheIconTarget.locator(":scope > .history-thumbnail"),
   ).toHaveAttribute("href", "https://www.nicovideo.jp/watch/sm100");
+  await expectCacheIconAssetApplied(
+    page,
+    cacheIconTarget.locator(":scope > .history-thumbnail"),
+  );
   const missingThumbnail = page.locator(
     '.history-item[data-video-id="sm100"] .thumbnail-image',
   );

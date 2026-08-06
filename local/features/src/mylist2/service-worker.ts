@@ -8,7 +8,8 @@ declare const self: ServiceWorkerGlobalScope;
 console.debug("Service Worker script loaded");
 console.debug("Current location:", self.location.href);
 
-const CACHE_NAME = "custom-mylist2-v3";
+const CACHE_PREFIX = "custom-mylist2-";
+const CACHE_NAME = `${CACHE_PREFIX}v4`;
 const CACHE_URLS = [
   "/local/features/dist/features.js",
   "/local/features/dist/pages/mylist2/index.html",
@@ -42,7 +43,7 @@ self.addEventListener("install", (event: ExtendableEvent) => {
         CACHE_URLS.forEach((url) => {
           cacheMetadata.set(url, timestamp);
         });
-        return cache.addAll(CACHE_URLS);
+        return cache.addAll(CACHE_URLS).then(() => self.skipWaiting());
       })
       .catch((error) => {
         console.error("Cache installation failed:", error);
@@ -54,8 +55,19 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 self.addEventListener("activate", (event: ExtendableEvent) => {
   console.debug("Service Worker activating...");
   event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
+    (async () => {
       try {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames
+            .filter(
+              (cacheName) =>
+                cacheName.startsWith(CACHE_PREFIX) && cacheName !== CACHE_NAME,
+            )
+            .map((cacheName) => caches.delete(cacheName)),
+        );
+
+        const cache = await caches.open(CACHE_NAME);
         // 古いキャッシュを削除
         const now = Date.now();
         const keys = await cache.keys();
@@ -70,11 +82,12 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
           return Promise.resolve();
         });
 
-        return Promise.all(deletions);
+        await Promise.all(deletions);
+        await self.clients.claim();
       } catch (error) {
         console.error("Cache cleanup failed:", error);
       }
-    }),
+    })(),
   );
 });
 

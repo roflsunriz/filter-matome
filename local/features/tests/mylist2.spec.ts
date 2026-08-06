@@ -3,6 +3,10 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import {
+  expectCacheIconAssetApplied,
+  installCacheIconAssetRoutes,
+} from "./cache-icon-test-helper";
 
 const projectRoot = join(import.meta.dirname, "..");
 const fixtureEntry = join(import.meta.dirname, "fixtures", "mylist2-entry.ts");
@@ -107,6 +111,7 @@ async function fulfillDocument(route: Route): Promise<void> {
 }
 
 async function openApp(page: Page): Promise<void> {
+  await installCacheIconAssetRoutes(page);
   await page.route(pageUrl, fulfillDocument);
   await page.goto(pageUrl);
   await page.addScriptTag({ content: appBundle });
@@ -338,6 +343,7 @@ test("動画検索・ソート・詳細表示・選択状態が同期する", as
   await expect(thumbnailLink.locator(":scope > .video-thumbnail")).toHaveCount(
     1,
   );
+  await expectCacheIconAssetApplied(page, thumbnailLink);
   await expect(
     page.locator('.video-item[data-id="sm100"] .video-thumbnail'),
   ).toHaveAttribute("data-fallback-thumbnail", "true");

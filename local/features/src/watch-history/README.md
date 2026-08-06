@@ -71,7 +71,7 @@
 - 削除条件は表示ラベルと純粋関数を一致させ、実際の削除前に対象件数を提示する。
 - extension未配置、NicoCache_nl停止、システム通知未対応を通常の分岐として扱い、UI状態・GUIログ・通知音で判断できるようにする。
 - サムネイル失敗時は共通フォールバックを使う。
-- 履歴一覧、動画詳細、シリーズ内動画のサムネイルは動画リンクとして描画し、NicoCache_nlの`local/15_cached_link_color.js`と`local/nl_cacheIcon.css`を正本とするキャッシュ品質アイコン表示へ接続する。
+- 履歴一覧、動画詳細、シリーズ内動画のサムネイルは動画リンクとして描画する。`/local/`配信はnlFilterの自動挿入対象外なので、HTMLからNicoCache_nl正本の`local/15_cached_link_color.js`と`local/nl_cacheIcon.css`を明示的に読み込み、キャッシュ品質アイコン表示へ接続する。
 
 ## テスト
 
