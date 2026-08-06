@@ -49,6 +49,17 @@ type AccessRightsEnvelope = {
   meta?: { status?: number; errorCode?: string };
 };
 
+class ApiResponseError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly errorCode?: string,
+  ) {
+    super(message);
+    this.name = "ApiResponseError";
+  }
+}
+
 export function extractVideoId(href: string): string | null {
   try {
     const base =
@@ -110,28 +121,40 @@ async function readJson<T>(response: Response, label: string): Promise<T> {
         : {};
     const meta = record.meta as Record<string, unknown> | undefined;
     const errorCode =
-      typeof meta?.errorCode === "string" ? ` (${meta.errorCode})` : "";
-    throw new Error(`${label}: HTTP ${response.status}${errorCode}`);
+      typeof meta?.errorCode === "string" ? meta.errorCode : undefined;
+    throw new ApiResponseError(
+      `${label}: HTTP ${response.status}${errorCode ? ` (${errorCode})` : ""}`,
+      response.status,
+      errorCode,
+    );
   }
   return payload;
 }
 
-export async function negotiateContentUrl(
+function createWatchUrl(
+  endpoint: "v3" | "v3_guest",
   videoId: string,
-  fetcher: typeof fetch = fetch,
-): Promise<string> {
-  const actionTrackId = createActionTrackId();
+  actionTrackId: string,
+): URL {
   const watchUrl = new URL(
-    `/api/watch/v3_guest/${encodeURIComponent(videoId)}`,
+    `/api/watch/${endpoint}/${encodeURIComponent(videoId)}`,
     location.origin,
   );
   watchUrl.searchParams.set("_frontendId", FRONTEND_ID);
   watchUrl.searchParams.set("_frontendVersion", FRONTEND_VERSION);
   watchUrl.searchParams.set("actionTrackId", actionTrackId);
   watchUrl.searchParams.set("t", String(Date.now()));
+  return watchUrl;
+}
 
-  const watchEnvelope = await readJson<WatchEnvelope>(
-    await fetcher(watchUrl, {
+async function fetchWatchEnvelope(
+  endpoint: "v3" | "v3_guest",
+  videoId: string,
+  actionTrackId: string,
+  fetcher: typeof fetch,
+): Promise<WatchEnvelope> {
+  return readJson<WatchEnvelope>(
+    await fetcher(createWatchUrl(endpoint, videoId, actionTrackId), {
       credentials: "include",
       headers: {
         "X-Frontend-Id": FRONTEND_ID,
@@ -139,6 +162,35 @@ export async function negotiateContentUrl(
       },
     }),
     "watch API",
+  );
+}
+
+async function requestWatchEnvelope(
+  videoId: string,
+  actionTrackId: string,
+  fetcher: typeof fetch,
+): Promise<WatchEnvelope> {
+  try {
+    return await fetchWatchEnvelope("v3", videoId, actionTrackId, fetcher);
+  } catch (error) {
+    const shouldUseGuest =
+      error instanceof ApiResponseError &&
+      (error.status === 401 ||
+        (error.status === 400 && error.errorCode === "UNAUTHORIZED"));
+    if (!shouldUseGuest) throw error;
+    return fetchWatchEnvelope("v3_guest", videoId, actionTrackId, fetcher);
+  }
+}
+
+export async function negotiateContentUrl(
+  videoId: string,
+  fetcher: typeof fetch = fetch,
+): Promise<string> {
+  const actionTrackId = createActionTrackId();
+  const watchEnvelope = await requestWatchEnvelope(
+    videoId,
+    actionTrackId,
+    fetcher,
   );
   const watch = watchResponseFrom(watchEnvelope);
   const domand = watch?.media?.domand;

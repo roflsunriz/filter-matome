@@ -9,10 +9,12 @@ APIエンドポイント: https://ext.nicovideo.jp/api/getthumbinfo/{video_id}
 3. 取得失敗・未知形式・非OKレスポンスの場合は、次の現行Watch APIを試す。
 
 ```text
-GET https://www.nicovideo.jp/api/watch/v3_guest/{video_id}?actionTrackId={10文字の英数字}_{UNIXミリ秒}
+GET https://www.nicovideo.jp/api/watch/v3/{video_id}?actionTrackId={10文字の英数字}_{UNIXミリ秒}
 X-Frontend-Id: 6
 X-Frontend-Version: 0
 ```
+
+ログイン中は通常版を使用する。通常版が`UNAUTHORIZED`（HTTP 400）またはHTTP 401を返した未ログイン環境だけ、同じリクエスト条件で`/api/watch/v3_guest/{video_id}`へフォールバックする。ログイン中にゲスト版を固定使用すると`FORBIDDEN`（HTTP 400）になる環境がある。
 
 Watch APIの成功レスポンスは `meta.status=200` と `data.video` を中心に扱います。`data.video.duration` は秒数を `m:ss` または `h:mm:ss` へ変換し、`count.view`・`count.comment`・`count.mylist`、`thumbnail.url`（なければ`player`/`ogp`）、`registeredAt`、`owner`または`channel`、`tag.items`、`genre.label` を取得します。公式チャンネル動画では `owner` が `null` で `channel` のみ存在する場合があるため、どちらも任意項目です。`isPrivate`、`isDeleted`、`meta.errorCode` は公開状態エラーとして保持します。R18系は `tag.hasR18Tag` とタグ名の両方を確認します。
 

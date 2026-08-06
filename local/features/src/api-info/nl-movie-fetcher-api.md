@@ -27,13 +27,15 @@ Cookie、`accessRightKey`、署名付きクエリー、ユーザーID、視聴�
 
 ## Watch API
 
-ブラウザーのログインCookieを利用して同一オリジンから呼び出す。
+ブラウザーのログインCookieを利用して同一オリジンから呼び出す。ログイン中は通常版を使用する。
 
 ```http
-GET /api/watch/v3_guest/{videoId}?_frontendId=6&_frontendVersion=0&actionTrackId={random}_{epochMs}&t={epochMs}
+GET /api/watch/v3/{videoId}?_frontendId=6&_frontendVersion=0&actionTrackId={random}_{epochMs}&t={epochMs}
 X-Frontend-Id: 6
 X-Frontend-Version: 0
 ```
+
+未ログインの隔離プロファイルでは通常版がHTTP 400 `UNAUTHORIZED`、ゲスト版がHTTP 200になった。したがって通常版を先に呼び、HTTP 401またはHTTP 400 `UNAUTHORIZED`の場合だけ、同じqueryとheaderで`/api/watch/v3_guest/{videoId}`へフォールバックする。ログイン中にゲスト版を固定使用するとHTTP 400 `FORBIDDEN`になる環境があるため、認証状態を無視してゲスト版へ固定しない。
 
 使用する最小フィールドは次のとおり。
 

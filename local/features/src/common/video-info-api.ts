@@ -7,6 +7,8 @@ import type {
 export const EXT_THUMB_INFO_ENDPOINT =
   "https://ext.nicovideo.jp/api/getthumbinfo/";
 export const WATCH_VIDEO_INFO_ENDPOINT =
+  "https://www.nicovideo.jp/api/watch/v3/";
+export const WATCH_VIDEO_INFO_GUEST_ENDPOINT =
   "https://www.nicovideo.jp/api/watch/v3_guest/";
 
 export type VideoInfoSource = "ext-thumb" | "watch-api";
@@ -618,6 +620,43 @@ const chooseFinalError = (
   );
 };
 
+const fetchWatchVideoInfo = async (
+  videoId: string,
+  encodedVideoId: string,
+  fetcher: VideoInfoFetcher,
+): Promise<ThumbInfo> => {
+  const actionTrackId = createActionTrackId();
+  const query = `?actionTrackId=${encodeURIComponent(actionTrackId)}`;
+  const options = {
+    headers: {
+      "X-Frontend-Id": "6",
+      "X-Frontend-Version": "0",
+    },
+  };
+
+  try {
+    return await requestAndParse(
+      WATCH_VIDEO_INFO_ENDPOINT + encodedVideoId + query,
+      videoId,
+      "watch-api",
+      fetcher,
+      options,
+    );
+  } catch (error) {
+    const shouldUseGuest =
+      isNicoVideoInfoError(error) &&
+      (error.code === "UNAUTHORIZED" || error.code === "HTTP_401");
+    if (!shouldUseGuest) throw error;
+    return requestAndParse(
+      WATCH_VIDEO_INFO_GUEST_ENDPOINT + encodedVideoId + query,
+      videoId,
+      "watch-api",
+      fetcher,
+      options,
+    );
+  }
+};
+
 export const fetchNicoVideoInfo = async (
   videoId: string,
   fetcher: VideoInfoFetcher = defaultFetcher,
@@ -637,17 +676,7 @@ export const fetchNicoVideoInfo = async (
   }
 
   try {
-    const actionTrackId = createActionTrackId();
-    const watchUrl =
-      WATCH_VIDEO_INFO_ENDPOINT +
-      encodedVideoId +
-      `?actionTrackId=${encodeURIComponent(actionTrackId)}`;
-    return await requestAndParse(watchUrl, videoId, "watch-api", fetcher, {
-      headers: {
-        "X-Frontend-Id": "6",
-        "X-Frontend-Version": "0",
-      },
-    });
+    return await fetchWatchVideoInfo(videoId, encodedVideoId, fetcher);
   } catch (error) {
     errors.push(error);
   }

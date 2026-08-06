@@ -45,9 +45,11 @@ function documentRoute(route: Route): void {
 test("カードからDomand取得を開始し完了状態を表示する", async ({ page }) => {
   let extensionStatus = "idle";
   let accessRequestWith: string | undefined;
+  const watchEndpoints: string[] = [];
   await page.route(pageUrl, documentRoute);
-  await page.route("**/api/watch/v3_guest/sm9?**", (route) =>
-    route.fulfill({
+  await page.route("**/api/watch/v3/sm9?**", (route) => {
+    watchEndpoints.push("v3");
+    return route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({
         data: {
@@ -71,8 +73,16 @@ test("カードからDomand取得を開始し完了状態を表示する", async
           },
         },
       }),
-    }),
-  );
+    });
+  });
+  await page.route("**/api/watch/v3_guest/sm9?**", (route) => {
+    watchEndpoints.push("v3_guest");
+    return route.fulfill({
+      status: 400,
+      contentType: "application/json",
+      body: JSON.stringify({ meta: { status: 400, errorCode: "FORBIDDEN" } }),
+    });
+  });
   await page.route(
     "https://nvapi.nicovideo.jp/v1/watch/sm9/access-rights/hls?**",
     (route) => {
@@ -119,7 +129,81 @@ test("カードからDomand取得を開始し完了状態を表示する", async
   await button.click();
   await expect(button).toHaveAttribute("data-status", "completed");
   await expect(button).toHaveAttribute("title", /取得完了/);
+  expect(watchEndpoints).toEqual(["v3"]);
   expect(accessRequestWith).toBe("https://www.nicovideo.jp");
+});
+
+test("未ログインでは通常Watch APIからゲスト版へ切り替える", async ({
+  page,
+}) => {
+  const watchEndpoints: string[] = [];
+  await page.route(pageUrl, documentRoute);
+  await page.route("**/api/watch/v3/sm9?**", (route) => {
+    watchEndpoints.push("v3");
+    return route.fulfill({
+      status: 400,
+      contentType: "application/json",
+      body: JSON.stringify({
+        meta: { status: 400, errorCode: "UNAUTHORIZED" },
+      }),
+    });
+  });
+  await page.route("**/api/watch/v3_guest/sm9?**", (route) => {
+    watchEndpoints.push("v3_guest");
+    return route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: {
+          response: {
+            client: { watchTrackId: "guest-track" },
+            media: {
+              domand: {
+                accessRightKey: "guest-key",
+                videos: [{ id: "video", isAvailable: true }],
+                audios: [{ id: "audio", isAvailable: true }],
+              },
+            },
+          },
+        },
+      }),
+    });
+  });
+  await page.route(
+    "https://nvapi.nicovideo.jp/v1/watch/sm9/access-rights/hls?**",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: {
+            contentUrl:
+              "https://delivery.domand.nicovideo.jp/hlsbid/0123456789abcdef01234567/playlists/variants/0123456789abcdef.m3u8",
+          },
+        }),
+      }),
+  );
+  await page.route("**/cache/filter-matome/v1/movie-fetcher/**", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        videoId: "sm9",
+        status: "completed",
+        completed: 2,
+        total: 2,
+      }),
+    }),
+  );
+
+  await page.goto(pageUrl);
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(() =>
+    (
+      window as Window & { startMovieFetcherTest?: () => void }
+    ).startMovieFetcherTest?.(),
+  );
+  const button = page.locator(".filter-matome-movie-fetcher");
+  await button.click();
+  await expect(button).toHaveAttribute("data-status", "completed");
+  expect(watchEndpoints).toEqual(["v3", "v3_guest"]);
 });
 
 test("SPAで追加されたカードにもボタンを一度だけ付ける", async ({ page }) => {

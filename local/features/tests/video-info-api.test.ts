@@ -175,7 +175,7 @@ describe("video-info-api", () => {
     });
   });
 
-  test("falls back from an unknown ext-thumb response to the Watch API", async () => {
+  test("falls back from an unknown ext-thumb response to the regular Watch API", async () => {
     const calls: Array<{ url: string; options?: unknown }> = [];
     const responses = [
       new Response("<html>temporary error</html>", { status: 200 }),
@@ -197,9 +197,37 @@ describe("video-info-api", () => {
     expect(result.channel?.nickname).toBe("公式チャンネル");
     expect(calls).toHaveLength(2);
     expect(calls[0]?.url).toContain("ext.nicovideo.jp/api/getthumbinfo");
-    expect(calls[1]?.url).toContain("/api/watch/v3_guest/so46598987?");
+    expect(calls[1]?.url).toContain("/api/watch/v3/so46598987?");
     expect(calls[1]?.options).toEqual({
       headers: { "X-Frontend-Id": "6", "X-Frontend-Version": "0" },
     });
+  });
+
+  test("falls back to the guest Watch API only when the regular API is unauthorized", async () => {
+    const calls: string[] = [];
+    const responses = [
+      new Response("<html>temporary error</html>", { status: 200 }),
+      new Response(
+        JSON.stringify({ meta: { status: 400, errorCode: "UNAUTHORIZED" } }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      ),
+      new Response(JSON.stringify(watchPayload), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    ];
+    const fetcher: VideoInfoFetcher = async (url) => {
+      calls.push(url);
+      const response = responses.shift();
+      if (!response) throw new Error("unexpected request");
+      return response;
+    };
+
+    const result = await fetchNicoVideoInfo("so46598987", fetcher);
+
+    expect(result.source).toBe("watch-api");
+    expect(calls).toHaveLength(3);
+    expect(calls[1]).toContain("/api/watch/v3/so46598987?");
+    expect(calls[2]).toContain("/api/watch/v3_guest/so46598987?");
   });
 });
