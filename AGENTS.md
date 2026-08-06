@@ -78,8 +78,8 @@ bun run build
 
 ## NicoCache_nlの現行パスモデル
 
-- 以下では、アプリケーション本体のルートを `NICO_APP_ROOT`、実行時にNicoCache_nlが使用するユーザーデータルートを `NICO_DATA_ROOT` と表記する。現在の環境ではそれぞれ `C:\NicoCache_nl` と `C:\Users\UserName\Documents\NicoCache_nl` である。
-- `NICO_DATA_ROOT` は `C:\NicoCache_nl\config.properties` の `userDataRoot` で設定され、起動時の `nicocache.userDataRoot` システムプロパティやランチャー指定があればそちらが優先される。ポータブル起動や開発起動ではアプリケーションルートがデータルートになる場合もあるため、パスを推測せず毎回設定と `NicoCachePaths.dataRoot()` を確認する。
+- 以下では、アプリケーション本体のルートを `NICO_APP_ROOT`、実行時にNicoCache_nlが使用するユーザーデータルートを `NICO_DATA_ROOT` と表記する。現在の環境ではそれぞれ `C:\Users\UserName\AppData\Local\NicoCache_nl` と `C:\Users\UserName\Documents\NicoCache_nl` である。
+- `NICO_DATA_ROOT` は `C:\Users\UserName\AppData\Local\NicoCache_nl\config.properties` の `userDataRoot` で設定され、起動時の `nicocache.userDataRoot` システムプロパティやランチャー指定があればそちらが優先される。ポータブル起動や開発起動ではアプリケーションルートがデータルートになる場合もあるため、パスを推測せず毎回設定と `NicoCachePaths.dataRoot()` を確認する。
 - `extensions`、`local`、`cache`、`certs`、`data`、`nlFilters`、`NicoCacheGUI.property` などの実行時データは `NICO_DATA_ROOT` 配下にある。`NICO_APP_ROOT` はソース、JAR、設定、起動スクリプトなど本体側のファイルを置くルートであり、両者を混同しない。
 
 ## NicoCache_nl連携の制約
@@ -87,13 +87,13 @@ bun run build
 - ブラウザー側の `window.NicoCache_nl.watch` と、NicoCache_nl本体が提供する `/cache/*` HTTP APIを区別する。
 - `window.NicoCache_nl.watch` は `NICO_DATA_ROOT\local\nllib_watch.js` が提供する互換ヘルパーであり、ニコニコ動画の `server-response` メタ情報や視聴ページの `fetch` レスポンスに依存する。ニコニコ動画側の構造変更へすぐ追従できない場合があるため、第一の情報源にはしない。
 - 現在の動画IDはURLまたは呼び出し元から明示された値を優先し、再生状態は `HTMLMediaElement` など対象ページの実体を優先する。`window.NicoCache_nl.watch` は、それらから取得できない情報のフォールバックとして、存在確認、型確認、失敗時処理を入れて使用する。
-- `/cache/*` はNicoCache_nl本体のHTTP APIである。ローカルキャッシュ固有の状態や操作には利用してよい。例として `https://www.nicovideo.jp/cache/info/v2` があり、実装は `C:\NicoCache_nl\src\dareka\processor\impl\CacheDirProcessor.java` にある。利用前に実装、既存のAPI仕様メモ、エラー形式を確認する。
+- `/cache/*` はNicoCache_nl本体のHTTP APIである。ローカルキャッシュ固有の状態や操作には利用してよい。例として `https://www.nicovideo.jp/cache/info/v2` があり、実装は `C:\Users\UserName\AppData\Local\NicoCache_nl\src\dareka\processor\impl\CacheDirProcessor.java` にある。利用前に実装、既存のAPI仕様メモ、エラー形式を確認する。
 - このリポジトリの成果物は、主に `NICO_DATA_ROOT` 側に作成されたシンボリックリンクから参照される。例えば `NICO_DATA_ROOT\nlFilters\100_features.txt` は `C:\filter-matome\nlFilters\100_features.txt` を参照する。リンクは双方向ではないため、作成、置換、削除の前に `LinkType` と `Target` を確認する。
 - NicoCache_nlをプロキシーとして起動し、対象のローカル配信が有効な場合、`NICO_DATA_ROOT\local\` 配下は `https://www.nicovideo.jp/local/` 配下として配信される。
 
 ## NicoCache_nl本体の変更とビルド
 
-- NicoCache_nl本体のソースは `C:\NicoCache_nl\src\` にある。
+- NicoCache_nl本体のソースは `C:\Users\UserName\AppData\Local\NicoCache_nl\src\` にある。
 
 ## NicoCache_nlの起動・終了・再起動・デバッグ
 
@@ -121,7 +121,7 @@ java -jar .\NicoCacheLauncher.jar --headless --check-data-root
 
 ## NicoCache_nlの主要パス
 
-- `NICO_APP_ROOT`（現在は `C:\NicoCache_nl`）: `src\`、`NicoCache_nl.jar`、`lib\`、`defaults\`、`documents\`、`config.properties`、`build-*.ps1`、起動スクリプトなど、本体・開発・起動に必要なファイル。
+- `NICO_APP_ROOT`（現在は `C:\Users\UserName\AppData\Local\NicoCache_nl`）: `src\`、`NicoCache_nl.jar`、`lib\`、`defaults\`、`documents\`、`config.properties`、`build-*.ps1`、起動スクリプトなど、本体・開発・起動に必要なファイル。
 - `NICO_DATA_ROOT`（現在は `C:\Users\UserName\Documents\NicoCache_nl`）: `extensions\`、`cache\`、`cvcache\`、`thcache\`、`certs\`、`data\`、`local\`、`nlFilters\`、`list\`、`NicoCacheGUI.property`、`proxy.pac` など、実行時に参照・更新されるユーザーデータ。
 
 - `.externalToolBuilders\`: EclipseのAnt外部ツールビルダー設定。
