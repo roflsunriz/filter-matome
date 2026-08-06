@@ -10,6 +10,7 @@ NicoCache_nlとニコニコ動画関連APIについて、実装時に確認し�
 - `ext-thumb-info-api.md`: 旧ext-thumb XMLと現行Watch API JSONを含む動画情報API。
 - `nico-watch-api.md`: ウォッチページと `apiData` の取得に関するメモ。
 - `nl-gpac-json.md`: NicoCache_nlのGPAC解析JSON。
+- `nl-movie-fetcher-api.md`: 現行Domand/CMAF配信とnlMovieFetcherの実測仕様。
 - `nv-comment-api.md`: コメントAPIの要求・応答構造。
 - `nv-comment-api-snippet.md`: コメントAPIの調査用抜粋。
 

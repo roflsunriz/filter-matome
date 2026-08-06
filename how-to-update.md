@@ -5,6 +5,10 @@
 5. git tag "#(version)"
 6. git push origin "#(version)" の操作でGithub Actionsが自動でリリースを作成する。
 
+## nlMovieFetcherの追従確認
+
+ニコニコ動画の配信仕様変更へ追従するときは、`local/features/src/api-info/nl-movie-fetcher-api.md` のraw CDP手順で、Watch API、access-rights API、映像・音声分離playlistを再観測します。Java拡張は対象NicoCache_nlのJARをclasspathにしてコンパイルし、`nlMovieFetcher.class` 以外の追加classが生成されないことを確認してください。TypeScript側は通常の `bun run verify` でカードDOM、API交渉、SPA追加を検証します。
+
 ## scripts Java Toolboxの更新
 
 `scripts/java-toolbox` は独立したMavenプロジェクトです。リリースワークフローがJDK 17で`mvn verify`を実行し、生成したJARを配布アーカイブへ同梱します。変更時はローカルでも次を実行し、4層の自動テスト、GUI起動、`--list-plugins`、`--headless --self-test`の順に確認します。

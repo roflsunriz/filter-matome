@@ -49,6 +49,7 @@ const featureEntrypoints = [
   "src/common/index.ts",
   "src/mlink-video-controller/index.ts",
   "src/movie-info/index.ts",
+  "src/movie-fetcher/index.ts",
   "src/mylist2/index.ts",
   "src/video-player/index.ts",
   "src/video-player/standalone/main.ts",

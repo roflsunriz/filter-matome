@@ -14,6 +14,7 @@ type CommentFilterModule = typeof import("@/comment-filter2/index");
 type CommonModule = typeof import("@/common/index");
 type MlinkModule = typeof import("@/mlink-video-controller/index");
 type MovieInfoModule = typeof import("@/movie-info/index");
+type MovieFetcherModule = typeof import("@/movie-fetcher/index");
 type MylistModule = typeof import("@/mylist2/index");
 type VideoPlayerRouterModule = typeof import("@/video-player/index");
 type StandalonePlayerModule = typeof import("@/video-player/standalone/main");
@@ -118,7 +119,12 @@ async function activateCurrentPage(): Promise<void> {
     return;
   }
 
-  const tasks: Promise<void>[] = [startCommon()];
+  const tasks: Promise<void>[] = [
+    startCommon(),
+    loadEntry<MovieFetcherModule>("movie-fetcher/index").then((module) => {
+      module.startMovieFetcher();
+    }),
+  ];
   if (isMlinkPage()) {
     tasks.push(
       loadEntry<MlinkModule>("mlink-video-controller/index").then((module) => {

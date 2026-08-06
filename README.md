@@ -179,6 +179,7 @@ local/
   │   ├── comment-filter2/      # コメントフィルター
   │   ├── common/               # 共通ヘルパー、共通ヘッダー、ロガー、トースト
   │   ├── mlink-video-controller/ # 視聴ページ操作パネルとモジュール
+  │   ├── movie-fetcher/        # 一覧カードからDomand/CMAFを取得
   │   ├── movie-info/           # 動画/API情報ダッシュボード
   │   ├── mylist2/              # マイリスト2
   │   ├── runtime/              # 配信ページ判定と起動境界
@@ -197,7 +198,8 @@ nlFilters/
 
 extensions/
 ├── FilterMatomeCacheControl.java/.class # MP4等を保持したままHLSだけを削除・削除予約するサーバーAPI
-└── FilterMatomeSeriesAlerts.java/.class # シリーズ新着の定期確認とOS通知
+├── FilterMatomeSeriesAlerts.java/.class # シリーズ新着の定期確認とOS通知
+└── nlMovieFetcher.java/.class           # 現行Domand/CMAFの一覧取得拡張
 
 docs/resources/            # USAGE.mdで使われる画像リソース
 ```
