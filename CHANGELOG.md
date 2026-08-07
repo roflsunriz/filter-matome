@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#237] - 2026-08-08
+
 ### Fixed
 
 - 【extensions/nlMovieFetcher】転送済みバイト数を状態APIへ追加し、帯域上限に応じて各レスポンスの読み込みを抑制できるようにした。不完全なリソース取得は完了扱いにせず、smartFetcher側で再試行・失敗記録する。
@@ -26,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【features・README】リリース番号を`237`へ更新し、latestバッジを`#237`へ変更した。
 - 【mlink-video-controller/原宿風Watch】公式の詳細アコーディオンを操作せず動画説明を確認できるよう、watchページの`server-response`から説明HTMLを事前取得して安全な専用DOMへ描画し、空・短文はコンパクトに、長文は最大高まで伸長した後だけ内部スクロールする表示へ変更した。
 
 ### Removed
