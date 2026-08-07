@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- 【extensions/nlMovieFetcher】転送済みバイト数と開始・終了時刻を状態APIへ追加し、帯域上限に応じて各レスポンスの読み込みを抑制できるようにした。不完全なリソース取得は完了扱いにせず、smartFetcher側で再試行・失敗記録する。
+- 【extensions/nlMovieFetcher】転送済みバイト数を状態APIへ追加し、帯域上限に応じて各レスポンスの読み込みを抑制できるようにした。不完全なリソース取得は完了扱いにせず、smartFetcher側で再試行・失敗記録する。
 - 【mylist2・watch-history】`/local/`配信ではnlFilterによる正本のキャッシュアイコンJS・CSSが自動挿入されず、サムネイルのDOMだけを対応してもアイコンが表示されなかった問題を修正した。両SPAが正本を明示的に読み込み、mylist2はService Workerの旧HTMLキャッシュも更新時に破棄する。
 - 【common・movie-fetcher・extensions】動画情報取得と検索一覧からの取得交渉で常にゲスト用Watch APIを呼び、ログイン中にHTTP 400 `FORBIDDEN`で停止する問題を修正した。通常版を優先し、未ログインを示す`UNAUTHORIZED`の場合だけゲスト版へ切り替える。現行media playlistの`/cache/file/`配下にある音声・映像CMAF URLも固定ホスト・固定パス形状に限定して許可し、Java拡張が`playlist contains a disallowed URL`で停止しないようにした。
 - 【extensions・movie-fetcher】現行access-rights APIで必須の`X-Request-With`を送信し、一覧からのDomand取得が`INVALID_PARAMETER`で失敗する問題を修正した。Java拡張が自己プロキシーのHTTPS証明書を検証するときはユーザーデータのローカルCAを使用し、配信取得へ公式サイトの`Origin`、`Referer`と配信対象Cookieだけを付けて、`PKIX path building failed`またはHTTP 403で停止しないようにした。APIエラーコードをボタンのツールチップとブラウザーコンソールへ表示して、Java GUIログへ到達しない交渉失敗も診断できるようにした。
@@ -27,6 +27,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - 【mlink-video-controller/原宿風Watch】公式の詳細アコーディオンを操作せず動画説明を確認できるよう、watchページの`server-response`から説明HTMLを事前取得して安全な専用DOMへ描画し、空・短文はコンパクトに、長文は最大高まで伸長した後だけ内部スクロールする表示へ変更した。
+
+### Removed
+
+- 【extensions/nlMovieFetcher】現行Domand/CMAFだけを必要十分に扱うため、利用側で管理していて参照されない開始・終了時刻の状態と、実測済み配信で使わない`asset.domand`・旧形式汎用パスの互換許可を削除した。
 
 ### Security
 

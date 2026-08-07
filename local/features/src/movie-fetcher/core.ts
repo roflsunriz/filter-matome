@@ -26,8 +26,6 @@ export interface MovieFetcherStatus {
   completed: number;
   total: number;
   bytesTransferred?: number;
-  startedAt?: number;
-  finishedAt?: number;
   error?: string;
 }
 

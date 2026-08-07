@@ -49,7 +49,7 @@ import dareka.processor.StringResource;
  * 視聴権の取得はログイン状態を持つブラウザー側へ任せ、この拡張は署名済みURLだけを扱う。
  */
 public final class nlMovieFetcher implements Extension2, Processor {
-    public static final int REVISION = 26080701;
+    public static final int REVISION = 26080702;
     public static final String VER_STRING = "nlMovieFetcher_" + REVISION;
 
     private static final String API_PREFIX = "/cache/filter-matome/v1/movie-fetcher/";
@@ -84,10 +84,6 @@ public final class nlMovieFetcher implements Extension2, Processor {
     private final ConcurrentHashMap<String, String> errors =
             new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> transferredBytes =
-            new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Long> startedAts =
-            new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Long> finishedAts =
             new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Thread> workers =
             new ConcurrentHashMap<>();
@@ -207,8 +203,6 @@ public final class nlMovieFetcher implements Extension2, Processor {
         totals.put(jobVideoId, 0);
         errors.remove(jobVideoId);
         transferredBytes.put(jobVideoId, 0L);
-        startedAts.remove(jobVideoId);
-        finishedAts.remove(jobVideoId);
         logInfo(jobVideoId + ": 取得要求を受け付けました");
         Thread worker = new Thread(
                 () -> runJob(jobVideoId, jobUrl, jobCookie,
@@ -237,12 +231,12 @@ public final class nlMovieFetcher implements Extension2, Processor {
     private void runJob(
             String videoId, String masterUrl, String deliveryCookie,
             long maximumBytesPerSecond) {
+        long startedAt = System.currentTimeMillis();
         try {
             states.put(videoId, "fetching");
-            startedAts.put(videoId, System.currentTimeMillis());
             logInfo(videoId + ": master playlistを取得します");
             String master = fetchText(videoId, masterUrl, deliveryCookie,
-                    maximumBytesPerSecond);
+                    maximumBytesPerSecond, startedAt);
             Set<String> playlists = extractUris(masterUrl, master);
             if (playlists.isEmpty()) {
                 throw new IOException("master playlist has no child playlist");
@@ -256,7 +250,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
             for (String playlistUrl : playlists) {
                 checkCanceled();
                 String media = fetchText(videoId, playlistUrl,
-                        deliveryCookie, maximumBytesPerSecond);
+                        deliveryCookie, maximumBytesPerSecond, startedAt);
                 playlistIndex++;
                 completed.merge(videoId, 1, Integer::sum);
                 mediaResources.addAll(extractUris(playlistUrl, media));
@@ -273,7 +267,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
             for (String resourceUrl : mediaResources) {
                 checkCanceled();
                 fetchBinary(videoId, resourceUrl, deliveryCookie,
-                        maximumBytesPerSecond);
+                        maximumBytesPerSecond, startedAt);
                 resourceIndex++;
                 completed.merge(videoId, 1, Integer::sum);
                 if (resourceIndex == 1 || resourceIndex % 10 == 0
@@ -294,27 +288,30 @@ public final class nlMovieFetcher implements Extension2, Processor {
             errors.put(videoId, error);
             logWarning(videoId + ": 取得失敗: " + error);
         } finally {
-            finishedAts.put(videoId, System.currentTimeMillis());
             workers.remove(videoId, Thread.currentThread());
         }
     }
 
     private String fetchText(String videoId, String url,
-            String deliveryCookie, long maximumBytesPerSecond)
+            String deliveryCookie, long maximumBytesPerSecond,
+            long startedAt)
             throws IOException, InterruptedException {
         byte[] bytes = fetch(videoId, url, MAX_PLAYLIST, deliveryCookie,
-                maximumBytesPerSecond);
+                maximumBytesPerSecond, startedAt);
         return new String(bytes, StandardCharsets.UTF_8);
     }
 
     private void fetchBinary(String videoId, String url,
-            String deliveryCookie, long maximumBytesPerSecond)
+            String deliveryCookie, long maximumBytesPerSecond,
+            long startedAt)
             throws IOException, InterruptedException {
-        fetch(videoId, url, -1, deliveryCookie, maximumBytesPerSecond);
+        fetch(videoId, url, -1, deliveryCookie, maximumBytesPerSecond,
+                startedAt);
     }
 
     private byte[] fetch(String videoId, String url, int maximum,
-            String deliveryCookie, long maximumBytesPerSecond)
+            String deliveryCookie, long maximumBytesPerSecond,
+            long startedAt)
             throws IOException, InterruptedException {
         if (!isAllowedDomandUrl(url)) {
             throw new IOException("playlist contains a disallowed URL");
@@ -356,7 +353,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
                     size += read;
                     long total = transferredBytes.merge(
                             videoId, (long) read, Long::sum);
-                    throttle(videoId, total, maximumBytesPerSecond);
+                    throttle(total, maximumBytesPerSecond, startedAt);
                     if (maximum >= 0 && size > maximum) {
                         throw new IOException("playlist is too large");
                     }
@@ -371,13 +368,11 @@ public final class nlMovieFetcher implements Extension2, Processor {
         }
     }
 
-    private void throttle(String videoId, long bytes,
-            long maximumBytesPerSecond) throws InterruptedException {
+    private void throttle(long bytes, long maximumBytesPerSecond,
+            long startedAt) throws InterruptedException {
         if (maximumBytesPerSecond <= 0L) {
             return;
         }
-        long startedAt = startedAts.getOrDefault(
-                videoId, System.currentTimeMillis());
         long expectedMillis = bytes > Long.MAX_VALUE / 1000L
                 ? Long.MAX_VALUE
                 : bytes * 1000L / maximumBytesPerSecond;
@@ -497,18 +492,14 @@ public final class nlMovieFetcher implements Extension2, Processor {
                 return false;
             }
             host = host.toLowerCase(Locale.ROOT);
-            if (!("delivery.domand.nicovideo.jp".equals(host)
-                    || "asset.domand.nicovideo.jp".equals(host))) {
+            if (!"delivery.domand.nicovideo.jp".equals(host)) {
                 return false;
             }
             String path = uri.getPath();
             return path != null && (path.startsWith("/hlsbid/")
                     || path.startsWith("/shlsbid/")
                     || path.startsWith("/hlsext/")
-                    || path.matches("/[a-f0-9]{24}/.*")
-                    || ("delivery.domand.nicovideo.jp".equals(host)
-                            && CURRENT_CMAF_RESOURCE_PATH.matcher(path)
-                                    .matches()));
+                    || CURRENT_CMAF_RESOURCE_PATH.matcher(path).matches());
         } catch (IllegalArgumentException exception) {
             return false;
         }
@@ -529,10 +520,6 @@ public final class nlMovieFetcher implements Extension2, Processor {
         body.append(",\"total\":").append(totals.getOrDefault(videoId, 0));
         body.append(",\"bytesTransferred\":")
                 .append(transferredBytes.getOrDefault(videoId, 0L));
-        body.append(",\"startedAt\":")
-                .append(startedAts.getOrDefault(videoId, 0L));
-        body.append(",\"finishedAt\":")
-                .append(finishedAts.getOrDefault(videoId, 0L));
         String error = errors.get(videoId);
         if (error != null) {
             field(body, "error", error, true);
