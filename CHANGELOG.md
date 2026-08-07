@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Security
 
 - 【extensions/FilterMatomeSmartFetcher】認証に必要なCookie名だけを許可し、AES-GCM暗号文と256ビット鍵を状態JSONとは別の所有者限定ファイルへ保存する。Cookie、署名URL、アクセス権キーは状態APIとログへ返さず、管理画面から保存Cookieだけを削除できる。
+- push前監査で検出されたDOMPurifyのXSS脆弱性を解消するため、直接依存とロックファイルを修正版`3.4.13`へ更新した。
 - push前監査で検出された`brace-expansion`のDoS脆弱性を解消するため、overrideとロックファイルを安全版`5.0.9`へ更新した。
 
 ## [#236] - 2026-08-02
