@@ -636,6 +636,7 @@ test("サムネイル欠落時と画像読込失敗時にフォールバック�
     "src",
     /^data:image\/svg\+xml/,
   );
+  await expectCacheIconAssetApplied(page, detailThumbnail);
 });
 
 test("シリーズタブを開かなくてもアラートのシリーズ選択肢を取得する", async ({
@@ -738,11 +739,10 @@ test("各タブ・シリーズ・アラートの静的および動的ボタン�
   await expect(
     page.locator("#series-detail-videos .series-video-item"),
   ).toHaveCount(2);
-  await expect(
-    page.locator(
-      '#series-detail-videos .series-video-item[data-video-id="sm100"] .video-thumbnail',
-    ),
-  ).toHaveAttribute("href", "https://www.nicovideo.jp/watch/sm100");
+  const seriesThumbnail = page.locator(
+    '#series-detail-videos a[href$="sm100"]',
+  );
+  await expectCacheIconAssetApplied(page, seriesThumbnail);
   await page.locator("#series-detail-add-alert").click();
   await expect(page.locator("#toast-container")).toContainText(
     "このシリーズのアラートは既に存在します",

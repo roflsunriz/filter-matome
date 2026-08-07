@@ -9,7 +9,7 @@ console.debug("Service Worker script loaded");
 console.debug("Current location:", self.location.href);
 
 const CACHE_PREFIX = "custom-mylist2-";
-const CACHE_NAME = `${CACHE_PREFIX}v4`;
+const CACHE_NAME = `${CACHE_PREFIX}v5`;
 const CACHE_URLS = [
   "/local/features/dist/features.js",
   "/local/features/dist/pages/mylist2/index.html",
