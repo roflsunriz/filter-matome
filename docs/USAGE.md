@@ -6,9 +6,19 @@
 
 GitHubページの[リリースページ](https://github.com/roflsunriz/filter-matome/releases)からダウンロードすること。
 
+このガイドでは、NicoCache_nl本体のルートを `NICO_APP_ROOT`、実行時データのルートを `NICO_DATA_ROOT` と表記する。現在確認しているWindows構成の例は次の通り。
+
+| 表記 | 現行の例 | 主な内容 |
+|---|---|---|
+| `NICO_APP_ROOT` | `C:\Users\UserName\AppData\Local\NicoCache_nl` | NicoCache_nl本体、JAR、ランチャー、`config.properties`、`scripts` |
+| `NICO_DATA_ROOT` | `C:\Users\UserName\Documents\NicoCache_nl` | `extensions`、`local`、`nlFilters`、`cache`、`data`、`NicoCacheGUI.property` |
+
+`NICO_DATA_ROOT` は `NICO_APP_ROOT\config.properties` の `userDataRoot` で確認する。ランチャーや起動オプションで別のデータルートを指定している場合は、実際に `extensions`、`local`、`nlFilters` があるそのルートを使用する。ポータブル構成では2つのルートが同じ場合もある。
+
 !!! warning "注意事項"
 
-    - ディレクトリ構造を壊さずにそのまま`local`フォルダは`local`フォルダに、`nlFilters`は`nlFilters`フォルダに、`extensions`フォルダは`extensions`フォルダに上書きする。
+    - ディレクトリ構造を壊さず、`local`、`nlFilters`、`extensions` は `NICO_DATA_ROOT` の同名フォルダに上書きする。`scripts` は `NICO_APP_ROOT` に配置する。
+    - シンボリックリンクを利用している場合は、削除や置換の前にリンク自体と参照先を確認する。
     - **フィルタの抜き差しは上級者向けなのでnlFiltersの文法を完全に理解し、HTML/CSS/JavaScriptの知識が十分にあり、デベロッパーコンソールを十全に扱え、自己解決できる者だけが自己の責任で対応すること。**
 
 !!! note
@@ -16,28 +26,33 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
     問題を発見した場合は[GitHubのIssue](https://github.com/roflsunriz/filter-matome/issues)にて報告する。あるいはIssueで相談してからPull Requestを送る。
 
 ### 標準手順
-`$env:USERPROFILE\Downloads`にダウンロードしたとする  
-  
-1. 7zファイル`filter-matome-.xxx.7z`を7-zipで展開する  
-2. `$env:USERPROFILE\Downloads\filter-matome-.xxx\NicoCache_nl`にある`extensions`, `local`, `scripts`, `nlFilters`を `C:\Users\UserName\AppData\Local\NicoCache_nl`に上書きコピーする  
+
+`$env:USERPROFILE\Downloads` にダウンロードし、上記のWindows構成を使う例。
+
+1. 7zファイル `filter-matome-<version>.7z` を7-Zipで展開する。
+2. NicoCache_nl本体のGUIまたは標準ランチャーで本体を終了する。Java ToolboxはNicoCache_nl本体のプロセス管理を行わない。
+3. 展開先の `NicoCache_nl\extensions`、`NicoCache_nl\local`、`NicoCache_nl\nlFilters` を、それぞれ `NICO_DATA_ROOT` の同名フォルダへ上書きコピーする。
+4. 必要な場合は、展開先の `NicoCache_nl\scripts` を `NICO_APP_ROOT\scripts` へ上書きコピーする。
 
     !!! note
 
-        `scripts` フォルダにはビルド済みJava ToolboxのJARが含まれる。Java Toolboxを使わない場合はコピー必須ではない
+        `scripts` フォルダにはビルド済みJava ToolboxのJARが含まれる。Java Toolboxを使わない場合はコピー必須ではない。
 
-3. NicoCache_nl本体のGUIまたは標準の終了手段で終了し、本体に付属する標準ランチャーから再起動する。Java ToolboxはNicoCache_nl本体のプロセス管理を行わない
+5. NicoCache_nl本体に付属する標準ランチャーから起動する。その後、ブラウザーで `Ctrl+F5` を押してハード再読み込みする。
 
 ### クリーンインストール手順
 
-`C:\Users\UserName\AppData\Local\NicoCache_nl`にインストールしたとする  
+1. mylist2、comment-filter2、watch-history、mlink-video-controllerの各管理画面から必要な設定とデータをエクスポートし、`local\background-images` に自分で追加した画像も別の場所へバックアップする。
+2. `NICO_APP_ROOT\config.properties` の `userDataRoot` を確認し、バックアップ後にNicoCache_nlを終了する。
+3. `NICO_DATA_ROOT\extensions` から、「同梱される拡張機能」に記載した10種の `.class` と `.java` を削除する。旧版の `nlMediaInfo*` と `nlGpac$*.class` が残っている場合は、それらも削除する。
+4. `NICO_DATA_ROOT\local` から `background-images`、`features`、`images`、`mime.types`、`list.js`、`list.js.map` のうちfilter-matomeが配置したものを取り除く。`background-images` に自分で追加した画像は残す。シンボリックリンクは参照先を確認し、リンク自体だけを削除する。
+5. `NICO_DATA_ROOT\nlFilters` から `100_features.txt`、`101_disable_official_function.txt`、`105_premium_hide.txt`、`nlFilters_編集ガイド.md` のうちfilter-matomeが配置したものを取り除く。
+6. Java Toolboxも入れ直す場合は、`NICO_APP_ROOT\scripts` がfilter-matomeのコピーまたはリンクであることを確認して取り除く。
+7. 上記の標準手順で現行版を配置し、NicoCache_nlを起動してブラウザーをハード再読み込みする。
 
-1. `C:\Users\UserName\AppData\Local\NicoCache_nl`フォルダを開く  
-2. `extensions`フォルダから`CommentFilterLogger.class`, `CustomCacheReturner.class`, `downloadThruFFmpeg.class`, `ExtUtil.class`, `FilterMatomeCacheControl.class`, `FilterMatomeSeriesAlerts.class`, `FilterMatomeSmartFetcher.class`, `NicochartInfoProxy.class`, `nlMovieFetcher.class`, `nlMediaInfo.class`, `nlMediaInfo$CommandResult.class`, `nlMediaInfo$StreamCollector.class`, `nlGpac.class`, `nlGpac$CommandResult.class`, `nlGpac$StreamCollector.class`, `nlGpac$TrackData.class`を削除する
-3. `local`フォルダにある`background-images`, `features`, `images`, フォルダ, `mime.types`, `list.js` のシンボリックリンクを削除する  
-4. `scripts`フォルダを削除する  
-5. `nlFilters`フォルダの `100_features.txt`, `101_disable_official_function.txt`, `105_premium_hide.txt`, `nlFilters_編集ガイド.md`を削除する
-6. NicoCache_nlを再起動する  
-7. 上記標準手順に従ってインストールする  
+!!! warning "削除しないデータ"
+
+    `NICO_DATA_ROOT\cache`、`data`、`certs`、`list`、`NicoCacheGUI.property` などの実行時データは、filter-matomeのクリーンインストールで削除しない。用途を確認できない通常ファイルや、他の拡張機能が配置したファイルも削除しない。
 
 ### 参考資料
 
@@ -49,7 +64,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 `extensions/` は、ブラウザへ挿入されるJavaScriptやCSSでは実行できないサーバー側の処理をNicoCache_nlへ追加するディレクトリである。ローカルキャッシュファイルの探索、外部コマンドの実行、NicoCache_nl GUIへのログ表示、外部サイトからの限定的な情報取得などを担当する。
 
-配布物には同名の `.class` と `.java` が含まれる。
+配布物には、次の全10種について同名の `.class` と `.java` が含まれる。
 
 - `.class`: NicoCache_nlが実行時に読み込むコンパイル済み拡張機能。本機能を利用するために必要。
 - `.java`: 拡張機能のソースコード。通常利用時のコンパイルには使用せず、実装確認や開発用として同梱している。
@@ -64,10 +79,10 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 | `ExtUtil.class` | 拡張機能向けの共通処理を提供する補助クラス | 単独で操作する機能ではない。他の `.class` と一緒に配置する |
 | `FilterMatomeCacheControl.class` | filter-matome向けにHLSキャッシュの一括削除と削除予約をJSON APIで提供する | 完了済み・停止済みHLSは削除し、ダウンロード中HLSは完了または中断後に削除する。MP4・FLV・SWFは削除しない |
 | `FilterMatomeSeriesAlerts.class` | watch-historyのアラート設定を保持し、NicoCache_nlの60秒定期イベントからシリーズ新着を確認してOS通知を表示する | NicoCache_nlが起動していればwatch-historyやブラウザを閉じても動作する |
-| `FilterMatomeSmartFetcher.class` | 動画取得の永続予約、暗号化Cookie、帯域・容量判定、再試行、履歴を管理する | `nlMovieFetcher.class`と組み合わせ、動画取得スケジューラーで使用する |
+| `FilterMatomeSmartFetcher.class` | 動画取得の永続予約、暗号化Cookie、帯域・容量判定、再試行、取得履歴を管理する | `nlMovieFetcher.class`と組み合わせ、動画取得スケジューラーで使用する |
 | `NicochartInfoProxy.class` | video-playerが通常の動画情報を取得できない場合だけ、サーバー側からnicochart.jpの公開情報を取得する | 接続先と動画IDを制限した読み取り専用処理。PACや`genCerts.bat` / `genCerts.sh`の変更は不要 |
 | `nlGpac.class` | キャッシュファイルまたはHLS/CMAFプレイリストをGPACの`inspect:xml:stats:allp`で全期間解析し、映像・音声の仕様を一つのJSONへまとめて返す。HLSマスターは最高帯域の品質を選択する | movie-infoのGPAC表示と`/cache/gpac?<動画ID>`で使用。GPACの`gpac.exe`が必要 |
-| `nlMovieFetcher.class` | 署名済みDomand playlistの全CMAFリソースをNicoCache_nl経由で取得する | 一覧の即時取得とsmartFetcherの実行エンジンとして使用する |
+| `nlMovieFetcher.class` | 署名済みDomand playlistの全CMAFリソースをNicoCache_nl経由で取得し、進捗確認と中止APIを提供する | 一覧の即時取得とsmartFetcherの実行エンジンとして使用する |
 
 `nlGpac.class`は単一クラスで完結し、キャッシュを変更せず、通常のメディアファイルはそのまま、`.hls`ディレクトリはローカルの`master.m3u8`を入力としてGPACへ渡す。HLS/CMAFでもセグメントごとの結果を返さず、GPACが全期間を消費して得たPIDの解像度、Codec、ビットレート、フレーム数、時間、音声サンプルレート、チャンネル数などをまとめる。movie-infoのGPACビューでは、これらに加えてコンテナ入力、GPACバージョン、品質選択、色空間、ピクセル形式、アスペクト比、チャンネル配置などをストリーム別に表示し、GPACが返した未知の属性も全属性表で確認できる。キャッシュ解析で意図せず外部配信へ接続しないよう、プレイリストにHTTP等のリモートURLが含まれる場合は解析を拒否する。GPACの実行ファイルは、`-Dgpac.path=...`、`GPAC_PATH`環境変数、`C:\PathArea\GPAC\gpac.exe`、ユーザーの`%LOCALAPPDATA%\Programs\GPAC\gpac.exe`、`C:\Program Files\GPAC\gpac.exe`、最後にPATHの順で探索する。
 
@@ -105,7 +120,7 @@ X-Filter-Matome-Cache-Control: 1
 
 - Windowsなどシステムトレイ通知を利用できる環境ではOS通知を表示し、通知をクリックすると新着動画を開く。
 - システムトレイ通知を利用できない環境では、NicoCache_nl GUIの`Series Alerts`タブへ記録し、可能なら通知音を鳴らす。
-- 設定と最終確認状態は`NicoCache_nl/data/filter-matome-series-alerts.json`へ原子的に保存する。破損を検出した場合は同じ場所へ`.corrupt-<時刻>`付きで退避する。
+- 設定と最終確認状態は`NICO_DATA_ROOT\data\filter-matome-series-alerts.json`へ原子的に保存する。破損を検出した場合は同じ場所へ`.corrupt-<時刻>`付きで退避する。
 - 旧版のIndexedDBにあるアラートは、更新後にwatch-historyを最初に開いた時点でextensionへ一度だけ移行される。以後の追加・変更・削除とJSON入出力はIndexedDBを経由しない。
 - NicoCache_nlを停止している間は確認できない。再起動後、期限を過ぎたアラートは次の定期処理で確認する。
 - シリーズアラート画面で`拡張DB: 接続済み・通知有効`または`拡張DB: 接続済み・GUIログ/通知音`と表示されることを確認する。`通知テスト`で実際の通知経路を確認できる。
@@ -116,12 +131,12 @@ X-Filter-Matome-Cache-Control: 1
 
 NicoCache_nlが起動している間だけ約60秒ごとに期限を確認する。PC停止中に過ぎた実行枠は失敗履歴へ記録し、次回がある予約は将来へ進める。取得失敗・不完全取得は再試行後に履歴へ残り、次の予約へ自動的に進む。予約画面は `/local/features/dist/pages/movie-fetcher/index.html` から直接開くこともできる。
 
-認証Cookieは許可された4種類だけをAES-GCMで暗号化し、NicoCache_nlの`data/`に状態とは別ファイルで保存する。ログイン中にニコニコ動画を一度開いてから予約画面の「保存Cookie」が保存済みであることを確認する。共有PCではNicoCache_nlのユーザーデータルートを他ユーザーから読めないようにし、不要になった場合は予約画面の「保存Cookieを削除」を実行する。
+認証Cookieは許可された4種類だけをAES-GCMで暗号化し、`NICO_DATA_ROOT\data` に状態とは別ファイルで保存する。ログイン中にニコニコ動画を一度開いてから予約画面の「保存Cookie」が保存済みであることを確認する。共有PCではNicoCache_nlのユーザーデータルートを他ユーザーから読めないようにし、不要になった場合は予約画面の「保存Cookieを削除」を実行する。
 
 #### 配置と更新
 
-1. 配布物の `extensions/` にある `.class` と `.java` を、ディレクトリ構造を変えずにNicoCache_nlの `extensions/` へ上書きコピーする。
-2. リリースノートで削除された拡張がある場合は、古い `.class` をNicoCache_nlの `extensions/` から削除する。古い `.class` を残すと、廃止済みの処理が読み込まれ続ける場合がある。
+1. 配布物の `extensions/` にある `.class` と `.java` を、ディレクトリ構造を変えずに `NICO_DATA_ROOT\extensions` へ上書きコピーする。
+2. リリースノートで削除された拡張がある場合は、古い `.class` を `NICO_DATA_ROOT\extensions` から削除する。古い `.class` を残すと、廃止済みの処理が読み込まれ続ける場合がある。
 3. NicoCache_nlを再起動する。ブラウザの再読み込みだけでは、追加・更新・削除した `.class` は反映されない。
 
 !!! warning "拡張機能の取り扱い"
@@ -133,7 +148,7 @@ NicoCache_nlが起動している間だけ約60秒ごとに期限を確認する
 
 #### 動作しない場合
 
-1. `.class`が `NicoCache_nl/extensions/` 直下にあることを確認する。サブフォルダへ移動しない。
+1. `.class` が `NICO_DATA_ROOT\extensions` 直下にあることを確認する。サブフォルダへ移動しない。
 2. NicoCache_nlを再起動し、起動ログに対象拡張の読み込み失敗やJavaバージョンのエラーがないか確認する。
 3. 保存機能では`ffmpeg -version`、GPAC機能では`gpac -h`または導入先の`gpac.exe -h`が成功するか確認する。GPACがPATHにない場合は、設定した`GPAC_PATH`または`C:\PathArea\GPAC\gpac.exe`の実体を確認する。
 4. 更新後にだけ失敗する場合は、古い `.class` の残存を確認してから、標準手順で `extensions/` を再度上書きする。
@@ -155,15 +170,15 @@ NicoCache_nl はキャッシュデータ用スクリプトを、Targetの`local/
 java -jar "C:\Users\UserName\AppData\Local\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
   --headless --plugin developer --action listjs `
   --source-root "C:\filter-matome" `
-  --target-root "$env:LOCALAPPDATA\NicoCache_nl" --dry-run
+  --target-root "$env:USERPROFILE\Documents\NicoCache_nl" --dry-run
 
 java -jar "C:\Users\UserName\AppData\Local\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
   --headless --plugin developer --action listjs `
   --source-root "C:\filter-matome" `
-  --target-root "$env:LOCALAPPDATA\NicoCache_nl" --yes --force
+  --target-root "$env:USERPROFILE\Documents\NicoCache_nl" --yes --force
 ```
 
-`links`アクションでは`local`、`nlFilters`、`extensions`、`list.js`を一括作成できる。Linux/macOSでは同じJARをターミナルから実行し、Source/Targetを必要に応じて`--source-root`／`--target-root`で指定する。詳細な手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照。
+`--target-root` にはJava Toolboxの既定値ではなく、`config.properties` で確認した実際の `NICO_DATA_ROOT` を指定する。`links`アクションでは`local`、`nlFilters`、`extensions`、`list.js`を一括作成できる。Linux/macOSでは同じJARをターミナルから実行し、Source/Targetを必要に応じて`--source-root`／`--target-root`で指定する。詳細な手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照。
 
 ---
 
@@ -194,6 +209,7 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 | 機能 | URL |
 |---|---|
 | mylist2 | `https://www.nicovideo.jp/local/features/dist/pages/mylist2/index.html` |
+| movie-fetcher | `https://www.nicovideo.jp/local/features/dist/pages/movie-fetcher/index.html` |
 | movie-info | `https://www.nicovideo.jp/local/features/dist/pages/movie-info/index.html` |
 | video-player | `https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html` |
 | watch-history | `https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html` |
@@ -270,14 +286,14 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 
 #### 任意で用意した動画をコメントを被せて再生
 - [Hohoema](https://github.com/tor4kichi/Hohoema)を使用する方法
-- `C:\Users\UserName\AppData\Local\NicoCache_nl\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`、`smXXXXXXXX.mp4`、`nmXXXXXXXX.mp4`、`ssXXXXXXXX.mp4`などとし、該当動画IDのページを開く。 
-- `C:\Users\UserName\AppData\Local\NicoCache_nl\local\cache`に動画IDで名前を付けて保存`soXXXXXXXX.mp4`、`smXXXXXXXX.mp4`、`nmXXXXXXXX.mp4`、`ssXXXXXXXX.mp4`などとし、該当動画IDのページを開く。 
+- `NICO_DATA_ROOT\cache`（現行例: `C:\Users\UserName\Documents\NicoCache_nl\cache`）に動画IDで名前を付けて保存`soXXXXXXXX.mp4`、`smXXXXXXXX.mp4`、`nmXXXXXXXX.mp4`、`ssXXXXXXXX.mp4`などとし、該当動画IDのページを開く。
+- `NICO_DATA_ROOT\local\cache`に同様の名前で保存し、該当動画IDのページを開く。
 
 !!! note
     mp4ファイルを配布済みJava ToolboxでFastStart変換すると、読み込みから再生開始までの待ち時間が短縮される。通常利用ではMavenなどのビルドは不要。
 
     ```powershell
-    java -jar "C:\Users\UserName\AppData\Local\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" --headless --plugin media --action faststart --input "C:\Users\UserName\AppData\Local\NicoCache_nl\cache\movie.mp4" --dry-run
+    java -jar "C:\Users\UserName\AppData\Local\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" --headless --plugin media --action faststart --input "C:\Users\UserName\Documents\NicoCache_nl\cache\movie.mp4" --dry-run
     ```
 
 !!! note
@@ -340,7 +356,7 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 
 そのうえで、mlink-video-controller の設定タブにある「背景画像設定」から背景画像を指定する。指定方法は URL 指定とファイル選択の 2 種類である。ファイル選択した画像は、IndexedDB に base64 形式で保存される。
 
-URL は `https://www.nicovideo.jp/local/background.jpg` のように、`local` 配下のファイルをそのまま指定するのが最も単純な例である。たとえば `C:\Users\UserName\AppData\Local\NicoCache_nl\local\background-images\favorites\background1.avif` に画像を置いた場合、URL は `https://www.nicovideo.jp/local/background-images/favorites/background1.avif` になる。さらに、`local` フォルダ内の `hoge` フォルダに `image.jpg` がある場合は、`https://www.nicovideo.jp/local/hoge/image.jpg` になる。`https://www.nicovideo.jp/local/` 以外の外部 URL も指定できるが、読み込み時に外部サーバーへ無用な負荷をかけるおそれがあるため非推奨である。フォルダ構成や指定数に厳密な制限はないが、常識的な範囲で設定することを推奨する。
+URL は `https://www.nicovideo.jp/local/background.jpg` のように、`NICO_DATA_ROOT\local` 配下のファイルをそのまま指定するのが最も単純な例である。たとえば `C:\Users\UserName\Documents\NicoCache_nl\local\background-images\favorites\background1.avif` に画像を置いた場合、URL は `https://www.nicovideo.jp/local/background-images/favorites/background1.avif` になる。さらに、`local` フォルダ内の `hoge` フォルダに `image.jpg` がある場合は、`https://www.nicovideo.jp/local/hoge/image.jpg` になる。`https://www.nicovideo.jp/local/` 以外の外部 URL も指定できるが、読み込み時に外部サーバーへ無用な負荷をかけるおそれがあるため非推奨である。フォルダ構成や指定数に厳密な制限はないが、常識的な範囲で設定することを推奨する。
 
 !!! warning "注意事項（nico_wallpaperG併用時）"
     nico_wallpaperGと併用している場合衝突が起きるので、そのときはどちらを優先するかによるが mlink-video-controller にて背景セレクターとマトリックス背景を無効化し、「wp1.css」に以下を追記する。（デフォルトの場合）
@@ -420,7 +436,7 @@ watch-history > 「管理」 > 「エクスポート」または「Google Drive�
 ### 開発ツール
 
 - [Apache Ant (Javaビルドツール)](https://ant.apache.org/bindownload.cgi)
-- [Adoptium OpenJDK (Java Development Kit)](https://adoptium.net/temurin/releases/?version=17&os=windows&package=jdk&arch=x64)
+- [Adoptium Temurin OpenJDK 25 LTS](https://adoptium.net/temurin/releases/?version=25&os=any&arch=any)
 - [BouncyCastle (暗号化ライブラリ)](https://www.bouncycastle.org/latest_releases.html)
 - [GPAC (メディア解析)](https://gpac.io/downloads/gpac-nightly-builds/)
 - [WinMerge (ファイル差分比較)](https://winmerge.org/?lang=ja)
