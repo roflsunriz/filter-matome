@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 const repositoryRoot = resolve(import.meta.dirname, "..", "..", "..");
@@ -39,6 +39,17 @@ const schedulerApp = readFileSync(
 );
 
 describe("smartFetcher Java extension contract", () => {
+  test("全Java拡張が単なる読込完了をinfoログへ出さない", () => {
+    const extensionDirectory = resolve(repositoryRoot, "extensions");
+    const sources = readdirSync(extensionDirectory)
+      .filter((name) => name.endsWith(".java"))
+      .map((name) => readFileSync(resolve(extensionDirectory, name), "utf8"));
+    for (const source of sources) {
+      expect(source).not.toMatch(/(?:拡張|extension).{0,20}読み込みました/iu);
+      expect(source).not.toMatch(/(?:extension).{0,20}(?:loaded)/iu);
+    }
+  });
+
   test("各拡張を単一classかつ1000行以下に保つ", () => {
     expect(scheduler.split(/\r?\n/u).length - 1).toBeLessThanOrEqual(1000);
     expect(fetcher.split(/\r?\n/u).length - 1).toBeLessThanOrEqual(1000);

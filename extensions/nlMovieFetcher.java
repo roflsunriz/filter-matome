@@ -49,7 +49,7 @@ import dareka.processor.StringResource;
  * 視聴権の取得はログイン状態を持つブラウザー側へ任せ、この拡張は署名済みURLだけを扱う。
  */
 public final class nlMovieFetcher implements Extension2, Processor {
-    public static final int REVISION = 26080801;
+    public static final int REVISION = 26080901;
     public static final String VER_STRING = "nlMovieFetcher_" + REVISION;
 
     private static final String API_PREFIX = "/cache/filter-matome/v1/movie-fetcher/";
@@ -99,7 +99,6 @@ public final class nlMovieFetcher implements Extension2, Processor {
             extensionLogger = NLMain.getExtLogger(
                     this, "nlMovieFetcher", null, false);
         }
-        logInfo("拡張を読み込みました (" + VER_STRING + ")");
     }
 
     @Override

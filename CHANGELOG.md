@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【movie-fetcher・extensions】smartFetcher専用SPAの予約登録を「動画」「日時」「確認」の3段階ウィザードへ変更し、曜日・祝日・優先度・再試行と通信・容量判定を折りたたみ式の詳細設定へ整理した。`nlMovieFetcher`と`FilterMatomeSmartFetcher`が登録時に毎回出していた単なる拡張読込完了ログを削除し、全Java拡張に同種の起動ログがないことを自動検証する。
 - 【README・extensions】プロジェクト構成から現行のJava拡張と役割を正しく把握できるよう、ログ受信、キャッシュ検索、メディア出力、動画情報取得、取得予約を含む全10種の一覧へ更新した。
 - 【docs/USAGE】本体と実行時データを誤った場所へ配置・削除しないよう、`NICO_APP_ROOT` と `NICO_DATA_ROOT` を区別した導入・クリーンインストール・シンボリックリンク・キャッシュ・背景画像の手順へ更新し、現行10拡張と動画取得ページを反映した。
 

@@ -24,7 +24,7 @@ import dareka.processor.*;
  */
 public final class FilterMatomeSmartFetcher
         implements Extension2, Processor, SystemEventListener {
-    public static final int REVISION = 26080701; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
+    public static final int REVISION = 26080901; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
     private static final String API_PREFIX = "/cache/filter-matome/v1/smart-fetcher/", REQUIRED_HEADER = "X-Filter-Matome-Smart-Fetcher";
     private static final Pattern API_URL = Pattern.compile( "^https?://www\\.nicovideo\\.jp" + API_PREFIX + "(state|schedule|settings|run-now|cancel|remove|credentials|clear-credentials)"
                     + "(?:\\?([^#]*))?$", Pattern.CASE_INSENSITIVE);
@@ -62,7 +62,7 @@ public final class FilterMatomeSmartFetcher
         manager.registerProcessor(this);
         manager.registerEventListener(this);
         if (extensionLogger == null) extensionLogger = NLMain.getExtLogger( this, "smartFetcher", null, false);
-        logInfo("拡張を読み込みました (" + VER_STRING + ")"); }
+    }
     @Override public String getVersionString() { return VER_STRING; }
     @Override public String[] getSupportedMethods() { return METHODS; }
     @Override public Pattern getSupportedURLAsPattern() { return API_URL; }

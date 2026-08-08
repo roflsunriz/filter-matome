@@ -160,8 +160,12 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
       window as Window & { startSmartFetcherTest?: () => Promise<void> }
     ).startSmartFetcherTest?.(),
   );
+  await expect(page.locator('[data-wizard-page="1"]')).toBeVisible();
+  await expect(page.locator('[data-wizard-page="2"]')).toBeHidden();
+  await expect(page.locator("#settings-form")).toBeHidden();
   await expect(page.locator('input[name="videoId"]')).toHaveValue("sm9");
   await page.locator("#inspect-button").click();
+  await expect(page.locator('[data-wizard-page="2"]')).toBeVisible();
   await expect(page.locator('input[name="title"]')).toHaveValue("テスト動画");
   await expect(page.locator('input[name="estimatedDisplay"]')).not.toHaveValue(
     "",
@@ -169,21 +173,35 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
   const startValue = await page.locator('input[name="startAt"]').inputValue();
   const stopValue = await page.locator('input[name="stopAt"]').inputValue();
   await page.locator('input[name="stopAt"]').fill(startValue);
-  await page.locator('#schedule-form button[type="submit"]').click();
+  await page.locator("[data-wizard-next]").click();
   await expect(page.locator("#toast")).toContainText(
     "停止日時は開始日時より後にしてください",
   );
   expect(actions).not.toContain("schedule");
   await page.locator('input[name="stopAt"]').fill(stopValue);
+  await page.locator("[data-wizard-next]").click();
+  await expect(page.locator('[data-wizard-page="3"]')).toBeVisible();
+  await expect(page.locator("#summary-video")).toContainText("テスト動画");
+  await page.locator('[data-wizard-page="3"] [data-wizard-back]').click();
+  await expect(page.locator('[data-wizard-page="2"]')).toBeVisible();
+  await expect(page.locator('input[name="startAt"]')).toHaveValue(startValue);
+  await page.locator("[data-wizard-next]").click();
   await page.locator('#schedule-form button[type="submit"]').click();
   await expect(page.locator('[data-schedule-id="schedule-1"]')).toContainText(
     "テスト動画",
   );
+  await page.locator('[data-action="edit"]').click();
+  await expect(page.locator("#wizard-title")).toContainText("予約を編集");
+  await expect(page.locator('input[name="videoId"]')).toHaveValue("sm9");
+  await page.locator("#reset-button").click();
+  await expect(page.locator("#wizard-title")).toContainText("予約を作成・編集");
   await page.screenshot({
     path: testInfo.outputPath("smart-fetcher-wide.png"),
     fullPage: true,
   });
 
+  await page.locator(".advanced-panel > summary").click();
+  await expect(page.locator("#settings-form")).toBeVisible();
   await page.locator('input[name="fixedKiB"]').fill("512");
   await page.locator('#settings-form button[type="submit"]').click();
   expect(serverState.settings.fixedBytesPerSecond).toBe(524_288);
@@ -332,7 +350,40 @@ test("狭い画面でも横にはみ出さず全フォームへ到達できる",
       body: JSON.stringify(serverState),
     }),
   );
-  await page.route("**/api/watch/v3/sm9?**", (route) => route.abort());
+  await page.route("**/api/watch/v3/sm9?**", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: {
+          response: {
+            client: { watchTrackId: "track" },
+            video: { title: "モバイル確認動画", duration: 60 },
+            media: {
+              domand: {
+                accessRightKey: "redacted",
+                videos: [
+                  {
+                    id: "video",
+                    isAvailable: true,
+                    qualityLevel: 1,
+                    bitRate: 1_000_000,
+                  },
+                ],
+                audios: [
+                  {
+                    id: "audio",
+                    isAvailable: true,
+                    qualityLevel: 1,
+                    bitRate: 128_000,
+                  },
+                ],
+              },
+            },
+          },
+        },
+      }),
+    }),
+  );
   await page.goto(pageUrl);
   await page.addScriptTag({ content: bundle });
   await page.evaluate(() =>
@@ -345,9 +396,17 @@ test("狭い画面でも横にはみ出さず全フォームへ到達できる",
     content: document.documentElement.scrollWidth,
   }));
   expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport);
-  await expect(page.locator("#settings-form")).toBeVisible();
+  await expect(page.locator('[data-wizard-page="1"]')).toBeVisible();
   await expect(page.locator("#schedule-form")).toBeVisible();
   await expect(page.locator("#history-list")).toBeVisible();
+  await page.locator("#inspect-button").click();
+  await expect(page.locator('[data-wizard-page="2"]')).toBeVisible();
+  await page.locator("[data-wizard-next]").click();
+  await expect(page.locator('[data-wizard-page="3"]')).toBeVisible();
+  await page.locator(".schedule-details > summary").click();
+  await expect(page.locator('input[name="priority"]')).toBeVisible();
+  await page.locator(".advanced-panel > summary").click();
+  await expect(page.locator("#settings-form")).toBeVisible();
   await page.screenshot({
     path: testInfo.outputPath("smart-fetcher-mobile.png"),
     fullPage: true,

@@ -21,6 +21,8 @@ import { applyTranslations, t } from "./scheduler-i18n";
 let state: SmartFetcherState | null = null;
 let toastTimer = 0;
 let stateRequestGeneration = 0;
+let wizardStep = 1;
+let inspectedVideoId = "";
 
 const byId = <T extends HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -82,6 +84,83 @@ function effectiveRate(settings: SmartFetcherSettings): number {
   return Math.max(1_024, (base * settings.percentage) / 100);
 }
 
+function setWizardStep(step: number): void {
+  wizardStep = Math.min(3, Math.max(1, step));
+  document
+    .querySelectorAll<HTMLElement>("[data-wizard-page]")
+    .forEach((page) => {
+      page.hidden = Number(page.dataset["wizardPage"]) !== wizardStep;
+    });
+  document
+    .querySelectorAll<HTMLElement>("[data-wizard-indicator]")
+    .forEach((indicator) => {
+      const indicatorStep = Number(indicator.dataset["wizardIndicator"]);
+      indicator.classList.toggle("active", indicatorStep === wizardStep);
+      indicator.classList.toggle("complete", indicatorStep < wizardStep);
+      if (indicatorStep === wizardStep)
+        indicator.setAttribute("aria-current", "step");
+      else indicator.removeAttribute("aria-current");
+    });
+}
+
+function updateInspectionCard(): void {
+  const form = byId<HTMLFormElement>("schedule-form");
+  const estimatedBytes = Number(formControl(form, "estimatedBytes").value);
+  byId("inspection-card").hidden =
+    !Number.isFinite(estimatedBytes) || estimatedBytes <= 0;
+}
+
+function updateRecurrenceDetails(): void {
+  const form = byId<HTMLFormElement>("schedule-form");
+  const hidden = formControl(form, "recurrence").value === "once";
+  document
+    .querySelectorAll<HTMLElement>("[data-recurrence-detail]")
+    .forEach((element) => {
+      element.hidden = hidden;
+    });
+}
+
+function updateScheduleSummary(): void {
+  const form = byId<HTMLFormElement>("schedule-form");
+  const startAt = new Date(formControl(form, "startAt").value).getTime();
+  const stopAt = new Date(formControl(form, "stopAt").value).getTime();
+  const videoId = formControl(form, "videoId").value.trim();
+  const title = formControl(form, "title").value.trim();
+  byId("summary-video").textContent = title ? `${title} (${videoId})` : videoId;
+  byId("summary-time").textContent =
+    `${formatDate(startAt)} – ${formatDate(stopAt)}`;
+  byId("summary-repeat").textContent = t(
+    formControl(form, "recurrence").value as ScheduleInput["recurrence"],
+  );
+  byId("summary-size").textContent = formControl(
+    form,
+    "estimatedDisplay",
+  ).value;
+  updateRecurrenceDetails();
+}
+
+function validateTiming(): boolean {
+  const form = byId<HTMLFormElement>("schedule-form");
+  const startControl = formControl<HTMLInputElement>(form, "startAt");
+  const stopControl = formControl<HTMLInputElement>(form, "stopAt");
+  if (!startControl.reportValidity() || !stopControl.reportValidity())
+    return false;
+  const startAt = new Date(startControl.value).getTime();
+  const stopAt = new Date(stopControl.value).getTime();
+  if (
+    !Number.isFinite(startAt) ||
+    !Number.isFinite(stopAt) ||
+    stopAt <= startAt
+  ) {
+    showToast(t("stopAfterStart"), true);
+    return false;
+  }
+  formControl(form, "windowMinutes").value = String(
+    Math.ceil((stopAt - startAt) / 60_000),
+  );
+  return true;
+}
+
 function initializeWeekdays(): void {
   const container = byId<HTMLDivElement>("weekday-options");
   const monday = new Date(Date.UTC(2024, 0, 1));
@@ -132,6 +211,7 @@ function resetScheduleForm(videoId = ""): void {
   formControl(form, "windowMinutes").value = String(windowMinutes);
   formControl(form, "estimatedBytes").value = "";
   formControl(form, "estimatedDisplay").value = "";
+  inspectedVideoId = "";
   formControl(form, "priority").value = "5";
   formControl(form, "maxRetries").value = "2";
   formControl<HTMLInputElement>(form, "enabled").checked = true;
@@ -140,6 +220,10 @@ function resetScheduleForm(videoId = ""): void {
     .forEach((input) => {
       input.checked = true;
     });
+  byId("wizard-title").textContent = t("newSchedule");
+  updateInspectionCard();
+  updateRecurrenceDetails();
+  setWizardStep(1);
 }
 
 function fillScheduleForm(schedule: SmartFetcherSchedule): void {
@@ -158,6 +242,7 @@ function fillScheduleForm(schedule: SmartFetcherSchedule): void {
   formControl(form, "estimatedDisplay").value = formatBytes(
     schedule.estimatedBytes,
   );
+  inspectedVideoId = schedule.videoId.toLowerCase();
   formControl(form, "priority").value = String(schedule.priority);
   formControl(form, "maxRetries").value = String(schedule.maxRetries);
   formControl<HTMLInputElement>(form, "enabled").checked = schedule.enabled;
@@ -166,6 +251,10 @@ function fillScheduleForm(schedule: SmartFetcherSchedule): void {
     .forEach((input) => {
       input.checked = (schedule.daysOfWeek & Number(input.value)) !== 0;
     });
+  byId("wizard-title").textContent = t("editSchedule");
+  updateInspectionCard();
+  updateRecurrenceDetails();
+  setWizardStep(1);
   form.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -369,14 +458,22 @@ function readSchedule(): ScheduleInput {
   };
 }
 
-async function inspectCurrentVideo(): Promise<void> {
+async function inspectCurrentVideo(advance = false): Promise<void> {
   const form = byId<HTMLFormElement>("schedule-form");
   const button = byId<HTMLButtonElement>("inspect-button");
+  const videoIdControl = formControl<HTMLInputElement>(form, "videoId");
+  if (!videoIdControl.reportValidity()) return;
+  const videoId = videoIdControl.value.trim().toLowerCase();
+  if (
+    inspectedVideoId === videoId &&
+    Number(formControl(form, "estimatedBytes").value) > 0
+  ) {
+    if (advance) setWizardStep(2);
+    return;
+  }
   button.disabled = true;
   try {
-    const inspection = await inspectScheduleVideo(
-      formControl(form, "videoId").value.trim(),
-    );
+    const inspection = await inspectScheduleVideo(videoId);
     formControl(form, "title").value = inspection.title;
     formControl(form, "estimatedBytes").value = String(
       inspection.estimatedBytes,
@@ -384,6 +481,9 @@ async function inspectCurrentVideo(): Promise<void> {
     formControl(form, "estimatedDisplay").value = formatBytes(
       inspection.estimatedBytes,
     );
+    inspectedVideoId = videoId;
+    updateInspectionCard();
+    if (advance) setWizardStep(2);
   } finally {
     button.disabled = false;
   }
@@ -473,13 +573,55 @@ function installListeners(): void {
       .catch((error: unknown) => showToast(String(error), true));
   });
   byId("inspect-button").addEventListener("click", () => {
-    void inspectCurrentVideo().catch((error: unknown) =>
+    void inspectCurrentVideo(true).catch((error: unknown) =>
       showToast(String(error), true),
     );
   });
   byId("reset-button").addEventListener("click", () => resetScheduleForm());
+  formControl(scheduleForm, "videoId").addEventListener("input", () => {
+    const videoId = formControl(scheduleForm, "videoId")
+      .value.trim()
+      .toLowerCase();
+    if (videoId !== inspectedVideoId) {
+      formControl(scheduleForm, "estimatedBytes").value = "";
+      formControl(scheduleForm, "estimatedDisplay").value = "";
+      formControl(scheduleForm, "title").value = "";
+      updateInspectionCard();
+    }
+  });
+  formControl(scheduleForm, "recurrence").addEventListener(
+    "change",
+    updateRecurrenceDetails,
+  );
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-wizard-back]")
+    .forEach((button) => {
+      button.addEventListener("click", () => setWizardStep(wizardStep - 1));
+    });
+  document
+    .querySelectorAll<HTMLButtonElement>("[data-wizard-next]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!validateTiming()) return;
+        updateScheduleSummary();
+        setWizardStep(3);
+      });
+    });
   byId<HTMLFormElement>("schedule-form").addEventListener("submit", (event) => {
     event.preventDefault();
+    if (wizardStep === 1) {
+      void inspectCurrentVideo(true).catch((error: unknown) =>
+        showToast(String(error), true),
+      );
+      return;
+    }
+    if (wizardStep === 2) {
+      if (validateTiming()) {
+        updateScheduleSummary();
+        setWizardStep(3);
+      }
+      return;
+    }
     try {
       void renderLatestState(saveSchedule(readSchedule()))
         .then(() => {

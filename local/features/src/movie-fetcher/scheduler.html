@@ -132,7 +132,7 @@
       }
       .layout {
         display: grid;
-        grid-template-columns: minmax(300px, 0.78fr) minmax(0, 1.22fr);
+        grid-template-columns: minmax(360px, 0.95fr) minmax(0, 1.05fr);
         gap: 18px;
         align-items: start;
       }
@@ -148,9 +148,52 @@
         border-bottom: 1px solid var(--line);
         background: var(--soft);
       }
-      .panel h2 {
+      .panel h2,
+      .summary-heading {
         margin: 0;
         font-size: 1.05rem;
+      }
+      .summary-heading {
+        display: block;
+        color: var(--text);
+        font-weight: 700;
+      }
+      .panel-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .panel-heading p {
+        margin: 4px 0 0;
+      }
+      .advanced-panel > summary,
+      .schedule-details > summary {
+        cursor: pointer;
+        list-style: none;
+      }
+      .advanced-panel > summary::-webkit-details-marker,
+      .schedule-details > summary::-webkit-details-marker {
+        display: none;
+      }
+      .advanced-panel > summary {
+        padding: 16px 18px;
+        border-bottom: 1px solid transparent;
+        background: var(--soft);
+      }
+      .advanced-panel[open] > summary {
+        border-bottom-color: var(--line);
+      }
+      .advanced-panel > summary::after,
+      .schedule-details > summary::after {
+        content: "+";
+        float: inline-end;
+        color: var(--accent);
+        font-size: 1.25rem;
+      }
+      .advanced-panel[open] > summary::after,
+      .schedule-details[open] > summary::after {
+        content: "−";
       }
       .panel-body {
         padding: 18px;
@@ -183,6 +226,97 @@
       .form-actions {
         justify-content: flex-end;
         margin-top: 16px;
+      }
+      .wizard-steps {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin: 0 0 20px;
+        padding: 0;
+        list-style: none;
+      }
+      .wizard-steps li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+      .wizard-steps li span:first-child {
+        display: grid;
+        flex: 0 0 24px;
+        width: 24px;
+        height: 24px;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--soft);
+      }
+      .wizard-steps li.active {
+        border-color: var(--accent);
+        color: var(--text);
+        background: #17253b;
+      }
+      .wizard-steps li.complete span:first-child,
+      .wizard-steps li.active span:first-child {
+        color: #08111f;
+        background: var(--accent);
+      }
+      .wizard-page h3 {
+        margin: 0;
+        font-size: 1.15rem;
+      }
+      .wizard-page > .muted {
+        margin: 4px 0 18px;
+      }
+      .inspection-card,
+      .summary-card {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #111821;
+      }
+      .inspection-card strong {
+        font-size: 1rem;
+        overflow-wrap: anywhere;
+      }
+      .inspection-card span,
+      .summary-card dt {
+        color: var(--muted);
+      }
+      .summary-card dl {
+        display: grid;
+        grid-template-columns: minmax(110px, auto) minmax(0, 1fr);
+        gap: 8px 14px;
+        margin: 0;
+      }
+      .summary-card dt,
+      .summary-card dd {
+        margin: 0;
+      }
+      .summary-card dd {
+        overflow-wrap: anywhere;
+      }
+      .schedule-details {
+        grid-column: 1/-1;
+        margin-top: 16px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .schedule-details > summary {
+        padding: 12px 14px;
+        color: var(--text);
+        font-weight: 700;
+      }
+      .schedule-details-body {
+        padding: 0 14px 14px;
       }
       .presets {
         margin-bottom: 14px;
@@ -298,8 +432,22 @@
           flex-direction: column;
         }
         .status-grid,
-        .form-grid {
+        .form-grid,
+        .wizard-steps {
           grid-template-columns: 1fr;
+        }
+        .wizard-steps {
+          gap: 5px;
+        }
+        .wizard-steps li {
+          padding: 6px 9px;
+        }
+        .summary-card dl {
+          grid-template-columns: 1fr;
+          gap: 2px;
+        }
+        .summary-card dd:not(:last-child) {
+          margin-bottom: 8px;
         }
         .job {
           grid-template-columns: 1fr;
@@ -362,8 +510,235 @@
         </div>
         <div class="layout">
           <div class="stack">
-            <section class="panel">
-              <header><h2 data-i18n="settings">通信と判定の設定</h2></header>
+            <section class="panel" id="schedule-wizard">
+              <header class="panel-heading">
+                <div>
+                  <h2 id="wizard-title" data-i18n="newSchedule">
+                    予約を作成・編集
+                  </h2>
+                  <p class="muted" data-i18n="wizardHelp">
+                    3つの手順で取得予約を登録します。
+                  </p>
+                </div>
+                <button
+                  id="reset-button"
+                  class="secondary"
+                  type="button"
+                  data-i18n="reset"
+                >
+                  入力を戻す
+                </button>
+              </header>
+              <div class="panel-body">
+                <ol class="wizard-steps" aria-label="schedule steps">
+                  <li class="active" data-wizard-indicator="1">
+                    <span>1</span><span data-i18n="stepVideo">動画を選ぶ</span>
+                  </li>
+                  <li data-wizard-indicator="2">
+                    <span>2</span><span data-i18n="stepTiming">日時を選ぶ</span>
+                  </li>
+                  <li data-wizard-indicator="3">
+                    <span>3</span><span data-i18n="stepConfirm">内容を確認</span>
+                  </li>
+                </ol>
+                <form id="schedule-form">
+                  <input name="id" type="hidden" />
+                  <input name="windowMinutes" type="hidden" />
+                  <input name="estimatedBytes" type="hidden" />
+
+                  <section class="wizard-page" data-wizard-page="1">
+                    <h3 data-i18n="stepVideo">動画を選ぶ</h3>
+                    <p class="muted" data-i18n="videoStepHelp">
+                      動画IDを入力すると、タイトルと推定サイズを確認します。
+                    </p>
+                    <div class="form-grid">
+                      <label class="full"
+                        ><span data-i18n="videoId">動画ID</span
+                        ><input
+                          name="videoId"
+                          pattern="[A-Za-z]{2}[0-9]+"
+                          required
+                      /></label>
+                    </div>
+                    <div id="inspection-card" class="inspection-card" hidden>
+                      <label
+                        ><span data-i18n="titleLabel">タイトル</span
+                        ><input name="title" maxlength="200" readonly
+                      /></label>
+                      <label
+                        ><span data-i18n="estimated">推定サイズ</span
+                        ><input name="estimatedDisplay" readonly
+                      /></label>
+                    </div>
+                    <div class="form-actions">
+                      <button
+                        id="inspect-button"
+                        type="button"
+                        data-i18n="inspectNext"
+                      >
+                        動画を確認して次へ
+                      </button>
+                    </div>
+                  </section>
+
+                  <section class="wizard-page" data-wizard-page="2" hidden>
+                    <h3 data-i18n="stepTiming">日時を選ぶ</h3>
+                    <p class="muted" data-i18n="timingStepHelp">
+                      おすすめから選ぶか、取得できる開始・停止日時を指定します。
+                    </p>
+                    <div class="presets">
+                      <button
+                        type="button"
+                        class="secondary"
+                        data-preset="tonight"
+                        data-i18n="tonight"
+                      >
+                        今夜
+                      </button>
+                      <button
+                        type="button"
+                        class="secondary"
+                        data-preset="weekday"
+                        data-i18n="weekdayNights"
+                      >
+                        平日夜
+                      </button>
+                      <button
+                        type="button"
+                        class="secondary"
+                        data-preset="weekend"
+                        data-i18n="weekend"
+                      >
+                        週末
+                      </button>
+                    </div>
+                    <div class="form-grid">
+                      <label
+                        ><span data-i18n="start">開始日時</span
+                        ><input name="startAt" type="datetime-local" required
+                      /></label>
+                      <label
+                        ><span data-i18n="stop">停止日時</span
+                        ><input name="stopAt" type="datetime-local" required
+                      /></label>
+                      <label class="full"
+                        ><span data-i18n="recurrence">繰り返し</span
+                        ><select name="recurrence">
+                          <option value="once" data-i18n="once">1回</option>
+                          <option value="daily" data-i18n="daily">毎日</option>
+                          <option value="weekly" data-i18n="weekly">毎週</option>
+                          <option value="monthly" data-i18n="monthly">毎月</option>
+                          <option value="yearly" data-i18n="yearly">毎年</option>
+                        </select></label
+                      >
+                    </div>
+                    <div class="form-actions">
+                      <button
+                        class="secondary"
+                        type="button"
+                        data-wizard-back
+                        data-i18n="back"
+                      >
+                        戻る
+                      </button>
+                      <button type="button" data-wizard-next data-i18n="continue">
+                        次へ
+                      </button>
+                    </div>
+                  </section>
+
+                  <section class="wizard-page" data-wizard-page="3" hidden>
+                    <h3 data-i18n="stepConfirm">内容を確認</h3>
+                    <p class="muted" data-i18n="confirmStepHelp">
+                      予約内容を確認して登録してください。
+                    </p>
+                    <div class="summary-card">
+                      <h3 data-i18n="scheduleSummary">予約内容</h3>
+                      <dl>
+                        <dt data-i18n="summaryVideo">動画</dt>
+                        <dd id="summary-video">—</dd>
+                        <dt data-i18n="summaryTime">取得可能時間</dt>
+                        <dd id="summary-time">—</dd>
+                        <dt data-i18n="summaryRepeat">繰り返し</dt>
+                        <dd id="summary-repeat">—</dd>
+                        <dt data-i18n="estimated">推定サイズ</dt>
+                        <dd id="summary-size">—</dd>
+                      </dl>
+                    </div>
+                    <details class="schedule-details">
+                      <summary data-i18n="scheduleDetails">予約の詳細設定</summary>
+                      <div class="schedule-details-body form-grid">
+                        <label data-recurrence-detail
+                          ><span data-i18n="holidayPolicy">祝日の扱い</span
+                          ><select name="holidayPolicy">
+                            <option value="include" data-i18n="include">
+                              通常どおり
+                            </option>
+                            <option value="exclude" data-i18n="exclude">
+                              祝日を除外
+                            </option>
+                            <option value="only" data-i18n="only">祝日のみ</option>
+                          </select></label
+                        >
+                        <fieldset class="full" data-recurrence-detail>
+                          <legend data-i18n="weekdays">曜日</legend>
+                          <div id="weekday-options" class="weekdays"></div>
+                        </fieldset>
+                        <label
+                          ><span data-i18n="priority">優先度 (0–9)</span
+                          ><input
+                            name="priority"
+                            type="number"
+                            min="0"
+                            max="9"
+                            value="5"
+                            required
+                        /></label>
+                        <label
+                          ><span data-i18n="retries">再試行回数</span
+                          ><input
+                            name="maxRetries"
+                            type="number"
+                            min="0"
+                            max="10"
+                            value="2"
+                            required
+                        /></label>
+                        <label class="full"
+                          ><span
+                            ><input name="enabled" type="checkbox" checked />
+                            <span data-i18n="enabled">有効</span></span
+                          ></label
+                        >
+                      </div>
+                    </details>
+                    <div class="form-actions">
+                      <button
+                        class="secondary"
+                        type="button"
+                        data-wizard-back
+                        data-i18n="back"
+                      >
+                        戻る
+                      </button>
+                      <button type="submit" data-i18n="saveSchedule">
+                        予約を保存
+                      </button>
+                    </div>
+                  </section>
+                </form>
+              </div>
+            </section>
+
+            <details class="panel advanced-panel">
+              <summary>
+                <span class="summary-heading" data-i18n="advancedSettings">
+                  通信・容量判定の詳細設定
+                </span>
+                <span class="muted" data-i18n="advancedSettingsHelp">
+                  帯域を制限したい場合や容量判定を調整したい場合だけ変更します。
+                </span>
+              </summary>
               <div class="panel-body">
                 <form id="settings-form" class="form-grid">
                   <label
@@ -438,140 +813,7 @@
                   </div>
                 </form>
               </div>
-            </section>
-            <section class="panel">
-              <header><h2 data-i18n="newSchedule">予約を作成・編集</h2></header>
-              <div class="panel-body">
-                <div class="presets">
-                  <button
-                    type="button"
-                    class="secondary"
-                    data-preset="tonight"
-                    data-i18n="tonight"
-                  >
-                    今夜</button
-                  ><button
-                    type="button"
-                    class="secondary"
-                    data-preset="weekday"
-                    data-i18n="weekdayNights"
-                  >
-                    平日夜</button
-                  ><button
-                    type="button"
-                    class="secondary"
-                    data-preset="weekend"
-                    data-i18n="weekend"
-                  >
-                    週末
-                  </button>
-                </div>
-                <form id="schedule-form" class="form-grid">
-                  <input name="id" type="hidden" />
-                  <label
-                    ><span data-i18n="videoId">動画ID</span
-                    ><input name="videoId" pattern="[A-Za-z]{2}[0-9]+" required
-                  /></label>
-                  <label
-                    ><span data-i18n="titleLabel">タイトル</span
-                    ><input name="title" maxlength="200"
-                  /></label>
-                  <label
-                    ><span data-i18n="start">開始日時</span
-                    ><input name="startAt" type="datetime-local" required
-                  /></label>
-                  <label
-                    ><span data-i18n="stop">停止日時</span
-                    ><input name="stopAt" type="datetime-local" required
-                  /></label>
-                  <label
-                    ><span data-i18n="recurrence">繰り返し</span
-                    ><select name="recurrence">
-                      <option value="once" data-i18n="once">1回</option>
-                      <option value="daily" data-i18n="daily">毎日</option>
-                      <option value="weekly" data-i18n="weekly">毎週</option>
-                      <option value="monthly" data-i18n="monthly">毎月</option>
-                      <option value="yearly" data-i18n="yearly">毎年</option>
-                    </select></label
-                  >
-                  <label
-                    ><span data-i18n="window">取得可能時間 (分)</span
-                    ><input
-                      name="windowMinutes"
-                      type="number"
-                      min="1"
-                      max="10080"
-                      required
-                  /></label>
-                  <label
-                    ><span data-i18n="holidayPolicy">祝日の扱い</span
-                    ><select name="holidayPolicy">
-                      <option value="include" data-i18n="include">
-                        通常どおり
-                      </option>
-                      <option value="exclude" data-i18n="exclude">
-                        祝日を除外
-                      </option>
-                      <option value="only" data-i18n="only">祝日のみ</option>
-                    </select></label
-                  >
-                  <fieldset class="full">
-                    <legend data-i18n="weekdays">曜日</legend>
-                    <div id="weekday-options" class="weekdays"></div>
-                  </fieldset>
-                  <label
-                    ><span data-i18n="estimated">推定サイズ</span
-                    ><input name="estimatedDisplay" readonly
-                  /></label>
-                  <input name="estimatedBytes" type="hidden" />
-                  <label
-                    ><span data-i18n="priority">優先度 (0–9)</span
-                    ><input
-                      name="priority"
-                      type="number"
-                      min="0"
-                      max="9"
-                      value="5"
-                      required
-                  /></label>
-                  <label
-                    ><span data-i18n="retries">再試行回数</span
-                    ><input
-                      name="maxRetries"
-                      type="number"
-                      min="0"
-                      max="10"
-                      value="2"
-                      required
-                  /></label>
-                  <label class="full"
-                    ><span
-                      ><input name="enabled" type="checkbox" checked />
-                      <span data-i18n="enabled">有効</span></span
-                    ></label
-                  >
-                  <div class="form-actions full">
-                    <button
-                      id="inspect-button"
-                      class="secondary"
-                      type="button"
-                      data-i18n="inspect"
-                    >
-                      動画情報とサイズを取得</button
-                    ><button
-                      id="reset-button"
-                      class="secondary"
-                      type="button"
-                      data-i18n="reset"
-                    >
-                      入力を戻す</button
-                    ><button type="submit" data-i18n="saveSchedule">
-                      予約を保存
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </section>
+            </details>
           </div>
           <div class="stack">
             <section class="panel">
