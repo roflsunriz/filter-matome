@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- 【release】`#`を含むタグ名がGitHub Actionsのartifact転送時に`.`へ変換され、公開アーカイブ名とリリースノートが一致しない問題を防ぐため、配布ファイル名を数値版の`filter-matome-<version>.7z`へ統一した。
+
 ## [#238] - 2026-08-09
 
 ### Added

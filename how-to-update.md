@@ -3,7 +3,7 @@
 3. README.mdのlatestバッジのバージョンを更新する
 4. 最後にコミットとプッシュを行う
 5. git tag "#(version)"
-6. git push origin "#(version)" の操作でGithub Actionsが自動でリリースを作成する。
+6. git push origin "#(version)" の操作でGithub Actionsが自動でリリースを作成する。タグは`#238`、配布アーカイブはURLフラグメントとの衝突を避けた`filter-matome-238.7z`のように、ファイル名側だけ`#`を除く。
 
 ## nlMovieFetcherの追従確認
 
