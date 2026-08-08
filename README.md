@@ -198,10 +198,16 @@ nlFilters/
 └── 105_premium_hide.txt            # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
 
 extensions/
-├── FilterMatomeCacheControl.java/.class # MP4等を保持したままHLSだけを削除・削除予約するサーバーAPI
+├── CommentFilterLogger.java/.class       # コメントフィルターログの受信とGUI表示
+├── CustomCacheReturner.java/.class       # 動画IDによるHLS・MP4キャッシュ検索API
+├── downloadThruFFmpeg.java/.class       # キャッシュ済みHLSの映像・音声をFFmpegで保存
+├── ExtUtil.java/.class                   # Java拡張向けの共通ユーティリティ
+├── FilterMatomeCacheControl.java/.class # MP4等を保持したままHLSだけを削除・削除予約するAPI
 ├── FilterMatomeSeriesAlerts.java/.class # シリーズ新着の定期確認とOS通知
-├── FilterMatomeSmartFetcher.java/.class  # 永続予約・暗号化Cookie・帯域制御
-└── nlMovieFetcher.java/.class           # 現行Domand/CMAFの一覧取得拡張
+├── FilterMatomeSmartFetcher.java/.class # 永続予約・暗号化Cookie・帯域制御・取得履歴の管理
+├── NicochartInfoProxy.java/.class        # 再生不可時のnicochart.jp動画情報フォールバック
+├── nlGpac.java/.class                    # GPACによるローカルキャッシュのメディア解析API
+└── nlMovieFetcher.java/.class            # 現行Domand/CMAF配信の取得・進捗確認・中止API
 
 docs/resources/            # USAGE.mdで使われる画像リソース
 ```

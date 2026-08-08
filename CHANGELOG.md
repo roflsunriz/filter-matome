@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- 【README・extensions】プロジェクト構成から現行のJava拡張と役割を正しく把握できるよう、ログ受信、キャッシュ検索、メディア出力、動画情報取得、取得予約を含む全10種の一覧へ更新した。
+
 ## [#237] - 2026-08-08
 
 ### Fixed
