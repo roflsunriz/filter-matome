@@ -40,13 +40,9 @@
 
 ### 前提条件
 - [NicoCache_nl](https://roflsunriz.github.io/setup-nicocache-nl/) 本体のインストール
-- [Adoptium Temurin OpenJDK 17 LTS](https://adoptium.net/temurin/releases?version=17&os=any&arch=any)
+- [Adoptium Temurin OpenJDK 25 LTS](https://adoptium.net/temurin/releases?version=25&os=any&arch=any)
 ```powershell
-winget install EclipseAdoptium.Temurin.17.JDK
-```
-- または [Adoptium Temurin OpenJDK 21 LTS](https://adoptium.net/temurin/releases?version=21&os=any&arch=any)
-```powershell
-winget install EclipseAdoptium.Temurin.21.JDK
+winget install EclipseAdoptium.Temurin.25.JDK
 ```
 - 対応ブラウザ: [Firefox](https://www.firefox.com/ja/download/all/desktop-release/)(推奨)
 ```powershell
@@ -74,14 +70,14 @@ winget install Google.Chrome
    ```bash
    # ディレクトリ構造を維持して以下に配置
    NicoCache_nl/
-   ├── nlFilters/     # 100-199番台のDSLフィルター
-   ├── local/         # 拡張機能のコンパイル済みファイル、ソースコード
-   └── extensions/    # 追加拡張機能のコンパイル済みファイル、ソースコード
+   ├── nlFilters/     # 100-105番台のDSLフィルター
+   ├── local/         # TypeScript系拡張機能のコンパイル済みファイル、ソースコード
+   └── extensions/    # Java系拡張機能のコンパイル済みファイル、ソースコード
    ```
 
 3. **設定の有効化**
    - NicoCache_nlを起動
-   - ブラウザでハード再読み込み（Ctrl+F5）
+   - ブラウザでハード再読み込み（Ctrl+F5を同時押し）
 
 4. **Java Toolboxの利用（必要な場合）**
    ```powershell
@@ -90,12 +86,7 @@ winget install Google.Chrome
    GUIは引数なし、サーバーや自動処理では`--headless`を付けて起動できます。使える機能と操作例は[`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md)を参照してください。
 
 ### クリーンインストール
-```bash
-# 既存の100-199番台フィルターを削除
-# extensions,local,nlFiltersにあるファイルをダウンロードファイルを見ながら削除(必要なファイルを間違えて消さないため)
-# 新しいファイルで上書き更新
-# 設定のインポート（必要に応じて）
-```
+[USAGE](https://roflsunriz.github.io/filter-matome/USAGE/) のクリーンインストール手順を参照
 
 ## 📖 機能詳細
 
@@ -162,7 +153,7 @@ winget install Google.Chrome
 ### 技術スタック
 - **言語**: TypeScript
 - **ビルドツール・ランタイム**: Bun（要求バージョンは `local/features/package.json` を参照）
-- **補助ツール**: Java 17+、Maven（Java Toolboxの開発・テスト時のみ）
+- **補助ツール**: Java 25、Maven（Java Toolboxの開発・テスト時のみ）
 - **静的解析**: ESLint、typescript-eslint
 - **テスト**: Bun test、Playwright
 - **ストレージ**: IndexedDB
@@ -309,14 +300,11 @@ NicoCache_nl はキャッシュデータマネージャをTargetの`local/list.j
 
 ### 開発ツール
 - [Bun](https://bun.com/docs/installation)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [Apache Ant](https://ant.apache.org/bindownload.cgi)
-- [Adoptium OpenJDK](https://adoptium.net/temurin/releases/?version=17)
+- [Adoptium OpenJDK](https://adoptium.net/temurin/releases/?version=25)
 - [Bouncy Castle](https://www.bouncycastle.org/download/bouncy-castle-java/#latest)
-- [Python](https://www.python.org/downloads/)
-- [Powershell](https://learn.microsoft.com/ja-jp/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.5#msi)
-- [WinMerge](https://winmerge.org/?lang=ja)
 - [GPAC](https://gpac.io/downloads/gpac-nightly-builds/)
+- [WinMerge](https://winmerge.org/?lang=ja)
 
 ## 📄 ライセンス
 
