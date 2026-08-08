@@ -12,19 +12,19 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.regex.*;
 import javax.crypto.*;
-import javax.crypto.spec.*;
+import javax.crypto.spec.*; import javax.net.ssl.*;
 import dareka.NLMain;
 import dareka.common.*;
 import dareka.common.json.*;
 import dareka.extensions.*;
-import dareka.processor.*;
+import dareka.processor.*; import dareka.processor.impl.NicoCachingTitleRetriever;
 /**
  * nlMovieFetcherの永続スケジュール、認証Cookie、帯域計画、履歴を管理する。
  * Cookieは暗号化した専用ファイルに保存し、状態JSONやAPI応答へ含めない。
  */
 public final class FilterMatomeSmartFetcher
         implements Extension2, Processor, SystemEventListener {
-    public static final int REVISION = 26080902; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
+    public static final int REVISION = 26080904; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
     private static final String API_PREFIX = "/cache/filter-matome/v1/smart-fetcher/", REQUIRED_HEADER = "X-Filter-Matome-Smart-Fetcher";
     private static final Pattern API_URL = Pattern.compile( "^https?://www\\.nicovideo\\.jp" + API_PREFIX + "(state|schedule|settings|run-now|cancel|remove|remove-history|clear-history|credentials|clear-credentials)"
                     + "(?:\\?([^#]*))?$", Pattern.CASE_INSENSITIVE);
@@ -379,7 +379,7 @@ public final class FilterMatomeSmartFetcher
         JsonObject watch = watchEnvelope.getObject("data", "response");
         if (watch == null) {
             watch = watchEnvelope.getObject("data"); }
-        JsonObject domand = watch == null ? null : watch.getObject("media", "domand");
+        JsonObject domand = watch == null ? null : watch.getObject("media", "domand"); NicoCachingTitleRetriever.putTitleCache(videoId, watch == null ? null : Json.getString(watch, "video", "title"));
         String accessKey = domand == null ? null : Json.getString(domand, "accessRightKey");
         String videoQuality = selectBestQuality( domand == null ? null : domand.getArray("videos"));
         String audioQuality = selectBestQuality( domand == null ? null : domand.getArray("audios"));
@@ -427,8 +427,8 @@ public final class FilterMatomeSmartFetcher
                 bestBitRate = bitRate; } }
         return best == null ? null : Json.getString(best, "id"); }
     private JsonObject requestJson(String url, String method, Map<String, String> headers, String body, boolean permitError) throws Exception {
-        HttpURLConnection connection = (HttpURLConnection)
-                new URL(url).openConnection(Proxy.NO_PROXY);
+        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", Integer.getInteger("listenPort", 8080))); HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection(proxy);
+        if (connection instanceof HttpsURLConnection) ((HttpsURLConnection) connection).setSSLSocketFactory(nlMovieFetcher.getProxyTlsSocketFactory());
         connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
         connection.setReadTimeout(READ_TIMEOUT_MS);
         connection.setRequestMethod(method);

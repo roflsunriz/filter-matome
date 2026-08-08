@@ -25,6 +25,7 @@ let toastTimer = 0;
 let stateRequestGeneration = 0;
 let wizardStep = 1;
 let inspectedVideoId = "";
+let startupPromise: Promise<void> | null = null;
 
 const byId = <T extends HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -197,6 +198,34 @@ function fillSettings(settings: SmartFetcherSettings): void {
   );
   formControl(form, "safetyPercent").value = String(settings.safetyPercent);
   formControl(form, "holidayCalendar").value = settings.holidayCalendar;
+  updateBandwidthFields();
+}
+
+function updateBandwidthFields(): void {
+  const form = byId<HTMLFormElement>("settings-form");
+  const mode = formControl<HTMLSelectElement>(form, "bandwidthMode").value;
+  const measured = state?.settings.measuredBytesPerSecond ?? 0;
+  const visibility = {
+    fixed: mode === "fixed",
+    line: mode === "percentage" || (mode === "auto" && measured <= 0),
+    share: mode !== "fixed",
+  };
+  for (const [name, visible] of Object.entries(visibility)) {
+    const wrapper = document.querySelector<HTMLElement>(
+      `[data-bandwidth-field="${name}"]`,
+    );
+    const input = wrapper?.querySelector<HTMLInputElement>("input");
+    if (!wrapper || !input) continue;
+    wrapper.hidden = !visible;
+    input.disabled = !visible;
+  }
+  byId("bandwidth-mode-help").textContent = t(
+    mode === "fixed"
+      ? "modeHelpFixed"
+      : mode === "percentage"
+        ? "modeHelpPercentage"
+        : "modeHelpAuto",
+  );
 }
 
 function resetScheduleForm(videoId = ""): void {
@@ -603,6 +632,10 @@ function installListeners(): void {
     "change",
     updateRecurrenceDetails,
   );
+  formControl<HTMLSelectElement>(
+    byId<HTMLFormElement>("settings-form"),
+    "bandwidthMode",
+  ).addEventListener("change", updateBandwidthFields);
   document
     .querySelectorAll<HTMLButtonElement>("[data-wizard-back]")
     .forEach((button) => {
@@ -704,7 +737,7 @@ function installListeners(): void {
   });
 }
 
-export async function startSmartFetcherApp(): Promise<void> {
+async function initializeSmartFetcherApp(): Promise<void> {
   applyTranslations();
   new CommonHeader("common-header-container", {
     title: "smartFetcher",
@@ -731,4 +764,9 @@ export async function startSmartFetcherApp(): Promise<void> {
       showToast(String(error), true),
     );
   window.setInterval(() => void loadState().catch(() => undefined), 10_000);
+}
+
+export function startSmartFetcherApp(): Promise<void> {
+  startupPromise ??= initializeSmartFetcherApp();
+  return startupPromise;
 }

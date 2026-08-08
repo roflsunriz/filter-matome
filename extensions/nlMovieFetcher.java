@@ -43,13 +43,16 @@ import dareka.processor.HttpRequestHeader;
 import dareka.processor.Processor;
 import dareka.processor.Resource;
 import dareka.processor.StringResource;
+import dareka.processor.impl.Cache;
+import dareka.processor.impl.CacheManager;
+import dareka.processor.impl.VideoDescriptor;
 
 /**
  * 現行Domand/CMAF配信をNicoCache_nl自身のプロキシー経由で最後まで取得する。
  * 視聴権の取得はログイン状態を持つブラウザー側へ任せ、この拡張は署名済みURLだけを扱う。
  */
 public final class nlMovieFetcher implements Extension2, Processor {
-    public static final int REVISION = 26080902;
+    public static final int REVISION = 26080904;
     public static final String VER_STRING = "nlMovieFetcher_" + REVISION;
 
     private static final String API_PREFIX = "/cache/filter-matome/v1/movie-fetcher/";
@@ -95,7 +98,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
             new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Thread> workers =
             new ConcurrentHashMap<>();
-    private volatile SSLSocketFactory proxyTlsSocketFactory;
+    private static volatile SSLSocketFactory proxyTlsSocketFactory;
     private volatile LoggerHandler extensionLogger;
 
     @Override
@@ -284,6 +287,9 @@ public final class nlMovieFetcher implements Extension2, Processor {
                             + resourceIndex + "/" + mediaResources.size());
                 }
             }
+            if (!hasCompletedCache(videoId)) {
+                throw new IOException("completed cache was not created");
+            }
             states.put(videoId, "completed");
             logInfo(videoId + ": 取得完了");
         } catch (InterruptedException exception) {
@@ -298,6 +304,19 @@ public final class nlMovieFetcher implements Extension2, Processor {
         } finally {
             workers.remove(videoId, Thread.currentThread());
         }
+    }
+
+    private boolean hasCompletedCache(String videoId)
+            throws InterruptedException {
+        for (int attempt = 0; attempt < 20; attempt++) {
+            for (VideoDescriptor video : CacheManager.getVideos(videoId)) {
+                if (new Cache(video).exists()) {
+                    return true;
+                }
+            }
+            Thread.sleep(100L);
+        }
+        return false;
     }
 
     private String fetchText(String videoId, String url,
@@ -418,12 +437,12 @@ public final class nlMovieFetcher implements Extension2, Processor {
         return selected.toString();
     }
 
-    private SSLSocketFactory getProxyTlsSocketFactory() throws IOException {
+    static SSLSocketFactory getProxyTlsSocketFactory() throws IOException {
         SSLSocketFactory current = proxyTlsSocketFactory;
         if (current != null) {
             return current;
         }
-        synchronized (this) {
+        synchronized (nlMovieFetcher.class) {
             current = proxyTlsSocketFactory;
             if (current != null) {
                 return current;

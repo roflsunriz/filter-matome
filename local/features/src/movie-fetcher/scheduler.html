@@ -368,6 +368,12 @@
         color: var(--muted);
         font-size: 0.84rem;
       }
+      .field-help {
+        display: block;
+        color: var(--muted);
+        font-size: 0.78rem;
+        line-height: 1.4;
+      }
       .badge {
         display: inline-flex;
         margin-inline-end: 6px;
@@ -757,11 +763,12 @@
                       </option>
                     </select></label
                   >
-                  <label
+                  <p id="bandwidth-mode-help" class="muted full"></p>
+                  <label data-bandwidth-field="fixed"
                     ><span data-i18n="fixedRate">固定速度 (KiB/s)</span
                     ><input name="fixedKiB" type="number" min="1" required
                   /></label>
-                  <label
+                  <label data-bandwidth-field="line"
                     ><span data-i18n="lineRate">回線速度 (MiB/s)</span
                     ><input
                       name="lineMiB"
@@ -770,7 +777,7 @@
                       step="0.01"
                       required
                   /></label>
-                  <label
+                  <label data-bandwidth-field="share"
                     ><span data-i18n="share">利用割合 (%)</span
                     ><input
                       name="percentage"
@@ -778,7 +785,8 @@
                       min="1"
                       max="100"
                       required
-                  /></label>
+                    /><small class="field-help" data-i18n="shareHelp"></small
+                  ></label>
                   <label
                     ><span data-i18n="window">既定取得時間 (分)</span
                     ><input
@@ -789,14 +797,15 @@
                       required
                   /></label>
                   <label
-                    ><span data-i18n="safety">容量安全率 (%)</span
+                    ><span data-i18n="safety">推定サイズの余裕 (%)</span
                     ><input
                       name="safetyPercent"
                       type="number"
                       min="100"
                       max="300"
                       required
-                  /></label>
+                    /><small class="field-help" data-i18n="safetyHelp"></small
+                  ></label>
                   <label
                     ><span data-i18n="calendar">祝日カレンダー</span
                     ><select name="holidayCalendar">

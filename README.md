@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/roflsunriz/filter-matome.svg)](https://github.com/roflsunriz/filter-matome/releases)
-[![Latest Version](https://img.shields.io/badge/latest-%23238-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
+[![Latest Version](https://img.shields.io/badge/latest-%23239-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
 
 **filter-matome**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
 
@@ -34,7 +34,7 @@
 - **コメントヒートマップ**: 盛り上がり箇所を視覚化
 - **キャッシュ一覧管理**: NicoCache_nlのキャッシュ一覧を検索・フィルタ・ソート・削除
 - **動画/API情報ダッシュボード**: 動画IDから複数APIの情報を横断表示
-- **動画取得スケジューラー**: 動画・日時・確認の3段階ウィザードで予約し、繰り返し、祝日、帯域上限、容量判定、再試行、個別・一括削除できる取得履歴を管理
+- **動画取得スケジューラー**: 動画・日時・確認の3段階ウィザードで予約し、繰り返し、祝日、モード別の帯域上限、完了可能時間の判定、再試行、個別・一括削除できる取得履歴を管理
 
 ## 📦 導入方法
 

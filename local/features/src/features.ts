@@ -26,11 +26,15 @@ type FeatureRuntimeWindow = Window & {
   __filterMatomeFeaturesStarted?: boolean;
 };
 
+declare const FILTER_MATOME_VERSION: string;
+
 const runtimeWindow = window as FeatureRuntimeWindow;
 const ENTRY_BASE_URL = "/local/features/dist/entries";
 
 async function loadEntry<T>(path: string): Promise<T> {
-  const loaded: unknown = await import(`${ENTRY_BASE_URL}/${path}.js`);
+  const loaded: unknown = await import(
+    `${ENTRY_BASE_URL}/${path}.js?v=${FILTER_MATOME_VERSION}`
+  );
   return loaded as T;
 }
 

@@ -1,6 +1,6 @@
 # nlMovieFetcher 現行仕様（Domand/CMAF）
 
-最終実測: 2026-08-09、smartFetcher実取得、`https://www.nicovideo.jp/watch/sm42013223`
+最終実測: 2026-08-09、smartFetcher実取得、未キャッシュだった `sm46636056` と `sm43303546`
 
 ## 調査元と再現性
 
@@ -79,11 +79,13 @@ CONNECT後に返るサイト証明書は`nicocache.userDataRoot/certs/ca.cer`を
 転送しない。値をAPIレスポンスやログへ出力してはならない。
 実測ではCookieなしの署名URL取得は403、ブラウザーの同一コンテキストでは200だった。
 
-成功時の `data.contentUrl` は `https://delivery.domand.nicovideo.jp/{hlsbid|shlsbid|hlsext}/...m3u8`。このPOSTをNicoCache_nl経由で行うことで、現行 `CmafCachingProcessor` が動画IDとマスターURLを関連付ける。
+成功時の `data.contentUrl` は `https://delivery.domand.nicovideo.jp/{hlsbid|shlsbid|hlsext}/...m3u8`。Watch APIとこのPOSTをNicoCache_nl経由で行うことで、現行 `CmafCachingProcessor` が動画IDとマスターURLを関連付ける。さらにWatchレスポンスの動画IDとタイトルを本体の `NicoCachingTitleRetriever` へ登録し、`NicoIdInfoCache`を用意する。本体を通さずにaccess-rightsだけ成功させると転送は完了してもマスターURLの対応がなく、タイトルを登録しないと`idInfo is not found`となるため、どちらの場合も完成キャッシュは作られない。
 
 実測したmasterは `EXT-X-STREAM-INF` の映像URIと `EXT-X-MEDIA:TYPE=AUDIO` の音声URIを別に持つ。media playlistはtarget duration 6秒、映像54断片・音声54断片だった。実装は個数を固定せず、相対URIを基準URLで解決し、`EXT-X-MAP`、`EXT-X-KEY`、コメントでない全行を重複排除して取得する。2026-08-09のsmartFetcher実取得では、media playlistが`asset.domand.nicovideo.jp/{24桁hex}/{audio|video}/{数字}/{品質}/{断片}.{cmfa|cmfv}`を返した。2026-08-08にはNicoCache_nlの自己プロキシーが既存キャッシュを返す経路で、`delivery.domand.nicovideo.jp/cache/file/{識別子}//master.m3u8`、`audio.m3u8`、`video.m3u8`も返った。Java拡張は実測したホスト・固定パス形状だけを用途別に許可し、開始URLは`delivery`のplaylistに限定したまま、任意の外部URLを拒否する。
 
-2026-08-09の`sm42013223`予約では、修正前はmasterとmedia playlistの20,017バイトを取得した後、上記`asset`断片をURL拒否していた。修正後は同じ予約が68/68リソース、48,186,231バイトを47.5秒で取得し、smartFetcher履歴とnlMovieFetcher状態がともに`completed`になった。URL許可変更は署名URL取得までのプローブだけで完了扱いにせず、この完了条件を実取得で確認する。
+2026-08-09の実測では、修正前はmasterとmedia playlistの取得後に上記`asset`断片をURL拒否するか、全リソースを転送してもNicoCache_nlの完成キャッシュが0件のまま履歴だけ`completed`になった。修正後は、あらかじめディスクと`/cache/info/v2`の対象動画が0件であることを確認してから、固定の検証用動画ではなく別の動画IDを予約して取得した。`sm46636056`は33,164,410バイト転送後、既存完成キャッシュと同じ形式の `sm46636056[720p,192]_お前を、プラス収支へ誘う…！！！.mp130（CBC賞）.hls` を作成し、45ファイル・33,139,672バイト、`complete=true`になった。続く`sm43303546`も87,544,702バイト転送後、`sm43303546[720p,128]_トイレVS野獣先輩.hls`を作成し、115ファイル・87,481,265バイト、`complete=true`になった。
+
+`nlMovieFetcher`はplaylist上の全リソースを読み終えただけでは`completed`にせず、本体の`Cache`が完成状態で実在することを確認する。URL許可、プロキシー経路、タイトル登録、完了判定は署名URL取得までのプローブで済ませず、上記2件を対象キャッシュ0件から実取得して確認した。
 
 ## nlMovieFetcherローカルAPI
 
@@ -95,7 +97,7 @@ CONNECT後に返るサイト証明書は`nicocache.userDataRoot/certs/ca.cer`を
 - `POST /cache/filter-matome/v1/movie-fetcher/cancel` — `{"videoId":"sm9"}`
 - `POST /cache/filter-matome/v1/movie-fetcher/report` — watch/access-rights APIなど、ブラウザー側で取得処理が止まった場合の短いエラー報告
 
-状態は `idle | queued | fetching | canceling | canceled | completed | failed`。`completed` と `total` は子playlistとCMAFリソースの取得数、`bytesTransferred`は帯域制御とsmartFetcherの完了判定に使う実転送量である。開始・終了時刻は利用側が管理するため返さない。
+状態は `idle | queued | fetching | canceling | canceled | completed | failed`。`completed` と `total` は子playlistとCMAFリソースの取得数、`bytesTransferred`は帯域制御に使う実転送量である。全リソース取得後にNicoCache_nlの完成キャッシュが実在しない場合は`failed`となり、smartFetcherも完了履歴を作らない。開始・終了時刻は利用側が管理するため返さない。
 
 GUI起動時は本体の拡張ロガーAPIでNicoCacheGUIへ`nlMovieFetcher`専用タブを追加する。受付、watch/access-rights APIのブラウザー側失敗、playlist数、CMAFリソース数と進捗、完了・中止・失敗理由を動画ID単位で記録する。ブラウザー報告は160文字へ制限し、URLを省略する。署名付きURL、Cookie、`accessRightKey`はログへ出力しない。GUIを使用しない場合も同じ内容を通常ログへ出力する。
 

@@ -5,6 +5,14 @@ import { composeWatchHistoryDocument } from "./watch-history-document";
 const projectRoot = resolve(import.meta.dirname, "..");
 const outDir = resolve(projectRoot, "dist");
 const relativeOutDir = relative(projectRoot, outDir);
+const packageDocument = (await Bun.file(
+  resolve(projectRoot, "package.json"),
+).json()) as { version?: unknown };
+const featureVersion = String(packageDocument.version ?? "").trim();
+
+if (!/^\d+$/u.test(featureVersion)) {
+  throw new Error(`Invalid package version: ${featureVersion}`);
+}
 
 if (
   relativeOutDir === "" ||
@@ -45,6 +53,7 @@ const commonBuildOptions = {
   minify: true,
   keepNames: true,
   packages: "bundle" as const,
+  define: { FILTER_MATOME_VERSION: JSON.stringify(featureVersion) },
 };
 
 const featureEntrypoints = [
@@ -67,11 +76,16 @@ async function copyHtmlPages(): Promise<void> {
     const source = resolve(projectRoot, page.source);
     const output = resolve(outDir, page.output);
     await mkdir(dirname(output), { recursive: true });
-    await Bun.write(
-      output,
+    const document =
       page.source === "src/watch-history/index.html"
         ? composeWatchHistoryDocument(projectRoot)
-        : Bun.file(source),
+        : await Bun.file(source).text();
+    await Bun.write(
+      output,
+      document.replace(
+        '/local/features/dist/features.js"',
+        `/local/features/dist/features.js?v=${featureVersion}\"`,
+      ),
     );
   }
 }
@@ -109,7 +123,9 @@ async function assertOutputContract(): Promise<void> {
 
   for (const page of htmlPages) {
     const html = await Bun.file(resolve(outDir, page.output)).text();
-    if (!html.includes("/local/features/dist/features.js")) {
+    if (
+      !html.includes(`/local/features/dist/features.js?v=${featureVersion}\"`)
+    ) {
       throw new Error(`${page.output} does not load features.js`);
     }
   }

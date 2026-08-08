@@ -6,11 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#239] - 2026-08-09
+
+### Added
+
+- 【movie-fetcher・extensions】smartFetcher専用SPAの取得履歴を、確認後に1件ずつまたは一括で削除できるようにした。履歴削除APIは履歴レコードだけを永続化対象から除き、予約と取得済み動画キャッシュを保持する。
+
 ### Fixed
 
 - 【release】`#`を含むタグ名がGitHub Actionsのartifact転送時に`.`へ変換され、公開アーカイブ名とリリースノートが一致しない問題を防ぐため、配布ファイル名を数値版の`filter-matome-<version>.7z`へ統一した。
+- 【extensions】smartFetcherのWatch APIとaccess-rights交渉をNicoCache_nl自身のプロキシーへ通し、動画IDとタイトルを本体のタイトルキャッシュへ登録した。全CMAFリソースを転送しただけでは成功にせず、本体の完成キャッシュが実在することを完了条件にした。対象キャッシュ0件から`sm46636056`と`sm43303546`を実取得し、既存完成キャッシュと同じファイル名形式、`complete=true`、ディスク上の断片群が作られることを確認した。
+- 【movie-fetcher】専用SPAを複数回初期化しないようにし、古い状態応答を破棄するとともに、リリース番号付きURLでブラウザーバンドルを読み込むようにした。「更新」「編集」「今すぐ実行」の直後から5秒後まで予約と履歴が残ることを実API接続のChromeとFirefoxで確認した。
+- 【movie-fetcher・extensions】media playlistが返した`asset.domand.nicovideo.jp`の24桁識別子・音声／映像・数値階層・品質・CMAF断片という実測形状と、NicoCache_nlの自己プロキシーが返すキャッシュ用playlistだけを用途別に許可し、`playlist contains a disallowed URL`で失敗する問題を修正した。
 
-## [#238] - 2026-08-09
+### Changed
+
+- 【features・README】リリース番号を`239`へ更新し、latestバッジを`#239`へ変更した。
+- 【movie-fetcher】smartFetcher専用SPAの予約登録を「動画」「日時」「確認」の3段階ウィザードへ変更した。通信・容量判定は、選択中の帯域モードで使う入力だけを表示し、「利用割合」の基準と、旧「容量安全率」がディスク容量ではなく推定サイズへ掛ける時間判定用の余裕であることを画面と文書へ明記した。
+- 【extensions】`nlMovieFetcher`と`FilterMatomeSmartFetcher`が登録時に毎回出していた単なる拡張読込完了ログを削除し、全Java拡張に同種の起動ログがないことを自動検証する。
+- 【README・docs】NicoCache_nlの本体ルートとデータルート、現行Java拡張10種、動画取得スケジューラー、完成キャッシュを成功条件とする動作を反映した。
+
+## [#238] - 2026-08-09（撤回済み）
+
+> キャッシュが作られない問題とSPAの表示消失が残っていたため公開を撤回した。修正と再検証を含む後継は`#239`。
 
 ### Added
 

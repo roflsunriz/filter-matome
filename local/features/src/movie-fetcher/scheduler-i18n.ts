@@ -15,11 +15,20 @@ const en = {
   fixed: "Fixed rate",
   percentage: "Percentage of line speed",
   auto: "Learn from completed transfers",
+  modeHelpFixed: "Limits every fetch to the fixed rate.",
+  modeHelpPercentage:
+    "Uses the selected percentage of the configured line speed.",
+  modeHelpAuto:
+    "The first fetch is measured without a limit; later fetches use the selected percentage of that measured speed.",
   fixedRate: "Fixed rate (KiB/s)",
   lineRate: "Line speed (MiB/s)",
   share: "Usage share (%)",
+  shareHelp:
+    "The share of line speed in percentage mode, or measured speed in auto mode, reserved for SmartFetcher.",
   window: "Fetch window (minutes)",
-  safety: "Size safety margin (%)",
+  safety: "Estimated-size margin (%)",
+  safetyHelp:
+    "Used only for time admission. 120% plans with a 20% margin; it does not mean disk usage or free space.",
   calendar: "Holiday calendar",
   japan: "Japanese public holidays",
   none: "Disabled",
@@ -115,11 +124,19 @@ const ja: Messages = {
   fixed: "固定速度",
   percentage: "回線速度の割合",
   auto: "実績から自動計測",
+  modeHelpFixed: "すべての取得を、指定した固定速度以下に制限します。",
+  modeHelpPercentage: "設定した回線速度のうち、利用割合の分だけを使います。",
+  modeHelpAuto:
+    "初回は速度制限なしで実測し、2回目以降は実測速度のうち利用割合の分だけを使います。",
   fixedRate: "固定速度 (KiB/s)",
   lineRate: "回線速度 (MiB/s)",
   share: "利用割合 (%)",
+  shareHelp:
+    "SmartFetcherに割り当てる割合です。割合モードでは設定した回線速度、自動モードでは実測速度に掛けます。",
   window: "取得可能時間 (分)",
-  safety: "容量安全率 (%)",
+  safety: "推定サイズの余裕 (%)",
+  safetyHelp:
+    "時間内に完了できるかの判定で、推定サイズに掛ける余裕です。120%なら20%上乗せします。ディスク使用率や空き容量ではありません。",
   calendar: "祝日カレンダー",
   japan: "日本の祝日",
   none: "使用しない",

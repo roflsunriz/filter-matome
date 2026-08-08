@@ -202,6 +202,21 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
 
   await page.locator(".advanced-panel > summary").click();
   await expect(page.locator("#settings-form")).toBeVisible();
+  await expect(page.locator('[data-bandwidth-field="fixed"]')).toBeVisible();
+  await expect(page.locator('[data-bandwidth-field="line"]')).toBeHidden();
+  await expect(page.locator('[data-bandwidth-field="share"]')).toBeHidden();
+  await expect(page.locator('input[name="fixedKiB"]')).toBeEnabled();
+  await expect(page.locator('input[name="lineMiB"]')).toBeDisabled();
+  await expect(page.locator('input[name="percentage"]')).toBeDisabled();
+  await page.locator("#setting-mode").selectOption("percentage");
+  await expect(page.locator('[data-bandwidth-field="fixed"]')).toBeHidden();
+  await expect(page.locator('[data-bandwidth-field="line"]')).toBeVisible();
+  await expect(page.locator('[data-bandwidth-field="share"]')).toBeVisible();
+  await page.locator("#setting-mode").selectOption("auto");
+  await expect(page.locator('[data-bandwidth-field="fixed"]')).toBeHidden();
+  await expect(page.locator('[data-bandwidth-field="line"]')).toBeVisible();
+  await expect(page.locator('[data-bandwidth-field="share"]')).toBeVisible();
+  await page.locator("#setting-mode").selectOption("fixed");
   await page.locator('input[name="fixedKiB"]').fill("512");
   await page.locator('#settings-form button[type="submit"]').click();
   expect(serverState.settings.fixedBytesPerSecond).toBe(524_288);
@@ -232,6 +247,88 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
       "clear-credentials",
     ]),
   );
+});
+
+test("SPAを二重起動しても予約と履歴を消さずタイマーを重複させない", async ({
+  page,
+}) => {
+  const now = Date.now();
+  const serverState = createState();
+  serverState.schedules = [
+    {
+      id: "schedule-stable",
+      videoId: "sm9",
+      title: "消えない予約",
+      recurrence: "once",
+      startAt: now + 60_000,
+      windowMinutes: 60,
+      daysOfWeek: 1,
+      holidayPolicy: "include",
+      enabled: true,
+      priority: 5,
+      estimatedBytes: 1_000,
+      maxRetries: 2,
+      retryCount: 0,
+      nextRunAt: now + 60_000,
+      state: "scheduled",
+      lastError: "",
+      lastRunAt: 0,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+  serverState.history = [
+    {
+      id: "history-stable",
+      scheduleId: "schedule-stable",
+      videoId: "sm9",
+      title: "消えない履歴",
+      state: "completed",
+      error: "",
+      estimatedBytes: 1_000,
+      actualBytes: 1_000,
+      startedAt: now - 1_000,
+      finishedAt: now,
+    },
+  ];
+  let intervalCount = 0;
+
+  await page.route(pageUrl, documentRoute);
+  await page.route("**/cache/filter-matome/v1/smart-fetcher/**", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(serverState),
+    }),
+  );
+  await page.goto(pageUrl);
+  await page.evaluate(() => {
+    const original = window.setInterval.bind(window);
+    window.setInterval = ((handler: TimerHandler, timeout?: number) => {
+      (window as Window & { __intervalCount?: number }).__intervalCount =
+        ((window as Window & { __intervalCount?: number }).__intervalCount ??
+          0) + 1;
+      return original(handler, timeout);
+    }) as typeof window.setInterval;
+  });
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(async () => {
+    const start = (
+      window as Window & { startSmartFetcherTest?: () => Promise<void> }
+    ).startSmartFetcherTest;
+    await Promise.all([start?.(), start?.()]);
+  });
+  intervalCount = await page.evaluate(
+    () =>
+      (window as Window & { __intervalCount?: number }).__intervalCount ?? 0,
+  );
+  await page.waitForTimeout(1_100);
+  await expect(
+    page.locator('[data-schedule-id="schedule-stable"]'),
+  ).toContainText("消えない予約");
+  await expect(
+    page.locator('[data-history-id="history-stable"]'),
+  ).toContainText("消えない履歴");
+  expect(intervalCount).toBe(1);
 });
 
 test("取得履歴を確認後に個別・一括削除しても予約を保持する", async ({

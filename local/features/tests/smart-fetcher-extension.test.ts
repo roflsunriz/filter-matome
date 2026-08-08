@@ -37,6 +37,14 @@ const schedulerApp = readFileSync(
   ),
   "utf8",
 );
+const features = readFileSync(
+  resolve(repositoryRoot, "local", "features", "src", "features.ts"),
+  "utf8",
+);
+const buildScript = readFileSync(
+  resolve(repositoryRoot, "local", "features", "scripts", "build.ts"),
+  "utf8",
+);
 
 describe("smartFetcher Java extension contract", () => {
   test("全Java拡張が単なる読込完了をinfoログへ出さない", () => {
@@ -82,6 +90,8 @@ describe("smartFetcher Java extension contract", () => {
     expect(fetcher).toContain("maxBytesPerSecond");
     expect(fetcher).toContain("bytesTransferred");
     expect(fetcher).toContain("throttle(total");
+    expect(fetcher).toContain("hasCompletedCache(videoId)");
+    expect(fetcher).toContain("new Cache(video).exists()");
   });
 
   test("取得履歴の個別・一括削除は履歴だけを永続化する", () => {
@@ -120,5 +130,24 @@ describe("smartFetcher Java extension contract", () => {
     expect(schedulerClient.match(/cache: "no-store"/gu)).toHaveLength(3);
     expect(schedulerApp).toContain("stateRequestGeneration");
     expect(schedulerApp).toContain("generation === stateRequestGeneration");
+  });
+
+  test("access-rights通信をNicoCacheプロキシーへ通してキャッシュ対象を登録する", () => {
+    const requestJson = scheduler.match(
+      /private JsonObject requestJson[\s\S]+?private JsonObject requestWatchPage/u,
+    )?.[0];
+    expect(requestJson).toBeDefined();
+    expect(requestJson).toContain("new Proxy(Proxy.Type.HTTP");
+    expect(requestJson).toContain("new URL(url).openConnection(proxy)");
+    expect(requestJson).toContain("nlMovieFetcher.getProxyTlsSocketFactory()");
+    expect(requestJson).not.toContain("openConnection(Proxy.NO_PROXY)");
+    expect(scheduler).toContain(
+      "NicoCachingTitleRetriever.putTitleCache(videoId",
+    );
+  });
+
+  test("リリース番号でbootstrapと遅延entryのブラウザーキャッシュを更新する", () => {
+    expect(buildScript).toContain("features.js?v=");
+    expect(features).toContain("?v=${FILTER_MATOME_VERSION}");
   });
 });
