@@ -1,12 +1,14 @@
 import { CommonHeader } from "@/common/header";
 import {
   cancelSchedule,
+  clearSmartFetcherHistory,
   clearStoredCredentials,
   formatBytes,
   getSmartFetcherState,
   inspectScheduleVideo,
   refreshStoredCredentials,
   removeSchedule,
+  removeSmartFetcherHistory,
   runScheduleNow,
   saveSchedule,
   saveSmartFetcherSettings,
@@ -316,6 +318,7 @@ function renderSchedule(schedule: SmartFetcherSchedule): HTMLElement {
 function renderHistory(entry: SmartFetcherHistory): HTMLElement {
   const article = document.createElement("article");
   article.className = "job";
+  article.dataset["historyId"] = entry.id;
   const content = document.createElement("div");
   const heading = document.createElement("h3");
   heading.textContent = entry.title || entry.videoId;
@@ -332,7 +335,12 @@ function renderHistory(entry: SmartFetcherHistory): HTMLElement {
     ),
   );
   if (entry.error) content.append(textLine("Error", entry.error));
-  article.append(content);
+  const actions = document.createElement("div");
+  actions.className = "row-actions";
+  actions.append(
+    actionButton(t("deleteHistory"), "remove-history", entry.id, "danger"),
+  );
+  article.append(content, actions);
   return article;
 }
 
@@ -373,6 +381,8 @@ function render(nextState: SmartFetcherState, fillSettingForm = false): void {
   }
 
   const historyList = byId<HTMLDivElement>("history-list");
+  byId<HTMLButtonElement>("clear-history-button").hidden =
+    nextState.history.length === 0;
   historyList.replaceChildren();
   if (nextState.history.length === 0) {
     const empty = document.createElement("p");
@@ -664,6 +674,33 @@ function installListeners(): void {
       button.disabled = false;
       showToast(String(error), true);
     });
+  });
+  byId("history-list").addEventListener("click", (event) => {
+    const button =
+      event.target instanceof Element
+        ? event.target.closest<HTMLButtonElement>(
+            'button[data-action="remove-history"]',
+          )
+        : null;
+    const id = button?.dataset["id"];
+    if (!button || !id || !window.confirm(t("confirmDeleteHistory"))) return;
+    button.disabled = true;
+    void renderLatestState(removeSmartFetcherHistory(id)).catch(
+      (error: unknown) => {
+        button.disabled = false;
+        showToast(String(error), true);
+      },
+    );
+  });
+  byId("clear-history-button").addEventListener("click", (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    if (!window.confirm(t("confirmClearHistory"))) return;
+    button.disabled = true;
+    void renderLatestState(clearSmartFetcherHistory())
+      .catch((error: unknown) => showToast(String(error), true))
+      .finally(() => {
+        button.disabled = false;
+      });
   });
 }
 

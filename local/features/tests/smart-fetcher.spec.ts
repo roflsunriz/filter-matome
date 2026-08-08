@@ -234,6 +234,131 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
   );
 });
 
+test("取得履歴を確認後に個別・一括削除しても予約を保持する", async ({
+  page,
+}) => {
+  const now = Date.now();
+  const serverState = createState();
+  await page.setViewportSize({ width: 390, height: 844 });
+  serverState.schedules = [
+    {
+      id: "schedule-kept",
+      videoId: "sm9",
+      title: "保持される予約",
+      recurrence: "once",
+      startAt: now + 60_000,
+      windowMinutes: 60,
+      daysOfWeek: 1,
+      holidayPolicy: "include",
+      enabled: true,
+      priority: 5,
+      estimatedBytes: 1_000,
+      maxRetries: 2,
+      retryCount: 0,
+      nextRunAt: now + 60_000,
+      state: "scheduled",
+      lastError: "",
+      lastRunAt: 0,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+  serverState.history = [
+    {
+      id: "history-1",
+      scheduleId: "schedule-kept",
+      videoId: "sm9",
+      title: "個別削除する履歴",
+      state: "completed",
+      error: "",
+      estimatedBytes: 1_000,
+      actualBytes: 1_000,
+      startedAt: now - 2_000,
+      finishedAt: now - 1_000,
+    },
+    {
+      id: "history-2",
+      scheduleId: "schedule-kept",
+      videoId: "sm10",
+      title: "一括削除する履歴",
+      state: "failed",
+      error: "取得失敗",
+      estimatedBytes: 2_000,
+      actualBytes: 100,
+      startedAt: now - 4_000,
+      finishedAt: now - 3_000,
+    },
+  ];
+  const actions: string[] = [];
+
+  await page.route(pageUrl, documentRoute);
+  await page.route(
+    "**/cache/filter-matome/v1/smart-fetcher/**",
+    async (route) => {
+      const action =
+        new URL(route.request().url()).pathname.split("/").at(-1) ?? "";
+      if (action === "remove-history") {
+        actions.push(action);
+        const { id } = route.request().postDataJSON() as { id: string };
+        serverState.history = serverState.history.filter(
+          (entry) => entry["id"] !== id,
+        );
+      } else if (action === "clear-history") {
+        actions.push(action);
+        serverState.history = [];
+      }
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(serverState),
+      });
+    },
+  );
+
+  await page.goto(pageUrl);
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(() =>
+    (
+      window as Window & { startSmartFetcherTest?: () => Promise<void> }
+    ).startSmartFetcherTest?.(),
+  );
+  await expect(page.locator('[data-history-id="history-1"]')).toBeVisible();
+  await expect(page.locator("#clear-history-button")).toBeVisible();
+  const initialWidth = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    content: document.documentElement.scrollWidth,
+  }));
+  expect(initialWidth.content).toBeLessThanOrEqual(initialWidth.viewport);
+
+  page.once("dialog", (dialog) => void dialog.dismiss());
+  await page
+    .locator('[data-history-id="history-1"] [data-action="remove-history"]')
+    .click();
+  await expect(page.locator('[data-history-id="history-1"]')).toBeVisible();
+  expect(actions).toEqual([]);
+
+  page.once("dialog", (dialog) => void dialog.accept());
+  await page
+    .locator('[data-history-id="history-1"] [data-action="remove-history"]')
+    .click();
+  await expect(page.locator('[data-history-id="history-1"]')).toHaveCount(0);
+  await expect(page.locator('[data-history-id="history-2"]')).toBeVisible();
+  await expect(
+    page.locator('[data-schedule-id="schedule-kept"]'),
+  ).toBeVisible();
+
+  page.once("dialog", (dialog) => void dialog.accept());
+  await page.locator("#clear-history-button").click();
+  await expect(page.locator('[data-history-id="history-2"]')).toHaveCount(0);
+  await expect(page.locator("#history-list")).toContainText(
+    "取得履歴はまだありません",
+  );
+  await expect(page.locator("#clear-history-button")).toBeHidden();
+  await expect(
+    page.locator('[data-schedule-id="schedule-kept"]'),
+  ).toBeVisible();
+  expect(actions).toEqual(["remove-history", "clear-history"]);
+});
+
 test("更新後の予約と履歴を遅れて届いた古い定期応答で消さない", async ({
   page,
 }) => {

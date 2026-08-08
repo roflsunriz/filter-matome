@@ -84,6 +84,22 @@ describe("smartFetcher Java extension contract", () => {
     expect(fetcher).toContain("throttle(total");
   });
 
+  test("取得履歴の個別・一括削除は履歴だけを永続化する", () => {
+    expect(scheduler).toContain("remove-history|clear-history");
+    expect(scheduler).toContain("private void removeHistory");
+    expect(scheduler).toContain("private void clearHistory");
+    const removeHistory = scheduler.match(
+      /private void removeHistory\([^\n]+/u,
+    )?.[0];
+    const clearHistory = scheduler.match(
+      /private void clearHistory\([^\n]+/u,
+    )?.[0];
+    expect(removeHistory).toContain("history.removeIf");
+    expect(clearHistory).toContain("history.clear()");
+    expect(removeHistory).not.toContain("schedules");
+    expect(clearHistory).not.toContain("schedules");
+  });
+
   test("実測したDomand配信URLだけを用途別に許可する", () => {
     expect(fetcher).toContain('"delivery.domand.nicovideo.jp".equals(host)');
     expect(fetcher).toContain("CURRENT_CMAF_RESOURCE_PATH");

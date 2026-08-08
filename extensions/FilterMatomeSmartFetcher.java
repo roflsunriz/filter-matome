@@ -24,9 +24,9 @@ import dareka.processor.*;
  */
 public final class FilterMatomeSmartFetcher
         implements Extension2, Processor, SystemEventListener {
-    public static final int REVISION = 26080901; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
+    public static final int REVISION = 26080902; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
     private static final String API_PREFIX = "/cache/filter-matome/v1/smart-fetcher/", REQUIRED_HEADER = "X-Filter-Matome-Smart-Fetcher";
-    private static final Pattern API_URL = Pattern.compile( "^https?://www\\.nicovideo\\.jp" + API_PREFIX + "(state|schedule|settings|run-now|cancel|remove|credentials|clear-credentials)"
+    private static final Pattern API_URL = Pattern.compile( "^https?://www\\.nicovideo\\.jp" + API_PREFIX + "(state|schedule|settings|run-now|cancel|remove|remove-history|clear-history|credentials|clear-credentials)"
                     + "(?:\\?([^#]*))?$", Pattern.CASE_INSENSITIVE);
     private static final Pattern VIDEO_ID = Pattern.compile( "^[a-z]{2}[0-9]+$", Pattern.CASE_INSENSITIVE), COOKIE_NAME = Pattern.compile( "^(nicosid|domand_bid|user_session|user_session_secure)$"), SERVER_RESPONSE = Pattern.compile("(?is)<meta\\b(?=[^>]*\\bname=[\"']server-response[\"'])[^>]*\\bcontent=(?:\"([^\"]*)\"|'([^']*)')[^>]*>");
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0 Safari/537.36", DATA_ROOT_PROPERTY = "nicocache.userDataRoot", CREDENTIAL_AAD = "filter-matome-smart-fetcher-v1";
@@ -100,6 +100,8 @@ public final class FilterMatomeSmartFetcher
                 cancelSchedule(stringValue(body, "id"));
             } else if ("remove".equals(action)) {
                 removeSchedule(stringValue(body, "id"));
+            } else if ("remove-history".equals(action)) { removeHistory(stringValue(body, "id"));
+            } else if ("clear-history".equals(action)) { clearHistory();
             } else {
                 return StringResource.getNotFound(); }
             return json(createStateJson());
@@ -120,16 +122,13 @@ public final class FilterMatomeSmartFetcher
                     saveState(); } } }
         return RESULT_OK; }
     private void installDefaultSettings() {
-        settings.put("timeZone", ZoneId.systemDefault().getId());
-        settings.put("bandwidthMode", "fixed");
-        settings.put("fixedBytesPerSecond", 1024L * 1024L);
-        settings.put("lineBytesPerSecond", 10L * 1024L * 1024L);
+        settings.put("timeZone", ZoneId.systemDefault().getId()); settings.put("bandwidthMode", "fixed");
+        settings.put("fixedBytesPerSecond", 1024L * 1024L); settings.put("lineBytesPerSecond", 10L * 1024L * 1024L);
         settings.put("percentage", 20L);
         settings.put("measuredBytesPerSecond", 0L);
         settings.put("defaultWindowMinutes", 360L);
         settings.put("safetyPercent", 120L);
-        settings.put("holidayCalendar", "japan");
-        settings.put("maxHistory", 500L); }
+        settings.put("holidayCalendar", "japan"); settings.put("maxHistory", 500L); }
     private void updateSettings(JsonObject body) {
         String zone = requiredString(body, "timeZone", 80);
         ZoneId.of(zone);
@@ -222,6 +221,8 @@ public final class FilterMatomeSmartFetcher
                 throw new IllegalArgumentException("予約が見つかりません"); }
             recomputeAdmission(System.currentTimeMillis());
             saveState(); } }
+    private void removeHistory(String id) { synchronized (stateLock) { if (!history.removeIf(entry -> id != null && id.equals(text(entry, "id")))) throw new IllegalArgumentException("取得履歴が見つかりません"); saveState(); } }
+    private void clearHistory() { synchronized (stateLock) { history.clear(); saveState(); } }
     private void scheduleTick() {
         if (!tickRunning.compareAndSet(false, true)) {
             return; }

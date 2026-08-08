@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- 【movie-fetcher・extensions】smartFetcher専用SPAの取得履歴を、確認後に1件ずつまたは一括で削除できるようにした。履歴削除APIは履歴レコードだけを永続化対象から除き、予約と取得済み動画キャッシュを保持する。
+
 ### Fixed
 
 - 【movie-fetcher・extensions】smartFetcher専用SPAで古い定期取得応答が追加・更新直後の予約と履歴を空表示へ戻す競合を防ぎ、状態APIをブラウザーキャッシュから常に除外した。実際の予約取得でmedia playlistが返した`asset.domand.nicovideo.jp`の24桁識別子・音声／映像・数値階層・品質・CMAF断片という固定形状と、NicoCache_nlの自己プロキシーが返すキャッシュ用playlistだけを用途別に許可し、`playlist contains a disallowed URL`で失敗する問題を修正した。

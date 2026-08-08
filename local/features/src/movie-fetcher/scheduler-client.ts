@@ -158,6 +158,14 @@ export const cancelSchedule = (id: string): Promise<SmartFetcherState> =>
 export const removeSchedule = (id: string): Promise<SmartFetcherState> =>
   scheduleAction("remove", id);
 
+export const removeSmartFetcherHistory = (
+  id: string,
+): Promise<SmartFetcherState> =>
+  callSmartFetcher<SmartFetcherState>("remove-history", { id });
+
+export const clearSmartFetcherHistory = (): Promise<SmartFetcherState> =>
+  callSmartFetcher<SmartFetcherState>("clear-history", {});
+
 export async function inspectScheduleVideo(
   videoId: string,
 ): Promise<MovieInspection> {

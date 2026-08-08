@@ -823,7 +823,18 @@
               <div id="schedule-list" class="panel-body list"></div>
             </section>
             <section class="panel">
-              <header><h2 data-i18n="history">取得履歴</h2></header>
+              <header class="panel-heading">
+                <h2 data-i18n="history">取得履歴</h2>
+                <button
+                  id="clear-history-button"
+                  class="danger"
+                  type="button"
+                  data-i18n="clearHistory"
+                  hidden
+                >
+                  履歴をすべて削除
+                </button>
+              </header>
               <div id="history-list" class="panel-body list history"></div>
             </section>
           </div>
