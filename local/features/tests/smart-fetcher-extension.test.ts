@@ -15,6 +15,28 @@ const fetcherPath = resolve(
 );
 const scheduler = readFileSync(schedulerPath, "utf8");
 const fetcher = readFileSync(fetcherPath, "utf8");
+const schedulerClient = readFileSync(
+  resolve(
+    repositoryRoot,
+    "local",
+    "features",
+    "src",
+    "movie-fetcher",
+    "scheduler-client.ts",
+  ),
+  "utf8",
+);
+const schedulerApp = readFileSync(
+  resolve(
+    repositoryRoot,
+    "local",
+    "features",
+    "src",
+    "movie-fetcher",
+    "scheduler-app.ts",
+  ),
+  "utf8",
+);
 
 describe("smartFetcher Java extension contract", () => {
   test("各拡張を単一classかつ1000行以下に保つ", () => {
@@ -58,5 +80,14 @@ describe("smartFetcher Java extension contract", () => {
     expect(fetcher).not.toContain('path.matches("/[a-f0-9]{24}/.*")');
     expect(fetcher).not.toContain("startedAts");
     expect(fetcher).not.toContain("finishedAts");
+  });
+
+  test("NicoCacheの限定cache playlistを許可しSPAの古い応答を破棄する", () => {
+    expect(fetcher).toContain("(?:master|audio|video)\\\\.m3u8");
+    expect(fetcher).toContain("[A-Za-z0-9._~,=-]{1,256}");
+    expect(fetcher).toContain('"delivery.domand.nicovideo.jp".equals(host)');
+    expect(schedulerClient.match(/cache: "no-store"/gu)).toHaveLength(3);
+    expect(schedulerApp).toContain("stateRequestGeneration");
+    expect(schedulerApp).toContain("generation === stateRequestGeneration");
   });
 });

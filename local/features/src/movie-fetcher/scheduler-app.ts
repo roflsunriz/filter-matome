@@ -20,6 +20,7 @@ import { applyTranslations, t } from "./scheduler-i18n";
 
 let state: SmartFetcherState | null = null;
 let toastTimer = 0;
+let stateRequestGeneration = 0;
 
 const byId = <T extends HTMLElement>(id: string): T => {
   const element = document.getElementById(id);
@@ -296,8 +297,19 @@ function render(nextState: SmartFetcherState, fillSettingForm = false): void {
   }
 }
 
+async function renderLatestState(
+  request: Promise<SmartFetcherState>,
+  fillSettingForm = false,
+): Promise<void> {
+  const generation = ++stateRequestGeneration;
+  const nextState = await request;
+  if (generation === stateRequestGeneration) {
+    render(nextState, fillSettingForm);
+  }
+}
+
 async function loadState(initial = false): Promise<void> {
-  render(await getSmartFetcherState(), initial);
+  await renderLatestState(getSmartFetcherState(), initial);
 }
 
 function readSettings(): SmartFetcherSettings {
@@ -443,20 +455,19 @@ function installListeners(): void {
     }
   });
   byId("refresh-button").addEventListener("click", () => {
-    void refreshStoredCredentials()
-      .then((next) => render(next))
-      .catch((error: unknown) => showToast(String(error), true));
+    void renderLatestState(refreshStoredCredentials()).catch((error: unknown) =>
+      showToast(String(error), true),
+    );
   });
   byId("clear-credentials-button").addEventListener("click", () => {
-    void clearStoredCredentials()
-      .then((next) => render(next))
-      .catch((error: unknown) => showToast(String(error), true));
+    void renderLatestState(clearStoredCredentials()).catch((error: unknown) =>
+      showToast(String(error), true),
+    );
   });
   byId<HTMLFormElement>("settings-form").addEventListener("submit", (event) => {
     event.preventDefault();
-    void saveSmartFetcherSettings(readSettings())
-      .then((next) => {
-        render(next, true);
+    void renderLatestState(saveSmartFetcherSettings(readSettings()), true)
+      .then(() => {
         showToast(t("saved"));
       })
       .catch((error: unknown) => showToast(String(error), true));
@@ -470,9 +481,8 @@ function installListeners(): void {
   byId<HTMLFormElement>("schedule-form").addEventListener("submit", (event) => {
     event.preventDefault();
     try {
-      void saveSchedule(readSchedule())
-        .then((next) => {
-          render(next);
+      void renderLatestState(saveSchedule(readSchedule()))
+        .then(() => {
           resetScheduleForm();
           showToast(t("saved"));
         })
@@ -508,12 +518,10 @@ function installListeners(): void {
           ? cancelSchedule
           : removeSchedule;
     button.disabled = true;
-    void operation(id)
-      .then((next) => render(next))
-      .catch((error: unknown) => {
-        button.disabled = false;
-        showToast(String(error), true);
-      });
+    void renderLatestState(operation(id)).catch((error: unknown) => {
+      button.disabled = false;
+      showToast(String(error), true);
+    });
   });
 }
 

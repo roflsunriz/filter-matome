@@ -94,6 +94,7 @@ async function callSmartFetcher<T>(
   return readJson<T>(
     await fetch(`${SMART_FETCHER_API}/${action}`, {
       method: body ? "POST" : "GET",
+      cache: "no-store",
       credentials: "include",
       headers: {
         [SMART_FETCHER_HEADER]: "1",
@@ -111,6 +112,7 @@ export function getSmartFetcherState(): Promise<SmartFetcherState> {
 export function refreshStoredCredentials(): Promise<SmartFetcherState> {
   return fetch(`${SMART_FETCHER_API}/credentials`, {
     method: "POST",
+    cache: "no-store",
     credentials: "include",
     headers: { [SMART_FETCHER_HEADER]: "1" },
   }).then((response) => readJson<SmartFetcherState>(response));
@@ -119,6 +121,7 @@ export function refreshStoredCredentials(): Promise<SmartFetcherState> {
 export function clearStoredCredentials(): Promise<SmartFetcherState> {
   return fetch(`${SMART_FETCHER_API}/clear-credentials`, {
     method: "POST",
+    cache: "no-store",
     credentials: "include",
     headers: { [SMART_FETCHER_HEADER]: "1" },
   }).then((response) => readJson<SmartFetcherState>(response));

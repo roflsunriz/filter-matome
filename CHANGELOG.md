@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- 【movie-fetcher・extensions】smartFetcher専用SPAで古い定期取得応答が追加・更新直後の予約と履歴を空表示へ戻す競合を防ぎ、状態APIをブラウザーキャッシュから常に除外した。NicoCache_nlの自己プロキシーが返す固定ホストのキャッシュ用playlistとCMAF断片も限定的に許可し、予約取得が`playlist contains a disallowed URL`で失敗する問題を修正した。
+
 ### Changed
 
 - 【README・extensions】プロジェクト構成から現行のJava拡張と役割を正しく把握できるよう、ログ受信、キャッシュ検索、メディア出力、動画情報取得、取得予約を含む全10種の一覧へ更新した。

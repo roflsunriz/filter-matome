@@ -216,6 +216,110 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
   );
 });
 
+test("更新後の予約と履歴を遅れて届いた古い定期応答で消さない", async ({
+  page,
+}) => {
+  const serverState = createState();
+  const staleState = createState();
+  let stateRequestCount = 0;
+  let delayedStateRoute: Route | null = null;
+  let resolveDelayedState: (() => void) | null = null;
+  const delayedState = new Promise<void>((resolve) => {
+    resolveDelayedState = resolve;
+  });
+
+  await page.route(pageUrl, documentRoute);
+  await page.route(
+    "**/cache/filter-matome/v1/smart-fetcher/**",
+    async (route) => {
+      const action =
+        new URL(route.request().url()).pathname.split("/").at(-1) ?? "";
+      if (action === "state" && ++stateRequestCount === 2) {
+        delayedStateRoute = route;
+        resolveDelayedState?.();
+        return;
+      }
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(serverState),
+      });
+    },
+  );
+
+  await page.goto(pageUrl);
+  await page.evaluate(() => {
+    window.setInterval = ((handler: () => void) => {
+      window.setTimeout(handler, 25);
+      return 1;
+    }) as typeof window.setInterval;
+  });
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(() =>
+    (
+      window as Window & { startSmartFetcherTest?: () => Promise<void> }
+    ).startSmartFetcherTest?.(),
+  );
+  await delayedState;
+
+  const now = Date.now();
+  serverState.schedules = [
+    {
+      id: "schedule-latest",
+      videoId: "sm9",
+      title: "保持される予約",
+      recurrence: "once",
+      startAt: now + 60_000,
+      windowMinutes: 60,
+      daysOfWeek: 1,
+      holidayPolicy: "include",
+      enabled: false,
+      priority: 5,
+      estimatedBytes: 1_000,
+      maxRetries: 2,
+      retryCount: 0,
+      nextRunAt: now + 60_000,
+      state: "failed",
+      lastError: "取得失敗",
+      lastRunAt: now,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+  serverState.history = [
+    {
+      id: "history-latest",
+      scheduleId: "schedule-latest",
+      videoId: "sm9",
+      title: "保持される履歴",
+      state: "failed",
+      error: "取得失敗",
+      estimatedBytes: 1_000,
+      actualBytes: 100,
+      startedAt: now - 1_000,
+      finishedAt: now,
+    },
+  ];
+
+  await page.locator("#refresh-button").click();
+  await expect(
+    page.locator('[data-schedule-id="schedule-latest"]'),
+  ).toContainText("保持される予約");
+  await expect(page.locator("#history-list")).toContainText("保持される履歴");
+
+  const staleRoute = delayedStateRoute;
+  expect(staleRoute).not.toBeNull();
+  await staleRoute!.fulfill({
+    contentType: "application/json",
+    body: JSON.stringify(staleState),
+  });
+  await page.waitForTimeout(100);
+
+  await expect(
+    page.locator('[data-schedule-id="schedule-latest"]'),
+  ).toContainText("保持される予約");
+  await expect(page.locator("#history-list")).toContainText("保持される履歴");
+});
+
 test("狭い画面でも横にはみ出さず全フォームへ到達できる", async ({
   page,
 }, testInfo) => {
