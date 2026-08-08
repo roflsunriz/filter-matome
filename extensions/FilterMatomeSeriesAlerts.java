@@ -35,12 +35,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
-
 import dareka.NLMain;
 import dareka.common.Logger;
+import dareka.common.LoggerHandler;
 import dareka.common.TextUtil;
 import dareka.common.json.Json;
 import dareka.common.json.JsonArray;
@@ -67,6 +64,7 @@ public final class FilterMatomeSeriesAlerts
     public static final String VER_STRING = "FilterMatomeSeriesAlerts_" + REVISION;
 
     private static final String LOG_PREFIX = "SeriesAlerts";
+    private static final String TAB_TITLE = "Series Alerts";
     private static final String REQUEST_HEADER = "X-Filter-Matome-Series-Alerts";
     private static final String[] SUPPORTED_METHODS = { "GET", "POST" };
     private static final Pattern SUPPORTED_URL = Pattern.compile(
@@ -113,25 +111,20 @@ public final class FilterMatomeSeriesAlerts
     private volatile TrayIcon trayIcon;
     private volatile String notificationTarget =
             "https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html";
-    private static JTextArea logArea;
-
-    public FilterMatomeSeriesAlerts() {
-        loadState();
-    }
+    private volatile LoggerHandler extensionLogger;
+    private boolean stateLoaded;
 
     @Override
     public void registerExtensions(ExtensionManager manager) {
         manager.registerProcessor(this);
         manager.registerEventListener(this);
-
-        if (NLMain.isLaunchGUI() && logArea == null) {
-            logArea = new JTextArea();
-            logArea.setEditable(false);
-            logArea.setLineWrap(true);
-            logArea.setWrapStyleWord(true);
-            JScrollPane pane = new JScrollPane(logArea);
-            NLMain.addTab("Series Alerts", null, pane,
-                    "watch-historyのシリーズ新着確認");
+        if (extensionLogger == null) {
+            extensionLogger = NLMain.getExtLogger(
+                    this, TAB_TITLE, null, false);
+        }
+        if (!stateLoaded) {
+            stateLoaded = true;
+            loadState();
         }
     }
 
@@ -194,8 +187,7 @@ public final class FilterMatomeSeriesAlerts
             appendLog("設定要求を拒否しました: " + exception.getMessage());
             return StringResource.getBadRequest();
         } catch (Exception exception) {
-            Logger.warning(LOG_PREFIX + ": request failed: "
-                    + exception.getMessage());
+            appendWarning("request failed: " + exception.getMessage());
             return StringResource.getInternalError("series alert request failed");
         }
     }
@@ -497,8 +489,7 @@ public final class FilterMatomeSeriesAlerts
             appendLog(alerts.size() + "件の保存済みアラートを読み込みました。");
         } catch (Exception exception) {
             backupBrokenState();
-            Logger.warning(LOG_PREFIX + ": invalid state file: "
-                    + exception.getMessage());
+            appendWarning("invalid state file: " + exception.getMessage());
         }
     }
 
@@ -534,7 +525,7 @@ public final class FilterMatomeSeriesAlerts
             }
         } catch (IOException exception) {
             lastError = "設定保存失敗: " + exception.getMessage();
-            Logger.warning(LOG_PREFIX + ": " + lastError);
+            appendWarning(lastError);
         }
     }
 
@@ -548,7 +539,7 @@ public final class FilterMatomeSeriesAlerts
                         StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException exception) {
-            Logger.warning(LOG_PREFIX + ": failed to back up state: "
+            appendWarning("failed to back up state: "
                     + exception.getMessage());
         }
     }
@@ -668,12 +659,12 @@ public final class FilterMatomeSeriesAlerts
                     SystemTray.getSystemTray().add(icon);
                     trayIcon = icon;
                 } catch (Exception exception) {
-                    Logger.warning(LOG_PREFIX + ": tray initialization failed: "
+                    appendWarning("tray initialization failed: "
                             + exception.getMessage());
                 }
             });
         } catch (Exception exception) {
-            Logger.warning(LOG_PREFIX + ": tray initialization failed: "
+            appendWarning("tray initialization failed: "
                     + exception.getMessage());
         }
         return trayIcon != null;
@@ -723,16 +714,20 @@ public final class FilterMatomeSeriesAlerts
     }
 
     private void appendLog(String message) {
-        Logger.info(LOG_PREFIX, "%s", message);
-        JTextArea area = logArea;
-        if (area != null) {
-            SwingUtilities.invokeLater(() -> {
-                if (area.getText().length() > 100_000) {
-                    area.setText(area.getText().substring(50_000));
-                }
-                area.append("[" + new java.util.Date() + "] " + message + "\n");
-                area.setCaretPosition(area.getDocument().getLength());
-            });
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.info(message);
+        } else {
+            Logger.info(LOG_PREFIX, "%s", message);
+        }
+    }
+
+    private void appendWarning(String message) {
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.warning(message);
+        } else {
+            Logger.warning(LOG_PREFIX + ": " + message);
         }
     }
 

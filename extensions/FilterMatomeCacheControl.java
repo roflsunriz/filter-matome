@@ -15,7 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import dareka.NLMain;
 import dareka.common.Logger;
+import dareka.common.LoggerHandler;
 import dareka.common.TextUtil;
 import dareka.common.json.Json;
 import dareka.common.json.JsonObject;
@@ -74,11 +76,16 @@ public final class FilterMatomeCacheControl
     /** videoId -> queuedを含むrequestId */
     private final ConcurrentHashMap<String, Set<String>> pendingRequestsByVideo =
             new ConcurrentHashMap<>();
+    private volatile LoggerHandler extensionLogger;
 
     @Override
     public void registerExtensions(ExtensionManager manager) {
         manager.registerProcessor(this);
         manager.registerEventListener(this);
+        if (extensionLogger == null) {
+            extensionLogger = NLMain.getExtLogger(
+                    this, "FilterMatomeCacheControl", null, false);
+        }
     }
 
     @Override
@@ -175,7 +182,7 @@ public final class FilterMatomeCacheControl
                 return StringResource.getBadRequest();
             }
         } catch (RuntimeException exception) {
-            Logger.warning("FilterMatomeCacheControl: invalid request body");
+            logWarning("invalid request body");
             return StringResource.getBadRequest();
         }
 
@@ -213,7 +220,7 @@ public final class FilterMatomeCacheControl
         }
 
         updatePendingRegistration(requestId);
-        Logger.info("FilterMatomeCacheControl: HLS removal requested for "
+        logInfo("HLS removal requested for "
                 + videoId + " (" + requestId + ")");
         return createRequestResponse(requestId);
     }
@@ -248,7 +255,7 @@ public final class FilterMatomeCacheControl
             }
             return "not_found";
         } catch (IOException | RuntimeException exception) {
-            Logger.warning("FilterMatomeCacheControl: failed to remove "
+            logWarning("failed to remove "
                     + cache.getId() + ": " + exception.getMessage());
             return "failed";
         }
@@ -371,7 +378,7 @@ public final class FilterMatomeCacheControl
                 processPendingForVideo(source.getCache().getVideoId());
             }
         } catch (RuntimeException exception) {
-            Logger.warning("FilterMatomeCacheControl: event processing failed: "
+            logWarning("event processing failed: "
                     + exception.getMessage());
         }
         return RESULT_OK;
@@ -550,5 +557,23 @@ public final class FilterMatomeCacheControl
         }
         json.append('"').append(TextUtil.escapeJSON(key)).append("\":\"")
                 .append(TextUtil.escapeJSON(value)).append('"');
+    }
+
+    private void logInfo(String message) {
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.info(message);
+        } else {
+            Logger.info("FilterMatomeCacheControl: " + message);
+        }
+    }
+
+    private void logWarning(String message) {
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.warning(message);
+        } else {
+            Logger.warning("FilterMatomeCacheControl: " + message);
+        }
     }
 }

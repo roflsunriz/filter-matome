@@ -9,10 +9,8 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,8 +22,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -40,6 +36,7 @@ import org.xml.sax.SAXException;
 
 import dareka.NLMain;
 import dareka.common.Logger;
+import dareka.common.LoggerHandler;
 import dareka.extensions.Extension2;
 import dareka.extensions.ExtensionManager;
 import dareka.processor.HttpHeader;
@@ -77,21 +74,15 @@ public class nlGpac implements Extension2, Processor {
 	private static final Pattern REMOTE_MANIFEST_REFERENCE_PATTERN = Pattern.compile(
 			"(?i)(?:https?|ftp|rtmp|udp|srt|ws|wss)://");
 
-	private static JTextArea logArea;
-	private static final int MAX_LOG_LENGTH = 100000;
+	private volatile LoggerHandler extensionLogger;
 
 	// Extension2 interface
 	public void registerExtensions(ExtensionManager mgr) {
 		mgr.registerProcessor(this);
 
-		if (logArea == null && NLMain.isLaunchGUI()) {
-			logArea = new JTextArea();
-			logArea.setEditable(false);
-			logArea.setLineWrap(true);
-			logArea.setWrapStyleWord(true);
-			logArea.setFont(new java.awt.Font("MS Gothic", java.awt.Font.PLAIN, 12));
-			JScrollPane scrollPane = new JScrollPane(logArea);
-			NLMain.addTab("GPAC", null, scrollPane, "GPACログ");
+		if (extensionLogger == null) {
+			extensionLogger = NLMain.getExtLogger(
+					this, LOG_PREFIX, null, false);
 		}
 	}
 
@@ -835,35 +826,28 @@ public class nlGpac implements Extension2, Processor {
 	}
 
 	private void logGpacResult(File originalInput, File analysisInput, String result) {
-		if (logArea == null) {
-			return;
-		}
 		final String formattedMessage = String.format(
-				"[%s] GPAC result for %s (analysis input: %s):\n%s\n"
+				"GPAC result for %s (analysis input: %s):\n%s\n"
 						+ "----------------------------------------\n",
-				new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()),
 				originalInput.getPath(), analysisInput.getPath(), result);
-		javax.swing.SwingUtilities.invokeLater(() -> {
-			if (logArea.getText().length() > MAX_LOG_LENGTH) {
-				logArea.setText(logArea.getText()
-						.substring(logArea.getText().length() - MAX_LOG_LENGTH / 2));
-			}
-			logArea.append(formattedMessage);
-			logArea.setCaretPosition(logArea.getDocument().getLength());
-		});
+		logInfo(formattedMessage.trim());
 	}
 
 	private void logError(String message) {
-		Logger.warning(LOG_PREFIX + ": " + message);
-		if (logArea == null) {
-			return;
+		LoggerHandler logger = extensionLogger;
+		if (logger != null) {
+			logger.warning(message);
+		} else {
+			Logger.warning(LOG_PREFIX + ": " + message);
 		}
-		final String errorMessage = String.format(
-				"[%s] ERROR: %s\n----------------------------------------\n",
-				new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()), message);
-		javax.swing.SwingUtilities.invokeLater(() -> {
-			logArea.append(errorMessage);
-			logArea.setCaretPosition(logArea.getDocument().getLength());
-		});
+	}
+
+	private void logInfo(String message) {
+		LoggerHandler logger = extensionLogger;
+		if (logger != null) {
+			logger.info(message);
+		} else {
+			Logger.info(LOG_PREFIX + ": " + message);
+		}
 	}
 }

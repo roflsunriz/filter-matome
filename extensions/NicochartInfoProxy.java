@@ -12,7 +12,9 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import dareka.NLMain;
 import dareka.common.Logger;
+import dareka.common.LoggerHandler;
 import dareka.extensions.Extension2;
 import dareka.extensions.ExtensionManager;
 import dareka.processor.HttpHeader;
@@ -39,10 +41,15 @@ public final class NicochartInfoProxy implements Extension2, Processor {
     private static final int CONNECT_TIMEOUT_MS = 5_000;
     private static final int READ_TIMEOUT_MS = 10_000;
     private static final int MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
+    private volatile LoggerHandler extensionLogger;
 
     @Override
     public void registerExtensions(ExtensionManager manager) {
         manager.registerProcessor(this);
+        if (extensionLogger == null) {
+            extensionLogger = NLMain.getExtLogger(
+                    this, "NicochartInfoProxy", null, false);
+        }
     }
 
     @Override
@@ -81,10 +88,11 @@ public final class NicochartInfoProxy implements Extension2, Processor {
         try {
             html = fetchNicochartPage(videoId);
         } catch (IOException exception) {
-            Logger.warning("NicochartInfoProxy: failed to fetch " + videoId
-                    + ": " + exception.getMessage());
+            logWarning("failed to fetch " + videoId + ": "
+                    + exception.getMessage());
             return StringResource.getNotFound();
         }
+        logInfo("fetched metadata fallback for " + videoId);
 
         StringResource response = new StringResource(html);
         // Serve as plain text so remote HTML can never execute in the
@@ -129,5 +137,23 @@ public final class NicochartInfoProxy implements Extension2, Processor {
             output.write(buffer, 0, read);
         }
         return output.toByteArray();
+    }
+
+    private void logInfo(String message) {
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.info(message);
+        } else {
+            Logger.info("NicochartInfoProxy: " + message);
+        }
+    }
+
+    private void logWarning(String message) {
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.warning(message);
+        } else {
+            Logger.warning("NicochartInfoProxy: " + message);
+        }
     }
 }

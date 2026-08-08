@@ -2,6 +2,7 @@ package extensions;
 
 import dareka.NLMain;
 import dareka.common.Logger;
+import dareka.common.LoggerHandler;
 import dareka.extensions.Extension2;
 import dareka.extensions.ExtensionManager;
 import dareka.processor.HttpHeader;
@@ -23,8 +24,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import javax.swing.JTextArea;
-import javax.swing.JScrollPane;
 
 public class CommentFilterLogger implements Extension2, Processor {
     
@@ -35,25 +34,17 @@ public class CommentFilterLogger implements Extension2, Processor {
     private static final Pattern PROCESSOR_SUPPORTED_PATTERN = Pattern.compile(
             "^https?://www\\.nicovideo\\.jp/cache/filter_logs");
     
-    private static JTextArea logArea;
+    private volatile LoggerHandler extensionLogger;
     
     private static final int BUFFER_SIZE = 1024 * 1024;  // 1MB
-    private static final int MAX_LOG_LENGTH = 100000;
-    
     private static final int MAX_FILTER_VALUE_LENGTH = 50;  // フィルター表現の最大長
 
     // Extension2 interface
     public void registerExtensions(ExtensionManager mgr) {
         mgr.registerProcessor(this);
-        
-        if (logArea == null && NLMain.isLaunchGUI()) {
-            logArea = new JTextArea();
-            logArea.setEditable(false);
-            logArea.setLineWrap(true);
-            logArea.setWrapStyleWord(true);
-            logArea.setFont(new java.awt.Font("MS Gothic", java.awt.Font.PLAIN, 12));
-            JScrollPane scrollPane = new JScrollPane(logArea);
-            NLMain.addTab("CommentFilter", null, scrollPane, "フィルターログ");
+        if (extensionLogger == null) {
+            extensionLogger = NLMain.getExtLogger(
+                    this, "CommentFilter", null, false);
         }
     }
     
@@ -74,17 +65,22 @@ public class CommentFilterLogger implements Extension2, Processor {
         return null;
     }
 
-    // エラー時のデバッグ情報をlogAreaに追加するヘルパーメソッド
+    // エラー時のデバッグ情報を専用ログへ追加するヘルパーメソッド
     private void appendErrorLog(String message) {
-        if (logArea != null) {
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                if (logArea.getText().length() > MAX_LOG_LENGTH) {
-                    logArea.setText(logArea.getText()
-                        .substring(logArea.getText().length() - MAX_LOG_LENGTH/2));
-                }
-                logArea.append("[ERROR] " + message + "\n");
-                logArea.setCaretPosition(logArea.getDocument().getLength());
-            });
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.warning(message);
+        } else {
+            Logger.warning("CommentFilter: " + message);
+        }
+    }
+
+    private void appendInfoLog(String message) {
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.info(message);
+        } else {
+            Logger.info("CommentFilter: " + message);
         }
     }
     
@@ -266,18 +262,8 @@ public class CommentFilterLogger implements Extension2, Processor {
                 ));
             }
             
-            // 全てのログを一度にUIに追加
-            if (logArea != null) {
-                final String messages = allMessages.toString();
-                javax.swing.SwingUtilities.invokeLater(() -> {
-                    if (logArea.getText().length() > MAX_LOG_LENGTH) {
-                        logArea.setText(logArea.getText()
-                            .substring(logArea.getText().length() - MAX_LOG_LENGTH/2));
-                    }
-                    logArea.append(messages);
-                    logArea.setCaretPosition(logArea.getDocument().getLength());
-                });
-            }
+            // 全てのログを一度に専用タブへ追加
+            appendInfoLog(allMessages.toString().trim());
             
             return new StringResource("ok");
         } catch (Exception e) {
@@ -298,4 +284,4 @@ public class CommentFilterLogger implements Extension2, Processor {
             return defaultValue;
         }
     }
-} 
+}

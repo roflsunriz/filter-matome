@@ -18,6 +18,7 @@ import java.io.UnsupportedEncodingException;
 
 import dareka.common.CloseUtil;
 import dareka.common.Logger;
+import dareka.common.LoggerHandler;
 import dareka.extensions.Extension2;
 import dareka.extensions.ExtensionManager;
 import dareka.processor.HttpHeader;
@@ -28,9 +29,6 @@ import dareka.processor.StringResource;
 import dareka.processor.impl.Cache;
 import dareka.processor.impl.VideoDescriptor;
 import dareka.NLMain;
-import javax.swing.JTextArea;
-import javax.swing.JScrollPane;
-import java.nio.file.Files;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,8 +42,7 @@ public class downloadThruFFmpeg implements Extension2, Processor {
     
     private static final File CACHE_DIR = new File("C:\\NicoCache_nl");
 
-    private static JTextArea logArea;
-    private static final int MAX_LOG_LENGTH = 100000;
+    private volatile LoggerHandler extensionLogger;
     
     // 処理中のリクエストを管理するセット
     private static final Set<String> processingRequests = ConcurrentHashMap.newKeySet();
@@ -53,14 +50,9 @@ public class downloadThruFFmpeg implements Extension2, Processor {
     public void registerExtensions(ExtensionManager mgr) {
         mgr.registerProcessor(this);
 
-        if (logArea == null && NLMain.isLaunchGUI()) {
-            logArea = new JTextArea();
-            logArea.setEditable(false);
-            logArea.setLineWrap(true);
-            logArea.setWrapStyleWord(true);
-            logArea.setFont(new java.awt.Font("MS Gothic", java.awt.Font.PLAIN, 12));
-            JScrollPane scrollPane = new JScrollPane(logArea);
-            NLMain.addTab("downloadThruFFmpeg", null, scrollPane, "FFmpeg");
+        if (extensionLogger == null) {
+            extensionLogger = NLMain.getExtLogger(
+                    this, "downloadThruFFmpeg", null, false);
         }
     }
 
@@ -345,32 +337,20 @@ public class downloadThruFFmpeg implements Extension2, Processor {
     }
     
     private void logError(String message) {
-        if (logArea != null) {
-            final String errorMessage = String.format(
-                "[%s] ERROR: %s\n----------------------------------------\n",
-                new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()),
-                message
-            );
-            
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                logArea.append(errorMessage);
-                logArea.setCaretPosition(logArea.getDocument().getLength());
-            });
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.warning(message);
+        } else {
+            Logger.warning("downloadThruFFmpeg: " + message);
         }
     }
     
     private void logInfo(String message) {
-        if (logArea != null) {
-            final String infoMessage = String.format(
-                "[%s] INFO: %s\n",
-                new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date()),
-                message
-            );
-            
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                logArea.append(infoMessage);
-                logArea.setCaretPosition(logArea.getDocument().getLength());
-            });
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.info(message);
+        } else {
+            Logger.info("downloadThruFFmpeg: " + message);
         }
     }
 
@@ -397,11 +377,6 @@ public class downloadThruFFmpeg implements Extension2, Processor {
     }
 
     private void appendLog(String message) {
-        if (logArea != null) {
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                logArea.append(message);
-                logArea.setCaretPosition(logArea.getDocument().getLength());
-            });
-        }
+        logInfo(message.trim());
     }
-} 
+}

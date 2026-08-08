@@ -29,7 +29,6 @@ import java.util.regex.Pattern;
 
 import dareka.NLMain;
 import dareka.common.CloseUtil;
-import dareka.common.Logger;
 import dareka.common.LoggerHandler;
 import dareka.common.Pair;
 import dareka.extensions.Extension2;
@@ -79,7 +78,7 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 					onMinutesInstance  = new ExtUtil(), 60, 60, TimeUnit.SECONDS);
 			Runtime.getRuntime().addShutdownHook(
 					onShutdownInstance = new ExtUtil());
-			register(self = this, null, null);
+			register(self = this, "ExtUtil", null);
 			self.debug("setting up now.");
 		}
 	}
@@ -160,11 +159,7 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 		}
 		this.caller = caller;
 		this.propDebug = propDebug;
-		if ("ExtUtil".equals(prefix)) {
-			extLogger = Logger.getHandler();
-		} else {
-			extLogger = NLMain.getExtLogger(caller, prefix, propDebug);
-		}
+		extLogger = NLMain.getExtLogger(caller, prefix, propDebug, false);
 		extensions.add(this);
 	}
 	
@@ -430,7 +425,7 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 			}
 		} catch (IOException e) {
 			if (self.isDebug()) {
-				Logger.error(e);
+				self.extLogger.error(e);
 				self._DBG("requestHeader:\n" + requestHeader);
 				if (responseHeader != null) {
 					self._DBG("responseHeader:\n" + responseHeader);
@@ -490,11 +485,11 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 		} catch (NoSuchMethodException e) {
 			self.debug("%s#%s() not found.", k.getName(), methodName);
 		} catch (IllegalAccessException e) {
-			if (self.isDebug()) Logger.error(e);
+			if (self.isDebug()) self.extLogger.error(e);
 		} catch (SecurityException e) {
-			if (self.isDebug()) Logger.error(e);
+			if (self.isDebug()) self.extLogger.error(e);
 		} catch (InvocationTargetException e) {
-			if (self.isDebug()) Logger.error(e);
+			if (self.isDebug()) self.extLogger.error(e);
 		}
 		return null; // FAILURE
 	}
@@ -539,7 +534,7 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 					callMethod(null, caller, loadMethod, loadMethodTypes, br);
 					return true;
 				} catch (IOException e) {
-					Logger.error(e);
+					extLogger.error(e);
 					warn("loading '%s' failed.", fileInfo.first);
 				} finally {
 					CloseUtil.close(br);
@@ -604,7 +599,7 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 				}
 				saved = true;
 			} catch (IOException e) {
-				Logger.error(e);
+				extLogger.error(e);
 				warn("saving '%s' failed.", fileInfo.first);
 			} finally {
 				CloseUtil.close(bw);

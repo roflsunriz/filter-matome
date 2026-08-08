@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 
 import dareka.NLMain;
 import dareka.common.Logger;
+import dareka.common.LoggerHandler;
 import dareka.extensions.Extension2;
 import dareka.extensions.ExtensionManager;
 import dareka.processor.HttpHeader;
@@ -21,9 +22,6 @@ import dareka.processor.Resource;
 import dareka.processor.StringResource;
 import dareka.processor.impl.Cache;
 import dareka.processor.impl.VideoDescriptor;
-
-import javax.swing.JTextArea;
-import javax.swing.JScrollPane;
 
 public class CustomCacheReturner implements Extension2, Processor {
     
@@ -36,27 +34,24 @@ public class CustomCacheReturner implements Extension2, Processor {
     private static final Pattern PROCESSOR_SUPPORTED_PATTERN = Pattern.compile(
             "^https?://www\\.nicovideo\\.jp/cache/find_cache\\?([a-z]{2}\\d+)");
     
-    private static JTextArea logArea;
-    private static final int MAX_LOG_LENGTH = 100000;
-    private static ExtUtil util;
+    private volatile LoggerHandler extensionLogger;
 
     private void logging(String format, Object... args) {
-        Logger.info(LOG_PREFIX, format, args);
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.info(format, args);
+        } else {
+            Logger.info(LOG_PREFIX, format, args);
+        }
     }
 
     @Override
     public void registerExtensions(ExtensionManager mgr) {
         mgr.registerProcessor(this);
 
-        if (NLMain.isLaunchGUI() && logArea == null) {
-            logArea = new JTextArea();
-            logArea.setEditable(false);
-            logArea.setLineWrap(true);
-            logArea.setWrapStyleWord(true);
-            logArea.setFont(new java.awt.Font("MS Gothic", java.awt.Font.PLAIN, 12));
-            JScrollPane scrollPane = new JScrollPane(logArea);
-            NLMain.addTab("CacheReturn", null, scrollPane, "ƒLƒƒƒbƒVƒ…ŒŸõŒ‹‰Ê");
-            logging("Tab added successfully");
+        if (extensionLogger == null) {
+            extensionLogger = NLMain.getExtLogger(
+                    this, LOG_PREFIX, PROP_DEBUG, false);
         }
     }
     
@@ -127,16 +122,7 @@ public class CustomCacheReturner implements Extension2, Processor {
                 result
             );
             
-            if (logArea != null) {
-                javax.swing.SwingUtilities.invokeLater(() -> {
-                    if (logArea.getText().length() > MAX_LOG_LENGTH) {
-                        logArea.setText(logArea.getText()
-                            .substring(logArea.getText().length() - MAX_LOG_LENGTH/2));
-                    }
-                    logArea.append(formattedMessage);
-                    logArea.setCaretPosition(logArea.getDocument().getLength());
-                });
-            }
+            logging("%s", formattedMessage.trim());
 
             StringResource r = new StringResource(result);
             r.addResponseHeader(HttpHeader.CONTENT_TYPE, "application/json");
