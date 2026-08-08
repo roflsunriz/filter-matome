@@ -49,7 +49,7 @@ import dareka.processor.StringResource;
  * 視聴権の取得はログイン状態を持つブラウザー側へ任せ、この拡張は署名済みURLだけを扱う。
  */
 public final class nlMovieFetcher implements Extension2, Processor {
-    public static final int REVISION = 26080901;
+    public static final int REVISION = 26080902;
     public static final String VER_STRING = "nlMovieFetcher_" + REVISION;
 
     private static final String API_PREFIX = "/cache/filter-matome/v1/movie-fetcher/";
@@ -71,6 +71,12 @@ public final class nlMovieFetcher implements Extension2, Processor {
                     + "(?:master|audio|video)\\.m3u8"
                     + "|audio/[A-Za-z0-9._-]{1,128}\\.cmfa"
                     + "|video/[A-Za-z0-9._-]{1,128}\\.cmfv)$");
+    private static final Pattern ASSET_CMAF_RESOURCE_PATH = Pattern.compile(
+            "^/[a-f0-9]{24}/(?:"
+                    + "audio/[0-9]{1,6}/audio-[A-Za-z0-9._-]{1,96}/"
+                    + "[A-Za-z0-9._-]{1,128}\\.cmfa"
+                    + "|video/[0-9]{1,6}/video-[A-Za-z0-9._-]{1,96}/"
+                    + "[A-Za-z0-9._-]{1,128}\\.cmfv)$");
     private static final int MAX_REQUEST_BODY = 8 * 1024;
     private static final int MAX_PLAYLIST = 2 * 1024 * 1024;
     private static final int CONNECT_TIMEOUT_MS = 20_000;
@@ -184,7 +190,8 @@ public final class nlMovieFetcher implements Extension2, Processor {
         String contentUrl = stringValue(body, "contentUrl");
         long maximumBytesPerSecond = longValue(
                 body, "maxBytesPerSecond", 0L);
-        if (!validVideoId(videoId) || !isAllowedDomandUrl(contentUrl)) {
+        if (!validVideoId(videoId)
+                || !isAllowedMasterPlaylistUrl(contentUrl)) {
             logWarning("不正な取得要求を拒否しました");
             return StringResource.getBadRequest();
         }
@@ -474,9 +481,38 @@ public final class nlMovieFetcher implements Extension2, Processor {
         URI resolved = base.resolve(value);
         String url = resolved.toString();
         if (!isAllowedDomandUrl(url)) {
-            throw new IOException("playlist contains a disallowed URL");
+            throw new IOException("playlist contains a disallowed URL ("
+                    + safeUrlShape(resolved) + ")");
         }
         result.add(url);
+    }
+
+    private String safeUrlShape(URI uri) {
+        StringBuilder result = new StringBuilder();
+        result.append("host=").append(uri.getHost()).append(" path=");
+        String path = uri.getPath();
+        if (path == null || path.isEmpty()) {
+            return result.append("<none>").toString();
+        }
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        for (String segment : path.split("/", -1)) {
+            result.append('/');
+            if (segment.isEmpty()) {
+                continue;
+            }
+            if (segment.matches("[a-z-]{1,16}")) {
+                result.append(segment);
+                continue;
+            }
+            int extension = segment.lastIndexOf('.');
+            result.append("<item:").append(segment.length()).append('>');
+            if (extension >= 0 && extension < segment.length() - 1) {
+                result.append(segment.substring(extension));
+            }
+        }
+        return result.toString();
     }
 
     private void checkCanceled() throws InterruptedException {
@@ -489,21 +525,49 @@ public final class nlMovieFetcher implements Extension2, Processor {
         try {
             URI uri = URI.create(value);
             String host = uri.getHost();
-            if (!"https".equalsIgnoreCase(uri.getScheme()) || host == null) {
+            if (!isSecureDomandUri(uri) || host == null) {
                 return false;
             }
             host = host.toLowerCase(Locale.ROOT);
-            if (!"delivery.domand.nicovideo.jp".equals(host)) {
+            String path = uri.getPath();
+            if (path == null) {
                 return false;
             }
-            String path = uri.getPath();
-            return path != null && (path.startsWith("/hlsbid/")
-                    || path.startsWith("/shlsbid/")
-                    || path.startsWith("/hlsext/")
-                    || CURRENT_CMAF_RESOURCE_PATH.matcher(path).matches());
+            if ("delivery.domand.nicovideo.jp".equals(host)) {
+                return path.startsWith("/hlsbid/")
+                        || path.startsWith("/shlsbid/")
+                        || path.startsWith("/hlsext/")
+                        || CURRENT_CMAF_RESOURCE_PATH.matcher(path).matches();
+            }
+            return "asset.domand.nicovideo.jp".equals(host)
+                    && ASSET_CMAF_RESOURCE_PATH.matcher(path).matches();
         } catch (IllegalArgumentException exception) {
             return false;
         }
+    }
+
+    private boolean isAllowedMasterPlaylistUrl(String value) {
+        try {
+            URI uri = URI.create(value);
+            String path = uri.getPath();
+            return isSecureDomandUri(uri)
+                    && "delivery.domand.nicovideo.jp".equalsIgnoreCase(
+                            uri.getHost())
+                    && path != null
+                    && (path.startsWith("/hlsbid/")
+                            || path.startsWith("/shlsbid/")
+                            || path.startsWith("/hlsext/"));
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+    }
+
+    private boolean isSecureDomandUri(URI uri) {
+        return "https".equalsIgnoreCase(uri.getScheme())
+                && uri.getHost() != null
+                && uri.getUserInfo() == null
+                && (uri.getPort() == -1 || uri.getPort() == 443)
+                && uri.getFragment() == null;
     }
 
     private Resource status(String videoId) {

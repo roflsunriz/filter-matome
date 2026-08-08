@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- 【movie-fetcher・extensions】smartFetcher専用SPAで古い定期取得応答が追加・更新直後の予約と履歴を空表示へ戻す競合を防ぎ、状態APIをブラウザーキャッシュから常に除外した。NicoCache_nlの自己プロキシーが返す固定ホストのキャッシュ用playlistとCMAF断片も限定的に許可し、予約取得が`playlist contains a disallowed URL`で失敗する問題を修正した。
+- 【movie-fetcher・extensions】smartFetcher専用SPAで古い定期取得応答が追加・更新直後の予約と履歴を空表示へ戻す競合を防ぎ、状態APIをブラウザーキャッシュから常に除外した。実際の予約取得でmedia playlistが返した`asset.domand.nicovideo.jp`の24桁識別子・音声／映像・数値階層・品質・CMAF断片という固定形状と、NicoCache_nlの自己プロキシーが返すキャッシュ用playlistだけを用途別に許可し、`playlist contains a disallowed URL`で失敗する問題を修正した。
 
 ### Changed
 

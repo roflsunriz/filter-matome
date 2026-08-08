@@ -84,10 +84,14 @@ describe("smartFetcher Java extension contract", () => {
     expect(fetcher).toContain("throttle(total");
   });
 
-  test("現行Domand配信に不要な互換URLと状態時刻を持たない", () => {
+  test("実測したDomand配信URLだけを用途別に許可する", () => {
     expect(fetcher).toContain('"delivery.domand.nicovideo.jp".equals(host)');
     expect(fetcher).toContain("CURRENT_CMAF_RESOURCE_PATH");
-    expect(fetcher).not.toContain("asset.domand.nicovideo.jp");
+    expect(fetcher).toContain("ASSET_CMAF_RESOURCE_PATH");
+    expect(fetcher).toContain('"asset.domand.nicovideo.jp".equals(host)');
+    expect(fetcher).toContain("isAllowedMasterPlaylistUrl(contentUrl)");
+    expect(fetcher).toContain("[a-f0-9]{24}");
+    expect(fetcher).toContain("uri.getUserInfo() == null");
     expect(fetcher).not.toContain('path.matches("/[a-f0-9]{24}/.*")');
     expect(fetcher).not.toContain("startedAts");
     expect(fetcher).not.toContain("finishedAts");

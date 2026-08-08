@@ -7,7 +7,7 @@
 
 ## nlMovieFetcherの追従確認
 
-ニコニコ動画の配信仕様変更へ追従するときは、`local/features/src/api-info/nl-movie-fetcher-api.md` のraw CDP手順で、Watch API、access-rights API、映像・音声分離playlistを再観測します。Java拡張は対象NicoCache_nlのJARをclasspathにして`nlMovieFetcher.java`と`FilterMatomeSmartFetcher.java`を同時にコンパイルし、生成物が同名の2クラスだけであることを確認してください。TypeScript側は通常の `bun run verify` でカードDOM、API交渉、スケジューラーSPAを検証します。
+ニコニコ動画の配信仕様変更へ追従するときは、`local/features/src/api-info/nl-movie-fetcher-api.md` のraw CDP手順で、Watch API、access-rights API、映像・音声分離playlistを再観測します。Java拡張は対象NicoCache_nlのJARをclasspathにして`nlMovieFetcher.java`と`FilterMatomeSmartFetcher.java`を同時にコンパイルし、生成物が同名の2クラスだけであることを確認してください。URL許可や取得処理を変更した場合は署名URLの取得だけで終了せず、公開動画をsmartFetcherから実行し、履歴が`completed`、nlMovieFetcherの`completed`と`total`が一致、`bytesTransferred`が0より大きいことまで確認します。署名クエリー、Cookie、アクセス権キーは検証記録へ残しません。TypeScript側は通常の `bun run verify` でカードDOM、API交渉、スケジューラーSPAを検証します。
 
 smartFetcherの永続形式を変更するときは、`data/filter-matome-smart-fetcher.json`の旧データ復旧、破損退避、再起動時の`running`回収を確認します。Cookieは状態JSONへ混在させず、許可名を`nicosid`、`domand_bid`、`user_session`、`user_session_secure`に限定したまま、AES-GCM暗号文と256ビット鍵を別ファイルへ保存してください。平文Cookie、署名URL、アクセス権キーをテスト出力やログへ含めてはいけません。
 
