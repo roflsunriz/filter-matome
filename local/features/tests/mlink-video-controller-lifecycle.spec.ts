@@ -5,6 +5,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const projectRoot = join(import.meta.dirname, "..");
+const fixturesRoot = join(import.meta.dirname, "fixtures");
+
+function readFixture(path: string): string {
+  return readFileSync(join(fixturesRoot, path), "utf8");
+}
 
 function buildTestDocument(body: string): string {
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>module lifecycle fixture</title></head><body>${body}</body></html>`;
@@ -127,10 +132,32 @@ test("background image settings persist dynamic CRUD, selection, and import even
 test("Harajuku module creates interactive chrome and removes it on destroy", async ({
   page,
 }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
   await page.route("https://www.nicovideo.jp/watch/sm9", (route) =>
     fulfillTestDocument(
       route,
-      `<main>
+      `<style>
+        #ncnl_common_header_menu .ncnl-common-header-trigger { background: transparent; color: #fff; }
+        #ncnl_common_header_menu .ncnl-common-header-popover { visibility: hidden; background: #f4f4f4; }
+        #ncnl_common_header_menu:hover .ncnl-common-header-popover { visibility: visible; }
+        #ncnl_common_header_menu .ncnl-common-header-actions,
+        #ncnl_common_header_menu .ncnl-common-header-item { background: #fff; color: #333; }
+        #ncnl_common_header_menu .ncnl-common-header-footer { background: #f4f4f4; }
+        #ncnl_common_header_menu .ncnl-common-header-footer a { color: #333; }
+      </style>
+      <div id="CommonHeader">
+        <div id="ncnl_common_header_menu">
+          <button type="button" class="ncnl-common-header-trigger">NicoCache</button>
+          <div class="ncnl-common-header-popover">
+            <div class="ncnl-common-header-actions">
+              <a class="ncnl-common-header-item" href="/cache/sm9/auto/movie">動画保存</a>
+              <button type="button" class="ncnl-common-header-item">キャッシュ削除</button>
+            </div>
+            <div class="ncnl-common-header-footer"><a href="/cache/">キャッシュへ</a></div>
+          </div>
+        </div>
+      </div>
+      <main>
         <section class="grid-template-areas">
           <div class="grid-area_bottom">
             <div><div><h1>テスト動画</h1></div></div>
@@ -187,6 +214,23 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
   });
 
   await expect(page.locator(".HarajukuWatchChrome")).toHaveCount(1);
+  const nicoCacheTrigger = page.locator(".ncnl-common-header-trigger");
+  await expect(nicoCacheTrigger).toHaveCSS("background-image", "none");
+  await nicoCacheTrigger.hover();
+  await expect(page.locator(".ncnl-common-header-popover")).toBeVisible();
+  await expect(page.locator(".ncnl-common-header-popover")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  for (const item of await page.locator(".ncnl-common-header-item").all()) {
+    await expect(item).toHaveCSS("background-color", "rgb(255, 255, 255)");
+    await expect(item).toHaveCSS("background-image", "none");
+    await expect(item).toHaveCSS("color", "rgb(17, 17, 17)");
+  }
+  await expect(page.locator(".ncnl-common-header-footer a")).toHaveCSS(
+    "color",
+    "rgb(17, 17, 17)",
+  );
   const description = page.locator(".HarajukuDescription");
   await expect(description).toHaveAttribute("data-hy-state", "ready");
   await expect(description).toContainText("短い説明");
@@ -314,6 +358,55 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
   await expect(page.locator(".HarajukuWatchChrome")).toHaveCount(0);
   await expect(page.locator(".HarajukuDescription")).toHaveCount(0);
   await expect(page.locator("#mlink-watch-harajuku-style")).toHaveCount(0);
+});
+
+test("header privacy hides premium override avatar and name by account structure", async ({
+  page,
+}) => {
+  await page.route(
+    "https://www.nicovideo.jp/header-privacy-premium-test",
+    (route) =>
+      fulfillTestDocument(
+        route,
+        readFixture("nicovideo-common-header-premium-override.html"),
+      ),
+  );
+  await page.goto("https://www.nicovideo.jp/header-privacy-premium-test");
+  await page.addScriptTag({ content: buildControllerBundle() });
+
+  await page.evaluate(async () => {
+    window.logger = {
+      warn: () => {},
+      error: () => {},
+      info: () => {},
+      debug: () => {},
+    };
+    localStorage.removeItem("headerPrivacySettings");
+    const exports = (
+      window as unknown as {
+        MlinkTabControllers: {
+          HeaderModule: new (config: unknown) => {
+            initialize(): Promise<void>;
+          };
+          headerModuleConfig: unknown;
+        };
+      }
+    ).MlinkTabControllers;
+    await new exports.HeaderModule(exports.headerModuleConfig).initialize();
+  });
+
+  await expect(page.locator(".common-header-1s8ioyy")).toHaveCSS(
+    "display",
+    "none",
+  );
+  await expect(page.locator(".common-header-q3ohau")).toHaveCSS(
+    "display",
+    "none",
+  );
+  await expect(page.locator(".common-header-ws8uen")).toHaveCSS(
+    "background-image",
+    /linear-gradient/,
+  );
 });
 
 test("module settings import/export normalization drops legacy and unknown module ids", async ({

@@ -104,3 +104,46 @@
     text-decoration: none !important;
   }
 
+  /* NicoCache_nlの安定classを使い、原宿テーマの汎用button/link指定からメニューを隔離する。 */
+  #ncnl_common_header_menu .ncnl-common-header-trigger {
+    background: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    color: #eee !important;
+    text-shadow: none !important;
+  }
+
+  #ncnl_common_header_menu:hover .ncnl-common-header-trigger,
+  #ncnl_common_header_menu:focus-within .ncnl-common-header-trigger {
+    background: rgba(255, 255, 255, .08) !important;
+    background-image: none !important;
+    color: #fff !important;
+  }
+
+  #ncnl_common_header_menu .ncnl-common-header-popover,
+  #ncnl_common_header_menu .ncnl-common-header-actions,
+  #ncnl_common_header_menu .ncnl-common-header-footer {
+    background: #fff !important;
+    background-image: none !important;
+    color: #111 !important;
+  }
+
+  #ncnl_common_header_menu .ncnl-common-header-item,
+  #ncnl_common_header_menu .ncnl-common-header-footer a {
+    background: #fff !important;
+    background-image: none !important;
+    border-color: #e5e5e5 !important;
+    box-shadow: none !important;
+    color: #111 !important;
+    text-decoration: none !important;
+    text-shadow: none !important;
+  }
+
+  #ncnl_common_header_menu .ncnl-common-header-item:hover,
+  #ncnl_common_header_menu .ncnl-common-header-item:focus-visible {
+    background: #f4f4f4 !important;
+    background-image: none !important;
+    color: #111 !important;
+    text-decoration: none !important;
+  }

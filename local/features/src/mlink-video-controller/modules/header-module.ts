@@ -39,7 +39,22 @@ export class HeaderModule implements ModuleInstance {
   private static readonly commonHeaderClassPrefix = "common-header-";
   private static readonly headerSelector =
     "#CommonHeader, header, .SiteHeaderContainer";
+  private static readonly accountLinkSelector =
+    '#CommonHeader a[href="https://www.nicovideo.jp/my"], ' +
+    '#CommonHeader a[href^="https://www.nicovideo.jp/my?"], ' +
+    '#CommonHeader a[href="/my"], ' +
+    '#CommonHeader a[href^="/my?"]';
+  private static readonly accountElementSelector =
+    '#CommonHeader a[href="https://www.nicovideo.jp/my"] > :first-child, ' +
+    '#CommonHeader a[href^="https://www.nicovideo.jp/my?"] > :first-child, ' +
+    '#CommonHeader a[href="/my"] > :first-child, ' +
+    '#CommonHeader a[href^="/my?"] > :first-child, ' +
+    '#CommonHeader a[href="https://www.nicovideo.jp/my"] > span, ' +
+    '#CommonHeader a[href^="https://www.nicovideo.jp/my?"] > span, ' +
+    '#CommonHeader a[href="/my"] > span, ' +
+    '#CommonHeader a[href^="/my?"] > span';
   private static readonly userElementSelector =
+    `${HeaderModule.accountElementSelector}, ` +
     'img[src^="https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/"], ' +
     'img[src*="/nicoaccount/usericon/"], ' +
     'img[alt*="ユーザーアイコン"], ' +
@@ -316,6 +331,7 @@ export class HeaderModule implements ModuleInstance {
     }
 
     return (
+      this.isAccountIconElement(element) ||
       element.classList.contains("common-header-w2sn95") ||
       this.hasClassNamePart(element, "userIcon") ||
       this.hasClassNamePart(element, "UserIcon")
@@ -332,6 +348,7 @@ export class HeaderModule implements ModuleInstance {
     }
 
     return (
+      this.isAccountNameElement(element) ||
       element.classList.contains("common-header-n0qa7l") ||
       this.hasClassNamePart(element, "userName") ||
       this.hasClassNamePart(element, "UserName") ||
@@ -340,6 +357,35 @@ export class HeaderModule implements ModuleInstance {
         element.textContent !== null &&
         element.textContent.trim().length > 0 &&
         element.querySelector("img") === null)
+    );
+  }
+
+  /**
+   * CommonHeaderのアカウントリンク直下にある先頭要素をアイコン領域として扱う。
+   * 会員種別によってimgではなく背景付きdivが描画される場合も同じ構造になる。
+   */
+  private isAccountIconElement(element: HTMLElement): boolean {
+    const accountLink = element.parentElement?.closest(
+      HeaderModule.accountLinkSelector,
+    );
+    return (
+      accountLink instanceof HTMLAnchorElement &&
+      element.parentElement === accountLink &&
+      accountLink.firstElementChild === element
+    );
+  }
+
+  /**
+   * ハッシュ付きclass名ではなく、アカウントリンク直下のspanをユーザー名として扱う。
+   */
+  private isAccountNameElement(element: HTMLElement): boolean {
+    const accountLink = element.parentElement?.closest(
+      HeaderModule.accountLinkSelector,
+    );
+    return (
+      element instanceof HTMLSpanElement &&
+      accountLink instanceof HTMLAnchorElement &&
+      element.parentElement === accountLink
     );
   }
 
