@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#241] - 2026-08-15
+
+### Fixed
+
+- 【mlink-video-controller/原宿風Watch】公式CommonHeaderへ追加されたNicoCacheメニューが原宿テーマの汎用ボタン配色を継承して浮かないよう、トリガーの背景をヘッダーへ馴染む透明色に戻し、ホバーで開くメニューを白背景・黒文字へ統一した。
+- 【mlink-video-controller/ヘッダープライバシー】`101_disable_official_function.txt`で`sessionUser.type`を`premium`へ変更した場合も、画像ではなく黄色い円形背景として描画されるアバターと新しいクラス名のユーザー名を、CommonHeaderの安定したアカウントリンク構造から判定して非表示にするよう修正した。
+
+### Changed
+
+- 【features・README】リリース番号を`241`へ更新し、latestバッジを`#241`へ変更した。
+
 ## [#240] - 2026-08-09
 
 ### Added
