@@ -1,17 +1,13 @@
 import "@/types/global-types";
 import type { IntegratedNicoData, NicoApiData } from "@/types/common-types";
-import type {
-  CacheEntry,
-  CacheInfoResponse,
-  GpacResponse,
-  ThumbInfo,
-} from "@/types/movie-info-types";
+import type { GpacResponse, ThumbInfo } from "@/types/movie-info-types";
+import type { CacheInfoEntry } from "@/types/cache-info-types";
+import { fetchCacheInfoEntry } from "@/common/cache-info-api";
 import {
   fetchNicoVideoInfo,
   type VideoInfoFetcher,
 } from "@/common/video-info-api";
 
-const CACHE_INFO_ENDPOINT = "https://www.nicovideo.jp/cache/info/v2?";
 const GPAC_ENDPOINT = "https://www.nicovideo.jp/cache/gpac?";
 
 const toErrorMessage = (error: unknown): string => {
@@ -21,19 +17,13 @@ const toErrorMessage = (error: unknown): string => {
   return String(error);
 };
 
-export const fetchCacheInfo = async (videoId: string): Promise<CacheEntry> => {
-  const url = CACHE_INFO_ENDPOINT + encodeURIComponent(videoId);
+export const fetchCacheInfo = async (
+  videoId: string,
+): Promise<CacheInfoEntry> => {
   try {
-    const response = await window.commonHelper.fetchRequest(url);
-    if (!response.ok) {
-      throw new Error("Cache info API error: " + response.status);
-    }
-    const json = (await response.json()) as CacheInfoResponse;
-    const entry = json?.[videoId];
-    if (!entry) {
-      throw new Error("指定された動画IDのキャッシュ情報が見つかりませんでした");
-    }
-    return entry;
+    return await fetchCacheInfoEntry(videoId, (url) =>
+      window.commonHelper.fetchRequest(url),
+    );
   } catch (error: unknown) {
     const message = toErrorMessage(error);
     window.logger?.error?.("[movie-info] cache info fetch failed", message);

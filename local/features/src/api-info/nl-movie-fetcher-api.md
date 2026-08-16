@@ -83,7 +83,7 @@ CONNECT後に返るサイト証明書は`nicocache.userDataRoot/certs/ca.cer`を
 
 実測したmasterは `EXT-X-STREAM-INF` の映像URIと `EXT-X-MEDIA:TYPE=AUDIO` の音声URIを別に持つ。media playlistはtarget duration 6秒、映像54断片・音声54断片だった。実装は個数を固定せず、相対URIを基準URLで解決し、`EXT-X-MAP`、`EXT-X-KEY`、コメントでない全行を重複排除して取得する。2026-08-09のsmartFetcher実取得では、media playlistが`asset.domand.nicovideo.jp/{24桁hex}/{audio|video}/{数字}/{品質}/{断片}.{cmfa|cmfv}`を返した。2026-08-08にはNicoCache_nlの自己プロキシーが既存キャッシュを返す経路で、`delivery.domand.nicovideo.jp/cache/file/{識別子}//master.m3u8`、`audio.m3u8`、`video.m3u8`も返った。Java拡張は実測したホスト・固定パス形状だけを用途別に許可し、開始URLは`delivery`のplaylistに限定したまま、任意の外部URLを拒否する。
 
-2026-08-09の実測では、修正前はmasterとmedia playlistの取得後に上記`asset`断片をURL拒否するか、全リソースを転送してもNicoCache_nlの完成キャッシュが0件のまま履歴だけ`completed`になった。修正後は、あらかじめディスクと`/cache/info/v2`の対象動画が0件であることを確認してから、固定の検証用動画ではなく別の動画IDを予約して取得した。`sm46636056`は33,164,410バイト転送後、既存完成キャッシュと同じ形式の `sm46636056[720p,192]_お前を、プラス収支へ誘う…！！！.mp130（CBC賞）.hls` を作成し、45ファイル・33,139,672バイト、`complete=true`になった。続く`sm43303546`も87,544,702バイト転送後、`sm43303546[720p,128]_トイレVS野獣先輩.hls`を作成し、115ファイル・87,481,265バイト、`complete=true`になった。
+2026-08-09の実測では、修正前はmasterとmedia playlistの取得後に上記`asset`断片をURL拒否するか、全リソースを転送してもNicoCache_nlの完成キャッシュが0件のまま履歴だけ`completed`になった。修正後は、あらかじめディスクと当時の`/cache/info/v2`で対象動画が0件であることを確認してから、固定の検証用動画ではなく別の動画IDを予約して取得した。`sm46636056`は33,164,410バイト転送後、既存完成キャッシュと同じ形式の `sm46636056[720p,192]_お前を、プラス収支へ誘う…！！！.mp130（CBC賞）.hls` を作成し、45ファイル・33,139,672バイト、`complete=true`になった。続く`sm43303546`も87,544,702バイト転送後、`sm43303546[720p,128]_トイレVS野獣先輩.hls`を作成し、115ファイル・87,481,265バイト、`complete=true`になった。
 
 `nlMovieFetcher`はplaylist上の全リソースを読み終えただけでは`completed`にせず、本体の`Cache`が完成状態で実在することを確認する。URL許可、プロキシー経路、タイトル登録、完了判定は署名URL取得までのプローブで済ませず、上記2件を対象キャッシュ0件から実取得して確認した。
 

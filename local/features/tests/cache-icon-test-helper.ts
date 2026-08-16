@@ -13,19 +13,18 @@ const cacheDisplayScriptFixture = String.raw`
   window.NicoCache_nl = window.NicoCache_nl || {};
 
   const describe = (videoInfo) => {
-    const cacheId = videoInfo.preferredDmcHls;
+    const cacheId = videoInfo.preferred;
     const cacheData = videoInfo.caches[cacheId];
-    const movieType = cacheData.dmcMovieType;
     return {
       cacheId,
       quality: "fhd",
-      videoMode: movieType.videoMode,
-      audioBitrate: movieType.audioBitrate,
+      videoMode: cacheData.videoMode,
+      audioBitrate: cacheData.audioBitrate,
       title:
         "NicoCache_nl キャッシュ済み: 映像 " +
-        movieType.videoMode +
+        cacheData.videoMode +
         " / 音声 " +
-        movieType.audioBitrate +
+        cacheData.audioBitrate +
         "kbps",
     };
   };
@@ -84,17 +83,25 @@ const cacheIconScriptFixture = String.raw`
       const cacheId = videoId + "[1080p,192].hls";
       const icon = cacheDisplay.createIcon(
         {
-          preferredDmcHls: cacheId,
+          videoId,
+          preferred: cacheId,
+          cacheIds: [cacheId],
+          cachings: [],
+          completes: [cacheId],
           caches: {
             [cacheId]: {
+              videoId,
+              cacheId,
               complete: true,
-              dmc: true,
-              movieType: "hls",
-              dmcMovieType: {
-                videoMode: "1080p",
-                videoBitrate: 6000,
-                audioBitrate: 192,
-              },
+              caching: false,
+              videoMode: "1080p",
+              audioBitrate: 192,
+              legacyLow: false,
+              size: 1048576,
+              title: "テスト動画",
+              subFolder: "",
+              filename: cacheId,
+              ts: 1786838400,
             },
           },
         },

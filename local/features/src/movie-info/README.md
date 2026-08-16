@@ -10,7 +10,7 @@
 
 ## 情報源
 
-- `/cache/info/v2?<動画ID>`: NicoCache_nlのキャッシュ情報。
+- `/cache/info/v3?<動画ID>`: NicoCache_nlのCMAF/Domand HLSキャッシュ情報。
 - `common/video-info-api.ts`: 旧`ext.nicovideo.jp/api/getthumbinfo/<動画ID>` XMLと現行Watch API JSONを互換処理し、動画情報を共通形式へ正規化するクライアント。
 - `/cache/gpac?<動画ID>`: ローカル動画をGPACで解析したJSON。HLS/CMAFは最高帯域の品質を選び、セグメント単位ではなく映像・音声のPID仕様をまとめて返す。
 - `window.commonHelper.fetchWatchPage`: ウォッチページの `apiData`。

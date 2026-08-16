@@ -36,7 +36,7 @@
 | 収益化 | `premium` / `advertisement` / `purchase` | 194 / 26 / 1 | `PremiumRegisterRequired-*`、`Advertisement-*`、`NicoadVideoCard-*` があり、会員・広告・ニコニ広告は公式固有の領域。 |
 | アクセシビリティ | `aria-` | 208 | 公式UIはARIA属性を広く含む。filter-matome側もUI独自性だけでなくキーボード・読み上げ品質を維持する必要がある。 |
 
-最終captureでは `NicoCache_nl`、`/cache/info/v2`、`/local/features/`、`commentFilter2`、`regexAnalyzer` に対応する差別化用シグナルは0件だった。これはcapture範囲にfilter-matomeの注入物が混ざっていない確認には使えるが、公式サービス全体に類似機能が存在しないことの証明には使わない。
+最終captureでは `NicoCache_nl`、当時の`/cache/info/v2`、`/local/features/`、`commentFilter2`、`regexAnalyzer` に対応する差別化用シグナルは0件だった。これはcapture範囲にfilter-matomeの注入物が混ざっていない確認には使えるが、公式サービス全体に類似機能が存在しないことの証明には使わない。
 
 ## 差別化の評価
 

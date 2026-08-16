@@ -2,16 +2,12 @@ import {
   fetchNicoVideoInfo,
   isNicoVideoInfoError,
 } from "@/common/video-info-api";
-import type { CacheInfoResponse } from "@/types/video-types";
+import {
+  fetchCacheInfoEntry,
+  hasCompletedCache,
+} from "@/common/cache-info-api";
 import { URLS } from "@/video-player/config/constants";
 import { addNavigationListener } from "@/runtime/navigation";
-
-type CacheInfoEntry = {
-  preferred?: unknown;
-  caches?: unknown;
-  completes?: unknown;
-  [key: string]: unknown;
-};
 
 type PlayerPreference = "standalone" | "official" | "ask";
 
@@ -21,83 +17,12 @@ interface PlayerChoiceSettings {
 }
 
 const WATCH_HOST_PATTERN = /\.nicovideo\.jp$/;
-const CACHE_INFO_ENDPOINT = "https://www.nicovideo.jp/cache/info/v2?";
 const PLAYER_CHOICE_KEY = "nicocache-player-choice";
 const UNAVAILABLE_MESSAGE = "お探しの動画は視聴できません";
 
-const hasCompletedCache = (
-  entry: CacheInfoEntry,
-  cacheId: string,
-  completesSet: Set<string>,
-): boolean => {
-  if (!cacheId) {
-    return false;
-  }
-
-  if (completesSet.has(cacheId)) {
-    return true;
-  }
-
-  const cachesValue = entry.caches;
-  if (
-    cachesValue &&
-    typeof cachesValue === "object" &&
-    !Array.isArray(cachesValue)
-  ) {
-    const cacheRecord = cachesValue as Record<string, unknown>;
-    const cache = cacheRecord[cacheId];
-    if (cache && typeof cache === "object") {
-      const completeValue = (cache as { complete?: unknown }).complete;
-      if (completeValue === true) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-};
-
-const existsCompletedCache = (entry: CacheInfoEntry): boolean => {
-  const completesValue = entry.completes;
-  const completes = Array.isArray(completesValue)
-    ? completesValue.filter(
-        (value): value is string => typeof value === "string",
-      )
-    : [];
-  const completesSet = new Set(completes);
-
-  const preferredValue = entry.preferred;
-  const preferred = typeof preferredValue === "string" ? preferredValue : "";
-  if (preferred && hasCompletedCache(entry, preferred, completesSet)) {
-    return true;
-  }
-
-  if (completes.length > 0) {
-    for (const cacheId of completes) {
-      if (hasCompletedCache(entry, cacheId, completesSet)) {
-        return true;
-      }
-    }
-  }
-
-  const cachesValue = entry.caches;
-  if (
-    cachesValue &&
-    typeof cachesValue === "object" &&
-    !Array.isArray(cachesValue)
-  ) {
-    const cacheRecord = cachesValue as Record<string, unknown>;
-    return Object.keys(cacheRecord).some((cacheId) =>
-      hasCompletedCache(entry, cacheId, completesSet),
-    );
-  }
-
-  return false;
-};
-
 /**
  * CustomCacheReturnerからキャッシュ情報を取得してキャッシュ存在を確認
- * @param cacheId キャッシュID (so30413239 形式)
+ * @param cacheId キャッシュIDまたは動画ID
  * @returns キャッシュが存在する場合はtrue
  */
 const hasCustomCacheForId = async (cacheId: string): Promise<boolean> => {
@@ -130,62 +55,13 @@ const hasCustomCacheForId = async (cacheId: string): Promise<boolean> => {
 
 const hasCacheForVideo = async (videoId: string): Promise<boolean> => {
   try {
-    const response = await fetch(
-      `${CACHE_INFO_ENDPOINT}${encodeURIComponent(videoId)}`,
-    );
-    if (!response || !response.ok) {
-      window.logger.info(
-        "キャッシュ情報取得に失敗したためローカルプレイヤーへの遷移をスキップします",
-        {
-          videoId,
-          status: response ? response.status : "no-response",
-        },
-      );
-      return false;
-    }
-
-    const jsonUnknown: unknown = await response.json();
-    const data = jsonUnknown as CacheInfoResponse | null;
-    if (!data || !(videoId in data)) {
-      return false;
-    }
-
-    const entryUnknown = data[videoId] as unknown;
-    if (!entryUnknown || typeof entryUnknown !== "object") {
-      return false;
-    }
-
-    const entry = entryUnknown as CacheInfoEntry;
-
-    // 既存のロジックでキャッシュ存在を確認
-    if (existsCompletedCache(entry)) {
+    const entry = await fetchCacheInfoEntry(videoId);
+    if (hasCompletedCache(entry)) {
       return true;
     }
 
-    // CustomCacheReturnerから情報を取得して確認
-    // preferred キャッシュIDを使用
-    const preferredValue = entry.preferred;
-    const preferred = typeof preferredValue === "string" ? preferredValue : "";
-    if (preferred && (await hasCustomCacheForId(preferred))) {
-      return true;
-    }
-
-    // caches オブジェクトからキャッシュIDを取得
-    const cachesValue = entry.caches;
-    if (
-      cachesValue &&
-      typeof cachesValue === "object" &&
-      !Array.isArray(cachesValue)
-    ) {
-      const cacheRecord = cachesValue as Record<string, unknown>;
-      for (const cacheId of Object.keys(cacheRecord)) {
-        if (await hasCustomCacheForId(cacheId)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
+    // v3はCMAF/Domand HLS専用なので、拡張管理のキャッシュは動画IDで別途探す。
+    return await hasCustomCacheForId(videoId);
   } catch (error) {
     window.logger.warn(
       "キャッシュ情報取得中にエラーが発生したためローカルプレイヤーへの遷移をスキップします",

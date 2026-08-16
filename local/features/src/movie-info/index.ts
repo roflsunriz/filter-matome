@@ -18,13 +18,13 @@ import { buildGpacSummary } from "@/movie-info/gpac-summary";
 import { applyMovieInfoDashboardStyles } from "@/movie-info/styles";
 import { PanelController, showMovieInfoErrorModal } from "@/movie-info/ui";
 import type {
-  CacheEntry,
   CommentPreview,
   ErrorModalItem,
   ThumbInfo,
   ThumbTagInfo,
   DownloadDescriptor,
 } from "@/types/movie-info-types";
+import type { CacheInfoEntry } from "@/types/cache-info-types";
 
 const COMMENT_PREVIEW_LIMIT = 200;
 
@@ -117,7 +117,7 @@ const createTagList = (tags: ThumbTagInfo[]): HTMLElement => {
   return wrapper;
 };
 
-const buildCacheSummary = (entry: CacheEntry): HTMLElement => {
+const buildCacheSummary = (entry: CacheInfoEntry): HTMLElement => {
   const container = document.createElement("div");
   container.className = "summary-container";
   const caches = Object.values(entry.caches ?? {});
@@ -149,11 +149,19 @@ const buildCacheSummary = (entry: CacheEntry): HTMLElement => {
     meta.appendChild(document.createTextNode("キャッシュ詳細"));
     caches.slice(0, 3).forEach((item) => {
       const line = document.createElement("div");
-      const quality =
-        item?.dmcMovieType && typeof item.dmcMovieType === "object"
-          ? String(item.dmcMovieType.videoMode || "")
+      const quality = item.videoMode ?? "";
+      const audio =
+        Number.isFinite(item.audioBitrate) && item.audioBitrate > 0
+          ? String(item.audioBitrate) + "kbps"
           : "";
-      const summary = [item.cacheId || "", quality, formatBytes(item.size)]
+      const state = item.complete ? "完了" : item.caching ? "取得中" : "未完了";
+      const summary = [
+        item.cacheId,
+        quality,
+        audio,
+        state,
+        formatBytes(item.size),
+      ]
         .filter((value) => value && value !== "-")
         .join(" / ");
       line.textContent = summary;
@@ -601,7 +609,7 @@ export function startMovieInfo(): void {
         const message = toFailureMessage(cacheInfoResult.reason);
         panels.cache.setStatus("error", "キャッシュ情報取得失敗: " + message);
         failures.push({
-          label: "cache/info/v2",
+          label: "cache/info/v3",
           message,
           action:
             "NicoCache_nl が起動しているか、対象動画のキャッシュ情報が存在するかを確認してください。",

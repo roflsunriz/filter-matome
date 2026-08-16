@@ -128,28 +128,30 @@ Object.assign(window, {
       return { apiData, serverContext: {} };
     },
     fetchRequest: async (url: string) => {
-      if (url.includes("cache/info/v2")) {
+      if (url.includes("cache/info/v3")) {
         failIfSelected("cache");
         return new Response(
           JSON.stringify({
             sm100: {
-              preferred: "sm100[720p].hls",
-              cacheIds: ["sm100[720p].hls"],
+              videoId: "sm100",
+              preferred: "sm100[720p,128].hls",
+              cacheIds: ["sm100[720p,128].hls"],
               cachings: [],
-              completes: ["sm100[720p].hls"],
+              completes: ["sm100[720p,128].hls"],
               caches: {
-                main: {
+                "sm100[720p,128].hls": {
                   videoId: "sm100",
-                  cacheId: "sm100[720p].hls",
+                  cacheId: "sm100[720p,128].hls",
                   complete: true,
-                  economy: false,
-                  dmc: true,
-                  movieType: "mp4",
+                  caching: false,
+                  videoMode: "720p",
+                  audioBitrate: 128,
+                  legacyLow: false,
                   size: 1048576,
                   title: "テスト動画",
-                  filename: "sm100.mp4",
+                  subFolder: "",
+                  filename: "sm100[720p,128]_テスト動画.hls",
                   ts: 1,
-                  caching: false,
                 },
               },
             },

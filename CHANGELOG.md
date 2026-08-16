@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#242] - 2026-08-16
+
+### Changed
+
+- 【common・video-player・movie-info】NicoCache_nlの現行CMAF/Domand HLSキャッシュだけを正確に扱えるよう、ローカルキャッシュ取得を`/cache/info/v3`へ移行した。`%LOCALAPPDATA%\NicoCache_nl\src`の実装に合わせてnullable値と取得中メタデータを検証し、完成状態はキャッシュ実体を正として判定し、推奨品質を優先して再生する。
+- 【api-info・tests】v2固有フィールドへの依存を防ぐため、cache info仕様書、movie-info表示、ブラウザーfixtureをv3の`videoMode`・`audioBitrate`・`legacyLow`形式へ更新し、v2形式の拒否、キャッシュ0件、取得中、完成済み、HTTPエラーを単体テストで固定した。
+- 【features・README】リリース番号を`242`へ更新し、latestバッジを`#242`へ変更した。
+
 ## [#241] - 2026-08-15
 
 ### Fixed

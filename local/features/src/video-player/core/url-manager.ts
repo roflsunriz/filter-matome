@@ -1,6 +1,9 @@
 import { VideoUrlInfo } from "@/types/index";
 import { URLS } from "@/video-player/config/constants";
-import type { CacheInfoResponse } from "@/types/video-types";
+import {
+  fetchCacheInfoEntry,
+  getCacheIdsInPriorityOrder,
+} from "@/common/cache-info-api";
 
 /**
  * 動画URLの管理クラス
@@ -34,7 +37,7 @@ export class UrlManager {
         ref: `/cache/file/nicocachenl_refcache=${videoId}.hls//master.m3u8`,
       };
 
-      // /cache/info/v2 と /cache/find_cache を並列で取得
+      // /cache/info/v3 と /cache/find_cache を並列で取得
       const [cacheInfoUrls, customCacheUrls] = await Promise.all([
         this.getCacheInfoUrls(videoId),
         this.getCustomCacheUrls(videoId),
@@ -63,7 +66,7 @@ export class UrlManager {
   }
 
   /**
-   * /cache/info/v2 からキャッシュ情報を取得してURLを生成
+   * /cache/info/v3 からキャッシュ情報を取得してURLを生成
    * @param videoId 動画ID
    * @returns キャッシュ情報から生成されたURL
    */
@@ -71,48 +74,14 @@ export class UrlManager {
     videoId: string,
   ): Promise<Partial<VideoUrlInfo>> {
     try {
-      const response = await fetch(
-        `https://www.nicovideo.jp/cache/info/v2?${encodeURIComponent(videoId)}`,
-      );
-
-      if (!response.ok) {
-        window.logger.warn(`Cache info fetch failed: ${response.status}`);
-        return {};
-      }
-
-      const data: CacheInfoResponse =
-        (await response.json()) as CacheInfoResponse;
-      const videoCacheInfo = data[videoId];
-
-      if (!videoCacheInfo) {
-        return {};
-      }
-
-      // 全キャッシュ ID を収集し、並列で取得してから順序どおりマージ
-      const tasks: Promise<Partial<VideoUrlInfo>>[] = [];
-
-      // preferred キャッシュIDを使用
-      if (videoCacheInfo.preferred) {
-        tasks.push(this.getCustomCacheUrls(videoCacheInfo.preferred));
-      }
-
-      // caches オブジェクトからキャッシュIDを取得
-      if (videoCacheInfo.caches && typeof videoCacheInfo.caches === "object") {
-        const cacheRecord = videoCacheInfo.caches as Record<string, unknown>;
-        for (const cacheId of Object.keys(cacheRecord)) {
-          tasks.push(this.getCustomCacheUrls(cacheId));
+      const cacheInfo = await fetchCacheInfoEntry(videoId);
+      for (const cacheId of getCacheIdsInPriorityOrder(cacheInfo)) {
+        const urls = await this.getCustomCacheUrls(cacheId);
+        if (urls.customHls || urls.customMp4) {
+          return urls;
         }
       }
-
-      const results = await Promise.all(tasks);
-
-      // preferred を先に適用し、caches で上書き（既存動作と同一のマージ順）
-      const urls: Partial<VideoUrlInfo> = {};
-      for (const result of results) {
-        Object.assign(urls, result);
-      }
-
-      return urls;
+      return {};
     } catch (error) {
       window.logger.warn("Cache info fetch error:", error);
       return {};

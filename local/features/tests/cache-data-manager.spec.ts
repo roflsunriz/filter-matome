@@ -121,7 +121,7 @@ test.beforeEach(async ({ page }) => {
       body: `<nicovideo_thumb_response status="ok"><thumb><title>詳細 ${id}</title><thumbnail_url>${transparentPixel}</thumbnail_url><user_nickname>テスト投稿者</user_nickname><length>1:23</length><view_counter>1200</view_counter><comment_num>34</comment_num><mylist_counter>56</mylist_counter><first_retrieve>2026-01-02T03:04:05+09:00</first_retrieve><tags><tag>テスト</tag></tags></thumb></nicovideo_thumb_response>`,
     });
   });
-  await page.route("https://www.nicovideo.jp/cache/info/v2?**", (route) => {
+  await page.route("https://www.nicovideo.jp/cache/info/v3?**", (route) => {
     const id = decodeURIComponent(route.request().url().split("?")[1] ?? "sm0");
     const cacheId = `${id}[720p].hls`;
     void route.fulfill({

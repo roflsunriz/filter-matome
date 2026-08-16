@@ -285,31 +285,6 @@ export type HlsConstructor = (typeof import("hls.js"))["default"];
 export type HlsInstance = InstanceType<HlsConstructor>;
 
 /**
- * キャッシュ情報APIレスポンスの型定義
- */
-export interface CacheInfoResponse {
-  [videoId: string]: {
-    preferred?: string;
-    cacheIds?: string[];
-    completes?: string[];
-    cachings?: string[];
-    preferredDmc?: string;
-    preferredDmcHls?: string;
-    caches?: {
-      [cacheId: string]: {
-        title: string;
-        cacheId?: string;
-        filename?: string;
-        complete?: boolean;
-        caching?: boolean;
-        [key: string]: unknown;
-      };
-    };
-    [key: string]: unknown;
-  };
-}
-
-/**
  * キャッシュURL取得結果の型定義
  */
 export interface CacheUrlResult {

@@ -14,6 +14,9 @@ export * from "@/types/thumbnails-filter-types";
 // 動画関連の型
 export * from "@/types/video-types";
 
+// NicoCache_nl cache/info/v3 関連の型
+export * from "@/types/cache-info-types";
+
 // UI関連の型
 export * from "@/types/ui-types";
 
@@ -41,9 +44,6 @@ export * from "@/types/cache-data-manager-types";
 // Movie Info 関連の型
 export type {
   PanelStatus as MovieInfoPanelStatus,
-  CacheItem as MovieInfoCacheItem,
-  CacheEntry as MovieInfoCacheEntry,
-  CacheInfoResponse as MovieInfoCacheInfoResponse,
   ThumbTagInfo as MovieInfoThumbTagInfo,
   ThumbOwnerInfo as MovieInfoThumbOwnerInfo,
   ThumbInfo as MovieInfoThumbInfo,
@@ -55,6 +55,12 @@ export type {
   DownloadDescriptor as MovieInfoDownloadDescriptor,
   PanelSummaryBuilder as MovieInfoPanelSummaryBuilder,
 } from "@/types/movie-info-types";
+
+export type {
+  CacheInfoItem as MovieInfoCacheItem,
+  CacheInfoEntry as MovieInfoCacheEntry,
+  CacheInfoResponse as MovieInfoCacheInfoResponse,
+} from "@/types/cache-info-types";
 
 // データベース関連の型（重複エクスポートを避けるため必要なもののみ明示的に再エクスポート）
 export type {

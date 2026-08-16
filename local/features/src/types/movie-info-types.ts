@@ -1,48 +1,7 @@
 import type { CommentData, NicoApiData } from "@/types/common-types";
+import type { CacheInfoEntry } from "@/types/cache-info-types";
 
 export type PanelStatus = "idle" | "loading" | "success" | "error";
-
-export interface CacheItem {
-  videoId: string;
-  cacheId: string;
-  complete: boolean;
-  economy: boolean;
-  dmc: boolean;
-  movieType: string;
-  size: number;
-  title: string;
-  filename: string;
-  ts: number;
-  caching: boolean;
-  dmcMovieType?: {
-    videoMode?: string;
-    videoBitrate?: number;
-    audioBitrate?: number;
-    [key: string]: unknown;
-  } | null;
-  subFolder?: string | null;
-  preferredQuality?: string | null;
-  [key: string]: unknown;
-}
-
-export interface CacheEntry {
-  preferred: string | null;
-  preferredHTML5?: string | null;
-  preferredFlash?: string | null;
-  preferredSmile?: string | null;
-  preferredDmc?: string | null;
-  preferredDmcFlv?: string | null;
-  preferredDmcHls?: string | null;
-  cacheIds: string[];
-  cachings: string[];
-  completes: string[];
-  caches: Record<string, CacheItem>;
-  reEncoded?: string | null;
-  reEncodedBitrate?: number | null;
-  [key: string]: unknown;
-}
-
-export type CacheInfoResponse = Record<string, CacheEntry>;
 
 export interface ThumbTagInfo {
   name: string;
@@ -116,7 +75,7 @@ export interface CommentPreview {
 export interface DashboardState {
   videoId: string | null;
   apiData: NicoApiData | null;
-  cacheInfo: CacheEntry | null;
+  cacheInfo: CacheInfoEntry | null;
   thumbInfo: ThumbInfo | null;
   gpacInfo: GpacResponse | null;
   commentPreview: CommentPreview | null;
