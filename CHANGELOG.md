@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#243] - 2026-08-18
+
 ### Changed
 
 - 【全NicoCache連携】本体の旧`/cache/*`管理API廃止に合わせ、キャッシュ照会・検索・再生・
@@ -16,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   本体の論理メディアAPIと`nicocachenl.test/media/v1`の再生セッション経路へ移行した。
 - 【extensions】movie-fetcher、smart-fetcher、GPAC、nicochart、シリーズアラート、
   コメントログを`/api/v1/extensions/filter-matome`へ統一した。
+- 【features・README】リリース番号を`243`へ更新し、latestバッジを`#243`へ変更した。
 
 ### Removed
 
