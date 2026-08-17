@@ -112,8 +112,9 @@ describe("smartFetcher Java extension contract", () => {
 
   test("実測したDomand配信URLだけを用途別に許可する", () => {
     expect(fetcher).toContain('"delivery.domand.nicovideo.jp".equals(host)');
-    expect(fetcher).toContain("CURRENT_CMAF_RESOURCE_PATH");
+    expect(fetcher).toContain("LOCAL_CMAF_RESOURCE_PATH");
     expect(fetcher).toContain("ASSET_CMAF_RESOURCE_PATH");
+    expect(fetcher).toContain('"nicocachenl.test".equals(host)');
     expect(fetcher).toContain('"asset.domand.nicovideo.jp".equals(host)');
     expect(fetcher).toContain("isAllowedMasterPlaylistUrl(contentUrl)");
     expect(fetcher).toContain("[a-f0-9]{24}");
@@ -123,10 +124,10 @@ describe("smartFetcher Java extension contract", () => {
     expect(fetcher).not.toContain("finishedAts");
   });
 
-  test("NicoCacheの限定cache playlistを許可しSPAの古い応答を破棄する", () => {
+  test("NicoCacheの限定media playlistを許可しSPAの古い応答を破棄する", () => {
     expect(fetcher).toContain("(?:master|audio|video)\\\\.m3u8");
-    expect(fetcher).toContain("[A-Za-z0-9._~,=-]{1,256}");
-    expect(fetcher).toContain('"delivery.domand.nicovideo.jp".equals(host)');
+    expect(fetcher).toContain("/media/v1/playback-sessions/");
+    expect(fetcher).not.toContain("/cache/file/");
     expect(schedulerClient.match(/cache: "no-store"/gu)).toHaveLength(3);
     expect(schedulerApp).toContain("stateRequestGeneration");
     expect(schedulerApp).toContain("generation === stateRequestGeneration");

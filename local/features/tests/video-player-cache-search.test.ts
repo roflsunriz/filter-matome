@@ -91,4 +91,6 @@ test("video-playerは本体の検索・メディアAPIだけを使う", () => {
   expect(source).toContain("/media");
   expect(source).not.toContain("extensions/filter-matome/cache-search");
   expect(source).not.toContain("CustomCacheReturner");
+  expect(source).not.toContain("/cache/file/");
+  expect(source).not.toContain("/local/cache/");
 });

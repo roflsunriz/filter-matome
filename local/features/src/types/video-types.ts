@@ -74,9 +74,6 @@ export interface VideoAvailabilityResult {
  */
 export interface VideoUrlInfo {
   auto: string;
-  ref: string;
-  hls?: string;
-  mp4?: string;
 }
 
 /**

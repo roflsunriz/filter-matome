@@ -1,22 +1,11 @@
 import { VideoUrlInfo } from "@/types/index";
-import { URLS } from "@/video-player/config/constants";
 
 /**
  * 動画URLの管理クラス
  * キャッシュサーバーからURLを取得するなどの機能を提供します
  */
 export class UrlManager {
-  private readonly baseUrl: string;
-  private readonly urlPriority: (keyof VideoUrlInfo)[] = [
-    "auto",
-    "ref",
-    "hls",
-    "mp4",
-  ];
-
-  constructor() {
-    this.baseUrl = URLS.BASE;
-  }
+  private readonly urlPriority: (keyof VideoUrlInfo)[] = ["auto"];
 
   /**
    * 指定された動画IDに対する利用可能なURLを取得します
@@ -26,9 +15,6 @@ export class UrlManager {
   public getUrls(videoId: string): Promise<VideoUrlInfo> {
     return Promise.resolve({
       auto: `https://nicocachenl.test/api/v1/videos/${encodeURIComponent(videoId)}/media`,
-      ref: `/cache/file/nicocachenl_refcache=${videoId}.hls//master.m3u8`,
-      hls: `/local/cache/${videoId}.hls/master.m3u8`,
-      mp4: `/local/cache/${videoId}.mp4`,
     });
   }
 
@@ -62,22 +48,13 @@ export class UrlManager {
   }
 
   /**
-   * 相対URLを絶対URLに変換
-   */
-  public getFullUrl(path: string): string {
-    if (path.startsWith("http")) return path;
-    return `${this.baseUrl}${path}`;
-  }
-
-  /**
    * 優先度順に並べた動画URL候補を取得
    */
   public async getCandidateUrls(videoId: string): Promise<string[]> {
     const urls = await this.getUrls(videoId);
     return this.urlPriority
       .map((key) => urls[key])
-      .filter((url): url is string => url !== undefined)
-      .map((url) => this.getFullUrl(url));
+      .filter((url): url is string => url !== undefined);
   }
 
   /**

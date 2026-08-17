@@ -52,7 +52,7 @@ import dareka.processor.impl.VideoDescriptor;
  * 視聴権の取得はログイン状態を持つブラウザー側へ任せ、この拡張は署名済みURLだけを扱う。
  */
 public final class nlMovieFetcher implements Extension2, Processor {
-    public static final int REVISION = 26081801;
+    public static final int REVISION = 26081802;
     public static final String VER_STRING = "nlMovieFetcher_" + REVISION;
 
     private static final String API_PREFIX = "/api/v1/extensions/filter-matome/movie-fetcher/";
@@ -68,9 +68,8 @@ public final class nlMovieFetcher implements Extension2, Processor {
             "https?://\\S+", Pattern.CASE_INSENSITIVE);
     private static final Pattern URI_ATTRIBUTE = Pattern.compile(
             "(?:^|[:,])URI=\\\"([^\\\"]+)\\\"", Pattern.CASE_INSENSITIVE);
-    private static final Pattern CURRENT_CMAF_RESOURCE_PATH = Pattern.compile(
-            "^/cache/file/[A-Za-z0-9._~-]{1,256}="
-                    + "[A-Za-z0-9._~,=-]{1,256}//(?:"
+    private static final Pattern LOCAL_CMAF_RESOURCE_PATH = Pattern.compile(
+            "^/media/v1/playback-sessions/[A-Za-z0-9._~,=-]{1,256}/files/(?:"
                     + "(?:master|audio|video)\\.m3u8"
                     + "|audio/[A-Za-z0-9._-]{1,128}\\.cmfa"
                     + "|video/[A-Za-z0-9._-]{1,128}\\.cmfv)$");
@@ -544,7 +543,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
         try {
             URI uri = URI.create(value);
             String host = uri.getHost();
-            if (!isSecureDomandUri(uri) || host == null) {
+            if (!isSecureResourceUri(uri) || host == null) {
                 return false;
             }
             host = host.toLowerCase(Locale.ROOT);
@@ -555,8 +554,10 @@ public final class nlMovieFetcher implements Extension2, Processor {
             if ("delivery.domand.nicovideo.jp".equals(host)) {
                 return path.startsWith("/hlsbid/")
                         || path.startsWith("/shlsbid/")
-                        || path.startsWith("/hlsext/")
-                        || CURRENT_CMAF_RESOURCE_PATH.matcher(path).matches();
+                        || path.startsWith("/hlsext/");
+            }
+            if ("nicocachenl.test".equals(host)) {
+                return LOCAL_CMAF_RESOURCE_PATH.matcher(path).matches();
             }
             return "asset.domand.nicovideo.jp".equals(host)
                     && ASSET_CMAF_RESOURCE_PATH.matcher(path).matches();
@@ -569,7 +570,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
         try {
             URI uri = URI.create(value);
             String path = uri.getPath();
-            return isSecureDomandUri(uri)
+            return isSecureResourceUri(uri)
                     && "delivery.domand.nicovideo.jp".equalsIgnoreCase(
                             uri.getHost())
                     && path != null
@@ -581,7 +582,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
         }
     }
 
-    private boolean isSecureDomandUri(URI uri) {
+    private boolean isSecureResourceUri(URI uri) {
         return "https".equalsIgnoreCase(uri.getScheme())
                 && uri.getHost() != null
                 && uri.getUserInfo() == null

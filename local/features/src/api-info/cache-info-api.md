@@ -58,4 +58,5 @@ DELETE /api/v1/videos/<動画ID>/hls-cache-entries
 DELETE /api/v1/videos/<動画ID>/cache-entries
 ```
 
-旧`www.nicovideo.jp/cache/*`管理APIは利用しない。`/cache/file/*`はCMAF再生データの内部経路であり、REST APIとは別に扱う。
+旧`www.nicovideo.jp/cache/*`は配信経路を含めて利用しない。CMAFの内部配信は
+`https://nicocachenl.test/media/v1/*`へ分離され、通常の利用側は動画単位の`/media`を使う。

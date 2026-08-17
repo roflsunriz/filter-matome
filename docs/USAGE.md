@@ -85,6 +85,8 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 cache-data-managerとmlink-video-controllerの削除操作は、NicoCache_nl本体の`DELETE /api/v1/videos/<動画ID>/hls-cache-entries`を使用する。完了済み・停止済みHLSは即時削除し、取得中HLSは変種単位で完了前の削除を予約する。MP4・FLV・SWFは対象にしない。
 
+video-playerはNicoCache_nl本体の`/api/v1/videos/<動画ID>/media`だけを再生候補に使う。movie-fetcherが自己プロキシーから受け取るCMAF断片は`nicocachenl.test/media/v1/playback-sessions/`に限定し、旧`www.nicovideo.jp/cache/*`経路は使用しない。
+
 #### watch-history常駐シリーズアラート
 
 `FilterMatomeSeriesAlerts`がシリーズアラートの正本を管理し、watch-historyのシリーズアラート画面はextension APIから一覧取得・追加・変更・削除する管理フロントエンドとして動作する。NicoCache_nlは約60秒ごとに期限到来を確認し、対象動画の公開ウォッチページから次動画を検出する。ログインCookieやブラウザの通知権限には依存しない。

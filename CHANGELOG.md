@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   保存・削除と全Java拡張APIを`https://nicocachenl.test/api/v1`へ完全移行した。
 - 【common・video-player・movie-info】動画単位のREST資源からCMAF/Domandキャッシュ情報を取得し、
   専用ホストの再生・エクスポート経路を使うよう、型検証、URL生成、fixture、UI表示を更新した。
+- 【video-player・nlMovieFetcher】旧`www.nicovideo.jp/cache/file/*`への内部配信依存を除去し、
+  本体の論理メディアAPIと`nicocachenl.test/media/v1`の再生セッション経路へ移行した。
 - 【extensions】movie-fetcher、smart-fetcher、GPAC、nicochart、シリーズアラート、
   コメントログを`/api/v1/extensions/filter-matome`へ統一した。
 
