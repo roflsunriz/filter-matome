@@ -10,11 +10,11 @@ NicoCache_nlが生成するキャッシュ一覧ページを、検索・絞り�
 
 - 入力: NicoCache_nlがページへ展開する `window.tempList`、`window.cacheList`、`window.ncversion`。
 - 動画詳細・公開状態: `common/video-info-api.ts` が現行Watch API JSONと旧`ext.nicovideo.jp/api/getthumbinfo/<動画ID>` XMLを互換処理する。
-- キャッシュ削除: `common/cache-removal.ts` を通じて `FilterMatomeCacheControl` APIを利用する。
+- キャッシュ削除: `common/cache-removal.ts` を通じてNicoCache_nl本体の動画単位DELETE APIを利用する。
 - 出力: 一覧DOM、検索結果・詳細モーダル、再生・変換・削除操作。
 - 補助保存: `storage/cache-metadata-db.ts` の `CacheDataManagerMetadata` IndexedDB。
 
-`tempList` は同一動画の `cacheList` より優先されます。削除処理ではMP4などを推測で消さず、APIが返すHLSの削除・削除予約・対象なし・失敗を区別してください。
+`tempList` は同一動画の `cacheList` より優先されます。動画単位削除では完成・一時キャッシュを対象とし、APIが返す即時削除・削除予約・対象なし・失敗を区別してください。
 
 ## 構成
 

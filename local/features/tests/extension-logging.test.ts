@@ -7,10 +7,7 @@ const extensionDirectory = resolve(repositoryRoot, "extensions");
 
 const expectedLogTabs = new Map<string, string>([
   ["CommentFilterLogger.java", "CommentFilter"],
-  ["CustomCacheReturner.java", "CacheReturn"],
-  ["downloadThruFFmpeg.java", "downloadThruFFmpeg"],
   ["ExtUtil.java", "ExtUtil"],
-  ["FilterMatomeCacheControl.java", "FilterMatomeCacheControl"],
   ["FilterMatomeSeriesAlerts.java", "Series Alerts"],
   ["FilterMatomeSmartFetcher.java", "smartFetcher"],
   ["NicochartInfoProxy.java", "NicochartInfoProxy"],

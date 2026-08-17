@@ -145,11 +145,17 @@ export class EventCoordinator {
   }
 
   private handleSaveVideo(baseId: string): void {
-    window.open(`./ffmpeg?video=${baseId}`, "_blank");
+    window.open(
+      `https://nicocachenl.test/api/v1/videos/${encodeURIComponent(baseId)}/exports/video`,
+      "_blank",
+    );
   }
 
   private handleSaveAudio(baseId: string): void {
-    window.open(`./ffmpeg?audio=${baseId}`, "_blank");
+    window.open(
+      `https://nicocachenl.test/api/v1/videos/${encodeURIComponent(baseId)}/exports/audio`,
+      "_blank",
+    );
   }
 
   private async handleDelete(baseId: string, title: string): Promise<void> {
@@ -170,7 +176,7 @@ export class EventCoordinator {
       alert(
         error instanceof Error
           ? error.message
-          : "HLSキャッシュの削除に失敗しました。",
+          : "キャッシュの削除に失敗しました。",
       );
     }
   }

@@ -273,7 +273,7 @@ export class LinkManager {
           return;
         }
         window.open(
-          `https://nicocachenl.test/api/v1/extensions/filter-matome/ffmpeg/exports/video/${encodeURIComponent(videoId)}`,
+          `https://nicocachenl.test/api/v1/videos/${encodeURIComponent(videoId)}/exports/video`,
         );
       },
       saveaudio: () => {
@@ -284,7 +284,7 @@ export class LinkManager {
           return;
         }
         window.open(
-          `https://nicocachenl.test/api/v1/extensions/filter-matome/ffmpeg/exports/audio/${encodeURIComponent(videoId)}`,
+          `https://nicocachenl.test/api/v1/videos/${encodeURIComponent(videoId)}/exports/audio`,
         );
       },
       savecomment: async () => {

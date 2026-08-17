@@ -1,9 +1,5 @@
 import { VideoUrlInfo } from "@/types/index";
 import { URLS } from "@/video-player/config/constants";
-import {
-  fetchCacheInfoEntry,
-  getCacheIdsInPriorityOrder,
-} from "@/common/cache-info-api";
 
 /**
  * 動画URLの管理クラス
@@ -12,12 +8,10 @@ import {
 export class UrlManager {
   private readonly baseUrl: string;
   private readonly urlPriority: (keyof VideoUrlInfo)[] = [
-    "customHls",
-    "customMp4",
-    "hls",
-    "mp4",
     "auto",
     "ref",
+    "hls",
+    "mp4",
   ];
 
   constructor() {
@@ -29,109 +23,13 @@ export class UrlManager {
    * @param videoId ニコニコ動画のID
    * @returns 利用可能なURLの情報
    */
-  public async getUrls(videoId: string): Promise<VideoUrlInfo> {
-    try {
-      // 基本的なURLセット
-      const urls: VideoUrlInfo = {
-        auto: `https://nicocachenl.test/api/v1/videos/${encodeURIComponent(videoId)}/media`,
-        ref: `/cache/file/nicocachenl_refcache=${videoId}.hls//master.m3u8`,
-      };
-
-      // RESTキャッシュ情報とCustomCacheReturnerを並列で取得
-      const [cacheInfoUrls, customCacheUrls] = await Promise.all([
-        this.getCacheInfoUrls(videoId),
-        this.getCustomCacheUrls(videoId),
-      ]);
-
-      // 両方の情報を統合
-      const allUrls = { ...urls, ...cacheInfoUrls, ...customCacheUrls };
-
-      // 従来のパスをフォールバックとして追加
-      if (!allUrls.customHls)
-        allUrls.hls = `/local/cache/${videoId}.hls/master.m3u8`;
-      if (!allUrls.customMp4) allUrls.mp4 = `/local/cache/${videoId}.mp4`;
-
-      return allUrls;
-    } catch (error) {
-      window.logger.error("キャッシュ検索エラー:", error);
-
-      // エラー時は従来のURLを返す
-      return {
-        auto: `https://nicocachenl.test/api/v1/videos/${encodeURIComponent(videoId)}/media`,
-        ref: `/cache/file/nicocachenl_refcache=${videoId}.hls//master.m3u8`,
-        hls: `/local/cache/${videoId}.hls/master.m3u8`,
-        mp4: `/local/cache/${videoId}.mp4`,
-      };
-    }
-  }
-
-  /**
-   * NicoCache_nl REST APIからキャッシュ情報を取得してURLを生成
-   * @param videoId 動画ID
-   * @returns キャッシュ情報から生成されたURL
-   */
-  private async getCacheInfoUrls(
-    videoId: string,
-  ): Promise<Partial<VideoUrlInfo>> {
-    try {
-      const cacheInfo = await fetchCacheInfoEntry(videoId);
-      for (const cacheId of getCacheIdsInPriorityOrder(cacheInfo)) {
-        const urls = await this.getCustomCacheUrls(cacheId);
-        if (urls.customHls || urls.customMp4) {
-          return urls;
-        }
-      }
-      return {};
-    } catch (error) {
-      window.logger.warn("Cache info fetch error:", error);
-      return {};
-    }
-  }
-
-  /**
-   * CustomCacheReturner からキャッシュ情報を取得
-   * @param cacheId キャッシュID (so30413239 形式)
-   * @returns CustomCacheReturnerのレスポンスから生成されたURL
-   */
-  private async getCustomCacheUrls(
-    cacheId: string,
-  ): Promise<Partial<VideoUrlInfo>> {
-    try {
-      const response = await fetch(
-        `https://nicocachenl.test/api/v1/extensions/filter-matome/cache-search/${encodeURIComponent(cacheId)}`,
-      );
-
-      if (!response.ok) {
-        throw new Error(`Custom cache search failed: ${response.status}`);
-      }
-
-      const data: unknown = await response.json();
-      const availablePaths = (
-        data &&
-        typeof data === "object" &&
-        "paths" in (data as Record<string, unknown>)
-          ? (data as { paths?: unknown }).paths
-          : []
-      ) as unknown[];
-
-      const urls: Partial<VideoUrlInfo> = {};
-
-      // パスをそのまま追加
-      for (const path of availablePaths) {
-        if (typeof path === "string") {
-          if (path.endsWith(".hls")) {
-            urls.customHls = `/local/cache/${path}/master.m3u8`;
-          } else if (path.endsWith(".mp4")) {
-            urls.customMp4 = `/local/cache/${path}`;
-          }
-        }
-      }
-
-      return urls;
-    } catch (error) {
-      window.logger.warn(`Custom cache search error for ${cacheId}:`, error);
-      return {};
-    }
+  public getUrls(videoId: string): Promise<VideoUrlInfo> {
+    return Promise.resolve({
+      auto: `https://nicocachenl.test/api/v1/videos/${encodeURIComponent(videoId)}/media`,
+      ref: `/cache/file/nicocachenl_refcache=${videoId}.hls//master.m3u8`,
+      hls: `/local/cache/${videoId}.hls/master.m3u8`,
+      mp4: `/local/cache/${videoId}.mp4`,
+    });
   }
 
   /**

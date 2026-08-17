@@ -133,4 +133,15 @@ describe("mlink-video-controller structure", () => {
     expect(watchPageModule).not.toContain("pageObserver");
     expect(watchPageModule).not.toContain("setupPageObserver");
   });
+
+  test("uses NicoCache_nl core APIs for cache exports and removal", () => {
+    const linkManager = readControllerFile("services/link-manager.ts");
+    const videoUtil = readControllerFile("utils/video-util.ts");
+
+    expect(linkManager).toContain("/exports/video");
+    expect(linkManager).toContain("/exports/audio");
+    expect(linkManager).not.toContain("ffmpeg/exports");
+    expect(videoUtil).toContain("removeCacheForVideo");
+    expect(videoUtil).not.toContain("fetchCacheRemovalStatus");
+  });
 });

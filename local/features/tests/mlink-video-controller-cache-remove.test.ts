@@ -1,124 +1,75 @@
 import { describe, expect, test } from "bun:test";
 
 import {
-  fetchCacheRemovalStatus,
   getCacheRemovalNotice,
   removeCacheForVideo,
 } from "../src/common/cache-removal";
 
-const completedResponse = {
-  requestId: "request-1",
-  videoId: "sm9",
-  status: "completed",
-  target: "hls",
-  preservesNonHls: true,
-  results: [{ cacheId: "sm9[720p,256].hls", outcome: "deleted" }],
-} as const;
-
-describe("FilterMatomeCacheControl API client", () => {
-  test("requests HLS-only removal with active-download queuing", async () => {
+describe("NicoCache_nl deletion API client", () => {
+  test("動画単位のDELETEを本体APIへ送る", async () => {
     const originalFetch = globalThis.fetch;
     const calls: Array<[RequestInfo | URL, RequestInit | undefined]> = [];
     globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
       calls.push([input, init]);
-      return Promise.resolve(Response.json(completedResponse));
+      return Promise.resolve(
+        Response.json({ videoId: "sm9", status: "deleted" }),
+      );
     }) as typeof fetch;
 
     try {
-      await expect(removeCacheForVideo("sm9")).resolves.toEqual(
-        completedResponse,
-      );
+      await expect(removeCacheForVideo("sm9")).resolves.toEqual({
+        videoId: "sm9",
+        status: "deleted",
+      });
     } finally {
       globalThis.fetch = originalFetch;
     }
 
     expect(calls).toEqual([
       [
-        "https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Filter-Matome-Cache-Control": "1",
-          },
-          body: JSON.stringify({
-            videoId: "sm9",
-            scope: "hls",
-            activeDownload: "queue",
-          }),
-          cache: "no-store",
-          credentials: "same-origin",
-        },
+        "https://nicocachenl.test/api/v1/videos/sm9/cache-entries",
+        { method: "DELETE", cache: "no-store", credentials: "omit" },
       ],
     ]);
   });
 
-  test("fetches queued removal status by request id", async () => {
-    const originalFetch = globalThis.fetch;
-    const calls: Array<[RequestInfo | URL, RequestInit | undefined]> = [];
-    globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
-      calls.push([input, init]);
-      return Promise.resolve(Response.json(completedResponse));
-    }) as typeof fetch;
-
-    try {
-      await fetchCacheRemovalStatus("request/1");
-    } finally {
-      globalThis.fetch = originalFetch;
-    }
-
-    expect(calls[0]?.[0]).toBe(
-      "https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove-status?id=request%2F1",
-    );
-    expect(calls[0]?.[1]).toEqual({
-      method: "GET",
-      cache: "no-store",
-      credentials: "same-origin",
-      headers: { "X-Filter-Matome-Cache-Control": "1" },
-    });
-  });
-
-  test("reports active HLS downloads as queued without claiming deletion", () => {
+  test("取得中キャッシュの削除予約を削除済みと誤表示しない", () => {
     const notice = getCacheRemovalNotice({
-      ...completedResponse,
-      status: "pending",
-      results: [{ cacheId: "sm9[720p,256].hls", outcome: "queued" }],
+      videoId: "sm9",
+      status: "scheduled",
     });
-
     expect(notice.kind).toBe("warning");
     expect(notice.message).toContain("削除を予約しました");
   });
 
-  test("explains a missing extension on HTTP 404", async () => {
+  test("対象なしと不正レスポンスを区別する", async () => {
+    expect(
+      getCacheRemovalNotice({ videoId: "sm9", status: "not_found" }),
+    ).toEqual({
+      kind: "warning",
+      message: "削除可能なキャッシュが見つかりません。",
+    });
+
     const originalFetch = globalThis.fetch;
     globalThis.fetch = (() =>
       Promise.resolve(
-        new Response("Not Found", { status: 404 }),
+        Response.json({ videoId: "sm9", status: "unknown" }),
       )) as typeof fetch;
-
     try {
       await expect(removeCacheForVideo("sm9")).rejects.toThrow(
-        "FilterMatomeCacheControl拡張が見つかりません",
+        "応答形式が不正です",
       );
     } finally {
       globalThis.fetch = originalFetch;
     }
   });
 
-  test("rejects responses containing a non-HLS deletion target", async () => {
+  test("HTTPエラーを報告する", async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = (() =>
-      Promise.resolve(
-        Response.json({
-          ...completedResponse,
-          results: [{ cacheId: "sm9.mp4", outcome: "deleted" }],
-        }),
-      )) as typeof fetch;
-
+      Promise.resolve(new Response("", { status: 503 }))) as typeof fetch;
     try {
-      await expect(removeCacheForVideo("sm9")).rejects.toThrow(
-        "HLSキャッシュ削除APIの結果形式が不正です",
-      );
+      await expect(removeCacheForVideo("sm9")).rejects.toThrow("HTTP 503");
     } finally {
       globalThis.fetch = originalFetch;
     }

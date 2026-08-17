@@ -135,8 +135,7 @@ class E2EIsolatedDeveloperTest {
         for (String filter : new String[]{"100_features.txt", "101_disable_official_function.txt", "105_premium_hide.txt"}) {
             Files.writeString(repo.resolve("nlFilters").resolve(filter), filter);
         }
-        for (String extension : new String[]{"CommentFilterLogger.class", "CustomCacheReturner.class",
-                "downloadThruFFmpeg.class", "ExtUtil.class", "FilterMatomeCacheControl.class",
+        for (String extension : new String[]{"CommentFilterLogger.class", "ExtUtil.class",
                 "FilterMatomeSeriesAlerts.class", "FilterMatomeSmartFetcher.class",
                 "NicochartInfoProxy.class", "nlGpac.class", "nlMovieFetcher.class"}) {
             Files.writeString(repo.resolve("extensions").resolve(extension), extension);

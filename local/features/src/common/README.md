@@ -19,7 +19,7 @@
 - `video-info-api.ts`: 旧ext-thumb XMLと現行Watch API JSONを共通の動画情報へ正規化するクライアント。
 - `cache-search-client.ts`, `cache-search-results.ts`: NicoCache_nlキャッシュ検索と結果UI。
 - `cache-info-api.ts`: 専用ホストREST APIのレスポンス検証、取得、完成判定、再生候補の優先順位。
-- `cache-removal.ts`: `FilterMatomeCacheControl` APIの削除・削除予約・状態確認。
+- `cache-removal.ts`: NicoCache_nl本体の動画単位DELETE APIと削除予約結果の正規化。
 - `video-navigation.ts`, `video-navigation-styles.ts`: 動画ID・URL入力とキャッシュ検索の共通UI。
 - `indexed-db-emergency-backup.ts`: 破損したIndexedDBを再作成する前の緊急退避。
 - `google-drive-backup-service.ts`: Google Identity Services、`drive.file`権限、ZIP圧縮を使う機能共通のGoogle Driveバックアップ基盤。

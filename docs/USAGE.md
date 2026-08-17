@@ -44,7 +44,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 1. mylist2、comment-filter2、watch-history、mlink-video-controllerの各管理画面から必要な設定とデータをエクスポートし、`local\background-images` に自分で追加した画像も別の場所へバックアップする。
 2. `NICO_APP_ROOT\config.properties` の `userDataRoot` を確認し、バックアップ後にNicoCache_nlを終了する。
-3. `NICO_DATA_ROOT\extensions` から、「同梱される拡張機能」に記載した10種の `.class` と `.java` を削除する。旧版の `nlMediaInfo*` と `nlGpac$*.class` が残っている場合は、それらも削除する。
+3. `NICO_DATA_ROOT\extensions` から、「同梱される拡張機能」に記載した7種の `.class` と `.java` を削除する。旧版の`CustomCacheReturner*`、`downloadThruFFmpeg*`、`FilterMatomeCacheControl*`、`nlMediaInfo*`、`nlGpac$*.class`が残っている場合も削除する。
 4. `NICO_DATA_ROOT\local` から `background-images`、`features`、`images`、`mime.types`、`list.js`、`list.js.map` のうちfilter-matomeが配置したものを取り除く。`background-images` に自分で追加した画像は残す。シンボリックリンクは参照先を確認し、リンク自体だけを削除する。
 5. `NICO_DATA_ROOT\nlFilters` から `100_features.txt`、`101_disable_official_function.txt`、`105_premium_hide.txt`、`nlFilters_編集ガイド.md` のうちfilter-matomeが配置したものを取り除く。
 6. Java Toolboxも入れ直す場合は、`NICO_APP_ROOT\scripts` がfilter-matomeのコピーまたはリンクであることを確認して取り除く。
@@ -64,7 +64,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 `extensions/` は、ブラウザへ挿入されるJavaScriptやCSSでは実行できないサーバー側の処理をNicoCache_nlへ追加するディレクトリである。ローカルキャッシュファイルの探索、外部コマンドの実行、NicoCache_nl GUIへのログ表示、外部サイトからの限定的な情報取得などを担当する。
 
-配布物には、次の全10種について同名の `.class` と `.java` が含まれる。
+配布物には、次の全7種について同名の `.class` と `.java` が含まれる。
 
 - `.class`: NicoCache_nlが実行時に読み込むコンパイル済み拡張機能。本機能を利用するために必要。
 - `.java`: 拡張機能のソースコード。通常利用時のコンパイルには使用せず、実装確認や開発用として同梱している。
@@ -74,10 +74,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 | ファイル | 役割 | 主な利用箇所・追加要件 |
 |---|---|---|
 | `CommentFilterLogger.class` | comment-filter2から送信されたフィルター結果を受け取り、NicoCache_nl GUIのログタブへ表示する | comment-filter2の「ログ送信」を有効にした場合に使用。GUIなしで起動した場合はログタブを表示しない |
-| `CustomCacheReturner.class` | `local/cache`内のHLS・MP4候補を動画IDで検索し、JSONで返す | video-playerのローカル動画ソース探索に使用 |
-| `downloadThruFFmpeg.class` | キャッシュ動画から動画または音声を書き出す | mlink-video-controllerとキャッシュ一覧の「保存:動画」「保存:音声」で使用。別途`ffmpeg`コマンドが必要 |
 | `ExtUtil.class` | 拡張機能向けの共通処理を提供する補助クラス | 単独で操作する機能ではない。他の `.class` と一緒に配置する |
-| `FilterMatomeCacheControl.class` | filter-matome向けにHLSキャッシュの一括削除と削除予約をJSON APIで提供する | 完了済み・停止済みHLSは削除し、ダウンロード中HLSは完了または中断後に削除する。MP4・FLV・SWFは削除しない |
 | `FilterMatomeSeriesAlerts.class` | watch-historyのアラート設定を保持し、NicoCache_nlの60秒定期イベントからシリーズ新着を確認してOS通知を表示する | NicoCache_nlが起動していればwatch-historyやブラウザを閉じても動作する |
 | `FilterMatomeSmartFetcher.class` | 動画取得の永続予約、暗号化Cookie、帯域・容量判定、再試行、取得履歴を管理する | `nlMovieFetcher.class`と組み合わせ、動画取得スケジューラーで使用する |
 | `NicochartInfoProxy.class` | video-playerが通常の動画情報を取得できない場合だけ、サーバー側からnicochart.jpの公開情報を取得する | 接続先と動画IDを制限した読み取り専用処理。PACや`genCerts.bat` / `genCerts.sh`の変更は不要 |
@@ -85,34 +82,6 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 | `nlMovieFetcher.class` | 署名済みDomand playlistの全CMAFリソースをNicoCache_nl経由で取得し、進捗確認と中止APIを提供する | 一覧の即時取得とsmartFetcherの実行エンジンとして使用する |
 
 `nlGpac.class`は単一クラスで完結し、キャッシュを変更せず、通常のメディアファイルはそのまま、`.hls`ディレクトリはローカルの`master.m3u8`を入力としてGPACへ渡す。HLS/CMAFでもセグメントごとの結果を返さず、GPACが全期間を消費して得たPIDの解像度、Codec、ビットレート、フレーム数、時間、音声サンプルレート、チャンネル数などをまとめる。movie-infoのGPACビューでは、これらに加えてコンテナ入力、GPACバージョン、品質選択、色空間、ピクセル形式、アスペクト比、チャンネル配置などをストリーム別に表示し、GPACが返した未知の属性も全属性表で確認できる。キャッシュ解析で意図せず外部配信へ接続しないよう、プレイリストにHTTP等のリモートURLが含まれる場合は解析を拒否する。GPACの実行ファイルは、`-Dgpac.path=...`、`GPAC_PATH`環境変数、`C:\PathArea\GPAC\gpac.exe`、ユーザーの`%LOCALAPPDATA%\Programs\GPAC\gpac.exe`、`C:\Program Files\GPAC\gpac.exe`、最後にPATHの順で探索する。
-
-#### HLSキャッシュ削除API
-
-`FilterMatomeCacheControl`は、cache-data-managerとmlink-video-controllerのキャッシュ削除で使用する。NicoCache_nl本体のソースを書き換えず、公開されているキャッシュAPIとシステムイベントだけを利用する。削除対象は動画IDに紐づく `.hls` に限定され、ユーザーが用意した可能性のあるMP4・FLV・SWFは保持される。
-
-すべてのリクエストで `X-Filter-Matome-Cache-Control: 1` ヘッダーが必要。状態変更にはGETではなくPOSTを使用する。
-
-```http
-GET https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/capabilities
-X-Filter-Matome-Cache-Control: 1
-```
-
-```http
-POST https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove
-Content-Type: application/json
-X-Filter-Matome-Cache-Control: 1
-
-{"videoId":"sm9","scope":"hls","activeDownload":"queue"}
-```
-
-完了済み・停止済みHLSは `deleted`、ダウンロード中HLSは `queued` として返る。`queued` は即時削除済みという意味ではなく、キャッシュ完了・中断イベントと定期再確認によって削除される。応答の `requestId` は次のAPIで確認できる。
-
-```http
-GET https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove-status?id=<requestId>
-X-Filter-Matome-Cache-Control: 1
-```
-
-リクエスト全体の状態は `not_found`、`pending`、`completed`、`partial`、`failed` のいずれかとなる。NicoCache_nlを再起動すると処理中の削除予約は失われるため、`pending` の間はNicoCache_nlを終了しない。
 
 #### watch-history常駐シリーズアラート
 
@@ -146,7 +115,7 @@ NicoCache_nlが起動している間だけ約60秒ごとに期限を確認する
     - 拡張機能はNicoCache_nlと同じJavaプロセス内で動作し、ローカルファイルの読み取りや外部コマンドの起動、ネットワーク通信を行える。信頼できる配布元の `.class` だけを配置する。
     - `.java`だけを更新しても動作は変わらない。通常利用者は配布済みの `.class` を使用し、自分で再コンパイルしない。
     - 一部の拡張だけを任意に抜くと、対応する画面機能が404や取得失敗になる。基本的には配布物の一式を使用する。
-    - `downloadThruFFmpeg.class`は従来どおり`ffmpeg`を使用する。`nlGpac.class`はGPACを外部プロセスとして呼び出すため、`gpac.exe`をPATHへ追加するか、`C:\PathArea\GPAC`やユーザー領域へ導入して`GPAC_PATH`または`-Dgpac.path=...`で指定する。
+    - 動画・音声保存はNicoCache_nl本体APIを使用する。`nlGpac.class`はGPACを外部プロセスとして呼び出すため、`gpac.exe`をPATHへ追加するか、`C:\PathArea\GPAC`やユーザー領域へ導入して`GPAC_PATH`または`-Dgpac.path=...`で指定する。
 
 #### 動作しない場合
 
@@ -237,7 +206,7 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 コメント検索タブでは通常表現と正規表現による検索ができる。詳細表示チェックボックスをオンにすると、ID, No., 投稿日時, コメントコマンド, プレミアムステータス, スコアといった情報が表示される。  
 
 関連リンクタブでは、filter-matome関連リンク、niconico関連リンク、NicoCache_nlリンクが表示される。  
-`キャッシュリスト`の使用には上記キャッシュデータ用マネージャのシンボリックリンクセットアップが必要。その他、`保存:動画`, `保存:音声`のリンクの動作には `downloadThruFFmpeg.class` が必要。 動画または音声の保存時はJavaによるファイルダイアログが出るのでタスクバーにあるNicoCacheのアイコンをダブルクリックしてファイルダイアログをフォアグラウンドに移動したほうがよい。（自動でフォアグラウンドにならないため） `Processing Started`となるとダウンロード処理開始。 `保存:コメント` は現在NicoCache_nl本体自体が最新のコメントデータ形式に未対応のため動作していない。  
+`キャッシュリスト`の使用には上記キャッシュデータ用マネージャのシンボリックリンクセットアップが必要。`保存:動画`、`保存:音声`、`保存:コメント`はNicoCache_nl本体のエクスポートAPIを使用し、ブラウザーの通常のダウンロードとして保存する。
 
 モジュールタブではmlink-video-controllerに統合された各種機能モジュールのオン・オフができる。  
 

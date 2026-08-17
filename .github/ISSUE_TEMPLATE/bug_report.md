@@ -52,8 +52,6 @@ Windowsの場合は、Ctrl + Windows + S キーの同時押しで簡単にスク
 - バージョン: 2026-xx-xx
 - 使用しているextensions（全て書き出すこと）:  
         - [ ] CommentFilterLogger  
-        - [ ] CustomCacheReturner  
-        - [ ] downloadThruFFmpeg  
         - [ ] ExtUtil  
         - [ ] nlGpac
 - 使用しているnlFilters（全て書き出すこと）:   

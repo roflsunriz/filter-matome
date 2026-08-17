@@ -124,37 +124,26 @@ test.beforeEach(async ({ page }) => {
   await page.route(
     "https://nicocachenl.test/api/v1/videos/**/cache-entries",
     (route) => {
-      const id = decodeURIComponent(
-        route.request().url().split("?")[1] ?? "sm0",
-      );
+      const request = route.request();
+      const segments = new URL(request.url()).pathname.split("/");
+      const id = decodeURIComponent(segments.at(-2) ?? "sm0");
+      if (request.method() === "DELETE") {
+        void route.fulfill({
+          contentType: "application/json",
+          body: JSON.stringify({ videoId: id, status: "deleted" }),
+        });
+        return;
+      }
       const cacheId = `${id}[720p].hls`;
       void route.fulfill({
         contentType: "application/json",
         body: JSON.stringify({
-          [id]: {
-            preferred: cacheId,
-            completes: [cacheId],
-            caches: { [cacheId]: { complete: true, caching: false } },
-          },
-        }),
-      });
-    },
-  );
-  await page.route(
-    "https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove",
-    (route) => {
-      const request = route.request();
-      const body = request.postDataJSON() as { videoId?: string };
-      const videoId = body.videoId ?? "sm0";
-      void route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify({
-          requestId: `request-${videoId}`,
-          videoId,
-          status: "completed",
-          target: "hls",
-          preservesNonHls: true,
-          results: [{ cacheId: `${videoId}[720p].hls`, outcome: "deleted" }],
+          videoId: id,
+          preferred: cacheId,
+          cacheIds: [cacheId],
+          cachings: [],
+          completes: [cacheId],
+          caches: { [cacheId]: { complete: true, caching: false } },
         }),
       });
     },
@@ -270,7 +259,7 @@ test("個別削除と一括操作が確認後に更新される", async ({ page 
     .toEqual(
       expect.arrayContaining([
         expect.stringContaining("本当に削除しますか？"),
-        expect.stringContaining("HLSキャッシュを削除しました"),
+        expect.stringContaining("動画に属するキャッシュを削除しました"),
       ]),
     );
   await expect(page.locator(".result-count")).toHaveText("8 件");
@@ -298,23 +287,18 @@ test("個別削除と一括操作が確認後に更新される", async ({ page 
   await expect(page.locator(".global-progress")).toBeHidden();
 });
 
-test("HLSがないMP4テンポラリ項目は一括削除後も一覧に残る", async ({ page }) => {
-  const removalUrl =
-    "https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove";
-  await page.unroute(removalUrl);
+test("本体が対象なしを返したテンポラリ項目は一覧に残る", async ({ page }) => {
+  const removalUrl = "https://nicocachenl.test/api/v1/videos/**/cache-entries";
   await page.route(removalUrl, (route) => {
-    const body = route.request().postDataJSON() as { videoId?: string };
-    const videoId = body.videoId ?? "sm0";
+    if (route.request().method() !== "DELETE") {
+      void route.fallback();
+      return;
+    }
+    const segments = new URL(route.request().url()).pathname.split("/");
+    const videoId = decodeURIComponent(segments.at(-2) ?? "sm0");
     void route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({
-        requestId: `request-${videoId}`,
-        videoId,
-        status: "not_found",
-        target: "hls",
-        preservesNonHls: true,
-        results: [],
-      }),
+      body: JSON.stringify({ videoId, status: "not_found" }),
     });
   });
 
@@ -329,7 +313,7 @@ test("HLSがないMP4テンポラリ項目は一括削除後も一覧に残る",
   });
   await page.locator("#deleteTemporaryBtn").click();
   page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("対象HLSなし: 1 件");
+    expect(dialog.message()).toContain("対象なし: 1 件");
     await dialog.accept();
   });
 

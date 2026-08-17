@@ -9,7 +9,6 @@ import {
 } from "@/common/cache-removal.js";
 
 export {
-  fetchCacheRemovalStatus,
   getCacheRemovalNotice,
   removeCacheForVideo,
 } from "@/common/cache-removal.js";
@@ -60,14 +59,14 @@ export const handleCacheRemove = async (videoId: string): Promise<void> => {
     try {
       const result = await removeCacheForVideo(videoId);
       const notice = getCacheRemovalNotice(result);
-      window.logger.info("[video-util] HLSキャッシュ削除API応答", result);
+      window.logger.info("[video-util] NicoCache_nl削除API応答", result);
       window.toastr?.[notice.kind]?.(notice.message);
     } catch (error) {
       window.logger.error("[video-util] キャッシュ削除に失敗しました", error);
       window.toastr?.error?.(
         error instanceof Error
           ? error.message
-          : "HLSキャッシュの削除に失敗しました。",
+          : "キャッシュの削除に失敗しました。",
       );
     }
   }

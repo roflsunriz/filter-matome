@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import {
   getCacheSearchUrl,
@@ -76,4 +78,17 @@ describe("common cache search", () => {
       }),
     ).rejects.toThrow("HTTP 500");
   });
+});
+
+test("video-playerは本体の検索・メディアAPIだけを使う", () => {
+  const sourceRoot = join(import.meta.dirname, "..", "src", "video-player");
+  const source = [
+    readFileSync(join(sourceRoot, "router", "watch-page-router.ts"), "utf8"),
+    readFileSync(join(sourceRoot, "core", "url-manager.ts"), "utf8"),
+  ].join("\n");
+
+  expect(source).toContain("searchVideoCaches");
+  expect(source).toContain("/media");
+  expect(source).not.toContain("extensions/filter-matome/cache-search");
+  expect(source).not.toContain("CustomCacheReturner");
 });

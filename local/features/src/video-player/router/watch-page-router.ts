@@ -6,6 +6,7 @@ import {
   fetchCacheInfoEntry,
   hasCompletedCache,
 } from "@/common/cache-info-api";
+import { searchVideoCaches } from "@/common/cache-search-client";
 import { addNavigationListener } from "@/runtime/navigation";
 
 type PlayerPreference = "standalone" | "official" | "ask";
@@ -19,55 +20,27 @@ const WATCH_HOST_PATTERN = /\.nicovideo\.jp$/;
 const PLAYER_CHOICE_KEY = "nicocache-player-choice";
 const UNAVAILABLE_MESSAGE = "お探しの動画は視聴できません";
 
-/**
- * CustomCacheReturnerからキャッシュ情報を取得してキャッシュ存在を確認
- * @param cacheId キャッシュIDまたは動画ID
- * @returns キャッシュが存在する場合はtrue
- */
-const hasCustomCacheForId = async (cacheId: string): Promise<boolean> => {
-  try {
-    const response = await fetch(
-      `https://nicocachenl.test/api/v1/extensions/filter-matome/cache-search/${encodeURIComponent(cacheId)}`,
-    );
-
-    if (!response.ok) {
-      window.logger.warn(
-        `Custom cache search failed for ${cacheId}: ${response.status}`,
-      );
-      return false;
-    }
-
-    const data: unknown = await response.json();
-    const availablePaths = (
-      data &&
-      typeof data === "object" &&
-      "paths" in (data as Record<string, unknown>)
-        ? (data as { paths?: unknown }).paths
-        : []
-    ) as unknown[];
-
-    // パスが存在すればキャッシュありとみなす
-    return Array.isArray(availablePaths) && availablePaths.length > 0;
-  } catch (error) {
-    window.logger.warn(`Custom cache search error for ${cacheId}:`, error);
-    return false;
-  }
-};
-
 const hasCacheForVideo = async (videoId: string): Promise<boolean> => {
   try {
     const entry = await fetchCacheInfoEntry(videoId);
     if (hasCompletedCache(entry)) {
       return true;
     }
-
-    // v3はCMAF/Domand HLS専用なので、拡張管理のキャッシュは動画IDで別途探す。
-    return await hasCustomCacheForId(videoId);
   } catch (error) {
     window.logger.warn(
-      "キャッシュ情報取得中にエラーが発生したためローカルプレイヤーへの遷移をスキップします",
+      "CMAFキャッシュ情報を取得できなかったため検索APIへ切り替えます",
       error,
     );
+  }
+  try {
+    const results = await searchVideoCaches(videoId);
+    return results.some(
+      (result) =>
+        result.videoId.toLowerCase() === videoId.toLowerCase() &&
+        result.cacheIds.length > 0,
+    );
+  } catch (error) {
+    window.logger.warn("キャッシュ検索APIの取得に失敗しました", error);
     return false;
   }
 };

@@ -15,6 +15,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【extensions】movie-fetcher、smart-fetcher、HLS削除、GPAC、nicochart、シリーズアラート、
   コメントログ、FFmpeg保存、キャッシュ検索を`/api/v1/extensions/filter-matome`へ統一した。
 
+### Removed
+
+- 【common・cache-data-manager・mlink-video-controller・video-player】削除、検索、再生可否、
+  動画・音声保存をNicoCache_nl本体APIへ直接接続し、重複していた`FilterMatomeCacheControl`、
+  `CustomCacheReturner`、`downloadThruFFmpeg`のソース、クラス、配布・リンク設定を削除した。
+
 ## [#242] - 2026-08-16
 
 ### Changed

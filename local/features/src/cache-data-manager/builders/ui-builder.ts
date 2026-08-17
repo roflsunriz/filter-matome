@@ -623,9 +623,9 @@ export class UIBuilder {
         async (baseId) => {
           try {
             const result = await removeCacheForVideo(baseId);
-            if (result.status === "pending") {
+            if (result.status === "scheduled") {
               queuedBaseIds.add(baseId);
-            } else if (result.status === "completed") {
+            } else if (result.status === "deleted") {
               deletedBaseIds.add(baseId);
             } else if (result.status === "not_found") {
               notFoundBaseIds.add(baseId);
@@ -653,11 +653,11 @@ export class UIBuilder {
 
       if (failedBaseIds.length > 0) {
         alert(
-          `テンポラリ動画の一括削除が一部失敗しました。\n削除: ${deletedBaseIds.size.toLocaleString()} 件\n削除予約: ${queuedBaseIds.size.toLocaleString()} 件\n対象HLSなし: ${notFoundBaseIds.size.toLocaleString()} 件\n失敗: ${failedBaseIds.length.toLocaleString()} 件\n失敗ID: ${failedBaseIds.slice(0, 20).join(", ")}`,
+          `テンポラリ動画の一括削除が一部失敗しました。\n削除: ${deletedBaseIds.size.toLocaleString()} 件\n削除予約: ${queuedBaseIds.size.toLocaleString()} 件\n対象なし: ${notFoundBaseIds.size.toLocaleString()} 件\n失敗: ${failedBaseIds.length.toLocaleString()} 件\n失敗ID: ${failedBaseIds.slice(0, 20).join(", ")}`,
         );
       } else if (queuedBaseIds.size > 0 || notFoundBaseIds.size > 0) {
         alert(
-          `テンポラリ動画の削除を処理しました。\n削除: ${deletedBaseIds.size.toLocaleString()} 件\n削除予約: ${queuedBaseIds.size.toLocaleString()} 件\n対象HLSなし: ${notFoundBaseIds.size.toLocaleString()} 件`,
+          `テンポラリ動画の削除を処理しました。\n削除: ${deletedBaseIds.size.toLocaleString()} 件\n削除予約: ${queuedBaseIds.size.toLocaleString()} 件\n対象なし: ${notFoundBaseIds.size.toLocaleString()} 件`,
         );
       } else {
         alert(

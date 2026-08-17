@@ -319,7 +319,7 @@ export class SearchResultsModal {
               alert(
                 error instanceof Error
                   ? error.message
-                  : "HLSキャッシュの削除に失敗しました。",
+                  : "キャッシュの削除に失敗しました。",
               );
             });
         }

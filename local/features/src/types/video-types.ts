@@ -77,8 +77,6 @@ export interface VideoUrlInfo {
   ref: string;
   hls?: string;
   mp4?: string;
-  customHls?: string;
-  customMp4?: string;
 }
 
 /**

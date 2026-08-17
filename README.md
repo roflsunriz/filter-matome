@@ -190,10 +190,7 @@ nlFilters/
 
 extensions/
 ├── CommentFilterLogger.java/.class       # コメントフィルターログの受信とGUI表示
-├── CustomCacheReturner.java/.class       # 動画IDによるHLS・MP4キャッシュ検索API
-├── downloadThruFFmpeg.java/.class       # キャッシュ済みHLSの映像・音声をFFmpegで保存
 ├── ExtUtil.java/.class                   # Java拡張向けの共通ユーティリティ
-├── FilterMatomeCacheControl.java/.class # MP4等を保持したままHLSだけを削除・削除予約するAPI
 ├── FilterMatomeSeriesAlerts.java/.class # シリーズ新着の定期確認とOS通知
 ├── FilterMatomeSmartFetcher.java/.class # 永続予約・暗号化Cookie・帯域制御・取得履歴の管理
 ├── NicochartInfoProxy.java/.class        # 再生不可時のnicochart.jp動画情報フォールバック
