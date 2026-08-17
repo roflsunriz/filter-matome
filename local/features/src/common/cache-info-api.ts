@@ -4,7 +4,7 @@ import type {
   CacheInfoResponse,
 } from "@/types/cache-info-types";
 
-export const CACHE_INFO_ENDPOINT = "https://www.nicovideo.jp/cache/info/v3?";
+export const CACHE_INFO_ENDPOINT = "https://nicocachenl.test/api/v1/videos";
 
 export type CacheInfoFetcher = (url: string) => Promise<Response>;
 
@@ -68,12 +68,12 @@ const isCacheInfoEntry = (value: unknown): value is CacheInfoEntry => {
 };
 
 export const buildCacheInfoUrl = (videoId: string): string =>
-  CACHE_INFO_ENDPOINT + encodeURIComponent(videoId);
+  `${CACHE_INFO_ENDPOINT}/${encodeURIComponent(videoId)}/cache-entries`;
 
 export const parseCacheInfoResponse = (value: unknown): CacheInfoResponse => {
   if (!isRecord(value)) {
     throw new Error(
-      "cache/info/v3 のレスポンスがJSONオブジェクトではありません",
+      "キャッシュ一括照会APIのレスポンスがJSONオブジェクトではありません",
     );
   }
 
@@ -81,7 +81,7 @@ export const parseCacheInfoResponse = (value: unknown): CacheInfoResponse => {
   for (const [inputId, entry] of Object.entries(value)) {
     if (!isCacheInfoEntry(entry)) {
       throw new Error(
-        `cache/info/v3 の ${inputId} エントリがv3形式ではありません`,
+        `キャッシュ一括照会APIの ${inputId} エントリ形式が不正です`,
       );
     }
     response[inputId] = entry;
@@ -96,16 +96,14 @@ export const fetchCacheInfoEntry = async (
 ): Promise<CacheInfoEntry> => {
   const response = await fetcher(buildCacheInfoUrl(videoId));
   if (!response.ok) {
-    throw new Error(`cache/info/v3 API error: ${response.status}`);
+    throw new Error(`NicoCache_nl REST API error: ${response.status}`);
   }
 
   const responseValue: unknown = await response.json();
-  const data = parseCacheInfoResponse(responseValue);
-  const entry = data[videoId];
-  if (!entry) {
-    throw new Error("指定された動画IDのキャッシュ情報が見つかりませんでした");
+  if (!isCacheInfoEntry(responseValue)) {
+    throw new Error("NicoCache_nl REST APIのキャッシュ情報形式が不正です");
   }
-  return entry;
+  return responseValue;
 };
 
 export const hasCompletedCache = (entry: CacheInfoEntry): boolean =>

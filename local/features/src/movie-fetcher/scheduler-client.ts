@@ -1,7 +1,8 @@
 import { inspectVideo, type MovieInspection } from "./core";
 
 export const SMART_FETCHER_HEADER = "X-Filter-Matome-Smart-Fetcher";
-export const SMART_FETCHER_API = "/cache/filter-matome/v1/smart-fetcher";
+export const SMART_FETCHER_API =
+  "https://nicocachenl.test/api/v1/extensions/filter-matome/smart-fetcher";
 
 export type Recurrence = "once" | "daily" | "weekly" | "monthly" | "yearly";
 export type HolidayPolicy = "include" | "exclude" | "only";
@@ -95,7 +96,7 @@ async function callSmartFetcher<T>(
     await fetch(`${SMART_FETCHER_API}/${action}`, {
       method: body ? "POST" : "GET",
       cache: "no-store",
-      credentials: "include",
+      credentials: "omit",
       headers: {
         [SMART_FETCHER_HEADER]: "1",
         ...(body ? { "Content-Type": "application/json" } : {}),
@@ -113,7 +114,7 @@ export function refreshStoredCredentials(): Promise<SmartFetcherState> {
   return fetch(`${SMART_FETCHER_API}/credentials`, {
     method: "POST",
     cache: "no-store",
-    credentials: "include",
+    credentials: "omit",
     headers: { [SMART_FETCHER_HEADER]: "1" },
   }).then((response) => readJson<SmartFetcherState>(response));
 }
@@ -122,7 +123,7 @@ export function clearStoredCredentials(): Promise<SmartFetcherState> {
   return fetch(`${SMART_FETCHER_API}/clear-credentials`, {
     method: "POST",
     cache: "no-store",
-    credentials: "include",
+    credentials: "omit",
     headers: { [SMART_FETCHER_HEADER]: "1" },
   }).then((response) => readJson<SmartFetcherState>(response));
 }

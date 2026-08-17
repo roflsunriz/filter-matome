@@ -91,11 +91,11 @@ CONNECT後に返るサイト証明書は`nicocache.userDataRoot/certs/ca.cer`を
 
 すべて同一オリジンで、`X-Filter-Matome-Movie-Fetcher: 1` が必須。URLだけを直接開いた場合は404にする。
 
-- `GET /cache/filter-matome/v1/movie-fetcher/capabilities`
-- `POST /cache/filter-matome/v1/movie-fetcher/start` — `{"videoId":"sm9","contentUrl":"https://delivery.domand.nicovideo.jp/..."}`
-- `GET /cache/filter-matome/v1/movie-fetcher/status?videoId=sm9`
-- `POST /cache/filter-matome/v1/movie-fetcher/cancel` — `{"videoId":"sm9"}`
-- `POST /cache/filter-matome/v1/movie-fetcher/report` — watch/access-rights APIなど、ブラウザー側で取得処理が止まった場合の短いエラー報告
+- `GET https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher/capabilities`
+- `POST https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher/start` — `{"videoId":"sm9","contentUrl":"https://delivery.domand.nicovideo.jp/..."}`
+- `GET https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher/status?videoId=sm9`
+- `POST https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher/cancel` — `{"videoId":"sm9"}`
+- `POST https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher/report` — watch/access-rights APIなど、ブラウザー側で取得処理が止まった場合の短いエラー報告
 
 状態は `idle | queued | fetching | canceling | canceled | completed | failed`。`completed` と `total` は子playlistとCMAFリソースの取得数、`bytesTransferred`は帯域制御に使う実転送量である。全リソース取得後にNicoCache_nlの完成キャッシュが実在しない場合は`failed`となり、smartFetcherも完了履歴を作らない。開始・終了時刻は利用側が管理するため返さない。
 

@@ -1,4 +1,5 @@
-const CACHE_REMOVAL_API_BASE = "/cache/filter-matome/v1";
+const CACHE_REMOVAL_API_BASE =
+  "https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control";
 const CACHE_REMOVAL_REQUEST_HEADER = "X-Filter-Matome-Cache-Control";
 
 const REMOVAL_STATUSES = [

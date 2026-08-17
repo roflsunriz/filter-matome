@@ -1,63 +1,60 @@
-# NicoCache_nl cache/info/v3
+# NicoCache_nl RESTキャッシュAPI
 
 ## エンドポイント
 
 ```text
-GET  https://www.nicovideo.jp/cache/info/v3?<動画ID>
-POST https://www.nicovideo.jp/cache/info/v3
+GET  https://nicocachenl.test/api/v1/videos/<動画ID>/cache-entries
+POST https://nicocachenl.test/api/v1/cache-entry-queries
 ```
 
-2026-08-16時点の正本は、`%LOCALAPPDATA%\NicoCache_nl\src\dareka\processor\impl\CacheDirProcessor.java` と同ディレクトリの `CmafCacheInfo.java` である。
+単一動画は動画IDをパスセグメントとしてUTF-8パーセントエンコードする。一括照会はJSON本文を使い、最大256件まで指定できる。
 
-v3はCMAF/Domand由来のHLSキャッシュだけを返す。v2が含んでいたSmile、FLV、MP4、旧DMC優先フィールドはv3の対象外である。GETのクエリとPOST本文は、カンマまたは空白区切りで複数IDを指定できる。空入力は空のJSONオブジェクトを返し、無効なID形式はHTTP 400を返す。
-
-## レスポンス契約
-
-```ts
-export type CacheInfoResponse = Record<string, CacheInfoEntry>;
-
-export interface CacheInfoEntry {
-  videoId: string | null;
-  preferred: string | null;
-  cacheIds: string[];
-  cachings: string[];
-  completes: string[];
-  caches: Record<string, CacheInfoItem>;
-}
-
-export interface CacheInfoItem {
-  videoId: string;
-  cacheId: string;
-  complete: boolean;
-  caching: boolean;
-  videoMode: string | null;
-  audioBitrate: number;
-  legacyLow: boolean;
-  size: number;
-  cachingSize?: number;
-  title: string | null;
-  subFolder: string | null;
-  filename: string | null;
-  ts: number | null;
+```json
+{
+  "videoIds": ["sm9", "sm10"]
 }
 ```
 
-ルートキーには要求に使ったIDが入り、`videoId`にはNicoCache_nlが正規化した動画IDが入る。対象動画にCMAF/Domand HLSキャッシュがない場合も、値は`null`ではなく、`preferred: null`、空配列、空の`caches`を持つエントリになる。
+## 動画単位レスポンス
 
-`preferred`は、完成済みキャッシュが存在する場合にNicoCache_nlが選んだHLS cacheIdである。`cacheIds`は登録済み、`cachings`は取得中、`completes`は完成済みの索引で、実体状態は`caches[cacheId].complete`と`caching`に入る。
+```json
+{
+  "videoId": "sm9",
+  "preferred": "sm9[1080p,192].hls",
+  "cacheIds": ["sm9[1080p,192].hls"],
+  "cachings": [],
+  "completes": ["sm9[1080p,192].hls"],
+  "caches": {
+    "sm9[1080p,192].hls": {
+      "videoId": "sm9",
+      "cacheId": "sm9[1080p,192].hls",
+      "complete": true,
+      "caching": false,
+      "videoMode": "1080p",
+      "audioBitrate": 192,
+      "legacyLow": false,
+      "size": 123456789,
+      "title": "動画タイトル",
+      "subFolder": "",
+      "filename": "sm9[1080p,192]_動画タイトル.hls",
+      "ts": 1786838400
+    }
+  }
+}
+```
 
-## キャッシュ実体
+一括照会では、各動画IDをキーとして同じ動画単位レスポンスを返す。キャッシュがない動画も`videoId`と空配列・空`caches`を持つ。現行CMAF/Domand HLSだけを対象とし、完成判定は`complete`または`completes`を使う。
 
-- `videoMode`: `720p`などの映像品質。取得できない場合は`null`。
-- `audioBitrate`: 音声ビットレート。
-- `legacyLow`: 旧low相当のキャッシュかを示す互換情報。
-- `size`: 完成済みでは実ファイルサイズ、未完成では予定サイズ。
-- `cachingSize`: 未完成キャッシュで現在までに取得したサイズ。完成済みでは省略される。
-- `title`、`subFolder`、`filename`、`ts`: 完成済みキャッシュでは実ファイル由来。未完成で一時ファイルを特定できない場合は`null`になる。
+## 関連API
 
-## 利用時の規則
+```text
+GET    /api/v1/cache-entries?query=<検索語>&order=desc
+GET    /api/v1/videos/<動画ID>/media
+GET    /api/v1/videos/<動画ID>/exports/video
+GET    /api/v1/videos/<動画ID>/exports/audio
+GET    /api/v1/videos/<動画ID>/exports/comments
+DELETE /api/v1/videos/<動画ID>/temporary-cache-entries
+DELETE /api/v1/videos/<動画ID>/cache-entries
+```
 
-- ローカル再生可否は`caches`内の`complete`を正とし、配列の件数だけで判断しない。
-- 再生候補は完成済みの`preferred`を最優先にし、その後に完成済みcacheIdだけを重複なく調べる。取得中・未完了のcacheIdは再生候補にしない。
-- `preferredDmc*`、`dmcMovieType`、`economy`、`dmc`、`movieType`、`reEncoded*`はv3に存在しないため参照しない。
-- 外部入力は`unknown`として受け、必須フィールドとnullableフィールドを検証してから利用する。
+旧`www.nicovideo.jp/cache/*`管理APIは利用しない。`/cache/file/*`はCMAF再生データの内部経路であり、REST APIとは別に扱う。

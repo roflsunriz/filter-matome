@@ -418,11 +418,21 @@ test("NicoCache_nl経由のnicochart動画情報をApiDataへ変換する", asyn
     fulfillPlayerDocument,
   );
   await page.route(
-    "https://www.nicovideo.jp/cache/nicochart-info/sm9",
+    "https://nicocachenl.test/api/v1/extensions/filter-matome/nicochart-info/sm9",
     async (route) => {
+      const corsHeaders = {
+        "Access-Control-Allow-Origin": "https://www.nicovideo.jp",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Filter-Matome-Nicochart",
+      };
+      if (route.request().method() === "OPTIONS") {
+        await route.fulfill({ status: 204, headers: corsHeaders });
+        return;
+      }
       expect(route.request().headers()["x-filter-matome-nicochart"]).toBe("1");
       await route.fulfill({
         contentType: "text/plain; charset=utf-8",
+        headers: corsHeaders,
         body: `<!doctype html>
         <html lang="ja">
           <head><meta charset="utf-8"><title>nicochart fixture</title></head>

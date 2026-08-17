@@ -33,11 +33,11 @@ export class UrlManager {
     try {
       // 基本的なURLセット
       const urls: VideoUrlInfo = {
-        auto: `/cache/${videoId}/auto/movie`,
+        auto: `https://nicocachenl.test/api/v1/videos/${encodeURIComponent(videoId)}/media`,
         ref: `/cache/file/nicocachenl_refcache=${videoId}.hls//master.m3u8`,
       };
 
-      // /cache/info/v3 と /cache/find_cache を並列で取得
+      // RESTキャッシュ情報とCustomCacheReturnerを並列で取得
       const [cacheInfoUrls, customCacheUrls] = await Promise.all([
         this.getCacheInfoUrls(videoId),
         this.getCustomCacheUrls(videoId),
@@ -57,7 +57,7 @@ export class UrlManager {
 
       // エラー時は従来のURLを返す
       return {
-        auto: `/cache/${videoId}/auto/movie`,
+        auto: `https://nicocachenl.test/api/v1/videos/${encodeURIComponent(videoId)}/media`,
         ref: `/cache/file/nicocachenl_refcache=${videoId}.hls//master.m3u8`,
         hls: `/local/cache/${videoId}.hls/master.m3u8`,
         mp4: `/local/cache/${videoId}.mp4`,
@@ -66,7 +66,7 @@ export class UrlManager {
   }
 
   /**
-   * /cache/info/v3 からキャッシュ情報を取得してURLを生成
+   * NicoCache_nl REST APIからキャッシュ情報を取得してURLを生成
    * @param videoId 動画ID
    * @returns キャッシュ情報から生成されたURL
    */
@@ -98,7 +98,7 @@ export class UrlManager {
   ): Promise<Partial<VideoUrlInfo>> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/cache/find_cache?${cacheId}`,
+        `https://nicocachenl.test/api/v1/extensions/filter-matome/cache-search/${encodeURIComponent(cacheId)}`,
       );
 
       if (!response.ok) {

@@ -14,7 +14,7 @@ export * from "@/types/thumbnails-filter-types";
 // 動画関連の型
 export * from "@/types/video-types";
 
-// NicoCache_nl cache/info/v3 関連の型
+// NicoCache_nl RESTキャッシュAPI関連の型
 export * from "@/types/cache-info-types";
 
 // UI関連の型

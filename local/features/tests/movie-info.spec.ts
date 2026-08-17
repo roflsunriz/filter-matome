@@ -51,9 +51,10 @@ async function openApp(
   failure: string | null = null,
 ): Promise<void> {
   await page.route(pageUrl, fulfillDocument);
-  await page.route("**/cache/search/**", async (route) => {
+  await page.route("**/api/v1/cache-entries?**", async (route) => {
     await route.fulfill({
       contentType: "application/json; charset=utf-8",
+      headers: { "Access-Control-Allow-Origin": "https://www.nicovideo.jp" },
       body: JSON.stringify({
         "sm100[720p,128].hls": [
           "検索で見つかったテスト動画",

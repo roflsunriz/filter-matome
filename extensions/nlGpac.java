@@ -49,7 +49,7 @@ import dareka.processor.impl.VideoDescriptor;
 
 /** Uses GPAC to inspect cached media and returns one normalized JSON document. */
 public class nlGpac implements Extension2, Processor {
-	public static final int REVISION = 260802002;
+	public static final int REVISION = 26081801;
 	public static final String VER_STRING = "nlGpac_" + REVISION;
 	public static final String LOG_PREFIX = "GPAC";
 	private static final String GPAC_PATH_PROPERTY = "gpac.path";
@@ -60,7 +60,7 @@ public class nlGpac implements Extension2, Processor {
 	private static final long PROCESS_TIMEOUT_SECONDS = 120;
 	private static final String[] PROCESSOR_SUPPORTED_METHODS = { "GET" };
 	private static final Pattern PROCESSOR_SUPPORTED_PATTERN = Pattern.compile(
-			"^https?://www\\.nicovideo\\.jp/cache/gpac\\?([a-z]{2}\\d+(low)?(?:\\[\\w+,\\d+,\\d+\\]\\w*\\.(?:flv|mp4))?)");
+			"^https?://nicocachenl\\.test/api/v1/extensions/filter-matome/gpac/([a-z]{2}\\d+(low)?(?:\\[\\w+,\\d+,\\d+\\]\\w*\\.(?:flv|mp4))?)");
 	private static final Pattern SUMMARY_FRAME_COUNT_PATTERN = Pattern.compile(
 			"(?m)^\\s*Nb Frames:\\s*(\\d+)");
 	private static final Pattern SUMMARY_TOTAL_SIZE_PATTERN = Pattern.compile(

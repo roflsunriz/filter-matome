@@ -42,16 +42,16 @@ import dareka.processor.impl.VideoDescriptor;
 public final class FilterMatomeCacheControl
         implements Extension2, Processor, SystemEventListener {
 
-    public static final int REVISION = 260713;
+    public static final int REVISION = 26081801;
     public static final String VER_STRING =
             "FilterMatomeCacheControl_" + REVISION;
 
-    private static final String API_PREFIX = "/cache/filter-matome/v1/";
+    private static final String API_PREFIX = "/api/v1/extensions/filter-matome/cache-control/";
     private static final String REQUEST_HEADER =
             "X-Filter-Matome-Cache-Control";
     private static final String[] SUPPORTED_METHODS = { "GET", "POST" };
     private static final Pattern SUPPORTED_URL = Pattern.compile(
-            "^https?://www\\.nicovideo\\.jp" + API_PREFIX
+            "^https?://nicocachenl\\.test" + API_PREFIX
                     + "(capabilities|remove|remove-status)(?:\\?([^#]*))?$",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern VIDEO_ID_PATTERN = Pattern.compile(

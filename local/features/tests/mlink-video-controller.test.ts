@@ -64,7 +64,7 @@ describe("mlink-video-controller structure", () => {
     expect(linkManager).not.toContain("動画非表示設定");
     expect(linkManager).toContain("保存:コメントJSON");
     expect(linkManager).toContain("downloadCommentsJson(videoId)");
-    expect(linkManager).not.toContain("/cache/${threadId}.xml");
+    expect(linkManager).not.toContain("${threadId}.xml");
     expect(commentJsonDownload).toContain(
       "window.commonHelper.fetchNicoDataWithComments(videoId,",
     );

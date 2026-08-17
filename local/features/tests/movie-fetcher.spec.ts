@@ -99,7 +99,7 @@ test("カードからDomand取得を開始し完了状態を表示する", async
     },
   );
   await page.route(
-    "**/cache/filter-matome/v1/movie-fetcher/**",
+    "**/api/v1/extensions/filter-matome/movie-fetcher/**",
     async (route) => {
       const url = route.request().url();
       if (url.endsWith("/start")) extensionStatus = "fetching";
@@ -181,16 +181,18 @@ test("未ログインでは通常Watch APIからゲスト版へ切り替える",
         }),
       }),
   );
-  await page.route("**/cache/filter-matome/v1/movie-fetcher/**", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        videoId: "sm9",
-        status: "completed",
-        completed: 2,
-        total: 2,
+  await page.route(
+    "**/api/v1/extensions/filter-matome/movie-fetcher/**",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          videoId: "sm9",
+          status: "completed",
+          completed: 2,
+          total: 2,
+        }),
       }),
-    }),
   );
 
   await page.goto(pageUrl);
@@ -218,24 +220,27 @@ test("Watch API失敗をnlMovieFetcherのGUIログへ報告する", async ({ pag
       }),
     }),
   );
-  await page.route("**/cache/filter-matome/v1/movie-fetcher/**", (route) => {
-    if (route.request().url().endsWith("/report")) {
-      reported = route.request().postDataJSON();
+  await page.route(
+    "**/api/v1/extensions/filter-matome/movie-fetcher/**",
+    (route) => {
+      if (route.request().url().endsWith("/report")) {
+        reported = route.request().postDataJSON();
+        return route.fulfill({
+          contentType: "application/json",
+          body: JSON.stringify({ reported: true }),
+        });
+      }
       return route.fulfill({
         contentType: "application/json",
-        body: JSON.stringify({ reported: true }),
+        body: JSON.stringify({
+          videoId: "sm9",
+          status: "idle",
+          completed: 0,
+          total: 0,
+        }),
       });
-    }
-    return route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        videoId: "sm9",
-        status: "idle",
-        completed: 0,
-        total: 0,
-      }),
-    });
-  });
+    },
+  );
 
   await page.goto(pageUrl);
   await page.addScriptTag({ content: bundle });

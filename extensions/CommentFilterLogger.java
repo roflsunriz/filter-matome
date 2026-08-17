@@ -27,12 +27,12 @@ import java.util.regex.Matcher;
 
 public class CommentFilterLogger implements Extension2, Processor {
     
-    public static final int REVISION = 250330;
+    public static final int REVISION = 26081801;
     public static final String VER_STRING = "CommentFilterLogger_" + REVISION;
     
     private static final String[] PROCESSOR_SUPPORTED_METHODS = { "POST" };
     private static final Pattern PROCESSOR_SUPPORTED_PATTERN = Pattern.compile(
-            "^https?://www\\.nicovideo\\.jp/cache/filter_logs");
+            "^https?://nicocachenl\\.test/api/v1/extensions/filter-matome/comment-filter/logs$");
     
     private volatile LoggerHandler extensionLogger;
     

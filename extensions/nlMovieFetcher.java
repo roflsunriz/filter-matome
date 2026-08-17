@@ -52,14 +52,14 @@ import dareka.processor.impl.VideoDescriptor;
  * 視聴権の取得はログイン状態を持つブラウザー側へ任せ、この拡張は署名済みURLだけを扱う。
  */
 public final class nlMovieFetcher implements Extension2, Processor {
-    public static final int REVISION = 26080904;
+    public static final int REVISION = 26081801;
     public static final String VER_STRING = "nlMovieFetcher_" + REVISION;
 
-    private static final String API_PREFIX = "/cache/filter-matome/v1/movie-fetcher/";
+    private static final String API_PREFIX = "/api/v1/extensions/filter-matome/movie-fetcher/";
     private static final String REQUIRED_HEADER = "X-Filter-Matome-Movie-Fetcher";
     private static final String[] METHODS = { "GET", "POST" };
     private static final Pattern API_URL = Pattern.compile(
-            "^https?://www\\.nicovideo\\.jp" + API_PREFIX
+            "^https?://nicocachenl\\.test" + API_PREFIX
                     + "(capabilities|start|status|cancel|report)(?:\\?([^#]*))?$",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern VIDEO_ID = Pattern.compile(

@@ -10,9 +10,9 @@
 
 ## 情報源
 
-- `/cache/info/v3?<動画ID>`: NicoCache_nlのCMAF/Domand HLSキャッシュ情報。
+- `https://nicocachenl.test/api/v1/videos/<動画ID>/cache-entries`: NicoCache_nlのCMAF/Domand HLSキャッシュ情報。
 - `common/video-info-api.ts`: 旧`ext.nicovideo.jp/api/getthumbinfo/<動画ID>` XMLと現行Watch API JSONを互換処理し、動画情報を共通形式へ正規化するクライアント。
-- `/cache/gpac?<動画ID>`: ローカル動画をGPACで解析したJSON。HLS/CMAFは最高帯域の品質を選び、セグメント単位ではなく映像・音声のPID仕様をまとめて返す。
+- `/api/v1/extensions/filter-matome/gpac/<動画ID>`: ローカル動画をGPACで解析したJSON。HLS/CMAFは最高帯域の品質を選び、セグメント単位ではなく映像・音声のPID仕様をまとめて返す。
 - `window.commonHelper.fetchWatchPage`: ウォッチページの `apiData`。
 - `window.commonHelper.fetchNicoDataWithComments`: ユーザー操作時だけ取得するコメント統合データ。
 
@@ -41,7 +41,7 @@
 
 ## 変更時の確認
 
-- `/cache/*` のレスポンスやエラー形式を変更するときは、NicoCache_nl本体と `api-info/` を確認する。
+- NicoCache_nl REST APIのレスポンスやエラー形式を変更するときは、本体と `api-info/` を確認する。
 - 取得失敗を握りつぶさず、情報源名、原因、次の確認方法を表示する。
 - 動画説明は許可要素・属性を限定し、外部リンクへ `noopener noreferrer` を付ける。
 - 大量コメントを概要DOMへ直接展開せず、プレビュー件数を制限する。

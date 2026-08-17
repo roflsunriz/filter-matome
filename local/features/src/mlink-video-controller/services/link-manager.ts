@@ -258,7 +258,7 @@ export class LinkManager {
           window.logger.error("CommentFilter2の呼び出しに失敗しました:", error);
         }
       },
-      cachelist: "https://www.nicovideo.jp/cache/",
+      cachelist: "https://nicocachenl.test/cache",
       movieinfo: () => {
         const baseUrl =
           "https://www.nicovideo.jp/local/features/dist/pages/movie-info/index.html";
@@ -272,7 +272,9 @@ export class LinkManager {
           );
           return;
         }
-        window.open("https://www.nicovideo.jp/cache/ffmpeg?video=" + videoId);
+        window.open(
+          `https://nicocachenl.test/api/v1/extensions/filter-matome/ffmpeg/exports/video/${encodeURIComponent(videoId)}`,
+        );
       },
       saveaudio: () => {
         if (!videoId) {
@@ -281,7 +283,9 @@ export class LinkManager {
           );
           return;
         }
-        window.open(`https://www.nicovideo.jp/cache/ffmpeg?audio=${videoId}`);
+        window.open(
+          `https://nicocachenl.test/api/v1/extensions/filter-matome/ffmpeg/exports/audio/${encodeURIComponent(videoId)}`,
+        );
       },
       savecomment: async () => {
         if (!videoId) {

@@ -81,7 +81,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 | `FilterMatomeSeriesAlerts.class` | watch-historyのアラート設定を保持し、NicoCache_nlの60秒定期イベントからシリーズ新着を確認してOS通知を表示する | NicoCache_nlが起動していればwatch-historyやブラウザを閉じても動作する |
 | `FilterMatomeSmartFetcher.class` | 動画取得の永続予約、暗号化Cookie、帯域・容量判定、再試行、取得履歴を管理する | `nlMovieFetcher.class`と組み合わせ、動画取得スケジューラーで使用する |
 | `NicochartInfoProxy.class` | video-playerが通常の動画情報を取得できない場合だけ、サーバー側からnicochart.jpの公開情報を取得する | 接続先と動画IDを制限した読み取り専用処理。PACや`genCerts.bat` / `genCerts.sh`の変更は不要 |
-| `nlGpac.class` | キャッシュファイルまたはHLS/CMAFプレイリストをGPACの`inspect:xml:stats:allp`で全期間解析し、映像・音声の仕様を一つのJSONへまとめて返す。HLSマスターは最高帯域の品質を選択する | movie-infoのGPAC表示と`/cache/gpac?<動画ID>`で使用。GPACの`gpac.exe`が必要 |
+| `nlGpac.class` | キャッシュファイルまたはHLS/CMAFプレイリストをGPACの`inspect:xml:stats:allp`で全期間解析し、映像・音声の仕様を一つのJSONへまとめて返す。HLSマスターは最高帯域の品質を選択する | movie-infoのGPAC表示と`https://nicocachenl.test/api/v1/extensions/filter-matome/gpac/<動画ID>`で使用。GPACの`gpac.exe`が必要 |
 | `nlMovieFetcher.class` | 署名済みDomand playlistの全CMAFリソースをNicoCache_nl経由で取得し、進捗確認と中止APIを提供する | 一覧の即時取得とsmartFetcherの実行エンジンとして使用する |
 
 `nlGpac.class`は単一クラスで完結し、キャッシュを変更せず、通常のメディアファイルはそのまま、`.hls`ディレクトリはローカルの`master.m3u8`を入力としてGPACへ渡す。HLS/CMAFでもセグメントごとの結果を返さず、GPACが全期間を消費して得たPIDの解像度、Codec、ビットレート、フレーム数、時間、音声サンプルレート、チャンネル数などをまとめる。movie-infoのGPACビューでは、これらに加えてコンテナ入力、GPACバージョン、品質選択、色空間、ピクセル形式、アスペクト比、チャンネル配置などをストリーム別に表示し、GPACが返した未知の属性も全属性表で確認できる。キャッシュ解析で意図せず外部配信へ接続しないよう、プレイリストにHTTP等のリモートURLが含まれる場合は解析を拒否する。GPACの実行ファイルは、`-Dgpac.path=...`、`GPAC_PATH`環境変数、`C:\PathArea\GPAC\gpac.exe`、ユーザーの`%LOCALAPPDATA%\Programs\GPAC\gpac.exe`、`C:\Program Files\GPAC\gpac.exe`、最後にPATHの順で探索する。
@@ -93,12 +93,12 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 すべてのリクエストで `X-Filter-Matome-Cache-Control: 1` ヘッダーが必要。状態変更にはGETではなくPOSTを使用する。
 
 ```http
-GET /cache/filter-matome/v1/capabilities
+GET https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/capabilities
 X-Filter-Matome-Cache-Control: 1
 ```
 
 ```http
-POST /cache/filter-matome/v1/remove
+POST https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove
 Content-Type: application/json
 X-Filter-Matome-Cache-Control: 1
 
@@ -108,7 +108,7 @@ X-Filter-Matome-Cache-Control: 1
 完了済み・停止済みHLSは `deleted`、ダウンロード中HLSは `queued` として返る。`queued` は即時削除済みという意味ではなく、キャッシュ完了・中断イベントと定期再確認によって削除される。応答の `requestId` は次のAPIで確認できる。
 
 ```http
-GET /cache/filter-matome/v1/remove-status?id=<requestId>
+GET https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove-status?id=<requestId>
 X-Filter-Matome-Cache-Control: 1
 ```
 

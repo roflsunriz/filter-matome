@@ -1,4 +1,4 @@
-const CACHE_SEARCH_ENDPOINT = "https://www.nicovideo.jp/cache/search/";
+const CACHE_SEARCH_ENDPOINT = "https://nicocachenl.test/api/v1/cache-entries";
 
 const VIDEO_ID_PREFIX_PATTERN = /^([a-z]{2}\d+)/i;
 
@@ -28,7 +28,7 @@ export const getCacheSearchUrl = (query: string): string => {
     throw new Error("検索キーワードを入力してください。");
   }
 
-  return `${CACHE_SEARCH_ENDPOINT}${encodeURIComponent(normalizedQuery)}?order=d`;
+  return `${CACHE_SEARCH_ENDPOINT}?query=${encodeURIComponent(normalizedQuery)}&order=desc`;
 };
 
 export const parseCacheSearchResponse = (

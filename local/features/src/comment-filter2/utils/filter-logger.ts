@@ -4,7 +4,7 @@ import { CF2FilterLogEntry } from "@/types/filter-types";
 export class FilterLogger {
   // ローカル環境でCommentFilterLogger.javaが動作していることを想定
   private static readonly FILTER_LOG_ENDPOINT =
-    window.location.origin + "/cache/filter_logs";
+    "https://nicocachenl.test/api/v1/extensions/filter-matome/comment-filter/logs";
   private static readonly MAX_BATCH_SIZE = 100; // 一度に送信するログの最大数
   private static readonly RETRY_ATTEMPTS = 3; // リトライ回数
   private static readonly RETRY_DELAY = 1000; // リトライ間隔（ミリ秒）

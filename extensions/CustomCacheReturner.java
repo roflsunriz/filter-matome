@@ -25,14 +25,14 @@ import dareka.processor.impl.VideoDescriptor;
 
 public class CustomCacheReturner implements Extension2, Processor {
     
-    public static final int REVISION = 241214;
+    public static final int REVISION = 26081801;
     public static final String VER_STRING = "CustomCacheReturner_" + REVISION;
     public static final String LOG_PREFIX = "CacheReturn";
     public static final String PROP_DEBUG = "CacheReturnDebug";
     
     private static final String[] PROCESSOR_SUPPORTED_METHODS = { "GET" };
     private static final Pattern PROCESSOR_SUPPORTED_PATTERN = Pattern.compile(
-            "^https?://www\\.nicovideo\\.jp/cache/find_cache\\?([a-z]{2}\\d+)");
+            "^https?://nicocachenl\\.test/api/v1/extensions/filter-matome/cache-search/([a-z]{2}\\d+)");
     
     private volatile LoggerHandler extensionLogger;
 

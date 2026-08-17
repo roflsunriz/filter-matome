@@ -24,9 +24,9 @@ import dareka.processor.*; import dareka.processor.impl.NicoCachingTitleRetrieve
  */
 public final class FilterMatomeSmartFetcher
         implements Extension2, Processor, SystemEventListener {
-    public static final int REVISION = 26080904; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
-    private static final String API_PREFIX = "/cache/filter-matome/v1/smart-fetcher/", REQUIRED_HEADER = "X-Filter-Matome-Smart-Fetcher";
-    private static final Pattern API_URL = Pattern.compile( "^https?://www\\.nicovideo\\.jp" + API_PREFIX + "(state|schedule|settings|run-now|cancel|remove|remove-history|clear-history|credentials|clear-credentials)"
+    public static final int REVISION = 26081801; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
+    private static final String API_PREFIX = "/api/v1/extensions/filter-matome/smart-fetcher/", REQUIRED_HEADER = "X-Filter-Matome-Smart-Fetcher";
+    private static final Pattern API_URL = Pattern.compile( "^https?://nicocachenl\\.test" + API_PREFIX + "(state|schedule|settings|run-now|cancel|remove|remove-history|clear-history|credentials|clear-credentials)"
                     + "(?:\\?([^#]*))?$", Pattern.CASE_INSENSITIVE);
     private static final Pattern VIDEO_ID = Pattern.compile( "^[a-z]{2}[0-9]+$", Pattern.CASE_INSENSITIVE), COOKIE_NAME = Pattern.compile( "^(nicosid|domand_bid|user_session|user_session_secure)$"), SERVER_RESPONSE = Pattern.compile("(?is)<meta\\b(?=[^>]*\\bname=[\"']server-response[\"'])[^>]*\\bcontent=(?:\"([^\"]*)\"|'([^']*)')[^>]*>");
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0 Safari/537.36", DATA_ROOT_PROPERTY = "nicocache.userDataRoot", CREDENTIAL_AAD = "filter-matome-smart-fetcher-v1";
@@ -340,7 +340,7 @@ public final class FilterMatomeSmartFetcher
     private JsonObject callDownloader(String action, String method, String videoId, String contentUrl, String cookie, long rate) throws Exception {
         int port = Integer.getInteger("listenPort", 8080);
         Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", port));
-        URL url = new URL("http://www.nicovideo.jp/cache/filter-matome/v1/" + "movie-fetcher/" + action);
+        URL url = new URL("http://nicocachenl.test/api/v1/extensions/filter-matome/" + "movie-fetcher/" + action);
         HttpURLConnection connection = (HttpURLConnection)
                 url.openConnection(proxy);
         connection.setConnectTimeout(CONNECT_TIMEOUT_MS);

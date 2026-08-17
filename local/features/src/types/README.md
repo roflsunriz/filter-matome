@@ -12,7 +12,7 @@
 - `database-types.ts`: IndexedDB、移行、バックアップの共通型。
 - `comment-types.ts`, `filter-types.ts`: コメント応答とcomment-filter2ルール。
 - `video-types.ts`, `video-player-bridge-types.ts`: 動画、プレイヤー、フィルター連携。
-- `cache-info-types.ts`: NicoCache_nl `/cache/info/v3` の動画・キャッシュ実体。
+- `cache-info-types.ts`: NicoCache_nl REST APIの動画・キャッシュ実体。
 - `mylist-types.ts`, `watch-history-types.ts`: 各永続データモデル。
 - `cache-data-manager-types.ts`, `movie-info-types.ts`: 各ダッシュボードの入出力。
 - `mlink-video-controller-types.ts`, `module-types.ts`, `background-image-types.ts`, `thumbnails-filter-types.ts`: mlinkのパネル・モジュール・設定。

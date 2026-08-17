@@ -609,7 +609,7 @@ export function startMovieInfo(): void {
         const message = toFailureMessage(cacheInfoResult.reason);
         panels.cache.setStatus("error", "キャッシュ情報取得失敗: " + message);
         failures.push({
-          label: "cache/info/v3",
+          label: "NicoCache REST API",
           message,
           action:
             "NicoCache_nl が起動しているか、対象動画のキャッシュ情報が存在するかを確認してください。",

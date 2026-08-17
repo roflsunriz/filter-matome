@@ -1,4 +1,4 @@
-/** NicoCache_nl `/cache/info/v3` のキャッシュ実体。 */
+/** NicoCache_nl REST APIのキャッシュ実体。 */
 export interface CacheInfoItem {
   videoId: string;
   cacheId: string;
@@ -15,7 +15,7 @@ export interface CacheInfoItem {
   ts: number | null;
 }
 
-/** NicoCache_nl `/cache/info/v3` の動画単位エントリ。 */
+/** NicoCache_nl REST APIの動画単位エントリ。 */
 export interface CacheInfoEntry {
   videoId: string | null;
   preferred: string | null;
@@ -25,5 +25,5 @@ export interface CacheInfoEntry {
   caches: Record<string, CacheInfoItem>;
 }
 
-/** 動画IDまたは入力IDをキーにした `/cache/info/v3` レスポンス。 */
+/** 動画IDをキーにした一括キャッシュ照会レスポンス。 */
 export type CacheInfoResponse = Record<string, CacheInfoEntry>;

@@ -1,5 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+export * as localApiCors from "./local-api-cors-test-helper";
+
 const CACHE_ICON_SCRIPT_URL =
   "https://www.nicovideo.jp/local/15_cached_link_color.js";
 const CACHE_DISPLAY_SCRIPT_URL =

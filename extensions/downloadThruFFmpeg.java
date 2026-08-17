@@ -34,11 +34,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class downloadThruFFmpeg implements Extension2, Processor {
     
-    public static final int REVISION = 251002004;  // 2025/10/02 v004 - Remove -f hls, add compatibility options
+    public static final int REVISION = 26081801;  // 2025/10/02 v004 - Remove -f hls, add compatibility options
     public static final String VER_STRING = "downloadThruFFmpeg_"+REVISION;
     private static final String[] PROCESSOR_SUPPORTED_METHODS = { "GET" };
     private static final Pattern PROCESSOR_SUPPORTED_PATTERN = Pattern.compile(
-        "^https?://www\\.nicovideo\\.jp/cache/ffmpeg\\?(video|audio)=([a-z]{2}\\d{1,11})");
+        "^https?://nicocachenl\\.test/api/v1/extensions/filter-matome/ffmpeg/exports/(video|audio)/([a-z]{2}\\d{1,11})");
     
     private static final File CACHE_DIR = new File("C:\\NicoCache_nl");
 

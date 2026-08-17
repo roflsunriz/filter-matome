@@ -18,7 +18,7 @@
 - `server-response-parser.ts`: `server-response` メタ情報の安全な解析。
 - `video-info-api.ts`: 旧ext-thumb XMLと現行Watch API JSONを共通の動画情報へ正規化するクライアント。
 - `cache-search-client.ts`, `cache-search-results.ts`: NicoCache_nlキャッシュ検索と結果UI。
-- `cache-info-api.ts`: `/cache/info/v3` のレスポンス検証、取得、完成判定、再生候補の優先順位。
+- `cache-info-api.ts`: 専用ホストREST APIのレスポンス検証、取得、完成判定、再生候補の優先順位。
 - `cache-removal.ts`: `FilterMatomeCacheControl` APIの削除・削除予約・状態確認。
 - `video-navigation.ts`, `video-navigation-styles.ts`: 動画ID・URL入力とキャッシュ検索の共通UI。
 - `indexed-db-emergency-backup.ts`: 破損したIndexedDBを再作成する前の緊急退避。

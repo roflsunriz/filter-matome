@@ -1,6 +1,7 @@
 import type { SeriesAlert } from "@/types/watch-history-types";
 
-const API_ROOT = "/cache/watch-history-series-alerts";
+const API_ROOT =
+  "https://nicocachenl.test/api/v1/extensions/filter-matome/series-alerts";
 const API_HEADER = "X-Filter-Matome-Series-Alerts";
 const SCHEMA_VERSION = 1;
 

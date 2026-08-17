@@ -4,10 +4,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { composeWatchHistoryDocument } from "../scripts/watch-history-document";
-import {
-  expectCacheIconAssetApplied,
-  installCacheIconAssetRoutes,
-} from "./cache-icon-test-helper";
+import * as testHelpers from "./cache-icon-test-helper";
 import { verifyWatchHistoryGoogleDriveBackup } from "./watch-history-google-drive-test-helper";
 
 const projectRoot = join(import.meta.dirname, "..");
@@ -256,10 +253,11 @@ async function openApp(page: Page): Promise<ExtensionRouteController> {
       return { started, release };
     },
   };
-  await installCacheIconAssetRoutes(page);
+  await testHelpers.installCacheIconAssetRoutes(page);
   await page.route(
-    "https://www.nicovideo.jp/cache/watch-history-series-alerts/**",
+    "https://nicocachenl.test/api/v1/extensions/filter-matome/series-alerts/**",
     async (route) => {
+      if (await testHelpers.localApiCors.fulfillPreflight(route)) return;
       const action = new URL(route.request().url()).pathname.split("/").pop();
       if (action === "config") {
         const body = route.request().postDataJSON() as { alerts?: unknown[] };
@@ -288,6 +286,7 @@ async function openApp(page: Page): Promise<ExtensionRouteController> {
               };
       await route.fulfill({
         contentType: "application/json",
+        headers: testHelpers.localApiCors.headers,
         body: JSON.stringify(response),
       });
     },
@@ -599,7 +598,7 @@ test("サムネイル欠落時と画像読込失敗時にフォールバック�
   await expect(
     cacheIconTarget.locator(":scope > .history-thumbnail"),
   ).toHaveAttribute("href", "https://www.nicovideo.jp/watch/sm100");
-  await expectCacheIconAssetApplied(
+  await testHelpers.expectCacheIconAssetApplied(
     page,
     cacheIconTarget.locator(":scope > .history-thumbnail"),
   );
@@ -636,7 +635,7 @@ test("サムネイル欠落時と画像読込失敗時にフォールバック�
     "src",
     /^data:image\/svg\+xml/,
   );
-  await expectCacheIconAssetApplied(page, detailThumbnail);
+  await testHelpers.expectCacheIconAssetApplied(page, detailThumbnail);
 });
 
 test("シリーズタブを開かなくてもアラートのシリーズ選択肢を取得する", async ({
@@ -742,7 +741,7 @@ test("各タブ・シリーズ・アラートの静的および動的ボタン�
   const seriesThumbnail = page.locator(
     '#series-detail-videos a[href$="sm100"]',
   );
-  await expectCacheIconAssetApplied(page, seriesThumbnail);
+  await testHelpers.expectCacheIconAssetApplied(page, seriesThumbnail);
   await page.locator("#series-detail-add-alert").click();
   await expect(page.locator("#toast-container")).toContainText(
     "このシリーズのアラートは既に存在します",
@@ -780,7 +779,7 @@ test("各タブ・シリーズ・アラートの静的および動的ボタン�
   expect(
     await page.evaluate(async () => {
       const response = await fetch(
-        "/cache/watch-history-series-alerts/status",
+        "https://nicocachenl.test/api/v1/extensions/filter-matome/series-alerts/status",
         { headers: { "X-Filter-Matome-Series-Alerts": "1" } },
       );
       return (await response.json()) as { alerts: Array<{ enabled: boolean }> };
@@ -838,7 +837,7 @@ test("削除前に開始した再取得の応答でアラートが復活しな�
   expect(
     await page.evaluate(async () => {
       const response = await fetch(
-        "/cache/watch-history-series-alerts/status",
+        "https://nicocachenl.test/api/v1/extensions/filter-matome/series-alerts/status",
         { headers: { "X-Filter-Matome-Series-Alerts": "1" } },
       );
       return (await response.json()) as { alerts: unknown[] };

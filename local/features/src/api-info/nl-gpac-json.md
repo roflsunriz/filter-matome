@@ -1,6 +1,6 @@
 # nlGpac JSON
 
-APIエンドポイント: `https://www.nicovideo.jp/cache/gpac?{video_id}`
+APIエンドポイント: `https://nicocachenl.test/api/v1/extensions/filter-matome/gpac/{video_id}`
 
 `extensions/nlGpac.class`単体が、キャッシュされた通常のメディアファイルまたはHLS/CMAFのプレイリストをGPACで解析して返すJSONです。MediaInfoやFFmpegは使用しません。
 

@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- 【全NicoCache連携】本体の旧`/cache/*`管理API廃止に合わせ、キャッシュ照会・検索・再生・
+  保存・削除と全Java拡張APIを`https://nicocachenl.test/api/v1`へ完全移行した。
+- 【common・video-player・movie-info】動画単位のREST資源からCMAF/Domandキャッシュ情報を取得し、
+  専用ホストの再生・エクスポート経路を使うよう、型検証、URL生成、fixture、UI表示を更新した。
+- 【extensions】movie-fetcher、smart-fetcher、HLS削除、GPAC、nicochart、シリーズアラート、
+  コメントログ、FFmpeg保存、キャッシュ検索を`/api/v1/extensions/filter-matome`へ統一した。
+
 ## [#242] - 2026-08-16
 
 ### Changed

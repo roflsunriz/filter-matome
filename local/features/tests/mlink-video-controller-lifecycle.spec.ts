@@ -150,10 +150,10 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
           <button type="button" class="ncnl-common-header-trigger">NicoCache</button>
           <div class="ncnl-common-header-popover">
             <div class="ncnl-common-header-actions">
-              <a class="ncnl-common-header-item" href="/cache/sm9/auto/movie">動画保存</a>
+              <a class="ncnl-common-header-item" href="https://nicocachenl.test/api/v1/videos/sm9/exports/video">動画保存</a>
               <button type="button" class="ncnl-common-header-item">キャッシュ削除</button>
             </div>
-            <div class="ncnl-common-header-footer"><a href="/cache/">キャッシュへ</a></div>
+            <div class="ncnl-common-header-footer"><a href="https://nicocachenl.test/cache">キャッシュへ</a></div>
           </div>
         </div>
       </div>

@@ -34,7 +34,7 @@ describe("FilterMatomeCacheControl API client", () => {
 
     expect(calls).toEqual([
       [
-        "/cache/filter-matome/v1/remove",
+        "https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove",
         {
           method: "POST",
           headers: {
@@ -68,7 +68,7 @@ describe("FilterMatomeCacheControl API client", () => {
     }
 
     expect(calls[0]?.[0]).toBe(
-      "/cache/filter-matome/v1/remove-status?id=request%2F1",
+      "https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove-status?id=request%2F1",
     );
     expect(calls[0]?.[1]).toEqual({
       method: "GET",

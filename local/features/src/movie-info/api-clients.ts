@@ -8,7 +8,8 @@ import {
   type VideoInfoFetcher,
 } from "@/common/video-info-api";
 
-const GPAC_ENDPOINT = "https://www.nicovideo.jp/cache/gpac?";
+const GPAC_ENDPOINT =
+  "https://nicocachenl.test/api/v1/extensions/filter-matome/gpac/";
 
 const toErrorMessage = (error: unknown): string => {
   if (error instanceof Error && error.message) {

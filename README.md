@@ -142,7 +142,7 @@ winget install Google.Chrome
 - **キャッシュ操作**: テンポラリ動画の一括削除や個別操作を提供
 
 ### 動画/API情報ダッシュボード (movie-info)
-- **横断取得**: cache/info、動画情報API、GPACメディア解析、watch apiDataを並列取得
+- **横断取得**: NicoCache_nl RESTキャッシュAPI、動画情報API、GPACメディア解析、watch apiDataを並列取得
 - **GPAC仕様表示**: 再生時間、解像度、ビットレート、フレーム、色、音声、コンテナ情報、全ストリーム属性をmovie-infoで確認
 - **コメント取得**: 必要時だけ全フォークコメントを取得し、プレビューとフルJSON保存を提供
 - **エラー表示**: 一部API取得失敗時も成功したパネルを表示し、失敗元と確認ポイントを整理

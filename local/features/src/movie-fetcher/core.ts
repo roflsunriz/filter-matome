@@ -4,7 +4,8 @@ const ACTION_TRACK_CHARACTERS =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 export const MOVIE_FETCHER_HEADER = "X-Filter-Matome-Movie-Fetcher";
-export const MOVIE_FETCHER_API = "/cache/filter-matome/v1/movie-fetcher";
+export const MOVIE_FETCHER_API =
+  "https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher";
 
 export interface DomandQuality {
   id?: string;

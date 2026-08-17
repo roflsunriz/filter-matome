@@ -9,7 +9,7 @@ import {
 describe("common cache search", () => {
   test("builds an encoded NicoCache_nl search URL", () => {
     expect(getCacheSearchUrl(" 豪血寺一族 ")).toBe(
-      "https://www.nicovideo.jp/cache/search/%E8%B1%AA%E8%A1%80%E5%AF%BA%E4%B8%80%E6%97%8F?order=d",
+      "https://nicocachenl.test/api/v1/cache-entries?query=%E8%B1%AA%E8%A1%80%E5%AF%BA%E4%B8%80%E6%97%8F&order=desc",
     );
     expect(() => getCacheSearchUrl("   ")).toThrow(
       "検索キーワードを入力してください。",
@@ -63,7 +63,7 @@ describe("common cache search", () => {
     });
 
     expect(requestedUrl).toContain(
-      "/cache/search/%E9%99%B0%E9%99%BD%E5%B8%AB?order=d",
+      "/api/v1/cache-entries?query=%E9%99%B0%E9%99%BD%E5%B8%AB&order=desc",
     );
     expect(requestedInit?.cache).toBe("no-store");
     expect(results[0]?.videoId).toBe("sm9");

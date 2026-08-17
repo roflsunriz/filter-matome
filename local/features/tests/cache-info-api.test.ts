@@ -48,10 +48,10 @@ const createEntry = (): CacheInfoEntry => ({
   },
 });
 
-describe("cache/info/v3 client", () => {
-  test("動画IDをエンコードしたv3 URLを組み立てる", () => {
+describe("NicoCache_nl REST cache client", () => {
+  test("動画IDをエンコードしたREST URLを組み立てる", () => {
     expect(buildCacheInfoUrl("sm9, sm10")).toBe(
-      "https://www.nicovideo.jp/cache/info/v3?sm9%2C%20sm10",
+      "https://nicocachenl.test/api/v1/videos/sm9%2C%20sm10/cache-entries",
     );
   });
 
@@ -102,7 +102,7 @@ describe("cache/info/v3 client", () => {
           caches: {},
         },
       }),
-    ).toThrow("v3形式ではありません");
+    ).toThrow("エントリ形式が不正です");
   });
 
   test("HTTPエラーと不正なcacheId対応を報告する", async () => {
@@ -110,16 +110,14 @@ describe("cache/info/v3 client", () => {
       fetchCacheInfoEntry("sm9", () =>
         Promise.resolve(new Response("", { status: 503 })),
       ),
-    ).rejects.toThrow("cache/info/v3 API error: 503");
+    ).rejects.toThrow("NicoCache_nl REST API error: 503");
 
     const entry = createEntry();
     entry.caches["sm9[720p,128].hls"].cacheId = "sm9[360p,64].hls";
     await expect(
       fetchCacheInfoEntry("sm9", () =>
-        Promise.resolve(
-          new Response(JSON.stringify({ sm9: entry }), { status: 200 }),
-        ),
+        Promise.resolve(new Response(JSON.stringify(entry), { status: 200 })),
       ),
-    ).rejects.toThrow("v3形式ではありません");
+    ).rejects.toThrow("REST APIのキャッシュ情報形式が不正です");
   });
 });

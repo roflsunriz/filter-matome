@@ -28,7 +28,7 @@ const fixtureEntry = join(
   "fixtures",
   "cache-data-manager-entry.ts",
 );
-const pageUrl = "https://www.nicovideo.jp/cache/";
+const pageUrl = "https://nicocachenl.test/cache";
 const transparentPixel =
   "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 let appBundle = "";
@@ -121,22 +121,27 @@ test.beforeEach(async ({ page }) => {
       body: `<nicovideo_thumb_response status="ok"><thumb><title>詳細 ${id}</title><thumbnail_url>${transparentPixel}</thumbnail_url><user_nickname>テスト投稿者</user_nickname><length>1:23</length><view_counter>1200</view_counter><comment_num>34</comment_num><mylist_counter>56</mylist_counter><first_retrieve>2026-01-02T03:04:05+09:00</first_retrieve><tags><tag>テスト</tag></tags></thumb></nicovideo_thumb_response>`,
     });
   });
-  await page.route("https://www.nicovideo.jp/cache/info/v3?**", (route) => {
-    const id = decodeURIComponent(route.request().url().split("?")[1] ?? "sm0");
-    const cacheId = `${id}[720p].hls`;
-    void route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        [id]: {
-          preferred: cacheId,
-          completes: [cacheId],
-          caches: { [cacheId]: { complete: true, caching: false } },
-        },
-      }),
-    });
-  });
   await page.route(
-    "https://www.nicovideo.jp/cache/filter-matome/v1/remove",
+    "https://nicocachenl.test/api/v1/videos/**/cache-entries",
+    (route) => {
+      const id = decodeURIComponent(
+        route.request().url().split("?")[1] ?? "sm0",
+      );
+      const cacheId = `${id}[720p].hls`;
+      void route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          [id]: {
+            preferred: cacheId,
+            completes: [cacheId],
+            caches: { [cacheId]: { complete: true, caching: false } },
+          },
+        }),
+      });
+    },
+  );
+  await page.route(
+    "https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove",
     (route) => {
       const request = route.request();
       const body = request.postDataJSON() as { videoId?: string };
@@ -294,7 +299,8 @@ test("個別削除と一括操作が確認後に更新される", async ({ page 
 });
 
 test("HLSがないMP4テンポラリ項目は一括削除後も一覧に残る", async ({ page }) => {
-  const removalUrl = "https://www.nicovideo.jp/cache/filter-matome/v1/remove";
+  const removalUrl =
+    "https://nicocachenl.test/api/v1/extensions/filter-matome/cache-control/remove";
   await page.unroute(removalUrl);
   await page.route(removalUrl, (route) => {
     const body = route.request().postDataJSON() as { videoId?: string };

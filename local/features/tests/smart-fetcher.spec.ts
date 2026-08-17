@@ -4,6 +4,12 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+const localApiCorsHeaders = {
+  "Access-Control-Allow-Origin": "https://www.nicovideo.jp",
+  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, X-Filter-Matome-Smart-Fetcher",
+};
+
 const projectRoot = join(import.meta.dirname, "..");
 const fixtureEntry = join(
   import.meta.dirname,
@@ -112,8 +118,12 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
     }),
   );
   await page.route(
-    "**/cache/filter-matome/v1/smart-fetcher/**",
+    "**/api/v1/extensions/filter-matome/smart-fetcher/**",
     async (route) => {
+      if (route.request().method() === "OPTIONS") {
+        await route.fulfill({ status: 204, headers: localApiCorsHeaders });
+        return;
+      }
       const action =
         new URL(route.request().url()).pathname.split("/").at(-1) ?? "";
       actions.push(action);
@@ -148,6 +158,7 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
       }
       await route.fulfill({
         contentType: "application/json",
+        headers: localApiCorsHeaders,
         body: JSON.stringify(serverState),
       });
     },
@@ -219,7 +230,9 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
   await page.locator("#setting-mode").selectOption("fixed");
   await page.locator('input[name="fixedKiB"]').fill("512");
   await page.locator('#settings-form button[type="submit"]').click();
-  expect(serverState.settings.fixedBytesPerSecond).toBe(524_288);
+  await expect
+    .poll(() => serverState.settings.fixedBytesPerSecond)
+    .toBe(524_288);
 
   await page.locator('[data-action="run"]').click();
   await expect(page.locator('[data-schedule-id="schedule-1"]')).toContainText(
@@ -294,11 +307,13 @@ test("SPAを二重起動しても予約と履歴を消さずタイマーを重�
   let intervalCount = 0;
 
   await page.route(pageUrl, documentRoute);
-  await page.route("**/cache/filter-matome/v1/smart-fetcher/**", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify(serverState),
-    }),
+  await page.route(
+    "**/api/v1/extensions/filter-matome/smart-fetcher/**",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(serverState),
+      }),
   );
   await page.goto(pageUrl);
   await page.evaluate(() => {
@@ -390,7 +405,7 @@ test("取得履歴を確認後に個別・一括削除しても予約を保持�
 
   await page.route(pageUrl, documentRoute);
   await page.route(
-    "**/cache/filter-matome/v1/smart-fetcher/**",
+    "**/api/v1/extensions/filter-matome/smart-fetcher/**",
     async (route) => {
       const action =
         new URL(route.request().url()).pathname.split("/").at(-1) ?? "";
@@ -470,7 +485,7 @@ test("更新後の予約と履歴を遅れて届いた古い定期応答で消�
 
   await page.route(pageUrl, documentRoute);
   await page.route(
-    "**/cache/filter-matome/v1/smart-fetcher/**",
+    "**/api/v1/extensions/filter-matome/smart-fetcher/**",
     async (route) => {
       const action =
         new URL(route.request().url()).pathname.split("/").at(-1) ?? "";
@@ -566,11 +581,13 @@ test("狭い画面でも横にはみ出さず全フォームへ到達できる",
   const serverState = createState();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route(pageUrl, documentRoute);
-  await page.route("**/cache/filter-matome/v1/smart-fetcher/**", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify(serverState),
-    }),
+  await page.route(
+    "**/api/v1/extensions/filter-matome/smart-fetcher/**",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify(serverState),
+      }),
   );
   await page.route("**/api/watch/v3/sm9?**", (route) =>
     route.fulfill({

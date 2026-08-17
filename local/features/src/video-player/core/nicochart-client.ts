@@ -12,7 +12,7 @@ export const fetchNicochartVideoInfo = async (
   }
 
   const response = await fetch(
-    `/cache/nicochart-info/${encodeURIComponent(videoId)}`,
+    `https://nicocachenl.test/api/v1/extensions/filter-matome/nicochart-info/${encodeURIComponent(videoId)}`,
     {
       method: "GET",
       credentials: "same-origin",

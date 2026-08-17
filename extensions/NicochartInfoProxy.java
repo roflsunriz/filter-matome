@@ -30,11 +30,11 @@ import dareka.processor.StringResource;
  */
 public final class NicochartInfoProxy implements Extension2, Processor {
 
-    public static final int REVISION = 260713;
+    public static final int REVISION = 26081801;
     public static final String VER_STRING = "NicochartInfoProxy_" + REVISION;
 
     private static final Pattern SUPPORTED_URL = Pattern.compile(
-            "^https?://www\\.nicovideo\\.jp/cache/nicochart-info/([a-z]{2}\\d+)$",
+            "^https?://nicocachenl\\.test/api/v1/extensions/filter-matome/nicochart-info/([a-z]{2}\\d+)$",
             Pattern.CASE_INSENSITIVE);
     private static final String[] SUPPORTED_METHODS = { "GET" };
     private static final String REQUEST_HEADER = "X-Filter-Matome-Nicochart";

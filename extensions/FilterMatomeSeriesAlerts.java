@@ -60,7 +60,7 @@ import dareka.processor.StringResource;
 public final class FilterMatomeSeriesAlerts
         implements Extension2, Processor, SystemEventListener {
 
-    public static final int REVISION = 260714;
+    public static final int REVISION = 26081801;
     public static final String VER_STRING = "FilterMatomeSeriesAlerts_" + REVISION;
 
     private static final String LOG_PREFIX = "SeriesAlerts";
@@ -68,7 +68,7 @@ public final class FilterMatomeSeriesAlerts
     private static final String REQUEST_HEADER = "X-Filter-Matome-Series-Alerts";
     private static final String[] SUPPORTED_METHODS = { "GET", "POST" };
     private static final Pattern SUPPORTED_URL = Pattern.compile(
-            "^https?://www\\.nicovideo\\.jp/cache/watch-history-series-alerts/"
+            "^https?://nicocachenl\\.test/api/v1/extensions/filter-matome/series-alerts/"
                     + "(status|config|check-now|test-notification)$");
     private static final Pattern VIDEO_ID_PATTERN = Pattern.compile(
             "^[a-z]{2}\\d+$", Pattern.CASE_INSENSITIVE);

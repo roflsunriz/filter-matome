@@ -6,7 +6,6 @@ import {
   fetchCacheInfoEntry,
   hasCompletedCache,
 } from "@/common/cache-info-api";
-import { URLS } from "@/video-player/config/constants";
 import { addNavigationListener } from "@/runtime/navigation";
 
 type PlayerPreference = "standalone" | "official" | "ask";
@@ -27,7 +26,9 @@ const UNAVAILABLE_MESSAGE = "お探しの動画は視聴できません";
  */
 const hasCustomCacheForId = async (cacheId: string): Promise<boolean> => {
   try {
-    const response = await fetch(`${URLS.BASE}/cache/find_cache?${cacheId}`);
+    const response = await fetch(
+      `https://nicocachenl.test/api/v1/extensions/filter-matome/cache-search/${encodeURIComponent(cacheId)}`,
+    );
 
     if (!response.ok) {
       window.logger.warn(
