@@ -1,12 +1,20 @@
 const CACHE_API_BASE = "https://nicocachenl.test/api/v1/videos";
 
-const REMOVAL_STATUSES = ["not_found", "scheduled", "deleted"] as const;
+const REMOVAL_STATUSES = [
+  "not_found",
+  "scheduled",
+  "deleted",
+  "partial",
+  "failed",
+] as const;
 
 export type CacheRemovalStatus = (typeof REMOVAL_STATUSES)[number];
 
 export interface CacheRemovalResponse {
   videoId: string;
   status: CacheRemovalStatus;
+  target: "hls";
+  preservesNonHls: true;
 }
 
 export interface CacheRemovalNotice {
@@ -22,13 +30,17 @@ const parseCacheRemovalResponse = (value: unknown): CacheRemovalResponse => {
     !isRecord(value) ||
     typeof value.videoId !== "string" ||
     typeof value.status !== "string" ||
-    !REMOVAL_STATUSES.includes(value.status as CacheRemovalStatus)
+    !REMOVAL_STATUSES.includes(value.status as CacheRemovalStatus) ||
+    value.target !== "hls" ||
+    value.preservesNonHls !== true
   ) {
     throw new Error("NicoCache_nl削除APIの応答形式が不正です");
   }
   return {
     videoId: value.videoId,
     status: value.status as CacheRemovalStatus,
+    target: "hls",
+    preservesNonHls: true,
   };
 };
 
@@ -37,7 +49,7 @@ export const removeCacheForVideo = async (
   videoId: string,
 ): Promise<CacheRemovalResponse> => {
   const response = await fetch(
-    `${CACHE_API_BASE}/${encodeURIComponent(videoId)}/cache-entries`,
+    `${CACHE_API_BASE}/${encodeURIComponent(videoId)}/hls-cache-entries`,
     {
       method: "DELETE",
       cache: "no-store",
@@ -68,7 +80,17 @@ export const getCacheRemovalNotice = (
     case "deleted":
       return {
         kind: "success",
-        message: "動画に属するキャッシュを削除しました。",
+        message: "動画に属するHLSキャッシュを削除しました。",
+      };
+    case "partial":
+      return {
+        kind: "error",
+        message: "HLSキャッシュの削除が一部失敗しました。",
+      };
+    case "failed":
+      return {
+        kind: "error",
+        message: "HLSキャッシュの削除に失敗しました。",
       };
   }
 };

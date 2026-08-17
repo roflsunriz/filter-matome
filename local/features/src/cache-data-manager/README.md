@@ -14,7 +14,7 @@ NicoCache_nlが生成するキャッシュ一覧ページを、検索・絞り�
 - 出力: 一覧DOM、検索結果・詳細モーダル、再生・変換・削除操作。
 - 補助保存: `storage/cache-metadata-db.ts` の `CacheDataManagerMetadata` IndexedDB。
 
-`tempList` は同一動画の `cacheList` より優先されます。動画単位削除では完成・一時キャッシュを対象とし、APIが返す即時削除・削除予約・対象なし・失敗を区別してください。
+`tempList` は同一動画の `cacheList` より優先されます。削除では動画に属するHLSだけを対象にし、MP4・FLV・SWFを保持したうえで、APIが返す即時削除・削除予約・対象なし・失敗を区別してください。
 
 ## 構成
 

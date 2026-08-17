@@ -54,6 +54,7 @@ GET    /api/v1/videos/<動画ID>/exports/video
 GET    /api/v1/videos/<動画ID>/exports/audio
 GET    /api/v1/videos/<動画ID>/exports/comments
 DELETE /api/v1/videos/<動画ID>/temporary-cache-entries
+DELETE /api/v1/videos/<動画ID>/hls-cache-entries
 DELETE /api/v1/videos/<動画ID>/cache-entries
 ```
 

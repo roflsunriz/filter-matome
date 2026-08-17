@@ -122,7 +122,7 @@ test.beforeEach(async ({ page }) => {
     });
   });
   await page.route(
-    "https://nicocachenl.test/api/v1/videos/**/cache-entries",
+    "https://nicocachenl.test/api/v1/videos/**/hls-cache-entries",
     (route) => {
       const request = route.request();
       const segments = new URL(request.url()).pathname.split("/");
@@ -130,7 +130,12 @@ test.beforeEach(async ({ page }) => {
       if (request.method() === "DELETE") {
         void route.fulfill({
           contentType: "application/json",
-          body: JSON.stringify({ videoId: id, status: "deleted" }),
+          body: JSON.stringify({
+            videoId: id,
+            status: "deleted",
+            target: "hls",
+            preservesNonHls: true,
+          }),
         });
         return;
       }
@@ -259,7 +264,7 @@ test("個別削除と一括操作が確認後に更新される", async ({ page 
     .toEqual(
       expect.arrayContaining([
         expect.stringContaining("本当に削除しますか？"),
-        expect.stringContaining("動画に属するキャッシュを削除しました"),
+        expect.stringContaining("動画に属するHLSキャッシュを削除しました"),
       ]),
     );
   await expect(page.locator(".result-count")).toHaveText("8 件");
@@ -288,7 +293,8 @@ test("個別削除と一括操作が確認後に更新される", async ({ page 
 });
 
 test("本体が対象なしを返したテンポラリ項目は一覧に残る", async ({ page }) => {
-  const removalUrl = "https://nicocachenl.test/api/v1/videos/**/cache-entries";
+  const removalUrl =
+    "https://nicocachenl.test/api/v1/videos/**/hls-cache-entries";
   await page.route(removalUrl, (route) => {
     if (route.request().method() !== "DELETE") {
       void route.fallback();
@@ -298,7 +304,12 @@ test("本体が対象なしを返したテンポラリ項目は一覧に残る",
     const videoId = decodeURIComponent(segments.at(-2) ?? "sm0");
     void route.fulfill({
       contentType: "application/json",
-      body: JSON.stringify({ videoId, status: "not_found" }),
+      body: JSON.stringify({
+        videoId,
+        status: "not_found",
+        target: "hls",
+        preservesNonHls: true,
+      }),
     });
   });
 

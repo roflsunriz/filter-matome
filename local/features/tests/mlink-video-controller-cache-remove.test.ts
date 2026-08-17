@@ -12,7 +12,12 @@ describe("NicoCache_nl deletion API client", () => {
     globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
       calls.push([input, init]);
       return Promise.resolve(
-        Response.json({ videoId: "sm9", status: "deleted" }),
+        Response.json({
+          videoId: "sm9",
+          status: "deleted",
+          target: "hls",
+          preservesNonHls: true,
+        }),
       );
     }) as typeof fetch;
 
@@ -20,6 +25,8 @@ describe("NicoCache_nl deletion API client", () => {
       await expect(removeCacheForVideo("sm9")).resolves.toEqual({
         videoId: "sm9",
         status: "deleted",
+        target: "hls",
+        preservesNonHls: true,
       });
     } finally {
       globalThis.fetch = originalFetch;
@@ -27,7 +34,7 @@ describe("NicoCache_nl deletion API client", () => {
 
     expect(calls).toEqual([
       [
-        "https://nicocachenl.test/api/v1/videos/sm9/cache-entries",
+        "https://nicocachenl.test/api/v1/videos/sm9/hls-cache-entries",
         { method: "DELETE", cache: "no-store", credentials: "omit" },
       ],
     ]);
@@ -37,6 +44,8 @@ describe("NicoCache_nl deletion API client", () => {
     const notice = getCacheRemovalNotice({
       videoId: "sm9",
       status: "scheduled",
+      target: "hls",
+      preservesNonHls: true,
     });
     expect(notice.kind).toBe("warning");
     expect(notice.message).toContain("削除を予約しました");
@@ -44,7 +53,12 @@ describe("NicoCache_nl deletion API client", () => {
 
   test("対象なしと不正レスポンスを区別する", async () => {
     expect(
-      getCacheRemovalNotice({ videoId: "sm9", status: "not_found" }),
+      getCacheRemovalNotice({
+        videoId: "sm9",
+        status: "not_found",
+        target: "hls",
+        preservesNonHls: true,
+      }),
     ).toEqual({
       kind: "warning",
       message: "削除可能なキャッシュが見つかりません。",

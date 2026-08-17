@@ -56,7 +56,7 @@ watchページ間のSPA遷移は共通navigationイベントから`ModuleManager
 - `handlers/mylist2.ts`: mylist2 SPAへ動画追加要求を渡す。
 - `services/link-manager.ts`: filter-matome専用リンクからsmartFetcherを開き、視聴ページでは現在の動画IDを予約フォームへ渡す。
 - `managers/comment-api-cache.ts`: コメントAPIデータを共有する。
-- `common/cache-removal.ts`: NicoCache_nl本体APIで動画単位のキャッシュ削除・削除予約を行う。
+- `common/cache-removal.ts`: NicoCache_nl本体APIで動画単位のHLS削除・変種単位の削除予約を行う。
 - `integrations/video-player-bridge.ts` はcomment-filter2側にあり、スタンドアロンプレイヤーへフィルター済みコメントを渡す。
 
 `window.NicoCache_nl.watch` は存在・型・失敗を確認したフォールバックに限定し、現在の動画IDはURL、再生状態は対象ページのメディア要素を優先します。

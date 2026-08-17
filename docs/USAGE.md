@@ -83,6 +83,8 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 `nlGpac.class`は単一クラスで完結し、キャッシュを変更せず、通常のメディアファイルはそのまま、`.hls`ディレクトリはローカルの`master.m3u8`を入力としてGPACへ渡す。HLS/CMAFでもセグメントごとの結果を返さず、GPACが全期間を消費して得たPIDの解像度、Codec、ビットレート、フレーム数、時間、音声サンプルレート、チャンネル数などをまとめる。movie-infoのGPACビューでは、これらに加えてコンテナ入力、GPACバージョン、品質選択、色空間、ピクセル形式、アスペクト比、チャンネル配置などをストリーム別に表示し、GPACが返した未知の属性も全属性表で確認できる。キャッシュ解析で意図せず外部配信へ接続しないよう、プレイリストにHTTP等のリモートURLが含まれる場合は解析を拒否する。GPACの実行ファイルは、`-Dgpac.path=...`、`GPAC_PATH`環境変数、`C:\PathArea\GPAC\gpac.exe`、ユーザーの`%LOCALAPPDATA%\Programs\GPAC\gpac.exe`、`C:\Program Files\GPAC\gpac.exe`、最後にPATHの順で探索する。
 
+cache-data-managerとmlink-video-controllerの削除操作は、NicoCache_nl本体の`DELETE /api/v1/videos/<動画ID>/hls-cache-entries`を使用する。完了済み・停止済みHLSは即時削除し、取得中HLSは変種単位で完了前の削除を予約する。MP4・FLV・SWFは対象にしない。
+
 #### watch-history常駐シリーズアラート
 
 `FilterMatomeSeriesAlerts`がシリーズアラートの正本を管理し、watch-historyのシリーズアラート画面はextension APIから一覧取得・追加・変更・削除する管理フロントエンドとして動作する。NicoCache_nlは約60秒ごとに期限到来を確認し、対象動画の公開ウォッチページから次動画を検出する。ログインCookieやブラウザの通知権限には依存しない。
