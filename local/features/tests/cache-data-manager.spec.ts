@@ -318,15 +318,18 @@ test("本体が対象なしを返したテンポラリ項目は一覧に残る",
   await openApp(page, seed);
 
   await page.locator(".bulk-actions").click();
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("テンポラリ動画を一括削除しますか？");
-    await dialog.accept();
-  });
-  await page.locator("#deleteTemporaryBtn").click();
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("対象なし: 1 件");
-    await dialog.accept();
-  });
+  const confirmationPromise = page.waitForEvent("dialog");
+  const deleteClick = page.locator("#deleteTemporaryBtn").click();
+  const confirmation = await confirmationPromise;
+  expect(confirmation.message()).toContain(
+    "テンポラリ動画を一括削除しますか？",
+  );
+  const resultPromise = page.waitForEvent("dialog");
+  await confirmation.accept();
+  const result = await resultPromise;
+  expect(result.message()).toContain("対象なし: 1 件");
+  await result.accept();
+  await deleteClick;
 
   await expect(page.locator(".result-count")).toHaveText("5 件");
 });

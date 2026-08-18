@@ -20,6 +20,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   コメントログを`/api/v1/extensions/filter-matome`へ統一した。
 - 【features・README】リリース番号を`243`へ更新し、latestバッジを`#243`へ変更した。
 
+### Fixed
+
+- 【cache-data-manager・tests】一括削除の確認を受け入れた直後に結果ダイアログが返る場合も、
+  利用者操作E2Eが通知を取り逃さず内容確認と閉じる操作を完了するよう待機順序を修正した。
+
 ### Removed
 
 - 【common・cache-data-manager・mlink-video-controller・video-player】削除、検索、再生可否、
