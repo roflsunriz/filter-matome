@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#244] - 2026-08-19
+
+### Added
+
+- 【Java Toolbox/media】キャッシュ動画のrenameで仮の720p・192kbpsを使わず、dry-runを含め
+  実ファイルをffprobeで解析し、利用不能・情報不足時はGPACへフォールバックして、実測した
+  解像度と音声ビットレートからNicoCache互換名を自動構築するようにした。GUIとCLIで
+  `auto`、`ffprobe`、`gpac`を選択でき、両解析器が不足する場合は理由を表示して変更しない。
+
+### Changed
+
+- 【features・README】リリース番号を`244`へ更新し、latestバッジを`#244`へ変更した。
+
 ## [#243] - 2026-08-18
 
 ### Changed

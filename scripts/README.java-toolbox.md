@@ -13,7 +13,7 @@
 - GUIへ表示するREADMEをプラグインごとに持ち、外部プラグインの追加・削除をホスト変更なしで行えます。
 - E2Eは`@TempDir`配下の専用データ・リポジトリ・ホームを使い、実機の設定やNicoCache_nlへ接続しません。ffmpeg/ffprobe、ローカル更新API・動画情報APIはテスト用偽実装／localhostへ差し替えます。
 
-FFmpeg、FFprobeなど、処理そのものに必要な外部実行ファイルは自動インストールせず、実行時に検出して不足理由を表示します。
+FFmpeg、FFprobe、GPACなど、処理そのものに必要な外部実行ファイルは自動インストールせず、実行時に検出して不足理由を表示します。
 
 ## 配布版の利用
 
@@ -57,6 +57,17 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
 java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
   --headless --plugin media --action faststart --input "movie.mp4"
 
+# 動画IDを含むMP4を実測した画質・音質と動画タイトルでNicoCache互換名へ変更
+# autoはffprobeを優先し、利用不能・情報不足ならGPACへフォールバック
+java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+  --headless --plugin media --action rename --input "sm9.mp4" \
+  --inspector auto --yes
+
+# GPACへ明示的に固定して、変更予定だけを表示
+java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+  --headless --plugin media --action rename --input "sm9.mp4" \
+  --inspector gpac --gpac "/path/to/gpac" --dry-run
+
 # 設定を一覧表示
 java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
   --headless --plugin config-editor --action list --config "/path/to/config.properties"
@@ -78,7 +89,7 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
 
 組み込みプラグイン:
 
-- `media`: 10秒／60秒切り出し、FastStart、HLS、H.264／HEVC／AV1変換、キャッシュ動画リネーム
+- `media`: 10秒／60秒切り出し、FastStart、HLS、H.264／HEVC／AV1変換、ffprobe／GPAC実測によるキャッシュ動画リネーム。`--inspector auto|ffprobe|gpac`、`--gpac PATH`、`tools.gpac`に対応
 - `config-editor`: properties編集とdefaults辞書。GUIの初期設定ファイルはWindowsでは`%LOCALAPPDATA%/NicoCache_nl/config.properties`、Linuxでは`~/.config/NicoCache_nl/config.properties`、macOSでは`~/Library/Application Support/NicoCache_nl/config.properties`です。defaults辞書の値はダブルクリックで設定一覧へ入力できます。
 - `updater`: GitHub Releases API、ETag、`.part`ダウンロード
 - `developer`: `create-claude-link`相当の安全な相対リンク作成、`create-all-symlinks.ps1`相当の一括リンク、`create-listjs-symlink.ps1`相当の`list.js`リンク、依存関係診断

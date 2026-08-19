@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/roflsunriz/filter-matome.svg)](https://github.com/roflsunriz/filter-matome/releases)
-[![Latest Version](https://img.shields.io/badge/latest-%23243-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
+[![Latest Version](https://img.shields.io/badge/latest-%23244-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
 
 **filter-matome**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
 
@@ -218,7 +218,7 @@ CIと同じ検証をまとめて実行する場合は`bun run verify`を使用�
 
 ### scripts の Java Toolbox
 
-`scripts/` のメディア変換、設定編集、更新、開発者向け操作をまとめたGUI・ヘッドレス対応のJavaアプリです。リリースアーカイブにはビルド済みJARを同梱しているため、利用者はMavenやBunでビルドする必要がありません。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。開発補助プラグインでは、Windowsの`C:\filter-matome`と`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値にして、旧`create-all-symlinks.ps1`／`create-listjs-symlink.ps1`相当のリンクをGUI・ヘッドレスで安全に作成できます。導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md) を参照してください。`nicocache-utility.py`と専用READMEは削除済みで、NicoCache_nlの管理操作は本体側の機能を使用します。用途が異なるMkDocs用フックなどは残しています。
+`scripts/` のメディア変換、設定編集、更新、開発者向け操作をまとめたGUI・ヘッドレス対応のJavaアプリです。リリースアーカイブにはビルド済みJARを同梱しているため、利用者はMavenやBunでビルドする必要がありません。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。mediaのrenameはffprobeを優先し、利用不能・情報不足時はGPACへフォールバックして、実測した解像度と音声ビットレートからNicoCache互換名を自動構築します。開発補助プラグインでは、Windowsの`C:\filter-matome`と`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値にして、旧`create-all-symlinks.ps1`／`create-listjs-symlink.ps1`相当のリンクをGUI・ヘッドレスで安全に作成できます。導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md) を参照してください。`nicocache-utility.py`と専用READMEは削除済みで、NicoCache_nlの管理操作は本体側の機能を使用します。用途が異なるMkDocs用フックなどは残しています。
 
 ### NicoCache_nlの終了・再起動
 

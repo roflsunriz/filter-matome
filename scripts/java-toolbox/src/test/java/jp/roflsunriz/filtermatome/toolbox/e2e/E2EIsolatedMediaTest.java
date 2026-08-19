@@ -13,6 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class E2EIsolatedMediaTest {
@@ -28,6 +29,7 @@ class E2EIsolatedMediaTest {
         Path outputDirectory = Files.createDirectories(environment.root().resolve("output"));
         Path ffmpeg = environment.tool("ffmpeg");
         Path ffprobe = environment.tool("ffprobe");
+        Path gpac = environment.tool("gpac");
 
         Path cutInput = mediaFile(inputDirectory, "cut input.mp4");
         runMedia(environment, "cut10", cutInput, outputDirectory, ffmpeg, ffprobe);
@@ -85,6 +87,41 @@ class E2EIsolatedMediaTest {
             runMedia(environment, "rename", renameInput, outputDirectory, ffmpeg, ffprobe, "--yes");
             assertRegular(inputDirectory.resolve("sm123[720p,192]_隔離タイトル.mp4"));
             assertFalse(Files.exists(renameInput));
+
+            Path gpacRenameInput = mediaFile(inputDirectory, "sm124.mp4");
+            runMedia(environment, "rename", gpacRenameInput, outputDirectory, ffmpeg, ffprobe,
+                    "--yes", "--inspector=gpac", "--gpac=" + gpac);
+            assertRegular(inputDirectory.resolve("sm124[1080p,160]_隔離タイトル.mp4"));
+            assertFalse(Files.exists(gpacRenameInput));
+
+            Path fallbackRenameInput = mediaFile(inputDirectory, "sm125.mp4");
+            runMedia(environment, "rename", fallbackRenameInput, outputDirectory, ffmpeg, ffprobe,
+                    "--yes", "--inspector=auto", "--ffprobe=" + environment.root().resolve("missing-ffprobe"),
+                    "--gpac=" + gpac);
+            assertRegular(inputDirectory.resolve("sm125[1080p,160]_隔離タイトル.mp4"));
+            assertFalse(Files.exists(fallbackRenameInput));
+
+            Path dryRunInput = mediaFile(inputDirectory, "sm126.mp4");
+            List<String> dryRun = environment.plugin("media", "rename");
+            dryRun.add("--input=" + dryRunInput);
+            dryRun.add("--ffprobe=" + ffprobe);
+            dryRun.add("--gpac=" + gpac);
+            dryRun.add("--dry-run");
+            var dryRunResult = environment.run(dryRun);
+            assertEquals(0, dryRunResult.exitCode(), dryRunResult.output());
+            assertTrue(dryRunResult.output().contains("sm126[720p,192]"));
+            assertRegular(dryRunInput);
+
+            Path unavailableInspectorInput = mediaFile(inputDirectory, "sm127.mp4");
+            List<String> unavailableInspector = environment.plugin("media", "rename");
+            unavailableInspector.add("--input=" + unavailableInspectorInput);
+            unavailableInspector.add("--ffprobe=" + environment.root().resolve("missing-ffprobe"));
+            unavailableInspector.add("--gpac=" + environment.root().resolve("missing-gpac"));
+            unavailableInspector.add("--inspector=auto");
+            unavailableInspector.add("--yes");
+            var unavailableResult = environment.run(unavailableInspector);
+            assertNotEquals(0, unavailableResult.exitCode(), unavailableResult.output());
+            assertRegular(unavailableInspectorInput);
         } finally {
             server.stop(0);
         }
@@ -92,6 +129,7 @@ class E2EIsolatedMediaTest {
         String toolLog = environment.toolLogText();
         assertTrue(toolLog.contains("ffmpeg"), "ffmpegの外部コマンド境界を通っていません。");
         assertTrue(toolLog.contains("ffprobe"), "ffprobeの外部コマンド境界を通っていません。");
+        assertTrue(toolLog.contains("gpac"), "GPACの外部コマンド境界を通っていません。");
     }
 
     private static void runMedia(IsolatedEnvironment environment, String action, Path input, Path output,

@@ -10,6 +10,7 @@ import jp.roflsunriz.filtermatome.toolbox.PluginDescriptor;
 import jp.roflsunriz.filtermatome.toolbox.ProcessResult;
 import jp.roflsunriz.filtermatome.toolbox.ProcessRunner;
 import jp.roflsunriz.filtermatome.toolbox.ToolPlugin;
+import jp.roflsunriz.filtermatome.toolbox.plugins.MediaInspector.MediaInfo;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -61,16 +62,21 @@ public final class MediaPlugin implements ToolPlugin {
 
     @Override
     public PluginDescriptor descriptor() {
-        return new PluginDescriptor("media", "メディア変換", "ffmpeg/ffprobeによる変換、HLS、FastStart、切り出し、リネーム", true, true);
+        return new PluginDescriptor("media", "メディア変換",
+                "ffmpeg/ffprobe/GPACによる変換、HLS、FastStart、切り出し、リネーム", true, true);
     }
 
     @Override
     public String readme() {
         return "メディア変換\n\n"
                 + "対応アクション: cut10, cut60, faststart, hls, convert, rename\n"
-                + "ffmpeg/ffprobeはPATHから自動検出します。設定画面がない環境では "
-                + "--ffmpeg PATH --ffprobe PATH またはアプリ設定 tools.ffmpeg/tools.ffprobe を利用できます。\n\n"
-                + "リネームの動画情報APIは media.watchApiUrl / media.legacyApiUrl で変更できます。\n\n"
+                + "ffmpeg/ffprobe/GPACはPATHと設定から検出します。設定画面がない環境では "
+                + "--ffmpeg PATH --ffprobe PATH --gpac PATH またはアプリ設定 "
+                + "tools.ffmpeg/tools.ffprobe/tools.gpac を利用できます。\n\n"
+                + "リネームは --inspector auto（既定）でffprobeを優先し、不足・失敗時はGPACへ"
+                + "フォールバックします。ffprobeまたはgpacへ固定することもできます。"
+                + "dry-runでも実ファイルを解析し、推測値では命名しません。動画情報APIは "
+                + "media.watchApiUrl / media.legacyApiUrl で変更できます。\n\n"
                 + "既定では既存ファイルを上書きせず、--overwrite を明示した場合だけ上書きします。"
                 + "GUIでは上書き前に確認を表示し、変換途中のファイルは作業先に限定します。";
     }
@@ -92,10 +98,14 @@ public final class MediaPlugin implements ToolPlugin {
         String action = request.action().toLowerCase(Locale.ROOT);
         String ffmpeg = request.value("ffmpeg", context.config().get("tools.ffmpeg", "ffmpeg"));
         String ffprobe = request.value("ffprobe", context.config().get("tools.ffprobe", "ffprobe"));
-        boolean needsProbe = action.equals("hls") || action.equals("rename")
+        String gpac = request.value("gpac", MediaInspector.resolveGpacExecutable(context));
+        boolean rename = action.equals("rename");
+        boolean needsProbe = action.equals("hls")
                 || request.value("mode", "").toLowerCase(Locale.ROOT).equals("adaptive");
-        if (!request.dryRun() || (needsProbe && !request.dryRun())) {
-            ensureTool(ffmpeg, "ffmpeg", context);
+        if (!request.dryRun()) {
+            if (!rename) {
+                ensureTool(ffmpeg, "ffmpeg", context);
+            }
             if (needsProbe) {
                 ensureTool(ffprobe, "ffprobe", context);
             }
@@ -115,7 +125,7 @@ public final class MediaPlugin implements ToolPlugin {
             case "faststart" -> processFastStart(inputs, request, context, token, ffmpeg);
             case "hls" -> processHls(inputs, request, context, token, ffmpeg, ffprobe);
             case "convert", "transcode" -> processConvert(inputs, request, context, token, ffmpeg, ffprobe);
-            case "rename" -> processRename(inputs, request, context, token, ffprobe);
+            case "rename" -> processRename(inputs, request, context, token, ffprobe, gpac);
             default -> throw new IllegalArgumentException("未対応のメディアアクションです: " + action);
         };
     }
@@ -172,7 +182,8 @@ public final class MediaPlugin implements ToolPlugin {
         String mode = request.value("mode", "h264").toLowerCase(Locale.ROOT);
         int failures = 0;
         for (Path input : inputs) {
-            boolean adaptiveCopy = !request.dryRun() && mode.equals("adaptive") && "h264".equals(probe(input, ffprobe, "video"));
+            boolean adaptiveCopy = !request.dryRun() && mode.equals("adaptive")
+                    && "h264".equals(MediaInspector.probeCodec(input, ffprobe, "video"));
             List<String> codec = new ArrayList<>();
             if (adaptiveCopy) {
                 codec.addAll(List.of("-c:v", "copy", "-c:a", "aac"));
@@ -210,7 +221,7 @@ public final class MediaPlugin implements ToolPlugin {
         int failures = 0;
         for (Path input : inputs) {
             MediaInfo info = request.dryRun() ? new MediaInfo("h264", "aac", true, 5_000_000, 192_000)
-                    : probeInfo(input, ffprobe);
+                    : MediaInspector.probeWithFfprobe(input, ffprobe);
             Path output = hlsDirectory(input, request.output());
             if (!prepareDirectoryOutput(output, request, context)) {
                 continue;
@@ -244,7 +255,7 @@ public final class MediaPlugin implements ToolPlugin {
     }
 
     private int processRename(List<Path> inputs, CommandRequest request, PluginContext context,
-                              CancellationToken token, String ffprobe) throws Exception {
+                              CancellationToken token, String ffprobe, String gpac) throws Exception {
         if (!request.dryRun() && !request.confirmed()) {
             throw new IllegalArgumentException("リネームは --yes/--apply またはGUIの確認が必要です。");
         }
@@ -262,16 +273,32 @@ public final class MediaPlugin implements ToolPlugin {
                 continue;
             }
             String id = matcher.group(1).toLowerCase();
-            MediaInfo info = request.dryRun() ? new MediaInfo("", "", true, 0, 192_000) : probeInfo(input, ffprobe);
+            MediaInfo info;
+            try {
+                info = MediaInspector.inspectForRename(
+                        input, request.value("inspector", "auto"),
+                        ffprobe, gpac, context);
+            } catch (IOException exception) {
+                context.log().error("画質・音質を解析できないためスキップ: "
+                        + input.getFileName() + " (" + exception.getMessage() + ")");
+                failures++;
+                continue;
+            }
             String title = fetchTitle(http, id, context, watchApiUrl, legacyApiUrl);
             if (title == null || title.isBlank()) {
                 context.log().warn("タイトルを取得できないためスキップ: " + input.getFileName());
                 continue;
             }
-            String resolution = info.height() > 0 ? info.height() + "p" : "720p";
-            String bitrate = info.audioBitrate() > 0 ? Integer.toString(info.audioBitrate() / 1000) : "192";
+            String resolution = info.height() + "p";
+            String bitrate = info.hasAudio()
+                    ? Integer.toString(Math.max(1, (info.audioBitrate() + 500) / 1000))
+                    : "0";
             String name = id + "[" + resolution + "," + bitrate + "]_" + FileSafety.safeFileName(title) + ".mp4";
             Path output = input.resolveSibling(name);
+            if (output.equals(input)) {
+                context.log().info("スキップ（既に検査済みの名前）: " + input.getFileName());
+                continue;
+            }
             if (Files.exists(output) && !output.equals(input)) {
                 context.log().warn("出力名が既に存在するためスキップ: " + output);
                 continue;
@@ -418,55 +445,6 @@ public final class MediaPlugin implements ToolPlugin {
         return command;
     }
 
-    private static String probe(Path input, String ffprobe, String stream) throws IOException, InterruptedException {
-        ProcessBuilder builder = new ProcessBuilder(ffprobe, "-v", "error", "-select_streams", stream + ":0",
-                "-show_entries", "stream=codec_name", "-of", "default=nw=1:nk=1", input.toString());
-        Process process = builder.start();
-        String output = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).trim();
-        int exit = process.waitFor();
-        return exit == 0 ? output.lines().findFirst().orElse("") : "";
-    }
-
-    private static MediaInfo probeInfo(Path input, String ffprobe) throws IOException, InterruptedException {
-        List<String> command = List.of(ffprobe, "-v", "error", "-show_entries",
-                "stream=codec_type,codec_name,width,height,bit_rate:format=format_name", "-of", "csv=p=0", input.toString());
-        Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
-        String output = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-        int exit = process.waitFor();
-        if (exit != 0) {
-            throw new IOException("ffprobeに失敗しました: " + input);
-        }
-        String videoCodec = "";
-        String audioCodec = "";
-        int height = 0;
-        int audioBitrate = 0;
-        String format = "";
-        for (String line : output.lines().toList()) {
-            String[] parts = line.split(",", -1);
-            if (parts.length >= 2 && parts[0].equals("format")) {
-                format = parts[1];
-            } else if (parts[0].equals("video")) {
-                videoCodec = parts.length > 1 ? parts[1] : "";
-                height = parseInt(parts, 3);
-            } else if (parts[0].equals("audio")) {
-                audioCodec = parts.length > 1 ? parts[1] : "";
-                audioBitrate = parseInt(parts, 4);
-            }
-        }
-        return new MediaInfo(videoCodec, audioCodec, !audioCodec.isBlank(), 5_000_000, audioBitrate, height, format);
-    }
-
-    private static int parseInt(String[] values, int index) {
-        if (index >= values.length) {
-            return 0;
-        }
-        try {
-            return Integer.parseInt(values[index].trim());
-        } catch (NumberFormatException ignored) {
-            return 0;
-        }
-    }
-
     private static void prefixPlaylist(Path playlist, String prefix) throws IOException {
         if (!Files.exists(playlist)) {
             return;
@@ -555,19 +533,13 @@ public final class MediaPlugin implements ToolPlugin {
         return normalized + "/" + suffix;
     }
 
-    private record MediaInfo(String videoCodec, String audioCodec, boolean hasAudio, int bandwidth,
-                             int audioBitrate, int height, String formatName) {
-        private MediaInfo(String videoCodec, String audioCodec, boolean hasAudio, int bandwidth, int audioBitrate) {
-            this(videoCodec, audioCodec, hasAudio, bandwidth, audioBitrate, 0, "mp4");
-        }
-    }
-
     private static final class MediaPanel extends JPanel {
         private final MediaPlugin plugin;
         private final PluginContext context;
         private final JTextArea inputs = new JTextArea(5, 50);
         private final JTextField output = new JTextField();
         private final JComboBox<String> action = new JComboBox<>(new String[]{"cut10", "cut60", "faststart", "hls", "convert", "rename"});
+        private final JComboBox<String> inspector = new JComboBox<>(new String[]{"auto", "ffprobe", "gpac"});
         private final JComboBox<String> mode = new JComboBox<>(new String[]{"h264", "hevc", "av1", "adaptive"});
         private final JTextField segment = new JTextField("6", 5);
         private final JTextField crf = new JTextField("20", 5);
@@ -631,18 +603,19 @@ public final class MediaPlugin implements ToolPlugin {
             c.anchor = GridBagConstraints.WEST;
             c.fill = GridBagConstraints.HORIZONTAL;
             addRow(options, c, 0, "アクション", action);
-            addRow(options, c, 1, "変換モード", mode);
-            addRow(options, c, 2, "出力フォルダ", output);
-            addRow(options, c, 3, "セグメント秒", segment);
-            addRow(options, c, 4, "CRF", crf);
-            addRow(options, c, 5, "プリセット", preset);
-            addRow(options, c, 6, "音声ビットレート", audioBitrate);
-            c.gridx = 1; c.gridy = 7; options.add(recursive, c);
-            c.gridy = 8; options.add(overwrite, c);
-            c.gridy = 9; options.add(dryRun, c);
+            addRow(options, c, 1, "リネーム解析", inspector);
+            addRow(options, c, 2, "変換モード", mode);
+            addRow(options, c, 3, "出力フォルダ", output);
+            addRow(options, c, 4, "セグメント秒", segment);
+            addRow(options, c, 5, "CRF", crf);
+            addRow(options, c, 6, "プリセット", preset);
+            addRow(options, c, 7, "音声ビットレート", audioBitrate);
+            c.gridx = 1; c.gridy = 8; options.add(recursive, c);
+            c.gridy = 9; options.add(overwrite, c);
+            c.gridy = 10; options.add(dryRun, c);
             JButton outputChoose = new JButton("参照");
             outputChoose.addActionListener(event -> chooseOutput());
-            c.gridx = 2; c.gridy = 2; options.add(outputChoose, c);
+            c.gridx = 2; c.gridy = 3; options.add(outputChoose, c);
             start.addActionListener(event -> start());
             cancel.setEnabled(false);
             cancel.addActionListener(event -> cancel());
@@ -694,6 +667,7 @@ public final class MediaPlugin implements ToolPlugin {
                 if (answer != JOptionPane.YES_OPTION) return;
             }
             Map<String, String> values = new HashMap<>();
+            values.put("inspector", inspector.getSelectedItem().toString());
             values.put("mode", mode.getSelectedItem().toString());
             values.put("segment-duration", segment.getText().trim());
             values.put("crf", crf.getText().trim());

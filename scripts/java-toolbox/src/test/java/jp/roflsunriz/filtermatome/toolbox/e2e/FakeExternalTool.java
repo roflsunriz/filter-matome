@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * 実機のffmpeg、ffprobeを呼ばずに外部コマンド境界を検証する偽実装。
+ * 実機のffmpeg、ffprobe、GPACを呼ばずに外部コマンド境界を検証する偽実装。
  * テスト用ラッパーから呼び出され、受け取った引数をログへ残して最小限の成果物を生成する。
  */
 public final class FakeExternalTool {
@@ -26,13 +26,14 @@ public final class FakeExternalTool {
         String kind = args[0];
         List<String> command = Arrays.asList(args).subList(1, args.length);
         appendLog(kind, command);
-        if (command.contains("-version")) {
+        if (command.contains("-version") || command.contains("-h")) {
             System.out.println("fake-" + kind + " version 1.0");
             return;
         }
         switch (kind) {
             case "ffprobe" -> fakeFfprobe(command);
             case "ffmpeg" -> fakeFfmpeg(command);
+            case "gpac" -> fakeGpac(command);
             default -> throw new IllegalArgumentException("未対応の偽コマンドです: " + kind);
         }
     }
@@ -44,10 +45,25 @@ public final class FakeExternalTool {
             return;
         }
         if (joined.contains("stream=codec_type,codec_name,width,height,bit_rate")) {
-            System.out.println("video,h264,1920,720,5000000");
-            System.out.println("audio,aac,0,0,192000");
-            System.out.println("format,mp4");
+            System.out.println("{\"streams\":["
+                    + "{\"codec_type\":\"video\",\"codec_name\":\"h264\","
+                    + "\"width\":1920,\"height\":720,\"bit_rate\":5000000},"
+                    + "{\"codec_type\":\"audio\",\"codec_name\":\"aac\","
+                    + "\"bit_rate\":192000}],"
+                    + "\"format\":{\"format_name\":\"mov,mp4,m4a,3gp,3g2,mj2\"}}");
         }
+    }
+
+    private static void fakeGpac(List<String> command) {
+        if (!command.contains("inspect:xml:stats:allp")) {
+            return;
+        }
+        System.out.println("<GPACInspect>"
+                + "<PIDConfigure StreamType=\"Visual\" CodecID=\"avc1\" "
+                + "ServiceWidth=\"1920\" ServiceHeight=\"1080\"/>"
+                + "<PIDConfigure StreamType=\"Audio\" CodecID=\"mp4a\" "
+                + "Bitrate=\"160000\"/>"
+                + "</GPACInspect>");
     }
 
     private static void fakeFfmpeg(List<String> command) throws IOException {
