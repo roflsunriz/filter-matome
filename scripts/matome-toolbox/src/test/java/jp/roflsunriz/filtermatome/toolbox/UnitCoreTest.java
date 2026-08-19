@@ -126,6 +126,26 @@ class UnitCoreTest {
     }
 
     @Test
+    void appPathsMigratesTheLegacyDataDirectoryToTheOfficialName() throws Exception {
+        Path userHome = Files.createDirectories(temp.resolve("home"));
+        Path legacy = Files.createDirectories(userHome.resolve(".filter-matome-toolbox"));
+        Files.writeString(legacy.resolve("app.properties"), "test.key=value");
+        Path repo = Files.createDirectories(temp.resolve("repo"));
+        String previousUserHome = System.getProperty("user.home");
+
+        try {
+            System.setProperty("user.home", userHome.toString());
+            AppPaths paths = AppPaths.discover(CliOptions.parse(new String[]{"--repo-root", repo.toString()}));
+
+            assertEquals(userHome.resolve(".matome-toolbox").toAbsolutePath().normalize(), paths.dataDir());
+            assertTrue(Files.exists(paths.configFile()));
+            assertFalse(Files.exists(legacy));
+        } finally {
+            System.setProperty("user.home", previousUserHome);
+        }
+    }
+
+    @Test
     void cancellationAndCommandRequestExposeSafeValues() {
         CancellationToken token = new CancellationToken();
         assertFalse(token.isCancelled());

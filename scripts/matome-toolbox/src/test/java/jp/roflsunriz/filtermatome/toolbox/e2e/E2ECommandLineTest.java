@@ -28,7 +28,7 @@ class E2ECommandLineTest {
         assertTrue(list.output().contains("media\t"));
         assertTrue(list.output().contains("config-editor\t"));
         assertTrue(list.output().contains("developer\t"));
-        assertFalse(list.output().contains("nicocache\t"), "NicoCache管理はJavaToolboxから削除されています。");
+        assertFalse(list.output().contains("nicocache\t"), "NicoCache管理はmatome-toolboxから削除されています。");
 
         ProcessResult selfTest = TestSupport.runMain(List.of("--headless", "--self-test", "--data-dir", data.toString(),
                 "--repo-root", repo.toString()), temp);
@@ -53,5 +53,19 @@ class E2ECommandLineTest {
                 "--dry-run", "--data-dir", data.toString(), "--repo-root", repo.toString()), temp);
         assertEquals(0, dryRun.exitCode());
         assertTrue(dryRun.output().contains("faststart"));
+    }
+
+    @Test
+    void helpUsesTheOfficialProductAndJarNames() throws Exception {
+        Path data = temp.resolve("help-data");
+        Path repo = Files.createDirectories(temp.resolve("help-repo"));
+        ProcessResult help = TestSupport.runMain(List.of("--headless", "--help", "--data-dir", data.toString(),
+                "--repo-root", repo.toString()), temp);
+
+        assertEquals(0, help.exitCode(), help.output());
+        assertTrue(help.output().contains("matome-toolbox"));
+        assertTrue(help.output().contains("matome-toolbox-0.1.0-SNAPSHOT.jar"));
+        assertFalse(help.output().contains("filter-matome-toolbox"));
+        assertFalse(help.output().contains("Java Toolbox"));
     }
 }

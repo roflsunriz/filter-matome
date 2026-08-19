@@ -6,9 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- 【matome-toolbox・CI・release】ツールの正式名称を`matome-toolbox`へ統一し、Mavenプロジェクトを
+  `scripts/matome-toolbox`、生成JARを`matome-toolbox-0.1.0-SNAPSHOT.jar`へ改名した。
+  CIとリリース作成時に新しいパスのJARを実行検証し、そのJARだけを配布アーカイブへ同梱するようにした。
+  旧既定データディレクトリは、初回起動時に新しい`~/.matome-toolbox`へ自動移行する。
+
 ### Removed
 
-- 【cache-data-manager・Java Toolbox・docs】NicoCache_nlのキャッシュ一覧を独自UIへ置き換える
+- 【cache-data-manager・matome-toolbox・docs】NicoCache_nlのキャッシュ一覧を独自UIへ置き換える
   cache-data-managerを廃止し、ソース、専用型、Playwrightテスト、遅延読込、ビルド入口、
   `local/list.js`と`list.js.map`の一括・個別リンク作成機能と案内を撤去した。
   mlink-video-controllerのキャッシュリストはNicoCache_nl本体の`/cache`を直接開く導線として維持し、

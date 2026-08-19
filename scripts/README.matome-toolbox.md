@@ -1,6 +1,6 @@
-# Java Toolbox
+# matome-toolbox
 
-`java-toolbox` は、`scripts/` に分散していたPython、PowerShell、バッチの利用導線を、JDKだけで起動できるクロスプラットフォームJavaアプリへまとめる後継ツールです。
+`matome-toolbox` は、`scripts/` に分散していたPython、PowerShell、バッチの利用導線を、JDKだけで起動できるクロスプラットフォームJavaアプリへまとめる後継ツールです。
 
 ## 解消した注意点
 
@@ -18,11 +18,11 @@ FFmpeg、FFprobe、GPACなど、処理そのものに必要な外部実行ファ
 ## 配布版の利用
 
 GitHubのリリースアーカイブには、ビルド済みの
-`scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar` を同梱しています。JDK 17以上があれば実行でき、通常利用者がMaven、Bun、ソースコードからビルドする必要はありません。
+`scripts/matome-toolbox/target/matome-toolbox-0.1.0-SNAPSHOT.jar` を同梱しています。JDK 17以上があれば実行でき、通常利用者がMaven、Bun、ソースコードからビルドする必要はありません。
 
 ```bash
-java -jar scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
-java -jar scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test --data-dir ./toolbox-data
+java -jar scripts/matome-toolbox/target/matome-toolbox-0.1.0-SNAPSHOT.jar
+java -jar scripts/matome-toolbox/target/matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test --data-dir ./toolbox-data
 ```
 
 ## 開発用ビルドと起動
@@ -30,9 +30,9 @@ java -jar scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar -
 ソースから変更・検証する場合だけJDK 17以上とMavenが必要です。
 
 ```bash
-cd scripts/java-toolbox
+cd scripts/matome-toolbox
 mvn verify
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
+java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar
 ```
 
 テストはJUnit 5で、単体（CLI・JSON・properties・ファイル安全性・OS別パス解決・プロセス制御）、機能（組み込みプラグインのヘッドレス操作）、結合（ServiceLoader外部JAR・開発補助アクション・ローカルHTTPのETag更新）、E2E（実際の`Main`子プロセス、組み込み機能の成功／拒否／バックアップ／`.part`／副作用、シンボリックリンク、GUIタブ構築とREADME・defaults辞書の操作部品）を検証します。E2Eの外部コマンドは偽実装が引数と生成物を記録し、更新・動画情報APIはlocalhostのHTTPサーバーだけを使うため、実機の設定、証明書ストア、レジストリ、Firefoxプロファイル、GitHubへ触れません。シンボリックリンク権限がないOSでは、作成成功ではなく安全な拒否と既存ファイル保護を検証します。GUIを表示できない環境では実ウィンドウのGUI E2Eだけ自動的にスキップし、ヘッドレスGUI構築とCLI E2Eは実行します。全検証には`mvn verify`を使用してください。
@@ -40,8 +40,8 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
 プラグイン一覧と自己診断:
 
 ```bash
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --list-plugins
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test --data-dir ./toolbox-data
+java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar --list-plugins
+java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test --data-dir ./toolbox-data
 ```
 
 表示サーバーがない環境でも全プラグインのSwingビューを構築するには、`--headless --gui-smoke`を使用します。実ウィンドウの操作確認は表示可能な環境でのみGUI E2Eが実行されます。
@@ -50,30 +50,30 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test
 
 ```bash
 # 変換予定だけを確認
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar \
   --headless --plugin media --action hls --input "動画フォルダ" --recursive --dry-run
 
 # FastStart化。既存出力は既定でスキップ
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar \
   --headless --plugin media --action faststart --input "movie.mp4"
 
 # 動画IDを含むMP4を実測した画質・音質と動画タイトルでNicoCache互換名へ変更
 # autoはffprobeを優先し、利用不能・情報不足ならGPACへフォールバック
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar \
   --headless --plugin media --action rename --input "sm9.mp4" \
   --inspector auto --yes
 
 # GPACへ明示的に固定して、変更予定だけを表示
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar \
   --headless --plugin media --action rename --input "sm9.mp4" \
   --inspector gpac --gpac "/path/to/gpac" --dry-run
 
 # 設定を一覧表示
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar \
   --headless --plugin config-editor --action list --config "/path/to/config.properties"
 
 # リポジトリとNicoCache_nlのリンク予定を確認
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
+java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar \
   --headless --plugin developer --action links --dry-run
 
 ```
@@ -91,7 +91,7 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
 - `updater`: GitHub Releases API、ETag、`.part`ダウンロード
 - `developer`: `create-claude-link`相当の安全な相対リンク作成、`create-all-symlinks.ps1`相当の一括リンク、依存関係診断
 
-`nicocache-utility.py`と専用READMEは削除済みです。NicoCache_nl本体の管理機能と重複するため、JavaToolboxにはNicoCache管理プラグインを組み込んでいません。MkDocsのビルドフックなど、用途が異なるスクリプトは残しています。
+`nicocache-utility.py`と専用READMEは削除済みです。NicoCache_nl本体の管理機能と重複するため、matome-toolboxにはNicoCache管理プラグインを組み込んでいません。MkDocsのビルドフックなど、用途が異なるスクリプトは残しています。
 
 ## OS固有機能
 

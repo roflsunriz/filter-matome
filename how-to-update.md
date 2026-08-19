@@ -11,21 +11,23 @@
 
 smartFetcherの永続形式を変更するときは、`data/filter-matome-smart-fetcher.json`の旧データ復旧、破損退避、再起動時の`running`回収を確認します。Cookieは状態JSONへ混在させず、許可名を`nicosid`、`domand_bid`、`user_session`、`user_session_secure`に限定したまま、AES-GCM暗号文と256ビット鍵を別ファイルへ保存してください。平文Cookie、署名URL、アクセス権キーをテスト出力やログへ含めてはいけません。
 
-## scripts Java Toolboxの更新
+## scripts matome-toolboxの更新
 
-`scripts/java-toolbox` は独立したMavenプロジェクトです。リリースワークフローがJDK 17で`mvn verify`を実行し、生成したJARを配布アーカイブへ同梱します。変更時はローカルでも次を実行し、4層の自動テスト、GUI起動、`--list-plugins`、`--headless --self-test`の順に確認します。
+`scripts/matome-toolbox` は独立したMavenプロジェクトです。リリースワークフローがJDK 17で`mvn verify`を実行し、生成したJARを配布アーカイブへ同梱します。変更時はローカルでも次を実行し、4層の自動テスト、GUI起動、`--list-plugins`、`--headless --self-test`の順に確認します。
+
+旧名称の既定データディレクトリ`~/.filter-matome-toolbox`があり、`~/.matome-toolbox`がまだない場合は、初回起動時に設定、プラグイン、ログを新しいディレクトリへ自動移行します。`--data-dir`を明示した場合は指定先をそのまま使用します。
 
 ```bash
-cd scripts/java-toolbox
+cd scripts/matome-toolbox
 mvn --batch-mode verify
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --list-plugins
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test --data-dir ./toolbox-data
+java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar --list-plugins
+java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test --data-dir ./toolbox-data
 ```
 
 GUIを表示できないCIやサーバーではGUI E2Eだけスキップされます。CLI E2E、組み込みプラグイン、外部プラグインSPI、ローカルHTTPによるETag更新テストはヘッドレスで実行されます。
 
-JavaToolboxのE2Eは、`@TempDir`配下にデータディレクトリ、リポジトリ、ユーザーホームを作る隔離フィクスチャです。ffmpeg/ffprobeなどの外部コマンドは偽実装、更新APIと動画タイトルAPIはlocalhostのHTTPサーバーへ差し替えるため、実機の設定、証明書ストア、Windowsレジストリ、Firefoxプロファイル、外部GitHubへ接続しません。メディア、設定編集、更新、開発者向け操作を同じ隔離環境で確認し、OSにシンボリックリンク作成権限がない場合も安全な拒否と既存通常ファイルの保護を検証します。
+matome-toolboxのE2Eは、`@TempDir`配下にデータディレクトリ、リポジトリ、ユーザーホームを作る隔離フィクスチャです。ffmpeg/ffprobeなどの外部コマンドは偽実装、更新APIと動画タイトルAPIはlocalhostのHTTPサーバーへ差し替えるため、実機の設定、証明書ストア、Windowsレジストリ、Firefoxプロファイル、外部GitHubへ接続しません。メディア、設定編集、更新、開発者向け操作を同じ隔離環境で確認し、OSにシンボリックリンク作成権限がない場合も安全な拒否と既存通常ファイルの保護を検証します。
 
 変換や設定編集を行う場合は、対象パスを明示し、最初に`--dry-run`で予定を確認してください。失敗時はアプリデータディレクトリの設定バックアップと、各処理の`.bak-*`／`.part`を確認して復旧します。NicoCache_nl本体の管理操作は本体側の案内に従ってください。
 
-リリースアーカイブ作成時は、`scripts/java-toolbox/target`の開発用生成物を除去し、実行JARだけを同じパスへコピーします。配布物の検証では、アーカイブ内のJARが存在し、`--list-plugins`と`--headless --self-test`を実行できることを確認します。
+リリースアーカイブ作成時は、`scripts/matome-toolbox/target`の開発用生成物を除去し、実行JARだけを同じパスへコピーします。配布物の検証では、アーカイブ内のJARが存在し、`--list-plugins`と`--headless --self-test`を実行できることを確認します。

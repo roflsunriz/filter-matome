@@ -30,13 +30,13 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 `$env:USERPROFILE\Downloads` にダウンロードし、上記のWindows構成を使う例。
 
 1. 7zファイル `filter-matome-<version>.7z` を7-Zipで展開する。
-2. NicoCache_nl本体のGUIまたは標準ランチャーで本体を終了する。Java ToolboxはNicoCache_nl本体のプロセス管理を行わない。
+2. NicoCache_nl本体のGUIまたは標準ランチャーで本体を終了する。matome-toolboxはNicoCache_nl本体のプロセス管理を行わない。
 3. 展開先の `NicoCache_nl\extensions`、`NicoCache_nl\local`、`NicoCache_nl\nlFilters` を、それぞれ `NICO_DATA_ROOT` の同名フォルダへ上書きコピーする。
 4. 必要な場合は、展開先の `NicoCache_nl\scripts` を `NICO_APP_ROOT\scripts` へ上書きコピーする。
 
     !!! note
 
-        `scripts` フォルダにはビルド済みJava ToolboxのJARが含まれる。Java Toolboxを使わない場合はコピー必須ではない。
+        `scripts` フォルダにはビルド済みmatome-toolboxのJARが含まれる。matome-toolboxを使わない場合はコピー必須ではない。
 
 5. 以前の版から更新する場合、`NICO_DATA_ROOT\local\list.js` と `list.js.map` がfilter-matomeの `local\features\dist\features.js` を参照するシンボリックリンクなら、参照先を確認してリンク自体だけを削除する。通常ファイルや別の参照先は削除しない。
 6. NicoCache_nl本体に付属する標準ランチャーから起動する。その後、ブラウザーで `Ctrl+F5` を押してハード再読み込みする。
@@ -48,7 +48,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 3. `NICO_DATA_ROOT\extensions` から、「同梱される拡張機能」に記載した7種の `.class` と `.java` を削除する。旧版の`CustomCacheReturner*`、`downloadThruFFmpeg*`、`FilterMatomeCacheControl*`、`nlMediaInfo*`、`nlGpac$*.class`が残っている場合も削除する。
 4. `NICO_DATA_ROOT\local` から `background-images`、`features`、`images`、`mime.types`、`list.js`、`list.js.map` のうちfilter-matomeが配置したものを取り除く。`background-images` に自分で追加した画像は残す。シンボリックリンクは参照先を確認し、リンク自体だけを削除する。
 5. `NICO_DATA_ROOT\nlFilters` から `100_features.txt`、`101_disable_official_function.txt`、`105_premium_hide.txt`、`nlFilters_編集ガイド.md` のうちfilter-matomeが配置したものを取り除く。
-6. Java Toolboxも入れ直す場合は、`NICO_APP_ROOT\scripts` がfilter-matomeのコピーまたはリンクであることを確認して取り除く。
+6. matome-toolboxも入れ直す場合は、`NICO_APP_ROOT\scripts` がfilter-matomeのコピーまたはリンクであることを確認して取り除く。
 7. 上記の標準手順で現行版を配置し、NicoCache_nlを起動してブラウザーをハード再読み込みする。
 
 !!! warning "削除しないデータ"
@@ -242,10 +242,10 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 - `NICO_DATA_ROOT\local\cache`に同様の名前で保存し、該当動画IDのページを開く。
 
 !!! note
-    mp4ファイルを配布済みJava ToolboxでFastStart変換すると、読み込みから再生開始までの待ち時間が短縮される。通常利用ではMavenなどのビルドは不要。
+    mp4ファイルを配布済みmatome-toolboxでFastStart変換すると、読み込みから再生開始までの待ち時間が短縮される。通常利用ではMavenなどのビルドは不要。
 
     ```powershell
-    java -jar "C:\Users\UserName\AppData\Local\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" --headless --plugin media --action faststart --input "C:\Users\UserName\Documents\NicoCache_nl\cache\movie.mp4" --dry-run
+    java -jar "C:\Users\UserName\AppData\Local\NicoCache_nl\scripts\matome-toolbox\target\matome-toolbox-0.1.0-SNAPSHOT.jar" --headless --plugin media --action faststart --input "C:\Users\UserName\Documents\NicoCache_nl\cache\movie.mp4" --dry-run
     ```
 
 !!! note

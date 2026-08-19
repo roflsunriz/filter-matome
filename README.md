@@ -52,8 +52,8 @@ winget install Mozilla.Firefox.ja
 winget install Google.Chrome
 ```
 
-リリースアーカイブには、Java Toolboxのビルド済みJARも
-`scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar` として同梱しています。通常利用ではMaven、Bun、Apache Antのビルド手順は不要です。NicoCache_nl本体の導入に必要なBouncy Castleなどの要件は、NicoCache_nl側の案内に従ってください。
+リリースアーカイブには、matome-toolboxのビルド済みJARも
+`scripts/matome-toolbox/target/matome-toolbox-0.1.0-SNAPSHOT.jar` として同梱しています。通常利用ではMaven、Bun、Apache Antのビルド手順は不要です。NicoCache_nl本体の導入に必要なBouncy Castleなどの要件は、NicoCache_nl側の案内に従ってください。
 
 ### インストール手順
 
@@ -78,11 +78,11 @@ winget install Google.Chrome
    - NicoCache_nlを起動
    - ブラウザでハード再読み込み（Ctrl+F5を同時押し）
 
-4. **Java Toolboxの利用（必要な場合）**
+4. **matome-toolboxの利用（必要な場合）**
    ```powershell
-   java -jar C:\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar --list-plugins
+   java -jar C:\NicoCache_nl\scripts\matome-toolbox\target\matome-toolbox-0.1.0-SNAPSHOT.jar --list-plugins
    ```
-   GUIは引数なし、サーバーや自動処理では`--headless`を付けて起動できます。使える機能と操作例は[`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md)を参照してください。
+   GUIは引数なし、サーバーや自動処理では`--headless`を付けて起動できます。使える機能と操作例は[`scripts/README.matome-toolbox.md`](scripts/README.matome-toolbox.md)を参照してください。
 
 ### クリーンインストール
 [USAGE](https://roflsunriz.github.io/filter-matome/USAGE/) のクリーンインストール手順を参照
@@ -146,7 +146,7 @@ winget install Google.Chrome
 ### 技術スタック
 - **言語**: TypeScript
 - **ビルドツール・ランタイム**: Bun（要求バージョンは `local/features/package.json` を参照）
-- **補助ツール**: Java 25、Maven（Java Toolboxの開発・テスト時のみ）
+- **補助ツール**: Java 25、Maven（matome-toolboxの開発・テスト時のみ）
 - **静的解析**: ESLint、typescript-eslint
 - **テスト**: Bun test、Playwright
 - **ストレージ**: IndexedDB
@@ -208,13 +208,13 @@ CIと同じ検証をまとめて実行する場合は`bun run verify`を使用�
 `features.js`はページ判定用の軽量ブートストラップで、必要な機能だけを`entries/`から遅延読み込みします。生成は単一の`bun run build`で一括して行います。
 構成、生成物、プロジェクト別READMEは [`local/features/README.md`](local/features/README.md) を参照してください。
 
-### scripts の Java Toolbox
+### scripts の matome-toolbox
 
-`scripts/` のメディア変換、設定編集、更新、開発者向け操作をまとめたGUI・ヘッドレス対応のJavaアプリです。リリースアーカイブにはビルド済みJARを同梱しているため、利用者はMavenやBunでビルドする必要がありません。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。mediaのrenameはffprobeを優先し、利用不能・情報不足時はGPACへフォールバックして、実測した解像度と音声ビットレートからNicoCache互換名を自動構築します。開発補助プラグインでは、Windowsの`C:\filter-matome`と`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値にして、旧`create-all-symlinks.ps1`相当のリンクをGUI・ヘッドレスで安全に作成できます。導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md) を参照してください。`nicocache-utility.py`と専用READMEは削除済みで、NicoCache_nlの管理操作は本体側の機能を使用します。用途が異なるMkDocs用フックなどは残しています。
+`scripts/` のメディア変換、設定編集、更新、開発者向け操作をまとめたGUI・ヘッドレス対応のJavaアプリです。リリースアーカイブにはビルド済みJARを同梱しているため、利用者はMavenやBunでビルドする必要がありません。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。mediaのrenameはffprobeを優先し、利用不能・情報不足時はGPACへフォールバックして、実測した解像度と音声ビットレートからNicoCache互換名を自動構築します。開発補助プラグインでは、Windowsの`C:\filter-matome`と`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値にして、旧`create-all-symlinks.ps1`相当のリンクをGUI・ヘッドレスで安全に作成できます。導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.matome-toolbox.md`](scripts/README.matome-toolbox.md) を参照してください。`nicocache-utility.py`と専用READMEは削除済みで、NicoCache_nlの管理操作は本体側の機能を使用します。用途が異なるMkDocs用フックなどは残しています。
 
 ### NicoCache_nlの終了・再起動
 
-NicoCache_nlの終了と再起動は、NicoCache_nl本体に付属するGUIまたは標準ランチャーを使用してください。Java Toolboxはリポジトリのリンク作成、メディア処理、設定編集、更新に集中し、NicoCache_nl本体のプロセス管理は行いません。
+NicoCache_nlの終了と再起動は、NicoCache_nl本体に付属するGUIまたは標準ランチャーを使用してください。matome-toolboxはリポジトリのリンク作成、メディア処理、設定編集、更新に集中し、NicoCache_nl本体のプロセス管理は行いません。
 
 ### nlFilter文法
 ```ini

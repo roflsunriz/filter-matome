@@ -116,7 +116,7 @@ jobs:
           distribution: temurin
           java-version: "17"
           cache: maven
-          cache-dependency-path: scripts/java-toolbox/pom.xml
+          cache-dependency-path: scripts/matome-toolbox/pom.xml
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -139,14 +139,14 @@ jobs:
         working-directory: local/features
         run: bun run build
 
-      - name: Test and package Java Toolbox
-        working-directory: scripts/java-toolbox
+      - name: Test and package matome-toolbox
+        working-directory: scripts/matome-toolbox
         run: mvn --batch-mode verify
 
       - name: Verify packaged artifacts
         shell: bash
         run: |
-          test -f scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
+          test -f scripts/matome-toolbox/target/matome-toolbox-0.1.0-SNAPSHOT.jar
           test -f extensions/nlGpac.class
           test -f extensions/nlGpac.java
 
@@ -157,14 +157,14 @@ jobs:
           name: build-artifacts
           path: |
             local/features/dist/
-            scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
+            scripts/matome-toolbox/target/matome-toolbox-0.1.0-SNAPSHOT.jar
             extensions/
           retention-days: 7
 
   # ─────────────────────────────────────────────
-  # ジョブ⑤: Java ToolboxのOS別・ヘッドレス検証
+  # ジョブ⑤: matome-toolboxのOS別・ヘッドレス検証
   # ─────────────────────────────────────────────
-  java-toolbox-platforms:
+  matome-toolbox-platforms:
     strategy:
       fail-fast: false
       matrix:
@@ -181,10 +181,10 @@ jobs:
           distribution: temurin
           java-version: "17"
           cache: maven
-          cache-dependency-path: scripts/java-toolbox/pom.xml
+          cache-dependency-path: scripts/matome-toolbox/pom.xml
 
-      - name: Run Java Toolbox tests
-        working-directory: scripts/java-toolbox
+      - name: Run matome-toolbox tests
+        working-directory: scripts/matome-toolbox
         run: mvn --batch-mode verify
 
   # ─────────────────────────────────────────────

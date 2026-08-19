@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>jp.roflsunriz.filtermatome</groupId>
-    <artifactId>filter-matome-toolbox</artifactId>
+    <artifactId>matome-toolbox</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <name>filter-matome-toolbox</name>
-    <description>filter-matome scripts のクロスプラットフォーム Java ツールボックス</description>
+    <name>matome-toolbox</name>
+    <description>filter-matome scripts のクロスプラットフォームツールボックス</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

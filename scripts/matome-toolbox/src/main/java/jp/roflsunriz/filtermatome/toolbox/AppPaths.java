@@ -17,7 +17,7 @@ public record AppPaths(
         Path current = Path.of("").toAbsolutePath().normalize();
         Path data = options.dataDir() != null
                 ? options.dataDir().toAbsolutePath().normalize()
-                : Path.of(System.getProperty("user.home"), ".filter-matome-toolbox").toAbsolutePath().normalize();
+                : defaultDataDir();
         Path repo = options.repoRoot() != null
                 ? options.repoRoot().toAbsolutePath().normalize()
                 : findRepositoryRoot(current);
@@ -28,6 +28,21 @@ public record AppPaths(
         Files.createDirectories(plugins);
         Files.createDirectories(data.resolve("logs"));
         return new AppPaths(data, data.resolve("app.properties"), plugins, data.resolve("logs"), repo);
+    }
+
+    private static Path defaultDataDir() throws IOException {
+        Path userHome = Path.of(System.getProperty("user.home")).toAbsolutePath().normalize();
+        Path current = userHome.resolve(".matome-toolbox");
+        Path legacy = userHome.resolve(".filter-matome-toolbox");
+        if (!Files.exists(current) && Files.exists(legacy)) {
+            try {
+                return Files.move(legacy, current);
+            } catch (IOException exception) {
+                throw new IOException("旧データディレクトリをmatome-toolboxへ移行できません: "
+                        + legacy + " -> " + current, exception);
+            }
+        }
+        return current;
     }
 
     private static Path findRepositoryRoot(Path start) {

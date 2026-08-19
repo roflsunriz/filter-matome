@@ -73,7 +73,7 @@ bun run build
 ### ドキュメントとJava拡張のビルド
 
 - MkDocs文書はリポジトリ直下で `mkdocs build --strict` を実行して検証する。初回セットアップでは `python -m pip install -r requirements-docs.txt` が必要で、生成先の `.mkdocs-build/` はGit管理外である。
-- Java拡張はBunビルドとは別系統である。変更時は `scripts/README.java-toolbox.md` と対象ソースの依存関係を確認し、利用可能なNicoCache_nl本体とJDKがある場合に限ってコンパイルする。既存の `.class` をソースと無関係に上書きしない。
+- Java拡張はBunビルドとは別系統である。変更時は `scripts/README.matome-toolbox.md` と対象ソースの依存関係を確認し、利用可能なNicoCache_nl本体とJDKがある場合に限ってコンパイルする。既存の `.class` をソースと無関係に上書きしない。
 
 ## NicoCache_nlの現行パスモデル
 

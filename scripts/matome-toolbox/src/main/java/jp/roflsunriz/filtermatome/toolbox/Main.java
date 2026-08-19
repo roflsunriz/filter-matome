@@ -6,6 +6,9 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public final class Main {
+    public static final String APPLICATION_NAME = "matome-toolbox";
+    public static final String JAR_FILE_NAME = "matome-toolbox-0.1.0-SNAPSHOT.jar";
+
     private Main() {
     }
 
@@ -114,8 +117,8 @@ public final class Main {
     }
 
     private static void printUsage() {
-        System.out.println("filter-matome-toolbox");
-        System.out.println("GUI:       java -jar filter-matome-toolbox-0.1.0-SNAPSHOT.jar");
+        System.out.println(APPLICATION_NAME);
+        System.out.println("GUI:       java -jar " + JAR_FILE_NAME);
         System.out.println("一覧:      java -jar ... --list-plugins");
         System.out.println("ヘッドレス: java -jar ... --headless --plugin media --action hls --input movie.mp4 --dry-run");
         System.out.println("リンク確認: java -jar ... --headless --plugin developer --action links --dry-run");

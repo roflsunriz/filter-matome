@@ -61,7 +61,7 @@ public final class AppConfig {
         }
         Path temp = file.resolveSibling(file.getFileName() + ".tmp");
         try (OutputStream output = Files.newOutputStream(temp)) {
-            properties.store(output, "filter-matome-toolbox configuration");
+            properties.store(output, "matome-toolbox configuration");
         }
         try {
             Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);

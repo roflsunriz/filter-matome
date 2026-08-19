@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** 実ユーザーデータから切り離したJavaToolbox E2E実行環境。 */
+/** 実ユーザーデータから切り離したmatome-toolbox E2E実行環境。 */
 public final class IsolatedEnvironment {
     private static final String TOOL_LOG_ENV = "FILTER_MATOME_FAKE_TOOL_LOG";
 
@@ -27,7 +27,7 @@ public final class IsolatedEnvironment {
     private final Map<String, Path> tools = new HashMap<>();
 
     public IsolatedEnvironment(Path parent) throws IOException {
-        root = Files.createDirectories(parent.resolve("java-toolbox-isolated").toAbsolutePath().normalize());
+        root = Files.createDirectories(parent.resolve("matome-toolbox-isolated").toAbsolutePath().normalize());
         data = Files.createDirectories(root.resolve("data"));
         repo = Files.createDirectories(root.resolve("repo"));
         app = Files.createDirectories(root.resolve("app"));

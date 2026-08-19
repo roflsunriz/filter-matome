@@ -488,7 +488,7 @@ public final class MediaPlugin implements ToolPlugin {
             HttpRequest request = HttpRequest.newBuilder(uri)
                     .timeout(Duration.ofSeconds(20))
                     .header("Accept", "application/json")
-                    .header("User-Agent", "filter-matome-toolbox/0.1")
+                    .header("User-Agent", "matome-toolbox/0.1")
                     .GET().build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
@@ -512,7 +512,7 @@ public final class MediaPlugin implements ToolPlugin {
         try {
             HttpRequest request = HttpRequest.newBuilder(URI.create(joinEndpoint(legacyApiUrl, videoId)))
                     .timeout(Duration.ofSeconds(20))
-                    .header("User-Agent", "filter-matome-toolbox/0.1")
+                    .header("User-Agent", "matome-toolbox/0.1")
                     .GET().build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) return null;

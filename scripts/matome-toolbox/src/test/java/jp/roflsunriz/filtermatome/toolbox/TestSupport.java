@@ -84,7 +84,7 @@ public final class TestSupport {
         }
         if (!process.waitFor(30, TimeUnit.SECONDS)) {
             process.destroyForcibly();
-            throw new IOException("テスト用JavaToolboxプロセスがタイムアウトしました。");
+            throw new IOException("テスト用matome-toolboxプロセスがタイムアウトしました。");
         }
         return new ProcessResult(process.exitValue(), output);
     }

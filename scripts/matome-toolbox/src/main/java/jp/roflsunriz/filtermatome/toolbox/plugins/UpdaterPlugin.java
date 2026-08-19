@@ -83,7 +83,7 @@ public final class UpdaterPlugin implements ToolPlugin {
                 .timeout(Duration.ofSeconds(30))
                 .header("Accept", "application/vnd.github+json")
                 .header("X-GitHub-Api-Version", "2022-11-28")
-                .header("User-Agent", "filter-matome-toolbox/0.1")
+                .header("User-Agent", "matome-toolbox/0.1")
                 .GET();
         String etag = context.config().get("updater.etag", "");
         if (!etag.isBlank()) requestBuilder.header("If-None-Match", etag);
@@ -155,7 +155,7 @@ public final class UpdaterPlugin implements ToolPlugin {
                 .timeout(Duration.ofMinutes(5))
                 .header("Accept", "application/octet-stream")
                 .header("X-GitHub-Api-Version", "2022-11-28")
-                .header("User-Agent", "filter-matome-toolbox/0.1")
+                .header("User-Agent", "matome-toolbox/0.1")
                 .GET();
         if (!tokenValue.isBlank()) request.header("Authorization", "Bearer " + tokenValue);
         HttpResponse<InputStream> response = client.send(request.build(), HttpResponse.BodyHandlers.ofInputStream());

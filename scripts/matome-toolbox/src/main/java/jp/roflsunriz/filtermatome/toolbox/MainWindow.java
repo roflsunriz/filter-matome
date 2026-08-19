@@ -29,7 +29,7 @@ public final class MainWindow {
     public MainWindow(PluginManager manager, PluginContext context) {
         this.manager = manager;
         this.context = context;
-        this.frame = GraphicsEnvironment.isHeadless() ? null : new JFrame("filter-matome Toolbox");
+        this.frame = GraphicsEnvironment.isHeadless() ? null : new JFrame(Main.APPLICATION_NAME);
         build();
     }
 

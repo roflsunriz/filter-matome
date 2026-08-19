@@ -24,7 +24,7 @@ jobs:
           distribution: temurin
           java-version: "17"
           cache: maven
-          cache-dependency-path: scripts/java-toolbox/pom.xml
+          cache-dependency-path: scripts/matome-toolbox/pom.xml
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -47,8 +47,8 @@ jobs:
         working-directory: local/features
         run: bun run build
 
-      - name: Build Java Toolbox
-        working-directory: scripts/java-toolbox
+      - name: Build matome-toolbox
+        working-directory: scripts/matome-toolbox
         run: mvn --batch-mode verify
 
       # nlGpac はリポジトリ内のコンパイル済みクラスを配布するため個別ビルドは不要
@@ -69,13 +69,13 @@ jobs:
           cp LICENSE release/NicoCache_nl/
           cp GUIDE.html release/NicoCache_nl/
 
-          # Java Toolboxは実行JARだけを配布し、Mavenの開発用生成物は含めない
-          rm -rf release/NicoCache_nl/scripts/java-toolbox/target
-          mkdir -p release/NicoCache_nl/scripts/java-toolbox/target
-          cp scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar release/NicoCache_nl/scripts/java-toolbox/target/
-          test -f release/NicoCache_nl/scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar
-          java -jar release/NicoCache_nl/scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --list-plugins
-          java -jar release/NicoCache_nl/scripts/java-toolbox/target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test --data-dir release/NicoCache_nl/.toolbox-release-test
+          # matome-toolboxは実行JARだけを配布し、Mavenの開発用生成物は含めない
+          rm -rf release/NicoCache_nl/scripts/matome-toolbox/target
+          mkdir -p release/NicoCache_nl/scripts/matome-toolbox/target
+          cp scripts/matome-toolbox/target/matome-toolbox-0.1.0-SNAPSHOT.jar release/NicoCache_nl/scripts/matome-toolbox/target/
+          test -f release/NicoCache_nl/scripts/matome-toolbox/target/matome-toolbox-0.1.0-SNAPSHOT.jar
+          java -jar release/NicoCache_nl/scripts/matome-toolbox/target/matome-toolbox-0.1.0-SNAPSHOT.jar --list-plugins
+          java -jar release/NicoCache_nl/scripts/matome-toolbox/target/matome-toolbox-0.1.0-SNAPSHOT.jar --headless --self-test --data-dir release/NicoCache_nl/.toolbox-release-test
           rm -rf release/NicoCache_nl/.toolbox-release-test
 
           # mime.typesをコピー
@@ -139,7 +139,7 @@ jobs:
           echo "### 📦 ダウンロード" >> release_notes.md
           echo "- **7Z**: \`filter-matome-${VERSION}.7z\`" >> release_notes.md
           echo "- アーカイブのルートに \`GUIDE.html\` を同梱" >> release_notes.md
-          echo "- Java Toolboxのビルド済みJARを \`scripts/java-toolbox/target/\` に同梱（利用者のMavenビルド不要）" >> release_notes.md
+          echo "- matome-toolboxのビルド済みJARを \`scripts/matome-toolbox/target/matome-toolbox-0.1.0-SNAPSHOT.jar\` に同梱（利用者のMavenビルド不要）" >> release_notes.md
           echo "" >> release_notes.md
           echo "### 🔄 導入方法" >> release_notes.md
           echo "1. 既存のfilter-matomeのバックアップを作成" >> release_notes.md

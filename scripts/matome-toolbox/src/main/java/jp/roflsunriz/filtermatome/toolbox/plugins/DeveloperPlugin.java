@@ -45,8 +45,8 @@ public final class DeveloperPlugin implements ToolPlugin {
                 + "通常ファイルは削除せず、既存リンクの再作成には --force、\n"
                 + "実作成には --yes、事前確認には --dry-run を指定してください。\n\n"
                 + "例:\n"
-                + "java -jar filter-matome-toolbox.jar --headless --plugin developer --action links --dry-run\n"
-                + "\nmkdocs_hooks.pyはMkDocsのPythonフックとして残しますが、Java Toolbox本体の実行にはPython依存はありません。";
+                + "java -jar matome-toolbox.jar --headless --plugin developer --action links --dry-run\n"
+                + "\nmkdocs_hooks.pyはMkDocsのPythonフックとして残しますが、matome-toolbox本体の実行にはPython依存はありません。";
     }
 
     @Override
@@ -63,7 +63,7 @@ public final class DeveloperPlugin implements ToolPlugin {
             case "links", "create-links", "symlinks", "create-all-symlinks", "all-links" ->
                     DeveloperSymlinkService.createAll(request, context);
             case "diagnose", "check" -> {
-                context.log().info("Java ToolboxはPython依存なしで動作します。");
+                context.log().info("matome-toolboxはPython依存なしで動作します。");
                 context.log().info("既定のリンク元: " + DeveloperSymlinkService.defaultSourceRoot(context));
                 context.log().info("既定のリンク先: " + DeveloperSymlinkService.defaultTargetRoot());
                 context.log().info("MkDocsフックは既存のscripts/mkdocs_hooks.pyをMkDocsから利用してください。");
