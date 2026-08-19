@@ -26,6 +26,12 @@ minify後の内部名では、取得actionが`Ar`（export alias `O`）、現在
 
 ストア本体、Watchデータ、thread keyは公開しない。comment-filter2は`reload()`を呼び、再取得時の`POST /v1/threads`レスポンスを従来の`DataInterceptor`でフィルタリングする。APIがない、版が違う、または呼び出しに失敗した場合だけ、従来の確認付きページ再読み込みへフォールバックする。
 
+## 現行資産での再検証（2026-08-20）
+
+プロキシーを明示的に無効化したCookieなし一時Chromeから、更新後の公開資産`PlayerSeekBar-DzqrqG09.js`を取得した。公式原本のSHA-256は`0a2046ec57d9a19f386dd3c8a02e9867837ad3874b167abd8728b702a49d43d9`で、既存Matchは1回だけ一致した。nlFilter適用後の同資産もde-minifyと構文解析に成功した。
+
+別のCookieなし一時BrowserContextをNicoCache_nl経由で開き、`sm9`で動的検証した。`FilterMatomeCommentApi.version === 1`を確認後に`reload()`を呼ぶと、`POST /v1/threads`が1回だけ送信されHTTP 200を受けた。`CommentFilter2Data.lastUpdated`は増加し、URLと`performance.timeOrigin`は変化しなかったため、ページ全体を再読み込みせず再取得レスポンスがcomment-filter2へ再入力されたことを確認した。
+
 ## 追従確認
 
 公式資産を再取得した後、次を実行する。
@@ -33,8 +39,9 @@ minify後の内部名では、取得actionが`Ar`（export alias `O`）、現在
 ```powershell
 cd local/features
 bun run sandbox:analyze-comment-reload
+bun run sandbox:verify-comment-reload
 bun test tests/comment-reload-nlfilter.test.ts tests/official-player-bridge.test.ts
 bunx playwright test tests/comment-filter2.spec.ts
 ```
 
-解析コマンドは最新captureをメモリー上でde-minifyし、`POST /v1/threads`、`fetchAdditionals`の再利用、nlFilterのMatchと注入内容を検証する。失敗時は`102_comment_reload_api.txt`を推測で緩めず、新しい公式actionがストアと描画を更新するところまで再解析する。
+解析コマンドは最新captureをメモリー上でde-minifyし、`POST /v1/threads`、`fetchAdditionals`の再利用、nlFilterのMatchと注入内容を検証する。動的検証コマンドは起動済みChromeのCookieなし一時BrowserContextを使用し、API呼び出しが`POST /v1/threads`を1回だけ実行して200を受け、comment-filter2の更新時刻を進め、ページのURLと`performance.timeOrigin`を変えないことを確認する。失敗時は`102_comment_reload_api.txt`を推測で緩めず、新しい公式actionがストアと描画を更新するところまで再解析する。

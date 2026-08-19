@@ -15,6 +15,7 @@
 - `../../scripts/sandbox/run-offline-quality-sandbox.ts`: 外部通信遮断下で公式の品質候補生成・選択関数を実行し、利用不可候補の除外、自動画質、上限指定時のフォールバックを確認します。
 - `../../scripts/sandbox/run-offline-seek-preview-sandbox.ts`: 外部通信遮断下で公式Storyboardモデルとレンダラーを実行し、時刻からスプライトセルへの変換とCSS描画を確認します。
 - `../../scripts/sandbox/verify-offline-cdp-sandbox.ts`: 一時BrowserContextを作り、CDPでHTTP、HTTPS、WebSocket、FTPを遮断し、CookieとWeb Storageも空であることを検証します。
+- `../../scripts/sandbox/verify-current-comment-reload.ts`: Cookieのない一時BrowserContextで現行Watchページを開き、版付きAPI、`POST /v1/threads`、comment-filter2への再入力、ページ再読み込みがないことを動的検証します。
 - `comment-post-api.md`: 2026-07-19に取得した公式バンドルから確認したコメント投稿契約です。
 - `comment-reload-api.md`: 2026-07-23に取得した公式バンドルから確認した、公式ストアと描画を更新するコメント再取得契約です。
 - `feature-differentiation.md`: raw CDP captureと外部通信遮断下の静的集計から、公式機能とfilter-matomeの差別化軸を整理した調査結果です。
@@ -40,6 +41,7 @@ bun run sandbox:run-membership
 bun run sandbox:run-quality
 bun run sandbox:run-seek-preview
 bun run sandbox:verify-offline
+bun run sandbox:verify-comment-reload
 bun run sandbox:analyze-official
 bun run sandbox:analyze-comment-reload
 ```

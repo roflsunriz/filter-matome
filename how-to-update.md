@@ -12,6 +12,7 @@
 ```powershell
 cd local/features
 bun run sandbox:analyze-comment-reload
+bun run sandbox:verify-comment-reload
 bun test tests/comment-reload-nlfilter.test.ts tests/official-player-bridge.test.ts
 bunx playwright test tests/comment-filter2.spec.ts
 ```
