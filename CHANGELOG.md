@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- 【CI】Ubuntu hosted runnerでPlaywrightのOS依存パッケージ再導入が外部`apt`待ちのまま
+  タイムアウトしないよう、既存ランタイム依存を利用してChromium本体だけを取得するようにした。
+
 ## [#244] - 2026-08-19
 
 ### Added

@@ -86,7 +86,7 @@ jobs:
 
       - name: Install Chromium
         working-directory: local/features
-        run: bun x playwright install --with-deps chromium
+        run: bun x playwright install chromium
 
       - name: Run browser tests
         working-directory: local/features
