@@ -92,20 +92,17 @@ class FunctionalPluginTest {
     }
 
     @Test
-    void developerCreatesAllLinksAndOptionalListJsMapWithoutDeletingFiles() throws Exception {
+    void developerCreatesAllLinksWithoutRetiredCacheManagerScriptOrDeletingFiles() throws Exception {
         Path repo = Files.createDirectories(temp.resolve("repo"));
         Files.createDirectories(repo.resolve("scripts"));
-        Path dist = Files.createDirectories(repo.resolve("local/features/dist"));
         Path features = Files.createDirectories(repo.resolve("local/features"));
-        Files.writeString(dist.resolve("features.js"), "features");
-        Files.writeString(dist.resolve("features.js.map"), "map");
         Files.writeString(repo.resolve("local/mime.types"), "text/javascript");
 
         Path target = Files.createDirectories(temp.resolve("nicocache"));
-        Files.createDirectories(target.resolve("scripts"));
         Files.createDirectories(target.resolve("local"));
         Files.createDirectories(target.resolve("nlFilters"));
         Files.createDirectories(target.resolve("extensions"));
+        Path protectedMimeTypes = Files.writeString(target.resolve("local/mime.types"), "keep");
         PluginContext context = TestSupport.context(temp.resolve("data"), repo);
         DeveloperPlugin plugin = new DeveloperPlugin();
 
@@ -122,28 +119,11 @@ class FunctionalPluginTest {
                 "source-root", repo.toString(), "target-root", target.toString()),
                 false, false, false, true, null);
         assertEquals(0, plugin.run(all, context));
-        assertTrue(Files.isSymbolicLink(target.resolve("local/list.js")));
-        assertEquals(dist.resolve("features.js").toRealPath(), target.resolve("local/list.js").toRealPath());
-
-        CommandRequest listJs = TestSupport.request("listjs", List.of(), Map.of(
-                "source-root", repo.toString(), "target-root", target.toString(),
-                "target", dist.resolve("features.js").toString(),
-                "link-dir", target.resolve("local").toString()),
-                false, false, false, true, null);
-        assertEquals(0, plugin.run(listJs, context));
-        assertTrue(Files.isSymbolicLink(target.resolve("local/list.js.map")));
-        assertEquals(dist.resolve("features.js.map").toRealPath(), target.resolve("local/list.js.map").toRealPath());
-
-        Path protectedDirectory = Files.createDirectories(target.resolve("protected-local"));
-        Path protectedLink = protectedDirectory.resolve("list.js");
-        Files.writeString(protectedLink, "keep");
-        CommandRequest protectedRequest = TestSupport.request("listjs", List.of(), Map.of(
-                "target", dist.resolve("features.js").toString(),
-                "link-dir", protectedDirectory.toString()),
-                false, false, false, true, null);
-        assertEquals(0, plugin.run(protectedRequest, context));
-        assertEquals("keep", Files.readString(protectedLink));
-        assertTrue(Files.isDirectory(features));
+        assertTrue(Files.isSymbolicLink(target.resolve("local/features")));
+        assertEquals(features.toRealPath(), target.resolve("local/features").toRealPath());
+        assertEquals("keep", Files.readString(protectedMimeTypes));
+        assertFalse(Files.exists(target.resolve("local/list.js")));
+        assertFalse(Files.exists(target.resolve("local/list.js.map")));
     }
 
     private static boolean supportsSymbolicLinks(Path root) throws Exception {

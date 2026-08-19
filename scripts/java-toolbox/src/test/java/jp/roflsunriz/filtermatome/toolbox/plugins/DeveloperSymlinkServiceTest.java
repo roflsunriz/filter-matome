@@ -42,11 +42,9 @@ class DeveloperSymlinkServiceTest {
     }
 
     @Test
-    void allLinksIncludeListJsButListJsMapIsHandledByTheDedicatedAction() {
+    void allLinksExcludeTheRetiredCacheManagerScript() {
         assertTrue(DeveloperSymlinkService.allLinkDefinitions().stream()
-                .anyMatch(definition -> definition.source().equals("local/features/dist/features.js")
-                        && definition.link().equals("local/list.js")));
-        assertTrue(DeveloperSymlinkService.allLinkDefinitions().stream()
-                .noneMatch(definition -> definition.link().equals("local/list.js.map")));
+                .noneMatch(definition -> definition.link().equals("local/list.js")
+                        || definition.link().equals("local/list.js.map")));
     }
 }

@@ -1,5 +1,5 @@
 /**
- * cache-data-manager を基準にした共通ビジュアルトークン。
+ * 各機能で共有するダークテーマのビジュアルトークン。
  * 各機能は固有の接頭辞付き変数へ必要な値だけ割り当てて使用する。
  */
 export const MINIMAL_DARK_THEME_TOKENS = `

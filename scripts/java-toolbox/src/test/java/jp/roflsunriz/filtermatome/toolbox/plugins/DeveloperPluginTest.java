@@ -14,6 +14,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class DeveloperPluginTest {
     @TempDir
@@ -27,13 +28,11 @@ class DeveloperPluginTest {
         JPanel panel = new DeveloperPlugin().createView(context);
         JTextField source = findTextField(panel, "developer-source-root");
         JTextField target = findTextField(panel, "developer-target-root");
-        JTextField listJs = findTextField(panel, "developer-listjs-target");
         assertNotNull(source);
         assertNotNull(target);
-        assertNotNull(listJs);
         assertEquals(DeveloperSymlinkService.defaultSourceRoot(context).toString(), source.getText());
         assertEquals(DeveloperSymlinkService.defaultTargetRoot().toString(), target.getText());
-        assertEquals(DeveloperSymlinkService.defaultListJsTarget(context).toString(), listJs.getText());
+        assertNull(findTextField(panel, "developer-listjs-target"));
     }
 
     private static JTextField findTextField(Container root, String name) {

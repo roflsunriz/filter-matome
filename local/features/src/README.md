@@ -7,7 +7,6 @@
 | パス | 主な責務 |
 | --- | --- |
 | `api-info/` | NicoCache_nl・ニコニコ動画関連APIの仕様メモとレスポンス例 |
-| `cache-data-manager/` | キャッシュ一覧、検索、削除UI |
 | `comment-filter2/` | コメント取得の捕捉、フィルタリング、設定UI |
 | `common/` | 共通ヘッダー、APIクライアント、ログ、通知、動画ナビゲーション |
 | `mlink-video-controller/` | 公式視聴ページの操作パネルと機能モジュール |

@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- 【cache-data-manager・Java Toolbox・docs】NicoCache_nlのキャッシュ一覧を独自UIへ置き換える
+  cache-data-managerを廃止し、ソース、専用型、Playwrightテスト、遅延読込、ビルド入口、
+  mlink-video-controllerのキャッシュリスト導線を削除した。不要になった`local/list.js`と
+  `list.js.map`の一括・個別リンク作成機能と案内も撤去し、旧版からの更新時はfilter-matomeを
+  参照する既存シンボリックリンクだけを確認して削除する手順へ変更した。
+
 ### Fixed
 
 - 【CI】Ubuntu hosted runnerでPlaywrightのOS依存パッケージ再導入が外部`apt`待ちのまま

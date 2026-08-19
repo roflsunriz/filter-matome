@@ -49,8 +49,8 @@
 
 - 共通ヘッダー変更: 各静的SPAとニコニコ動画上のmlink表示を確認する。
 - 動画ナビゲーション変更: movie-infoとvideo-playerを同時に確認する。
-- 動画情報API変更: movie-info、cache-data-manager、mylist2、video-player、Service Worker、関連スクリプトを同時に確認する。
-- キャッシュ検索・削除変更: cache-data-manager、video-player、mlink-video-controllerを確認する。
+- 動画情報API変更: movie-info、mylist2、video-player、Service Worker、関連スクリプトを同時に確認する。
+- キャッシュ検索・削除変更: video-player、mlink-video-controllerを確認する。
 - テーマやアイコン変更: 狭幅、低高さ、高DPI、フォーカス表示、長い翻訳文を確認する。
 - IndexedDB復旧変更: データを退避できない場合に無条件削除しないことを確認する。
 - Google Drive変更: mylist2とwatch-historyのフォルダー・ファイル絞り込み、認証、ZIP入出力をまとめて確認する。

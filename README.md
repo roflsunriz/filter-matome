@@ -32,7 +32,6 @@
 - **背景画像設定**: 視聴ページの背景をカスタマイズ
 - **プレミアム勧誘非表示**: 煩わしい勧誘要素を完全除去
 - **コメントヒートマップ**: 盛り上がり箇所を視覚化
-- **キャッシュ一覧管理**: NicoCache_nlのキャッシュ一覧を検索・フィルタ・ソート・削除
 - **動画/API情報ダッシュボード**: 動画IDから複数APIの情報を横断表示
 - **動画取得スケジューラー**: 動画・日時・確認の3段階ウィザードで予約し、繰り返し、祝日、モード別の帯域上限、完了可能時間の判定、再試行、個別・一括削除できる取得履歴を管理
 
@@ -124,7 +123,7 @@ winget install Google.Chrome
 - **NGワード・NG正規表現**: コメントのNGワード・NG正規表現
 
 ### マルチリンクビデオコントローラー (mlink-video-controller)
-- **リンク提供**: mylist2, comment-filter2, watch-history, mylist2への追加ボタン、動画非表示設定、ニコニコ動画関連サービスへのリンク、キャッシュリスト、キャッシュ情報、nlGpac, 音声保存、動画保存、コメント保存、キャッシュ削除
+- **リンク提供**: mylist2, comment-filter2, watch-history, mylist2への追加ボタン、動画非表示設定、ニコニコ動画関連サービスへのリンク、キャッシュ情報、nlGpac, 音声保存、動画保存、コメント保存、キャッシュ削除
 - **再生速度調整**: 再生速度の調整
 - **多彩なコントロールボタン**: 再生・一時停止・次の動画・前の動画・繰り返し再生・シークバー・5秒スキップ・10秒スキップ・30秒スキップ・60秒スキップ
 - **コメント検索**: コメントの検索
@@ -134,12 +133,6 @@ winget install Google.Chrome
 - **サムネイルフィルター**: キーワード・正規表現で動画サムネイルを非表示
 - **原宿風Watch表示**: 視聴ページの表示を原宿風レイアウトへ変更し、事前取得した動画説明文を内容量に応じて伸縮・最大高以降スクロールで表示
 - **モジュール管理**: ヘッダープライバシー、UI強化、視聴ページ機能強化、背景セレクター/背景画像設定、マトリックス背景、タブセッション拡張などを管理
-
-### キャッシュ一覧管理 (cache-data-manager)
-- **仮想スクロール**: 大量キャッシュでも可視範囲のみ描画
-- **検索・フィルタ・ソート**: 動画ID、タイトル、画質、ステータス、利用不可状態で絞り込み
-- **公開状態チェック**: 動画情報APIで削除・非公開などを確認し、メタデータをIndexedDBへ保存
-- **キャッシュ操作**: テンポラリ動画の一括削除や個別操作を提供
 
 ### 動画/API情報ダッシュボード (movie-info)
 - **横断取得**: NicoCache_nl RESTキャッシュAPI、動画情報API、GPACメディア解析、watch apiDataを並列取得
@@ -167,7 +160,6 @@ local/
 └─┬── features/          # メイン機能群
   ├── src/               # TypeScriptソースコード
   │   ├── api-info/             # ニコニコ動画/API仕様メモ
-  │   ├── cache-data-manager/   # NicoCache_nlキャッシュ一覧UI
   │   ├── comment-filter2/      # コメントフィルター
   │   ├── common/               # 共通ヘルパー、共通ヘッダー、ロガー、トースト
   │   ├── mlink-video-controller/ # 視聴ページ操作パネルとモジュール
@@ -218,7 +210,7 @@ CIと同じ検証をまとめて実行する場合は`bun run verify`を使用�
 
 ### scripts の Java Toolbox
 
-`scripts/` のメディア変換、設定編集、更新、開発者向け操作をまとめたGUI・ヘッドレス対応のJavaアプリです。リリースアーカイブにはビルド済みJARを同梱しているため、利用者はMavenやBunでビルドする必要がありません。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。mediaのrenameはffprobeを優先し、利用不能・情報不足時はGPACへフォールバックして、実測した解像度と音声ビットレートからNicoCache互換名を自動構築します。開発補助プラグインでは、Windowsの`C:\filter-matome`と`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値にして、旧`create-all-symlinks.ps1`／`create-listjs-symlink.ps1`相当のリンクをGUI・ヘッドレスで安全に作成できます。導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md) を参照してください。`nicocache-utility.py`と専用READMEは削除済みで、NicoCache_nlの管理操作は本体側の機能を使用します。用途が異なるMkDocs用フックなどは残しています。
+`scripts/` のメディア変換、設定編集、更新、開発者向け操作をまとめたGUI・ヘッドレス対応のJavaアプリです。リリースアーカイブにはビルド済みJARを同梱しているため、利用者はMavenやBunでビルドする必要がありません。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。mediaのrenameはffprobeを優先し、利用不能・情報不足時はGPACへフォールバックして、実測した解像度と音声ビットレートからNicoCache互換名を自動構築します。開発補助プラグインでは、Windowsの`C:\filter-matome`と`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値にして、旧`create-all-symlinks.ps1`相当のリンクをGUI・ヘッドレスで安全に作成できます。導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.java-toolbox.md`](scripts/README.java-toolbox.md) を参照してください。`nicocache-utility.py`と専用READMEは削除済みで、NicoCache_nlの管理操作は本体側の機能を使用します。用途が異なるMkDocs用フックなどは残しています。
 
 ### NicoCache_nlの終了・再起動
 
@@ -265,10 +257,6 @@ mkdocs serve
 
 
 ## ⚠️ 重要な注意事項
-
-### シンボリックリンク作成（必須）
-NicoCache_nl はキャッシュデータマネージャをTargetの`local/list.js`という固定名で参照します。ビルド成果物（例: `features.js`）へこの固定名のシンボリックリンクを作成しないと機能しません。開発補助プラグインの`listjs`または`links`アクションで、OS別の既定パスを使って安全に作成できます。詳細手順はガイドを参照してください。
-
 
 ### 使用上の注意
 - **全機能同時使用前提**: 個別機能の抜き出しは動作保証外

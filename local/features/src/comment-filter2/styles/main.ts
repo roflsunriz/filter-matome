@@ -1,6 +1,6 @@
 import { MINIMAL_DARK_THEME_TOKENS } from "@/common/visual-theme";
 
-/** cache-data-manager の色規約に合わせた comment-filter2 UI。 */
+/** 共通の色規約に合わせた comment-filter2 UI。 */
 export const CommentFilter2MainStyles = `
 :host {
   ${MINIMAL_DARK_THEME_TOKENS}

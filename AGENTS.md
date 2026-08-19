@@ -38,7 +38,6 @@ Get-Content -Raw -LiteralPath .\COMMON-AGENTS.md
 
 - `features.ts`: URLに応じて各機能を読み込むブラウザー側のエントリーポイント。
 - `api-info/`: NicoCache_nlおよびニコニコ動画関連APIの仕様メモとレスポンス例。
-- `cache-data-manager/`: NicoCache_nlのキャッシュ一覧、検索、削除などを扱う管理UI。
 - `comment-filter2/`: コメント取得、フィルタリング、設定UI。`integrations/video-player-bridge.ts` が `video-player` との連携境界である。
 - `common/`: Material Design Icons、共通ヘッダー、ロガー、トースト、APIクライアントなど、複数機能で共有する実装。
 - `mlink-video-controller/`: 視聴ページの操作パネルと機能モジュール群。`modules/` が個別機能、`module-handlers/` が読み込み・設定UIなどの管理を担当する。
@@ -137,7 +136,7 @@ java -jar .\NicoCacheLauncher.jar --headless --check-data-root
 - `lib\`: Bouncy Castleなど、NicoCache_nl本体と証明書生成で使用する依存ライブラリ。
 - `link\`, `others\`: 関連Webページなどへのショートカット。
 - `NICO_DATA_ROOT\list\`: `NGtitle.txt` などのリストファイル。
-- `NICO_DATA_ROOT\local\`: ブラウザーへ配信するJavaScript、CSS、画像、ビルド成果物など。`background-images\`, `features\`, `images\`, `list.js`, `mime.types` にはこのリポジトリを参照するシンボリックリンクが配置される。
+- `NICO_DATA_ROOT\local\`: ブラウザーへ配信するJavaScript、CSS、画像、ビルド成果物など。`background-images\`, `features\`, `images\`, `mime.types` にはこのリポジトリを参照するシンボリックリンクが配置される。
 - `NICO_DATA_ROOT\nlFilters\`: JavaScript、CSS、画像の追加やHTML置換を行うNicoCache_nl専用DSLフィルター。
 - `NICO_APP_ROOT\scripts\`: `C:\filter-matome\scripts\` を参照するシンボリックリンク。
 - `NICO_APP_ROOT\src\`: NicoCache_nl本体のJavaソースと、ビルドスクリプトが生成するクラスファイルの配置先。

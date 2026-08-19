@@ -38,7 +38,8 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
         `scripts` フォルダにはビルド済みJava ToolboxのJARが含まれる。Java Toolboxを使わない場合はコピー必須ではない。
 
-5. NicoCache_nl本体に付属する標準ランチャーから起動する。その後、ブラウザーで `Ctrl+F5` を押してハード再読み込みする。
+5. 以前の版から更新する場合、`NICO_DATA_ROOT\local\list.js` と `list.js.map` がfilter-matomeの `local\features\dist\features.js` を参照するシンボリックリンクなら、参照先を確認してリンク自体だけを削除する。通常ファイルや別の参照先は削除しない。
+6. NicoCache_nl本体に付属する標準ランチャーから起動する。その後、ブラウザーで `Ctrl+F5` を押してハード再読み込みする。
 
 ### クリーンインストール手順
 
@@ -83,7 +84,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 `nlGpac.class`は単一クラスで完結し、キャッシュを変更せず、通常のメディアファイルはそのまま、`.hls`ディレクトリはローカルの`master.m3u8`を入力としてGPACへ渡す。HLS/CMAFでもセグメントごとの結果を返さず、GPACが全期間を消費して得たPIDの解像度、Codec、ビットレート、フレーム数、時間、音声サンプルレート、チャンネル数などをまとめる。movie-infoのGPACビューでは、これらに加えてコンテナ入力、GPACバージョン、品質選択、色空間、ピクセル形式、アスペクト比、チャンネル配置などをストリーム別に表示し、GPACが返した未知の属性も全属性表で確認できる。キャッシュ解析で意図せず外部配信へ接続しないよう、プレイリストにHTTP等のリモートURLが含まれる場合は解析を拒否する。GPACの実行ファイルは、`-Dgpac.path=...`、`GPAC_PATH`環境変数、`C:\PathArea\GPAC\gpac.exe`、ユーザーの`%LOCALAPPDATA%\Programs\GPAC\gpac.exe`、`C:\Program Files\GPAC\gpac.exe`、最後にPATHの順で探索する。
 
-cache-data-managerとmlink-video-controllerの削除操作は、NicoCache_nl本体の`DELETE /api/v1/videos/<動画ID>/hls-cache-entries`を使用する。完了済み・停止済みHLSは即時削除し、取得中HLSは変種単位で完了前の削除を予約する。MP4・FLV・SWFは対象にしない。
+mlink-video-controllerの削除操作は、NicoCache_nl本体の`DELETE /api/v1/videos/<動画ID>/hls-cache-entries`を使用する。完了済み・停止済みHLSは即時削除し、取得中HLSは変種単位で完了前の削除を予約する。MP4・FLV・SWFは対象にしない。
 
 video-playerはNicoCache_nl本体の`/api/v1/videos/<動画ID>/media`だけを再生候補に使う。movie-fetcherが自己プロキシーから受け取るCMAF断片は`nicocachenl.test/media/v1/playback-sessions/`に限定し、旧`www.nicovideo.jp/cache/*`経路は使用しない。
 
@@ -130,30 +131,6 @@ NicoCache_nlが起動している間だけ約60秒ごとに期限を確認する
 5. `NicochartInfoProxy`が失敗してもvideo-playerはキャッシュ再生を継続する。詳細はNicoCache_nlの警告ログで `NicochartInfoProxy` を確認する。
 6. HLS削除が `pending` のままの場合は対象動画のキャッシュが継続中か確認する。完了または中断後、最大約60秒の定期再確認で削除される。
 7. シリーズアラートが`拡張DB: 未接続`の場合は、`FilterMatomeSeriesAlerts.class`が配置されているか、起動ログに`FilterMatomeSeriesAlerts`があるか確認してNicoCache_nlを再起動する。
-
----
-
-### 1.2 Symlink Setup (Required)
-
-NicoCache_nl はキャッシュデータ用スクリプトを、Targetの`local/list.js`という固定名で参照する。ビルド成果物（`local/features/dist/features.js`）へのシンボリックリンクが必要なため、Java Toolboxの開発補助プラグインを使って予定確認と作成を行う。
-
-**要約（Windows / PowerShell）**
-
-`--dry-run`は変更せず、`--yes`で実作成、`--force`で既存シンボリックリンクだけを再作成する。既存の通常ファイルやフォルダーは削除されない。
-
-```powershell
-java -jar "C:\Users\UserName\AppData\Local\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
-  --headless --plugin developer --action listjs `
-  --source-root "C:\filter-matome" `
-  --target-root "$env:USERPROFILE\Documents\NicoCache_nl" --dry-run
-
-java -jar "C:\Users\UserName\AppData\Local\NicoCache_nl\scripts\java-toolbox\target\filter-matome-toolbox-0.1.0-SNAPSHOT.jar" `
-  --headless --plugin developer --action listjs `
-  --source-root "C:\filter-matome" `
-  --target-root "$env:USERPROFILE\Documents\NicoCache_nl" --yes --force
-```
-
-`--target-root` にはJava Toolboxの既定値ではなく、`config.properties` で確認した実際の `NICO_DATA_ROOT` を指定する。`links`アクションでは`local`、`nlFilters`、`extensions`、`list.js`を一括作成できる。Linux/macOSでは同じJARをターミナルから実行し、Source/Targetを必要に応じて`--source-root`／`--target-root`で指定する。詳細な手順は [creating-symlink-for-listjs.md](creating-symlink-for-listjs.md) を参照。
 
 ---
 
@@ -210,7 +187,7 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 コメント検索タブでは通常表現と正規表現による検索ができる。詳細表示チェックボックスをオンにすると、ID, No., 投稿日時, コメントコマンド, プレミアムステータス, スコアといった情報が表示される。  
 
 関連リンクタブでは、filter-matome関連リンク、niconico関連リンク、NicoCache_nlリンクが表示される。  
-`キャッシュリスト`の使用には上記キャッシュデータ用マネージャのシンボリックリンクセットアップが必要。`保存:動画`、`保存:音声`、`保存:コメント`はNicoCache_nl本体のエクスポートAPIを使用し、ブラウザーの通常のダウンロードとして保存する。
+`保存:動画`、`保存:音声`、`保存:コメント`はNicoCache_nl本体のエクスポートAPIを使用し、ブラウザーの通常のダウンロードとして保存する。
 
 モジュールタブではmlink-video-controllerに統合された各種機能モジュールのオン・オフができる。  
 

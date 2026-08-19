@@ -237,7 +237,6 @@ jobs:
             "README.md"
             "LICENSE"
             "stop-nicocache.ps1"
-            "docs/creating-symlink-for-listjs.md"
             "CHANGELOG.md"
             "docs/USAGE.md"
             "nlFilters/nlFilters_編集ガイド.md"

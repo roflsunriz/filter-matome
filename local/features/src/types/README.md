@@ -14,10 +14,10 @@
 - `video-types.ts`, `video-player-bridge-types.ts`: 動画、プレイヤー、フィルター連携。
 - `cache-info-types.ts`: NicoCache_nl REST APIの動画・キャッシュ実体。
 - `mylist-types.ts`, `watch-history-types.ts`: 各永続データモデル。
-- `cache-data-manager-types.ts`, `movie-info-types.ts`: 各ダッシュボードの入出力。
+- `movie-info-types.ts`: 動画/API情報ダッシュボードの入出力。
 - `mlink-video-controller-types.ts`, `module-types.ts`, `background-image-types.ts`, `thumbnails-filter-types.ts`: mlinkのパネル・モジュール・設定。
 - `ui-types.ts`, `icon-types.ts`, `toastr-types.ts`, `util-types.ts`: UIと共通ユーティリティ。
-- `asset-modules.d.ts`, `flexsearch.d.ts`, `nico-common.d.ts`, `performance.d.ts`: 外部・アセット・環境宣言。
+- `asset-modules.d.ts`, `nico-common.d.ts`, `performance.d.ts`: 外部・アセット・環境宣言。
 
 ## 使い分け
 

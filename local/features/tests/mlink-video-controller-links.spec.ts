@@ -7,7 +7,7 @@ import { join } from "node:path";
 const projectRoot = join(import.meta.dirname, "..");
 
 interface LinkManagerProbe {
-  getLinks(group: "custom"): Promise<
+  getLinks(group: "custom" | "dataManagement"): Promise<
     Array<{
       id: string;
       title: string;
@@ -104,6 +104,9 @@ test("filter-matome専用リンクから現在の動画をsmartFetcherへ渡す"
       disabled: card?.dataset.disabled,
       title: card?.querySelector("span")?.textContent,
       openedUrls,
+      dataManagementActions: (await linkManager.getLinks("dataManagement")).map(
+        (link) => link.action,
+      ),
     };
   });
 
@@ -112,5 +115,12 @@ test("filter-matome専用リンクから現在の動画をsmartFetcherへ渡す"
   expect(result.disabled).toBeUndefined();
   expect(result.openedUrls).toEqual([
     "https://www.nicovideo.jp/local/features/dist/pages/movie-fetcher/index.html?videoId=sm9",
+  ]);
+  expect(result.dataManagementActions).toEqual([
+    "movieinfo",
+    "savemovie",
+    "saveaudio",
+    "savecomment",
+    "cache_remove",
   ]);
 });

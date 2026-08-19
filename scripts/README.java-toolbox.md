@@ -76,9 +76,6 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
 java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
   --headless --plugin developer --action links --dry-run
 
-# list.js と、存在する場合だけ list.js.map をリンク
-java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
-  --headless --plugin developer --action listjs --yes --force
 ```
 
 削除、リネーム、リンク再作成、上書きなど副作用のある操作は、`--yes`、`--force`、`--overwrite`を明示しない限り実行しません。NicoCache_nl本体の起動・停止・ビルドなどの管理操作は本体側の機能を使用してください。
@@ -92,7 +89,7 @@ java -jar target/filter-matome-toolbox-0.1.0-SNAPSHOT.jar \
 - `media`: 10秒／60秒切り出し、FastStart、HLS、H.264／HEVC／AV1変換、ffprobe／GPAC実測によるキャッシュ動画リネーム。`--inspector auto|ffprobe|gpac`、`--gpac PATH`、`tools.gpac`に対応
 - `config-editor`: properties編集とdefaults辞書。GUIの初期設定ファイルはWindowsでは`%LOCALAPPDATA%/NicoCache_nl/config.properties`、Linuxでは`~/.config/NicoCache_nl/config.properties`、macOSでは`~/Library/Application Support/NicoCache_nl/config.properties`です。defaults辞書の値はダブルクリックで設定一覧へ入力できます。
 - `updater`: GitHub Releases API、ETag、`.part`ダウンロード
-- `developer`: `create-claude-link`相当の安全な相対リンク作成、`create-all-symlinks.ps1`相当の一括リンク、`create-listjs-symlink.ps1`相当の`list.js`リンク、依存関係診断
+- `developer`: `create-claude-link`相当の安全な相対リンク作成、`create-all-symlinks.ps1`相当の一括リンク、依存関係診断
 
 `nicocache-utility.py`と専用READMEは削除済みです。NicoCache_nl本体の管理機能と重複するため、JavaToolboxにはNicoCache管理プラグインを組み込んでいません。MkDocsのビルドフックなど、用途が異なるスクリプトは残しています。
 

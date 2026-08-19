@@ -30,8 +30,7 @@ final class DeveloperSymlinkService {
             new LinkDefinition("extensions/FilterMatomeSmartFetcher.class", "extensions/FilterMatomeSmartFetcher.class"),
             new LinkDefinition("extensions/NicochartInfoProxy.class", "extensions/NicochartInfoProxy.class"),
             new LinkDefinition("extensions/nlGpac.class", "extensions/nlGpac.class"),
-            new LinkDefinition("extensions/nlMovieFetcher.class", "extensions/nlMovieFetcher.class"),
-            new LinkDefinition("local/features/dist/features.js", "local/list.js"));
+            new LinkDefinition("extensions/nlMovieFetcher.class", "extensions/nlMovieFetcher.class"));
 
     private DeveloperSymlinkService() {
     }
@@ -55,11 +54,6 @@ final class DeveloperSymlinkService {
     static Path defaultTargetRoot(String platform, String localAppData, String xdgConfigHome, String userHome) {
         return ConfigEditorPlugin.defaultConfigPath(platform, localAppData, xdgConfigHome, userHome)
                 .toAbsolutePath().normalize().getParent();
-    }
-
-    static Path defaultListJsTarget(PluginContext context) {
-        return defaultSourceRoot(context).resolve("local/features/dist/features.js")
-                .toAbsolutePath().normalize();
     }
 
     static List<LinkDefinition> allLinkDefinitions() {
@@ -86,47 +80,6 @@ final class DeveloperSymlinkService {
         for (LinkDefinition definition : ALL_LINKS) {
             plans.add(new LinkPlan(sourceRoot.resolve(definition.source()).normalize(),
                     targetRoot.resolve(definition.link()).normalize()));
-        }
-        return processPlans(plans, request, context, false);
-    }
-
-    static int createListJs(CommandRequest request, PluginContext context) throws IOException {
-        requireConfirmation(request);
-        Path sourceRoot = requestedRoot(request, defaultSourceRoot(context),
-                "source-root", "source");
-        Path targetRoot = requestedRoot(request, defaultTargetRoot(),
-                "target-root", "data-root");
-        String targetValue = firstValue(request, "target", "target-file");
-        if (targetValue == null && !request.inputs().isEmpty()) {
-            targetValue = request.inputs().get(0);
-        }
-        Path target = targetValue == null
-                ? sourceRoot.resolve("local/features/dist/features.js")
-                : resolvePath(targetValue, sourceRoot);
-        String linkDirectoryValue = firstValue(request, "link-dir", "linkdirectory", "link-directory");
-        Path linkDirectory = linkDirectoryValue == null
-                ? targetRoot.resolve("local")
-                : resolvePath(linkDirectoryValue, targetRoot);
-
-        if (!Files.isRegularFile(target)) {
-            throw new IOException("リンク元のJavaScriptがありません: " + target);
-        }
-        if (!Files.isDirectory(linkDirectory)) {
-            if (!request.dryRun()) {
-                throw new IOException("list.jsのリンク先フォルダーがありません: " + linkDirectory);
-            }
-            context.log().warn("list.jsのリンク先フォルダーがないため、dry-runのみ続行します: " + linkDirectory);
-        }
-
-        Path listLink = linkDirectory.resolve("list.js").normalize();
-        List<LinkPlan> plans = new ArrayList<>();
-        plans.add(new LinkPlan(target, listLink));
-
-        Path targetMap = target.resolveSibling(target.getFileName() + ".map");
-        if (Files.exists(targetMap)) {
-            plans.add(new LinkPlan(targetMap, linkDirectory.resolve("list.js.map").normalize()));
-        } else {
-            context.log().info("mapファイルがないためlist.js.mapは変更しません: " + targetMap);
         }
         return processPlans(plans, request, context, false);
     }

@@ -25,7 +25,6 @@ local/features/
 | ディレクトリ | 責務 | 詳細 |
 | --- | --- | --- |
 | `src/api-info/` | NicoCache_nl・ニコニコ動画関連APIの調査メモ | [README](src/api-info/README.md) |
-| `src/cache-data-manager/` | NicoCache_nlキャッシュ一覧の検索・操作UI | [README](src/cache-data-manager/README.md) |
 | `src/comment-filter2/` | コメントAPIの捕捉、ルール適用、設定UI | [README](src/comment-filter2/README.md) |
 | `src/common/` | 共通ヘッダー、ログ、通知、アイコン、API・UI部品 | [README](src/common/README.md) |
 | `src/mlink-video-controller/` | 視聴ページの操作パネルと機能モジュール | [README](src/mlink-video-controller/README.md) |
@@ -45,7 +44,6 @@ local/features/
 - 生成HTMLの `data-feature-page`: mylist2、movie-fetcher、movie-info、video-player、watch-historyの各SPAを起動する。
 - NicoCache_nlの対象ページ: `common` を起動し、対象ホストでは `mlink-video-controller` を起動する。
 - `www.nicovideo.jp/watch/<動画ID>`: comment-filter2、video-playerのルーター、watch-historyの追跡処理を起動する。
-- cache-data-manager: NicoCache_nlが生成するHTMLから呼ばれる `window.makeCacheList` を登録する。
 
 SPA遷移は `runtime/navigation.ts` がHistory APIと`popstate`・`hashchange`を単一イベントへ変換して再判定します。ページ判定を変更すると複数機能の起動条件へ波及するため、`runtime/` と `features.ts` を併せて確認してください。
 

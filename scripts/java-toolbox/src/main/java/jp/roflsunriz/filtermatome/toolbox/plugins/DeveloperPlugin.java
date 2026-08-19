@@ -36,18 +36,16 @@ public final class DeveloperPlugin implements ToolPlugin {
     @Override
     public String readme() {
         return "開発補助\n\n"
-                + "create-claude-link.ps1、create-all-symlinks.ps1、create-listjs-symlink.ps1相当の機能を、\n"
+                + "create-claude-link.ps1、create-all-symlinks.ps1相当の機能を、\n"
                 + "GUIとヘッドレスで共通利用できます。既定のソースはWindowsでは C:\\filter-matome、\n"
                 + "Linuxでは現在のリポジトリ、macOSでは現在のリポジトリです。既定のリンク先は\n"
                 + "Windowsでは %LOCALAPPDATA%/NicoCache_nl、Linuxでは ~/.config/NicoCache_nl、\n"
                 + "macOSでは ~/Library/Application Support/NicoCache_nl です。\n\n"
-                + "--action links は scripts、local、nlFilters、extensions、local/list.jsを一括でリンクします。\n"
-                + "--action listjs は指定したビルド済みJavaScriptを list.js へリンクし、対応する .map がある場合だけ\n"
-                + "list.js.mapもリンクします。通常ファイルは削除せず、既存リンクの再作成には --force、\n"
+                + "--action links は scripts、local、nlFilters、extensionsを一括でリンクします。\n"
+                + "通常ファイルは削除せず、既存リンクの再作成には --force、\n"
                 + "実作成には --yes、事前確認には --dry-run を指定してください。\n\n"
                 + "例:\n"
                 + "java -jar filter-matome-toolbox.jar --headless --plugin developer --action links --dry-run\n"
-                + "java -jar filter-matome-toolbox.jar --headless --plugin developer --action listjs --yes\n"
                 + "\nmkdocs_hooks.pyはMkDocsのPythonフックとして残しますが、Java Toolbox本体の実行にはPython依存はありません。";
     }
 
@@ -64,8 +62,6 @@ public final class DeveloperPlugin implements ToolPlugin {
             case "create-claude-link", "link" -> DeveloperSymlinkService.createSingleLink(request, context);
             case "links", "create-links", "symlinks", "create-all-symlinks", "all-links" ->
                     DeveloperSymlinkService.createAll(request, context);
-            case "listjs", "list-js", "listjs-link", "create-listjs-link", "create-listjs-symlink" ->
-                    DeveloperSymlinkService.createListJs(request, context);
             case "diagnose", "check" -> {
                 context.log().info("Java ToolboxはPython依存なしで動作します。");
                 context.log().info("既定のリンク元: " + DeveloperSymlinkService.defaultSourceRoot(context));
@@ -86,8 +82,6 @@ public final class DeveloperPlugin implements ToolPlugin {
         private final PluginContext context;
         private final JTextField sourceRoot = new JTextField();
         private final JTextField targetRoot = new JTextField();
-        private final JTextField listJsTarget = new JTextField();
-        private final JTextField listJsLinkDirectory = new JTextField();
         private final JTextField claudeLinkName = new JTextField("CLAUDE.md");
         private final JCheckBox dryRun = new JCheckBox("ドライラン", true);
         private final JCheckBox force = new JCheckBox("既存リンクを再作成");
@@ -98,12 +92,8 @@ public final class DeveloperPlugin implements ToolPlugin {
             setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
             sourceRoot.setText(DeveloperSymlinkService.defaultSourceRoot(context).toString());
             targetRoot.setText(DeveloperSymlinkService.defaultTargetRoot().toString());
-            listJsTarget.setText(DeveloperSymlinkService.defaultListJsTarget(context).toString());
-            listJsLinkDirectory.setText(DeveloperSymlinkService.defaultTargetRoot().resolve("local").toString());
             sourceRoot.setName("developer-source-root");
             targetRoot.setName("developer-target-root");
-            listJsTarget.setName("developer-listjs-target");
-            listJsLinkDirectory.setName("developer-listjs-link-directory");
             claudeLinkName.setName("developer-claude-link-name");
             dryRun.setName("developer-dry-run");
             force.setName("developer-force");
@@ -115,13 +105,10 @@ public final class DeveloperPlugin implements ToolPlugin {
             fields.setBorder(BorderFactory.createTitledBorder("シンボリックリンクのパス"));
             addField(fields, 0, "Source", sourceRoot);
             addField(fields, 1, "Target", targetRoot);
-            addField(fields, 2, "list.jsのビルド成果物", listJsTarget);
-            addField(fields, 3, "list.jsのリンク先フォルダー", listJsLinkDirectory);
-            addField(fields, 4, "CLAUDE.mdのリンク名", claudeLinkName);
+            addField(fields, 2, "CLAUDE.mdのリンク名", claudeLinkName);
 
             JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
             addAction(actions, "一括リンク", "developer-action-links", "links");
-            addAction(actions, "list.jsリンク", "developer-action-listjs", "listjs");
             addAction(actions, "CLAUDE.mdリンク", "developer-action-claude", "link");
             actions.add(dryRun);
             actions.add(force);
@@ -171,8 +158,6 @@ public final class DeveloperPlugin implements ToolPlugin {
             Map<String, String> values = new HashMap<>();
             values.put("source-root", sourceRoot.getText().trim());
             values.put("target-root", targetRoot.getText().trim());
-            values.put("target", listJsTarget.getText().trim());
-            values.put("link-dir", listJsLinkDirectory.getText().trim());
             values.put("link-name", claudeLinkName.getText().trim());
             values.put("force", Boolean.toString(force.isSelected()));
             String source = action.equals("link") ? "AGENTS.md" : "";
@@ -201,7 +186,6 @@ public final class DeveloperPlugin implements ToolPlugin {
         return switch (action) {
             case "link" -> DeveloperSymlinkService.createSingleLink(request, context);
             case "links" -> DeveloperSymlinkService.createAll(request, context);
-            case "listjs" -> DeveloperSymlinkService.createListJs(request, context);
             default -> throw new IllegalArgumentException("未対応のGUIアクションです: " + action);
         };
     }

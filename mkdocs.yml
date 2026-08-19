@@ -33,7 +33,6 @@ nav:
   - ホーム: index.md
   - filter-matome:
     - 使い方ガイド README: USAGE.md
-    - list.js シンボリックリンク作成: creating-symlink-for-listjs.md
   - 機能別ドキュメント:
     - mylist2 README: mylist2.md
     - comment-filter2 README: comment-filter2.md

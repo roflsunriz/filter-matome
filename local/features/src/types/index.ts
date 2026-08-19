@@ -38,9 +38,6 @@ export * from "@/types/util-types";
 // Links Video Controller関連の型
 export * from "@/types/mlink-video-controller-types";
 
-// Cache Data Manager 関連の型
-export * from "@/types/cache-data-manager-types";
-
 // Movie Info 関連の型
 export type {
   PanelStatus as MovieInfoPanelStatus,

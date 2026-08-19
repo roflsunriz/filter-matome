@@ -121,12 +121,6 @@ export class LinkManager {
     ] as LinkData[],
     dataManagement: [
       {
-        id: "cachelist",
-        title: "キャッシュリスト",
-        icon: getIconPath("storage", "outlined"),
-        action: "cachelist",
-      },
-      {
         id: "movieinfo",
         title: "Movie Info",
         icon: getIconPath("dashboard", "outlined"),
@@ -258,7 +252,6 @@ export class LinkManager {
           window.logger.error("CommentFilter2の呼び出しに失敗しました:", error);
         }
       },
-      cachelist: "https://nicocachenl.test/cache",
       movieinfo: () => {
         const baseUrl =
           "https://www.nicovideo.jp/local/features/dist/pages/movie-info/index.html";

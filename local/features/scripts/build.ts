@@ -57,7 +57,6 @@ const commonBuildOptions = {
 };
 
 const featureEntrypoints = [
-  "src/cache-data-manager/main.ts",
   "src/comment-filter2/index.ts",
   "src/common/index.ts",
   "src/mlink-video-controller/index.ts",

@@ -46,20 +46,19 @@ class IntegrationPluginManagerTest {
     void routesDeveloperSymlinkActionThroughThePluginManager() throws Exception {
         Path repo = Files.createDirectories(temp.resolve("repo"));
         Path target = Files.createDirectories(temp.resolve("target"));
-        Files.createDirectories(repo.resolve("local/features/dist"));
-        Files.writeString(repo.resolve("local/features/dist/features.js"), "features");
-        Files.createDirectories(target.resolve("local"));
+        Files.createDirectories(repo.resolve("scripts"));
+        Files.createDirectories(target.resolve("scripts"));
         PluginContext context = TestSupport.context(temp.resolve("data"), repo);
         var logs = TestSupport.captureLogs(context.log());
 
         try (PluginManager manager = new PluginManager(context)) {
             manager.discover();
-            CommandRequest request = TestSupport.request("listjs", List.of(), Map.of(
+            CommandRequest request = TestSupport.request("links", List.of(), Map.of(
                     "source-root", repo.toString(), "target-root", target.toString()),
                     false, false, true, false, null);
             assertEquals(0, manager.run("developer", request));
             assertTrue(logs.stream().anyMatch(line -> line.contains("DRY-RUN:")
-                    && line.contains("list.js")));
+                    && line.contains("scripts")));
         }
     }
 

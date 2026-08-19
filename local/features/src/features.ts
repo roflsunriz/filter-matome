@@ -9,7 +9,6 @@ import {
   installNavigationMonitor,
 } from "@/runtime/navigation";
 
-type CacheDataManagerModule = typeof import("@/cache-data-manager/main");
 type CommentFilterModule = typeof import("@/comment-filter2/index");
 type CommonModule = typeof import("@/common/index");
 type MlinkModule = typeof import("@/mlink-video-controller/index");
@@ -36,26 +35,6 @@ async function loadEntry<T>(path: string): Promise<T> {
     `${ENTRY_BASE_URL}/${path}.js?v=${FILTER_MATOME_VERSION}`
   );
   return loaded as T;
-}
-
-function registerLazyCacheDataManager(): void {
-  let modulePromise: Promise<CacheDataManagerModule> | null = null;
-  window.makeCacheList = (): void => {
-    modulePromise ??= loadEntry<CacheDataManagerModule>(
-      "cache-data-manager/main",
-    );
-    void modulePromise
-      .then((module) => {
-        module.registerCacheDataManager();
-        window.makeCacheList();
-      })
-      .catch((error: unknown) => {
-        console.error(
-          "[features] cache-data-managerの読み込みに失敗しました",
-          error,
-        );
-      });
-  };
 }
 
 async function startCommon(): Promise<void> {
@@ -175,8 +154,6 @@ function startRuntime(): void {
     return;
   }
   runtimeWindow.__filterMatomeFeaturesStarted = true;
-
-  registerLazyCacheDataManager();
 
   const activate = (): void => {
     void activateCurrentPage().catch(reportActivationError);

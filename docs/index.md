@@ -5,7 +5,6 @@ filter-matome の導入手順、各機能の使い方、補助資料をまとめ
 ## filter-matome
 
 - [使い方ガイド README](USAGE.md)
-- [NicoCache_nl 用 list.js シンボリックリンク作成手順](creating-symlink-for-listjs.md)
 
 ## 機能別ドキュメント
 - [mylist2 README](mylist2.md)
