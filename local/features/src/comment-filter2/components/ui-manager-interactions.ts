@@ -393,14 +393,28 @@ export abstract class UIManagerInteractions extends UIManagerCore {
     }
   }
 
-  /** プレイヤー種別に応じて、即時同期またはページ再読み込みを行う。 */
+  /** プレイヤー種別に応じて、ローカル同期または公式コメント再取得を行う。 */
   protected async applyFromCockpit(): Promise<void> {
-    if (!this.canApplyImmediately()) {
-      await this.reloadPage();
+    await this.storage.saveSettings(this.currentSettings);
+
+    if (this.isLocalVideoPlayerAvailable()) {
+      await this.applyFilter(window.CommentFilter2Data?.currentSmid ?? null);
       return;
     }
 
-    await this.applyFilter(window.CommentFilter2Data?.currentSmid ?? null);
+    try {
+      if (await this.reloadOfficialComments()) {
+        window.toastr?.success("コメントを再取得してフィルターを適用しました");
+        return;
+      }
+    } catch (error) {
+      window.logger?.error(
+        "[CommentFilter2] Official comment reload failed:",
+        error,
+      );
+    }
+
+    await this.reloadPage();
   }
 
   /**

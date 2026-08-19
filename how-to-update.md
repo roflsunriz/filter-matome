@@ -5,6 +5,19 @@
 5. git tag "#(version)"
 6. git push origin "#(version)" の操作でGithub Actionsが自動でリリースを作成する。タグは`#238`、配布アーカイブはURLフラグメントとの衝突を避けた`filter-matome-238.7z`のように、ファイル名側だけ`#`を除く。
 
+## 公式コメント再取得APIの追従確認
+
+ニコニコ動画の公式資産更新でcomment-filter2の「今すぐ適用」がページ再読み込み確認へ戻った場合は、`local/features/src/sandbox/README.md`の手順で公開視聴ページ資産を再取得します。Cookie、認証ヘッダー、HTMLは保存せず、取得済みES Moduleを実行しないでください。
+
+```powershell
+cd local/features
+bun run sandbox:analyze-comment-reload
+bun test tests/comment-reload-nlfilter.test.ts tests/official-player-bridge.test.ts
+bunx playwright test tests/comment-filter2.spec.ts
+```
+
+解析が失敗した場合は、最新資産をde-minifyして`POST /v1/threads`の再実行、直前の追加取得条件、成功後の公式ストア更新と描画更新を追跡します。`nlFilters/102_comment_reload_api.txt`は確認できたactionへだけ接続し、ストア本体やWatchデータをグローバルへ公開しません。新しいMatchで解析コマンドとテストが成功しない限り置き換えず、旧Matchが外れた環境では確認付きページ再読み込みフォールバックを維持します。変更前へ戻す場合は`102_comment_reload_api.txt`だけを以前の版へ戻し、ブラウザーキャッシュを消してWatchページをハード再読み込みします。
+
 ## nlMovieFetcherの追従確認
 
 ニコニコ動画の配信仕様変更へ追従するときは、`local/features/src/api-info/nl-movie-fetcher-api.md` のraw CDP手順で、Watch API、access-rights API、映像・音声分離playlistを再観測します。Java拡張は対象NicoCache_nlのJARをclasspathにして`nlMovieFetcher.java`と`FilterMatomeSmartFetcher.java`を同時にコンパイルし、生成物が同名の2クラスだけであることを確認してください。URL許可や取得処理を変更した場合は署名URLの取得だけで終了せず、公開動画をsmartFetcherから実行し、履歴が`completed`、nlMovieFetcherの`completed`と`total`が一致、`bytesTransferred`が0より大きいことまで確認します。署名クエリー、Cookie、アクセス権キーは検証記録へ残しません。TypeScript側は通常の `bun run verify` でカードDOM、API交渉、スケジューラーSPAを検証します。

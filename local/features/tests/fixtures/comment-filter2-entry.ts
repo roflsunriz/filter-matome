@@ -1,4 +1,5 @@
 import { UIManager } from "@/comment-filter2/components/ui-manager";
+import { OfficialPlayerBridge } from "@/comment-filter2/integrations/official-player-bridge";
 import { FilterStorage } from "@/comment-filter2/storage/indexed-db";
 import type { NgRuleJson } from "@/types/filter-types";
 
@@ -8,6 +9,7 @@ declare global {
       seedAndStart: () => Promise<void>;
       mockCanvasBodies: string[];
       mockCanvasCommands: string[][];
+      officialReloadCount: number;
       readStoredClearExistingCommands: () => Promise<boolean | undefined>;
     };
   }
@@ -124,12 +126,14 @@ async function seedAndStart(): Promise<void> {
     }
   };
 
+  const officialPlayerBridge = new OfficialPlayerBridge();
   const manager = new UIManager(
     () => {
       renderFilteredCommentsToMockCanvas();
       window.dispatchEvent(new CustomEvent("cf2:test-filter-applied"));
     },
     () => Boolean(window.videoPlayer),
+    () => officialPlayerBridge.reloadComments(),
   );
   // UIManagerのコンストラクター内初期化（IndexedDB接続・設定読込）の完了を待つ。
   await new Promise((resolve) => setTimeout(resolve, 50));
@@ -238,6 +242,7 @@ Object.assign(window, {
     seedAndStart,
     mockCanvasBodies: [],
     mockCanvasCommands: [],
+    officialReloadCount: 0,
     readStoredClearExistingCommands,
   },
 });

@@ -247,7 +247,7 @@ test("概要の今すぐ適用がコメントを再処理して表示側へ同�
   expect(filteredBodies).toEqual(["", "通常コメント"]);
 });
 
-test("公式プレイヤーでは今すぐ適用時にページ再読み込みを確認する", async ({
+test("再取得APIがない公式プレイヤーではページ再読み込みを確認する", async ({
   page,
 }) => {
   await page.evaluate(() => {
@@ -263,6 +263,38 @@ test("公式プレイヤーでは今すぐ適用時にページ再読み込み�
   expect(
     await page.evaluate(() => window.CommentFilter2Data?.filteredData),
   ).toBeNull();
+});
+
+test("公式プレイヤーではコメント再取得APIでリロードせず適用する", async ({
+  page,
+}) => {
+  const urlBeforeApply = page.url();
+  await page.evaluate(() => {
+    delete window.videoPlayer;
+    window.FilterMatomeCommentApi = {
+      version: 1,
+      reload: async () => {
+        window.CommentFilter2Test.officialReloadCount += 1;
+        window.dispatchEvent(new CustomEvent("cf2:test-official-reloaded"));
+      },
+    };
+  });
+  const reloaded = page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        window.addEventListener("cf2:test-official-reloaded", () => resolve(), {
+          once: true,
+        });
+      }),
+  );
+
+  await page.locator("#cf2-shadow-host #cf2-cockpit-apply").click();
+  await reloaded;
+
+  expect(
+    await page.evaluate(() => window.CommentFilter2Test.officialReloadCount),
+  ).toBe(1);
+  expect(page.url()).toBe(urlBeforeApply);
 });
 
 test("正規表現の一致、未一致、入力エラーをリアルタイム表示する", async ({

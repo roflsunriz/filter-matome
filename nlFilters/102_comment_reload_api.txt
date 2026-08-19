@@ -1,0 +1,13 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+# 公式コメントストアの再取得actionだけを、comment-filter2から呼べるAPIとして公開する。
+# 公式資産が更新されてMatchが一致しない場合、comment-filter2は従来のページ再読み込みへフォールバックする。
+[Replace]
+Name = comment-filter2用公式コメント再取得API
+FullURL = https?:\/\/resource\.video\.nimg\.jp\/web\/scripts\/nvpc_next\/assets\/[^\/?]+\.js(?:\?.*)?$
+Match<
+Le\(e,\[`initialized`,`fetched`\]\);let n=e\.current\(\),r=yield lr\(
+>
+Replace<
+Le(e,[`initialized`,`fetched`]);try{globalThis.FilterMatomeCommentApi={version:1,reload:()=>Ar(e,e.current().fetchAdditionals)}}catch{};let n=e.current(),r=yield lr(
+>

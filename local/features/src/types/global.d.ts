@@ -29,6 +29,10 @@ declare global {
   const toastr: ToastrInstance;
 
   interface Window {
+    FilterMatomeCommentApi?: {
+      version: 1;
+      reload: () => Promise<unknown>;
+    };
     NicoCache_nl: NicoCache_nlInterface;
     commonHelper: {
       // 既存の関数

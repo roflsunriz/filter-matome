@@ -82,7 +82,7 @@ export abstract class UIManagerCore {
    * レガシーインポートをトリガー
    */
   protected abstract triggerLegacyImport(): void;
-  /** プレイヤー種別に応じて、即時同期またはページ再読み込みを行う。 */
+  /** プレイヤー種別に応じて、コメントの即時同期または再取得を行う。 */
   protected abstract applyFromCockpit(): Promise<void>;
   /**
    * ファイルインポートを処理
@@ -103,7 +103,8 @@ export abstract class UIManagerCore {
   /** サイドナビゲーションでワークスペースの表示を切り替える */
   protected abstract setupCockpitNavigation(): void;
   protected readonly onFilterApplied: () => void;
-  protected readonly canApplyImmediately: () => boolean;
+  protected readonly isLocalVideoPlayerAvailable: () => boolean;
+  protected readonly reloadOfficialComments: () => Promise<boolean>;
   protected storage: FilterStorage;
   protected filter: CommentFilter;
   protected jsonFilter: JsonCommentFilter;
@@ -129,10 +130,13 @@ export abstract class UIManagerCore {
 
   constructor(
     onFilterApplied: () => void = () => undefined,
-    canApplyImmediately: () => boolean = () => true,
+    isLocalVideoPlayerAvailable: () => boolean = () => true,
+    reloadOfficialComments: () => Promise<boolean> = () =>
+      Promise.resolve(false),
   ) {
     this.onFilterApplied = onFilterApplied;
-    this.canApplyImmediately = canApplyImmediately;
+    this.isLocalVideoPlayerAvailable = isLocalVideoPlayerAvailable;
+    this.reloadOfficialComments = reloadOfficialComments;
     this.storage = new FilterStorage();
     this.filter = new CommentFilter();
     this.jsonFilter = new JsonCommentFilter();

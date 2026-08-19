@@ -2,6 +2,7 @@
 import { DataInterceptor } from "@/comment-filter2/proxy/data-interceptor";
 import { UIManager } from "@/comment-filter2/components/ui-manager";
 import { VideoPlayerBridge } from "@/comment-filter2/integrations/video-player-bridge";
+import { OfficialPlayerBridge } from "@/comment-filter2/integrations/official-player-bridge";
 import { CONSTANTS } from "@/comment-filter2/utils/constants";
 import { VideoPlayerBridgeStatus } from "@/types/video-player-bridge-types";
 
@@ -9,15 +10,18 @@ export class CommentFilter2 {
   private dataInterceptor: DataInterceptor;
   private uiManager: UIManager;
   private videoPlayerBridge: VideoPlayerBridge;
+  private officialPlayerBridge: OfficialPlayerBridge;
   private isInitialized: boolean = false;
   private keyboardShortcutEnabled: boolean = true;
 
   constructor() {
     this.dataInterceptor = new DataInterceptor();
     this.videoPlayerBridge = new VideoPlayerBridge();
+    this.officialPlayerBridge = new OfficialPlayerBridge();
     this.uiManager = new UIManager(
       () => this.videoPlayerBridge.forceSync(),
       () => this.videoPlayerBridge.getStatus().isVideoPlayerDetected,
+      () => this.officialPlayerBridge.reloadComments(),
     );
 
     void this.initialize();
