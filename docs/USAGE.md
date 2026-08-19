@@ -187,7 +187,7 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 コメント検索タブでは通常表現と正規表現による検索ができる。詳細表示チェックボックスをオンにすると、ID, No., 投稿日時, コメントコマンド, プレミアムステータス, スコアといった情報が表示される。  
 
 関連リンクタブでは、filter-matome関連リンク、niconico関連リンク、NicoCache_nlリンクが表示される。  
-`保存:動画`、`保存:音声`、`保存:コメント`はNicoCache_nl本体のエクスポートAPIを使用し、ブラウザーの通常のダウンロードとして保存する。
+`キャッシュリスト`はNicoCache_nl本体の`https://nicocachenl.test/cache`を直接開くため、廃止したcache-data-managerや`local/list.js`には依存しない。`保存:動画`、`保存:音声`、`保存:コメント`はNicoCache_nl本体のエクスポートAPIを使用し、ブラウザーの通常のダウンロードとして保存する。
 
 モジュールタブではmlink-video-controllerに統合された各種機能モジュールのオン・オフができる。  
 

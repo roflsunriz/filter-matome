@@ -48,7 +48,7 @@ function buildControllerBundle(): string {
   }
 }
 
-test("filter-matome専用リンクから現在の動画をsmartFetcherへ渡す", async ({
+test("専用リンクからsmartFetcherとNicoCache_nlのキャッシュ一覧を開く", async ({
   page,
 }) => {
   await page.route("https://www.nicovideo.jp/watch/sm9", (route) =>
@@ -99,14 +99,21 @@ test("filter-matome専用リンクから現在の動画をsmartFetcherへ渡す"
     );
     card?.click();
     await new Promise((resolve) => window.setTimeout(resolve, 0));
+    const dataManagementLinks = await linkManager.getLinks("dataManagement");
+    const cacheListLink = dataManagementLinks.find(
+      (link) => link.action === "cachelist",
+    );
+    if (cacheListLink) {
+      await linkManager.handleAction(cacheListLink.action);
+    }
     return {
       action: card?.dataset.action,
       disabled: card?.dataset.disabled,
       title: card?.querySelector("span")?.textContent,
       openedUrls,
-      dataManagementActions: (await linkManager.getLinks("dataManagement")).map(
-        (link) => link.action,
-      ),
+      cacheListTitle: cacheListLink?.title,
+      cacheListDisabled: cacheListLink?.disabled,
+      dataManagementActions: dataManagementLinks.map((link) => link.action),
     };
   });
 
@@ -115,8 +122,12 @@ test("filter-matome専用リンクから現在の動画をsmartFetcherへ渡す"
   expect(result.disabled).toBeUndefined();
   expect(result.openedUrls).toEqual([
     "https://www.nicovideo.jp/local/features/dist/pages/movie-fetcher/index.html?videoId=sm9",
+    "https://nicocachenl.test/cache",
   ]);
+  expect(result.cacheListTitle).toBe("キャッシュリスト");
+  expect(result.cacheListDisabled).toBe(false);
   expect(result.dataManagementActions).toEqual([
+    "cachelist",
     "movieinfo",
     "savemovie",
     "saveaudio",
