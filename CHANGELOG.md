@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - 【comment-filter2・nlFilters】ルール変更後も視聴ページを維持したまま公式コメントだけを再取得して反映できるよう、公式コメントストアの再取得actionを版付きの最小APIとして公開し、comment-filter2から呼び出す経路を追加した。公式資産が更新されAPIを利用できない場合は、従来の確認付きページ再読み込みへフォールバックする。
 - 【sandbox・tests】公式資産の更新へ安全に追従できるよう、取得済みES Moduleを実行せずメモリー上でde-minifyし、コメント再取得action、追加取得条件、nlFilterのMatchを検証する解析コマンドと回帰テストを追加した。Cookieのない一時BrowserContextで現行Watchページを開き、コメント再取得のHTTP応答、comment-filter2への再入力、ページ全体が再読み込みされないことを検証する隔離実験も追加した。
+- 【sandbox・nlFilters・docs】将来Matchを安全に汎化できるよう、公式資産ごとのURL、ハッシュ、サイズ、一致断片、意味上の安定点と変動点を時系列で残し、3版以上・対象1件・他資産0件・置換後構文・動的再取得を採用条件とする履歴文書を追加した。
 
 ### Changed
 

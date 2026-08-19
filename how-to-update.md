@@ -9,6 +9,8 @@
 
 ニコニコ動画の公式資産更新でcomment-filter2の「今すぐ適用」がページ再読み込み確認へ戻った場合は、`local/features/src/sandbox/README.md`の手順で公開視聴ページ資産を再取得します。Cookie、認証ヘッダー、HTMLは保存せず、取得済みES Moduleを実行しないでください。
 
+Matchを変更する前に、`local/features/src/sandbox/comment-reload-match-history.md`へ公式原本のURL、SHA-256、サイズ、Matchと一致数、前版との差分、意味上の根拠を追記します。履歴が3版以上あり、minify名が実際に変化した版を含み、全履歴で対象に1回・他資産に0回だけ一致することを確認できるまでは、識別子を無条件にワイルドカード化しません。
+
 ```powershell
 cd local/features
 bun run sandbox:analyze-comment-reload

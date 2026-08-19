@@ -18,6 +18,7 @@
 - `../../scripts/sandbox/verify-current-comment-reload.ts`: Cookieのない一時BrowserContextで現行Watchページを開き、版付きAPI、`POST /v1/threads`、comment-filter2への再入力、ページ再読み込みがないことを動的検証します。
 - `comment-post-api.md`: 2026-07-19に取得した公式バンドルから確認したコメント投稿契約です。
 - `comment-reload-api.md`: 2026-07-23に取得した公式バンドルから確認した、公式ストアと描画を更新するコメント再取得契約です。
+- `comment-reload-match-history.md`: 公式資産ごとのMatch、ハッシュ、意味上の安定点、変動点、汎化候補と採用条件を時系列で記録します。
 - `feature-differentiation.md`: raw CDP captureと外部通信遮断下の静的集計から、公式機能とfilter-matomeの差別化軸を整理した調査結果です。
 - `membership-differentiation.md`: 未ログイン・一般・プレミアムの機能差と、チャンネル会員・PPVなど別軸の動画権利を整理した調査結果です。
 - `quality-audio-delivery.md`: 画質・音質候補、会員別利用可否、access-rights、分離HLS配信、自動・手動切り替え、selected・loading・playing状態を整理した調査結果です。

@@ -1,5 +1,7 @@
 # 公式コメント再取得APIの調査記録
 
+Matchの版ごとの差分、安定点、汎化条件は[公式コメント再取得nlFilter Match履歴](comment-reload-match-history.md)へ時系列で記録します。
+
 ## 調査対象
 
 - 取得日時: 2026-07-23T20:21:01.436Z
@@ -34,7 +36,7 @@ minify後の内部名では、取得actionが`Ar`（export alias `O`）、現在
 
 ## 追従確認
 
-公式資産を再取得した後、次を実行する。
+公式資産を再取得した後、`comment-reload-match-history.md`へ新しい版の観測を追記してから次を実行する。
 
 ```powershell
 cd local/features
