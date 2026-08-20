@@ -71,6 +71,12 @@ class UnitCoreTest {
         assertNotNull(backup);
         assertTrue(Files.exists(backup));
         assertEquals("a", Files.readString(backup));
+
+        Path sameTimeBackup = FileSafety.backup(mp4, () -> 1L);
+        Path sameTimeBackup2 = FileSafety.backup(mp4, () -> 1L);
+        assertEquals("a.MP4.bak-1", sameTimeBackup.getFileName().toString());
+        assertEquals("a.MP4.bak-2", sameTimeBackup2.getFileName().toString());
+        assertEquals("a", Files.readString(sameTimeBackup2));
     }
 
     @Test

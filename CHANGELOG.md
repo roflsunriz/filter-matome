@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【matome-toolbox/media】H.264変換とadaptive変換のMP4をFirefoxで再生できるよう、再エンコード時の映像をHigh profile・8-bit 4:2:0へ統一し、FastStartを維持した。adaptiveとHLSはcodec名だけでコピーせず、Main／High系の8-bit 4:2:0だけをコピーし、High 10・4:2:2・4:4:4などは互換形式へ再エンコードするよう修正した。
 - 【features/build】`#245.1`のような小数点付きリリースでも正式な配布物を生成できるよう、package versionの検証を整数または1段の小数形式へ対応させ、整数限定でビルドが停止する問題を修正した。
 - 【release】小数点付きタグと同名のCHANGELOG節がある場合は整数部の旧リリース節をフォールバック追記せず、リリースノートへ今回と前回の変更が重複掲載される問題を修正した。
+- 【matome-toolbox】設定などを同一ミリ秒内に連続保存しても既存バックアップと衝突しないよう、バックアップ名をファイルシステム上で予約し、競合時は次の番号へ進める共通処理へ統一した。
 
 ## [#245] - 2026-08-20
 

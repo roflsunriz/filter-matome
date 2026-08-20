@@ -7,7 +7,6 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.time.Instant;
 import java.util.Properties;
 
 /** アプリ設定を原子的に保存し、上書き前にバックアップする。 */
@@ -56,8 +55,7 @@ public final class AppConfig {
     public synchronized void save() throws IOException {
         Files.createDirectories(file.toAbsolutePath().getParent());
         if (Files.exists(file)) {
-            Path backup = file.resolveSibling(file.getFileName() + ".bak-" + Instant.now().toEpochMilli());
-            Files.copy(file, backup, StandardCopyOption.COPY_ATTRIBUTES);
+            FileSafety.backup(file);
         }
         Path temp = file.resolveSibling(file.getFileName() + ".tmp");
         try (OutputStream output = Files.newOutputStream(temp)) {

@@ -1,6 +1,7 @@
 package jp.roflsunriz.filtermatome.toolbox;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,6 +14,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.LongSupplier;
 import java.util.regex.Pattern;
 
 public final class FileSafety {
@@ -55,14 +57,19 @@ public final class FileSafety {
     }
 
     public static Path backup(Path original) throws IOException {
+        return backup(original, () -> Instant.now().toEpochMilli());
+    }
+
+    static Path backup(Path original, LongSupplier timestampSource) throws IOException {
         if (!Files.exists(original)) {
             return null;
         }
-        Path backup = original.resolveSibling(original.getFileName() + ".bak-" + Instant.now().toEpochMilli());
-        if (Files.isDirectory(original) && !Files.isSymbolicLink(original)) {
+        boolean directory = Files.isDirectory(original) && !Files.isSymbolicLink(original);
+        Path backup = reserveBackup(original, timestampSource.getAsLong(), directory);
+        if (directory) {
             copyTree(original, backup);
         } else {
-            Files.copy(original, backup, StandardCopyOption.COPY_ATTRIBUTES);
+            Files.copy(original, backup, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING);
         }
         return backup;
     }
@@ -118,5 +125,22 @@ public final class FileSafety {
                 return FileVisitResult.CONTINUE;
             }
         });
+    }
+
+    private static Path reserveBackup(Path original, long firstId, boolean directory) throws IOException {
+        for (int offset = 0; offset < 10_000; offset++) {
+            Path candidate = original.resolveSibling(original.getFileName() + ".bak-" + (firstId + offset));
+            try {
+                if (directory) {
+                    Files.createDirectory(candidate);
+                } else {
+                    Files.createFile(candidate);
+                }
+                return candidate;
+            } catch (FileAlreadyExistsException ignored) {
+                // 同一ミリ秒の保存や別プロセスとの競合時は次の番号を予約する。
+            }
+        }
+        throw new IOException("バックアップ名を確保できません: " + original);
     }
 }
