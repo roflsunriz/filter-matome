@@ -55,11 +55,24 @@ class E2EIsolatedMediaTest {
         runMedia(environment, "faststart", fastStartInput, outputDirectory, ffmpeg, ffprobe, "--overwrite");
         assertTrue(hasBackup(fastStartOutput), "上書き前のバックアップが作成されていません。");
 
-        for (String mode : List.of("h264", "hevc", "av1", "adaptive")) {
+        Path h264Input = mediaFile(inputDirectory, "convert h264.mp4");
+        runMedia(environment, "convert", h264Input, outputDirectory, ffmpeg, ffprobe, "--mode=h264");
+        assertRegular(outputDirectory.resolve("convert_convert h264_h264.mp4"));
+
+        for (String mode : List.of("hevc", "av1")) {
             Path convertInput = mediaFile(inputDirectory, "convert " + mode + ".mp4");
             runMedia(environment, "convert", convertInput, outputDirectory, ffmpeg, ffprobe, "--mode=" + mode);
             assertRegular(outputDirectory.resolve("convert_convert " + mode + "_" + mode + ".mp4"));
         }
+        Path adaptiveCompatibleInput = mediaFile(inputDirectory, "convert adaptive.mp4");
+        runMedia(environment, "convert", adaptiveCompatibleInput, outputDirectory,
+                ffmpeg, ffprobe, "--mode=adaptive");
+        assertRegular(outputDirectory.resolve("convert_convert adaptive_adaptive.mp4"));
+        Path adaptiveIncompatibleInput = mediaFile(inputDirectory, "convert adaptive incompatible.mp4");
+        runMedia(environment, "convert", adaptiveIncompatibleInput, outputDirectory,
+                ffmpeg, ffprobe, "--mode=adaptive");
+        assertRegular(outputDirectory.resolve(
+                "convert_convert adaptive incompatible_adaptive.mp4"));
         Path transcodeInput = mediaFile(inputDirectory, "transcode alias.mp4");
         runMedia(environment, "transcode", transcodeInput, outputDirectory, ffmpeg, ffprobe, "--mode=hevc");
         assertRegular(outputDirectory.resolve("convert_transcode alias_hevc.mp4"));
@@ -73,6 +86,9 @@ class E2EIsolatedMediaTest {
         assertTrue(Files.readString(hlsOutput.resolve("video.m3u8")).contains("video/init01.cmfv"));
         assertTrue(Files.exists(hlsOutput.resolve("audio/001.cmfa")));
         assertFalse(Files.exists(outputDirectory.resolve("hls input.HLS.part")));
+        Path hlsIncompatibleInput = mediaFile(inputDirectory, "hls adaptive incompatible.mp4");
+        runMedia(environment, "hls", hlsIncompatibleInput, outputDirectory, ffmpeg, ffprobe);
+        assertRegular(outputDirectory.resolve("hls adaptive incompatible.HLS/master.m3u8"));
 
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/watch", exchange -> respond(exchange, 200,
@@ -130,6 +146,25 @@ class E2EIsolatedMediaTest {
         assertTrue(toolLog.contains("ffmpeg"), "ffmpegの外部コマンド境界を通っていません。");
         assertTrue(toolLog.contains("ffprobe"), "ffprobeの外部コマンド境界を通っていません。");
         assertTrue(toolLog.contains("gpac"), "GPACの外部コマンド境界を通っていません。");
+        String h264Command = ffmpegCommandForInput(toolLog, h264Input);
+        assertTrue(h264Command.contains("\t-c:v\tlibx264\t"), h264Command);
+        assertTrue(h264Command.contains("\t-profile:v\thigh\t"), h264Command);
+        assertTrue(h264Command.contains("\t-pix_fmt\tyuv420p\t"), h264Command);
+        assertTrue(h264Command.contains("\t-movflags\t+faststart\t"), h264Command);
+        String adaptiveCompatibleCommand = ffmpegCommandForInput(toolLog, adaptiveCompatibleInput);
+        assertTrue(adaptiveCompatibleCommand.contains("\t-c:v\tcopy\t"), adaptiveCompatibleCommand);
+        assertTrue(adaptiveCompatibleCommand.contains("\t-movflags\t+faststart\t"),
+                adaptiveCompatibleCommand);
+        String adaptiveIncompatibleCommand = ffmpegCommandForInput(toolLog, adaptiveIncompatibleInput);
+        assertTrue(adaptiveIncompatibleCommand.contains("\t-c:v\tlibx264\t"), adaptiveIncompatibleCommand);
+        assertTrue(adaptiveIncompatibleCommand.contains("\t-profile:v\thigh\t"), adaptiveIncompatibleCommand);
+        assertTrue(adaptiveIncompatibleCommand.contains("\t-pix_fmt\tyuv420p\t"), adaptiveIncompatibleCommand);
+        assertTrue(adaptiveIncompatibleCommand.contains("\t-movflags\t+faststart\t"),
+                adaptiveIncompatibleCommand);
+        String hlsIncompatibleCommand = ffmpegCommandForInput(toolLog, hlsIncompatibleInput);
+        assertTrue(hlsIncompatibleCommand.contains("\t-c:v\tlibx264\t"), hlsIncompatibleCommand);
+        assertTrue(hlsIncompatibleCommand.contains("\t-profile:v\thigh\t"), hlsIncompatibleCommand);
+        assertTrue(hlsIncompatibleCommand.contains("\t-pix_fmt\tyuv420p\t"), hlsIncompatibleCommand);
     }
 
     private static void runMedia(IsolatedEnvironment environment, String action, Path input, Path output,
@@ -158,6 +193,15 @@ class E2EIsolatedMediaTest {
         try (var files = Files.list(original.getParent())) {
             return files.anyMatch(path -> path.getFileName().toString().startsWith(original.getFileName() + ".bak-"));
         }
+    }
+
+    private static String ffmpegCommandForInput(String toolLog, Path input) {
+        String inputArgument = "\t-i\t" + input + "\t";
+        return toolLog.lines()
+                .filter(line -> line.startsWith("ffmpeg\t") && line.contains(inputArgument))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError(
+                        "ffmpegコマンドが記録されていません: " + input));
     }
 
     private static void respond(HttpExchange exchange, int status, String body) throws java.io.IOException {

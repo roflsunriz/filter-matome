@@ -40,13 +40,15 @@ public final class FakeExternalTool {
 
     private static void fakeFfprobe(List<String> command) {
         String joined = String.join(" ", command);
-        if (joined.contains("stream=codec_name")) {
-            System.out.println("h264");
-            return;
-        }
-        if (joined.contains("stream=codec_type,codec_name,width,height,bit_rate")) {
+        if (joined.contains("stream=codec_type,codec_name,profile,pix_fmt,width,height,bit_rate")) {
+            boolean incompatible = command.stream()
+                    .anyMatch(argument -> argument.contains("adaptive incompatible"));
+            String profile = incompatible ? "High 4:4:4 Predictive" : "High";
+            String pixelFormat = incompatible ? "yuv444p" : "yuv420p";
             System.out.println("{\"streams\":["
                     + "{\"codec_type\":\"video\",\"codec_name\":\"h264\","
+                    + "\"profile\":\"" + profile + "\","
+                    + "\"pix_fmt\":\"" + pixelFormat + "\","
                     + "\"width\":1920,\"height\":720,\"bit_rate\":5000000},"
                     + "{\"codec_type\":\"audio\",\"codec_name\":\"aac\","
                     + "\"bit_rate\":192000}],"

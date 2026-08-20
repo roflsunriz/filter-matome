@@ -86,7 +86,7 @@ java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar \
 
 組み込みプラグイン:
 
-- `media`: 10秒／60秒切り出し、FastStart、HLS、H.264／HEVC／AV1変換、ffprobe／GPAC実測によるキャッシュ動画リネーム。`--inspector auto|ffprobe|gpac`、`--gpac PATH`、`tools.gpac`に対応
+- `media`: 10秒／60秒切り出し、FastStart、HLS、H.264／HEVC／AV1変換、ffprobe／GPAC実測によるキャッシュ動画リネーム。H.264変換はHigh profile・8-bit 4:2:0のMP4をFastStart化してFirefoxを含む一般的なブラウザーで再生できる形式にし、adaptiveは同形式のH.264だけをコピーしてHigh 10・4:2:2・4:4:4などを再エンコードします。`--inspector auto|ffprobe|gpac`、`--gpac PATH`、`tools.gpac`に対応
 - `config-editor`: properties編集とdefaults辞書。GUIの初期設定ファイルはWindowsでは`%LOCALAPPDATA%/NicoCache_nl/config.properties`、Linuxでは`~/.config/NicoCache_nl/config.properties`、macOSでは`~/Library/Application Support/NicoCache_nl/config.properties`です。defaults辞書の値はダブルクリックで設定一覧へ入力できます。
 - `updater`: GitHub Releases API、ETag、`.part`ダウンロード
 - `developer`: `create-claude-link`相当の安全な相対リンク作成、`create-all-symlinks.ps1`相当の一括リンク、依存関係診断

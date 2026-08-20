@@ -88,22 +88,10 @@ final class MediaInspector {
         throw new IOException(String.join(" / ", errors));
     }
 
-    static String probeCodec(Path input, String ffprobe, String stream)
-            throws IOException, InterruptedException {
-        ProcessBuilder builder = new ProcessBuilder(ffprobe, "-v", "error",
-                "-select_streams", stream + ":0", "-show_entries",
-                "stream=codec_name", "-of", "default=nw=1:nk=1", input.toString());
-        Process process = builder.start();
-        String output = new String(process.getInputStream().readAllBytes(),
-                StandardCharsets.UTF_8).trim();
-        int exit = process.waitFor();
-        return exit == 0 ? output.lines().findFirst().orElse("") : "";
-    }
-
     static MediaInfo probeWithFfprobe(Path input, String ffprobe)
             throws IOException, InterruptedException {
         List<String> command = List.of(ffprobe, "-v", "error", "-show_entries",
-                "stream=codec_type,codec_name,width,height,bit_rate:format=format_name",
+                "stream=codec_type,codec_name,profile,pix_fmt,width,height,bit_rate:format=format_name",
                 "-of", "json", input.toString());
         Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
         String output = new String(process.getInputStream().readAllBytes(),
@@ -115,6 +103,8 @@ final class MediaInspector {
         try {
             Map<String, Object> root = Json.object(Json.parse(output));
             String videoCodec = "";
+            String videoProfile = "";
+            String pixelFormat = "";
             String audioCodec = "";
             int height = 0;
             int audioBitrate = 0;
@@ -125,6 +115,8 @@ final class MediaInspector {
                 if (type.equals("video")) {
                     if (videoCodec.isBlank()) {
                         videoCodec = Json.string(stream.get("codec_name"), "");
+                        videoProfile = Json.string(stream.get("profile"), "");
+                        pixelFormat = Json.string(stream.get("pix_fmt"), "");
                     }
                     height = Math.max(height, parsePositiveInt(stream.get("height")));
                 } else if (type.equals("audio")) {
@@ -138,7 +130,8 @@ final class MediaInspector {
             }
             Map<String, Object> format = Json.object(root.get("format"));
             return new MediaInfo(videoCodec, audioCodec, hasAudio, 5_000_000,
-                    audioBitrate, height, Json.string(format.get("format_name"), ""));
+                    audioBitrate, height, Json.string(format.get("format_name"), ""),
+                    videoProfile, pixelFormat);
         } catch (IllegalArgumentException exception) {
             throw new IOException("ffprobeのJSONを解析できません: " + input, exception);
         }
@@ -332,7 +325,25 @@ final class MediaInspector {
                 primary.audioBitrate() > 0
                         ? primary.audioBitrate() : fallback.audioBitrate(),
                 primary.height() > 0 ? primary.height() : fallback.height(),
-                firstNonBlank(primary.formatName(), fallback.formatName()));
+                firstNonBlank(primary.formatName(), fallback.formatName()),
+                firstNonBlank(primary.videoProfile(), fallback.videoProfile()),
+                firstNonBlank(primary.pixelFormat(), fallback.pixelFormat()));
+    }
+
+    static boolean isFirefoxCompatibleH264(MediaInfo info) {
+        if (info == null || !info.videoCodec().equalsIgnoreCase("h264")) {
+            return false;
+        }
+        String pixelFormat = info.pixelFormat().toLowerCase(Locale.ROOT);
+        if (!pixelFormat.equals("yuv420p") && !pixelFormat.equals("yuvj420p")) {
+            return false;
+        }
+        String profile = info.videoProfile().toLowerCase(Locale.ROOT);
+        return profile.equals("constrained baseline")
+                || profile.equals("baseline")
+                || profile.equals("main")
+                || profile.equals("high")
+                || profile.equals("progressive high");
     }
 
     private static boolean renameInfoComplete(MediaInfo info) {
@@ -366,11 +377,19 @@ final class MediaInspector {
 
     record MediaInfo(String videoCodec, String audioCodec, boolean hasAudio,
                      int bandwidth, int audioBitrate, int height,
-                     String formatName) {
+                     String formatName, String videoProfile,
+                     String pixelFormat) {
+        MediaInfo(String videoCodec, String audioCodec, boolean hasAudio,
+                  int bandwidth, int audioBitrate, int height,
+                  String formatName) {
+            this(videoCodec, audioCodec, hasAudio, bandwidth,
+                    audioBitrate, height, formatName, "", "");
+        }
+
         MediaInfo(String videoCodec, String audioCodec, boolean hasAudio,
                   int bandwidth, int audioBitrate) {
             this(videoCodec, audioCodec, hasAudio, bandwidth,
-                    audioBitrate, 0, "mp4");
+                    audioBitrate, 0, "mp4", "", "");
         }
     }
 }

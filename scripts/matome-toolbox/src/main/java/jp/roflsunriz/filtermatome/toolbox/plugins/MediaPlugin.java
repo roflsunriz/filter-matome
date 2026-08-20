@@ -77,6 +77,9 @@ public final class MediaPlugin implements ToolPlugin {
                 + "フォールバックします。ffprobeまたはgpacへ固定することもできます。"
                 + "dry-runでも実ファイルを解析し、推測値では命名しません。動画情報APIは "
                 + "media.watchApiUrl / media.legacyApiUrl で変更できます。\n\n"
+                + "H.264変換はFirefoxを含む一般的なブラウザーで再生できるよう、High profile、"
+                + "8-bit 4:2:0で出力し、MP4をFastStart化します。adaptiveは互換性のあるH.264だけを"
+                + "コピーし、High 10、4:2:2、4:4:4などは同じ互換形式へ再エンコードします。\n\n"
                 + "既定では既存ファイルを上書きせず、--overwrite を明示した場合だけ上書きします。"
                 + "GUIでは上書き前に確認を表示し、変換途中のファイルは作業先に限定します。";
     }
@@ -183,7 +186,8 @@ public final class MediaPlugin implements ToolPlugin {
         int failures = 0;
         for (Path input : inputs) {
             boolean adaptiveCopy = !request.dryRun() && mode.equals("adaptive")
-                    && "h264".equals(MediaInspector.probeCodec(input, ffprobe, "video"));
+                    && MediaInspector.isFirefoxCompatibleH264(
+                            MediaInspector.probeWithFfprobe(input, ffprobe));
             List<String> codec = new ArrayList<>();
             if (adaptiveCopy) {
                 codec.addAll(List.of("-c:v", "copy", "-c:a", "aac"));
@@ -195,7 +199,9 @@ public final class MediaPlugin implements ToolPlugin {
                 };
                 codec.addAll(List.of("-c:v", videoCodec, "-c:a", "aac"));
                 if (videoCodec.equals("libx264")) {
-                    codec.addAll(List.of("-preset", request.value("preset", "veryfast"), "-crf", request.value("crf", "20")));
+                    codec.addAll(List.of("-preset", request.value("preset", "veryfast"),
+                            "-crf", request.value("crf", "20"),
+                            "-profile:v", "high", "-pix_fmt", "yuv420p"));
                 }
             }
             Path output = outputFile(input, request.output(), "convert_", stem(input) + "_" + mode + ".mp4");
@@ -234,7 +240,8 @@ public final class MediaPlugin implements ToolPlugin {
                     Files.createDirectories(work.resolve("audio"));
                 }
             }
-            boolean copy = info.videoCodec().equalsIgnoreCase("h264") && info.formatName().contains("mp4");
+            boolean copy = MediaInspector.isFirefoxCompatibleH264(info)
+                    && info.formatName().contains("mp4");
             List<String> command = buildHlsCommand(input, work, info, copy, request, ffmpeg);
             if (!run(command, work, request.dryRun(), context, token)) {
                 if (!request.dryRun()) FileSafety.deleteTree(work);
@@ -426,7 +433,8 @@ public final class MediaPlugin implements ToolPlugin {
         if (copy) {
             command.addAll(List.of("-c:v", "copy"));
         } else {
-            command.addAll(List.of("-c:v", "libx264", "-preset", preset, "-crf", crf, "-pix_fmt", "yuv420p"));
+            command.addAll(List.of("-c:v", "libx264", "-preset", preset,
+                    "-crf", crf, "-profile:v", "high", "-pix_fmt", "yuv420p"));
         }
         command.addAll(List.of("-f", "hls", "-hls_time", duration, "-movflags", "cmaf", "-hls_segment_type", "fmp4",
                 "-hls_playlist_type", "vod", "-hls_flags", "independent_segments", "-start_number", "1",

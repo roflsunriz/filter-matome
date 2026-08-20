@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- 【matome-toolbox/media】H.264変換とadaptive変換のMP4をFirefoxで再生できるよう、再エンコード時の映像をHigh profile・8-bit 4:2:0へ統一し、FastStartを維持した。adaptiveとHLSはcodec名だけでコピーせず、Main／High系の8-bit 4:2:0だけをコピーし、High 10・4:2:2・4:4:4などは互換形式へ再エンコードするよう修正した。
+
 ## [#245] - 2026-08-20
 
 ### Added
