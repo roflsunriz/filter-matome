@@ -180,11 +180,15 @@ jobs:
             echo "- 該当するセクションが見つかりませんでした。全文は CHANGELOG.md を参照してください。" >> release_notes.md
           fi
 
-      - name: Fallback notes for decimal tags
+      - name: Fallback notes for decimal tags without an exact section
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
           case "$TAG" in
             *.*)
+              EXACT_SECTION_RE="^##[ ]*\[${TAG}\]"
+              if grep -E -q -- "${EXACT_SECTION_RE}" CHANGELOG.md; then
+                exit 0
+              fi
               TAG_MAJOR="${TAG%%.*}"
               SECTION_RE="^##[ ]*\[${TAG_MAJOR}\]"
               if grep -E -q -- "${SECTION_RE}" CHANGELOG.md; then

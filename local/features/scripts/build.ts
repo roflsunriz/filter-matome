@@ -1,5 +1,6 @@
 import { mkdir, rm } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
+import { parseFeatureVersion } from "./feature-version";
 import { composeWatchHistoryDocument } from "./watch-history-document";
 
 const projectRoot = resolve(import.meta.dirname, "..");
@@ -8,11 +9,7 @@ const relativeOutDir = relative(projectRoot, outDir);
 const packageDocument = (await Bun.file(
   resolve(projectRoot, "package.json"),
 ).json()) as { version?: unknown };
-const featureVersion = String(packageDocument.version ?? "").trim();
-
-if (!/^\d+$/u.test(featureVersion)) {
-  throw new Error(`Invalid package version: ${featureVersion}`);
-}
+const featureVersion = parseFeatureVersion(packageDocument.version);
 
 if (
   relativeOutDir === "" ||
