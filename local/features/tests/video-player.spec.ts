@@ -138,6 +138,57 @@ test("背景切替トグルが mlink の背景変数を固定レイヤーへ反�
   });
 });
 
+test("新APIの一覧ラッパーから完成キャッシュを検索できる", async ({ page }) => {
+  await page.route(
+    "https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html?videoId=sm9",
+    fulfillPlayerDocument,
+  );
+  await page.route("**/api/v1/cache-entries?**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json; charset=utf-8",
+      headers: { "Access-Control-Allow-Origin": "https://www.nicovideo.jp" },
+      body: JSON.stringify({
+        complete: {
+          "sm100[720p,128].hls": [
+            "検索対象の動画",
+            "fixture",
+            1048576,
+            1783900800,
+          ],
+          "sm101[720p,128].hls": [
+            "一致しない別動画",
+            "fixture",
+            2097152,
+            1783900801,
+          ],
+        },
+        temporary: {
+          "sm102[720p,128].hls": [
+            "検索対象の取得中動画",
+            "fixture",
+            1024,
+            1783900802,
+          ],
+        },
+      }),
+    });
+  });
+  await page.goto(
+    "https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html?videoId=sm9",
+  );
+  await page.addScriptTag({ content: buildFixtureBundle() });
+  await page.evaluate(() => window.createStandaloneLayoutForTest());
+
+  await page.locator("#nc-video-navigation-input").fill("検索対象");
+  await page.getByRole("button", { name: "キャッシュを検索" }).click();
+  await expect(page.locator(".common-cache-search-results__status")).toHaveText(
+    "1件の動画キャッシュが見つかりました。",
+  );
+  await expect(
+    page.locator(".common-cache-search-results__select"),
+  ).toContainText("検索対象の動画");
+});
+
 test("ボタン外でネイティブ全画面を解除しても通常表示のクラスへ戻る", async ({
   page,
 }) => {

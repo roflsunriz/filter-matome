@@ -56,12 +56,28 @@ async function openApp(
       contentType: "application/json; charset=utf-8",
       headers: { "Access-Control-Allow-Origin": "https://www.nicovideo.jp" },
       body: JSON.stringify({
-        "sm100[720p,128].hls": [
-          "検索で見つかったテスト動画",
-          "fixture",
-          1048576,
-          1783900800,
-        ],
+        complete: {
+          "sm100[720p,128].hls": [
+            "検索で見つかったテスト動画",
+            "fixture",
+            1048576,
+            1783900800,
+          ],
+          "sm101[720p,128].hls": [
+            "一致しない別動画",
+            "fixture",
+            2097152,
+            1783900801,
+          ],
+        },
+        temporary: {
+          "sm102[720p,128].hls": [
+            "検索で見つかった取得中動画",
+            "fixture",
+            1024,
+            1783900802,
+          ],
+        },
       }),
     });
   });

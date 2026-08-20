@@ -16,11 +16,62 @@ type Fetcher = (
   init?: RequestInit,
 ) => Promise<Response>;
 
+interface CacheEntryMap {
+  entries: Record<string, unknown>;
+  requiresLocalFiltering: boolean;
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
 const readString = (value: unknown): string =>
   typeof value === "string" ? value.trim() : "";
 
 const readNonNegativeNumber = (value: unknown): number =>
   typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : 0;
+
+const readCacheEntryMap = (value: unknown): CacheEntryMap => {
+  if (!isRecord(value)) {
+    throw new Error("キャッシュ検索APIのレスポンス形式が不正です。");
+  }
+
+  if (isRecord(value.error)) {
+    const message = readString(value.error.message);
+    throw new Error(message || "キャッシュ検索APIがエラーを返しました。");
+  }
+
+  if ("complete" in value || "temporary" in value) {
+    if (!isRecord(value.complete)) {
+      throw new Error("完成済みキャッシュ一覧の形式が不正です。");
+    }
+    return {
+      entries: value.complete,
+      requiresLocalFiltering: true,
+    };
+  }
+
+  return { entries: value, requiresLocalFiltering: false };
+};
+
+const matchesCacheQuery = (
+  result: CacheSearchResult,
+  query: string,
+): boolean => {
+  const words = query.trim().toLowerCase().split(/\s+/u).filter(Boolean);
+  if (words.length === 0) {
+    return true;
+  }
+
+  const searchable = [result.videoId, result.title, ...result.cacheIds]
+    .join("\n")
+    .toLowerCase();
+  return words.every((word) => {
+    if (word.startsWith("-")) {
+      return !searchable.includes(word.slice(1));
+    }
+    return searchable.includes(word);
+  });
+};
 
 export const getCacheSearchUrl = (query: string): string => {
   const normalizedQuery = query.trim();
@@ -33,16 +84,13 @@ export const getCacheSearchUrl = (query: string): string => {
 
 export const parseCacheSearchResponse = (
   value: unknown,
+  query = "",
 ): CacheSearchResult[] => {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error("キャッシュ検索APIのレスポンス形式が不正です。");
-  }
+  const { entries, requiresLocalFiltering } = readCacheEntryMap(value);
 
   const grouped = new Map<string, CacheSearchResult>();
 
-  for (const [cacheId, rawEntry] of Object.entries(
-    value as Record<string, unknown>,
-  )) {
+  for (const [cacheId, rawEntry] of Object.entries(entries)) {
     const match = cacheId.match(VIDEO_ID_PREFIX_PATTERN);
     if (!match || !Array.isArray(rawEntry)) {
       continue;
@@ -80,11 +128,14 @@ export const parseCacheSearchResponse = (
     }
   }
 
-  return [...grouped.values()].sort(
+  const results = [...grouped.values()].sort(
     (left, right) =>
       right.newestTimestamp - left.newestTimestamp ||
       left.videoId.localeCompare(right.videoId),
   );
+  return requiresLocalFiltering
+    ? results.filter((result) => matchesCacheQuery(result, query))
+    : results;
 };
 
 export const searchVideoCaches = async (
@@ -104,5 +155,5 @@ export const searchVideoCaches = async (
     );
   }
 
-  return parseCacheSearchResponse(await response.json());
+  return parseCacheSearchResponse(await response.json(), query);
 };

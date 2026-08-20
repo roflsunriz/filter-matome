@@ -58,5 +58,9 @@ DELETE /api/v1/videos/<動画ID>/hls-cache-entries
 DELETE /api/v1/videos/<動画ID>/cache-entries
 ```
 
+キャッシュ検索は通常、キャッシュIDをキーとする検索結果を直下へ返す。本体の移行途中などで
+`query`が反映されず、`{"complete": {...}, "temporary": {...}}` の一覧形式が返る場合は、
+共通検索クライアントが`complete`だけを同じ検索語で絞り込み、取得中キャッシュを結果へ混在させない。
+
 旧`www.nicovideo.jp/cache/*`は配信経路を含めて利用しない。CMAFの内部配信は
 `https://nicocachenl.test/media/v1/*`へ分離され、通常の利用側は動画単位の`/media`を使う。

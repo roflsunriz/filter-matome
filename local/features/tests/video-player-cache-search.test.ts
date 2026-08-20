@@ -46,6 +46,48 @@ describe("common cache search", () => {
     ]);
   });
 
+  test("新APIの一覧ラッパーから完成キャッシュだけを検索語で絞り込む", () => {
+    expect(
+      parseCacheSearchResponse(
+        {
+          complete: {
+            "sm9[720p,128].hls": ["陰陽師 本編", "music", 1_000, 300],
+            "sm10[720p,128].hls": ["別の動画", "", 2_000, 200],
+            "sm11[720p,128].hls": ["陰陽師 続編", "", 3_000, 400],
+          },
+          temporary: {
+            "sm12[720p,128].hls": ["陰陽師 取得中", "", 4_000, 500],
+          },
+        },
+        "陰陽師 -続編",
+      ),
+    ).toEqual([
+      {
+        videoId: "sm9",
+        title: "陰陽師 本編",
+        cacheIds: ["sm9[720p,128].hls"],
+        folders: ["music"],
+        totalSize: 1_000,
+        newestTimestamp: 300,
+      },
+    ]);
+  });
+
+  test("新APIの一覧ラッパーでは動画IDでも検索できる", () => {
+    expect(
+      parseCacheSearchResponse(
+        {
+          complete: {
+            "sm9[720p,128].hls": ["タイトル", "", 1_000, 300],
+            "sm10[720p,128].hls": ["タイトル", "", 2_000, 200],
+          },
+          temporary: {},
+        },
+        "sm10",
+      ).map((result) => result.videoId),
+    ).toEqual(["sm10"]);
+  });
+
   test("requests the search API without cache and validates the response", async () => {
     let requestedUrl = "";
     let requestedInit: RequestInit | undefined;
@@ -56,7 +98,11 @@ describe("common cache search", () => {
         return Promise.resolve(
           new Response(
             JSON.stringify({
-              "sm9[720p,128].hls": ["レッツゴー！陰陽師", "", 123, 456],
+              complete: {
+                "sm9[720p,128].hls": ["レッツゴー！陰陽師", "", 123, 456],
+                "sm10[720p,128].hls": ["別の動画", "", 789, 500],
+              },
+              temporary: {},
             }),
             { status: 200 },
           ),
@@ -68,7 +114,7 @@ describe("common cache search", () => {
       "/api/v1/cache-entries?query=%E9%99%B0%E9%99%BD%E5%B8%AB&order=desc",
     );
     expect(requestedInit?.cache).toBe("no-store");
-    expect(results[0]?.videoId).toBe("sm9");
+    expect(results.map((result) => result.videoId)).toEqual(["sm9"]);
   });
 
   test("reports HTTP failures", async () => {

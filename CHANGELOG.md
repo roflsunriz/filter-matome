@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- 【common・video-player・movie-info】NicoCache_nlのキャッシュ検索APIが移行途中の一覧ラッパーを返す環境でも検索結果が0件にならないよう、完成キャッシュだけを実際の検索語で絞り込み、取得中キャッシュを除外する互換処理と両画面の回帰テストを追加した。
+
 ## [#245.1] - 2026-08-20
 
 ### Changed
