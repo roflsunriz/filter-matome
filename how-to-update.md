@@ -19,7 +19,7 @@ bun test tests/comment-reload-nlfilter.test.ts tests/official-player-bridge.test
 bunx playwright test tests/comment-filter2.spec.ts
 ```
 
-解析が失敗した場合は、最新資産をde-minifyして`POST /v1/threads`の再実行、直前の追加取得条件、成功後の公式ストア更新と描画更新を追跡します。`nlFilters/102_comment_reload_api.txt`は確認できたactionへだけ接続し、ストア本体やWatchデータをグローバルへ公開しません。新しいMatchで解析コマンドとテストが成功しない限り置き換えず、旧Matchが外れた環境では確認付きページ再読み込みフォールバックを維持します。変更前へ戻す場合は`102_comment_reload_api.txt`だけを以前の版へ戻し、ブラウザーキャッシュを消してWatchページをハード再読み込みします。
+解析が失敗した場合は、最新資産をde-minifyして`POST /v1/threads`の再実行、直前の追加取得条件、成功後の公式ストア更新と描画更新を追跡します。`nlFilters/102_comment_reload_api.txt`は確認できたactionへだけ接続し、ストア本体やWatchデータをグローバルへ公開しません。新しいMatchで解析コマンドとテストが成功しない限り置き換えず、旧Matchが外れた環境では通常再読み込みを自動実行せず、一度だけ必要なハード再読み込み方法を通知します。変更前へ戻す場合は`102_comment_reload_api.txt`だけを以前の版へ戻し、ブラウザーキャッシュを消してWatchページをハード再読み込みします。
 
 ## nlMovieFetcherの追従確認
 

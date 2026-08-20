@@ -247,22 +247,60 @@ test("概要の今すぐ適用がコメントを再処理して表示側へ同�
   expect(filteredBodies).toEqual(["", "通常コメント"]);
 });
 
-test("再取得APIがない公式プレイヤーではページ再読み込みを確認する", async ({
+test("再取得APIがない公式プレイヤーでは自動再読み込みせず復旧方法を示す", async ({
   page,
 }) => {
+  const urlBeforeApply = page.url();
   await page.evaluate(() => {
     delete window.videoPlayer;
+    delete window.FilterMatomeCommentApi;
+    window.CommentFilter2Test.toastrErrors = [];
   });
-  const dialog = page.waitForEvent("dialog");
-  const click = page.locator("#cf2-shadow-host #cf2-cockpit-apply").click();
-  const confirmation = await dialog;
-
-  expect(confirmation.message()).toContain("ページを再読み込みして設定を適用");
-  await confirmation.dismiss();
-  await click;
+  await page.locator("#cf2-shadow-host #cf2-cockpit-apply").click();
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.CommentFilter2Test.toastrErrors.at(-1)),
+    )
+    .toContain("一度だけ Ctrl+F5 でハード再読み込み");
+  expect(page.url()).toBe(urlBeforeApply);
   expect(
     await page.evaluate(() => window.CommentFilter2Data?.filteredData),
   ).toBeNull();
+});
+
+test("公式コメントAPIの公開が遅れても再読み込みせず適用する", async ({
+  page,
+}) => {
+  const urlBeforeApply = page.url();
+  await page.evaluate(() => {
+    delete window.videoPlayer;
+    delete window.FilterMatomeCommentApi;
+    setTimeout(() => {
+      window.FilterMatomeCommentApi = {
+        version: 1,
+        reload: async () => {
+          window.CommentFilter2Test.officialReloadCount += 1;
+          window.dispatchEvent(new CustomEvent("cf2:test-official-reloaded"));
+        },
+      };
+    }, 30);
+  });
+  const reloaded = page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        window.addEventListener("cf2:test-official-reloaded", () => resolve(), {
+          once: true,
+        });
+      }),
+  );
+
+  await page.locator("#cf2-shadow-host #cf2-cockpit-apply").click();
+  await reloaded;
+
+  expect(
+    await page.evaluate(() => window.CommentFilter2Test.officialReloadCount),
+  ).toBe(1);
+  expect(page.url()).toBe(urlBeforeApply);
 });
 
 test("公式プレイヤーではコメント再取得APIでリロードせず適用する", async ({

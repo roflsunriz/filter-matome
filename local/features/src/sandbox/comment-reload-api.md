@@ -26,7 +26,7 @@ minify後の内部名では、取得actionが`Ar`（export alias `O`）、現在
 - `FilterMatomeCommentApi.version`: 契約版`1`
 - `FilterMatomeCommentApi.reload()`: 直前と同じ追加条件で公式コメントを再取得するPromise
 
-ストア本体、Watchデータ、thread keyは公開しない。comment-filter2は`reload()`を呼び、再取得時の`POST /v1/threads`レスポンスを従来の`DataInterceptor`でフィルタリングする。APIがない、版が違う、または呼び出しに失敗した場合だけ、従来の確認付きページ再読み込みへフォールバックする。
+ストア本体、Watchデータ、thread keyは公開しない。comment-filter2は`reload()`を呼び、再取得時の`POST /v1/threads`レスポンスを従来の`DataInterceptor`でフィルタリングする。APIの初期化中は短時間待機する。APIがない、または版が違う場合は効果のない通常再読み込みを自動実行せず、更新後の資産を取得するため一度だけ`Ctrl+F5`が必要なことを通知する。API呼び出し自体の失敗は通信エラーとして通知し、再試行できる状態を保つ。
 
 ## 現行資産での再検証（2026-08-20）
 

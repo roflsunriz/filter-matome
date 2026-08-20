@@ -10,6 +10,7 @@ declare global {
       mockCanvasBodies: string[];
       mockCanvasCommands: string[][];
       officialReloadCount: number;
+      toastrErrors: string[];
       readStoredClearExistingCommands: () => Promise<boolean | undefined>;
     };
   }
@@ -126,7 +127,10 @@ async function seedAndStart(): Promise<void> {
     }
   };
 
-  const officialPlayerBridge = new OfficialPlayerBridge();
+  const officialPlayerBridge = new OfficialPlayerBridge(window, {
+    availabilityTimeoutMs: 100,
+    pollIntervalMs: 10,
+  });
   const manager = new UIManager(
     () => {
       renderFilteredCommentsToMockCanvas();
@@ -234,7 +238,9 @@ Object.assign(window, {
   },
   toastr: {
     success: () => undefined,
-    error: () => undefined,
+    error: (message: string) => {
+      window.CommentFilter2Test.toastrErrors.push(message);
+    },
     info: () => undefined,
     warning: () => undefined,
   },
@@ -243,6 +249,7 @@ Object.assign(window, {
     mockCanvasBodies: [],
     mockCanvasCommands: [],
     officialReloadCount: 0,
+    toastrErrors: [],
     readStoredClearExistingCommands,
   },
 });

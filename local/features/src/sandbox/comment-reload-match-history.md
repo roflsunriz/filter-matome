@@ -135,7 +135,7 @@ store状態が initialized または fetched
 5. Replace後の全対象資産をde-minify・構文解析できる。
 6. `FilterMatomeCommentApi`が1回だけ注入され、元のMatchが残らない。
 7. 最新版で`verify-current-comment-reload.ts`が成功する。
-8. 0件または複数件一致時は置換せず、comment-filter2のページ再読み込みフォールバックが維持される。
+8. 0件または複数件一致時は置換せず、comment-filter2が自動再読み込みせずハード再読み込み手順を通知する。
 
 ## 履歴追加テンプレート
 

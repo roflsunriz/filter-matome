@@ -31,10 +31,30 @@ describe("OfficialPlayerBridge", () => {
     ).not.toBeNull();
   });
 
-  test("APIがない場合はページ再読み込み用のfalseを返す", async () => {
-    const bridge = new OfficialPlayerBridge({});
+  test("待機してもAPIがない場合は利用不能を示すfalseを返す", async () => {
+    const bridge = new OfficialPlayerBridge({}, { availabilityTimeoutMs: 0 });
     expect(bridge.isAvailable()).toBe(false);
     expect(await bridge.reloadComments()).toBe(false);
+  });
+
+  test("初期化中に遅れて公開されたAPIを待って再取得する", async () => {
+    let reloadCount = 0;
+    const host: { FilterMatomeCommentApi?: unknown } = {};
+    const bridge = new OfficialPlayerBridge(host, {
+      availabilityTimeoutMs: 100,
+      pollIntervalMs: 5,
+    });
+    setTimeout(() => {
+      host.FilterMatomeCommentApi = {
+        version: OFFICIAL_COMMENT_API_VERSION,
+        reload: async () => {
+          reloadCount += 1;
+        },
+      };
+    }, 15);
+
+    expect(await bridge.reloadComments()).toBe(true);
+    expect(reloadCount).toBe(1);
   });
 
   test("同時の再取得要求を一つの公式actionへまとめる", async () => {
@@ -56,8 +76,6 @@ describe("OfficialPlayerBridge", () => {
     const first = bridge.reloadComments();
     const second = bridge.reloadComments();
     expect(first).toBe(second);
-    expect(reloadCount).toBe(0);
-    await Promise.resolve();
     expect(reloadCount).toBe(1);
     release?.();
     expect(await first).toBe(true);

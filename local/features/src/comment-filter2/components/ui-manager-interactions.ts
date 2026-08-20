@@ -259,43 +259,6 @@ export abstract class UIManagerInteractions extends UIManagerCore {
   }
 
   /**
-   * ページを再読み込みして設定を適用
-   */
-  protected async reloadPage(): Promise<void> {
-    try {
-      // 確認ダイアログを表示
-      if (
-        !confirm(
-          "ページを再読み込みして設定を適用しますか？\n\n※未保存の入力内容は失われます",
-        )
-      ) {
-        return;
-      }
-
-      // デバッグログ
-      window.logger?.info(
-        "[CommentFilter2] Reloading page to apply settings...",
-      );
-
-      // 設定を保存してから再読み込み（念のため）
-      await this.storage.saveSettings(this.currentSettings);
-
-      // 短い遅延の後にリロード（UIの更新を確実にするため）
-      setTimeout(() => {
-        try {
-          window.location.reload();
-        } catch (e) {
-          throw new Error(String(e));
-        }
-      }, 100);
-    } catch (error) {
-      window.logger?.error("[CommentFilter2] Failed to reload page:", error);
-      // Toastr使用：リロードエラー通知をToastrに変更
-      window.toastr?.error("再読み込みに失敗しました");
-    }
-  }
-
-  /**
    * UIを表示
    */
   public async show(): Promise<void> {
@@ -412,9 +375,18 @@ export abstract class UIManagerInteractions extends UIManagerCore {
         "[CommentFilter2] Official comment reload failed:",
         error,
       );
+      window.toastr?.error(
+        "コメントの再取得に失敗しました。通信状態を確認して、もう一度適用してください。",
+      );
+      return;
     }
 
-    await this.reloadPage();
+    window.logger?.warn(
+      "[CommentFilter2] Official comment reload API is unavailable on the current page",
+    );
+    window.toastr?.error(
+      "コメント再取得機能が現在のページに読み込まれていません。更新後の機能を有効にするため、このページを一度だけ Ctrl+F5 でハード再読み込みしてください。",
+    );
   }
 
   /**

@@ -39,7 +39,7 @@ Replace<
 
 例外として、公式コードがメタタグを読む前に同期実行する必要がある `server-context-override.js` は、`101_disable_official_function.txt` が `server-context` の直後へ defer なしで挿入します。同フィルターには設定JSONだけを置き、パス走査、型検証、通信保護などの実装を埋め込まないでください。
 
-もう一つの例外が`102_comment_reload_api.txt`です。公式ES Moduleのコメント再取得actionへ、ストアをclosureに閉じ込めた`reload()`だけを追加します。公式資産由来のコードをfeaturesへ複製せず、公開境界は版、再取得関数、失敗時のページ再読み込みフォールバックに限定します。Matchを更新するときは、`local/features/src/sandbox/comment-reload-match-history.md`へ時系列の観測を追加し、`comment-reload-api.md`の手順で取得済み資産をde-minifyして検証してください。
+もう一つの例外が`102_comment_reload_api.txt`です。公式ES Moduleのコメント再取得actionへ、ストアをclosureに閉じ込めた`reload()`だけを追加します。公式資産由来のコードをfeaturesへ複製せず、公開境界は版と再取得関数に限定します。API不在時は通常再読み込みを自動実行せず、一度だけ必要なハード再読み込み方法を通知します。Matchを更新するときは、`local/features/src/sandbox/comment-reload-match-history.md`へ時系列の観測を追加し、`comment-reload-api.md`の手順で取得済み資産をde-minifyして検証してください。
 
 1. `local/features/src/`へ機能を実装する
 2. 明示的な`start*()`関数を公開する
