@@ -9,6 +9,7 @@ playwright.config.ts
 *.bak
 .mp4_cache
 __pycache__/
+.tmp/
 
 # コードスペース
 .vs/
