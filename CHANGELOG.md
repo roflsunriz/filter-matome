@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#245] - 2026-08-20
+
 ### Added
 
 - 【comment-filter2・nlFilters】描画済みコメントを右クリックした公式Reactメニューから、コメントのコピー、Google検索、本文全体がHTTP(S) URLの場合の新規タブ表示、comment-filter2への全動画NGワード・NGユーザーID追加を行えるようにした。DOMや生成class名を探索せず公式コメントモデルを版付きAPIへ渡し、NG追加は重複防止・無効ルール再有効化後にコメントだけを再取得して即時反映する。
@@ -15,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【sandbox・nlFilters・docs】将来Matchを安全に汎化できるよう、公式資産ごとのURL、ハッシュ、サイズ、一致断片、意味上の安定点と変動点を時系列で残し、3版以上・対象1件・他資産0件・置換後構文・動的再取得を採用条件とする履歴文書を追加した。
 
 ### Changed
+
+- 【features・README】リリース番号を`245`へ更新し、latestバッジを`#245`へ変更した。
+- 【開発環境】隔離解析やテストが作成する一時ファイルを誤って追跡しないよう、`.tmp/`をGitの除外対象へ追加した。
 
 - 【matome-toolbox・CI・release】ツールの正式名称を`matome-toolbox`へ統一し、Mavenプロジェクトを
   `scripts/matome-toolbox`、生成JARを`matome-toolbox-0.1.0-SNAPSHOT.jar`へ改名した。
