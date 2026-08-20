@@ -1,0 +1,13 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+# 公式プレイヤーのReactコメントメニューへ、comment-filter2の版付き項目APIを接続する。
+# DOM、class名、表示言語のセレクターには依存せず、公式のコメントモデルをそのままAPIへ渡す。
+[Replace]
+Name = comment-filter2用公式コメントメニュー
+FullURL = https?:\/\/resource\.video\.nimg\.jp\/web\/scripts\/nvpc_next\/assets\/[^\/?]+\.js(?:\?.*)?$
+Match<
+(\(0,q\.jsxs\)\(f,\{css:\$\.raw\(\),onPress:s,children:\[`再生時間（`,)
+>
+Replace<
+...(()=>{try{let e=globalThis.FilterMatomeCommentMenuApi;if(e?.version!==1)return[];let n=e.getItems(t.comment);return Array.isArray(n)?n.map(n=>(0,q.jsx)(f,{css:{padding:`base`,fontSize:`s`,borderRadius:`s`,_hover:{backgroundColor:`layer.surfaceMediumEm`}},onPress:()=>e.execute(n.id,t.comment),children:n.label},n.id)):[]}catch{return[]}})(),$1
+>

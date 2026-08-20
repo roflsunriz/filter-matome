@@ -105,6 +105,7 @@ export abstract class UIManagerCore {
   protected readonly onFilterApplied: () => void;
   protected readonly isLocalVideoPlayerAvailable: () => boolean;
   protected readonly reloadOfficialComments: () => Promise<boolean>;
+  protected readonly initializationPromise: Promise<void>;
   protected storage: FilterStorage;
   protected filter: CommentFilter;
   protected jsonFilter: JsonCommentFilter;
@@ -140,7 +141,7 @@ export abstract class UIManagerCore {
     this.storage = new FilterStorage();
     this.filter = new CommentFilter();
     this.jsonFilter = new JsonCommentFilter();
-    void this.initialize();
+    this.initializationPromise = this.initialize();
   }
 
   /**

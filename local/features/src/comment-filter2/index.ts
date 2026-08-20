@@ -3,6 +3,11 @@ import { DataInterceptor } from "@/comment-filter2/proxy/data-interceptor";
 import { UIManager } from "@/comment-filter2/components/ui-manager";
 import { VideoPlayerBridge } from "@/comment-filter2/integrations/video-player-bridge";
 import { OfficialPlayerBridge } from "@/comment-filter2/integrations/official-player-bridge";
+import {
+  OfficialCommentMenu,
+  type ContextMenuNgApplyResult,
+  type OfficialCommentMenuApi,
+} from "@/comment-filter2/integrations/official-comment-menu";
 import { CONSTANTS } from "@/comment-filter2/utils/constants";
 import { VideoPlayerBridgeStatus } from "@/types/video-player-bridge-types";
 
@@ -11,6 +16,7 @@ export class CommentFilter2 {
   private uiManager: UIManager;
   private videoPlayerBridge: VideoPlayerBridge;
   private officialPlayerBridge: OfficialPlayerBridge;
+  private officialCommentMenu: OfficialCommentMenu;
   private isInitialized: boolean = false;
   private keyboardShortcutEnabled: boolean = true;
 
@@ -23,6 +29,28 @@ export class CommentFilter2 {
       () => this.videoPlayerBridge.getStatus().isVideoPlayerDetected,
       () => this.officialPlayerBridge.reloadComments(),
     );
+    this.officialCommentMenu = new OfficialCommentMenu({
+      writeClipboard: async (text) => {
+        if (typeof navigator.clipboard?.writeText !== "function") {
+          throw new Error("クリップボードAPIを利用できません");
+        }
+        await navigator.clipboard.writeText(text);
+      },
+      openWindow: (url) => {
+        window.open(url, "_blank", "noopener,noreferrer");
+      },
+      addNgWord: (word) =>
+        this.addContextMenuRule(() =>
+          this.uiManager.addContextMenuNgWord(word),
+        ),
+      addNgUser: (userId) =>
+        this.addContextMenuRule(() =>
+          this.uiManager.addContextMenuNgUser(userId),
+        ),
+      notify: (level, message) => {
+        window.toastr?.[level]?.(message);
+      },
+    });
 
     void this.initialize();
   }
@@ -196,6 +224,31 @@ export class CommentFilter2 {
     return this.isInitialized;
   }
 
+  public getOfficialCommentMenuApi(): OfficialCommentMenuApi {
+    return this.officialCommentMenu;
+  }
+
+  private async addContextMenuRule(
+    addRule: () => Promise<ContextMenuNgApplyResult["status"]>,
+  ): Promise<ContextMenuNgApplyResult> {
+    const status = await addRule();
+    if (status === "already-exists") {
+      return { status, reapplied: true };
+    }
+    try {
+      return {
+        status,
+        reapplied: await this.officialPlayerBridge.reloadComments(),
+      };
+    } catch (error) {
+      window.logger?.error(
+        "[CommentFilter2] Failed to reapply a context-menu NG rule:",
+        error,
+      );
+      return { status, reapplied: false };
+    }
+  }
+
   /**
    * CommentFilter2を完全に無効化
    */
@@ -204,6 +257,10 @@ export class CommentFilter2 {
       this.dataInterceptor.disable();
       this.uiManager.destroy();
       this.videoPlayerBridge.destroy();
+
+      if (window.FilterMatomeCommentMenuApi === this.officialCommentMenu) {
+        delete window.FilterMatomeCommentMenuApi;
+      }
 
       this.isInitialized = false;
       window.logger?.info("[CommentFilter2] Destroyed successfully");
@@ -262,6 +319,8 @@ export function startCommentFilter2(): CommentFilter2 {
   try {
     commentFilter2Instance = new CommentFilter2();
     window.CommentFilter2Instance = commentFilter2Instance;
+    window.FilterMatomeCommentMenuApi =
+      commentFilter2Instance.getOfficialCommentMenuApi();
 
     // 初期化完了イベントを送信
     window.dispatchEvent(new CustomEvent("CommentFilter2Ready"));

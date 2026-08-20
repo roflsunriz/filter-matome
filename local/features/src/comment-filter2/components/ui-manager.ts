@@ -1,6 +1,12 @@
 // UIマネジメント部 - UIの制御とイベント処理
 import { CSS_CLASSES, UI_ELEMENTS } from "@/comment-filter2/templates/main-ui";
 import {
+  type ContextMenuRuleAddStatus,
+  createContextMenuNgUserRule,
+  createContextMenuNgWordRule,
+  upsertContextMenuRule,
+} from "@/comment-filter2/integrations/context-menu-rules";
+import {
   parseJsonl,
   stringifyJsonl,
 } from "@/comment-filter2/utils/jsonl-parser";
@@ -17,6 +23,50 @@ import { UIManagerInteractions } from "./ui-manager-interactions";
 
 /** 正規表現分析・JSONルール編集を含む公開UI。 */
 export class UIManager extends UIManagerInteractions {
+  private contextMenuRuleWriteQueue: Promise<void> = Promise.resolve();
+
+  public addContextMenuNgWord(
+    commentBody: string,
+  ): Promise<ContextMenuRuleAddStatus> {
+    const rule = createContextMenuNgWordRule(commentBody);
+    if (!rule) {
+      return Promise.reject(new Error("コメント本文が空です"));
+    }
+    return this.enqueueContextMenuRule(rule);
+  }
+
+  public addContextMenuNgUser(
+    commentUserId: string,
+  ): Promise<ContextMenuRuleAddStatus> {
+    const rule = createContextMenuNgUserRule(commentUserId);
+    if (!rule) {
+      return Promise.reject(new Error("コメントのユーザーIDが空です"));
+    }
+    return this.enqueueContextMenuRule(rule);
+  }
+
+  private enqueueContextMenuRule(
+    rule: NgRuleJson,
+  ): Promise<ContextMenuRuleAddStatus> {
+    const operation = this.contextMenuRuleWriteQueue.then(async () => {
+      await this.initializationPromise;
+      const currentRules = await this.storage.getJsonRules();
+      const result = upsertContextMenuRule(currentRules, rule);
+      if (result.status !== "already-exists") {
+        await this.storage.saveJsonRules(result.rules);
+        if (this.isUICreated) {
+          await this.refreshRulesList();
+        }
+      }
+      return result.status;
+    });
+    this.contextMenuRuleWriteQueue = operation.then(
+      () => undefined,
+      () => undefined,
+    );
+    return operation;
+  }
+
   /** 入力中の正規表現を任意のテスト文字列へ適用して一致箇所を表示する */
   protected updateRegexPreview(): void {
     if (!this.container) return;

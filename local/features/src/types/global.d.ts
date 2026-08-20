@@ -33,6 +33,11 @@ declare global {
       version: 1;
       reload: () => Promise<unknown>;
     };
+    FilterMatomeCommentMenuApi?: {
+      version: 1;
+      getItems: (comment: unknown) => Array<{ id: string; label: string }>;
+      execute: (action: unknown, comment: unknown) => Promise<boolean>;
+    };
     NicoCache_nl: NicoCache_nlInterface;
     commonHelper: {
       // 既存の関数

@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- 【comment-filter2・nlFilters】描画済みコメントを右クリックした公式Reactメニューから、コメントのコピー、Google検索、本文全体がHTTP(S) URLの場合の新規タブ表示、comment-filter2への全動画NGワード・NGユーザーID追加を行えるようにした。DOMや生成class名を探索せず公式コメントモデルを版付きAPIへ渡し、NG追加は重複防止・無効ルール再有効化後にコメントだけを再取得して即時反映する。
+- 【sandbox・tests】公式メニュー資産の更新へ追従できるよう、React children生成点へのMatchが全captureで一意であること、置換後ES Moduleの構文、既存公式NG操作、版付きメニューAPI接続を検証する解析コマンド、観測履歴、単体テストを追加した。
 - 【comment-filter2・nlFilters】ルール変更後も視聴ページを維持したまま公式コメントだけを再取得して反映できるよう、公式コメントストアの再取得actionを版付きの最小APIとして公開し、comment-filter2から呼び出す経路を追加した。公式資産が更新されAPIを利用できない場合は自動再読み込みせず、一度だけ必要なハード再読み込み方法を通知する。
 - 【sandbox・tests】公式資産の更新へ安全に追従できるよう、取得済みES Moduleを実行せずメモリー上でde-minifyし、コメント再取得action、追加取得条件、nlFilterのMatchを検証する解析コマンドと回帰テストを追加した。Cookieのない一時BrowserContextで現行Watchページを開き、コメント再取得のHTTP応答、comment-filter2への再入力、ページ全体が再読み込みされないことを検証する隔離実験も追加した。
 - 【sandbox・nlFilters・docs】将来Matchを安全に汎化できるよう、公式資産ごとのURL、ハッシュ、サイズ、一致断片、意味上の安定点と変動点を時系列で残し、3版以上・対象1件・他資産0件・置換後構文・動的再取得を採用条件とする履歴文書を追加した。

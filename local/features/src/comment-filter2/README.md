@@ -15,6 +15,8 @@
 - `components/ui-manager-core.ts`, `components/ui-manager-interactions.ts`, `components/ui-manager.ts`: UI生成と基本状態、動的フォーム操作、正規表現分析・JSONルール編集。
 - `integrations/video-player-bridge.ts`: フィルター済みコメントをvideo-playerへ同期する境界。
 - `integrations/official-player-bridge.ts`: `102_comment_reload_api.txt`が公開する版付きAPIを検証し、公式コメント再取得を多重実行せず呼ぶ境界。
+- `integrations/official-comment-menu.ts`: 公式コメントモデルから右クリック項目を生成し、コピー、検索、URL表示、comment-filter2のNG追加を実行する版付き境界。
+- `integrations/context-menu-rules.ts`: コメント本文を安全なリテラルNGへ変換し、NGユーザーを含む重複防止・再有効化を行う純粋処理。
 - `templates/`, `styles/`: Shadow DOM用テンプレートとスタイル。
 - `utils/`: JSON/JSONL/CSV変換、旧形式移行、サニタイズ、正規表現診断、ログ。
 
@@ -25,6 +27,7 @@
 3. JSONフィルターがスレッドごとにルールを適用する。大量データはWorkerへ分割し、失敗時はメインスレッドへフォールバックする。
 4. フィルター済みデータをグローバルストアへ戻し、`VideoPlayerBridge` が差分を確認してvideo-playerへ通知する。
 5. 公式プレイヤーで「今すぐ適用」を押すと、`OfficialPlayerBridge`が公式コメントストアの再取得actionを呼ぶ。APIの初期化中は短時間待機し、再取得レスポンスを`DataInterceptor`が新しいルールで処理するため、ページ全体を再読み込みせず公式描画へ反映される。
+6. 描画済みコメントの右クリックでは、`103_official_comment_menu.txt`が公式Reactメニューのコメントモデルを`OfficialCommentMenu`へ渡す。DOM探索を介さず、コピー、Google検索、HTTP(S) URLの新規タブ表示、全動画対象のNGワード・NGユーザーID追加を行う。NG追加後は公式コメントだけを再取得して即時反映する。
 
 更新前から開いているページや未変換の公式資産がHTTPキャッシュに残るページでは、再取得APIを後から追加できません。この場合は通常再読み込みを自動実行せず、更新後の資産を取得するため一度だけ`Ctrl+F5`が必要なことを通知します。
 
@@ -49,6 +52,7 @@
 - `cf2:smid-changed`: 対象動画IDの変更。
 - `commentFilter2Update`: video-playerへ送る更新イベント。
 - `window.FilterMatomeCommentApi`: nlFilterが公式資産内で公開する版付き再取得API。comment-filter2は`version: 1`と`reload()`だけを受理する。
+- `window.FilterMatomeCommentMenuApi`: comment-filter2が公開し、nlFilterで接続した公式Reactメニューだけが利用する版付き項目・操作API。
 
 イベント名やデータ型を変更するときは `src/types/video-player-bridge-types.ts` とvideo-player側の受信処理を同時に更新してください。
 
@@ -68,6 +72,8 @@
 - `tests/comment-data-bypass.test.ts`: フィルターを迂回する内部取得契約。
 - `tests/official-player-bridge.test.ts`: 版検証、多重再取得の集約、失敗後の再試行。
 - `tests/comment-reload-nlfilter.test.ts`: 公式CDNのURL条件、minify済みMatch、版付きAPI注入の契約。
+- `tests/comment-context-menu-nlfilter.test.ts`: 公式Reactメニュー生成点、版付きAPI接続、DOM非依存の契約。
+- `tests/comment-context-menu-rules.test.ts`, `tests/official-comment-menu.test.ts`: リテラルNG、重複防止、URL制限、全メニュー操作。
 
 ```powershell
 cd local/features

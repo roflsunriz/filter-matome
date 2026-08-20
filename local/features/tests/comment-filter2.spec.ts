@@ -335,6 +335,65 @@ test("公式プレイヤーではコメント再取得APIでリロードせず�
   expect(page.url()).toBe(urlBeforeApply);
 });
 
+test("公式右クリックメニューからNGワードとNGユーザーを保存して即時反映する", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    delete window.videoPlayer;
+    window.CommentFilter2Test.officialReloadCount = 0;
+    window.FilterMatomeCommentApi = {
+      version: 1,
+      reload: async () => {
+        window.CommentFilter2Test.officialReloadCount += 1;
+      },
+    };
+  });
+
+  const result = await page.evaluate(async () => {
+    const api = window.FilterMatomeCommentMenuApi;
+    if (!api) throw new Error("公式コメントメニューAPIがありません");
+    const comment = { body: "右クリック.*NG", userId: "nvc:menu-user" };
+    const itemIds = api.getItems(comment).map((item) => item.id);
+    const wordAdded = await api.execute("add-ng-word", comment);
+    const duplicateIgnored = await api.execute("add-ng-word", comment);
+    const userAdded = await api.execute("add-ng-user", comment);
+    return { itemIds, wordAdded, duplicateIgnored, userAdded };
+  });
+
+  expect(result).toEqual({
+    itemIds: ["copy-comment", "google-search", "add-ng-word", "add-ng-user"],
+    wordAdded: true,
+    duplicateIgnored: true,
+    userAdded: true,
+  });
+  await expect
+    .poll(() =>
+      page.evaluate(() => window.CommentFilter2Test.officialReloadCount),
+    )
+    .toBe(2);
+  const rules = await page.evaluate(() =>
+    window.CommentFilter2Test.readStoredJsonRules(),
+  );
+  expect(rules).toHaveLength(4);
+  expect(rules).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        pattern: "右クリック\\.\\*NG",
+        flags: "gi",
+        action: { type: "hide" },
+        smid: ["ALL"],
+        enabled: true,
+      }),
+      expect.objectContaining({
+        userId: "nvc:menu-user",
+        action: { type: "hide" },
+        smid: ["ALL"],
+        enabled: true,
+      }),
+    ]),
+  );
+});
+
 test("正規表現の一致、未一致、入力エラーをリアルタイム表示する", async ({
   page,
 }) => {

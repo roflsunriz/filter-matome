@@ -15,6 +15,7 @@
     "sandbox:capture-official": "bun scripts/sandbox/capture-official-watch-bundle.ts",
     "sandbox:analyze-official": "bun scripts/sandbox/analyze-official-watch-bundle.ts",
     "sandbox:analyze-comment-reload": "bun scripts/sandbox/analyze-comment-reload-api.ts",
+    "sandbox:analyze-comment-menu": "bun scripts/sandbox/analyze-comment-context-menu.ts",
     "sandbox:observe-membership": "bun scripts/sandbox/observe-membership-context.ts",
     "sandbox:observe-quality": "bun scripts/sandbox/observe-quality-delivery.ts",
     "sandbox:observe-seek-preview": "bun scripts/sandbox/observe-seek-preview.ts",

@@ -1,5 +1,9 @@
 import { UIManager } from "@/comment-filter2/components/ui-manager";
 import { OfficialPlayerBridge } from "@/comment-filter2/integrations/official-player-bridge";
+import {
+  OfficialCommentMenu,
+  type ContextMenuNgApplyResult,
+} from "@/comment-filter2/integrations/official-comment-menu";
 import { FilterStorage } from "@/comment-filter2/storage/indexed-db";
 import type { NgRuleJson } from "@/types/filter-types";
 
@@ -12,6 +16,7 @@ declare global {
       officialReloadCount: number;
       toastrErrors: string[];
       readStoredClearExistingCommands: () => Promise<boolean | undefined>;
+      readStoredJsonRules: () => Promise<NgRuleJson[]>;
     };
   }
 }
@@ -139,6 +144,29 @@ async function seedAndStart(): Promise<void> {
     () => Boolean(window.videoPlayer),
     () => officialPlayerBridge.reloadComments(),
   );
+  const addContextMenuRule = async (
+    addRule: () => Promise<ContextMenuNgApplyResult["status"]>,
+  ): Promise<ContextMenuNgApplyResult> => {
+    const status = await addRule();
+    return {
+      status,
+      reapplied:
+        status === "already-exists"
+          ? true
+          : await officialPlayerBridge.reloadComments(),
+    };
+  };
+  window.FilterMatomeCommentMenuApi = new OfficialCommentMenu({
+    writeClipboard: async () => undefined,
+    openWindow: () => undefined,
+    addNgWord: (word) =>
+      addContextMenuRule(() => manager.addContextMenuNgWord(word)),
+    addNgUser: (userId) =>
+      addContextMenuRule(() => manager.addContextMenuNgUser(userId)),
+    notify: (level, message) => {
+      window.toastr[level](message);
+    },
+  });
   // UIManagerのコンストラクター内初期化（IndexedDB接続・設定読込）の完了を待つ。
   await new Promise((resolve) => setTimeout(resolve, 50));
   await manager.show();
@@ -165,6 +193,26 @@ async function readStoredClearExistingCommands(): Promise<boolean | undefined> {
             ? value.clearExistingCommands
             : undefined,
         );
+      };
+    };
+  });
+}
+
+async function readStoredJsonRules(): Promise<NgRuleJson[]> {
+  return new Promise((resolve, reject) => {
+    const openRequest = indexedDB.open("CommentFilter2DB");
+    openRequest.onerror = () => reject(openRequest.error);
+    openRequest.onsuccess = () => {
+      const db = openRequest.result;
+      const transaction = db.transaction("json_rules", "readonly");
+      const request = transaction.objectStore("json_rules").getAll();
+      request.onerror = () => {
+        db.close();
+        reject(request.error);
+      };
+      request.onsuccess = () => {
+        db.close();
+        resolve(request.result as NgRuleJson[]);
       };
     };
   });
@@ -251,5 +299,6 @@ Object.assign(window, {
     officialReloadCount: 0,
     toastrErrors: [],
     readStoredClearExistingCommands,
+    readStoredJsonRules,
   },
 });

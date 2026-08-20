@@ -8,6 +8,7 @@
 - `../../scripts/sandbox/capture-official-watch-bundle.ts`: 起動済みChromeのraw CDPへ接続し、調査専用タブで読み込まれた公式JavaScriptと同一CDNのES Module依存関係を取得します。Cookie、リクエストヘッダー、HTMLは保存しません。
 - `../../scripts/sandbox/analyze-official-watch-bundle.ts`: 取得物を実行せず、機能語と参照ドメインを静的集計します。
 - `../../scripts/sandbox/analyze-comment-reload-api.ts`: 最新captureをメモリー上でde-minifyし、公式コメント再取得actionと`102_comment_reload_api.txt`の接続を検証します。
+- `../../scripts/sandbox/analyze-comment-context-menu.ts`: 最新captureをメモリー上でde-minifyし、公式右クリックメニューのReact生成点と`103_official_comment_menu.txt`の接続を検証します。
 - `../../scripts/sandbox/observe-membership-context.ts`: ログイン済みセッションと未ログインの一時BrowserContextを比較し、個人識別子を保存せず会員区分と動画権利フラグだけを記録します。
 - `../../scripts/sandbox/observe-quality-delivery.ts`: ログイン済みセッションの一時タブで、個人識別子や認証情報を保存せず、画質・音質候補、access-rightsの組、HLS manifest、映像・音声セグメント分離を観測します。
 - `../../scripts/sandbox/observe-seek-preview.ts`: 一時タブの公式シークバーへraw CDPでホバーし、query stringや個人識別子を保存せずStoryboardの取得経路、数値メタデータ、表示差を記録します。
@@ -19,6 +20,8 @@
 - `comment-post-api.md`: 2026-07-19に取得した公式バンドルから確認したコメント投稿契約です。
 - `comment-reload-api.md`: 2026-07-23に取得した公式バンドルから確認した、公式ストアと描画を更新するコメント再取得契約です。
 - `comment-reload-match-history.md`: 公式資産ごとのMatch、ハッシュ、意味上の安定点、変動点、汎化候補と採用条件を時系列で記録します。
+- `comment-context-menu.md`: 描画中コメントの右クリック座標から公式コメントモデルとReactメニューへ至る契約です。
+- `comment-context-menu-match-history.md`: 公式メニュー資産のMatch、ハッシュ、一致数、意味上の境界を時系列で記録します。
 - `feature-differentiation.md`: raw CDP captureと外部通信遮断下の静的集計から、公式機能とfilter-matomeの差別化軸を整理した調査結果です。
 - `membership-differentiation.md`: 未ログイン・一般・プレミアムの機能差と、チャンネル会員・PPVなど別軸の動画権利を整理した調査結果です。
 - `quality-audio-delivery.md`: 画質・音質候補、会員別利用可否、access-rights、分離HLS配信、自動・手動切り替え、selected・loading・playing状態を整理した調査結果です。
@@ -45,6 +48,7 @@ bun run sandbox:verify-offline
 bun run sandbox:verify-comment-reload
 bun run sandbox:analyze-official
 bun run sandbox:analyze-comment-reload
+bun run sandbox:analyze-comment-menu
 ```
 
 別のCDP endpointや動画を使う場合は、スクリプトへ直接引数を渡します。

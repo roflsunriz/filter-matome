@@ -21,6 +21,21 @@ bunx playwright test tests/comment-filter2.spec.ts
 
 解析が失敗した場合は、最新資産をde-minifyして`POST /v1/threads`の再実行、直前の追加取得条件、成功後の公式ストア更新と描画更新を追跡します。`nlFilters/102_comment_reload_api.txt`は確認できたactionへだけ接続し、ストア本体やWatchデータをグローバルへ公開しません。新しいMatchで解析コマンドとテストが成功しない限り置き換えず、旧Matchが外れた環境では通常再読み込みを自動実行せず、一度だけ必要なハード再読み込み方法を通知します。変更前へ戻す場合は`102_comment_reload_api.txt`だけを以前の版へ戻し、ブラウザーキャッシュを消してWatchページをハード再読み込みします。
 
+## 公式コメント右クリックメニューの追従確認
+
+右クリックメニューからcomment-filter2項目だけが消えた場合は、`local/features/src/sandbox/comment-context-menu.md`に従い、右クリック座標から`getCommentAtOffset()`で公式コメントモデルを取得し、`ExpandedComment`がReact操作項目を生成する経路を再確認します。DOMノード、生成class名、表示文言のセレクターへ切り替えてはいけません。
+
+Matchを変更する前に`comment-context-menu-match-history.md`へ公式原本のURL、SHA-256、サイズ、Matchと一致数、意味上の根拠を追記します。公式minify名の変化を含む3版以上で対象1回・他資産0回を確認するまでは、識別子を無条件にワイルドカード化しません。
+
+```powershell
+cd local/features
+bun run sandbox:analyze-comment-menu
+bun test tests/comment-context-menu-nlfilter.test.ts tests/comment-context-menu-rules.test.ts tests/official-comment-menu.test.ts
+bunx playwright test tests/comment-filter2.spec.ts
+```
+
+解析は置換後ES Moduleの構文、版付き`getItems/execute`接続、既存の公式NG操作が残ることまで確認します。Matchが外れた場合は公式メニューが無改変で表示され、comment-filter2項目だけが追加されません。変更前へ戻す場合は`103_official_comment_menu.txt`だけを以前の版へ戻し、ブラウザーキャッシュを消してWatchページをハード再読み込みします。
+
 ## nlMovieFetcherの追従確認
 
 ニコニコ動画の配信仕様変更へ追従するときは、`local/features/src/api-info/nl-movie-fetcher-api.md` のraw CDP手順で、Watch API、access-rights API、映像・音声分離playlistを再観測します。Java拡張は対象NicoCache_nlのJARをclasspathにして`nlMovieFetcher.java`と`FilterMatomeSmartFetcher.java`を同時にコンパイルし、生成物が同名の2クラスだけであることを確認してください。URL許可や取得処理を変更した場合は署名URLの取得だけで終了せず、公開動画をsmartFetcherから実行し、履歴が`completed`、nlMovieFetcherの`completed`と`total`が一致、`bytesTransferred`が0より大きいことまで確認します。署名クエリー、Cookie、アクセス権キーは検証記録へ残しません。TypeScript側は通常の `bun run verify` でカードDOM、API交渉、スケジューラーSPAを検証します。
