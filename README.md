@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/roflsunriz/filter-matome.svg)](https://github.com/roflsunriz/filter-matome/releases)
-[![Latest Version](https://img.shields.io/badge/latest-%23246-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
+[![Latest Version](https://img.shields.io/badge/latest-%23247-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
 
 **filter-matome**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
 
@@ -29,6 +29,7 @@
 - **マルチリンクビデオコントローラー**: 再生速度調整、フレーム単位シーク、音量微調整、コメントヒートマップ、サムネイルフィルター、原宿風Watch表示、モジュール管理
 
 ### 🛠️ 拡張機能
+- **公式通知の一括既読**: CommonHeaderのベル内から、通知先ページを開かずに現在取得できる全未読通知を一度に既読化
 - **背景画像設定**: 視聴ページの背景をカスタマイズ
 - **プレミアム勧誘非表示**: 煩わしい勧誘要素を完全除去
 - **コメントヒートマップ**: 盛り上がり箇所を視覚化

@@ -27,6 +27,7 @@ bun run benchmark:comment-filter
 
 ## テストの分担
 
+- `common-notification-read-all.spec.ts`: 公式CommonHeader相当の未読・ページングfixture、一括既読ボタンの再挿入、全成功、部分失敗と再試行。
 - `comment-filter2.spec.ts`: 実IndexedDBを使う設定UI、ルールCRUD、即時適用、正規表現プレビュー。
 - `mlink-video-controller.spec.ts`: パネル、各タブ、モジュール設定、インポート・正規化、主要UI操作。
 - `mlink-video-controller-lifecycle.spec.ts`: 設定正規化、背景画像CRUD、原宿UIの生成・操作・破棄。

@@ -1,0 +1,100 @@
+{
+  "fixtureSource": {
+    "commonHeaderVersion": "3.13.0",
+    "notificationListAsset": "index-20260818_130906_70e9320.js",
+    "observedAt": "2026-08-23",
+    "note": "公式CommonHeaderと通知一覧資産をde-minifyして確認した /v1/box の notifications・nextUrl 契約を、個人情報を含まない値で再構成したfixture"
+  },
+  "pages": [
+    {
+      "meta": {
+        "status": 200
+      },
+      "data": {
+        "importantUnreadCount": 1,
+        "notifications": [
+          {
+            "id": "notice-unread-1",
+            "read": false,
+            "createdAt": "2026-08-23T00:00:00+09:00",
+            "icon": "https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/defaults/blank.jpg",
+            "title": "匿名化した未読通知1",
+            "content": null,
+            "onClick": {
+              "pc": "https://www.nicovideo.jp/watch/sm9",
+              "sp": "https://sp.nicovideo.jp/watch/sm9",
+              "internalLink": true
+            }
+          },
+          {
+            "id": "notice-read",
+            "read": true,
+            "createdAt": "2026-08-22T00:00:00+09:00",
+            "icon": "https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/defaults/blank.jpg",
+            "title": "匿名化した既読通知",
+            "content": null,
+            "onClick": {
+              "pc": "https://www.nicovideo.jp/",
+              "sp": "https://sp.nicovideo.jp/",
+              "internalLink": true
+            }
+          },
+          {
+            "id": "notice-unread-2",
+            "read": false,
+            "createdAt": "2026-08-21T00:00:00+09:00",
+            "icon": "https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/defaults/blank.jpg",
+            "title": "匿名化した未読通知2",
+            "content": {
+              "icon": null,
+              "title": "匿名化した通知本文"
+            },
+            "onClick": {
+              "pc": "https://www.nicovideo.jp/my/fav/user",
+              "sp": "https://sp.nicovideo.jp/my/fav/user",
+              "internalLink": true
+            }
+          }
+        ],
+        "nextUrl": "https://api.oshirasebox.nicovideo.jp/v1/box?offset=25&importantOnly=false"
+      }
+    },
+    {
+      "meta": {
+        "status": 200
+      },
+      "data": {
+        "importantUnreadCount": 0,
+        "notifications": [
+          {
+            "id": "notice-unread-2",
+            "read": false,
+            "createdAt": "2026-08-21T00:00:00+09:00",
+            "icon": "https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/defaults/blank.jpg",
+            "title": "ページ境界で重複した未読通知",
+            "content": null,
+            "onClick": {
+              "pc": "https://www.nicovideo.jp/",
+              "sp": "https://sp.nicovideo.jp/",
+              "internalLink": true
+            }
+          },
+          {
+            "id": 1004,
+            "read": false,
+            "createdAt": "2026-08-20T00:00:00+09:00",
+            "icon": "https://secure-dcdn.cdn.nimg.jp/nicoaccount/usericon/defaults/blank.jpg",
+            "title": "数値IDの匿名化した未読通知",
+            "content": null,
+            "onClick": {
+              "pc": "https://www.nicovideo.jp/",
+              "sp": "https://sp.nicovideo.jp/",
+              "internalLink": true
+            }
+          }
+        ],
+        "nextUrl": null
+      }
+    }
+  ]
+}

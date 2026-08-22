@@ -26,7 +26,7 @@
     "sandbox:verify-comment-reload": "bun scripts/sandbox/verify-current-comment-reload.ts",
     "sandbox:type-check": "tsc --noEmit -p scripts/sandbox/tsconfig.json",
     "test:unit": "bun scripts/test-unit.ts",
-    "test:e2e": "playwright test tests/mlink-video-controller.spec.ts tests/mlink-video-controller-links.spec.ts tests/mlink-video-controller-lifecycle.spec.ts tests/watch-history.spec.ts tests/watch-tracker.spec.ts tests/mylist2.spec.ts tests/comment-filter2.spec.ts tests/movie-info.spec.ts tests/video-player.spec.ts tests/movie-fetcher.spec.ts tests/smart-fetcher.spec.ts",
+    "test:e2e": "playwright test tests/common-notification-read-all.spec.ts tests/mlink-video-controller.spec.ts tests/mlink-video-controller-links.spec.ts tests/mlink-video-controller-lifecycle.spec.ts tests/watch-history.spec.ts tests/watch-tracker.spec.ts tests/mylist2.spec.ts tests/comment-filter2.spec.ts tests/movie-info.spec.ts tests/video-player.spec.ts tests/movie-fetcher.spec.ts tests/smart-fetcher.spec.ts",
     "test": "bun run test:unit && bun run test:e2e",
     "error-check": "bun run type-check && bun run lint",
     "verify": "bun run format:check && bun run lint && bun run type-check && bun run test && bun run build"
@@ -40,7 +40,7 @@
     "typescript": "6.0.2",
     "typescript-eslint": "8.63.0"
   },
-  "version": "246",
+  "version": "247",
   "description": "Enhancing scripts for Niconico",
   "main": "index.js",
   "directories": {

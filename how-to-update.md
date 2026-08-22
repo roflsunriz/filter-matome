@@ -5,6 +5,18 @@
 5. git tag "#(version)"
 6. git push origin "#(version)" の操作でGithub Actionsが自動でリリースを作成する。タグは`#238`、配布アーカイブはURLフラグメントとの衝突を避けた`filter-matome-238.7z`のように、ファイル名側だけ`#`を除く。
 
+## 公式CommonHeader通知APIの追従確認
+
+CommonHeaderのベル内に`すべて既読`ボタンが出ない、一覧取得や既読化が失敗する、または公式通知一覧の続きが残る場合は、`local/features/src/sandbox/common-header-notification-read-all.md`の公開資産、URL、サイズ、SHA-256を更新し、両資産をメモリー上でde-minifyして`GET /v1/box`、`data.nextUrl`、`PUT /v1/notifications/<通知ID>/read`、必要ヘッダーを再確認する。`POST api.feed.nicovideo.jp/v1/read`は別のフォロー新着タイムライン用なので、ベル通知へ流用しない。
+
+```powershell
+cd local/features
+bun test tests/common-notification-read-all.test.ts
+bunx playwright test tests/common-notification-read-all.spec.ts
+```
+
+fixtureは確認できた必要フィールドだけを匿名値で更新し、Cookie、通知本文、ユーザーIDを保存しない。自動テストから実サービスへPUTしない。APIのorigin、path、レスポンス型、ページングが確認できない場合は許可条件を緩めず、全ページ検証前に一部通知だけを既読化しない。ロールバックは`src/common/index.ts`から一括既読起動を外し、`notification-read-all.ts`と専用テスト・fixtureを前のリリースへ戻して全体ビルドを再生成する。
+
 ## 公式コメント再取得APIの追従確認
 
 ニコニコ動画の公式資産更新でcomment-filter2の「今すぐ適用」がページ再読み込み確認へ戻った場合は、`local/features/src/sandbox/README.md`の手順で公開視聴ページ資産を再取得します。Cookie、認証ヘッダー、HTMLは保存せず、取得済みES Moduleを実行しないでください。

@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#247] - 2026-08-23
+
+### Added
+
+- 【common・CommonHeader】公式ベルの通知先ページを個別に開かず全未読通知を処理できるよう、通知パネルの設定リンク横へ`すべて既読`ボタンを追加した。公式一覧の`nextUrl`を最後まで検証してから未読IDだけを重複排除・制限付き並列で既読化し、部分失敗は件数表示と再試行を可能にした。
+- 【sandbox・tests】CommonHeader 3.12.0／3.13.0と現行通知一覧アプリをde-minifyして確認したベル・ページング・個別既読契約を記録し、匿名化した未読fixtureで全ページ取得、数値ID、重複、外部URL拒否、PUT並列上限、部分失敗、DOM再挿入、再試行を検証する単体・Playwrightテストを追加した。
+
+### Changed
+
+- 【features・README】リリース番号を`247`へ更新し、latestバッジを`#247`へ変更した。
+
 ## [#246] - 2026-08-23
 
 ### Changed

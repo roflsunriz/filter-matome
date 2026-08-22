@@ -22,6 +22,7 @@
 - `comment-reload-match-history.md`: 公式資産ごとのMatch、ハッシュ、意味上の安定点、変動点、汎化候補と採用条件を時系列で記録します。
 - `comment-context-menu.md`: 描画中コメントの右クリック座標から公式コメントモデルとReactメニューへ至る契約です。
 - `comment-context-menu-match-history.md`: 公式メニュー資産のMatch、ハッシュ、一致数、意味上の境界を時系列で記録します。
+- `common-header-notification-read-all.md`: CommonHeaderと通知一覧アプリをde-minifyして確認した、ベル表示、全ページ取得、個別既読APIの契約と一括既読実装の安全境界です。
 - `feature-differentiation.md`: raw CDP captureと外部通信遮断下の静的集計から、公式機能とfilter-matomeの差別化軸を整理した調査結果です。
 - `membership-differentiation.md`: 未ログイン・一般・プレミアムの機能差と、チャンネル会員・PPVなど別軸の動画権利を整理した調査結果です。
 - `quality-audio-delivery.md`: 画質・音質候補、会員別利用可否、access-rights、分離HLS配信、自動・手動切り替え、selected・loading・playing状態を整理した調査結果です。
