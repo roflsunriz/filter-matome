@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#246] - 2026-08-23
+
 ### Changed
 
+- 【features・README】リリース番号を`246`へ更新し、latestバッジを`#246`へ変更した。
 - 【comment-filter2】非表示ルールに一致したコメントを空本文と`invisible`コマンドへ変換せずレスポンスからエントリごと除去し、未取得分を含む累計を壊さないよう、スレッド件数と同一スレッドIDの全体件数から実際の除去数だけを差し引く方式へ変更した。
 
 ## [#245.2] - 2026-08-20
