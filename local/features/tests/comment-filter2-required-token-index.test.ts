@@ -260,8 +260,6 @@ describe("必須トークン候補索引", () => {
 
   test("Unicode ignoreCase の純粋リテラルを誤って候補除外しない", () => {
     expect(new RegExp("s", "iu").test("ſ")).toBeTrue();
-    expect(filterBodies([hideRule("s", "iu")], ["ſ"])).toEqual([
-      { body: "", commands: ["invisible"] },
-    ]);
+    expect(filterBodies([hideRule("s", "iu")], ["ſ"])).toEqual([]);
   });
 });

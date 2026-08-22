@@ -68,11 +68,10 @@ describe("comment-filter2 nicoru exclusion", () => {
       regexCache: new Map(),
     });
 
-    expect(result.comments).toHaveLength(2);
+    expect(result.comments).toHaveLength(1);
     expect(result.comments[0].body).toBe("protected");
     expect(result.comments[0].commands).not.toContain("invisible");
-    expect(result.comments[1].body).toBe("");
-    expect(result.comments[1].commands).toContain("invisible");
+    expect(result.comments.some((comment) => comment.id === "2")).toBe(false);
   });
 
   test("unspecified action treats include mode as a matching exemption", () => {
@@ -111,10 +110,10 @@ describe("comment-filter2 nicoru exclusion", () => {
       regexCache: new Map(),
     });
 
+    expect(result.comments).toHaveLength(1);
     expect(result.comments[0].body).toBe("protected");
     expect(result.comments[0].commands).not.toContain("invisible");
-    expect(result.comments[1].body).toBe("");
-    expect(result.comments[1].commands).toContain("invisible");
+    expect(result.comments.some((comment) => comment.id === "2")).toBe(false);
   });
 
   test("action rules are not evaluated during the exemption pass", () => {
@@ -213,8 +212,7 @@ describe("comment-filter2 nicoru exclusion", () => {
       regexCache: new Map(),
     });
 
-    expect(result.comments[0].commands).toContain("invisible");
-    expect(result.comments[1].commands).toContain("invisible");
+    expect(result.comments).toEqual([]);
   });
 
   test("log event collection can be disabled independently of filtering", () => {
@@ -241,7 +239,7 @@ describe("comment-filter2 nicoru exclusion", () => {
       collectLogs: false,
     });
 
-    expect(result.comments[0].commands).toContain("invisible");
+    expect(result.comments).toEqual([]);
     expect(result.logs).toEqual([]);
   });
 });

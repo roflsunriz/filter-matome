@@ -24,7 +24,7 @@
 
 1. `DataInterceptor` がコメントAPI応答を捕捉し、元データをグローバルストアへ保持する。
 2. `cf2:data-updated` または `cf2:smid-changed` を受けて、UI管理層が保存済み設定とルールを読む。
-3. JSONフィルターがスレッドごとにルールを適用する。大量データはWorkerへ分割し、失敗時はメインスレッドへフォールバックする。
+3. JSONフィルターがスレッドごとにルールを適用する。非表示に一致したコメントは本文を空にせずエントリごと除去し、スレッド・全体の累計件数から今回除去した件数だけを差し引く。大量データはWorkerへ分割し、失敗時はメインスレッドへフォールバックする。
 4. フィルター済みデータをグローバルストアへ戻し、`VideoPlayerBridge` が差分を確認してvideo-playerへ通知する。
 5. 公式プレイヤーで「今すぐ適用」を押すと、`OfficialPlayerBridge`が公式コメントストアの再取得actionを呼ぶ。APIの初期化中は短時間待機し、再取得レスポンスを`DataInterceptor`が新しいルールで処理するため、ページ全体を再読み込みせず公式描画へ反映される。
 6. 描画済みコメントの右クリックでは、`103_official_comment_menu.txt`が公式Reactメニューのコメントモデルを`OfficialCommentMenu`へ渡す。DOM探索を介さず、コピー、Google検索、HTTP(S) URLの新規タブ表示、全動画対象のNGワード・NGユーザーID追加を行う。NG追加後は公式コメントだけを再取得して即時反映する。
@@ -69,6 +69,7 @@
 - `tests/comment-filter2-command-settings.test.ts`: 既存コマンドの同カテゴリー置換と全除去を、JSON・互換両エンジンで比較する。
 - `tests/comment-filter2-required-token-index.test.ts`: 必須トークン抽出、候補索引なしとの結果同値性、Unicode境界、正規表現評価回数。
 - `tests/comment-filter2-nicoru-exclusion.test.ts`: ニコる条件と免除ルール。
+- `tests/comment-filter2-hidden-entry-removal.test.ts`: JSON・互換ルールによるエントリ除去とスレッド・全体累計の整合性。
 - `tests/comment-data-bypass.test.ts`: フィルターを迂回する内部取得契約。
 - `tests/official-player-bridge.test.ts`: 版検証、多重再取得の集約、失敗後の再試行。
 - `tests/comment-reload-nlfilter.test.ts`: 公式CDNのURL条件、minify済みMatch、版付きAPI注入の契約。

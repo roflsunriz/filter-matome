@@ -9,6 +9,7 @@ import {
 } from "@/types/filter-types";
 import { NgRuleJson } from "@/types/filter-types";
 import { FilterLogger } from "@/comment-filter2/utils/filter-logger";
+import { buildFilteredCommentResponse } from "@/comment-filter2/filter/comment-response";
 import {
   PreparedJsonRuleSet,
   JsonRuleMatchEvent,
@@ -180,13 +181,7 @@ export class JsonCommentFilter {
       };
     });
 
-    return {
-      ...data,
-      data: {
-        ...data.data,
-        threads: processedThreads,
-      },
-    };
+    return buildFilteredCommentResponse(data, processedThreads);
   }
 
   private async processCommentDataWithWorkers(
@@ -222,13 +217,7 @@ export class JsonCommentFilter {
       updatedThreads.push(...result.threads);
     }
 
-    return {
-      ...data,
-      data: {
-        ...data.data,
-        threads: updatedThreads,
-      },
-    };
+    return buildFilteredCommentResponse(data, updatedThreads);
   }
 
   private runWorker(

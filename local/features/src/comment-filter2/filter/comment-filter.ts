@@ -9,6 +9,7 @@ import {
   CF2FilterLogEntry,
 } from "@/types/filter-types";
 import { FilterLogger } from "@/comment-filter2/utils/filter-logger";
+import { buildFilteredCommentResponse } from "@/comment-filter2/filter/comment-response";
 import {
   PreparedRuleSet,
   RuleMatchLogEvent,
@@ -174,13 +175,7 @@ export class CommentFilter {
       };
     });
 
-    return {
-      ...data,
-      data: {
-        ...data.data,
-        threads: processedThreads,
-      },
-    };
+    return buildFilteredCommentResponse(data, processedThreads);
   }
 
   private async processCommentDataWithWorkers(
@@ -217,13 +212,7 @@ export class CommentFilter {
       updatedThreads.push(...result.threads);
     }
 
-    return {
-      ...data,
-      data: {
-        ...data.data,
-        threads: updatedThreads,
-      },
-    };
+    return buildFilteredCommentResponse(data, updatedThreads);
   }
 
   private runWorker(

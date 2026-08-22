@@ -366,8 +366,6 @@ function applyRulesToComment({
 
     if (actionResult.type === "hide") {
       shouldHideComment = true;
-      processedComment.body = "";
-      processedComment.commands.push("invisible");
       break;
     }
 
@@ -377,10 +375,7 @@ function applyRulesToComment({
   }
 
   if (shouldHideComment) {
-    processedComment.body = "";
-    if (!processedComment.commands.includes("invisible")) {
-      processedComment.commands.push("invisible");
-    }
+    return null;
   }
 
   const shouldApplyCommandSettings = hasIncludeNicoruRule

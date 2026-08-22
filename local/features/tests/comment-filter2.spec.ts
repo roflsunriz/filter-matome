@@ -193,8 +193,9 @@ test("コマンド適用方式を同カテゴリー置換と全除去からの�
     await applied;
     return page.evaluate(
       () =>
-        window.CommentFilter2Data?.filteredData?.data.threads[0]?.comments[1]
-          ?.commands ?? [],
+        window.CommentFilter2Data?.filteredData?.data.threads[0]?.comments.find(
+          (comment) => comment.id === "comment-2",
+        )?.commands ?? [],
     );
   };
 
@@ -239,12 +240,20 @@ test("概要の今すぐ適用がコメントを再処理して表示側へ同�
   await ui.locator("#cf2-cockpit-apply").click();
   await applied;
 
-  const filteredBodies = await page.evaluate(() =>
-    window.CommentFilter2Data?.filteredData?.data.threads[0]?.comments.map(
-      (comment) => comment.body,
-    ),
-  );
-  expect(filteredBodies).toEqual(["", "通常コメント"]);
+  const filteredThread = await page.evaluate(() => {
+    const thread = window.CommentFilter2Data?.filteredData?.data.threads[0];
+    return {
+      commentCount: thread?.commentCount,
+      comments: thread?.comments.map((comment) => ({
+        id: comment.id,
+        body: comment.body,
+      })),
+    };
+  });
+  expect(filteredThread).toEqual({
+    commentCount: 1,
+    comments: [{ id: "comment-2", body: "通常コメント" }],
+  });
 });
 
 test("再取得APIがない公式プレイヤーでは自動再読み込みせず復旧方法を示す", async ({

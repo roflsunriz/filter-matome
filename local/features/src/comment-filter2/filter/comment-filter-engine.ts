@@ -412,7 +412,6 @@ function applyRulesToComment({
   processedComment.isPremium = true;
   processedComment.commands = normalizeCommands(processedComment.commands);
 
-  const commandsToAdd: string[] = [];
   let shouldHideComment = false;
   let ruleApplied = false;
   let hasEmptyNicoruRule = false;
@@ -471,7 +470,6 @@ function applyRulesToComment({
       if (rule.nicoru === "EMPTY") {
         hasEmptyNicoruRule = true;
         shouldHideComment = true;
-        commandsToAdd.push("invisible");
       }
 
       continue;
@@ -515,7 +513,6 @@ function applyRulesToComment({
       if (rule.nicoru === "EMPTY") {
         hasEmptyNicoruRule = true;
         shouldHideComment = true;
-        commandsToAdd.push("invisible");
       }
     } else {
       processedComment.body = result.replacedText;
@@ -531,14 +528,11 @@ function applyRulesToComment({
   }
 
   if (shouldHideComment) {
-    processedComment.body = "";
-    if (!processedComment.commands.includes("invisible")) {
-      processedComment.commands.push("invisible");
-    }
-
     if (debugMode && Math.random() < 0.1) {
       // sampling log removed in engine context
     }
+
+    return null;
   }
 
   if (
@@ -555,13 +549,6 @@ function applyRulesToComment({
         settings,
       );
     }
-  }
-
-  if (commandsToAdd.length > 0) {
-    processedComment.commands = addOrReplaceCommands(
-      processedComment.commands,
-      commandsToAdd,
-    );
   }
 
   if (ruleApplied) {
