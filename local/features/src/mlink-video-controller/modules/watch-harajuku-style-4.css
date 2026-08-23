@@ -104,6 +104,22 @@
     text-decoration: none !important;
   }
 
+  /* filter-matomeの安定属性を使い、OSダーク時の汎用button配色から通知操作を隔離する。 */
+  #CommonHeader [data-filter-matome-notification-read-all="true"] {
+    background: #fff !important;
+    background-image: none !important;
+    border-color: #d5d5d5 !important;
+    box-shadow: none !important;
+    color: #333 !important;
+    text-shadow: none !important;
+  }
+
+  #CommonHeader [data-filter-matome-notification-read-all="true"]:hover {
+    background: #f4f4f4 !important;
+    background-image: none !important;
+    color: #333 !important;
+  }
+
   /* NicoCache_nlの安定classを使い、原宿テーマの汎用button/link指定からメニューを隔離する。 */
   #ncnl_common_header_menu .ncnl-common-header-trigger {
     background: transparent !important;

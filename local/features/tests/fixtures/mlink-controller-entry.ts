@@ -1,4 +1,5 @@
 import { CommentsTabController } from "@/mlink-video-controller/tab-controllers/comments-tab";
+import { startNotificationReadAll } from "@/common/notification-read-all";
 import { LinksTabController } from "@/mlink-video-controller/tab-controllers/links-tab";
 import { PanelNavigationController } from "@/mlink-video-controller/tab-controllers/navigation";
 import { PlaybackTabController } from "@/mlink-video-controller/tab-controllers/playback-tab";
@@ -41,5 +42,6 @@ Object.assign(window, {
     WatchHarajukuModule,
     watchHarajukuModuleConfig,
     LinkManager,
+    startNotificationReadAll,
   },
 });

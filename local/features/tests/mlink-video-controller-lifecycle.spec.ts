@@ -146,6 +146,14 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
         #ncnl_common_header_menu .ncnl-common-header-footer a { color: #333; }
       </style>
       <div id="CommonHeader">
+        <div data-fixture="notification-panel">
+          <div data-fixture="notification-header">
+            <span>お知らせ</span>
+            <a href="https://inform.nicovideo.jp/oshirase/settings">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" /></svg>
+            </a>
+          </div>
+        </div>
         <div id="ncnl_common_header_menu">
           <button type="button" class="ncnl-common-header-trigger">NicoCache</button>
           <div class="ncnl-common-header-popover">
@@ -203,17 +211,34 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
           destroy(): void;
         };
         watchHarajukuModuleConfig: unknown;
+        startNotificationReadAll(): void;
       };
       harajukuModule?: { destroy(): void };
     };
     const module = new api.MlinkTabControllers.WatchHarajukuModule(
       api.MlinkTabControllers.watchHarajukuModuleConfig,
     );
+    api.MlinkTabControllers.startNotificationReadAll();
     api.harajukuModule = module;
     await module.initialize();
   });
 
   await expect(page.locator(".HarajukuWatchChrome")).toHaveCount(1);
+  const notificationReadAll = page.locator(
+    '[data-filter-matome-notification-read-all="true"]',
+  );
+  await expect(notificationReadAll).toBeVisible();
+  await expect(notificationReadAll).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await expect(notificationReadAll).toHaveCSS("background-image", "none");
+  await expect(notificationReadAll).toHaveCSS("color", "rgb(51, 51, 51)");
+  await notificationReadAll.hover();
+  await expect(notificationReadAll).toHaveCSS(
+    "background-color",
+    "rgb(244, 244, 244)",
+  );
   const nicoCacheTrigger = page.locator(".ncnl-common-header-trigger");
   await expect(nicoCacheTrigger).toHaveCSS("background-image", "none");
   await nicoCacheTrigger.hover();
@@ -272,6 +297,11 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
     (button as HTMLButtonElement).click();
   });
   await expect(page.locator("html")).toHaveAttribute("data-hy-theme", "dark");
+  await expect(notificationReadAll).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+  await expect(notificationReadAll).toHaveCSS("color", "rgb(51, 51, 51)");
   await page.locator(".HarajukuBackgroundPriorityButton").evaluate((button) => {
     (button as HTMLButtonElement).click();
   });
