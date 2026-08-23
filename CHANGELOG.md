@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#248] - 2026-08-23
+
+### Changed
+
+- 【features・README】リリース番号を`248`へ更新し、latestバッジを`#248`へ変更した。
+
 ### Fixed
 
 - 【mlink-video-controller・common】OSをダーク表示にした環境で原宿風Watch表示を使っても、CommonHeaderの`すべて既読`ボタンが黒い汎用ボタン配色に上書きされないよう、安定した機能属性を使って通知パネル本来の明るい配色を保持した。
