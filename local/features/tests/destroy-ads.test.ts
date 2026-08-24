@@ -114,19 +114,6 @@ describe("destroy-ads official asset rewrites", () => {
     );
   });
 
-  test("disables both current Watch video-ad startup paths before getAd", () => {
-    const result = rewriteOfficialAsset(
-      "https://resource.video.nimg.jp/web/scripts/nvpc_next/assets/PlayerCurrentTime-current.js",
-      "var q=g(y(e=>{let t=e(K)?.videoAds?.[0];if(t)return load(t)}),[async e=>{let t=e.peek(U);if(await t.isAutoPlayable()){let n=t.getPrerollVideoAds().at(0);n&&warm(n)}}]);",
-    );
-    expect(result.transformations).toEqual(["watch-video-ad-orchestration"]);
-    expect(result.source).not.toContain(".videoAds?.[0]");
-    expect(result.source).not.toContain(".getPrerollVideoAds().at(0)");
-    expect(result.source.match(/filter-matome:watch-video-ads/gu)).toHaveLength(
-      2,
-    );
-  });
-
   test("short-circuits all adblock detector script probes", () => {
     const result = rewriteOfficialAsset(
       "https://resource.video.nimg.jp/web/scripts/nvpc_next/assets/PlayerVolumeBar-current.js",
@@ -190,7 +177,6 @@ describe("DestroyAds NicoCache_nl extension", () => {
     expect(extensionSource).toContain("publicUrl");
     expect(extensionSource).toContain("adsResource");
     expect(extensionSource).toContain("NicoGoogleTagManagerDataLayer");
-    expect(extensionSource).toContain("filter-matome:watch-video-ads");
     expect(extensionSource).toContain("filter-matome:adblock-detector");
     expect(extensionSource).not.toMatch(
       /MutationObserver|querySelector|style\.display|classList/gu,

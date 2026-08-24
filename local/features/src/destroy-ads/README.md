@@ -8,7 +8,7 @@
 2. 同extensionの`Rewriter`が公式HTML・JavaScriptレスポンスをブラウザーへ渡す前に処理する。
    - 現行`Advertisement-*` ES ModuleのReact広告コンポーネントとFallbackを`null`化する。
    - `root-*`の`publicUrl.adsResource`ローダー関数を残し、base URLだけを同一originの空stubへ変更する。公式側が`/assets/js/ads2.js`を追加してload完了を待つ契約を維持しつつ、外部広告コードは実行しない。
-   - `PlayerCurrentTime-*`の動画広告選択と自動再生prewarmを無効化し、広告APIを呼ぶ前に動画広告経路を閉じる。
+   - `PlayerCurrentTime-*`の動画広告選択と自動再生prewarmは書き換えない。公式側が広告API・Prebidの失敗を処理して通常動画を開始するため、この経路を消すと再生も停止する。
    - `PlayerVolumeBar-*`の広告ブロック検査が生成するadsResource・IMA・OpenXローダーを、`Promise.allSettled`内の即時rejectへ置換する。
    - `bridge-*`のGoogle Tag Manager起動呼び出しを除去する。
    - 旧ページbundleの`Advertisement`マネージャーを利用不可に固定する。

@@ -117,7 +117,6 @@ const required: readonly AssetRewriteKind[] = [
   "ads-resource-loader",
   "google-tag-manager-loader",
   "legacy-advertisement-manager",
-  "watch-video-ad-orchestration",
   "adblock-detector-loader",
 ];
 const missing = required.filter((kind) => !counts.has(kind));

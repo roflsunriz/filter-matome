@@ -35,6 +35,15 @@ interface HarajukuObservation {
   sidebarAreaCount: number;
 }
 
+interface VideoState {
+  currentTime: number;
+  errorCode: number | null;
+  errorMessage: string | null;
+  exists: true;
+  paused: boolean;
+  readyState: number;
+}
+
 const DEFAULT_CDP_ENDPOINT = "http://127.0.0.1:9222";
 const DEFAULT_WATCH_URL = "https://www.nicovideo.jp/watch/sm9";
 const SETTINGS_KEY = "nicoVideoController_moduleSettings";
@@ -196,6 +205,54 @@ const OBSERVATION_EXPRESSION = `(() => {
     sidebarAreaCount: document.querySelectorAll('[class*="grid-area_"][class*="sidebar"]').length,
   };
 })()`;
+
+const VIDEO_STATE_EXPRESSION = `(() => {
+  const video = document.querySelector('video');
+  if (!video) return { exists: false };
+  return {
+    exists: true,
+    paused: video.paused,
+    currentTime: video.currentTime,
+    duration: Number.isFinite(video.duration) ? video.duration : null,
+    readyState: video.readyState,
+    networkState: video.networkState,
+    errorCode: video.error?.code ?? null,
+    errorMessage: video.error?.message ?? null,
+  };
+})()`;
+
+async function observePlayback(client: RawCdpClient): Promise<void> {
+  const before = await evaluate(client, VIDEO_STATE_EXPRESSION);
+  await new Promise((resolve) => setTimeout(resolve, 5_000));
+  const after = await evaluate(client, VIDEO_STATE_EXPRESSION);
+  console.log(`[watch-playback] ${JSON.stringify({ before, after })}`);
+  if (!isVideoState(before) || !isVideoState(after)) {
+    throw new Error("動画要素または再生状態を取得できませんでした");
+  }
+  if (after.errorCode !== null) {
+    throw new Error(
+      `動画でMediaErrorが発生しました: ${after.errorCode} ${after.errorMessage ?? ""}`,
+    );
+  }
+  if (after.paused || after.currentTime - before.currentTime < 1) {
+    throw new Error(
+      `動画の再生が進行しませんでした: ${JSON.stringify({ before, after })}`,
+    );
+  }
+}
+
+function isVideoState(value: unknown): value is VideoState {
+  return (
+    isRecord(value) &&
+    value["exists"] === true &&
+    typeof value["paused"] === "boolean" &&
+    typeof value["currentTime"] === "number" &&
+    typeof value["readyState"] === "number" &&
+    (value["errorCode"] === null || typeof value["errorCode"] === "number") &&
+    (value["errorMessage"] === null ||
+      typeof value["errorMessage"] === "string")
+  );
+}
 
 async function waitForHarajuku(
   client: RawCdpClient,
@@ -415,6 +472,7 @@ async function main(): Promise<void> {
         if (diagnostics.length > 0) {
           console.log(`[watch-diagnostics]\n${diagnostics.join("\n")}`);
         }
+        await observePlayback(pageClient);
         return;
       }
 
@@ -496,6 +554,7 @@ async function main(): Promise<void> {
           `[harajuku-css] ${viewportName}: ${JSON.stringify(observation)}`,
         );
       }
+      await observePlayback(pageClient);
     } finally {
       unsubscribe();
       pageClient.close();

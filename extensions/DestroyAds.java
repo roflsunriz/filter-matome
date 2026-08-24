@@ -32,7 +32,7 @@ public final class DestroyAds implements Extension, RequestFilter, Rewriter {
     private static final Pattern SUPPORTED_REWRITE_URL = Pattern.compile(
             "https?://(?:resource\\.video\\.nimg\\.jp/web/scripts/(?:"
             + "nvpc_next/assets/(?:Advertisement|root|bridge|"
-            + "PlayerCurrentTime|PlayerVolumeBar)-[^/?]+\\.js"
+            + "PlayerVolumeBar)-[^/?]+\\.js"
             + "|bundle/pages_[^/?]+\\.js)|(?:[^/]+\\.)?nicovideo\\.jp/.*)",
             Pattern.CASE_INSENSITIVE);
 
@@ -51,11 +51,6 @@ public final class DestroyAds implements Extension, RequestFilter, Rewriter {
     private static final Pattern LEGACY_MANAGER_AVAILABILITY = Pattern.compile(
             "([A-Za-z_$][\\w$]*)\\.available=!\\(!([A-Za-z_$][\\w$]*)\\(\\)"
             + "\\|\\|!\\2\\(\\)\\.Advertisement\\)");
-    private static final Pattern WATCH_VIDEO_AD_ENTRY = Pattern.compile(
-            "[A-Za-z_$][\\w$]*\\([A-Za-z_$][\\w$]*\\)"
-            + "\\?\\.videoAds\\?\\.\\[0\\]");
-    private static final Pattern WATCH_VIDEO_AD_PREWARM = Pattern.compile(
-            "[A-Za-z_$][\\w$]*\\.getPrerollVideoAds\\(\\)\\.at\\(0\\)");
     private static final Pattern SNAPSHOT_ADS_RESOURCE_LOADER = Pattern.compile(
             "[A-Za-z_$][\\w$]*\\([A-Za-z_$][\\w$]*\\.getSnapshot\\(\\)"
             + "\\.publicUrl\\.adsResource\\)");
@@ -113,14 +108,6 @@ public final class DestroyAds implements Extension, RequestFilter, Rewriter {
         }
         if (lowerUrl.contains("/assets/bridge-")) {
             rewritten = GTM_LOADER_CALL.matcher(rewritten).replaceAll("void 0");
-        }
-        if (lowerUrl.contains("/assets/playercurrenttime-")
-                && countMatches(WATCH_VIDEO_AD_ENTRY, rewritten) == 1
-                && countMatches(WATCH_VIDEO_AD_PREWARM, rewritten) == 1) {
-            rewritten = WATCH_VIDEO_AD_ENTRY.matcher(rewritten).replaceAll(
-                    "void 0/*filter-matome:watch-video-ads*/");
-            rewritten = WATCH_VIDEO_AD_PREWARM.matcher(rewritten).replaceAll(
-                    "void 0/*filter-matome:watch-video-ads*/");
         }
         if (lowerUrl.contains("/assets/playervolumebar-")
                 && countMatches(SNAPSHOT_ADS_RESOURCE_LOADER, rewritten) == 1

@@ -6,7 +6,6 @@ export type AssetRewriteKind =
   | "adblock-detector-loader"
   | "google-tag-manager-loader"
   | "legacy-advertisement-manager"
-  | "watch-video-ad-orchestration"
   | "html-ad-element";
 
 export interface AssetRewriteResult {
@@ -20,8 +19,6 @@ const MODERN_ROOT_URL =
   /^https:\/\/resource\.video\.nimg\.jp\/web\/scripts\/nvpc_next\/assets\/root-[^/?]+\.js$/;
 const MODERN_BRIDGE_URL =
   /^https:\/\/resource\.video\.nimg\.jp\/web\/scripts\/nvpc_next\/assets\/bridge-[^/?]+\.js$/;
-const PLAYER_CURRENT_TIME_URL =
-  /^https:\/\/resource\.video\.nimg\.jp\/web\/scripts\/nvpc_next\/assets\/PlayerCurrentTime-[^/?]+\.js$/;
 const PLAYER_VOLUME_BAR_URL =
   /^https:\/\/resource\.video\.nimg\.jp\/web\/scripts\/nvpc_next\/assets\/PlayerVolumeBar-[^/?]+\.js$/;
 const LEGACY_PAGE_BUNDLE_URL =
@@ -38,10 +35,6 @@ const LEGACY_MANAGER_AVAILABILITY =
   /([A-Za-z_$][\w$]*)\.available=!\(!([A-Za-z_$][\w$]*)\(\)\|\|!\2\(\)\.Advertisement\)/g;
 const EXTERNAL_ELEMENT =
   /<(script|iframe|video|img|source|link)\b[^>]*(?:src|href|poster)\s*=\s*(["'])((?:https?:)?\/\/[^"']+)\2[^>]*>(?:[\s\S]*?<\/\1\s*>)?/gi;
-const WATCH_VIDEO_AD_ENTRY =
-  /[A-Za-z_$][\w$]*\([A-Za-z_$][\w$]*\)\?\.videoAds\?\.\[0\]/g;
-const WATCH_VIDEO_AD_PREWARM =
-  /[A-Za-z_$][\w$]*\.getPrerollVideoAds\(\)\.at\(0\)/g;
 const SNAPSHOT_ADS_RESOURCE_LOADER =
   /[A-Za-z_$][\w$]*\([A-Za-z_$][\w$]*\.getSnapshot\(\)\.publicUrl\.adsResource\)/g;
 const IMA_DETECTOR_LOADER =
@@ -129,19 +122,6 @@ export function rewriteOfficialAsset(
     if (result.count > 0) transformations.push("google-tag-manager-loader");
   }
   if (
-    PLAYER_CURRENT_TIME_URL.test(normalizedUrl) &&
-    countMatches(source, WATCH_VIDEO_AD_ENTRY) === 1 &&
-    countMatches(source, WATCH_VIDEO_AD_PREWARM) === 1
-  ) {
-    source = source
-      .replace(WATCH_VIDEO_AD_ENTRY, "void 0/*filter-matome:watch-video-ads*/")
-      .replace(
-        WATCH_VIDEO_AD_PREWARM,
-        "void 0/*filter-matome:watch-video-ads*/",
-      );
-    transformations.push("watch-video-ad-orchestration");
-  }
-  if (
     PLAYER_VOLUME_BAR_URL.test(normalizedUrl) &&
     countMatches(source, SNAPSHOT_ADS_RESOURCE_LOADER) === 1 &&
     countMatches(source, IMA_DETECTOR_LOADER) === 1 &&
@@ -208,12 +188,6 @@ export function detectAppliedAssetRewrites(
     source.includes("standaloneAdParams")
   ) {
     applied.push("legacy-advertisement-manager");
-  }
-  if (
-    PLAYER_CURRENT_TIME_URL.test(normalizedUrl) &&
-    source.match(/filter-matome:watch-video-ads/gu)?.length === 2
-  ) {
-    applied.push("watch-video-ad-orchestration");
   }
   if (
     PLAYER_VOLUME_BAR_URL.test(normalizedUrl) &&

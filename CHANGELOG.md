@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- 【destroy-ads・Watch】広告資産ローダー呼び出しを空Promiseへ置き換えたことで、access-rightsとHLSが成功しても公式動画エラーへ遷移する問題を修正した。公式ローダー関数は維持して同一originの空stubへ向け、動画広告開始点と広告ブロック検査は各公式資産内で要求生成前に無効化する。
+- 【destroy-ads・Watch】広告資産ローダー呼び出しを空Promiseへ置き換えたことで、access-rightsとHLSが成功しても公式動画エラーへ遷移する問題を修正した。公式ローダー関数は維持して同一originの空stubへ向け、通常再生開始にも必要な`PlayerCurrentTime`は変更せず、独立した広告ブロック検査だけを要求生成前に無効化する。
 - 【features・video-player】共通loggerの初期化前にvideo-player routerが失敗ログを出そうとして例外になる競合を防ぐため、ニコニコページではcommon entryの起動完了後に各機能entryを並列起動するよう順序を修正した。
 
 ## [#248] - 2026-08-23
