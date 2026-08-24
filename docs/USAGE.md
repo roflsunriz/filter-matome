@@ -47,7 +47,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 2. `NICO_APP_ROOT\config.properties` の `userDataRoot` を確認し、バックアップ後にNicoCache_nlを終了する。
 3. `NICO_DATA_ROOT\extensions` から、「同梱される拡張機能」に記載した8種の `.class` と `.java` を削除する。旧版の`CustomCacheReturner*`、`downloadThruFFmpeg*`、`FilterMatomeCacheControl*`、`nlMediaInfo*`、`nlGpac$*.class`が残っている場合も削除する。
 4. `NICO_DATA_ROOT\local` から `background-images`、`features`、`images`、`mime.types`、`list.js`、`list.js.map` のうちfilter-matomeが配置したものを取り除く。`background-images` に自分で追加した画像は残す。シンボリックリンクは参照先を確認し、リンク自体だけを削除する。
-5. `NICO_DATA_ROOT\nlFilters` から `100_features.txt`、`101_disable_official_function.txt`、`105_premium_hide.txt`、`nlFilters_編集ガイド.md` のうちfilter-matomeが配置したものを取り除く。
+5. `NICO_DATA_ROOT\nlFilters` から `100_features.txt`〜`105_premium_hide.txt`のうちfilter-matomeが配置した100番台フィルターと、`nlFilters_編集ガイド.md`を取り除く。
 6. matome-toolboxも入れ直す場合は、`NICO_APP_ROOT\scripts` がfilter-matomeのコピーまたはリンクであることを確認して取り除く。
 7. 上記の標準手順で現行版を配置し、NicoCache_nlを起動してブラウザーをハード再読み込みする。
 
@@ -168,6 +168,10 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 | movie-info | `https://www.nicovideo.jp/local/features/dist/pages/movie-info/index.html` |
 | video-player | `https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html` |
 | watch-history | `https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html` |
+
+### 104_watch_harajuku_style.txt
+
+Watchページで原宿風表示用CSSを公式CSSより先に読み込み、公式root CSSを専用のcascade layerへ隔離する。原宿風表示が有効な間だけactive scopeを開くため、モジュール無効時の公式表示には影響せず、有効時は大量の`!important`に頼らず通常のCSSカスケードで表示を切り替える。
 
 ### 101_disable_official_function.txt
 

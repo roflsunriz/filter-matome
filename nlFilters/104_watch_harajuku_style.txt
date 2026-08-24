@@ -1,0 +1,27 @@
+# nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
+
+# 公式Watchのroot CSSは主要5layerと、末尾のSimpleBar・font-face非layerルールで構成される。
+# CSS応答全体をfilter-matome-official layerへ入れてから、
+# 非layerのHarajuku CSSをhead先頭で先行ロードし、通常宣言で公式CSSより優先する。
+# CSS本体はactive属性でスコープされるため、モジュール無効時には画面へ影響しない。
+[Replace]
+Name = 公式Watch CSS layer隔離
+FullURL = https?:\/\/resource\.video\.nimg\.jp\/web\/scripts\/nvpc_next\/assets\/root-[a-zA-Z0-9_-]+\.css(?:\?.*)?$
+Match<
+^([\s\S]*)$
+>
+Replace<
+@layer filter-matome-official{$1}
+>
+
+[Replace]
+Name = 原宿風Watch CSS先行読込
+FullURL = https?:\/\/www\.nicovideo\.jp\/watch\/[a-zA-Z0-9]+(?:\?.*)?$
+Match<
+(<head(?:[^>]+)?>)(\r\n)?
+>
+Replace<
+$1
+<link id="filter-matome-watch-harajuku-stylesheet" rel="stylesheet" href="/local/features/dist/watch-harajuku.css">
+$2
+>

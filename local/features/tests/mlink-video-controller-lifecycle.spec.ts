@@ -4,6 +4,14 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { composeHarajukuStylesheet } from "../scripts/harajuku-stylesheet";
+import {
+  HARAJUKU_ACTIVE_ATTRIBUTE,
+  HARAJUKU_ACTIVE_VALUE,
+  HARAJUKU_STYLESHEET_ID,
+  HARAJUKU_STYLESHEET_PATH,
+} from "../src/mlink-video-controller/modules/harajuku-style-contract";
+
 const projectRoot = join(import.meta.dirname, "..");
 const fixturesRoot = join(import.meta.dirname, "fixtures");
 
@@ -11,14 +19,18 @@ function readFixture(path: string): string {
   return readFileSync(join(fixturesRoot, path), "utf8");
 }
 
-function buildTestDocument(body: string): string {
-  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>module lifecycle fixture</title></head><body>${body}</body></html>`;
+function buildTestDocument(body: string, head = ""): string {
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>module lifecycle fixture</title>${head}</head><body>${body}</body></html>`;
 }
 
-async function fulfillTestDocument(route: Route, body: string): Promise<void> {
+async function fulfillTestDocument(
+  route: Route,
+  body: string,
+  head = "",
+): Promise<void> {
   await route.fulfill({
     contentType: "text/html; charset=utf-8",
-    body: buildTestDocument(body),
+    body: buildTestDocument(body, head),
   });
 }
 
@@ -132,6 +144,13 @@ test("background image settings persist dynamic CRUD, selection, and import even
 test("Harajuku module creates interactive chrome and removes it on destroy", async ({
   page,
 }) => {
+  const harajukuStylesheet = await composeHarajukuStylesheet(projectRoot);
+  await page.route(`**${HARAJUKU_STYLESHEET_PATH}`, (route) =>
+    route.fulfill({
+      contentType: "text/css; charset=utf-8",
+      body: harajukuStylesheet,
+    }),
+  );
   await page.emulateMedia({ colorScheme: "dark" });
   await page.route("https://www.nicovideo.jp/watch/sm9", (route) =>
     fulfillTestDocument(
@@ -178,6 +197,14 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
           <div class="grid-area_sidebar"><div><div id="watch-sidebar"><section><header>コメントリスト</header></section></div></div></div>
         </section>
       </main>`,
+      `<link id="${HARAJUKU_STYLESHEET_ID}" rel="stylesheet" href="${HARAJUKU_STYLESHEET_PATH}">
+      <style>
+        @layer reset, base, tokens, recipes, utilities;
+        @layer utilities {
+          html, body { color: rgb(255, 0, 0); font: 16px serif; }
+          #watch-details > header, .official-details { display: block; }
+        }
+      </style>`,
     ),
   );
   await page.goto("https://www.nicovideo.jp/watch/sm9");
@@ -292,7 +319,11 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
   expect(descriptionMetrics.scrollHeight).toBeLessThanOrEqual(
     descriptionMetrics.height,
   );
-  await expect(page.locator("#mlink-watch-harajuku-style")).toHaveCount(1);
+  await expect(page.locator(`#${HARAJUKU_STYLESHEET_ID}`)).toHaveCount(1);
+  await expect(page.locator("html")).toHaveAttribute(
+    HARAJUKU_ACTIVE_ATTRIBUTE,
+    HARAJUKU_ACTIVE_VALUE,
+  );
   await page.locator(".HarajukuThemeButton").evaluate((button) => {
     (button as HTMLButtonElement).click();
   });
@@ -387,7 +418,10 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
   });
   await expect(page.locator(".HarajukuWatchChrome")).toHaveCount(0);
   await expect(page.locator(".HarajukuDescription")).toHaveCount(0);
-  await expect(page.locator("#mlink-watch-harajuku-style")).toHaveCount(0);
+  await expect(page.locator(`#${HARAJUKU_STYLESHEET_ID}`)).toHaveCount(1);
+  await expect(page.locator("html")).not.toHaveAttribute(
+    HARAJUKU_ACTIVE_ATTRIBUTE,
+  );
 });
 
 test("header privacy hides premium override avatar and name by account structure", async ({

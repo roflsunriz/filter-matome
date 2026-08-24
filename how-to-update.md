@@ -30,6 +30,24 @@ bunx playwright test tests/common-notification-read-all.spec.ts
 
 fixtureは確認できた必要フィールドだけを匿名値で更新し、Cookie、通知本文、ユーザーIDを保存しない。自動テストから実サービスへPUTしない。APIのorigin、path、レスポンス型、ページングが確認できない場合は許可条件を緩めず、全ページ検証前に一部通知だけを既読化しない。ロールバックは`src/common/index.ts`から一括既読起動を外し、`notification-read-all.ts`と専用テスト・fixtureを前のリリースへ戻して全体ビルドを再生成する。
 
+## 原宿風Watch CSSの追従確認
+
+公式Watchの表示が更新され、原宿風表示が公式CSSに負ける、または`104_watch_harajuku_style.txt`のCSS Matchが外れた場合は、Cookieと認証ヘッダーを保存しないraw CDP captureを取り直します。取得物はGit管理外の`local/features/src/sandbox/official-watch-bundle/`だけへ置き、公式CSSを製品bundleへ取り込まないでください。
+
+```powershell
+cd local/features
+bun run sandbox:capture-official
+bun run sandbox:analyze-watch-css
+bun test tests/official-watch-css-analysis.test.ts tests/harajuku-style-contract.test.ts
+bunx playwright test tests/mlink-video-controller-lifecycle.spec.ts --grep "Harajuku module"
+```
+
+`sandbox:analyze-watch-css`は、現行root CSSの上位構造が`reset`、`base`、`tokens`、`recipes`、`utilities`の順であること、layer外が既知のSimpleBar・font-face末尾だけであること、104番適用後に全体が単一の`filter-matome-official` layerへ入り、de-minify後も構文解析できることを検証します。未知のlayerやlayer外ルールが増えた場合はMatchを緩めず、de-minify結果で影響を確認して解析契約とテストを先に更新します。
+
+実環境では`NICO_DATA_ROOT\nlFilters\104_watch_harajuku_style.txt`のシンボリックリンク先を確認してNicoCache_nlを標準ランチャーで再起動し、Watch HTMLのHarajuku stylesheetが公式modulepreloadより前にあること、公式root CSS応答が`@layer filter-matome-official{`で始まることを確認します。Cookieなしの隔離Chromeで公式Watch自体がエラー画面になる場合は、専用DOMの見た目を確認済みとして扱わず、公式layerを再現したPlaywright E2Eでカスケードとモジュール破棄を検証します。
+
+ロールバックは`104_watch_harajuku_style.txt`とHarajuku CSS生成・active scope変更を同じ以前の版へ戻し、`bun run build`後にNicoCache_nlとブラウザーを再起動します。104だけを外すと現行モジュールがfallback linkを後から追加するため、読込順の保証を失います。
+
 ## 公式コメント再取得APIの追従確認
 
 ニコニコ動画の公式資産更新でcomment-filter2の「今すぐ適用」がページ再読み込み確認へ戻った場合は、`local/features/src/sandbox/README.md`の手順で公開視聴ページ資産を再取得します。Cookie、認証ヘッダー、HTMLは保存せず、取得済みES Moduleを実行しないでください。

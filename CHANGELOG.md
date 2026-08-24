@@ -10,6 +10,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - 【destroy-ads・Java extension・sandbox】広告をDOM/CSSで事後非表示にせず根本から止めるため、主要12ページ種別の公式資産と通信をCookieなしで走査・de-minifyする仕組みを追加した。現行React広告コンポーネント、`adsResource`、GTM、旧`Advertisement`マネージャーをブラウザーへ渡す前に無力化し、既存PACをバックアップした上で広告ホストだけをNicoCache_nlへ経路変更して、残ったニコニコ・Google/DoubleClick・ヘッダー入札・広告画像/動画要求も上流接続前に破棄する。
 - 【destroy-ads・tests】minify識別子の版差に依存せず意味上の生成点へ一致させ、通常の動画配信、コメント、Watch API、公式JavaScriptを過剰遮断しない広告通信規則と回帰テスト、3版の公式資産Match履歴を追加した。
+- 【Harajuku・sandbox・tests】公式Watchのroot CSS更新へ追従できるよう、raw CDP captureでJavaScriptとCSSを取得し、元CSSと104番nlFilter適用後CSSをde-minifyして、既定5layer、既知のSimpleBar・font-face末尾、全体layer隔離、構文、ハッシュを検証する解析・回帰テストを追加した。
+
+### Changed
+
+- 【Harajuku・nlFilters・build】原宿風Watchを後挿しstyleと1,116件の`!important`で押し切らず、独立した`watch-harajuku.css`を104番nlFilterから公式CSSより先に読み込み、公式root CSS応答全体を専用cascade layerへ隔離する構成へ変更した。Harajuku CSSはモジュール有効時だけactive scopeで適用し、通常宣言だけで公式CSSより自然に優先する。
 
 ## [#248] - 2026-08-23
 

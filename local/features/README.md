@@ -2,7 +2,7 @@
 
 ## 概要
 
-`local/features/` は、NicoCache_nlからニコニコ動画へ配信するブラウザー機能をBunとTypeScriptで管理するワークスペースです。`nlFilters/100_features.txt` が `dist/features.js` の軽量ブートストラップを読み込み、ページ判定後に必要な機能だけを `entries/` から遅延読み込みします。
+`local/features/` は、NicoCache_nlからニコニコ動画へ配信するブラウザー機能をBunとTypeScriptで管理するワークスペースです。`nlFilters/100_features.txt` が `dist/features.js` の軽量ブートストラップを読み込み、ページ判定後に必要な機能だけを `entries/` から遅延読み込みます。`nlFilters/104_watch_harajuku_style.txt`はWatchで`watch-harajuku.css`を公式root CSSより先に読み込み、公式CSS応答全体を専用cascade layerへ隔離します。
 
 生成物は機能別に分割されますが、個別ビルド用コマンドはありません。変更したプロジェクトにかかわらず、全体ビルドと関連テストを実行してください。
 
@@ -81,6 +81,7 @@ dist/
 ├── features.js.map
 ├── server-context-override.js      # 公式コードより先に同期実行
 ├── server-context-override.js.map
+├── watch-harajuku.css              # active scope付き原宿風Watch CSS
 ├── entries/             # ページ・機能別の遅延ロード入口
 ├── workers/
 │   ├── comment-filter-worker.js

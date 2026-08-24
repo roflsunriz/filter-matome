@@ -5,8 +5,9 @@
 ## 公式視聴ページのコメント投稿調査
 
 - `download-official-watch-bundle.ps1`: 認証Cookieを渡さずに公開視聴ページと参照JavaScriptを `official-watch-bundle/` へ取得します。
-- `../../scripts/sandbox/capture-official-watch-bundle.ts`: 起動済みChromeのraw CDPへ接続し、調査専用タブで読み込まれた公式JavaScriptと同一CDNのES Module依存関係を取得します。Cookie、リクエストヘッダー、HTMLは保存しません。
+- `../../scripts/sandbox/capture-official-watch-bundle.ts`: 起動済みChromeのraw CDPへ接続し、調査専用タブで読み込まれた公式JavaScript・CSSと同一CDNのES Module依存関係を取得します。Cookie、リクエストヘッダー、HTMLは保存せず、CSSはde-minify版も保存します。
 - `../../scripts/sandbox/analyze-official-watch-bundle.ts`: 取得物を実行せず、機能語と参照ドメインを静的集計します。
+- `../../scripts/sandbox/analyze-official-watch-css.ts`: 公式root CSSと`104_watch_harajuku_style.txt`適用後CSSをde-minifyし、既定layer、既知の非layer末尾、全体layer隔離、構文を検証します。
 - `../../scripts/sandbox/analyze-comment-reload-api.ts`: 最新captureをメモリー上でde-minifyし、公式コメント再取得actionと`102_comment_reload_api.txt`の接続を検証します。
 - `../../scripts/sandbox/analyze-comment-context-menu.ts`: 最新captureをメモリー上でde-minifyし、公式右クリックメニューのReact生成点と`103_official_comment_menu.txt`の接続を検証します。
 - `../../scripts/sandbox/observe-membership-context.ts`: ログイン済みセッションと未ログインの一時BrowserContextを比較し、個人識別子を保存せず会員区分と動画権利フラグだけを記録します。
@@ -17,6 +18,7 @@
 - `../../scripts/sandbox/run-offline-seek-preview-sandbox.ts`: 外部通信遮断下で公式Storyboardモデルとレンダラーを実行し、時刻からスプライトセルへの変換とCSS描画を確認します。
 - `../../scripts/sandbox/verify-offline-cdp-sandbox.ts`: 一時BrowserContextを作り、CDPでHTTP、HTTPS、WebSocket、FTPを遮断し、CookieとWeb Storageも空であることを検証します。
 - `../../scripts/sandbox/verify-current-comment-reload.ts`: Cookieのない一時BrowserContextで現行Watchページを開き、版付きAPI、`POST /v1/threads`、comment-filter2への再入力、ページ再読み込みがないことを動的検証します。
+- `../../scripts/sandbox/verify-current-harajuku-css.ts`: NicoCache_nl経由のCookieなし一時タブで原宿風Watchを有効化し、CSSの読込順、重要宣言0件、代表ビューポート、専用DOMを検証します。公式Watchがエラー画面の場合は失敗として報告します。
 - `comment-post-api.md`: 2026-07-19に取得した公式バンドルから確認したコメント投稿契約です。
 - `comment-reload-api.md`: 2026-07-23に取得した公式バンドルから確認した、公式ストアと描画を更新するコメント再取得契約です。
 - `comment-reload-match-history.md`: 公式資産ごとのMatch、ハッシュ、意味上の安定点、変動点、汎化候補と採用条件を時系列で記録します。
@@ -51,6 +53,8 @@ bun run sandbox:run-seek-preview
 bun run sandbox:verify-offline
 bun run sandbox:verify-comment-reload
 bun run sandbox:analyze-official
+bun run sandbox:analyze-watch-css
+bun run sandbox:verify-harajuku-css
 bun run sandbox:analyze-comment-reload
 bun run sandbox:analyze-comment-menu
 ```
@@ -63,7 +67,7 @@ bun scripts/sandbox/capture-official-watch-bundle.ts `
   --url=https://www.nicovideo.jp/watch/sm9
 ```
 
-raw CDP取得はログイン済みセッションでページを表示し、そこから参照される同一公式CDNのES Module依存関係も認証情報なしで巡回します。保存するのは `resource.video.nimg.jp/web/scripts/nvpc_next/assets/` の `.js` レスポンス本文と、URL、サイズ、SHA-256、取得日時だけです。NicoCache_nlが `www.nicovideo.jp/local/` として配信するスクリプト、HTML、Cookie、Authorization、リクエスト・レスポンスヘッダー、DOM、スクリーンショットは保存しません。通常の解析は `static-text-only` です。会員分岐の動的確認だけは、外部通信を遮断してloopbackから配信する隔離BrowserContextで、対象を限定した公式ES Moduleを実行します。
+raw CDP取得はログイン済みセッションでページを表示し、そこから参照される同一公式CDNのES Module依存関係も認証情報なしで巡回します。保存するのは `resource.video.nimg.jp/web/scripts/nvpc_next/assets/` の `.js`・`.css`レスポンス本文と、URL、サイズ、SHA-256、取得日時だけです。NicoCache_nlが `www.nicovideo.jp/local/` として配信するスクリプト、HTML、Cookie、Authorization、リクエスト・レスポンスヘッダー、DOM、スクリーンショットは保存しません。通常の解析は `static-text-only` です。会員分岐の動的確認だけは、外部通信を遮断してloopbackから配信する隔離BrowserContextで、対象を限定した公式ES Moduleを実行します。
 
 実行時は次を守ってください。
 

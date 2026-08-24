@@ -1,224 +1,224 @@
 
   div[class*="grid-area_"][class*="sidebar"] section {
-    margin-top: var(--hy-stat-height) !important;
-    height: calc(100% - var(--hy-stat-height)) !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    min-height: 0 !important;
+    margin-top: var(--hy-stat-height);
+    height: calc(100% - var(--hy-stat-height));
+    border: 0;
+    box-shadow: none;
+    min-height: 0;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: var(--hy-gap) !important;
-    align-items: stretch !important;
-    height: auto !important;
-    min-height: 0 !important;
+    display: flex;
+    flex-direction: column;
+    gap: var(--hy-gap);
+    align-items: stretch;
+    height: auto;
+    min-height: 0;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) {
-    flex: 0 0 calc(var(--watch-player-height) + 49px) !important;
-    height: calc(var(--watch-player-height) + 49px) !important;
-    min-height: 0 !important;
+    flex: 0 0 calc(var(--watch-player-height) + 49px);
+    height: calc(var(--watch-player-height) + 49px);
+    min-height: 0;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section {
-    flex: 0 0 var(--hy-sidebar-tag-search-height) !important;
-    height: var(--hy-sidebar-tag-search-height) !important;
-    min-height: var(--hy-sidebar-tag-search-height) !important;
-    max-height: var(--hy-sidebar-tag-search-height) !important;
-    margin-top: 0 !important;
+    flex: 0 0 var(--hy-sidebar-tag-search-height);
+    height: var(--hy-sidebar-tag-search-height);
+    min-height: var(--hy-sidebar-tag-search-height);
+    max-height: var(--hy-sidebar-tag-search-height);
+    margin-top: 0;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header {
-    display: flex !important;
-    align-items: center !important;
-    height: var(--hy-sidebar-tag-search-header-height) !important;
-    min-height: var(--hy-sidebar-tag-search-header-height) !important;
-    max-height: var(--hy-sidebar-tag-search-header-height) !important;
-    padding: 0 4px 0 8px !important;
-    box-sizing: border-box !important;
-    overflow: hidden !important;
+    display: flex;
+    align-items: center;
+    height: var(--hy-sidebar-tag-search-header-height);
+    min-height: var(--hy-sidebar-tag-search-header-height);
+    max-height: var(--hy-sidebar-tag-search-header-height);
+    padding: 0 4px 0 8px;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > [aria-label*="を開閉する"] {
-    display: flex !important;
-    flex: 1 1 auto !important;
-    align-items: center !important;
-    min-width: 0 !important;
-    height: 100% !important;
-    padding: 0 4px 0 0 !important;
-    gap: 4px !important;
-    overflow: hidden !important;
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    min-width: 0;
+    height: 100%;
+    padding: 0 4px 0 0;
+    gap: 4px;
+    overflow: hidden;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > [aria-label*="を開閉する"] > svg {
-    flex: 0 0 16px !important;
-    width: 16px !important;
-    min-width: 16px !important;
-    max-width: 16px !important;
-    height: 16px !important;
-    min-height: 16px !important;
-    max-height: 16px !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    flex: 0 0 16px;
+    width: 16px;
+    min-width: 16px;
+    max-width: 16px;
+    height: 16px;
+    min-height: 16px;
+    max-height: 16px;
+    padding: 0;
+    margin: 0;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > [aria-label*="を開閉する"] > div {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    height: auto !important;
-    overflow: hidden !important;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: auto;
+    overflow: hidden;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header h1,
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header p {
-    min-width: 0 !important;
-    margin: 0 !important;
-    overflow: hidden !important;
-    text-overflow: clip !important;
-    white-space: nowrap !important;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header h1 {
-    height: 18px !important;
-    font-size: 12px !important;
-    line-height: 18px !important;
+    height: 18px;
+    font-size: 12px;
+    line-height: 18px;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header p {
-    height: 16px !important;
-    font-size: 11px !important;
-    line-height: 16px !important;
+    height: 16px;
+    font-size: 11px;
+    line-height: 16px;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > div:last-child {
-    display: flex !important;
-    flex: 0 0 auto !important;
-    align-items: center !important;
-    gap: 2px !important;
-    height: 100% !important;
-    max-width: 78px !important;
-    padding: 0 !important;
-    overflow: hidden !important;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 2px;
+    height: 100%;
+    max-width: 78px;
+    padding: 0;
+    overflow: hidden;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > div:last-child > button {
-    flex: 0 0 24px !important;
-    width: 24px !important;
-    min-width: 24px !important;
-    max-width: 24px !important;
-    height: 24px !important;
-    min-height: 24px !important;
-    max-height: 24px !important;
-    padding: 3px !important;
-    border-color: transparent !important;
-    background: transparent !important;
+    flex: 0 0 24px;
+    width: 24px;
+    min-width: 24px;
+    max-width: 24px;
+    height: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    padding: 3px;
+    border-color: transparent;
+    background: transparent;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > header > div:last-child > button svg {
-    width: 18px !important;
-    height: 18px !important;
-    min-width: 18px !important;
-    min-height: 18px !important;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > :not(header) {
-    flex: 1 1 auto !important;
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: auto !important;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    overflow: auto;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > div:has(> .HarajukuWatchChrome) + section > :not(header) > div {
-    height: 100% !important;
-    min-height: 0 !important;
+    height: 100%;
+    min-height: 0;
   }
 
   div[class*="grid-area_"][class*="sidebar"] section::before {
-    content: none !important;
+    content: none;
   }
 
   .HarajukuWatchChrome {
-    position: absolute !important;
-    inset: 0 !important;
-    z-index: 20 !important;
-    box-sizing: border-box !important;
-    pointer-events: none !important;
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    box-sizing: border-box;
+    pointer-events: none;
   }
 
   .HarajukuStats {
-    position: absolute !important;
-    inset: 0 0 auto 0 !important;
-    height: var(--hy-stat-height) !important;
-    box-sizing: border-box !important;
-    font-family: "MS PGothic", "Meiryo", sans-serif !important;
-    font-size: 12px !important;
-    font-weight: bold !important;
-    color: #fff !important;
-    text-shadow: 0 -1px 0 #000 !important;
-    pointer-events: none !important;
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: var(--hy-stat-height);
+    box-sizing: border-box;
+    font-family: "MS PGothic", "Meiryo", sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 -1px 0 #000;
+    pointer-events: none;
   }
 
   .HarajukuStats-row {
-    position: absolute !important;
-    left: 0 !important;
-    right: var(--hy-stat-date-width) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 4px !important;
-    height: 18px !important;
-    box-sizing: border-box !important;
-    padding: 0 9px !important;
-    border: 1px solid #111 !important;
+    position: absolute;
+    left: 0;
+    right: var(--hy-stat-date-width);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 18px;
+    box-sizing: border-box;
+    padding: 0 9px;
+    border: 1px solid #111;
     background:
       linear-gradient(180deg, rgba(255, 255, 255, .38) 0, rgba(255, 255, 255, .18) 42%, rgba(255, 255, 255, 0) 43%),
-      linear-gradient(#656565 0, #383838 48%, #161616 49%, #050505 100%) !important;
-    line-height: 1 !important;
-    text-align: center !important;
-    white-space: nowrap !important;
+      linear-gradient(#656565 0, #383838 48%, #161616 49%, #050505 100%);
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
   }
 
   .HarajukuStats-row[data-hy-key="views"] {
-    top: 0 !important;
+    top: 0;
   }
 
   .HarajukuStats-row[data-hy-key="comments"] {
-    top: 20px !important;
+    top: 20px;
   }
 
   .HarajukuStats-row[data-hy-key="mylists"] {
-    top: 40px !important;
+    top: 40px;
   }
 
   .HarajukuStats-date {
-    position: absolute !important;
-    top: 0 !important;
-    right: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 4px !important;
-    width: var(--hy-stat-date-width) !important;
-    height: 58px !important;
-    box-sizing: border-box !important;
-    padding: 0 10px !important;
-    border: 1px solid #111 !important;
-    border-left: 0 !important;
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: var(--hy-stat-date-width);
+    height: 58px;
+    box-sizing: border-box;
+    padding: 0 10px;
+    border: 1px solid #111;
+    border-left: 0;
     background:
       linear-gradient(180deg, rgba(255, 255, 255, .42) 0, rgba(255, 255, 255, .18) 44%, rgba(255, 255, 255, 0) 45%),
-      linear-gradient(#777 0, #565656 48%, #393939 49%, #1d1d1d 100%) !important;
-    line-height: 1.35 !important;
-    text-align: center !important;
-    white-space: normal !important;
+      linear-gradient(#777 0, #565656 48%, #393939 49%, #1d1d1d 100%);
+    line-height: 1.35;
+    text-align: center;
+    white-space: normal;
   }
 
   .HarajukuStats-label,
   .HarajukuStats-value {
-    color: #fff !important;
-    font: inherit !important;
+    color: #fff;
+    font: inherit;
   }
 
   .HarajukuStats-row .HarajukuStats-label::after {
@@ -226,491 +226,491 @@
   }
 
   .HarajukuOwner {
-    position: absolute !important;
-    top: 0 !important;
-    left: auto !important;
-    right: 0 !important;
-    display: grid !important;
-    grid-template-columns: 52px minmax(0, 1fr) auto !important;
-    grid-template-rows: 1fr auto !important;
-    column-gap: 8px !important;
-    width: var(--hy-sidebar-width) !important;
-    height: var(--hy-owner-height) !important;
-    box-sizing: border-box !important;
-    padding: 8px !important;
-    border: 1px solid var(--hy-border) !important;
-    background: linear-gradient(var(--hy-panel), var(--hy-panel-2)) !important;
-    color: var(--hy-text) !important;
-    font-family: "MS PGothic", "Meiryo", sans-serif !important;
-    pointer-events: auto !important;
+    position: absolute;
+    top: 0;
+    left: auto;
+    right: 0;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    grid-template-rows: 1fr auto;
+    column-gap: 8px;
+    width: var(--hy-sidebar-width);
+    height: var(--hy-owner-height);
+    box-sizing: border-box;
+    padding: 8px;
+    border: 1px solid var(--hy-border);
+    background: linear-gradient(var(--hy-panel), var(--hy-panel-2));
+    color: var(--hy-text);
+    font-family: "MS PGothic", "Meiryo", sans-serif;
+    pointer-events: auto;
   }
 
   .HarajukuOwner-iconLink {
-    grid-row: 1 / 3 !important;
-    align-self: start !important;
-    width: 52px !important;
-    height: 52px !important;
+    grid-row: 1 / 3;
+    align-self: start;
+    width: 52px;
+    height: 52px;
   }
 
   .HarajukuOwner-icon {
-    display: block !important;
-    width: 52px !important;
-    height: 52px !important;
-    border: 1px solid var(--hy-border) !important;
-    border-radius: 50% !important;
-    object-fit: cover !important;
-    box-sizing: border-box !important;
+    display: block;
+    width: 52px;
+    height: 52px;
+    border: 1px solid var(--hy-border);
+    border-radius: 50%;
+    object-fit: cover;
+    box-sizing: border-box;
   }
 
   .HarajukuOwner-body {
-    display: flex !important;
-    min-width: 0 !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 5px !important;
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
   }
 
   .HarajukuOwner-name {
-    display: block !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-    color: var(--hy-text) !important;
-    font-size: 14px !important;
-    font-weight: bold !important;
-    line-height: 18px !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--hy-text);
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 18px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .HarajukuOwner-videos {
-    color: var(--hy-link) !important;
-    font-size: 12px !important;
-    line-height: 16px !important;
-    white-space: nowrap !important;
+    color: var(--hy-link);
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;
   }
 
   .HarajukuOwner-actions {
-    grid-column: 2 / 4 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    gap: 4px !important;
-    min-width: 0 !important;
-    white-space: nowrap !important;
+    grid-column: 2 / 4;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    min-width: 0;
+    white-space: nowrap;
   }
 
   .HarajukuOwner-menuWrapper {
-    position: relative !important;
-    flex: 0 0 30px !important;
+    position: relative;
+    flex: 0 0 30px;
   }
 
   .HarajukuOwner-menuPopup[hidden] {
-    display: none !important;
+    display: none;
   }
 
   .HarajukuOwner-menuPopup {
-    position: absolute !important;
-    top: calc(100% + 4px) !important;
-    right: 0 !important;
-    z-index: 40 !important;
-    width: max-content !important;
-    min-width: 180px !important;
-    padding: 4px !important;
-    border: 1px solid var(--hy-border-dark) !important;
-    background: var(--hy-panel) !important;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, .3) !important;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 40;
+    width: max-content;
+    min-width: 180px;
+    padding: 4px;
+    border: 1px solid var(--hy-border-dark);
+    background: var(--hy-panel);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .3);
   }
 
   #root#root main .HarajukuOwner-menuItem {
-    display: block !important;
-    width: 100% !important;
-    min-height: 28px !important;
-    padding: 4px 8px !important;
-    border: 0 !important;
-    background: transparent !important;
-    color: var(--hy-text) !important;
-    font: inherit !important;
-    text-align: left !important;
-    white-space: nowrap !important;
+    display: block;
+    width: 100%;
+    min-height: 28px;
+    padding: 4px 8px;
+    border: 0;
+    background: transparent;
+    color: var(--hy-text);
+    font: inherit;
+    text-align: left;
+    white-space: nowrap;
   }
 
   #root#root main .HarajukuOwner-menuItem:hover {
-    background: var(--hy-panel-2) !important;
+    background: var(--hy-panel-2);
   }
 
   #root#root main .HarajukuOwner-action {
-    display: inline-flex !important;
-    flex: 0 0 30px !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 30px !important;
-    min-width: 30px !important;
-    max-width: 30px !important;
-    height: 24px !important;
-    min-height: 24px !important;
-    padding: 0 !important;
-    border: 1px solid var(--hy-border-dark) !important;
-    border-radius: var(--hy-radius) !important;
-    background: linear-gradient(var(--hy-panel), var(--hy-panel-2)) !important;
-    color: var(--hy-text) !important;
-    fill: var(--hy-text) !important;
-    box-shadow: none !important;
-    cursor: pointer !important;
-    text-decoration: none !important;
+    display: inline-flex;
+    flex: 0 0 30px;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    height: 24px;
+    min-height: 24px;
+    padding: 0;
+    border: 1px solid var(--hy-border-dark);
+    border-radius: var(--hy-radius);
+    background: linear-gradient(var(--hy-panel), var(--hy-panel-2));
+    color: var(--hy-text);
+    fill: var(--hy-text);
+    box-shadow: none;
+    cursor: pointer;
+    text-decoration: none;
   }
 
   #root#root main .HarajukuOwner-action:hover {
-    border-color: var(--hy-link) !important;
-    color: var(--hy-link) !important;
-    fill: var(--hy-link) !important;
+    border-color: var(--hy-link);
+    color: var(--hy-link);
+    fill: var(--hy-link);
   }
 
   #root#root main .HarajukuOwner-action:disabled,
   #root#root main .HarajukuOwner-action[aria-disabled="true"] {
-    cursor: default !important;
-    opacity: .45 !important;
-    pointer-events: none !important;
+    cursor: default;
+    opacity: .45;
+    pointer-events: none;
   }
 
   #root#root main .HarajukuOwner-action svg {
-    display: block !important;
-    width: 17px !important;
-    height: 17px !important;
-    color: inherit !important;
-    fill: inherit !important;
+    display: block;
+    width: 17px;
+    height: 17px;
+    color: inherit;
+    fill: inherit;
   }
 
   div[class*="grid-area_"][class*="sidebar"] section > header {
-    height: var(--hy-sidebar-header-height) !important;
-    min-height: var(--hy-sidebar-header-height) !important;
-    position: relative !important;
-    background: linear-gradient(#686868, #1f1f1f) !important;
-    border: 1px solid #111 !important;
-    border-bottom: 0 !important;
-    color: #fff !important;
-    overflow: hidden !important;
-    text-align: center !important;
-    text-shadow: 0 -1px 0 #000 !important;
+    height: var(--hy-sidebar-header-height);
+    min-height: var(--hy-sidebar-header-height);
+    position: relative;
+    background: linear-gradient(#686868, #1f1f1f);
+    border: 1px solid #111;
+    border-bottom: 0;
+    color: #fff;
+    overflow: hidden;
+    text-align: center;
+    text-shadow: 0 -1px 0 #000;
   }
 
   div[class*="grid-area_"][class*="sidebar"] section > header [aria-label*="コメントリスト"][aria-label*="開閉"] {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    height: var(--hy-sidebar-header-height) !important;
-    min-height: var(--hy-sidebar-header-height) !important;
-    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--hy-sidebar-header-height);
+    min-height: var(--hy-sidebar-header-height);
+    padding: 0;
   }
 
   div[class*="grid-area_"][class*="sidebar"] section > header [aria-label*="コメントリスト"][aria-label*="開閉"] > svg {
-    position: absolute !important;
-    left: 10px !important;
-    top: 50% !important;
-    flex: 0 0 16px !important;
-    width: 16px !important;
-    min-width: 16px !important;
-    max-width: 16px !important;
-    height: 16px !important;
-    min-height: 16px !important;
-    max-height: 16px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transform: translateY(-50%) !important;
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    flex: 0 0 16px;
+    width: 16px;
+    min-width: 16px;
+    max-width: 16px;
+    height: 16px;
+    min-height: 16px;
+    max-height: 16px;
+    margin: 0;
+    padding: 0;
+    transform: translateY(-50%);
   }
 
   div[class*="grid-area_"][class*="sidebar"] section > header [aria-label*="コメントリスト"][aria-label*="開閉"] h1 {
-    line-height: var(--hy-sidebar-header-height) !important;
+    line-height: var(--hy-sidebar-header-height);
   }
 
   div[class*="grid-area_"][class*="sidebar"] section > div {
-    max-height: none !important;
-    overflow: auto !important;
-    border: 1px solid #999 !important;
-    border-top: 0 !important;
-    background: #fff !important;
+    max-height: none;
+    overflow: auto;
+    border: 1px solid #999;
+    border-top: 0;
+    background: #fff;
   }
 
   div[class*="grid-area_"][class*="sidebar"] section > header * {
-    color: #fff !important;
+    color: #fff;
   }
 
   div[class*="grid-area_"][class*="sidebar"] button[role="combobox"],
   [data-scope="tabs"][data-part="trigger"] {
-    height: 26px !important;
-    min-width: 0 !important;
-    padding: 0 10px !important;
-    border: 1px solid #aaa !important;
-    border-radius: var(--hy-radius) !important;
-    background: linear-gradient(#fff, #e4e4e4) !important;
-    color: #222 !important;
-    font-size: 12px !important;
+    height: 26px;
+    min-width: 0;
+    padding: 0 10px;
+    border: 1px solid #aaa;
+    border-radius: var(--hy-radius);
+    background: linear-gradient(#fff, #e4e4e4);
+    color: #222;
+    font-size: 12px;
   }
 
   div[class*="grid-area_"][class*="sidebar"] section [class*="Pressable"],
   div[class*="grid-area_"][class*="sidebar"] section li,
   div[class*="grid-area_"][class*="sidebar"] section [role="row"],
   div[class*="grid-area_"][class*="sidebar"] section a {
-    font-family: "MS PGothic", "Meiryo", sans-serif !important;
-    font-size: 12px !important;
+    font-family: "MS PGothic", "Meiryo", sans-serif;
+    font-size: 12px;
   }
 
   div[class*="grid-area_"][class*="sidebar"] section [class*="Pressable"]:nth-child(even),
   div[class*="grid-area_"][class*="sidebar"] section li:nth-child(even) {
-    background: #eee !important;
+    background: #eee;
   }
 
   div[class*="grid-area_"][class*="sidebar"] section [class*="Pressable"]:hover,
   div[class*="grid-area_"][class*="sidebar"] section li:hover {
-    background: #dcdcdc !important;
+    background: #dcdcdc;
   }
 
   [data-scope="tabs"][data-part="trigger"][data-selected] {
-    background: linear-gradient(#4b4b4b, #2b2b2b) !important;
-    border-color: #1f1f1f !important;
-    color: #fff !important;
-    text-shadow: 0 -1px 0 #000 !important;
+    background: linear-gradient(#4b4b4b, #2b2b2b);
+    border-color: #1f1f1f;
+    color: #fff;
+    text-shadow: 0 -1px 0 #000;
   }
 
   div[class*="grid-area_"][class*="sidebar"] [data-scope="tabs"],
   div[class*="grid-area_"][class*="sidebar"] [role="tabpanel"] {
-    display: none !important;
+    display: none;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] {
-    display: flex !important;
-    flex: 0 0 var(--hy-sidebar-recommend-height) !important;
-    flex-direction: column !important;
-    height: var(--hy-sidebar-recommend-height) !important;
-    min-height: var(--hy-sidebar-recommend-height) !important;
-    max-height: var(--hy-sidebar-recommend-height) !important;
-    padding: 8px !important;
-    box-sizing: border-box !important;
-    border: 1px solid var(--hy-border) !important;
-    background: var(--hy-panel) !important;
-    overflow: hidden !important;
+    display: flex;
+    flex: 0 0 var(--hy-sidebar-recommend-height);
+    flex-direction: column;
+    height: var(--hy-sidebar-recommend-height);
+    min-height: var(--hy-sidebar-recommend-height);
+    max-height: var(--hy-sidebar-recommend-height);
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid var(--hy-border);
+    background: var(--hy-panel);
+    overflow: hidden;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] > [data-scope="tabs"][data-part="list"] {
-    display: flex !important;
-    flex: 0 0 28px !important;
-    height: 28px !important;
-    min-height: 28px !important;
-    gap: 4px !important;
-    overflow: hidden !important;
+    display: flex;
+    flex: 0 0 28px;
+    height: 28px;
+    min-height: 28px;
+    gap: 4px;
+    overflow: hidden;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] > [data-scope="tabs"][data-part="list"] > [data-scope="tabs"][data-part="trigger"] {
-    display: flex !important;
-    flex: 1 1 0 !important;
-    align-items: center !important;
-    height: 26px !important;
-    min-height: 26px !important;
-    max-height: 26px !important;
-    min-width: 0 !important;
-    padding: 0 6px !important;
-    justify-content: center !important;
-    overflow: hidden !important;
-    text-overflow: clip !important;
-    white-space: nowrap !important;
-    word-break: keep-all !important;
-    overflow-wrap: normal !important;
-    line-height: 24px !important;
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    height: 26px;
+    min-height: 26px;
+    max-height: 26px;
+    min-width: 0;
+    padding: 0 6px;
+    justify-content: center;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    line-height: 24px;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] > [data-scope="tabs"][data-part="list"] > [data-scope="tabs"][data-part="trigger"] * {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-    text-overflow: clip !important;
-    white-space: nowrap !important;
-    word-break: keep-all !important;
-    overflow-wrap: normal !important;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: clip;
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow-wrap: normal;
   }
 
   div[class*="grid-area_"][class*="sidebar"] > div:has(> div > .HarajukuWatchChrome) > [data-scope="tabs"][data-part="root"] > [data-scope="tabs"][data-part="content"][role="tabpanel"][data-selected] {
-    display: block !important;
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    margin-top: 8px !important;
-    overflow: auto !important;
+    display: block;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: 8px;
+    overflow: auto;
   }
 
   div[class*="grid-area_"][class*="sidebar"]::after {
-    content: none !important;
+    content: none;
   }
 
   div[class*="grid-area_"][class*="sidebar"] [role="tabpanel"] {
-    margin-top: 8px !important;
+    margin-top: 8px;
   }
 
   div[class*="grid-area_"][class*="sidebar"] a[href*="/watch/"],
   div[class*="grid-area_"][class*="sidebar"] [data-anchor-area="recommendation"] {
-    border-radius: 0 !important;
+    border-radius: 0;
   }
 
   a[data-anchor-area="tags"],
   a[href^="/tag/"],
   #TagItemsCounter,
   #TagItemsShareButton {
-    height: 24px !important;
-    min-height: 24px !important;
-    padding: 0 8px !important;
-    border: 1px solid #aaa !important;
-    border-radius: var(--hy-radius) !important;
-    background: linear-gradient(#fff, #e7e7e7) !important;
-    color: var(--hy-link) !important;
-    font-size: 12px !important;
-    font-weight: normal !important;
-    flex: 0 0 auto !important;
-    max-width: none !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-    white-space: nowrap !important;
+    height: 24px;
+    min-height: 24px;
+    padding: 0 8px;
+    border: 1px solid #aaa;
+    border-radius: var(--hy-radius);
+    background: linear-gradient(#fff, #e7e7e7);
+    color: var(--hy-link);
+    font-size: 12px;
+    font-weight: normal;
+    flex: 0 0 auto;
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
   }
 
   div[class*="grid-area_"][class*="bottom"] > div:first-child,
   div[class*="grid-area_"][class*="bottom"] [data-anchor-area="tags"] {
-    margin-top: 4px !important;
+    margin-top: 4px;
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] {
-    gap: 8px !important;
+    gap: 8px;
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:first-child {
-    width: var(--hy-player-width) !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-    display: block !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-    border: 0 !important;
-    background: transparent !important;
-    color: var(--hy-text) !important;
-    font-size: 12px !important;
-    line-height: 20px !important;
-    white-space: nowrap !important;
+    width: var(--hy-player-width);
+    height: 0;
+    min-height: 0;
+    overflow: visible;
+    display: block;
+    padding: 0;
+    box-sizing: border-box;
+    border: 0;
+    background: transparent;
+    color: var(--hy-text);
+    font-size: 12px;
+    line-height: 20px;
+    white-space: nowrap;
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:first-child {
-    position: static !important;
+    position: static;
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:first-child > :first-child {
-    display: block !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    overflow: hidden !important;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:first-child > :first-child > :not(h1) {
-    display: none !important;
+    display: none;
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:first-child h1 {
-    display: block !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    z-index: 3 !important;
-    width: var(--hy-player-width) !important;
-    height: var(--hy-title-row-height) !important;
-    max-width: var(--hy-player-width) !important;
-    box-sizing: border-box !important;
-    margin: 0 !important;
-    padding: 6px 8px !important;
-    border: 1px solid #aaa !important;
-    background: linear-gradient(var(--hy-panel), var(--hy-panel-2)) !important;
-    overflow: hidden !important;
-    color: var(--hy-text) !important;
-    font-size: 16px !important;
-    font-weight: bold !important;
-    line-height: 20px !important;
-    white-space: nowrap !important;
-    text-overflow: clip !important;
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 3;
+    width: var(--hy-player-width);
+    height: var(--hy-title-row-height);
+    max-width: var(--hy-player-width);
+    box-sizing: border-box;
+    margin: 0;
+    padding: 6px 8px;
+    border: 1px solid #aaa;
+    background: linear-gradient(var(--hy-panel), var(--hy-panel-2));
+    overflow: hidden;
+    color: var(--hy-text);
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 20px;
+    white-space: nowrap;
+    text-overflow: clip;
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:first-child > :not(:first-child) {
-    display: none !important;
+    display: none;
   }
 
   section[class*="grid-template-areas"]::before {
-    content: none !important;
+    content: none;
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type {
-    position: absolute !important;
-    left: 0 !important;
-    top: calc(var(--hy-title-row-height) + var(--hy-title-to-detail-gap)) !important;
-    z-index: 4 !important;
-    width: var(--hy-player-width) !important;
-    height: var(--hy-description-height) !important;
-    min-height: var(--hy-description-min-height) !important;
-    max-height: var(--hy-description-max-height) !important;
-    overflow: hidden !important;
-    display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
+    position: absolute;
+    left: 0;
+    top: calc(var(--hy-title-row-height) + var(--hy-title-to-detail-gap));
+    z-index: 4;
+    width: var(--hy-player-width);
+    height: var(--hy-description-height);
+    min-height: var(--hy-description-min-height);
+    max-height: var(--hy-description-max-height);
+    overflow: hidden;
+    display: block;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > header {
-    display: none !important;
+    display: none;
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > section:first-of-type > :not(header):not(.HarajukuDescription) {
-    display: none !important;
+    display: none;
   }
 
   .HarajukuDescription {
-    box-sizing: border-box !important;
-    width: var(--hy-player-width) !important;
-    min-height: var(--hy-description-min-height) !important;
-    max-height: var(--hy-description-max-height) !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    overscroll-behavior: contain !important;
-    padding: 2px 8px !important;
-    border: 1px solid #b6b6b6 !important;
-    background: var(--hy-panel) !important;
-    color: var(--hy-text) !important;
-    font-size: 12px !important;
-    line-height: 18px !important;
-    overflow-wrap: anywhere !important;
-    white-space: normal !important;
+    box-sizing: border-box;
+    width: var(--hy-player-width);
+    min-height: var(--hy-description-min-height);
+    max-height: var(--hy-description-max-height);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 2px 8px;
+    border: 1px solid #b6b6b6;
+    background: var(--hy-panel);
+    color: var(--hy-text);
+    font-size: 12px;
+    line-height: 18px;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .HarajukuDescription[data-hy-state="empty"],
   .HarajukuDescription[data-hy-state="error"] {
-    display: flex !important;
-    align-items: center !important;
-    color: var(--hy-muted) !important;
+    display: flex;
+    align-items: center;
+    color: var(--hy-muted);
   }
 
   .HarajukuDescription:focus-visible {
-    outline: 2px solid var(--hy-blue) !important;
-    outline-offset: -2px !important;
+    outline: 2px solid var(--hy-blue);
+    outline-offset: -2px;
   }
 
   .HarajukuDescription :where(p, blockquote, pre, ul, ol) {
-    margin: 0 0 4px !important;
+    margin: 0 0 4px;
   }
 
   .HarajukuDescription :where(p, blockquote, pre, ul, ol):last-child {
-    margin-bottom: 0 !important;
+    margin-bottom: 0;
   }
 
   .HarajukuDescription :where(ul, ol) {
-    padding-left: 22px !important;
+    padding-left: 22px;
   }
 
   .HarajukuDescription a {
-    color: var(--hy-link) !important;
-    text-decoration: underline !important;
+    color: var(--hy-link);
+    text-decoration: underline;
   }
 
   .HarajukuDescription a:hover {
-    color: var(--hy-link-hover) !important;
+    color: var(--hy-link-hover);
   }

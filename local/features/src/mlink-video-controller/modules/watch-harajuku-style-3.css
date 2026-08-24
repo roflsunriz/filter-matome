@@ -1,72 +1,72 @@
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) {
-    position: absolute !important;
-    left: 0 !important;
+    position: absolute;
+    left: 0;
     top: calc(
       var(--hy-title-row-height) +
       var(--hy-title-to-detail-gap) +
       var(--hy-description-height) +
       var(--hy-detail-to-tags-gap)
-    ) !important;
-    z-index: 2 !important;
-    width: var(--hy-player-width) !important;
-    min-height: 28px !important;
-    max-height: var(--hy-tag-strip-max-height) !important;
-    overflow: visible !important;
-    display: flex !important;
-    flex-wrap: wrap !important;
-    align-items: center !important;
-    gap: 4px !important;
-    padding: 2px 0 !important;
-    background: #fff !important;
+    );
+    z-index: 2;
+    width: var(--hy-player-width);
+    min-height: 28px;
+    max-height: var(--hy-tag-strip-max-height);
+    overflow: visible;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 0;
+    background: #fff;
   }
 
   section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) > div[class*="contentOverlay"] {
-    inset: -1px 0 -15px !important;
-    width: 100% !important;
-    height: auto !important;
-    z-index: 3 !important;
+    inset: -1px 0 -15px;
+    width: 100%;
+    height: auto;
+    z-index: 3;
   }
 
   div[class*="grid-area_"][class*="bottom"] section {
-    margin-top: 8px !important;
-    max-height: 230px !important;
-    overflow: auto !important;
+    margin-top: 8px;
+    max-height: 230px;
+    overflow: auto;
   }
 
   div[class*="grid-area_"][class*="bottom"] > section:first-of-type {
-    margin-top: 0 !important;
-    max-height: var(--hy-description-max-height) !important;
-    overflow: hidden !important;
+    margin-top: 0;
+    max-height: var(--hy-description-max-height);
+    overflow: hidden;
   }
 
   div[class*="grid-area_"][class*="bottom"] section:nth-of-type(n+2) {
-    display: none !important;
+    display: none;
   }
 
   a[data-anchor-area="tags"]:hover,
   a[href^="/tag/"]:hover {
-    background: #fff !important;
-    border-color: #777 !important;
+    background: #fff;
+    border-color: #777;
   }
 
   [data-element-area="video_action"],
   button[data-element-area="video_action"] {
-    border: 1px solid #aaa !important;
-    border-radius: var(--hy-radius) !important;
-    background: linear-gradient(#fff, #e1e1e1) !important;
-    color: #222 !important;
-    box-shadow: inset 0 1px rgba(255, 255, 255, .9) !important;
+    border: 1px solid #aaa;
+    border-radius: var(--hy-radius);
+    background: linear-gradient(#fff, #e1e1e1);
+    color: #222;
+    box-shadow: inset 0 1px rgba(255, 255, 255, .9);
   }
 
   [data-element-area="video_action"]:hover {
-    background: linear-gradient(#fff, #d4d4d4) !important;
-    text-decoration: none !important;
+    background: linear-gradient(#fff, #d4d4d4);
+    text-decoration: none;
   }
 
   [class*="text-layer_"],
   [class*="c_textOnLayer"],
   [class*="fill_action"] {
-    color: inherit !important;
+    color: inherit;
   }
 
   [class*="bg-c_layer"],
@@ -79,22 +79,22 @@
   li,
   td,
   th {
-    line-height: 1.45 !important;
+    line-height: 1.45;
   }
 
   @media (max-width: 1000px) {
     #root > div > header {
-      padding: 0 8px !important;
+      padding: 0 8px;
     }
 
     main section[class*="grid-template-areas"] {
-      width: calc(100vw - 12px) !important;
-      margin-top: 6px !important;
-      display: block !important;
+      width: calc(100vw - 12px);
+      margin-top: 6px;
+      display: block;
     }
 
     section[class*="grid-template-areas"] > div {
-      margin-bottom: 10px !important;
+      margin-bottom: 10px;
     }
   }
 
@@ -105,9 +105,9 @@
   :root[data-hy-theme="light"] [aria-label="nicovideo-content"],
   :root[data-hy-theme="light"] #root main,
   :root[data-hy-theme="light"] body::before {
-    background: var(--hy-page) !important;
-    color: #222 !important;
-    color-scheme: light !important;
+    background: var(--hy-page);
+    color: #222;
+    color-scheme: light;
   }
 
   html[data-hy-theme="dark"],
@@ -117,9 +117,9 @@
   :root[data-hy-theme="dark"] [aria-label="nicovideo-content"],
   :root[data-hy-theme="dark"] #root main,
   :root[data-hy-theme="dark"] body::before {
-    background: var(--hy-page) !important;
-    color: #e8e8e8 !important;
-    color-scheme: dark !important;
+    background: var(--hy-page);
+    color: #e8e8e8;
+    color-scheme: dark;
   }
 
   :root[data-hy-theme="light"] #root > div > header,
@@ -128,18 +128,18 @@
   :root[data-hy-theme="light"] section[class*="grid-template-areas"] aside,
   :root[data-hy-theme="light"] section[class*="grid-template-areas"] [class*="surfaceHighEm"],
   :root[data-hy-theme="light"] div[class*="grid-area_"][class*="sidebar"] > div > div:first-child {
-    background: #fff !important;
-    border-color: #b7b7b7 !important;
-    color: #222 !important;
+    background: #fff;
+    border-color: #b7b7b7;
+    color: #222;
   }
 
   :root[data-hy-theme="light"] #root > div > header {
-    background: transparent !important;
+    background: transparent;
   }
 
   :root[data-hy-theme="light"] #root > div > header a[title="ニコニコ動画"]::after {
-    color: #111 !important;
-    text-shadow: 0 1px 0 #fff !important;
+    color: #111;
+    text-shadow: 0 1px 0 #fff;
   }
 
   :root[data-hy-theme="light"] #root > div > header form[role="search"],
@@ -147,16 +147,16 @@
   :root[data-hy-theme="light"] input,
   :root[data-hy-theme="light"] textarea,
   :root[data-hy-theme="light"] select {
-    background: #fff !important;
-    border-color: #999 !important;
-    color: #111 !important;
+    background: #fff;
+    border-color: #999;
+    color: #111;
   }
 
   :root[data-hy-theme="light"] #root > div > header form[role="search"]::before {
-    background: linear-gradient(#fff, #e2e2e2) !important;
-    border-right-color: #999 !important;
-    color: #111 !important;
-    text-shadow: 0 1px 0 #fff !important;
+    background: linear-gradient(#fff, #e2e2e2);
+    border-right-color: #999;
+    color: #111;
+    text-shadow: 0 1px 0 #fff;
   }
 
   :root[data-hy-theme="light"] section[class*="grid-template-areas"]::after,
@@ -168,43 +168,43 @@
   :root[data-hy-theme="light"] .PlayerPresenter textarea[placeholder="コメントを入力"],
   :root[data-hy-theme="light"] .PlayerPresenter input[placeholder="コマンド"],
   :root[data-hy-theme="light"] div[class*="grid-area_"][class*="sidebar"] section > div {
-    background: #fff !important;
-    border-color: #999 !important;
-    color: #111 !important;
-    text-shadow: none !important;
+    background: #fff;
+    border-color: #999;
+    color: #111;
+    text-shadow: none;
   }
 
   :root[data-hy-theme="light"] a[data-anchor-area="tags"],
   :root[data-hy-theme="light"] a[href^="/tag/"],
   :root[data-hy-theme="light"] #TagItemsCounter,
   :root[data-hy-theme="light"] #TagItemsShareButton {
-    background: linear-gradient(#fff, #e7e7e7) !important;
-    color: #0645ad !important;
+    background: linear-gradient(#fff, #e7e7e7);
+    color: #0645ad;
   }
 
   :root[data-hy-theme="light"] section[class*="grid-template-areas"] section > header,
   :root[data-hy-theme="light"] div[class*="grid-area_"][class*="sidebar"] section > header {
-    background: linear-gradient(#fdfdfd, #e1e1e1) !important;
-    border-color: #b7b7b7 !important;
-    color: #111 !important;
-    text-shadow: 0 1px 0 #fff !important;
+    background: linear-gradient(#fdfdfd, #e1e1e1);
+    border-color: #b7b7b7;
+    color: #111;
+    text-shadow: 0 1px 0 #fff;
   }
 
   :root[data-hy-theme="light"] div[class*="grid-area_"][class*="sidebar"] section > header *,
   :root[data-hy-theme="light"] section[class*="grid-template-areas"] section > header * {
-    color: #111 !important;
-    fill: #111 !important;
+    color: #111;
+    fill: #111;
   }
 
   :root[data-hy-theme="light"] div[class*="grid-area_"][class*="sidebar"] section [class*="Pressable"]:nth-child(even),
   :root[data-hy-theme="light"] div[class*="grid-area_"][class*="sidebar"] section li:nth-child(even) {
-    background: #eee !important;
-    color: #111 !important;
+    background: #eee;
+    color: #111;
   }
 
   :root[data-hy-theme="light"] div[class*="grid-area_"][class*="sidebar"] section [class*="Pressable"]:hover,
   :root[data-hy-theme="light"] div[class*="grid-area_"][class*="sidebar"] section li:hover {
-    background: #dcdcdc !important;
+    background: #dcdcdc;
   }
 
   :root[data-hy-theme="light"] #root main button:not([aria-label="コメント投稿ボタン"]):not([aria-label*="ニコる"]):not([data-element-name*="nicoru"]),
@@ -212,11 +212,11 @@
   :root[data-hy-theme="light"] #root > div > header button,
   :root[data-hy-theme="light"] #root > div > header [role="button"],
   :root[data-hy-theme="light"] #root > div > header .Pressable {
-    background: linear-gradient(#fff, #e1e1e1) !important;
-    border-color: #aaa !important;
-    color: #111 !important;
-    fill: #111 !important;
-    text-shadow: 0 1px 0 #fff !important;
+    background: linear-gradient(#fff, #e1e1e1);
+    border-color: #aaa;
+    color: #111;
+    fill: #111;
+    text-shadow: 0 1px 0 #fff;
   }
 
   :root[data-hy-theme="light"] #root main button:not([aria-label="コメント投稿ボタン"]):not([aria-label*="ニコる"]):not([data-element-name*="nicoru"]) *,
@@ -224,15 +224,15 @@
   :root[data-hy-theme="light"] #root > div > header button *,
   :root[data-hy-theme="light"] #root > div > header [role="button"] *,
   :root[data-hy-theme="light"] #root > div > header .Pressable * {
-    color: #111 !important;
-    fill: #111 !important;
+    color: #111;
+    fill: #111;
   }
 
   :root[data-hy-theme="light"] #root > div > header a:not([title="ニコニコ動画"]),
   :root[data-hy-theme="light"] #root > div > header [class*="bg_layer"],
   :root[data-hy-theme="light"] #root > div > header [class*="bg-c_layer"] {
-    background: transparent !important;
-    color: #111 !important;
+    background: transparent;
+    color: #111;
   }
 
   :root[data-hy-theme="dark"] #CommonHeader,
@@ -240,58 +240,58 @@
   :root[data-hy-theme="dark"] section[class*="grid-template-areas"] aside,
   :root[data-hy-theme="dark"] section[class*="grid-template-areas"] [class*="surfaceHighEm"],
   :root[data-hy-theme="dark"] div[class*="grid-area_"][class*="sidebar"] > div > div:first-child {
-    background: #202020 !important;
-    border-color: #555 !important;
-    color: #e8e8e8 !important;
+    background: #202020;
+    border-color: #555;
+    color: #e8e8e8;
   }
 
   :root[data-hy-theme="dark"] #CommonHeader {
-    background: transparent !important;
+    background: transparent;
   }
 
   :root[data-hy-theme="dark"] #root > div > header {
-    background: transparent !important;
-    color: #e8e8e8 !important;
+    background: transparent;
+    color: #e8e8e8;
   }
 
   :root[data-hy-theme="dark"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:first-child h1 {
-    background: linear-gradient(#2e2e2e, #202020) !important;
-    border-color: #666 !important;
-    color: #f2f2f2 !important;
+    background: linear-gradient(#2e2e2e, #202020);
+    border-color: #666;
+    color: #f2f2f2;
   }
 
   :root[data-hy-theme="dark"] #CommonHeader a[href^="https://www.nicovideo.jp?"] {
-    filter: brightness(0) invert(.68) contrast(.95) !important;
-    opacity: .72 !important;
+    filter: brightness(0) invert(.68) contrast(.95);
+    opacity: .72;
   }
 
   :root[data-hy-theme="dark"] #root > div > header a[title="ニコニコ動画"]::after {
-    color: #a8a8a8 !important;
-    text-shadow: 0 -1px 0 #000 !important;
+    color: #a8a8a8;
+    text-shadow: 0 -1px 0 #000;
   }
 
   :root[data-hy-theme="dark"] #root > div > header form[role="search"] {
-    background: #141414 !important;
-    border-color: #2d2d2d !important;
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .85) !important;
+    background: #141414;
+    border-color: #2d2d2d;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .85);
   }
 
   :root[data-hy-theme="dark"] #root > div > header form[role="search"]::before {
-    background: #191919 !important;
-    border-right-color: #2d2d2d !important;
-    color: #aaa !important;
-    text-shadow: 0 -1px 0 #000 !important;
+    background: #191919;
+    border-right-color: #2d2d2d;
+    color: #aaa;
+    text-shadow: 0 -1px 0 #000;
   }
 
   :root[data-hy-theme="dark"] #root > div > header input[role="combobox"] {
-    background: #141414 !important;
-    color: #c8c8c8 !important;
+    background: #141414;
+    color: #c8c8c8;
   }
 
   :root[data-hy-theme="dark"] #root > div > header form[role="search"] button[aria-label="検索"] {
-    background: #191919 !important;
-    border-left-color: #2d2d2d !important;
-    color: #aaa !important;
+    background: #191919;
+    border-left-color: #2d2d2d;
+    color: #aaa;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -312,48 +312,48 @@
     html,
     body,
     #root main {
-      background: transparent !important;
-      color: var(--hy-text) !important;
+      background: transparent;
+      color: var(--hy-text);
     }
 
     body::before {
-      background: transparent !important;
+      background: transparent;
     }
 
     #root > div > header,
     #CommonHeader {
-      background: transparent !important;
-      color: var(--hy-text) !important;
+      background: transparent;
+      color: var(--hy-text);
     }
 
     #CommonHeader a,
     #CommonHeader button,
     #CommonHeader [class*="common-header"] {
-      color: #eee !important;
+      color: #eee;
     }
 
     #root > div > header a[title="ニコニコ動画"]::after {
-      color: #f2f2f2 !important;
-      text-shadow: 0 1px 0 #000 !important;
+      color: #f2f2f2;
+      text-shadow: 0 1px 0 #000;
     }
 
     #CommonHeader a[href^="https://www.nicovideo.jp?"] {
-      filter: brightness(0) invert(1) contrast(1.25) !important;
+      filter: brightness(0) invert(1) contrast(1.25);
     }
 
     #root > div > header form[role="search"] {
-      border-color: #666 !important;
-      background: #111 !important;
-      box-shadow: inset 0 1px 2px rgba(0, 0, 0, .65) !important;
+      border-color: #666;
+      background: #111;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, .65);
     }
 
     #root > div > header input[role="combobox"],
     input,
     textarea,
     select {
-      background: #1e1e1e !important;
-      color: #eee !important;
-      border-color: #666 !important;
+      background: #1e1e1e;
+      color: #eee;
+      border-color: #666;
     }
 
     #root > div > header form[role="search"] button[aria-label="検索"],
@@ -362,90 +362,90 @@
     [data-element-area="video_action"],
     button[data-element-area="video_action"],
     .PlayerPresenter > div:nth-child(2) button {
-      background: linear-gradient(#3a3a3a, #202020) !important;
-      border-color: #666 !important;
-      color: #eee !important;
-      box-shadow: inset 0 1px rgba(255, 255, 255, .08) !important;
+      background: linear-gradient(#3a3a3a, #202020);
+      border-color: #666;
+      color: #eee;
+      box-shadow: inset 0 1px rgba(255, 255, 255, .08);
     }
 
     section[class*="grid-template-areas"]::before {
-      background: linear-gradient(#2e2e2e, #202020) !important;
-      border-color: #666 !important;
-      color: #f2f2f2 !important;
+      background: linear-gradient(#2e2e2e, #202020);
+      border-color: #666;
+      color: #f2f2f2;
     }
 
     section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:first-child {
-      background: linear-gradient(#2e2e2e, #202020) !important;
-      border-color: #666 !important;
-      color: #f2f2f2 !important;
+      background: linear-gradient(#2e2e2e, #202020);
+      border-color: #666;
+      color: #f2f2f2;
     }
 
     section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:first-child h1 {
-      background: linear-gradient(#2e2e2e, #202020) !important;
-      border-color: #666 !important;
-      color: #f2f2f2 !important;
+      background: linear-gradient(#2e2e2e, #202020);
+      border-color: #666;
+      color: #f2f2f2;
     }
 
     section[class*="grid-template-areas"]::after {
-      background: #1f1f1f !important;
-      border-color: #555 !important;
-      color: #d8d8d8 !important;
+      background: #1f1f1f;
+      border-color: #555;
+      color: #d8d8d8;
     }
 
     section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) {
-      background: var(--hy-bg) !important;
+      background: var(--hy-bg);
     }
 
     a[data-anchor-area="tags"],
     a[href^="/tag/"],
     #TagItemsCounter,
     #TagItemsShareButton {
-      background: linear-gradient(#323232, #222) !important;
-      border-color: #5f5f5f !important;
-      color: var(--hy-link) !important;
+      background: linear-gradient(#323232, #222);
+      border-color: #5f5f5f;
+      color: var(--hy-link);
     }
 
     section[class*="grid-template-areas"] section,
     section[class*="grid-template-areas"] aside,
     section[class*="grid-template-areas"] [class*="surfaceHighEm"],
     div[class*="grid-area_"][class*="sidebar"] > div > div:first-child {
-      background: var(--hy-panel) !important;
-      border-color: var(--hy-border) !important;
-      color: var(--hy-text) !important;
+      background: var(--hy-panel);
+      border-color: var(--hy-border);
+      color: var(--hy-text);
     }
 
     div[class*="grid-area_"][class*="sidebar"] section > header {
-      background: linear-gradient(#4b4b4b, #181818) !important;
-      border-color: #080808 !important;
-      color: #fff !important;
+      background: linear-gradient(#4b4b4b, #181818);
+      border-color: #080808;
+      color: #fff;
     }
 
     div[class*="grid-area_"][class*="sidebar"] section > div {
-      background: #181818 !important;
-      border-color: #555 !important;
-      color: var(--hy-text) !important;
+      background: #181818;
+      border-color: #555;
+      color: var(--hy-text);
     }
 
     div[class*="grid-area_"][class*="sidebar"] section [class*="Pressable"]:nth-child(even),
     div[class*="grid-area_"][class*="sidebar"] section li:nth-child(even) {
-      background: #242424 !important;
+      background: #242424;
     }
 
     div[class*="grid-area_"][class*="sidebar"] section [class*="Pressable"]:hover,
     div[class*="grid-area_"][class*="sidebar"] section li:hover {
-      background: #333 !important;
+      background: #333;
     }
 
     .PlayerPresenter > div:nth-child(2) {
-      background: linear-gradient(#2b2b2b, #171717) !important;
-      color: #eee !important;
+      background: linear-gradient(#2b2b2b, #171717);
+      color: #eee;
     }
 
     .PlayerPresenter textarea[placeholder="コメントを入力"],
     .PlayerPresenter input[placeholder="コマンド"] {
-      background: #151515 !important;
-      color: #eee !important;
-      border-color: #666 !important;
+      background: #151515;
+      color: #eee;
+      border-color: #666;
     }
 
     .PlayerPresenter [aria-label*="video - currentTime"],
@@ -455,9 +455,9 @@
     .PlayerPresenter [class*="surfaceAccentAzure"],
     .PlayerPresenter [class*="primaryAzure"],
     .PlayerPresenter > div:nth-child(2) button:hover {
-      background: linear-gradient(#52b7ff, #1f86d0) !important;
-      border-color: #0966a8 !important;
-      color: #fff !important;
+      background: linear-gradient(#52b7ff, #1f86d0);
+      border-color: #0966a8;
+      color: #fff;
     }
   }
 
@@ -468,9 +468,9 @@
   :root[data-hy-theme="light"] [aria-label="nicovideo-content"],
   :root[data-hy-theme="light"] #root main,
   :root[data-hy-theme="light"] body::before {
-    background: var(--hy-page) !important;
-    color: #222 !important;
-    color-scheme: light !important;
+    background: var(--hy-page);
+    color: #222;
+    color-scheme: light;
   }
 
   html[data-hy-theme="dark"],
@@ -480,9 +480,9 @@
   :root[data-hy-theme="dark"] [aria-label="nicovideo-content"],
   :root[data-hy-theme="dark"] #root main,
   :root[data-hy-theme="dark"] body::before {
-    background: var(--hy-page) !important;
-    color: #e8e8e8 !important;
-    color-scheme: dark !important;
+    background: var(--hy-page);
+    color: #e8e8e8;
+    color-scheme: dark;
   }
 
   :root[data-hy-theme] section[class*="grid-template-areas"]::after,
@@ -504,14 +504,14 @@
   :root[data-hy-theme] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
   :root[data-hy-theme] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
   :root[data-hy-theme] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
-    background: var(--hy-panel) !important;
-    border-color: var(--hy-border) !important;
-    color: var(--hy-text) !important;
+    background: var(--hy-panel);
+    border-color: var(--hy-border);
+    color: var(--hy-text);
   }
 
   :root[data-hy-theme] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) > div[class*="contentOverlay"] {
-    background: color-mix(in srgb, var(--hy-panel) 82%, transparent) !important;
-    color: var(--hy-text) !important;
+    background: color-mix(in srgb, var(--hy-panel) 82%, transparent);
+    color: var(--hy-text);
   }
 
   :root[data-hy-theme] .PlayerPresenter > div:nth-child(2),
@@ -520,16 +520,16 @@
   :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) [class*="bg_layer"],
   :root[data-hy-theme] [data-element-area="video_action"],
   :root[data-hy-theme] button[data-element-area="video_action"] {
-    background: linear-gradient(var(--hy-panel-2), var(--hy-panel)) !important;
-    border-color: var(--hy-border) !important;
-    color: var(--hy-text) !important;
+    background: linear-gradient(var(--hy-panel-2), var(--hy-panel));
+    border-color: var(--hy-border);
+    color: var(--hy-text);
   }
 
   :root[data-hy-theme] .PlayerPresenter textarea[placeholder="コメントを入力"],
   :root[data-hy-theme] .PlayerPresenter input[placeholder="コマンド"] {
-    background: var(--hy-bg) !important;
-    border-color: var(--hy-border) !important;
-    color: var(--hy-text) !important;
+    background: var(--hy-bg);
+    border-color: var(--hy-border);
+    color: var(--hy-text);
   }
 
   :root[data-hy-theme] [data-element-area="video_action"] *,
@@ -540,8 +540,8 @@
   :root[data-hy-theme] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] *,
   :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) [class*="bg-c_layer"] *,
   :root[data-hy-theme] .PlayerPresenter > div:nth-child(2) [class*="bg_layer"] * {
-    color: var(--hy-text) !important;
-    fill: var(--hy-text) !important;
+    color: var(--hy-text);
+    fill: var(--hy-text);
   }
 
   :root[data-hy-theme="light"] section[class*="grid-template-areas"]::after,
@@ -563,9 +563,9 @@
   :root[data-hy-theme="light"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
   :root[data-hy-theme="light"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
   :root[data-hy-theme="light"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
-    background: #fff !important;
-    border-color: #999 !important;
-    color: #111 !important;
+    background: #fff;
+    border-color: #999;
+    color: #111;
   }
 
   :root[data-hy-theme="light"] .PlayerPresenter > div:nth-child(2),
@@ -574,21 +574,21 @@
   :root[data-hy-theme="light"] .PlayerPresenter > div:nth-child(2) [class*="bg_layer"],
   :root[data-hy-theme="light"] [data-element-area="video_action"],
   :root[data-hy-theme="light"] button[data-element-area="video_action"] {
-    background: linear-gradient(#fff, #e1e1e1) !important;
-    border-color: #aaa !important;
-    color: #111 !important;
+    background: linear-gradient(#fff, #e1e1e1);
+    border-color: #aaa;
+    color: #111;
   }
 
   :root[data-hy-theme="light"] .PlayerPresenter textarea[placeholder="コメントを入力"],
   :root[data-hy-theme="light"] .PlayerPresenter input[placeholder="コマンド"] {
-    background: #fff !important;
-    border-color: #999 !important;
-    color: #111 !important;
+    background: #fff;
+    border-color: #999;
+    color: #111;
   }
 
   :root[data-hy-theme="light"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) > div[class*="contentOverlay"] {
-    background: rgba(242, 242, 242, .86) !important;
-    color: #111 !important;
+    background: rgba(242, 242, 242, .86);
+    color: #111;
   }
 
   :root[data-hy-theme="dark"] section[class*="grid-template-areas"]::after,
@@ -610,9 +610,9 @@
   :root[data-hy-theme="dark"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] > section[class],
   :root[data-hy-theme="dark"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg-c_layer"],
   :root[data-hy-theme="dark"] [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] [class*="bg_layer"] {
-    background: var(--hy-panel) !important;
-    border-color: var(--hy-border) !important;
-    color: var(--hy-text) !important;
+    background: var(--hy-panel);
+    border-color: var(--hy-border);
+    color: var(--hy-text);
   }
 
   :root[data-hy-theme="dark"] .PlayerPresenter > div:nth-child(2),
@@ -621,124 +621,124 @@
   :root[data-hy-theme="dark"] .PlayerPresenter > div:nth-child(2) [class*="bg_layer"],
   :root[data-hy-theme="dark"] [data-element-area="video_action"],
   :root[data-hy-theme="dark"] button[data-element-area="video_action"] {
-    background: linear-gradient(#2b2b2b, #171717) !important;
-    border-color: #666 !important;
-    color: #eee !important;
+    background: linear-gradient(#2b2b2b, #171717);
+    border-color: #666;
+    color: #eee;
   }
 
   :root[data-hy-theme="dark"] .PlayerPresenter textarea[placeholder="コメントを入力"],
   :root[data-hy-theme="dark"] .PlayerPresenter input[placeholder="コマンド"] {
-    background: #151515 !important;
-    border-color: #666 !important;
-    color: #eee !important;
+    background: #151515;
+    border-color: #666;
+    color: #eee;
   }
 
   :root[data-hy-theme="dark"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) > div[class*="contentOverlay"] {
-    background: rgba(32, 32, 32, .88) !important;
-    color: #eee !important;
+    background: rgba(32, 32, 32, .88);
+    color: #eee;
   }
 
   :root[data-hy-theme="light"] #root#root main .PlayerPresenter textarea[placeholder="コメントを入力"],
   :root[data-hy-theme="light"] #root#root main .PlayerPresenter input[placeholder="コマンド"] {
-    background: #fff !important;
-    background-image: none !important;
-    border-color: #999 !important;
-    color: #111 !important;
+    background: #fff;
+    background-image: none;
+    border-color: #999;
+    color: #111;
   }
 
   :root[data-hy-theme="dark"] #root#root main .PlayerPresenter textarea[placeholder="コメントを入力"],
   :root[data-hy-theme="dark"] #root#root main .PlayerPresenter input[placeholder="コマンド"] {
-    background: #151515 !important;
-    background-image: none !important;
-    border-color: #666 !important;
-    color: #eee !important;
+    background: #151515;
+    background-image: none;
+    border-color: #666;
+    color: #eee;
   }
 
   #root#root main .PlayerPresenter > div:first-child button,
   #root#root main .PlayerPresenter > div:first-child [role="button"] {
-    background: transparent !important;
-    background-image: none !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
+    background: transparent;
+    background-image: none;
+    border-color: transparent;
+    box-shadow: none;
   }
 
   #root#root main .PlayerPresenter > div:first-child button:hover,
   #root#root main .PlayerPresenter > div:first-child [role="button"]:hover {
-    background: transparent !important;
-    background-image: none !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
+    background: transparent;
+    background-image: none;
+    border-color: transparent;
+    box-shadow: none;
   }
 
   :root[data-hy-theme="light"] button[aria-label="ニコるボタン"][data-element-name="nicoru_click"] {
-    background: #fff !important;
-    border-color: #fff !important;
-    box-shadow: none !important;
+    background: #fff;
+    border-color: #fff;
+    box-shadow: none;
   }
 
   :root[data-hy-theme="light"] button[aria-label="ニコるボタン"][data-element-name="nicoru_click"]:hover {
-    background: #f4f4f4 !important;
-    border-color: #f4f4f4 !important;
+    background: #f4f4f4;
+    border-color: #f4f4f4;
   }
 
   :root[data-hy-theme="dark"] button[aria-label="ニコるボタン"][data-element-name="nicoru_click"] {
-    background: #202020 !important;
-    border-color: #202020 !important;
-    box-shadow: none !important;
+    background: #202020;
+    border-color: #202020;
+    box-shadow: none;
   }
 
   :root[data-hy-theme="dark"] button[aria-label="ニコるボタン"][data-element-name="nicoru_click"]:hover {
-    background: #252525 !important;
-    border-color: #252525 !important;
+    background: #252525;
+    border-color: #252525;
   }
 
   button[data-element-name="tag_edit"] {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: normal !important;
-    gap: normal !important;
-    height: 24px !important;
-    min-height: 24px !important;
-    padding: 0 8px !important;
-    margin-top: 4px !important;
-    border: 1px solid #aaa !important;
-    border-radius: var(--hy-radius) !important;
-    background: linear-gradient(#fff, #e7e7e7) !important;
-    color: var(--hy-link) !important;
-    font-size: 12px !important;
-    font-weight: normal !important;
-    line-height: 16.8px !important;
-    flex: 0 0 auto !important;
-    max-width: none !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-    white-space: nowrap !important;
-    box-sizing: border-box !important;
+    display: flex;
+    align-items: center;
+    justify-content: normal;
+    gap: normal;
+    height: 24px;
+    min-height: 24px;
+    padding: 0 8px;
+    margin-top: 4px;
+    border: 1px solid #aaa;
+    border-radius: var(--hy-radius);
+    background: linear-gradient(#fff, #e7e7e7);
+    color: var(--hy-link);
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 16.8px;
+    flex: 0 0 auto;
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+    box-sizing: border-box;
   }
 
   button[data-element-name="tag_edit"] svg {
-    display: none !important;
+    display: none;
   }
 
   button[data-element-name="tag_edit"] span {
-    display: flow-root !important;
-    height: 16.8px !important;
-    overflow: hidden !important;
-    color: inherit !important;
-    font: inherit !important;
-    line-height: inherit !important;
-    white-space: nowrap !important;
-    text-overflow: clip !important;
+    display: flow-root;
+    height: 16.8px;
+    overflow: hidden;
+    color: inherit;
+    font: inherit;
+    line-height: inherit;
+    white-space: nowrap;
+    text-overflow: clip;
   }
 
   :root[data-hy-theme="light"] button[data-element-name="tag_edit"] {
-    background: linear-gradient(#fff, #e7e7e7) !important;
-    border-color: #999 !important;
-    color: #0645ad !important;
+    background: linear-gradient(#fff, #e7e7e7);
+    border-color: #999;
+    color: #0645ad;
   }
 
   :root[data-hy-theme="light"] #root#root main button[data-element-name="tag_edit"],
   :root[data-hy-theme="light"] #root#root main button[data-element-name="tag_edit"] span {
-    color: #0645ad !important;
-    fill: #0645ad !important;
+    color: #0645ad;
+    fill: #0645ad;
   }

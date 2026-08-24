@@ -1,28 +1,28 @@
   :root[data-hy-theme="dark"] button[data-element-name="tag_edit"] {
-    background: linear-gradient(#323232, #222) !important;
-    border-color: #5f5f5f !important;
-    color: var(--hy-link) !important;
+    background: linear-gradient(#323232, #222);
+    border-color: #5f5f5f;
+    color: var(--hy-link);
   }
 
   :root[data-hy-theme="dark"] #root#root main button[data-element-name="tag_edit"],
   :root[data-hy-theme="dark"] #root#root main button[data-element-name="tag_edit"] span {
-    color: var(--hy-link) !important;
-    fill: var(--hy-link) !important;
+    color: var(--hy-link);
+    fill: var(--hy-link);
   }
 
   @media (prefers-color-scheme: dark) {
     button[data-element-name="tag_edit"] {
-      background: linear-gradient(#323232, #222) !important;
-      border-color: #5f5f5f !important;
-      color: var(--hy-link) !important;
+      background: linear-gradient(#323232, #222);
+      border-color: #5f5f5f;
+      color: var(--hy-link);
     }
   }
 
   :root[data-hy-background-priority="background-image"] section[class*="grid-template-areas"] > div[class*="grid-area_"][class*="bottom"] > div:nth-child(2) {
-    background: transparent !important;
-    background-image: none !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
+    background: transparent;
+    background-image: none;
+    border-color: transparent;
+    box-shadow: none;
   }
 
   html[data-hy-background-priority="background-image"],
@@ -32,8 +32,8 @@
   :root[data-hy-background-priority="background-image"] [aria-label="nicovideo-content"],
   :root[data-hy-background-priority="background-image"] #root main,
   :root[data-hy-background-priority="background-image"] body::before {
-    background: transparent !important;
-    background-image: none !important;
+    background: transparent;
+    background-image: none;
   }
 
   /* Keep official CommonHeader hover menus readable on their light menu-item backgrounds. */
@@ -67,29 +67,29 @@
   #CommonHeader#CommonHeader#CommonHeader .common-header-138r8qw.common-header-138r8qw *,
   #CommonHeader#CommonHeader#CommonHeader .common-header-1yxywo9.common-header-1yxywo9,
   #CommonHeader#CommonHeader#CommonHeader .common-header-1yxywo9.common-header-1yxywo9 * {
-    color: #111 !important;
-    fill: #111 !important;
-    text-shadow: none !important;
+    color: #111;
+    fill: #111;
+    text-shadow: none;
   }
 
   #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-oms0ym.common-header-oms0ym svg,
   #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-oms0ym.common-header-oms0ym svg g,
   #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-oms0ym.common-header-oms0ym svg path {
-    fill: none !important;
+    fill: none;
   }
 
   #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-oms0ym.common-header-oms0ym svg path[fill] {
-    fill: #999 !important;
+    fill: #999;
   }
 
   #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-1frfhkj.common-header-1frfhkj svg,
   #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-1frfhkj.common-header-1frfhkj svg g,
   #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-1frfhkj.common-header-1frfhkj svg path {
-    fill: none !important;
+    fill: none;
   }
 
   #CommonHeader#CommonHeader#CommonHeader .common-header-105n2rz.common-header-105n2rz .common-header-1frfhkj.common-header-1frfhkj svg path[fill] {
-    fill: #c2c2c2 !important;
+    fill: #c2c2c2;
   }
 
   #CommonHeader#CommonHeader#CommonHeader .common-header-1usu4l0.common-header-1usu4l0:hover,
@@ -100,66 +100,66 @@
   #CommonHeader#CommonHeader#CommonHeader .common-header-c1a1qc.common-header-c1a1qc:hover,
   #CommonHeader#CommonHeader#CommonHeader .common-header-u5s84m.common-header-u5s84m:hover,
   #CommonHeader#CommonHeader#CommonHeader .common-header-mocem5.common-header-mocem5:hover {
-    color: #111 !important;
-    text-decoration: none !important;
+    color: #111;
+    text-decoration: none;
   }
 
   /* filter-matomeの安定属性を使い、OSダーク時の汎用button配色から通知操作を隔離する。 */
   #CommonHeader [data-filter-matome-notification-read-all="true"] {
-    background: #fff !important;
-    background-image: none !important;
-    border-color: #d5d5d5 !important;
-    box-shadow: none !important;
-    color: #333 !important;
-    text-shadow: none !important;
+    background: #fff;
+    background-image: none;
+    border-color: #d5d5d5;
+    box-shadow: none;
+    color: #333;
+    text-shadow: none;
   }
 
   #CommonHeader [data-filter-matome-notification-read-all="true"]:hover {
-    background: #f4f4f4 !important;
-    background-image: none !important;
-    color: #333 !important;
+    background: #f4f4f4;
+    background-image: none;
+    color: #333;
   }
 
   /* NicoCache_nlの安定classを使い、原宿テーマの汎用button/link指定からメニューを隔離する。 */
   #ncnl_common_header_menu .ncnl-common-header-trigger {
-    background: transparent !important;
-    background-image: none !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
-    color: #eee !important;
-    text-shadow: none !important;
+    background: transparent;
+    background-image: none;
+    border-color: transparent;
+    box-shadow: none;
+    color: #eee;
+    text-shadow: none;
   }
 
   #ncnl_common_header_menu:hover .ncnl-common-header-trigger,
   #ncnl_common_header_menu:focus-within .ncnl-common-header-trigger {
-    background: rgba(255, 255, 255, .08) !important;
-    background-image: none !important;
-    color: #fff !important;
+    background: rgba(255, 255, 255, .08);
+    background-image: none;
+    color: #fff;
   }
 
   #ncnl_common_header_menu .ncnl-common-header-popover,
   #ncnl_common_header_menu .ncnl-common-header-actions,
   #ncnl_common_header_menu .ncnl-common-header-footer {
-    background: #fff !important;
-    background-image: none !important;
-    color: #111 !important;
+    background: #fff;
+    background-image: none;
+    color: #111;
   }
 
   #ncnl_common_header_menu .ncnl-common-header-item,
   #ncnl_common_header_menu .ncnl-common-header-footer a {
-    background: #fff !important;
-    background-image: none !important;
-    border-color: #e5e5e5 !important;
-    box-shadow: none !important;
-    color: #111 !important;
-    text-decoration: none !important;
-    text-shadow: none !important;
+    background: #fff;
+    background-image: none;
+    border-color: #e5e5e5;
+    box-shadow: none;
+    color: #111;
+    text-decoration: none;
+    text-shadow: none;
   }
 
   #ncnl_common_header_menu .ncnl-common-header-item:hover,
   #ncnl_common_header_menu .ncnl-common-header-item:focus-visible {
-    background: #f4f4f4 !important;
-    background-image: none !important;
-    color: #111 !important;
-    text-decoration: none !important;
+    background: #f4f4f4;
+    background-image: none;
+    color: #111;
+    text-decoration: none;
   }

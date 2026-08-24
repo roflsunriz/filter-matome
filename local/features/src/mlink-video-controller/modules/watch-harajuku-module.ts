@@ -9,17 +9,12 @@ import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
 import { HarajukuMetadataReader, META_ITEMS } from "./harajuku-metadata";
 import { renderHarajukuDescription } from "./harajuku-description";
 import { createMaterialIcon } from "@/common/material-icons";
-import harajukuBaseStyle from "./watch-harajuku-style-1.css" with { type: "text" };
-import harajukuChromeStyle from "./watch-harajuku-style-2.css" with { type: "text" };
-import harajukuThemeStyle from "./watch-harajuku-style-3.css" with { type: "text" };
-import harajukuCompatibilityStyle from "./watch-harajuku-style-4.css" with { type: "text" };
-
-const harajukuStyle = [
-  harajukuBaseStyle,
-  harajukuChromeStyle,
-  harajukuThemeStyle,
-  harajukuCompatibilityStyle,
-].join("\n");
+import {
+  HARAJUKU_ACTIVE_ATTRIBUTE,
+  HARAJUKU_ACTIVE_VALUE,
+  HARAJUKU_STYLESHEET_ID,
+  HARAJUKU_STYLESHEET_PATH,
+} from "./harajuku-style-contract";
 
 export const watchHarajukuModuleConfig: ModuleConfig = {
   id: "watch_harajuku",
@@ -56,7 +51,6 @@ type OwnerApiMetadata = Omit<
 
 const THEME_KEY = "harajuku-theme";
 const BACKGROUND_PRIORITY_KEY = "harajuku-background-priority";
-const STYLE_ID = "mlink-watch-harajuku-style";
 const CHROME_CLASS = "HarajukuWatchChrome";
 
 const SELECTORS = {
@@ -111,7 +105,11 @@ export class WatchHarajukuModule implements ModuleInstance {
       });
     }
 
-    this.injectStyle();
+    this.ensureStylesheet();
+    document.documentElement.setAttribute(
+      HARAJUKU_ACTIVE_ATTRIBUTE,
+      HARAJUKU_ACTIVE_VALUE,
+    );
     this.setTheme(this.getTheme());
     this.setBackgroundPriority(this.getBackgroundPriority());
     await this.loadWatchApiMetadata();
@@ -134,7 +132,6 @@ export class WatchHarajukuModule implements ModuleInstance {
       this.retryTimer = null;
     }
 
-    document.getElementById(STYLE_ID)?.remove();
     document.querySelectorAll(`.${CHROME_CLASS}`).forEach((node) => {
       node.remove();
     });
@@ -147,6 +144,7 @@ export class WatchHarajukuModule implements ModuleInstance {
 
     document.documentElement.removeAttribute("data-hy-theme");
     document.documentElement.removeAttribute("data-hy-background-priority");
+    document.documentElement.removeAttribute(HARAJUKU_ACTIVE_ATTRIBUTE);
     document.documentElement.style.removeProperty("--hy-description-height");
     document.documentElement.style.removeProperty(
       "--hy-watch-sidebar-panel-height",
@@ -189,15 +187,16 @@ export class WatchHarajukuModule implements ModuleInstance {
     this.startRetryTimer();
   }
 
-  private injectStyle(): void {
-    if (document.getElementById(STYLE_ID)) {
+  private ensureStylesheet(): void {
+    if (document.getElementById(HARAJUKU_STYLESHEET_ID)) {
       return;
     }
 
-    const style = document.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent = harajukuStyle;
-    document.head.appendChild(style);
+    const stylesheet = document.createElement("link");
+    stylesheet.id = HARAJUKU_STYLESHEET_ID;
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = HARAJUKU_STYLESHEET_PATH;
+    document.head.prepend(stylesheet);
   }
 
   private getTheme(): ThemeName {

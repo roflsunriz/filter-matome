@@ -184,6 +184,7 @@ nlFilters/
 ├── 101_disable_official_function.txt # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
 ├── 102_comment_reload_api.txt       # 公式コメント再取得actionをcomment-filter2へ公開
 ├── 103_official_comment_menu.txt    # 公式Reactコメントメニューへcomment-filter2操作を接続
+├── 104_watch_harajuku_style.txt     # 公式CSSのlayer隔離と原宿風Watch CSSの先行読込
 └── 105_premium_hide.txt            # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
 
 extensions/

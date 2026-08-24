@@ -3,6 +3,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { format } from "prettier";
+
 import {
   type CdpEvent,
   getBrowserVersionEndpoint,
@@ -66,6 +68,7 @@ interface CaptureManifestFile {
   mimeType: string;
   bytes: number;
   sha256: string;
+  deminifiedFileName?: string;
 }
 
 const DEFAULT_CDP_ENDPOINT = "http://127.0.0.1:9222";
@@ -127,7 +130,7 @@ const isIoReadResult = (value: unknown): value is IoReadResult =>
     typeof value.base64Encoded === "boolean") &&
   typeof value.eof === "boolean";
 
-const isOfficialScriptUrl = (url: string): boolean => {
+const isOfficialWatchAssetUrl = (url: string): boolean => {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -138,7 +141,7 @@ const isOfficialScriptUrl = (url: string): boolean => {
     parsed.hostname === "resource.video.nimg.jp" &&
     parsed.protocol === "https:" &&
     parsed.pathname.startsWith("/web/scripts/nvpc_next/assets/") &&
-    /\.m?js$/i.test(parsed.pathname)
+    /\.(?:m?js|css)$/i.test(parsed.pathname)
   );
 };
 
@@ -351,7 +354,7 @@ const main = async (): Promise<void> => {
         const params = eventParams(event);
         if (
           isResponseReceivedEvent(params) &&
-          isOfficialScriptUrl(params.response.url)
+          isOfficialWatchAssetUrl(params.response.url)
         ) {
           candidates.set(params.requestId, {
             url: params.response.url,
@@ -440,6 +443,19 @@ const main = async (): Promise<void> => {
     )) {
       const fileName = makeFileName(response.url);
       await writeFile(join(captureDirectory, fileName), response.body);
+      let deminifiedFileName: string | undefined;
+      if (/\.css$/i.test(new URL(response.url).pathname)) {
+        deminifiedFileName = `${fileName}.deminified.css`;
+        const deminified = await format(
+          new TextDecoder().decode(response.body),
+          { parser: "css" },
+        );
+        await writeFile(
+          join(captureDirectory, deminifiedFileName),
+          deminified,
+          "utf8",
+        );
+      }
       files.push({
         url: response.url,
         fileName,
@@ -447,11 +463,12 @@ const main = async (): Promise<void> => {
         mimeType: response.mimeType,
         bytes: response.body.byteLength,
         sha256: createHash("sha256").update(response.body).digest("hex"),
+        ...(deminifiedFileName ? { deminifiedFileName } : {}),
       });
     }
 
     if (files.length === 0) {
-      throw new Error("公式JavaScriptを1件も取得できませんでした。");
+      throw new Error("公式Watch資産を1件も取得できませんでした。");
     }
 
     const manifest = {

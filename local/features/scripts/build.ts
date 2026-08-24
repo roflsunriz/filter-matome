@@ -1,6 +1,7 @@
 import { mkdir, rm } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
 import { parseFeatureVersion } from "./feature-version";
+import { composeHarajukuStylesheet } from "./harajuku-stylesheet";
 import { composeWatchHistoryDocument } from "./watch-history-document";
 
 const projectRoot = resolve(import.meta.dirname, "..");
@@ -92,6 +93,7 @@ async function assertOutputContract(): Promise<void> {
     "features.js.map",
     "server-context-override.js",
     "server-context-override.js.map",
+    "watch-harajuku.css",
     ...featureEntrypoints.flatMap((entrypoint) => {
       const relativeEntry = entrypoint
         .replace(/^src\//, "")
@@ -186,12 +188,16 @@ async function build(): Promise<void> {
     }),
   ]);
 
+  await Bun.write(
+    resolve(outDir, "watch-harajuku.css"),
+    await composeHarajukuStylesheet(projectRoot),
+  );
   await copyHtmlPages();
   await assertOutputContract();
 
   const outputCount = results.reduce(
     (count, result) => count + result.outputs.length,
-    htmlPages.length,
+    htmlPages.length + 1,
   );
   const elapsed = ((performance.now() - startedAt) / 1000).toFixed(2);
   console.log(`[build] Created ${outputCount} files in ${elapsed}s`);

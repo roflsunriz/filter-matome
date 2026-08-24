@@ -8,13 +8,24 @@ const CHECKED_ROOTS = ["src", "tests", "scripts"].map((directory) =>
 );
 const MAX_LINES = 1000;
 const CHECKED_EXTENSIONS = new Set([".ts", ".css", ".html"]);
+const EXCLUDED_CAPTURE_DIRECTORIES = new Set([
+  "src/sandbox/destroy-ads-captures",
+  "src/sandbox/official-watch-bundle",
+]);
+
+function isExcludedCaptureDirectory(path: string): boolean {
+  const relativePath = relative(PROJECT_ROOT, path).replaceAll("\\", "/");
+  return EXCLUDED_CAPTURE_DIRECTORIES.has(relativePath);
+}
 
 async function collectSourceFiles(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
   const nested = await Promise.all(
     entries.map(async (entry) => {
       const path = join(directory, entry.name);
-      if (entry.isDirectory()) return collectSourceFiles(path);
+      if (entry.isDirectory()) {
+        return isExcludedCaptureDirectory(path) ? [] : collectSourceFiles(path);
+      }
       return CHECKED_EXTENSIONS.has(extname(entry.name)) ? [path] : [];
     }),
   );

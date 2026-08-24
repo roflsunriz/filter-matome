@@ -14,6 +14,7 @@
 | `101_disable_official_function.txt` | 公式プレイヤーの競合機能を無効化し、serverContextの設定JSONを保持 |
 | `102_comment_reload_api.txt` | 公式コメントストアの再取得actionをcomment-filter2向けの版付きAPIとして公開 |
 | `103_official_comment_menu.txt` | 公式Reactコメントメニューへcomment-filter2の版付き操作APIを接続 |
+| `104_watch_harajuku_style.txt` | 公式Watch CSSのlayer隔離とHarajuku CSSの先行読込 |
 | `105_premium_hide.txt` | プレミアム勧誘要素を非表示 |
 
 `features.js`はページ判定用の軽量ブートストラップです。ホスト名、URL、ローカルHTMLの`data-feature-page`を判定し、common、mlink-video-controller、comment-filter2、video-player、watch-trackerなど必要なエントリーだけを遅延読み込みします。
@@ -53,6 +54,7 @@ Replace<
 ## 注意事項
 
 - `100_features.txt`を無効にするとブラウザ機能はすべて起動しません。
+- `104_watch_harajuku_style.txt`の公式root CSS Matchを変更するときは、`bun run sandbox:capture-official`で現行資産を取得し、`bun run sandbox:analyze-watch-css`で元CSSとlayer隔離後CSSの両方をde-minify・構文検証してください。
 - 同じ`features.js`を複数のnlFilterから挿入しないでください。
 - URL条件を変更した場合は、中央ページルーターの条件と一致しているか確認してください。
 - `102_comment_reload_api.txt`を変更した場合は`bun run sandbox:analyze-comment-reload`で最新captureとの一致を確認してください。
