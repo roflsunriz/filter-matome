@@ -82,6 +82,7 @@ dist/
 ├── server-context-override.js      # 公式コードより先に同期実行
 ├── server-context-override.js.map
 ├── watch-harajuku.css              # active scope付き原宿風Watch CSS
+├── ad-stub/assets/js/ads2.js        # 公式adsResourceローダーの成功契約を保つ空script
 ├── entries/             # ページ・機能別の遅延ロード入口
 ├── workers/
 │   ├── comment-filter-worker.js

@@ -31,7 +31,8 @@ public final class DestroyAds implements Extension, RequestFilter, Rewriter {
             Pattern.compile("PROXY\\s+127\\.0\\.0\\.1:\\d+");
     private static final Pattern SUPPORTED_REWRITE_URL = Pattern.compile(
             "https?://(?:resource\\.video\\.nimg\\.jp/web/scripts/(?:"
-            + "nvpc_next/assets/(?:Advertisement|root|bridge)-[^/?]+\\.js"
+            + "nvpc_next/assets/(?:Advertisement|root|bridge|"
+            + "PlayerCurrentTime|PlayerVolumeBar)-[^/?]+\\.js"
             + "|bundle/pages_[^/?]+\\.js)|(?:[^/]+\\.)?nicovideo\\.jp/.*)",
             Pattern.CASE_INSENSITIVE);
 
@@ -42,13 +43,28 @@ public final class DestroyAds implements Extension, RequestFilter, Rewriter {
             "export\\{([A-Za-z_$][\\w$]*) as n,([A-Za-z_$][\\w$]*) as r,"
             + "([A-Za-z_$][\\w$]*) as t\\};");
     private static final Pattern ADS_RESOURCE_LOADER = Pattern.compile(
-            "[A-Za-z_$][\\w$]*\\([A-Za-z_$][\\w$]*\\.publicUrl\\.adsResource\\)");
+            "([A-Za-z_$][\\w$]*)\\([A-Za-z_$][\\w$]*"
+            + "\\.publicUrl\\.adsResource\\)");
     private static final Pattern GTM_LOADER_CALL = Pattern.compile(
             "[A-Za-z_$][\\w$]*\\([A-Za-z_$][\\w$]*"
             + "\\.NicoGoogleTagManagerDataLayer,`GTM-[A-Z0-9-]+`\\)");
     private static final Pattern LEGACY_MANAGER_AVAILABILITY = Pattern.compile(
             "([A-Za-z_$][\\w$]*)\\.available=!\\(!([A-Za-z_$][\\w$]*)\\(\\)"
             + "\\|\\|!\\2\\(\\)\\.Advertisement\\)");
+    private static final Pattern WATCH_VIDEO_AD_ENTRY = Pattern.compile(
+            "[A-Za-z_$][\\w$]*\\([A-Za-z_$][\\w$]*\\)"
+            + "\\?\\.videoAds\\?\\.\\[0\\]");
+    private static final Pattern WATCH_VIDEO_AD_PREWARM = Pattern.compile(
+            "[A-Za-z_$][\\w$]*\\.getPrerollVideoAds\\(\\)\\.at\\(0\\)");
+    private static final Pattern SNAPSHOT_ADS_RESOURCE_LOADER = Pattern.compile(
+            "[A-Za-z_$][\\w$]*\\([A-Za-z_$][\\w$]*\\.getSnapshot\\(\\)"
+            + "\\.publicUrl\\.adsResource\\)");
+    private static final Pattern IMA_DETECTOR_LOADER = Pattern.compile(
+            "[A-Za-z_$][\\w$]*\\(`https://imasdk\\.googleapis\\.com/"
+            + "js/sdkloader/ima3\\.js`\\)");
+    private static final Pattern OPENX_DETECTOR_LOADER = Pattern.compile(
+            "[A-Za-z_$][\\w$]*\\(`https://dwango-d\\.openx\\.net/"
+            + "w/1\\.0/jstag`\\)");
     private static final Pattern EXTERNAL_ELEMENT = Pattern.compile(
             "<(script|iframe|video|img|source|link)\\b[^>]*"
             + "(?:src|href|poster)\\s*=\\s*([\\\"'])((?:https?:)?//[^\\\"']+)\\2"
@@ -93,10 +109,31 @@ public final class DestroyAds implements Extension, RequestFilter, Rewriter {
         }
         if (lowerUrl.contains("/assets/root-")) {
             rewritten = ADS_RESOURCE_LOADER.matcher(rewritten)
-                    .replaceAll("Promise.resolve(null)");
+                    .replaceAll("$1(`/local/features/dist/ad-stub`)");
         }
         if (lowerUrl.contains("/assets/bridge-")) {
             rewritten = GTM_LOADER_CALL.matcher(rewritten).replaceAll("void 0");
+        }
+        if (lowerUrl.contains("/assets/playercurrenttime-")
+                && countMatches(WATCH_VIDEO_AD_ENTRY, rewritten) == 1
+                && countMatches(WATCH_VIDEO_AD_PREWARM, rewritten) == 1) {
+            rewritten = WATCH_VIDEO_AD_ENTRY.matcher(rewritten).replaceAll(
+                    "void 0/*filter-matome:watch-video-ads*/");
+            rewritten = WATCH_VIDEO_AD_PREWARM.matcher(rewritten).replaceAll(
+                    "void 0/*filter-matome:watch-video-ads*/");
+        }
+        if (lowerUrl.contains("/assets/playervolumebar-")
+                && countMatches(SNAPSHOT_ADS_RESOURCE_LOADER, rewritten) == 1
+                && countMatches(IMA_DETECTOR_LOADER, rewritten) == 1
+                && countMatches(OPENX_DETECTOR_LOADER, rewritten) == 1) {
+            String rejected = "Promise.reject(null)"
+                    + "/*filter-matome:adblock-detector*/";
+            rewritten = SNAPSHOT_ADS_RESOURCE_LOADER.matcher(rewritten)
+                    .replaceAll(rejected);
+            rewritten = IMA_DETECTOR_LOADER.matcher(rewritten)
+                    .replaceAll(rejected);
+            rewritten = OPENX_DETECTOR_LOADER.matcher(rewritten)
+                    .replaceAll(rejected);
         }
         if (lowerUrl.contains("/web/scripts/bundle/pages_")) {
             rewritten = LEGACY_MANAGER_AVAILABILITY.matcher(rewritten)
@@ -106,6 +143,15 @@ public final class DestroyAds implements Extension, RequestFilter, Rewriter {
             rewritten = removeBlockedElements(rewritten);
         }
         return rewritten;
+    }
+
+    private static int countMatches(Pattern pattern, String content) {
+        int count = 0;
+        Matcher matcher = pattern.matcher(content);
+        while (matcher.find()) {
+            count++;
+        }
+        return count;
     }
 
     private static String removeBlockedElements(String content) {

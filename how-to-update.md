@@ -16,7 +16,7 @@ bun run sandbox:analyze-destroy-ads
 bun test tests/destroy-ads.test.ts tests/extension-logging.test.ts
 ```
 
-Matchを変更する前に`local/features/src/destroy-ads/match-history.md`へURL、SHA-256、サイズ、一致数と意味上の根拠を追記する。広告語が含まれるだけの通常機能や、生成class名、表示文言を遮断根拠にしない。Java変更後は対象NicoCache_nlのclass pathで`DestroyAds.java`をコンパイルし、`DestroyAds.class`以外の同名追加classがないことを確認する。実環境ではNicoCache_nlを標準ランチャーで再起動し、`proxy.pac.destroy-ads.bak`が初回PAC変更前の内容を保持していること、主要ページのNetworkで広告配信・入札・同期・画像・動画・iframe要求がすべて`ERR_EMPTY_RESPONSE`となり上流応答を受けないこと、通常の動画、コメント、Watch API、一覧画像が維持されることを確認する。元へ戻す場合はNicoCache_nl停止後に同バックアップを`proxy.pac`へ戻し、`DestroyAds.class`を取り除いてNicoCache_nlとブラウザーを再起動する。
+Matchを変更する前に`local/features/src/destroy-ads/match-history.md`へURL、SHA-256、サイズ、一致数と意味上の根拠を追記する。広告語が含まれるだけの通常機能や、生成class名、表示文言を遮断根拠にしない。`publicUrl.adsResource`は呼び出しを削除せず、ローダー関数を保ったまま`/local/features/dist/ad-stub`へbase URLだけを変更する。Java変更後は対象NicoCache_nlのclass pathで`DestroyAds.java`をコンパイルし、`DestroyAds.class`以外の同名追加classがないことを確認する。実環境ではNicoCache_nlを標準ランチャーで再起動し、`proxy.pac.destroy-ads.bak`が初回PAC変更前の内容を保持していること、主要ページのNetworkで外部広告配信・入札・同期・画像・動画・iframe要求が上流応答を受けないこと、ローカル`ad-stub/assets/js/ads2.js`が200を返すこと、通常の動画、コメント、Watch API、一覧画像が維持されることを確認する。元へ戻す場合はNicoCache_nl停止後に同バックアップを`proxy.pac`へ戻し、`DestroyAds.class`を取り除いてNicoCache_nlとブラウザーを再起動する。
 
 ## 公式CommonHeader通知APIの追従確認
 

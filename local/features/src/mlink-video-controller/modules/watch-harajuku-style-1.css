@@ -93,6 +93,14 @@
     background: transparent;
   }
 
+  #root,
+  #root > div,
+  [aria-label="nicovideo-content"],
+  #root main {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   a,
   [data-anchor],
   button[data-element-name],
@@ -503,6 +511,11 @@
     padding: var(--hy-pre-player-height) 0 48px;
     column-gap: var(--hy-gap);
     row-gap: 8px;
+  }
+
+  main section[class*="grid-template-areas"] > div {
+    min-width: 0;
+    max-width: 100%;
   }
 
   [data-styling-name="fullscreen-target"],

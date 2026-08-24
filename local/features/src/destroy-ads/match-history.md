@@ -13,5 +13,11 @@
 | 2026-07-23 | `bridge-CgAJs_pW.js` | 70,469 | `2c0a67ee4b1b92e0e54e9c6939f63d4512ab2e7ef03f01c2cf4f6aed1f8432a0` | GTM起動 1件 |
 | 2026-08-19 | `bridge-OsqK3xBu.js` | 70,730 | `ec1970efa634b8c369d290221b2edf42eefe3bec5229cdb54817ffd0df3de8c3` | GTM起動 1件 |
 | 2026-08-24 | `bridge-UHUlhr66.js` | 70,752 | `a9f32cb42fa49561e61c720e654fecf7943255f9afd4b7d2c0d4440bc30744ed` | GTM起動 1件 |
+| 2026-08-24 | `PlayerCurrentTime-DyMaJv5-.js` | 70,044 | `93b968dcd0b0596898c3d86ff3b23dad30729112c83fb3129fc270136071c5ce` | `videoAds?.[0]`起動 1件、`getPrerollVideoAds().at(0)` prewarm 1件 |
+| 2026-08-24 | `PlayerVolumeBar-CshODhlc.js` | 23,981 | `783c97505f5d4fa546e4a35b90fc70b43009105cf6d097a0bac21dd043417524` | `adsResource`・IMA・OpenX検査ローダー 各1件 |
 
 2026-08-24の旧ページbundleでは`Advertisement`利用可能判定が`TopPage`、`VideoTop`、`NewVideosPage`、`UserPage`、`MessagePage`の5資産に各1回一致した。これらはハッシュ付きURLではないため、次回走査でも同じ意味上の判定と置換後構文を検証する。
+
+同日のWatch実行確認では、広告APIをRequestFilterで`DROP`した状態で`PlayerCurrentTime`から`GET /api/video/getAd.json.php`の失敗が観測された。通信失敗を公式の動画広告経路へ渡さないため、動画広告選択と自動再生prewarmの両生成点を公式資産内で先に`void 0`化する。`PlayerVolumeBar`の広告ブロック検査は失敗を`Promise.allSettled`で扱うが不要な広告スクリプト要求を生成するため、3ローダーを即時rejectへ置換する。いずれも全Matchが一意の場合だけまとめて適用し、部分一致では資産を変更しない。
+
+`root-*`の`D(serverContext.publicUrl.adsResource)`は戻り値未使用に見えるが、呼び出しを`Promise.resolve(null)`、即時reject、`void 0`のいずれへ置き換えても、access-rightsとHLS取得後に公式動画エラーへ遷移した。ローダー関数を保持したままbase URLだけを`/local/features/dist/ad-stub`へ変更すると、公式が追加する`/assets/js/ads2.js`を同一originの空scriptとして200で読み込み、5秒保持後もWatchが正常だった。この動的契約をroot書換えの受入条件とする。

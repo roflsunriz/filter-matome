@@ -112,8 +112,9 @@ async function activateCurrentPage(): Promise<void> {
     return;
   }
 
+  await startCommon();
+
   const tasks: Promise<void>[] = [
-    startCommon(),
     loadEntry<MovieFetcherModule>("movie-fetcher/index").then((module) => {
       module.startMovieFetcher();
     }),

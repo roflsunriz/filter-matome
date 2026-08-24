@@ -7,7 +7,9 @@
 1. `DestroyAds` Java extensionが既存`proxy.pac`のproxyポートを読み、広告ホストだけを同じNicoCache_nlへ通す管理ブロックを最終`DIRECT`の直前へ挿入する。初回変更前のPACは`proxy.pac.destroy-ads.bak`へ一度だけ保存し、既存ルールは維持する。
 2. 同extensionの`Rewriter`が公式HTML・JavaScriptレスポンスをブラウザーへ渡す前に処理する。
    - 現行`Advertisement-*` ES ModuleのReact広告コンポーネントとFallbackを`null`化する。
-   - `root-*`の`publicUrl.adsResource`ローダーを解決済みの空Promiseへ置換する。
+   - `root-*`の`publicUrl.adsResource`ローダー関数を残し、base URLだけを同一originの空stubへ変更する。公式側が`/assets/js/ads2.js`を追加してload完了を待つ契約を維持しつつ、外部広告コードは実行しない。
+   - `PlayerCurrentTime-*`の動画広告選択と自動再生prewarmを無効化し、広告APIを呼ぶ前に動画広告経路を閉じる。
+   - `PlayerVolumeBar-*`の広告ブロック検査が生成するadsResource・IMA・OpenXローダーを、`Promise.allSettled`内の即時rejectへ置換する。
    - `bridge-*`のGoogle Tag Manager起動呼び出しを除去する。
    - 旧ページbundleの`Advertisement`マネージャーを利用不可に固定する。
    - 公式HTMLに直書きされた広告用`script`、`iframe`、`video`、`img`、`source`、`link`をブラウザーが解析する前に除去する。
@@ -35,6 +37,7 @@ bun test tests/destroy-ads.test.ts tests/extension-logging.test.ts
 
 - 広告語の出現だけで遮断対象と断定しない。要求のinitiator、de-minifyした生成点、その後に発生した広告配信を対応付ける。
 - minify識別子そのものへ依存せず、`publicUrl.adsResource`、公開export、GTM data layer、`Advertisement`能力判定という意味上の境界へ一致させる。
+- `publicUrl.adsResource`の呼び出し自体を`void 0`や成功・失敗Promiseへ置き換えない。公式動画初期化はローダー関数のload完了契約に依存するため、ローカルstubのbase URLへ引数だけを変更する。
 - 公式資産のMatchが外れた場合は対象レスポンスを改変しない。RequestFilterの上流遮断は維持し、一般ページを壊すワイルドカードへ広げない。
 - URL規則を増やすときは、通常の動画・画像・コメント・APIを許可する負例を同時に追加する。
 - 変更後はJava拡張が`DestroyAds.class`だけを生成することと、実ブラウザーのNetworkで広告要求が上流へ到達しないことを確認する。

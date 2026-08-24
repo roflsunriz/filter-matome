@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - 【Harajuku・nlFilters・build】原宿風Watchを後挿しstyleと1,116件の`!important`で押し切らず、独立した`watch-harajuku.css`を104番nlFilterから公式CSSより先に読み込み、公式root CSS応答全体を専用cascade layerへ隔離する構成へ変更した。Harajuku CSSはモジュール有効時だけactive scopeで適用し、通常宣言だけで公式CSSより自然に優先する。
 
+### Fixed
+
+- 【destroy-ads・Watch】広告資産ローダー呼び出しを空Promiseへ置き換えたことで、access-rightsとHLSが成功しても公式動画エラーへ遷移する問題を修正した。公式ローダー関数は維持して同一originの空stubへ向け、動画広告開始点と広告ブロック検査は各公式資産内で要求生成前に無効化する。
+- 【features・video-player】共通loggerの初期化前にvideo-player routerが失敗ログを出そうとして例外になる競合を防ぐため、ニコニコページではcommon entryの起動完了後に各機能entryを並列起動するよう順序を修正した。
+
 ## [#248] - 2026-08-23
 
 ### Changed

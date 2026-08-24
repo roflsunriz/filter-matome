@@ -82,6 +82,21 @@
     line-height: 1.45;
   }
 
+  @media (max-width: 1200px) {
+    #root main div:has([role="tabpanel"][id$="content-recommendation"]) {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    #root main [role="tabpanel"][id$="content-recommendation"] {
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+  }
+
   @media (max-width: 1000px) {
     #root > div > header {
       padding: 0 8px;

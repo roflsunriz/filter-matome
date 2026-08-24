@@ -19,6 +19,7 @@ interface HarajukuObservation {
   bodyChildCount: number;
   bottomAreaCount: number;
   chromeCount: number;
+  clientWidth: number;
   descriptionCount: number;
   gridCount: number;
   harajukuImportantDeclarations: number;
@@ -28,6 +29,7 @@ interface HarajukuObservation {
   officialStylesheetFound: boolean;
   pageHeading: string;
   rootExists: boolean;
+  scrollWidth: number;
   sectionCount: number;
   sectionClasses: string[];
   sidebarAreaCount: number;
@@ -56,6 +58,7 @@ function isHarajukuObservation(value: unknown): value is HarajukuObservation {
     typeof value["bodyChildCount"] === "number" &&
     typeof value["bottomAreaCount"] === "number" &&
     typeof value["chromeCount"] === "number" &&
+    typeof value["clientWidth"] === "number" &&
     typeof value["descriptionCount"] === "number" &&
     typeof value["gridCount"] === "number" &&
     typeof value["harajukuImportantDeclarations"] === "number" &&
@@ -65,10 +68,30 @@ function isHarajukuObservation(value: unknown): value is HarajukuObservation {
     typeof value["officialStylesheetFound"] === "boolean" &&
     typeof value["pageHeading"] === "string" &&
     typeof value["rootExists"] === "boolean" &&
+    typeof value["scrollWidth"] === "number" &&
     typeof value["sectionCount"] === "number" &&
     Array.isArray(value["sectionClasses"]) &&
     value["sectionClasses"].every((item) => typeof item === "string") &&
     typeof value["sidebarAreaCount"] === "number"
+  );
+}
+
+function sanitizedUrl(value: string): string {
+  try {
+    const url = new URL(value);
+    url.username = "";
+    url.password = "";
+    url.search = "";
+    url.hash = "";
+    return url.href;
+  } catch {
+    return "invalid:";
+  }
+}
+
+function sanitizeDiagnosticText(value: string): string {
+  return value.replaceAll(/https?:\/\/[^\s)\]}]+/gu, (candidate) =>
+    sanitizedUrl(candidate),
   );
 }
 
@@ -152,6 +175,7 @@ const OBSERVATION_EXPRESSION = `(() => {
     bodyChildCount: document.body?.childElementCount ?? 0,
     bottomAreaCount: document.querySelectorAll('[class*="grid-area_"][class*="bottom"]').length,
     chromeCount: document.querySelectorAll('.HarajukuWatchChrome').length,
+    clientWidth: document.documentElement.clientWidth,
     descriptionCount: document.querySelectorAll('.HarajukuDescription').length,
     gridCount: document.querySelectorAll('section[class*="grid-template-areas"]').length,
     harajukuImportantDeclarations: importantDeclarations,
@@ -164,6 +188,7 @@ const OBSERVATION_EXPRESSION = `(() => {
     officialStylesheetFound: Boolean(officialLink),
     pageHeading: document.querySelector('h1')?.textContent?.trim() ?? '',
     rootExists: Boolean(document.getElementById('root')),
+    scrollWidth: document.documentElement.scrollWidth,
     sectionCount: document.querySelectorAll('section').length,
     sectionClasses: Array.from(document.querySelectorAll('section')).slice(0, 12).map(
       (section) => section.className
@@ -175,17 +200,33 @@ const OBSERVATION_EXPRESSION = `(() => {
 async function waitForHarajuku(
   client: RawCdpClient,
 ): Promise<HarajukuObservation> {
+  const startedAt = performance.now();
+  let gridSeenAt: number | null = null;
   for (let attempt = 0; attempt < 60; attempt += 1) {
     const value = await evaluate(client, OBSERVATION_EXPRESSION);
-    if (
-      isHarajukuObservation(value) &&
-      value.active === "active" &&
-      value.chromeCount === 1 &&
-      value.descriptionCount === 1 &&
-      value.harajukuSheetLoaded &&
-      value.officialStylesheetFound
-    ) {
-      return value;
+    if (isHarajukuObservation(value)) {
+      if (value.pageHeading === "エラーが発生しました") {
+        throw new Error(
+          `公式Watchが${Math.round(performance.now() - startedAt)}ms後にエラー画面へ遷移しました: ${JSON.stringify(value)}`,
+        );
+      }
+      if (value.gridCount > 0 && gridSeenAt === null) {
+        gridSeenAt = performance.now();
+      }
+      if (
+        value.active === "active" &&
+        value.chromeCount === 1 &&
+        value.descriptionCount === 1 &&
+        value.harajukuSheetLoaded &&
+        value.officialStylesheetFound
+      ) {
+        return value;
+      }
+      if (gridSeenAt !== null && performance.now() - gridSeenAt > 10_000) {
+        throw new Error(
+          `公式grid出現後10秒以内にHarajuku DOMを生成できませんでした: ${JSON.stringify(value)}`,
+        );
+      }
     }
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
@@ -195,9 +236,33 @@ async function waitForHarajuku(
   );
 }
 
+async function waitForOfficialWatch(
+  client: RawCdpClient,
+): Promise<HarajukuObservation> {
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    const value = await evaluate(client, OBSERVATION_EXPRESSION);
+    if (
+      isHarajukuObservation(value) &&
+      (value.gridCount > 0 || value.pageHeading === "エラーが発生しました")
+    ) {
+      return value;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  const lastValue = await evaluate(client, OBSERVATION_EXPRESSION);
+  throw new Error(
+    `公式Watchの初期化を確認できませんでした: ${JSON.stringify(lastValue)}`,
+  );
+}
+
 async function main(): Promise<void> {
   const cdpEndpoint = parseArgument("cdp") ?? DEFAULT_CDP_ENDPOINT;
   const watchUrl = validateWatchUrl(parseArgument("url") ?? DEFAULT_WATCH_URL);
+  const enableHarajuku = parseArgument("enable-harajuku") !== "false";
+  const moduleId = parseArgument("module") ?? "watch_harajuku";
+  if (!/^[a-z][a-z0-9_]+$/u.test(moduleId)) {
+    throw new Error(`不正なモジュールIDです: ${moduleId}`);
+  }
   const version = await getBrowserVersionEndpoint(cdpEndpoint);
   const browserClient = await RawCdpClient.connect(
     version.webSocketDebuggerUrl,
@@ -214,11 +279,100 @@ async function main(): Promise<void> {
     targetId = created.targetId;
     const pageWebSocket = await waitForTargetWebSocket(cdpEndpoint, targetId);
     const pageClient = await RawCdpClient.connect(pageWebSocket);
+    const diagnostics: string[] = [];
+    const requestUrls = new Map<string, string>();
+    const recordDiagnostic = (message: string): void => {
+      if (diagnostics.length < 40) {
+        diagnostics.push(sanitizeDiagnosticText(message));
+      }
+    };
+    const unsubscribe = pageClient.subscribe((event) => {
+      const params = event.params;
+      if (!isRecord(params)) {
+        return;
+      }
+      if (event.method === "Network.requestWillBeSent") {
+        const requestId = params["requestId"];
+        const request = params["request"];
+        if (
+          typeof requestId === "string" &&
+          isRecord(request) &&
+          typeof request["url"] === "string"
+        ) {
+          requestUrls.set(requestId, sanitizedUrl(request["url"]));
+        }
+        return;
+      }
+      if (event.method === "Runtime.exceptionThrown") {
+        const details = params["exceptionDetails"];
+        if (!isRecord(details)) {
+          return;
+        }
+        const exception = details["exception"];
+        const description = isRecord(exception)
+          ? exception["description"]
+          : undefined;
+        const text = details["text"];
+        recordDiagnostic(
+          `[runtime] ${typeof description === "string" ? description : typeof text === "string" ? text : "unknown exception"}`,
+        );
+        return;
+      }
+      if (event.method === "Log.entryAdded") {
+        const entry = params["entry"];
+        if (
+          isRecord(entry) &&
+          (entry["level"] === "error" || entry["level"] === "warning") &&
+          typeof entry["text"] === "string"
+        ) {
+          recordDiagnostic(
+            `[console:${String(entry["level"])}] ${entry["text"]}`,
+          );
+        }
+        return;
+      }
+      if (event.method === "Network.loadingFailed") {
+        const requestId = params["requestId"];
+        const errorText = params["errorText"];
+        const type = params["type"];
+        if (typeof errorText === "string") {
+          recordDiagnostic(
+            `[network:${typeof type === "string" ? type : "unknown"}] ${errorText}${typeof requestId === "string" && requestUrls.has(requestId) ? ` ${requestUrls.get(requestId)}` : ""}`,
+          );
+        }
+        return;
+      }
+      if (event.method === "Network.responseReceived") {
+        const response = params["response"];
+        if (
+          isRecord(response) &&
+          typeof response["status"] === "number" &&
+          response["status"] >= 400 &&
+          typeof response["url"] === "string"
+        ) {
+          recordDiagnostic(
+            `[http:${String(response["status"])}] ${sanitizedUrl(response["url"])}`,
+          );
+        } else if (
+          isRecord(response) &&
+          typeof response["status"] === "number" &&
+          typeof response["url"] === "string" &&
+          /(?:nvapi\.nicovideo\.jp\/v1\/watch\/|delivery\.domand\.nicovideo\.jp|\.m3u8(?:$|\?))/u.test(
+            response["url"],
+          )
+        ) {
+          recordDiagnostic(
+            `[video-http:${String(response["status"])}] ${sanitizedUrl(response["url"])}`,
+          );
+        }
+      }
+    });
     try {
       await Promise.all([
         pageClient.send("Page.enable"),
         pageClient.send("Runtime.enable"),
         pageClient.send("Network.enable"),
+        pageClient.send("Log.enable"),
       ]);
       await pageClient.send("Network.setCacheDisabled", {
         cacheDisabled: true,
@@ -232,16 +386,38 @@ async function main(): Promise<void> {
       await loaded;
       await evaluate(
         pageClient,
-        `localStorage.setItem(${JSON.stringify(SETTINGS_KEY)}, ${JSON.stringify(JSON.stringify({ watch_harajuku: { enabled: true } }))})`,
+        `localStorage.setItem(${JSON.stringify(SETTINGS_KEY)}, ${JSON.stringify(JSON.stringify({ [moduleId]: { enabled: enableHarajuku } }))})`,
       );
       loaded = waitForLoad(pageClient, 45_000);
       await pageClient.send("Page.reload", { ignoreCache: true });
       await loaded;
 
-      const observations: Array<{
-        viewport: string;
-        observation: HarajukuObservation;
-      }> = [];
+      if (!enableHarajuku) {
+        await waitForOfficialWatch(pageClient);
+        await new Promise((resolve) => setTimeout(resolve, 5_000));
+        const observationValue = await evaluate(
+          pageClient,
+          OBSERVATION_EXPRESSION,
+        );
+        if (!isHarajukuObservation(observationValue)) {
+          throw new Error("5秒後の公式Watch状態を取得できませんでした");
+        }
+        const observation = observationValue;
+        if (
+          observation.pageHeading === "エラーが発生しました" ||
+          observation.gridCount === 0
+        ) {
+          throw new Error(
+            `公式Watchがエラー画面です: ${JSON.stringify(observation)}\nDiagnostics:\n${diagnostics.join("\n") || "none"}`,
+          );
+        }
+        console.log(`[watch] ${JSON.stringify(observation)}`);
+        if (diagnostics.length > 0) {
+          console.log(`[watch-diagnostics]\n${diagnostics.join("\n")}`);
+        }
+        return;
+      }
+
       for (const viewport of [
         { width: 1024, height: 600 },
         { width: 1920, height: 1080 },
@@ -252,28 +428,76 @@ async function main(): Promise<void> {
           deviceScaleFactor: 1,
           mobile: false,
         });
-        const observation = await waitForHarajuku(pageClient);
-        observations.push({
-          viewport: `${String(viewport.width)}x${String(viewport.height)}`,
-          observation,
-        });
-      }
-
-      for (const { viewport, observation } of observations) {
+        let observation: HarajukuObservation;
+        try {
+          observation = await waitForHarajuku(pageClient);
+        } catch (error) {
+          throw new Error(
+            `${error instanceof Error ? error.message : String(error)}\nDiagnostics:\n${diagnostics.join("\n") || "none"}`,
+          );
+        }
+        const viewportName = `${String(viewport.width)}x${String(viewport.height)}`;
         if (
           observation.harajukuImportantDeclarations !== 0 ||
           !observation.harajukuLinkBeforeOfficial ||
           observation.horizontalOverflow
         ) {
+          const overflowElements = observation.horizontalOverflow
+            ? await evaluate(
+                pageClient,
+                `(() => {
+                  const viewportWidth = document.documentElement.clientWidth;
+                  const elements = Array.from(document.querySelectorAll('*'))
+                    .map((element) => {
+                      const rect = element.getBoundingClientRect();
+                      return {
+                        tag: element.tagName,
+                        id: element.id,
+                        className: typeof element.className === 'string' ? element.className : '',
+                        left: Math.round(rect.left),
+                        right: Math.round(rect.right),
+                        width: Math.round(rect.width),
+                        ancestors: Array.from((() => {
+                          const values = [];
+                          let current = element.parentElement;
+                          for (let index = 0; current && index < 5; index += 1) {
+                            values.push(current);
+                            current = current.parentElement;
+                          }
+                          return values;
+                        })()).map((ancestor) => ({
+                          tag: ancestor.tagName,
+                          id: ancestor.id,
+                          role: ancestor.getAttribute('role'),
+                          dataElementArea: ancestor.getAttribute('data-element-area'),
+                          dataNvpcScope: ancestor.getAttribute('data-nvpc-scope'),
+                          dataNvpcPart: ancestor.getAttribute('data-nvpc-part'),
+                        })),
+                      };
+                    })
+                    .filter((item) => item.width > 0 && (item.left < -1 || item.right > viewportWidth + 1))
+                    .sort((left, right) => right.width - left.width)
+                    .slice(0, 20);
+                  return {
+                    documentClientWidth: document.documentElement.clientWidth,
+                    documentScrollWidth: document.documentElement.scrollWidth,
+                    bodyClientWidth: document.body.clientWidth,
+                    bodyScrollWidth: document.body.scrollWidth,
+                    elements,
+                  };
+                })()`,
+              )
+            : [];
           throw new Error(
-            `${viewport}のHarajuku CSS契約に違反しました: ${JSON.stringify(observation)}`,
+            `${viewportName}のHarajuku CSS契約に違反しました: ${JSON.stringify(observation)}\nOverflow: ${JSON.stringify(overflowElements)}`,
           );
         }
         console.log(
-          `[harajuku-css] ${viewport}: ${JSON.stringify(observation)}`,
+          `[harajuku-css] ${viewportName}: ${JSON.stringify(observation)}`,
         );
       }
     } finally {
+      unsubscribe();
       pageClient.close();
     }
   } finally {

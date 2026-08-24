@@ -97,7 +97,9 @@ describe("destroy-ads official asset rewrites", () => {
         `const adsjsPromise=${expression};`,
       );
       expect(result.transformations).toEqual(["ads-resource-loader"]);
-      expect(result.source).toBe("const adsjsPromise=Promise.resolve(null);");
+      expect(result.source).toBe(
+        `const adsjsPromise=${expression[0]}(\`/local/features/dist/ad-stub\`);`,
+      );
     },
   );
 
@@ -110,6 +112,33 @@ describe("destroy-ads official asset rewrites", () => {
     expect(result.source).toBe(
       "window[J.NicoGoogleTagManagerDataLayer]=[];void 0;",
     );
+  });
+
+  test("disables both current Watch video-ad startup paths before getAd", () => {
+    const result = rewriteOfficialAsset(
+      "https://resource.video.nimg.jp/web/scripts/nvpc_next/assets/PlayerCurrentTime-current.js",
+      "var q=g(y(e=>{let t=e(K)?.videoAds?.[0];if(t)return load(t)}),[async e=>{let t=e.peek(U);if(await t.isAutoPlayable()){let n=t.getPrerollVideoAds().at(0);n&&warm(n)}}]);",
+    );
+    expect(result.transformations).toEqual(["watch-video-ad-orchestration"]);
+    expect(result.source).not.toContain(".videoAds?.[0]");
+    expect(result.source).not.toContain(".getPrerollVideoAds().at(0)");
+    expect(result.source.match(/filter-matome:watch-video-ads/gu)).toHaveLength(
+      2,
+    );
+  });
+
+  test("short-circuits all adblock detector script probes", () => {
+    const result = rewriteOfficialAsset(
+      "https://resource.video.nimg.jp/web/scripts/nvpc_next/assets/PlayerVolumeBar-current.js",
+      "Promise.allSettled([g(l.getSnapshot().publicUrl.adsResource).then(done),F(`https://imasdk.googleapis.com/js/sdkloader/ima3.js`),F(`https://dwango-d.openx.net/w/1.0/jstag`)]);",
+    );
+    expect(result.transformations).toEqual(["adblock-detector-loader"]);
+    expect(result.source).not.toContain("publicUrl.adsResource");
+    expect(result.source).not.toContain("imasdk.googleapis.com");
+    expect(result.source).not.toContain("dwango-d.openx.net");
+    expect(
+      result.source.match(/filter-matome:adblock-detector/gu),
+    ).toHaveLength(3);
   });
 
   test.each([
@@ -161,6 +190,8 @@ describe("DestroyAds NicoCache_nl extension", () => {
     expect(extensionSource).toContain("publicUrl");
     expect(extensionSource).toContain("adsResource");
     expect(extensionSource).toContain("NicoGoogleTagManagerDataLayer");
+    expect(extensionSource).toContain("filter-matome:watch-video-ads");
+    expect(extensionSource).toContain("filter-matome:adblock-detector");
     expect(extensionSource).not.toMatch(
       /MutationObserver|querySelector|style\.display|classList/gu,
     );

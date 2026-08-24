@@ -94,6 +94,7 @@ async function assertOutputContract(): Promise<void> {
     "server-context-override.js",
     "server-context-override.js.map",
     "watch-harajuku.css",
+    "ad-stub/assets/js/ads2.js",
     ...featureEntrypoints.flatMap((entrypoint) => {
       const relativeEntry = entrypoint
         .replace(/^src\//, "")
@@ -192,12 +193,15 @@ async function build(): Promise<void> {
     resolve(outDir, "watch-harajuku.css"),
     await composeHarajukuStylesheet(projectRoot),
   );
+  const adStubPath = resolve(outDir, "ad-stub/assets/js/ads2.js");
+  await mkdir(dirname(adStubPath), { recursive: true });
+  await Bun.write(adStubPath, "void 0;\n");
   await copyHtmlPages();
   await assertOutputContract();
 
   const outputCount = results.reduce(
     (count, result) => count + result.outputs.length,
-    htmlPages.length + 1,
+    htmlPages.length + 2,
   );
   const elapsed = ((performance.now() - startedAt) / 1000).toFixed(2);
   console.log(`[build] Created ${outputCount} files in ${elapsed}s`);
