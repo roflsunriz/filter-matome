@@ -5,6 +5,19 @@
 5. git tag "#(version)"
 6. git push origin "#(version)" の操作でGithub Actionsが自動でリリースを作成する。タグは`#238`、配布アーカイブはURLフラグメントとの衝突を避けた`filter-matome-238.7z`のように、ファイル名側だけ`#`を除く。
 
+## destroy-adsの追従確認
+
+公式ページや広告資産が更新された場合は、Cookieを持たない隔離Chromeをraw CDP付きで起動し、`local/features/src/destroy-ads/README.md`の対象12ページを再走査する。captureはGit管理外の`local/features/src/sandbox/destroy-ads-captures/`へ置き、クエリー、Cookie、認証ヘッダー、個人識別子を保存しない。
+
+```powershell
+cd local/features
+bun run sandbox:capture-destroy-ads -- --cdp=http://127.0.0.1:9222
+bun run sandbox:analyze-destroy-ads
+bun test tests/destroy-ads.test.ts tests/extension-logging.test.ts
+```
+
+Matchを変更する前に`local/features/src/destroy-ads/match-history.md`へURL、SHA-256、サイズ、一致数と意味上の根拠を追記する。広告語が含まれるだけの通常機能や、生成class名、表示文言を遮断根拠にしない。Java変更後は対象NicoCache_nlのclass pathで`DestroyAds.java`をコンパイルし、`DestroyAds.class`以外の同名追加classがないことを確認する。実環境ではNicoCache_nlを標準ランチャーで再起動し、`proxy.pac.destroy-ads.bak`が初回PAC変更前の内容を保持していること、主要ページのNetworkで広告配信・入札・同期・画像・動画・iframe要求がすべて`ERR_EMPTY_RESPONSE`となり上流応答を受けないこと、通常の動画、コメント、Watch API、一覧画像が維持されることを確認する。元へ戻す場合はNicoCache_nl停止後に同バックアップを`proxy.pac`へ戻し、`DestroyAds.class`を取り除いてNicoCache_nlとブラウザーを再起動する。
+
 ## 公式CommonHeader通知APIの追従確認
 
 CommonHeaderのベル内に`すべて既読`ボタンが出ない、一覧取得や既読化が失敗する、または公式通知一覧の続きが残る場合は、`local/features/src/sandbox/common-header-notification-read-all.md`の公開資産、URL、サイズ、SHA-256を更新し、両資産をメモリー上でde-minifyして`GET /v1/box`、`data.nextUrl`、`PUT /v1/notifications/<通知ID>/read`、必要ヘッダーを再確認する。`POST api.feed.nicovideo.jp/v1/read`は別のフォロー新着タイムライン用なので、ベル通知へ流用しない。

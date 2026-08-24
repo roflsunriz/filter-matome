@@ -9,6 +9,7 @@
 | `api-info/` | NicoCache_nl・ニコニコ動画関連APIの仕様メモとレスポンス例 |
 | `comment-filter2/` | コメント取得の捕捉、フィルタリング、設定UI |
 | `common/` | 共通ヘッダー、APIクライアント、ログ、通知、動画ナビゲーション |
+| `destroy-ads/` | 主要ページ走査、広告通信判定、公式資産の生成点書き換え契約 |
 | `mlink-video-controller/` | 公式視聴ページの操作パネルと機能モジュール |
 | `movie-info/` | キャッシュ・サムネイル・GPAC解析・視聴API情報の表示 |
 | `mylist2/` | 独自マイリストSPA、永続化、Service Worker |
@@ -28,5 +29,5 @@
 
 - `common/`、`runtime/`、`types/`、`features.ts` は複数機能へ波及するため、利用元と関連テストをまとめて確認する。
 - 外部API仕様を変更するときは、調査メモ、実装、モックテストの3点を同期する。
-- `sandbox/official-watch-bundle/`、`dist/`、`test-results/` は生成・一時データとして手編集またはコミットしない。
+- `sandbox/official-watch-bundle/`、`sandbox/destroy-ads-captures/`、`dist/`、`test-results/` は生成・一時データとして手編集またはコミットしない。
 - 標準検証は `local/features/` で `bun run format`、`bun run lint`、`bun run type-check`、`bun run test`、`bun run build` を実行する。

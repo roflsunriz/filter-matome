@@ -28,6 +28,7 @@
 - `quality-audio-delivery.md`: 画質・音質候補、会員別利用可否、access-rights、分離HLS配信、自動・手動切り替え、selected・loading・playing状態を整理した調査結果です。
 - `seek-thumbnail-preview.md`: シークバーホバーのStoryboard取得、スプライト計算、表示条件、ローカルプレイヤーへの示唆を整理した調査結果です。
 - `official-watch-bundle/`: ダウンロードしたHTML・JavaScriptの隔離先です。期限付きキーやトラッキング値を含む可能性があるためGit管理外です。
+- `destroy-ads-captures/`: Cookieなしで主要12ページ種別を巡回した要求一覧と、広告語を含む公式JS/CSSのde-minify結果です。クエリー文字列、認証情報、個人識別子は保存せず、Git管理外です。
 
 ```powershell
 cd local/features/src/sandbox
@@ -39,6 +40,8 @@ cd local/features/src/sandbox
 ```powershell
 cd local/features
 bun run sandbox:capture-official
+bun run sandbox:capture-destroy-ads
+bun run sandbox:analyze-destroy-ads
 bun run sandbox:observe-membership
 bun run sandbox:observe-quality
 bun run sandbox:observe-seek-preview

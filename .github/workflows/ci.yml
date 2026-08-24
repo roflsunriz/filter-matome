@@ -242,6 +242,8 @@ jobs:
             "nlFilters/nlFilters_編集ガイド.md"
             "extensions/CommentFilterLogger.java"
             "extensions/CommentFilterLogger.class"
+            "extensions/DestroyAds.java"
+            "extensions/DestroyAds.class"
             "extensions/ExtUtil.java"
             "extensions/ExtUtil.class"
             "extensions/FilterMatomeSeriesAlerts.java"

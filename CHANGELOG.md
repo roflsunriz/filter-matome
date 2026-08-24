@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- 【destroy-ads・Java extension・sandbox】広告をDOM/CSSで事後非表示にせず根本から止めるため、主要12ページ種別の公式資産と通信をCookieなしで走査・de-minifyする仕組みを追加した。現行React広告コンポーネント、`adsResource`、GTM、旧`Advertisement`マネージャーをブラウザーへ渡す前に無力化し、既存PACをバックアップした上で広告ホストだけをNicoCache_nlへ経路変更して、残ったニコニコ・Google/DoubleClick・ヘッダー入札・広告画像/動画要求も上流接続前に破棄する。
+- 【destroy-ads・tests】minify識別子の版差に依存せず意味上の生成点へ一致させ、通常の動画配信、コメント、Watch API、公式JavaScriptを過剰遮断しない広告通信規則と回帰テスト、3版の公式資産Match履歴を追加した。
+
 ## [#248] - 2026-08-23
 
 ### Changed

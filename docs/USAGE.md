@@ -45,7 +45,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 1. mylist2、comment-filter2、watch-history、mlink-video-controllerの各管理画面から必要な設定とデータをエクスポートし、`local\background-images` に自分で追加した画像も別の場所へバックアップする。
 2. `NICO_APP_ROOT\config.properties` の `userDataRoot` を確認し、バックアップ後にNicoCache_nlを終了する。
-3. `NICO_DATA_ROOT\extensions` から、「同梱される拡張機能」に記載した7種の `.class` と `.java` を削除する。旧版の`CustomCacheReturner*`、`downloadThruFFmpeg*`、`FilterMatomeCacheControl*`、`nlMediaInfo*`、`nlGpac$*.class`が残っている場合も削除する。
+3. `NICO_DATA_ROOT\extensions` から、「同梱される拡張機能」に記載した8種の `.class` と `.java` を削除する。旧版の`CustomCacheReturner*`、`downloadThruFFmpeg*`、`FilterMatomeCacheControl*`、`nlMediaInfo*`、`nlGpac$*.class`が残っている場合も削除する。
 4. `NICO_DATA_ROOT\local` から `background-images`、`features`、`images`、`mime.types`、`list.js`、`list.js.map` のうちfilter-matomeが配置したものを取り除く。`background-images` に自分で追加した画像は残す。シンボリックリンクは参照先を確認し、リンク自体だけを削除する。
 5. `NICO_DATA_ROOT\nlFilters` から `100_features.txt`、`101_disable_official_function.txt`、`105_premium_hide.txt`、`nlFilters_編集ガイド.md` のうちfilter-matomeが配置したものを取り除く。
 6. matome-toolboxも入れ直す場合は、`NICO_APP_ROOT\scripts` がfilter-matomeのコピーまたはリンクであることを確認して取り除く。
@@ -65,7 +65,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 
 `extensions/` は、ブラウザへ挿入されるJavaScriptやCSSでは実行できないサーバー側の処理をNicoCache_nlへ追加するディレクトリである。ローカルキャッシュファイルの探索、外部コマンドの実行、NicoCache_nl GUIへのログ表示、外部サイトからの限定的な情報取得などを担当する。
 
-配布物には、次の全7種について同名の `.class` と `.java` が含まれる。
+配布物には、次の全8種について同名の `.class` と `.java` が含まれる。
 
 - `.class`: NicoCache_nlが実行時に読み込むコンパイル済み拡張機能。本機能を利用するために必要。
 - `.java`: 拡張機能のソースコード。通常利用時のコンパイルには使用せず、実装確認や開発用として同梱している。
@@ -75,6 +75,7 @@ GitHubページの[リリースページ](https://github.com/roflsunriz/filter-m
 | ファイル | 役割 | 主な利用箇所・追加要件 |
 |---|---|---|
 | `CommentFilterLogger.class` | comment-filter2から送信されたフィルター結果を受け取り、NicoCache_nl GUIのログタブへ表示する | comment-filter2の「ログ送信」を有効にした場合に使用。GUIなしで起動した場合はログタブを表示しない |
+| `DestroyAds.class` | 公式HTML・JavaScriptが広告DOMやローダーを生成する前にレスポンスを書き換え、残った広告要求も上流接続前に破棄する | 表示後のDOM削除やCSS非表示は行わない。既存`proxy.pac`は同じproxyへ広告ホストだけを追加し、変更前を`proxy.pac.destroy-ads.bak`へ保存する。NicoCache_nlとブラウザーの再起動後に有効になる |
 | `ExtUtil.class` | 拡張機能向けの共通処理を提供する補助クラス | 単独で操作する機能ではない。他の `.class` と一緒に配置する |
 | `FilterMatomeSeriesAlerts.class` | watch-historyのアラート設定を保持し、NicoCache_nlの60秒定期イベントからシリーズ新着を確認してOS通知を表示する | NicoCache_nlが起動していればwatch-historyやブラウザを閉じても動作する |
 | `FilterMatomeSmartFetcher.class` | 動画取得の永続予約、暗号化Cookie、帯域・容量判定、再試行、取得履歴を管理する | `nlMovieFetcher.class`と組み合わせ、動画取得スケジューラーで使用する |

@@ -5,6 +5,8 @@
 ## スクリプト
 
 - `capture-official-watch-bundle.ts`: `http://127.0.0.1:9222` のChrome DevTools Protocolへ直接接続し、一時タブでwatchページが読み込んだ `resource.video.nimg.jp/web/scripts/nvpc_next/assets/` の公式JavaScriptと、そこから参照される同一CDNのES Module依存関係だけを `src/sandbox/official-watch-bundle/` へ保存する。依存関係の取得にはCookieを送らない。
+- `capture-destroy-ads.ts`: Cookieなしの一時タブでトップ、一覧、検索、Watch、ユーザー、シリーズ、マイリスト、認証導線の12ページ種別を巡回し、クエリーを除いた要求一覧と広告語を含む公式JS/CSSだけを`src/sandbox/destroy-ads-captures/`へ保存してde-minifyする。
+- `analyze-destroy-ads.ts`: 最新の主要ページcaptureに対して、広告Reactコンポーネント、`adsResource`、GTM、旧`Advertisement`マネージャーの生成点Matchを検証する。
 - `verify-offline-cdp-sandbox.ts`: 一時BrowserContextのHTTP、HTTPS、WebSocket、FTPを遮断し、CookieとWeb Storageが空であることを確認する。
 - `analyze-official-watch-bundle.ts`: 最新captureを実行せず、機能語と参照ドメインだけを集計する。
 - `observe-membership-context.ts`: 既存ログインセッションとCookieを継承しない一時BrowserContextで同じwatchページを開き、個人識別子を保存せず会員区分と動画権利フラグだけを比較する。
@@ -19,6 +21,8 @@
 
 ```powershell
 bun run sandbox:capture-official
+bun run sandbox:capture-destroy-ads
+bun run sandbox:analyze-destroy-ads
 bun run sandbox:observe-membership
 bun run sandbox:observe-seek-preview
 bun run sandbox:run-membership

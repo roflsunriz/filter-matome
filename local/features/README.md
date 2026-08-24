@@ -27,6 +27,7 @@ local/features/
 | `src/api-info/` | NicoCache_nl・ニコニコ動画関連APIの調査メモ | [README](src/api-info/README.md) |
 | `src/comment-filter2/` | コメントAPIの捕捉、ルール適用、設定UI | [README](src/comment-filter2/README.md) |
 | `src/common/` | 共通ヘッダー、ログ、通知、アイコン、API・UI部品 | [README](src/common/README.md) |
+| `src/destroy-ads/` | 主要ページ走査、広告要求判定、公式資産の生成点書き換え契約 | [README](src/destroy-ads/README.md) |
 | `src/mlink-video-controller/` | 視聴ページの操作パネルと機能モジュール | [README](src/mlink-video-controller/README.md) |
 | `src/movie-fetcher/` | 動画カードの即時取得と永続スケジューラーSPA | [README](src/movie-fetcher/README.md) |
 | `src/movie-info/` | 動画・キャッシュ・API情報ダッシュボード | [README](src/movie-info/README.md) |
