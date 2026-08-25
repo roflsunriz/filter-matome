@@ -65,6 +65,8 @@ bunx playwright test tests/mlink-video-controller-lifecycle.spec.ts --grep "Hara
 
 実環境では`NICO_DATA_ROOT\nlFilters\104_watch_harajuku_style.txt`のシンボリックリンク先を確認してNicoCache_nlを標準ランチャーで再起動し、Watch HTMLのHarajuku stylesheetが公式modulepreloadより前にあること、公式root CSS応答が`@layer filter-matome-official{`で始まることを確認します。Cookieなしの隔離Chromeで公式Watch自体がエラー画面になる場合は、専用DOMの見た目を確認済みとして扱わず、公式layerを再現したPlaywright E2Eでカスケードとモジュール破棄を検証します。
 
+左上の原宿風ニコニコアイコンは`fixed`で画面へ居残らせず、スクロール前後の`getBoundingClientRect().top + scrollY`が一致することを確認します。原宿モジュール有効中はCommonHeaderの公式インライン`sticky`を退避して`relative`へ変更し、無効化後は変更前の値と優先度へ戻ることも確認してください。`sandbox:verify-harajuku-css`は代表ビューポートでこの文書座標を動的検証します。
+
 ロールバックは`104_watch_harajuku_style.txt`とHarajuku CSS生成・active scope変更を同じ以前の版へ戻し、`bun run build`後にNicoCache_nlとブラウザーを再起動します。104だけを外すと現行モジュールがfallback linkを後から追加するため、読込順の保証を失います。
 
 ## 公式コメント再取得APIの追従確認

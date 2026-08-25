@@ -44,6 +44,14 @@ interface VideoState {
   readyState: number;
 }
 
+interface HarajukuIconObservation {
+  documentTopDelta: number | null;
+  exists: boolean;
+  pageAnchored: boolean;
+  position: string | null;
+  scrollDelta: number | null;
+}
+
 const DEFAULT_CDP_ENDPOINT = "http://127.0.0.1:9222";
 const DEFAULT_WATCH_URL = "https://www.nicovideo.jp/watch/sm9";
 const SETTINGS_KEY = "nicoVideoController_moduleSettings";
@@ -252,6 +260,68 @@ function isVideoState(value: unknown): value is VideoState {
     (value["errorMessage"] === null ||
       typeof value["errorMessage"] === "string")
   );
+}
+
+function isHarajukuIconObservation(
+  value: unknown,
+): value is HarajukuIconObservation {
+  return (
+    isRecord(value) &&
+    (value["documentTopDelta"] === null ||
+      typeof value["documentTopDelta"] === "number") &&
+    typeof value["exists"] === "boolean" &&
+    typeof value["pageAnchored"] === "boolean" &&
+    (value["position"] === null || typeof value["position"] === "string") &&
+    (value["scrollDelta"] === null || typeof value["scrollDelta"] === "number")
+  );
+}
+
+async function verifyPageAnchoredHarajukuIcon(
+  client: RawCdpClient,
+): Promise<void> {
+  const value = await evaluate(
+    client,
+    `(async () => {
+      const icon = document.querySelector('#CommonHeader a[href^="https://www.nicovideo.jp?"]');
+      if (!(icon instanceof HTMLElement)) {
+        return {
+          exists: false,
+          position: null,
+          pageAnchored: false,
+          scrollDelta: null,
+          documentTopDelta: null,
+        };
+      }
+      const startScroll = window.scrollY;
+      const before = icon.getBoundingClientRect();
+      const beforeDocumentTop = before.top + startScroll;
+      window.scrollTo(0, startScroll + 240);
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const afterScroll = window.scrollY;
+      const after = icon.getBoundingClientRect();
+      const afterDocumentTop = after.top + afterScroll;
+      window.scrollTo(0, startScroll);
+      return {
+        exists: true,
+        position: getComputedStyle(icon).position,
+        pageAnchored: Math.abs(beforeDocumentTop - afterDocumentTop) < 1,
+        scrollDelta: Math.round(afterScroll - startScroll),
+        documentTopDelta: Math.round(afterDocumentTop - beforeDocumentTop),
+      };
+    })()`,
+  );
+  if (
+    !isHarajukuIconObservation(value) ||
+    !value.exists ||
+    value.position !== "absolute" ||
+    !value.pageAnchored ||
+    value.scrollDelta === null ||
+    value.scrollDelta <= 0
+  ) {
+    throw new Error(
+      `原宿風ニコニコアイコンがページ座標へ固定されていません: ${JSON.stringify(value)}`,
+    );
+  }
 }
 
 async function waitForHarajuku(
@@ -495,6 +565,7 @@ async function main(): Promise<void> {
           );
         }
         const viewportName = `${String(viewport.width)}x${String(viewport.height)}`;
+        await verifyPageAnchoredHarajukuIcon(pageClient);
         if (
           observation.harajukuImportantDeclarations !== 0 ||
           !observation.harajukuLinkBeforeOfficial ||

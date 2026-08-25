@@ -80,6 +80,11 @@ export class WatchHarajukuModule implements ModuleInstance {
   private retryTimer: number | null = null;
   private scheduled = false;
   private _isActive = false;
+  private commonHeaderPositionBackup: {
+    element: HTMLElement;
+    priority: string;
+    value: string;
+  } | null = null;
   private ownerApiMetadata: OwnerApiMetadata | null = null;
   private descriptionHtml: string | null = null;
   private renderedDescriptionHtml: string | null | undefined;
@@ -110,6 +115,7 @@ export class WatchHarajukuModule implements ModuleInstance {
       HARAJUKU_ACTIVE_ATTRIBUTE,
       HARAJUKU_ACTIVE_VALUE,
     );
+    this.ensurePageAnchoredCommonHeader();
     this.setTheme(this.getTheme());
     this.setBackgroundPriority(this.getBackgroundPriority());
     await this.loadWatchApiMetadata();
@@ -150,6 +156,7 @@ export class WatchHarajukuModule implements ModuleInstance {
       "--hy-watch-sidebar-panel-height",
     );
     document.documentElement.style.colorScheme = "";
+    this.restoreCommonHeaderPosition();
 
     this.scheduled = false;
     this.ownerApiMetadata = null;
@@ -197,6 +204,41 @@ export class WatchHarajukuModule implements ModuleInstance {
     stylesheet.rel = "stylesheet";
     stylesheet.href = HARAJUKU_STYLESHEET_PATH;
     document.head.prepend(stylesheet);
+  }
+
+  private restoreCommonHeaderPosition(): void {
+    const backup = this.commonHeaderPositionBackup;
+    if (!backup) {
+      return;
+    }
+    if (backup.element.style.position === "relative") {
+      if (backup.value) {
+        backup.element.style.setProperty(
+          "position",
+          backup.value,
+          backup.priority,
+        );
+      } else {
+        backup.element.style.removeProperty("position");
+      }
+    }
+    this.commonHeaderPositionBackup = null;
+  }
+
+  private ensurePageAnchoredCommonHeader(): void {
+    const header = document.getElementById("CommonHeader");
+    if (!(header instanceof HTMLElement)) {
+      return;
+    }
+    if (this.commonHeaderPositionBackup?.element !== header) {
+      this.restoreCommonHeaderPosition();
+      this.commonHeaderPositionBackup = {
+        element: header,
+        value: header.style.getPropertyValue("position"),
+        priority: header.style.getPropertyPriority("position"),
+      };
+    }
+    header.style.setProperty("position", "relative");
   }
 
   private getTheme(): ThemeName {
@@ -692,6 +734,7 @@ export class WatchHarajukuModule implements ModuleInstance {
   }
 
   private renderChrome(): boolean {
+    this.ensurePageAnchoredCommonHeader();
     const description = this.ensureDescription();
     this.updateLayoutMetrics();
 

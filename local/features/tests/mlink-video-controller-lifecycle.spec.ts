@@ -156,6 +156,7 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
     fulfillTestDocument(
       route,
       `<style>
+        body { min-height: 2000px; }
         #ncnl_common_header_menu .ncnl-common-header-trigger { background: transparent; color: #fff; }
         #ncnl_common_header_menu .ncnl-common-header-popover { visibility: hidden; background: #f4f4f4; }
         #ncnl_common_header_menu:hover .ncnl-common-header-popover { visibility: visible; }
@@ -164,7 +165,10 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
         #ncnl_common_header_menu .ncnl-common-header-footer { background: #f4f4f4; }
         #ncnl_common_header_menu .ncnl-common-header-footer a { color: #333; }
       </style>
-      <div id="CommonHeader">
+      <div id="CommonHeader" style="position: sticky; top: 0">
+        <a data-fixture="harajuku-logo-icon" href="https://www.nicovideo.jp?from=harajuku">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" /></svg>
+        </a>
         <div data-fixture="notification-panel">
           <div data-fixture="notification-header">
             <span>お知らせ</span>
@@ -251,6 +255,21 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
   });
 
   await expect(page.locator(".HarajukuWatchChrome")).toHaveCount(1);
+  const logoIcon = page.locator('[data-fixture="harajuku-logo-icon"]');
+  await expect(page.locator("#CommonHeader")).toHaveCSS("position", "relative");
+  await expect(logoIcon).toHaveCSS("position", "absolute");
+  const logoBeforeScroll = await logoIcon.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { pageY: rect.y + window.scrollY, viewportY: rect.y };
+  });
+  await page.evaluate(() => window.scrollTo(0, 600));
+  const logoAfterScroll = await logoIcon.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { pageY: rect.y + window.scrollY, viewportY: rect.y };
+  });
+  expect(logoAfterScroll.pageY).toBeCloseTo(logoBeforeScroll.pageY, 0);
+  expect(logoAfterScroll.viewportY).toBeLessThan(logoBeforeScroll.viewportY);
+  await page.evaluate(() => window.scrollTo(0, 0));
   const notificationReadAll = page.locator(
     '[data-filter-matome-notification-read-all="true"]',
   );
@@ -422,6 +441,7 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
   await expect(page.locator("html")).not.toHaveAttribute(
     HARAJUKU_ACTIVE_ATTRIBUTE,
   );
+  await expect(page.locator("#CommonHeader")).toHaveCSS("position", "sticky");
 });
 
 test("header privacy hides premium override avatar and name by account structure", async ({
