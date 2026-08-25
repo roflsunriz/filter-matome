@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- 【docs/USAGE】現行の利用者向け機能をソースコードから確認できるよう、102・103番nlFilter、mylist2、movie-info、movie-fetcher、video-playerのコメント投稿、mlink-video-controllerの登録済み9モジュールと再生速度操作を追記し、廃止済みモジュールの説明を削除した。
+
 ## [#249] - 2026-08-26
 
 ### Added
