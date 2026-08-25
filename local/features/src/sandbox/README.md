@@ -8,6 +8,7 @@
 - `../../scripts/sandbox/capture-official-watch-bundle.ts`: 起動済みChromeのraw CDPへ接続し、調査専用タブで読み込まれた公式JavaScript・CSSと同一CDNのES Module依存関係を取得します。Cookie、リクエストヘッダー、HTMLは保存せず、CSSはde-minify版も保存します。
 - `../../scripts/sandbox/analyze-official-watch-bundle.ts`: 取得物を実行せず、機能語と参照ドメインを静的集計します。
 - `../../scripts/sandbox/analyze-official-watch-css.ts`: 公式root CSSと`104_watch_harajuku_style.txt`適用後CSSをde-minifyし、既定layer、既知の非layer末尾、全体layer隔離、構文を検証します。
+- `../../scripts/sandbox/analyze-playback-rate-bridge.ts`: 最新captureをメモリー上でde-minifyし、公式media controllerの再生速度状態、動画要素への補正、`101_disable_official_function.txt`の版付き同期APIを検証します。
 - `../../scripts/sandbox/analyze-comment-reload-api.ts`: 最新captureをメモリー上でde-minifyし、公式コメント再取得actionと`102_comment_reload_api.txt`の接続を検証します。
 - `../../scripts/sandbox/analyze-comment-context-menu.ts`: 最新captureをメモリー上でde-minifyし、公式右クリックメニューのReact生成点と`103_official_comment_menu.txt`の接続を検証します。
 - `../../scripts/sandbox/observe-membership-context.ts`: ログイン済みセッションと未ログインの一時BrowserContextを比較し、個人識別子を保存せず会員区分と動画権利フラグだけを記録します。
@@ -18,6 +19,7 @@
 - `../../scripts/sandbox/run-offline-seek-preview-sandbox.ts`: 外部通信遮断下で公式Storyboardモデルとレンダラーを実行し、時刻からスプライトセルへの変換とCSS描画を確認します。
 - `../../scripts/sandbox/verify-offline-cdp-sandbox.ts`: 一時BrowserContextを作り、CDPでHTTP、HTTPS、WebSocket、FTPを遮断し、CookieとWeb Storageも空であることを検証します。
 - `../../scripts/sandbox/verify-current-comment-reload.ts`: Cookieのない一時BrowserContextで現行Watchページを開き、版付きAPI、`POST /v1/threads`、comment-filter2への再入力、ページ再読み込みがないことを動的検証します。
+- `../../scripts/sandbox/verify-current-playback-rate.ts`: Cookieのない一時BrowserContextで現行Watchページを開き、公式ショートカットとmlinkの再生速度が版付きAPI・動画要素へ同期することを数値だけで動的検証します。
 - `../../scripts/sandbox/verify-current-harajuku-css.ts`: NicoCache_nl経由のCookieなし一時タブで原宿風Watchを有効化し、CSSの読込順、重要宣言0件、代表ビューポート、専用DOMを検証します。公式Watchがエラー画面の場合は失敗として報告します。
 - `comment-post-api.md`: 2026-07-19に取得した公式バンドルから確認したコメント投稿契約です。
 - `comment-reload-api.md`: 2026-07-23に取得した公式バンドルから確認した、公式ストアと描画を更新するコメント再取得契約です。
@@ -29,6 +31,7 @@
 - `membership-differentiation.md`: 未ログイン・一般・プレミアムの機能差と、チャンネル会員・PPVなど別軸の動画権利を整理した調査結果です。
 - `quality-audio-delivery.md`: 画質・音質候補、会員別利用可否、access-rights、分離HLS配信、自動・手動切り替え、selected・loading・playing状態を整理した調査結果です。
 - `seek-thumbnail-preview.md`: シークバーホバーのStoryboard取得、スプライト計算、表示条件、ローカルプレイヤーへの示唆を整理した調査結果です。
+- `playback-rate-bridge.md`: 公式media controllerと動画要素の再生速度同期、3版のMatch履歴、版付きブリッジの安全境界です。
 - `official-watch-bundle/`: ダウンロードしたHTML・JavaScriptの隔離先です。期限付きキーやトラッキング値を含む可能性があるためGit管理外です。
 - `destroy-ads-captures/`: Cookieなしで主要12ページ種別を巡回した要求一覧と、広告語を含む公式JS/CSSのde-minify結果です。クエリー文字列、認証情報、個人識別子は保存せず、Git管理外です。
 
@@ -52,8 +55,10 @@ bun run sandbox:run-quality
 bun run sandbox:run-seek-preview
 bun run sandbox:verify-offline
 bun run sandbox:verify-comment-reload
+bun run sandbox:verify-playback-rate
 bun run sandbox:analyze-official
 bun run sandbox:analyze-watch-css
+bun run sandbox:analyze-playback-rate
 bun run sandbox:verify-harajuku-css
 bun run sandbox:analyze-comment-reload
 bun run sandbox:analyze-comment-menu

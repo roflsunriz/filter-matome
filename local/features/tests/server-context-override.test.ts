@@ -24,8 +24,12 @@ describe("serverContext override config", () => {
     const config = parseServerContextOverrideConfig(configMatch?.[1] ?? "");
     expect(Object.keys(config).length).toBeGreaterThan(0);
 
-    const replaceBodyMatch = filter.match(
-      /Replace<\r?\n([\s\S]*?)\r?\n>\r?\n\r?\n# 公式の再生速度調整を無効化/,
+    const serverContextSection = filter.match(
+      /\[Replace\]\r?\nName = serverContext項目別書き換え用プレースホルダー\r?\n[\s\S]*?(?=\r?\n\[Replace\])/u,
+    )?.[0];
+    expect(serverContextSection).toBeDefined();
+    const replaceBodyMatch = serverContextSection?.match(
+      /Replace<\r?\n([\s\S]*?)\r?\n>/u,
     );
     expect(replaceBodyMatch).not.toBeNull();
     const replaceBody = replaceBodyMatch?.[1] ?? "";

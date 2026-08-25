@@ -177,7 +177,7 @@ Watchページで原宿風表示用CSSを公式CSSより先に読み込み、公
 
 Watchページの`server-context`直後へ設定JSONと同期スクリプトを挿入し、設定で有効にした項目だけを公式クライアントが読み込む前に書き換える。配布時の設定では`sessionUser.type`を`premium`として表示上の分岐を調整するが、認証状態、視聴権限、サーバー側で判定されるプレミアム権限は付与されない。
 
-同じファイルに、公式プレイヤーによる`playbackRate`の再設定を抑止し、mlink-video-controllerの再生速度変更を維持するnimg用フィルタも含まれる。公式JavaScriptを置換するため、追加・更新・除去後は`Ctrl+F5`でWatchページをハード再読み込みする。
+同じファイルに、公式プレイヤーのmedia controllerへ版付きの最小APIを接続するnimg用フィルタも含まれる。mlink-video-controllerはこのAPIから公式内部状態と動画要素を同時に更新するため、公式設定の再生速度と0.1～5倍のmlink設定を併用できる。公式UIの候補、会員判定、保存処理は変更しない。APIがないローカルvideo-playerでは動画要素へ直接設定する。公式JavaScriptを置換するため、追加・更新・除去後は`Ctrl+F5`でWatchページをハード再読み込みする。
 
 ### 102_comment_reload_api.txt
 

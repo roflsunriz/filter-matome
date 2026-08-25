@@ -91,22 +91,19 @@ $1
 <script src="/local/features/dist/server-context-override.js" charset="utf-8"></script>
 >
 
-# 公式の再生速度調整を無効化
-
-# 注意1: 導入・除去にはwatchページのハード再読み込みが必要
-#       大抵のモダンブラウザでは Ctrl + F5 でディスクキャッシュを上書きしつつ再読み込みする
-# 注意2: 公式プレイヤーが動かなくなる可能性あり(ソースコードを無理やり書き換えているため)
-# 動画の再生・一時停止・スキップ・シーク・再生速度変更など、非プレミアム会員で制限されている
-# 基本的な機能を提供するための下準備。
-# 実質的な機能はmlink-video-controllerで提供している。
+# 公式プレイヤーとmlink-video-controllerの再生速度を同期する。
+# 公式側のmedia controllerが保持する再生速度へ版付きの最小APIだけを接続し、
+# 公式UIの候補・会員判定・保存処理は変更しない。
+# mlink-video-controllerは0.1～5倍をこのAPIからmedia controllerへ設定する。
+# APIがないローカルvideo-playerではHTMLMediaElementへ直接設定する。
+# 導入・更新・除去後はCtrl+F5でWatchページをハード再読み込みする。
 
 [Replace]
-Name = 公式プレイヤーの再生速度調整機能無効化（nimg用）
-FullURL = https?://[^/]+\.nimg\.jp/[^/]+/[^/]+/[^/]+/[^/]+/[^/]+\.js
-Multi = TRUE
+Name = 公式プレイヤーとmlink-video-controllerの再生速度同期（nimg用）
+FullURL = https?:\/\/resource\.video\.nimg\.jp\/web\/scripts\/nvpc_next\/assets\/[^/?#]+\.js(?:\?[^#]*)?(?:#.*)?
 Match<
-playbackRate
+this\.getPlaybackRate=\(\)=>this\.media\.getPlaybackRate\(\)
 >
 Replace<
-_x_
+this.getPlaybackRate=()=>this.media.getPlaybackRate(),globalThis.FilterMatomePlaybackRateApi={version:1,get:()=>this.media?.getPlaybackRate()??null,set:e=>Number.isFinite(e)&&e>=.1&&e<=5&&this.media?(this.media.setPlaybackRate(e),this.media.getPlaybackRate()):null}
 >

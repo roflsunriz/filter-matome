@@ -22,6 +22,8 @@ import {
   watchHarajukuModuleConfig,
 } from "@/mlink-video-controller/modules/watch-harajuku-module";
 import { LinkManager } from "@/mlink-video-controller/services/link-manager";
+import { NicoVideoPlayer } from "@/mlink-video-controller/services/nico-video-player";
+import { SpeedHandler } from "@/mlink-video-controller/handlers/speed";
 
 Object.assign(window, {
   MlinkTabControllers: {
@@ -42,6 +44,8 @@ Object.assign(window, {
     WatchHarajukuModule,
     watchHarajukuModuleConfig,
     LinkManager,
+    NicoVideoPlayer,
+    SpeedHandler,
     startNotificationReadAll,
   },
 });

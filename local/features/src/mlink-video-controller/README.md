@@ -55,6 +55,7 @@ watchページ間のSPA遷移は共通navigationイベントから`ModuleManager
 ## 主な連携境界
 
 - `services/nico-video-player.ts`: 対象ページの動画要素と再生状態を優先して操作する。
+- `services/official-playback-rate-bridge.ts`: 101番nlFilterが公式media controllerへ公開する版付きAPIを検証し、Watchでは公式内部状態と動画要素を同時更新する。APIがないスタンドアロンプレイヤーでは動画要素へ直接設定する。
 - `handlers/mylist2.ts`: mylist2 SPAへ動画追加要求を渡す。
 - `services/link-manager.ts`: filter-matome専用リンクからsmartFetcherを開き、視聴ページでは現在の動画IDを予約フォームへ渡す。キャッシュリストはNicoCache_nl本体の`https://nicocachenl.test/cache`を直接開く。
 - `managers/comment-api-cache.ts`: コメントAPIデータを共有する。
@@ -68,6 +69,7 @@ watchページ間のSPA遷移は共通navigationイベントから`ModuleManager
 - パネル操作を追加するときは、template、controller、handler、styleの責務を分離する。
 - Web Componentの再接続やSPA遷移でイベントリスナー、Observer、タイマーを重複させない。
 - ニコニコ動画のDOMセレクター変更は実ページで確認し、翻訳文やハッシュ付きクラス名へ依存させない。
+- 再生速度連携は公式候補や会員判定を書き換えず、版付きAPIの`get`・`set`だけを利用する。公式UIとmlinkのどちらで変更しても動画要素の`ratechange`と両画面の表示が追従することを確認する。
 - 背景・原宿風・マトリックス背景の積層順とCSS変数を同時に確認する。
 - 外部リンクやキャッシュ削除は、対象動画IDを検証してから実行する。
 

@@ -38,6 +38,11 @@ declare global {
       getItems: (comment: unknown) => Array<{ id: string; label: string }>;
       execute: (action: unknown, comment: unknown) => Promise<boolean>;
     };
+    FilterMatomePlaybackRateApi?: {
+      version: 1;
+      get: () => number | null;
+      set: (rate: number) => number | null;
+    };
     NicoCache_nl: NicoCache_nlInterface;
     commonHelper: {
       // 既存の関数

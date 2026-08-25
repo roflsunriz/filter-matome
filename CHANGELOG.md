@@ -6,9 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- 【sandbox・tests】公式プレイヤー更新へ安全に追従できるよう、3世代・6captureの公開資産をde-minifyして確認したmedia controller境界、URL・サイズ・SHA-256・一意Match履歴を記録し、置換後構文、公式内部状態、動画要素補正、版付きAPI、フォールバックを検証する解析コマンド、Cookieなし実ページ検証、回帰テストを追加した。
+
 ### Changed
 
 - 【docs/USAGE】現行の利用者向け機能をソースコードから確認できるよう、102・103番nlFilter、mylist2、movie-info、movie-fetcher、video-playerのコメント投稿、mlink-video-controllerの登録済み9モジュールと再生速度操作を追記し、廃止済みモジュールの説明を削除した。
+
+### Fixed
+
+- 【nlFilters・mlink-video-controller】公式JavaScript中の`playbackRate`を全面置換して公式設定・HLS制御まで壊さず、公式media controllerへ版付きの最小APIを接続し、公式設定とmlinkのどちらから変更しても内部状態と動画要素を同期できるよう修正した。公式候補・会員判定・保存処理は維持し、APIがないローカルプレイヤーは従来の直接設定へフォールバックする。
 
 ## [#249] - 2026-08-26
 

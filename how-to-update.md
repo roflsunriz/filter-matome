@@ -5,6 +5,25 @@
 5. git tag "#(version)"
 6. git push origin "#(version)" の操作でGithub Actionsが自動でリリースを作成する。タグは`#238`、配布アーカイブはURLフラグメントとの衝突を避けた`filter-matome-238.7z`のように、ファイル名側だけ`#`を除く。
 
+## 公式プレイヤー再生速度ブリッジの追従確認
+
+公式設定またはmlink-video-controllerで変更した再生速度が元へ戻る、公式設定パネルがエラーになる、または101番nlFilterのMatchが外れた場合は、Cookieと認証ヘッダーを保存しないraw CDP captureを取り直す。取得物はGit管理外の`local/features/src/sandbox/official-watch-bundle/`だけへ置き、公式コードを製品bundleへ取り込まない。
+
+```powershell
+cd local/features
+bun run sandbox:capture-official
+bun run sandbox:analyze-playback-rate
+bun run sandbox:verify-playback-rate
+bun test tests/playback-rate-bridge-nlfilter.test.ts tests/official-playback-rate-bridge.test.ts
+bunx playwright test tests/mlink-video-controller-playback-rate.spec.ts
+```
+
+Matchを変更する前に`local/features/src/sandbox/playback-rate-bridge.md`へ公式原本のURL、SHA-256、サイズ、一致数、前版との差分、意味上の根拠を追記する。最新captureの全JavaScriptで対象1件・他資産0件、置換後ES Moduleの構文、公式media controllerの内部状態、`timeupdate`・`play`時の動画要素補正、版付きAPIの`get`・`set`を確認する。公式の候補配列、会員判定、保存処理は変更せず、`playbackRate`という語の全面置換へ戻さない。
+
+実環境ではWatchページを`Ctrl+F5`でハード再読み込みし、公式設定の各利用可能速度、キーボードの速度変更、mlinkのスライダー・プリセット・微調整を順に操作する。どちらで変更しても動画要素とmlink表示が追従し、公式設定を再度選べることを確認する。APIがないスタンドアロンvideo-playerではmlinkの直接設定が維持されることも確認する。
+
+ロールバックは101番nlFilterの再生速度同期セクション、`official-playback-rate-bridge.ts`、`nico-video-player.ts`のブリッジ利用を同じ以前の版へ戻し、ビルド後にWatchページをハード再読み込みする。旧`playbackRate`全面置換は公式設定・HLS制御まで壊すため復活させない。
+
 ## destroy-adsの追従確認
 
 公式ページや広告資産が更新された場合は、Cookieを持たない隔離Chromeをraw CDP付きで起動し、`local/features/src/destroy-ads/README.md`の対象12ページを再走査する。captureはGit管理外の`local/features/src/sandbox/destroy-ads-captures/`へ置き、クエリー、Cookie、認証ヘッダー、個人識別子を保存しない。

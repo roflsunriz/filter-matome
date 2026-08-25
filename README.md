@@ -181,7 +181,7 @@ local/
 
 nlFilters/
 ├── 100_features.txt                # 全機能を含むfeatures.jsをニコニコ動画全体へ挿入
-├── 101_disable_official_function.txt # 公式機能無効化(公式プレーヤーの再生速度調整を無効化)
+├── 101_disable_official_function.txt # serverContext書換設定と公式・mlink再生速度同期
 ├── 102_comment_reload_api.txt       # 公式コメント再取得actionをcomment-filter2へ公開
 ├── 103_official_comment_menu.txt    # 公式Reactコメントメニューへcomment-filter2操作を接続
 ├── 104_watch_harajuku_style.txt     # 公式CSSのlayer隔離と原宿風Watch CSSの先行読込

@@ -1,4 +1,8 @@
 import { NicoCache_nlInterface } from "@/types/global-types";
+import {
+  readOfficialPlaybackRate,
+  writeOfficialPlaybackRate,
+} from "./official-playback-rate-bridge";
 
 export class NicoVideoPlayer {
   private static instance: NicoVideoPlayer;
@@ -259,8 +263,11 @@ export class NicoVideoPlayer {
           }
         }
 
-        video.playbackRate = finalRate;
-        this.currentPlaybackRate = finalRate;
+        if (!writeOfficialPlaybackRate(window, finalRate)) {
+          video.playbackRate = finalRate;
+        }
+        this.currentPlaybackRate =
+          readOfficialPlaybackRate(window) ?? video.playbackRate;
 
         // 設定を保存
         this.saveSettings();
@@ -285,7 +292,10 @@ export class NicoVideoPlayer {
 
   public getPlaybackRate(): number {
     const video = this.getVideoElement();
-    return video ? video.playbackRate : this.currentPlaybackRate;
+    return (
+      readOfficialPlaybackRate(window) ??
+      (video ? video.playbackRate : this.currentPlaybackRate)
+    );
   }
 
   public getCurrentTime(): number {
