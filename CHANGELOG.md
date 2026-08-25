@@ -6,20 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#249] - 2026-08-26
+
 ### Added
 
 - 【destroy-ads・Java extension・sandbox】広告をDOM/CSSで事後非表示にせず根本から止めるため、主要12ページ種別の公式資産と通信をCookieなしで走査・de-minifyする仕組みを追加した。現行React広告コンポーネント、`adsResource`、GTM、旧`Advertisement`マネージャーをブラウザーへ渡す前に無力化し、既存PACをバックアップした上で広告ホストだけをNicoCache_nlへ経路変更して、残ったニコニコ・Google/DoubleClick・ヘッダー入札・広告画像/動画要求も上流接続前に破棄する。
 - 【destroy-ads・tests】minify識別子の版差に依存せず意味上の生成点へ一致させ、通常の動画配信、コメント、Watch API、公式JavaScriptを過剰遮断しない広告通信規則と回帰テスト、3版の公式資産Match履歴を追加した。
+- 【destroy-ads・tests】直近の再生維持修正を固定するため、匿名化した公式Watch資産とNetworkログのfixtureを追加し、広告コンポーネント公開binding・広告検査通信の無力化、広告要求の遮断、`adsResource`ローダー関数、`PlayerCurrentTime`、動画初期化API、HLS、復号鍵、映像・音声segment、コメント要求の維持を一括検証するようにした。
 - 【Harajuku・sandbox・tests】公式Watchのroot CSS更新へ追従できるよう、raw CDP captureでJavaScriptとCSSを取得し、元CSSと104番nlFilter適用後CSSをde-minifyして、既定5layer、既知のSimpleBar・font-face末尾、全体layer隔離、構文、ハッシュを検証する解析・回帰テストを追加した。
 
 ### Changed
 
+- 【features・README】リリース番号を`249`へ更新し、latestバッジを`#249`へ変更した。
 - 【Harajuku・nlFilters・build】原宿風Watchを後挿しstyleと1,116件の`!important`で押し切らず、独立した`watch-harajuku.css`を104番nlFilterから公式CSSより先に読み込み、公式root CSS応答全体を専用cascade layerへ隔離する構成へ変更した。Harajuku CSSはモジュール有効時だけactive scopeで適用し、通常宣言だけで公式CSSより自然に優先する。
 
 ### Fixed
 
 - 【destroy-ads・Watch】広告資産ローダー呼び出しを空Promiseへ置き換えたことで、access-rightsとHLSが成功しても公式動画エラーへ遷移する問題を修正した。公式ローダー関数は維持して同一originの空stubへ向け、通常再生開始にも必要な`PlayerCurrentTime`は変更せず、独立した広告ブロック検査だけを要求生成前に無効化する。
 - 【features・video-player】共通loggerの初期化前にvideo-player routerが失敗ログを出そうとして例外になる競合を防ぐため、ニコニコページではcommon entryの起動完了後に各機能entryを並列起動するよう順序を修正した。
+- 【Harajuku・responsive】狭いWatch画面で公式gridやおすすめタブの内容がビューポート幅を押し広げないよう、主要コンテナとgrid子要素を縮小可能にし、おすすめタブの横溢れを抑止した。
 
 ## [#248] - 2026-08-23
 
