@@ -37,6 +37,7 @@ bun run benchmark:comment-filter
 - `watch-history.spec.ts`: 実IndexedDBを使う履歴・統計・シリーズ・削除・入出力・DB管理。
 - `watch-tracker.spec.ts`: 動的video要素の記録とSPA離脱時の監視解除。
 - `source-file-size.test.ts`: TypeScript、CSS、HTMLが責務分割の上限を超えていないことを検証する。
+- `destroy-ads-watch-fixture.test.ts`: 匿名化した公式Watch資産・Network fixtureで、広告コンポーネントと広告通信の遮断、adsResourceローダー契約、通常動画の初期化・再生要求の維持を検証する。
 - `*.test.ts`: フィルター、削除条件、URL生成、API正規化、設定判断など、DOMから分離できる境界値と回帰。
 
 ## 追加・変更時の原則
