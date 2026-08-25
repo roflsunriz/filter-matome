@@ -6,12 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#250] - 2026-08-26
+
 ### Added
 
 - 【sandbox・tests】公式プレイヤー更新へ安全に追従できるよう、3世代・6captureの公開資産をde-minifyして確認したmedia controller境界、URL・サイズ・SHA-256・一意Match履歴を記録し、置換後構文、公式内部状態、動画要素補正、版付きAPI、フォールバックを検証する解析コマンド、Cookieなし実ページ検証、回帰テストを追加した。
 
 ### Changed
 
+- 【features・README】リリース番号を`250`へ更新し、latestバッジを`#250`へ変更した。
 - 【docs/USAGE】現行の利用者向け機能をソースコードから確認できるよう、102・103番nlFilter、mylist2、movie-info、movie-fetcher、video-playerのコメント投稿、mlink-video-controllerの登録済み9モジュールと再生速度操作を追記し、廃止済みモジュールの説明を削除した。
 
 ### Fixed
