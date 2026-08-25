@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#250.1] - 2026-08-26
+
+### Changed
+
+- 【features・README】リリース番号を`250.1`へ更新し、latestバッジを`#250.1`へ変更した。
+
 ### Fixed
 
 - 【Harajuku・responsive】左上の原宿風ニコニコアイコンが不安定な包含ブロックを基準にずれないよう、CommonHeaderの公式`sticky`指定を原宿モジュール有効中だけ退避してページ内の配置基準へ変更し、無効化時は元へ復元するよう修正した。アイコンは画面へ居残る`fixed`ではなくページと一緒にスクロールする`absolute`を維持し、スクロール前後で文書座標が変わらないことをモックと実Watchで検証する。
