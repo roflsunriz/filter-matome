@@ -17,10 +17,12 @@ interface CaptureManifest {
   files: CaptureFile[];
 }
 
-const MINIFIED_MENU_ANCHOR =
-  "(0,q.jsxs)(f,{css:$.raw(),onPress:s,children:[`再生時間（`,";
 const NLFILTER_MENU_PATTERN =
-  "(\\(0,q\\.jsxs\\)\\(f,\\{css:\\$\\.raw\\(\\),onPress:s,children:\\[`再生時間（`,)";
+  "(\\(0,([A-Za-z_$][\\w$]*)\\.jsxs\\)\\(([A-Za-z_$][\\w$]*)," +
+  "\\{css:([A-Za-z_$][\\w$]*)\\.raw\\(\\),onPress:([A-Za-z_$][\\w$]*)," +
+  "children:\\[`再生時間（`,)(?=\\(0,\\2\\.jsx\\)\\([A-Za-z_$][\\w$]*," +
+  "\\{css:\\{fontFamily:`metaNumber`\\},type:`vposMs`,children:" +
+  "([A-Za-z_$][\\w$]*)\\.comment\\.vposMs\\}\\),`）に移動`)";
 const EXPOSED_MENU_FRAGMENT = "globalThis.FilterMatomeCommentMenuApi";
 
 export interface NlFilterMenuContract {
@@ -68,10 +70,12 @@ function parseCaptureManifest(value: unknown): CaptureManifest {
 export function findCommentMenuBundle(
   files: CaptureFile[],
   sources: ReadonlyMap<string, string>,
+  matchPattern: RegExp,
 ): CaptureFile {
-  const matches = files.filter((file) =>
-    sources.get(file.fileName)?.includes(MINIFIED_MENU_ANCHOR),
-  );
+  const matches = files.filter((file) => {
+    const source = sources.get(file.fileName);
+    return source !== undefined && new RegExp(matchPattern).test(source);
+  });
   if (matches.length !== 1) {
     throw new Error(
       `公式コメントメニューを含む資産は1件必要です（検出: ${String(matches.length)}件）`,
@@ -108,8 +112,11 @@ export function assertCommentMenuNlFilterContract(
   }
   if (
     !contract.replace.includes(EXPOSED_MENU_FRAGMENT) ||
-    !contract.replace.includes("e.getItems(t.comment)") ||
-    !contract.replace.includes("e.execute(n.id,t.comment)") ||
+    !contract.replace.includes(
+      "FilterMatomeCommentMenuBridgeApi={version:1}",
+    ) ||
+    !contract.replace.includes("e.getItems($6.comment)") ||
+    !contract.replace.includes("e.execute(n.id,$6.comment)") ||
     !contract.replace.endsWith("$1")
   ) {
     throw new Error(
@@ -117,6 +124,20 @@ export function assertCommentMenuNlFilterContract(
     );
   }
   return contract;
+}
+
+export function applyCommentMenuNlFilter(
+  source: string,
+  contract: NlFilterMenuContract,
+): string {
+  const pattern = new RegExp(contract.match, "gu");
+  const matchCount = Array.from(source.matchAll(pattern)).length;
+  if (matchCount !== 1) {
+    throw new Error(
+      `コメントメニューAPIのMatchは対象資産に1回だけ必要です（検出: ${String(matchCount)}回）`,
+    );
+  }
+  return source.replace(pattern, contract.replace);
 }
 
 async function main(): Promise<void> {
@@ -142,11 +163,6 @@ async function main(): Promise<void> {
     }),
   );
 
-  const bundle = findCommentMenuBundle(javascriptFiles, sources);
-  const source = sources.get(bundle.fileName);
-  if (source === undefined) {
-    throw new Error(`公式資産を読み込めませんでした: ${bundle.fileName}`);
-  }
   const filterPath = resolve(
     dirname(projectRoot),
     "../nlFilters/103_official_comment_menu.txt",
@@ -166,10 +182,16 @@ async function main(): Promise<void> {
       `nlFilterのMatchは全公式資産で1回だけ必要です（検出: ${String(allMatchCount)}回）`,
     );
   }
-  const transformed = source.replace(matchPattern, contract.replace);
+  const bundle = findCommentMenuBundle(javascriptFiles, sources, matchPattern);
+  const source = sources.get(bundle.fileName);
+  if (source === undefined) {
+    throw new Error(`公式資産を読み込めませんでした: ${bundle.fileName}`);
+  }
+  const transformed = applyCommentMenuNlFilter(source, contract);
   const deminified = await format(transformed, { parser: "babel" });
   if (
     !deminified.includes("FilterMatomeCommentMenuApi") ||
+    !deminified.includes("FilterMatomeCommentMenuBridgeApi") ||
     !deminified.includes("getItems(t.comment)") ||
     !deminified.includes("execute(n.id, t.comment)") ||
     !deminified.includes("コメントをNG登録") ||

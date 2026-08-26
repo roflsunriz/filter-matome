@@ -6,8 +6,8 @@
 Name = comment-filter2用公式コメント再取得API
 FullURL = https?:\/\/resource\.video\.nimg\.jp\/web\/scripts\/nvpc_next\/assets\/[^\/?]+\.js(?:\?.*)?$
 Match<
-Le\(e,\[`initialized`,`fetched`\]\);let n=e\.current\(\),r=yield lr\(
+(var ([A-Za-z_$][\w$]*)=function\(\)\{var [A-Za-z_$][\w$]*=[A-Za-z_$][\w$]*\(function\*\(([A-Za-z_$][\w$]*),([A-Za-z_$][\w$]*)=\{\}\)\{[A-Za-z_$][\w$]*\(\3,\[`initialized`,`fetched`\]\);)(?=let ([A-Za-z_$][\w$]*)=\3\.current\(\),[A-Za-z_$][\w$]*=yield [A-Za-z_$][\w$]*\(\5\.watch\.comment\.nvComment\.server,\5\.watch\.video\.id,\5\.watch\.comment\.nvComment\.params,\4\))
 >
 Replace<
-Le(e,[`initialized`,`fetched`]);try{globalThis.FilterMatomeCommentApi={version:1,reload:()=>Ar(e,e.current().fetchAdditionals)}}catch{};let n=e.current(),r=yield lr(
+$1try{globalThis.FilterMatomeCommentApi={version:1,reload:()=>$2($3,$3.current().fetchAdditionals)}}catch{};
 >

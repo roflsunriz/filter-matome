@@ -6,8 +6,8 @@
 Name = comment-filter2用公式コメントメニュー
 FullURL = https?:\/\/resource\.video\.nimg\.jp\/web\/scripts\/nvpc_next\/assets\/[^\/?]+\.js(?:\?.*)?$
 Match<
-(\(0,q\.jsxs\)\(f,\{css:\$\.raw\(\),onPress:s,children:\[`再生時間（`,)
+(\(0,([A-Za-z_$][\w$]*)\.jsxs\)\(([A-Za-z_$][\w$]*),\{css:([A-Za-z_$][\w$]*)\.raw\(\),onPress:([A-Za-z_$][\w$]*),children:\[`再生時間（`,)(?=\(0,\2\.jsx\)\([A-Za-z_$][\w$]*,\{css:\{fontFamily:`metaNumber`\},type:`vposMs`,children:([A-Za-z_$][\w$]*)\.comment\.vposMs\}\),`）に移動`)
 >
 Replace<
-...(()=>{try{let e=globalThis.FilterMatomeCommentMenuApi;if(e?.version!==1)return[];let n=e.getItems(t.comment);return Array.isArray(n)?n.map(n=>(0,q.jsx)(f,{css:{padding:`base`,fontSize:`s`,borderRadius:`s`,_hover:{backgroundColor:`layer.surfaceMediumEm`}},onPress:()=>e.execute(n.id,t.comment),children:n.label},n.id)):[]}catch{return[]}})(),$1
+...(()=>{try{globalThis.FilterMatomeCommentMenuBridgeApi={version:1};let e=globalThis.FilterMatomeCommentMenuApi;if(e?.version!==1)return[];let n=e.getItems($6.comment);return Array.isArray(n)?n.map(n=>(0,$2.jsx)($3,{css:{padding:`base`,fontSize:`s`,borderRadius:`s`,_hover:{backgroundColor:`layer.surfaceMediumEm`}},onPress:()=>e.execute(n.id,$6.comment),children:n.label},n.id)):[]}catch{return[]}})(),$1
 >

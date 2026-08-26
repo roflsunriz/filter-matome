@@ -17,12 +17,16 @@ interface CaptureManifest {
   files: CaptureFile[];
 }
 
-const MINIFIED_RELOAD_ANCHOR =
-  "Le(e,[`initialized`,`fetched`]);let n=e.current(),r=yield lr(";
 const NLFILTER_RELOAD_PATTERN =
-  "Le\\(e,\\[`initialized`,`fetched`\\]\\);let n=e\\.current\\(\\),r=yield lr\\(";
+  "(var ([A-Za-z_$][\\w$]*)=function\\(\\)\\{var [A-Za-z_$][\\w$]*=" +
+  "[A-Za-z_$][\\w$]*\\(function\\*\\(([A-Za-z_$][\\w$]*)," +
+  "([A-Za-z_$][\\w$]*)=\\{\\}\\)\\{[A-Za-z_$][\\w$]*\\(\\3," +
+  "\\[`initialized`,`fetched`\\]\\);)(?=let ([A-Za-z_$][\\w$]*)=" +
+  "\\3\\.current\\(\\),[A-Za-z_$][\\w$]*=yield [A-Za-z_$][\\w$]*\\(" +
+  "\\5\\.watch\\.comment\\.nvComment\\.server,\\5\\.watch\\.video\\.id," +
+  "\\5\\.watch\\.comment\\.nvComment\\.params,\\4\\))";
 const EXPOSED_API_FRAGMENT =
-  "globalThis.FilterMatomeCommentApi={version:1,reload:()=>Ar(e,e.current().fetchAdditionals)}";
+  "globalThis.FilterMatomeCommentApi={version:1,reload:()=>$2($3,$3.current().fetchAdditionals)}";
 
 interface NlFilterReplaceContract {
   match: string;
@@ -69,16 +73,32 @@ function parseCaptureManifest(value: unknown): CaptureManifest {
 export function findCommentReloadBundle(
   files: CaptureFile[],
   sources: ReadonlyMap<string, string>,
+  matchPattern: RegExp,
 ): CaptureFile {
-  const matches = files.filter((file) =>
-    sources.get(file.fileName)?.includes(MINIFIED_RELOAD_ANCHOR),
-  );
+  const matches = files.filter((file) => {
+    const source = sources.get(file.fileName);
+    return source !== undefined && new RegExp(matchPattern).test(source);
+  });
   if (matches.length !== 1) {
     throw new Error(
       `コメント再取得actionを含む公式資産は1件必要です（検出: ${String(matches.length)}件）`,
     );
   }
   return matches[0];
+}
+
+export function applyCommentReloadNlFilter(
+  source: string,
+  contract: NlFilterReplaceContract,
+): string {
+  const pattern = new RegExp(contract.match, "gu");
+  const matchCount = Array.from(source.matchAll(pattern)).length;
+  if (matchCount !== 1) {
+    throw new Error(
+      `コメント再取得APIのMatchは対象資産に1回だけ必要です（検出: ${String(matchCount)}回）`,
+    );
+  }
+  return source.replace(pattern, contract.replace);
 }
 
 function readNlFilterBlock(filterSource: string, name: string): string {
@@ -136,24 +156,33 @@ async function main(): Promise<void> {
     }),
   );
 
-  const bundle = findCommentReloadBundle(javascriptFiles, sources);
-  const source = sources.get(bundle.fileName);
-  if (source === undefined) {
-    throw new Error(`公式資産を読み込めませんでした: ${bundle.fileName}`);
-  }
   const filterPath = resolve(
     dirname(projectRoot),
     "../nlFilters/102_comment_reload_api.txt",
   );
   const contract = assertNlFilterContract(await readFile(filterPath, "utf8"));
   const matchPattern = new RegExp(contract.match, "gu");
-  const matchCount = Array.from(source.matchAll(matchPattern)).length;
-  if (matchCount !== 1) {
+  const allMatchCount = Array.from(sources.values()).reduce(
+    (count, candidate) =>
+      count +
+      Array.from(candidate.matchAll(new RegExp(contract.match, "gu"))).length,
+    0,
+  );
+  if (allMatchCount !== 1) {
     throw new Error(
-      `nlFilterのMatchは公式資産に1回だけ必要です（検出: ${String(matchCount)}回）`,
+      `nlFilterのMatchは全公式資産で1回だけ必要です（検出: ${String(allMatchCount)}回）`,
     );
   }
-  const transformed = source.replace(matchPattern, contract.replace);
+  const bundle = findCommentReloadBundle(
+    javascriptFiles,
+    sources,
+    matchPattern,
+  );
+  const source = sources.get(bundle.fileName);
+  if (source === undefined) {
+    throw new Error(`公式資産を読み込めませんでした: ${bundle.fileName}`);
+  }
+  const transformed = applyCommentReloadNlFilter(source, contract);
   const deminified = await format(transformed, { parser: "babel" });
   if (
     !deminified.includes("fetchAdditionals") ||

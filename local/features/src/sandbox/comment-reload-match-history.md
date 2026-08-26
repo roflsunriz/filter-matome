@@ -15,19 +15,26 @@
 
 ## 現行Match
 
-2026-08-20現在の実装は次の正規表現です。
+2026-08-26現在の実装は次の正規表現です。
 
 ```regex
-Le\(e,\[`initialized`,`fetched`\]\);let n=e\.current\(\),r=yield lr\(
+(var ([A-Za-z_$][\w$]*)=function\(\)\{var [A-Za-z_$][\w$]*=[A-Za-z_$][\w$]*\(function\*\(([A-Za-z_$][\w$]*),([A-Za-z_$][\w$]*)=\{\}\)\{[A-Za-z_$][\w$]*\(\3,\[`initialized`,`fetched`\]\);)(?=let ([A-Za-z_$][\w$]*)=\3\.current\(\),[A-Za-z_$][\w$]*=yield [A-Za-z_$][\w$]*\(\5\.watch\.comment\.nvComment\.server,\5\.watch\.video\.id,\5\.watch\.comment\.nvComment\.params,\4\))
 ```
 
-一致対象のminify済み断片は次のとおりです。
+action、store、additionals、現在状態の識別子をcaptureし、同じstoreと現在状態がコメントAPIの4入力へ使われることをlookaheadで確認します。Replaceはactionとstoreのcaptureを再利用するため、識別子名自体には依存しません。
 
 ```javascript
-Le(e,[`initialized`,`fetched`]);let n=e.current(),r=yield lr(
+var Xi=function(){var e=ci(function*(e,t={}){
+  rn(e,[`initialized`,`fetched`]);
+  let n=e.current(),r=yield ki(
+    n.watch.comment.nvComment.server,
+    n.watch.video.id,
+    n.watch.comment.nvComment.params,
+    t
+  )
 ```
 
-このMatchは内部識別子`Le`、`e`、`n`、`r`、`lr`へ依存します。誤一致を避けるため現時点では意図的に狭くしており、汎用性が証明されたMatchではありません。
+`initialized` / `fetched`だけでは同一bundle内の別actionへ誤一致するため、generator wrapper、同一storeの`current()`、`watch.comment.nvComment.server`、動画ID、params、additionalsの連続関係まで必須にしています。
 
 ## 時系列
 
@@ -86,6 +93,38 @@ Le(e,[`initialized`,`fetched`]);let n=e.current(),r=yield lr(
 - URLと`performance.timeOrigin`が不変
 - ページ全体の再読み込みなし
 
+### 2026-08-24: minify識別子変更を確認
+
+| 項目 | 観測値 |
+| --- | --- |
+| capture | `captures/2026-08-24T15-44-21-093Z/` |
+| 取得日時 | `2026-08-24T15:44:21.093Z` |
+| 取得経路 | Cookieなし・`--no-proxy-server`の公式原本 |
+| 資産 | `PlayerSeekBar-CRVaxiiz.js` |
+| SHA-256 | `2c232bec978e5bdb9a0bbea6fde081317dbb3176319be43ed89a2b8acb4d6a62` |
+| サイズ | `1,397,325` bytes |
+| 旧Match一致数 | 0 |
+| capture group Match一致数 | 対象資産1、他JavaScript 0 |
+
+取得actionが`Ar`から`Yi`、状態guardが`Le`から`nn`、コメントAPI呼び出しが`lr`から`Oi`へ変わりました。store、状態、4つのAPI入力の関係は維持されたため、固定識別子ではなくcapture groupで同一関係を再利用する条件を満たしました。
+
+### 2026-08-26: 現行公式原本で汎化Matchを採用
+
+| 項目 | 観測値 |
+| --- | --- |
+| capture | `captures/2026-08-26T06-46-01-350Z/` |
+| 取得日時 | `2026-08-26T06:46:01.350Z` |
+| Chrome | `152.0.7977.64` |
+| 取得経路 | Cookieなし・`--no-proxy-server`の公式原本 |
+| 資産 | `PlayerSeekBar-BKS3ifbV.js` |
+| SHA-256 | `93922c43a79b90f56f74c7b11cc906503695ba1bc38e839688cf53bc1712e949` |
+| サイズ | `1,397,190` bytes |
+| 旧Match一致数 | 0 |
+| capture group Match一致数 | 対象資産1、他JavaScript 0 |
+| 置換後構文検証 | 成功 |
+
+取得actionは`Xi`、状態guardは`rn`、コメントAPI呼び出しは`ki`へ再度変わりました。保存済み6 captureすべてで対象1件・他資産0件、最新原本への置換、de-minify、`POST /v1/threads`と`fetchAdditionals`の維持を確認したため、capture group版を現行Matchへ採用しました。
+
 ## 現時点で安定している観測
 
 | 観測点 | 2026-07-23 | 2026-08-20 | 汎化への扱い |
@@ -102,13 +141,13 @@ Le(e,[`initialized`,`fetched`]);let n=e.current(),r=yield lr(
 | バイトオフセット | 42,308 | 42,332 | 使用禁止 |
 | 資産ハッシュ・サイズ | 版ごとに異なる | 版ごとに異なる | 識別・監査用。Match条件には使わない |
 
-## 汎化するときの方針
+## 汎化Matchの方針
 
 ### 優先順位
 
 1. de-minify後の構文木から意味上の条件を満たすactionを1件に絞り、minify済み原文の範囲を逆引きする解析・生成方式
 2. 複数の識別子をcapture groupで取得し、同じactionとstore引数だけをReplaceへ再利用する狭い正規表現
-3. 現在のような特定minify名に依存する完全一致
+3. 特定minify名に依存する完全一致
 
 単に`initialized`、`fetched`、`current()`だけへMatchを広げる方式は、同じbundle内の別actionにも多数存在するため採用しません。`/v1/threads`だけへの文字列一致も、APIクライアント定義を捕捉するだけでstore更新actionを特定できないため不十分です。
 
@@ -124,9 +163,9 @@ store状態が initialized または fetched
   → POST /v1/threadsの結果でstore更新
 ```
 
-### 汎化版へ切り替える条件
+### 採用時に満たした条件
 
-次をすべて満たすまで現行Matchを広げません。
+2026-08-26のcapture group版は次をすべて満たして採用しました。今後構造を広げる場合も同じ条件を再確認します。
 
 1. プロキシーを無効化した公式原本captureを3版以上記録する。
 2. 少なくとも1版で、現在依存しているminify名またはchunk名が実際に変化している。

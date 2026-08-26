@@ -58,6 +58,14 @@ this\.getPlaybackRate=\(\)=>this\.media\.getPlaybackRate\(\)
 - さらにasset名、サイズ、minify名が変わった版でも対象1件・他資産0件。
 - nlFilter適用後の全モジュールをde-minifyし、版付きAPI、media controller更新、公式の動画要素補正が同時に構文解析できることを確認した。
 
+### 2026-08-26: `PlayerSeekBar-BKS3ifbV.js`
+
+- URL: `https://resource.video.nimg.jp/web/scripts/nvpc_next/assets/PlayerSeekBar-BKS3ifbV.js`
+- size: `1,397,190 bytes`
+- SHA-256: `93922c43a79b90f56f74c7b11cc906503695ba1bc38e839688cf53bc1712e949`
+- 最新のasset名とminify名でも、公開メソッド名だけから成る現行Matchが対象1件・他資産0件だった。
+- nlFilter適用後のmedia controller状態、動画要素補正、公式速度選択、版付きAPIをde-minify・構文検証した。
+
 ## 採用条件と追従
 
 - 最新captureの全JavaScriptでMatchが1回だけ一致する。
