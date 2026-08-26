@@ -61,7 +61,7 @@ public final class FilterMatomeSmartFetcher
     @Override public void registerExtensions(ExtensionManager manager) {
         manager.registerProcessor(this);
         manager.registerEventListener(this);
-        if (extensionLogger == null) extensionLogger = NLMain.getExtLogger( this, "smartFetcher", null, false);
+        if (extensionLogger == null) extensionLogger = NLMain.getExtLogger( this, "smartFetcher", null, true);
     }
     @Override public String getVersionString() { return VER_STRING; }
     @Override public String[] getSupportedMethods() { return METHODS; }
@@ -992,9 +992,7 @@ public final class FilterMatomeSmartFetcher
         return response; }
     private void logInfo(String message) {
         LoggerHandler logger = extensionLogger;
-        if (logger != null) logger.info(message);
-        else Logger.info("smartFetcher: " + message); }
+        if (logger != null) logger.info(message); }
     private void logWarning(String message) {
         LoggerHandler logger = extensionLogger;
-        if (logger != null) logger.warning(message);
-        else Logger.warning("smartFetcher: " + message); } }
+        if (logger != null) logger.warning(message); } }

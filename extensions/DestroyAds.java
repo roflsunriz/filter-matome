@@ -10,10 +10,12 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import dareka.extensions.Extension;
+import dareka.NLMain;
+import dareka.common.LoggerHandler;
+import dareka.extensions.Extension2;
+import dareka.extensions.ExtensionManager;
 import dareka.extensions.RequestFilter;
 import dareka.extensions.Rewriter;
-import dareka.common.Logger;
 import dareka.processor.HttpRequestHeader;
 import dareka.processor.HttpResponseHeader;
 
@@ -21,7 +23,7 @@ import dareka.processor.HttpResponseHeader;
  * 広告生成コードをブラウザーへ渡す前に無力化し、残った広告要求を
  * NicoCache_nlが上流へ接続する前に破棄する。
  */
-public final class DestroyAds implements Extension, RequestFilter, Rewriter {
+public final class DestroyAds implements Extension2, RequestFilter, Rewriter {
     private static final String PAC_START =
             "  // filter-matome destroy-ads: managed block start";
     private static final String PAC_END =
@@ -36,9 +38,8 @@ public final class DestroyAds implements Extension, RequestFilter, Rewriter {
             + "|bundle/pages_[^/?]+\\.js)|(?:[^/]+\\.)?nicovideo\\.jp/.*)",
             Pattern.CASE_INSENSITIVE);
 
-    public DestroyAds() {
-        installProxyPacRoute();
-    }
+    private volatile LoggerHandler extensionLogger;
+    private boolean pacRouteInitialized;
     private static final Pattern COMPONENT_EXPORT = Pattern.compile(
             "export\\{([A-Za-z_$][\\w$]*) as n,([A-Za-z_$][\\w$]*) as r,"
             + "([A-Za-z_$][\\w$]*) as t\\};");
@@ -67,11 +68,17 @@ public final class DestroyAds implements Extension, RequestFilter, Rewriter {
             Pattern.CASE_INSENSITIVE);
 
     @Override
-    public Object queryInterface(Type type) {
-        if (type == Type.RequestFilter1 || type == Type.Rewriter1) {
-            return this;
+    public synchronized void registerExtensions(ExtensionManager manager) {
+        if (extensionLogger == null) {
+            extensionLogger = NLMain.getExtLogger(
+                    this, "DestroyAds", null, true);
         }
-        return null;
+        if (!pacRouteInitialized) {
+            pacRouteInitialized = true;
+            installProxyPacRoute();
+        }
+        manager.registerRewriter(this);
+        manager.registerRequestFilter(this);
     }
 
     @Override
@@ -239,16 +246,16 @@ public final class DestroyAds implements Extension, RequestFilter, Rewriter {
                 || host.equals("yads.yjtag.yahoo.co.jp");
     }
 
-    private static void installProxyPacRoute() {
+    private void installProxyPacRoute() {
         String dataRootProperty = System.getProperty("nicocache.userDataRoot");
         if (dataRootProperty == null || dataRootProperty.isBlank()) {
-            Logger.warning("DestroyAds: userDataRootを取得できないためproxy.pacを更新しません");
+            logWarning("userDataRootを取得できないためproxy.pacを更新しません");
             return;
         }
         Path dataRoot = Path.of(dataRootProperty).toAbsolutePath().normalize();
         Path pac = dataRoot.resolve("proxy.pac").normalize();
         if (!pac.startsWith(dataRoot) || !Files.isRegularFile(pac)) {
-            Logger.warning("DestroyAds: proxy.pacを安全に特定できません: " + pac);
+            logWarning("proxy.pacを安全に特定できません: " + pac);
             return;
         }
         try {
@@ -271,8 +278,14 @@ public final class DestroyAds implements Extension, RequestFilter, Rewriter {
                 Files.move(temporary, pac, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException | IllegalStateException error) {
-            Logger.warning("DestroyAds: proxy.pacを更新できません: "
-                    + error.getMessage());
+            logWarning("proxy.pacを更新できません: " + error.getMessage());
+        }
+    }
+
+    private void logWarning(String message) {
+        LoggerHandler logger = extensionLogger;
+        if (logger != null) {
+            logger.warning(message);
         }
     }
 

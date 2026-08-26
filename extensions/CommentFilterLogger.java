@@ -1,7 +1,6 @@
 package extensions;
 
 import dareka.NLMain;
-import dareka.common.Logger;
 import dareka.common.LoggerHandler;
 import dareka.extensions.Extension2;
 import dareka.extensions.ExtensionManager;
@@ -44,7 +43,7 @@ public class CommentFilterLogger implements Extension2, Processor {
         mgr.registerProcessor(this);
         if (extensionLogger == null) {
             extensionLogger = NLMain.getExtLogger(
-                    this, "CommentFilter", null, false);
+                    this, "CommentFilter", null, true);
         }
     }
     
@@ -70,8 +69,6 @@ public class CommentFilterLogger implements Extension2, Processor {
         LoggerHandler logger = extensionLogger;
         if (logger != null) {
             logger.warning(message);
-        } else {
-            Logger.warning("CommentFilter: " + message);
         }
     }
 
@@ -79,8 +76,6 @@ public class CommentFilterLogger implements Extension2, Processor {
         LoggerHandler logger = extensionLogger;
         if (logger != null) {
             logger.info(message);
-        } else {
-            Logger.info("CommentFilter: " + message);
         }
     }
     

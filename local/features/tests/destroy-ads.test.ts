@@ -169,10 +169,13 @@ describe("destroy-ads official asset rewrites", () => {
 describe("DestroyAds NicoCache_nl extension", () => {
   test("rewrites before browser parsing and drops before upstream processing", () => {
     expect(extensionSource).toContain(
-      "implements Extension, RequestFilter, Rewriter",
+      "implements Extension2, RequestFilter, Rewriter",
     );
-    expect(extensionSource).toContain("Type.RequestFilter1");
-    expect(extensionSource).toContain("Type.Rewriter1");
+    expect(extensionSource).toContain("manager.registerRequestFilter(this)");
+    expect(extensionSource).toContain("manager.registerRewriter(this)");
+    expect(extensionSource).toContain(
+      'NLMain.getExtLogger(\n                    this, "DestroyAds", null, true)',
+    );
     expect(extensionSource).toContain("RequestFilter.DROP");
     expect(extensionSource).toContain("publicUrl");
     expect(extensionSource).toContain("adsResource");

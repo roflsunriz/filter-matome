@@ -36,7 +36,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import dareka.NLMain;
-import dareka.common.Logger;
 import dareka.common.LoggerHandler;
 import dareka.common.TextUtil;
 import dareka.common.json.Json;
@@ -120,7 +119,7 @@ public final class FilterMatomeSeriesAlerts
         manager.registerEventListener(this);
         if (extensionLogger == null) {
             extensionLogger = NLMain.getExtLogger(
-                    this, TAB_TITLE, null, false);
+                    this, TAB_TITLE, null, true);
         }
         if (!stateLoaded) {
             stateLoaded = true;
@@ -717,8 +716,6 @@ public final class FilterMatomeSeriesAlerts
         LoggerHandler logger = extensionLogger;
         if (logger != null) {
             logger.info(message);
-        } else {
-            Logger.info(LOG_PREFIX, "%s", message);
         }
     }
 
@@ -726,8 +723,6 @@ public final class FilterMatomeSeriesAlerts
         LoggerHandler logger = extensionLogger;
         if (logger != null) {
             logger.warning(message);
-        } else {
-            Logger.warning(LOG_PREFIX + ": " + message);
         }
     }
 

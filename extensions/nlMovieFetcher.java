@@ -29,7 +29,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 import dareka.NLMain;
-import dareka.common.Logger;
 import dareka.common.LoggerHandler;
 import dareka.common.TextUtil;
 import dareka.common.json.Json;
@@ -105,7 +104,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
         manager.registerProcessor(this);
         if (extensionLogger == null) {
             extensionLogger = NLMain.getExtLogger(
-                    this, "nlMovieFetcher", null, false);
+                    this, "nlMovieFetcher", null, true);
         }
     }
 
@@ -701,8 +700,6 @@ public final class nlMovieFetcher implements Extension2, Processor {
         LoggerHandler logger = extensionLogger;
         if (logger != null) {
             logger.info(message);
-        } else {
-            Logger.info("nlMovieFetcher: " + message);
         }
     }
 
@@ -710,8 +707,6 @@ public final class nlMovieFetcher implements Extension2, Processor {
         LoggerHandler logger = extensionLogger;
         if (logger != null) {
             logger.warning(message);
-        } else {
-            Logger.warning("nlMovieFetcher: " + message);
         }
     }
 

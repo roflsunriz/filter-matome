@@ -13,7 +13,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import dareka.NLMain;
-import dareka.common.Logger;
 import dareka.common.LoggerHandler;
 import dareka.extensions.Extension2;
 import dareka.extensions.ExtensionManager;
@@ -48,7 +47,7 @@ public final class NicochartInfoProxy implements Extension2, Processor {
         manager.registerProcessor(this);
         if (extensionLogger == null) {
             extensionLogger = NLMain.getExtLogger(
-                    this, "NicochartInfoProxy", null, false);
+                    this, "NicochartInfoProxy", null, true);
         }
     }
 
@@ -143,8 +142,6 @@ public final class NicochartInfoProxy implements Extension2, Processor {
         LoggerHandler logger = extensionLogger;
         if (logger != null) {
             logger.info(message);
-        } else {
-            Logger.info("NicochartInfoProxy: " + message);
         }
     }
 
@@ -152,8 +149,6 @@ public final class NicochartInfoProxy implements Extension2, Processor {
         LoggerHandler logger = extensionLogger;
         if (logger != null) {
             logger.warning(message);
-        } else {
-            Logger.warning("NicochartInfoProxy: " + message);
         }
     }
 }

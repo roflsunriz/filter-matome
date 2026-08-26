@@ -159,7 +159,7 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 		}
 		this.caller = caller;
 		this.propDebug = propDebug;
-		extLogger = NLMain.getExtLogger(caller, prefix, propDebug, false);
+		extLogger = NLMain.getExtLogger(caller, prefix, propDebug, true);
 		extensions.add(this);
 	}
 	

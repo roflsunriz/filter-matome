@@ -35,7 +35,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import dareka.NLMain;
-import dareka.common.Logger;
 import dareka.common.LoggerHandler;
 import dareka.extensions.Extension2;
 import dareka.extensions.ExtensionManager;
@@ -82,7 +81,7 @@ public class nlGpac implements Extension2, Processor {
 
 		if (extensionLogger == null) {
 			extensionLogger = NLMain.getExtLogger(
-					this, LOG_PREFIX, null, false);
+					this, LOG_PREFIX, null, true);
 		}
 	}
 
@@ -837,8 +836,6 @@ public class nlGpac implements Extension2, Processor {
 		LoggerHandler logger = extensionLogger;
 		if (logger != null) {
 			logger.warning(message);
-		} else {
-			Logger.warning(LOG_PREFIX + ": " + message);
 		}
 	}
 
@@ -846,8 +843,6 @@ public class nlGpac implements Extension2, Processor {
 		LoggerHandler logger = extensionLogger;
 		if (logger != null) {
 			logger.info(message);
-		} else {
-			Logger.info(LOG_PREFIX + ": " + message);
 		}
 	}
 }
