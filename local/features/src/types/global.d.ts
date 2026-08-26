@@ -38,6 +38,9 @@ declare global {
       getItems: (comment: unknown) => Array<{ id: string; label: string }>;
       execute: (action: unknown, comment: unknown) => Promise<boolean>;
     };
+    FilterMatomeCommentMenuBridgeApi?: {
+      version: 1;
+    };
     FilterMatomePlaybackRateApi?: {
       version: 1;
       get: () => number | null;

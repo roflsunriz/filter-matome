@@ -5,6 +5,7 @@ import "@/common/header.js";
 import { applyCssConstants } from "@/common/css-constants.js";
 import "@/common/material-icons.js";
 import { startNotificationReadAll } from "@/common/notification-read-all.js";
+import { startApiStatusMenu } from "@/common/api-status-menu.js";
 
 let started = false;
 
@@ -17,4 +18,5 @@ export function startCommon(): void {
   applyCssConstants();
   applyToastrStyles();
   startNotificationReadAll();
+  startApiStatusMenu();
 }
