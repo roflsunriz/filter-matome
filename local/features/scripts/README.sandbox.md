@@ -16,6 +16,7 @@
 - `run-offline-seek-preview-sandbox.ts`: 外部通信を遮断した一時BrowserContextで公式Storyboardモデルとレンダラーを実行し、時刻からスプライトセルへの変換とCSS描画を確認する。
 - `raw-cdp-client.ts`: 各スクリプトで共有する、依存パッケージを使わないCDP WebSocketクライアント。
 - `verify-current-harajuku-css.ts`: NicoCache_nl経由のCookieなし一時タブで原宿風Watchを有効化し、先行stylesheet、公式stylesheetとの順序、Harajuku CSSの重要宣言0件、代表ビューポートの横溢れ、専用DOM生成を確認する。公式Watch自体がエラー画面の場合は成功扱いにしない。
+- `verify-current-api-status-menu.ts`: NicoCache_nl経由のCookieなし一時タブでCommonHeaderの独立メニュー、再生速度・コメント再取得・コメントメニューAPIの状態、ログイン有無に応じたservice／account配置、NicoCacheメニューとの非重複、ポップオーバーの画面内表示を確認する。
 
 ## 実行
 
@@ -33,6 +34,7 @@ bun run sandbox:verify-offline
 bun run sandbox:analyze-official
 bun run sandbox:analyze-watch-css
 bun run sandbox:verify-harajuku-css
+bun run sandbox:verify-api-status-menu
 ```
 
 取得処理は既存タブを遷移させません。ログイン済みブラウザーで表示した結果から、公式watchアセットCDNの `.js` と `.css` 本文だけを保存します。NicoCache_nlが `www.nicovideo.jp/local/` として配信するスクリプト、HTML、Cookie、Authorization、全ヘッダー、DOM、スクリーンショットは保存しません。

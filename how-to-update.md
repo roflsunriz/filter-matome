@@ -75,6 +75,8 @@ bunx playwright test tests/mlink-video-controller-lifecycle.spec.ts --grep "Hara
 
 Matchを変更する前に、`local/features/src/sandbox/comment-reload-match-history.md`へ公式原本のURL、SHA-256、サイズ、Matchと一致数、前版との差分、意味上の根拠を追記します。履歴が3版以上あり、minify名が実際に変化した版を含み、全履歴で対象に1回・他資産に0回だけ一致することを確認できるまでは、識別子を無条件にワイルドカード化しません。
 
+現行Matchはaction、store、additionals、現在状態の識別子をcaptureし、同一storeの`current()`とWatchコメントAPIのserver・動画ID・params・additionalsの関係をbackreferenceで固定します。単語だけのワイルドカードへ緩めず、CommonHeaderの`filter-matome`メニューでも再生速度同期とコメント再取得が`有効`になることを確認します。
+
 ```powershell
 cd local/features
 bun run sandbox:analyze-comment-reload
@@ -90,6 +92,8 @@ bunx playwright test tests/comment-filter2.spec.ts
 右クリックメニューからcomment-filter2項目だけが消えた場合は、`local/features/src/sandbox/comment-context-menu.md`に従い、右クリック座標から`getCommentAtOffset()`で公式コメントモデルを取得し、`ExpandedComment`がReact操作項目を生成する経路を再確認します。DOMノード、生成class名、表示文言のセレクターへ切り替えてはいけません。
 
 Matchを変更する前に`comment-context-menu-match-history.md`へ公式原本のURL、SHA-256、サイズ、Matchと一致数、意味上の根拠を追記します。公式minify名の変化を含む3版以上で対象1回・他資産0回を確認するまでは、識別子を無条件にワイルドカード化しません。
+
+現行MatchはReact runtime、button、css、handler、propsをcaptureし、同じruntimeとpropsが直後の`comment.vposMs`表示へ使われる関係を固定します。動的確認では公式コメントメニューを一度開き、CommonHeaderの`filter-matome`メニューでコメントメニューが`利用待ち`から`有効`へ変わることも確認します。
 
 ```powershell
 cd local/features

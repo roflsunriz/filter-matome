@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- 【common・CommonHeader】NicoCacheのキャッシュ操作とは別に、再生速度同期・コメント再取得・コメントメニュー挿入の版付きnlFilter APIを、有効・利用待ち・未検出・版不一致で確認できるfilter-matomeホバーメニューを追加した。公式アカウントリンクやservice linkから位置を求め、公式React管理外でNicoCacheメニューと重ならないよう配置し、狭幅・低高さ・RTL・キーボード操作にも対応する。
+
+### Fixed
+
+- 【nlFilters・sandbox】公式プレイヤー更新でコメント再取得APIの固定minify識別子Matchが0件になったため、Cookieなしの公式資産を再採取し、action・store・additionals・Watchコメント入力の関係をcapture groupとbackreferenceで固定するMatchへ修正した。コメントメニューもReact runtime・button・propsを同じ方式で再利用し、保存済み複数版と最新原本で対象1件・他資産0件、置換後構文、既存公式操作を検証した。
+- 【Java extension・NicoCacheGUI】extension専用ログがMainタブへも複製されないよう、全8拡張を`guiOnly`の正式ロガーへ統一した。DestroyAdsもExtension2として専用タブを登録し、初期化失敗時の警告をMainへ直接出さないよう修正した。
+
 ## [#250.1] - 2026-08-26
 
 ### Changed

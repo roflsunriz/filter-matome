@@ -13,6 +13,7 @@
 - `logger.ts`: 共通ロガー。`window.logger` を公開。
 - `toastr.ts`: 通知UI。`window.toastr` を公開。
 - `notification-read-all.ts`: 公式CommonHeaderの通知パネルへ一括既読ボタンを追加し、公式通知一覧をページングして未読だけを制限付き並列で既読化する。
+- `api-status-menu.ts`, `api-status-menu-styles.ts`: 公式CommonHeaderへ独立したfilter-matomeホバーメニューを挿入し、3つのnlFilter版付きAPIを型・版・実行マーカーから判定して表示する。
 - `material-icons.ts`, `icon-assets.ts`: Material Design Iconsの生成、URL化、既存画像の置換。
 - `css-constants.ts`, `visual-theme.ts`: 共通CSS変数とダークテーマトークン。
 - `thumbnail-fallback.ts`: 欠落・読込失敗時の共通サムネイル。
@@ -32,6 +33,7 @@
 - 動画IDは呼び出し元またはURLを優先し、`window.NicoCache_nl.watch` は型確認付きのフォールバックに限定する。
 - DOMやAPIから得る `unknown` は、共通境界で検証してから機能固有型へ渡す。
 - 公式通知の一括既読は、全ページのレスポンスと`nextUrl`を検証し終えてからPUTを開始し、公式API以外のURL、ページ循環、過大件数では何も変更せず停止する。
+- nlFilter API状態メニューは生成class名や表示文言を挿入先判定に使わず、CommonHeader root、`/my`リンク、公式service linkという意味のある境界から位置を決める。公式Reactの再描画と競合しないよう`body`直下へfixed配置し、NicoCacheメニューがあればログイン時は左、未ログイン時のservice配置では右へ並べる。コメントメニューは公式React側の挿入コードが実行されるまで待機状態とする。
 - 表示用HTML、動画説明、検索結果は、DOMPurifyまたはDOM APIで安全に組み立てる。
 - アイコンは `material-icons.ts` のヘルパーを使い、各プロジェクトへSVGを重複埋め込みしない。
 - Google Driveの保存フォルダー名、対象ファイル接頭辞、認証情報の保存キー、multipart boundary接頭辞は利用機能から明示し、サービス側に特定機能の既定値を持たせない。
@@ -63,6 +65,8 @@
 - `tests/common-server-response-parser.test.ts`
 - `tests/common-notification-read-all.test.ts`
 - `tests/common-notification-read-all.spec.ts`
+- `tests/common-api-status-menu.test.ts`
+- `tests/common-api-status-menu.spec.ts`
 - `tests/video-player-video-navigation.test.ts`
 - `tests/video-player-cache-search.test.ts`
 - `tests/video-info-api.test.ts`
