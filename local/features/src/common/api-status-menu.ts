@@ -176,6 +176,11 @@ const COPIES: Record<string, Copy> = {
 
 let observer: MutationObserver | null = null;
 let mountScheduled = false;
+let coordinatedAccountItem: HTMLElement | null = null;
+let coordinatedNicoCacheMenu: HTMLElement | null = null;
+let coordinatedAccountOriginalMargin = "";
+let coordinatedAccountBaseMargin = "0px";
+let coordinatedNicoCacheOriginalTranslate = "";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -326,6 +331,98 @@ const findPlacement = (header: Element): Placement => {
   );
 };
 
+const releaseAccountMenuCoordination = (): void => {
+  const accountItem = coordinatedAccountItem;
+  const nicoCacheMenu = coordinatedNicoCacheMenu;
+  if (accountItem) {
+    if (coordinatedAccountOriginalMargin) {
+      accountItem.style.marginLeft = coordinatedAccountOriginalMargin;
+    } else {
+      accountItem.style.removeProperty("margin-left");
+    }
+    accountItem.removeAttribute(
+      "data-filter-matome-api-status-original-margin",
+    );
+  }
+  if (nicoCacheMenu) {
+    if (coordinatedNicoCacheOriginalTranslate) {
+      nicoCacheMenu.style.translate = coordinatedNicoCacheOriginalTranslate;
+    } else {
+      nicoCacheMenu.style.removeProperty("translate");
+    }
+    nicoCacheMenu.removeAttribute("data-filter-matome-api-status-offset");
+    if (accountItem?.isConnected && nicoCacheMenu.isConnected) {
+      const accountRect = accountItem.getBoundingClientRect();
+      const nicoCacheWidth = Math.ceil(
+        nicoCacheMenu.getBoundingClientRect().width,
+      );
+      nicoCacheMenu.style.left = `${Math.round(
+        Math.max(0, accountRect.left - nicoCacheWidth),
+      )}px`;
+      nicoCacheMenu.style.top = `${Math.round(Math.max(0, accountRect.top))}px`;
+    }
+  }
+  coordinatedAccountItem = null;
+  coordinatedNicoCacheMenu = null;
+  coordinatedAccountOriginalMargin = "";
+  coordinatedAccountBaseMargin = "0px";
+  coordinatedNicoCacheOriginalTranslate = "";
+};
+
+const positionBetweenNicoCacheAndAccount = (
+  container: HTMLElement,
+  accountItem: HTMLElement,
+  nicoCacheMenu: HTMLElement,
+  width: number,
+): boolean => {
+  const nicoCacheWidth = Math.ceil(nicoCacheMenu.getBoundingClientRect().width);
+  if (width <= 0 || nicoCacheWidth <= 0) return false;
+
+  if (
+    coordinatedAccountItem !== accountItem ||
+    coordinatedNicoCacheMenu !== nicoCacheMenu
+  ) {
+    releaseAccountMenuCoordination();
+    coordinatedAccountItem = accountItem;
+    coordinatedNicoCacheMenu = nicoCacheMenu;
+    coordinatedAccountOriginalMargin =
+      accountItem.getAttribute(
+        "data-filter-matome-api-status-original-margin",
+      ) ?? accountItem.style.marginLeft;
+    coordinatedAccountBaseMargin =
+      coordinatedAccountOriginalMargin ||
+      getComputedStyle(accountItem).marginLeft ||
+      "0px";
+    coordinatedNicoCacheOriginalTranslate = nicoCacheMenu.style.translate;
+  }
+
+  accountItem.setAttribute(
+    "data-filter-matome-api-status-original-margin",
+    coordinatedAccountOriginalMargin,
+  );
+  accountItem.style.marginLeft = `calc(${coordinatedAccountBaseMargin} + ${String(width)}px)`;
+  const accountRect = accountItem.getBoundingClientRect();
+  const filterLeft = Math.max(0, accountRect.left - width);
+  nicoCacheMenu.style.left = `${Math.round(
+    Math.max(0, accountRect.left - nicoCacheWidth),
+  )}px`;
+  nicoCacheMenu.style.top = `${Math.round(Math.max(0, accountRect.top))}px`;
+  nicoCacheMenu.style.translate = `${String(-width)}px 0px`;
+  nicoCacheMenu.setAttribute(
+    "data-filter-matome-api-status-offset",
+    String(width),
+  );
+  container.style.setProperty(
+    "--filter-matome-api-status-trigger-left",
+    `${Math.round(filterLeft)}px`,
+  );
+  container.style.setProperty(
+    "--filter-matome-api-status-trigger-top",
+    `${Math.round(Math.max(0, accountRect.top))}px`,
+  );
+  return true;
+};
+
 const positionContainer = (
   container: HTMLElement,
   placement: Placement,
@@ -337,10 +434,25 @@ const positionContainer = (
     (nicoCachePlacement === "account" || nicoCachePlacement === "service") &&
     nicoCacheRect !== undefined &&
     nicoCacheRect.width > 0;
+  const width = Math.ceil(container.getBoundingClientRect().width);
+  if (
+    placement.name === "account" &&
+    placement.anchor instanceof HTMLElement &&
+    nicoCacheMenu instanceof HTMLElement &&
+    nicoCachePlacement === "account" &&
+    positionBetweenNicoCacheAndAccount(
+      container,
+      placement.anchor,
+      nicoCacheMenu,
+      width,
+    )
+  ) {
+    return;
+  }
+  releaseAccountMenuCoordination();
   const anchorRect = useNicoCacheAnchor
     ? nicoCacheRect
     : placement.anchor.getBoundingClientRect();
-  const width = Math.ceil(container.getBoundingClientRect().width);
   const preferredLeft =
     useNicoCacheAnchor && nicoCachePlacement === "service"
       ? anchorRect.right
@@ -522,6 +634,7 @@ const createMenu = (): HTMLElement => {
 const mountMenu = (): void => {
   const header = document.getElementById("CommonHeader");
   if (!header) {
+    releaseAccountMenuCoordination();
     document.getElementById(CONTAINER_ID)?.removeAttribute("data-mounted");
     return;
   }

@@ -39,6 +39,12 @@ interface MenuEvaluation {
     top: number;
     bottom: number;
   } | null;
+  accountMenu: {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  } | null;
   viewport: { width: number; height: number };
 }
 
@@ -83,6 +89,7 @@ const isMenuEvaluation = (value: unknown): value is MenuEvaluation =>
   isRect(value.trigger) &&
   isRect(value.popover) &&
   (value.nicoCacheMenu === null || isRect(value.nicoCacheMenu)) &&
+  (value.accountMenu === null || isRect(value.accountMenu)) &&
   isRecord(value.viewport) &&
   typeof value.viewport.width === "number" &&
   typeof value.viewport.height === "number";
@@ -253,6 +260,16 @@ const main = async (): Promise<void> => {
           const trigger = menu.querySelector("button");
           const popover = document.getElementById("filter-matome-api-status-popover");
           const nicoCacheMenu = document.getElementById("ncnl_common_header_menu");
+          const accountMenu = Array.from(
+            document.querySelectorAll("#CommonHeader a[href]"),
+          ).find((anchor) => {
+            try {
+              const url = new URL(anchor.href, location.href);
+              return url.hostname === "www.nicovideo.jp" && url.pathname === "/my";
+            } catch {
+              return false;
+            }
+          })?.parentElement;
           if (!(trigger instanceof HTMLElement) || !(popover instanceof HTMLElement)) {
             throw new Error("menu parts missing");
           }
@@ -274,6 +291,9 @@ const main = async (): Promise<void> => {
             nicoCacheMenu: nicoCacheMenu instanceof HTMLElement
               ? toRect(nicoCacheMenu.getBoundingClientRect())
               : null,
+            accountMenu: accountMenu instanceof HTMLElement
+              ? toRect(accountMenu.getBoundingClientRect())
+              : null,
             viewport: { width: innerWidth, height: innerHeight },
           };
         })()`,
@@ -293,13 +313,19 @@ const main = async (): Promise<void> => {
       if (
         result.nicoCacheMenu &&
         result.nicoCacheMenu.right > result.nicoCacheMenu.left &&
-        result.trigger.right > result.nicoCacheMenu.left &&
-        result.trigger.left < result.nicoCacheMenu.right &&
-        result.trigger.bottom > result.nicoCacheMenu.top &&
-        result.trigger.top < result.nicoCacheMenu.bottom
+        Math.abs(result.nicoCacheMenu.right - result.trigger.left) > 2
       ) {
         throw new Error(
-          "filter-matomeメニューがNicoCacheメニューと重なっています。",
+          "filter-matomeメニューがNicoCacheメニューの直後にありません。",
+        );
+      }
+      if (
+        result.placement === "account" &&
+        (!result.accountMenu ||
+          Math.abs(result.trigger.right - result.accountMenu.left) > 2)
+      ) {
+        throw new Error(
+          "filter-matomeメニューがNicoCacheとアカウントの間にありません。",
         );
       }
       assertInsideViewport(result.popover, result.viewport);

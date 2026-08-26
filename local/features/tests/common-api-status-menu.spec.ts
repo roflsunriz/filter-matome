@@ -52,6 +52,17 @@ const installFixture = async (
       nicoCacheMenu.style.cssText =
         "position:fixed;left:860px;top:0;width:90px;height:36px";
       document.body.append(nicoCacheMenu);
+      const accountLink = document.querySelector<HTMLAnchorElement>(
+        '#CommonHeader a[href="https://www.nicovideo.jp/my"]',
+      );
+      const accountItem = accountLink?.parentElement;
+      if (!accountItem) throw new Error("account fixture not found");
+      accountItem.setAttribute("data-ncnl-account-space", "true");
+      accountItem.setAttribute("data-ncnl-account-original-margin", "");
+      accountItem.setAttribute("data-ncnl-account-base-margin", "0px");
+      accountItem.setAttribute("data-ncnl-account-width", "90");
+      accountItem.style.cssText =
+        "position:fixed;left:860px;top:0;width:140px;height:36px;margin-left:calc(0px + 90px)";
       if (!activeApis) return;
       window.FilterMatomePlaybackRateApi = {
         version: 1,
@@ -83,11 +94,29 @@ const installFixture = async (
   });
 };
 
+const hasDesiredAccountMenuOrder = (page: Page): Promise<boolean> =>
+  page.evaluate(() => {
+    const filterMenu = document.getElementById("filter-matome-api-status-menu");
+    const nicoCacheMenu = document.getElementById("ncnl_common_header_menu");
+    const accountItem = document.querySelector(
+      '#CommonHeader a[href="https://www.nicovideo.jp/my"]',
+    )?.parentElement;
+    if (!filterMenu || !nicoCacheMenu || !accountItem) return false;
+    const filterRect = filterMenu.getBoundingClientRect();
+    const nicoCacheRect = nicoCacheMenu.getBoundingClientRect();
+    const accountRect = accountItem.getBoundingClientRect();
+    return (
+      filterMenu.parentElement === document.body &&
+      Math.abs(nicoCacheRect.right - filterRect.left) <= 1 &&
+      Math.abs(filterRect.right - accountRect.left) <= 1
+    );
+  });
+
 test.beforeAll(() => {
   bundle = buildFixtureBundle();
 });
 
-test("NicoCacheメニューの左へ別メニューとして配置しAPI状態を更新する", async ({
+test("NicoCacheメニューとアカウントメニューの間へ配置しAPI状態を更新する", async ({
   page,
 }) => {
   await installFixture(page);
@@ -97,24 +126,7 @@ test("NicoCacheメニューの左へ別メニューとして配置しAPI状態�
   });
   await expect(menu).toHaveCount(1);
   await expect(menu).toHaveAttribute("data-placement", "account");
-  await expect
-    .poll(() =>
-      page.evaluate(() => {
-        const filterMenu = document.getElementById(
-          "filter-matome-api-status-menu",
-        );
-        const nicoCacheMenu = document.getElementById(
-          "ncnl_common_header_menu",
-        );
-        if (!filterMenu || !nicoCacheMenu) return false;
-        return (
-          filterMenu.parentElement === document.body &&
-          filterMenu.getBoundingClientRect().right <=
-            nicoCacheMenu.getBoundingClientRect().left
-        );
-      }),
-    )
-    .toBe(true);
+  await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
 
   await trigger.hover();
   await expect(menu).toHaveAttribute("data-summary", "warning");
@@ -134,7 +146,7 @@ test("NicoCacheメニューの左へ別メニューとして配置しAPI状態�
   await page.evaluate(() => {
     window.FilterMatomeCommentMenuBridgeApi = { version: 1 };
   });
-  await page.locator("body").hover({ position: { x: 2, y: 80 } });
+  await page.mouse.move(2, 80);
   await trigger.hover();
   await expect(menu.locator('[data-api-id="comment-menu"]')).toHaveAttribute(
     "data-status",
@@ -150,6 +162,7 @@ test("NicoCacheメニューの左へ別メニューとして配置しAPI状態�
     header.replaceWith(replacement);
   });
   await expect(menu).toHaveCount(1);
+  await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
 
   await page.evaluate(() => {
     const header = document.getElementById("CommonHeader");
@@ -160,6 +173,27 @@ test("NicoCacheメニューの左へ別メニューとして配置しAPI状態�
     header.remove();
   });
   await expect(menu).not.toHaveAttribute("data-mounted", "true");
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const host = window as Window & {
+          detachedCommonHeaderFixture?: HTMLElement;
+        };
+        const accountItem = host.detachedCommonHeaderFixture?.querySelector(
+          'a[href="https://www.nicovideo.jp/my"]',
+        )?.parentElement;
+        return {
+          accountMargin: accountItem?.style.marginLeft ?? "missing",
+          nicoCacheTranslate:
+            document.getElementById("ncnl_common_header_menu")?.style
+              .translate ?? "missing",
+        };
+      }),
+    )
+    .toEqual({
+      accountMargin: "calc(90px)",
+      nicoCacheTranslate: "",
+    });
   await page.evaluate(() => {
     const host = window as Window & {
       detachedCommonHeaderFixture?: HTMLElement;
@@ -171,6 +205,7 @@ test("NicoCacheメニューの左へ別メニューとして配置しAPI状態�
     delete host.detachedCommonHeaderFixture;
   });
   await expect(menu).toHaveAttribute("data-mounted", "true");
+  await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
 });
 
 test("API不在と版不一致を赤い要約状態で区別する", async ({ page }) => {
@@ -189,7 +224,7 @@ test("API不在と版不一致を赤い要約状態で区別する", async ({ pa
       reload: "invalid",
     } as unknown as Window["FilterMatomeCommentApi"];
   });
-  await page.locator("body").hover({ position: { x: 2, y: 80 } });
+  await page.mouse.move(2, 80);
   await page.getByRole("button", { name: /filter-matome/u }).hover();
   await expect(menu.locator('[data-api-id="comment-reload"]')).toHaveAttribute(
     "data-status",
