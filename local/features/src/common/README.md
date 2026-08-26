@@ -33,7 +33,7 @@
 - 動画IDは呼び出し元またはURLを優先し、`window.NicoCache_nl.watch` は型確認付きのフォールバックに限定する。
 - DOMやAPIから得る `unknown` は、共通境界で検証してから機能固有型へ渡す。
 - 公式通知の一括既読は、全ページのレスポンスと`nextUrl`を検証し終えてからPUTを開始し、公式API以外のURL、ページ循環、過大件数では何も変更せず停止する。
-- nlFilter API状態メニューは生成class名や表示文言を挿入先判定に使わず、CommonHeader root、`/my`リンク、公式service linkという意味のある境界から位置を決める。公式Reactの再描画と競合しないよう`body`直下へfixed配置し、ログイン時は`NicoCache → filter-matome → アカウント`、未ログイン時はservice配置のNicoCache直後に並べる。コメントメニューは公式React側の挿入コードが実行されるまで待機状態とする。
+- nlFilter API状態メニューは生成class名や表示文言を挿入先判定に使わず、CommonHeader root、`/my`リンク、公式service linkという意味のある境界から位置を決める。公式React管理外の`body`直下へ`absolute`で置き、CommonHeaderの公式`sticky`は使用中だけ`relative`へ退避し、ポップオーバーも`absolute`に限定するため、機能側では`fixed`／`sticky`を使わずページと一緒にスクロールする。ログイン時は`NicoCache → filter-matome → アカウント`、未ログイン時はservice配置のNicoCache直後に並べる。コメントメニューは公式React側の挿入コードが実行されるまで待機状態とする。
 - 表示用HTML、動画説明、検索結果は、DOMPurifyまたはDOM APIで安全に組み立てる。
 - アイコンは `material-icons.ts` のヘルパーを使い、各プロジェクトへSVGを重複埋め込みしない。
 - Google Driveの保存フォルダー名、対象ファイル接頭辞、認証情報の保存キー、multipart boundary接頭辞は利用機能から明示し、サービス側に特定機能の既定値を持たせない。

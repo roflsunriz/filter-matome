@@ -176,11 +176,14 @@ const COPIES: Record<string, Copy> = {
 
 let observer: MutationObserver | null = null;
 let mountScheduled = false;
+let coordinatedHeader: HTMLElement | null = null;
+let coordinatedHeaderOriginalPosition = "";
+let coordinatedHeaderOriginalPositionPriority = "";
 let coordinatedAccountItem: HTMLElement | null = null;
 let coordinatedNicoCacheMenu: HTMLElement | null = null;
 let coordinatedAccountOriginalMargin = "";
 let coordinatedAccountBaseMargin = "0px";
-let coordinatedNicoCacheOriginalTranslate = "";
+let coordinatedNicoCacheOriginalPosition = "";
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -301,6 +304,16 @@ const findAccountItem = (root: Element): Element | null => {
 };
 
 const findServicePlacement = (root: Element): Placement | null => {
+  const nicoCacheMenu = document.getElementById("ncnl_common_header_menu");
+  if (
+    nicoCacheMenu?.dataset.ncnlMounted === "service" &&
+    nicoCacheMenu.parentElement
+  ) {
+    return {
+      anchor: nicoCacheMenu,
+      name: "service",
+    };
+  }
   const serviceLinks = Array.from(
     root.querySelectorAll<HTMLAnchorElement>('a[href*="header_servicelink"]'),
   );
@@ -331,6 +344,54 @@ const findPlacement = (header: Element): Placement => {
   );
 };
 
+const releaseHeaderCoordination = (): void => {
+  if (coordinatedHeader) {
+    if (coordinatedHeaderOriginalPosition) {
+      coordinatedHeader.style.setProperty(
+        "position",
+        coordinatedHeaderOriginalPosition,
+        coordinatedHeaderOriginalPositionPriority,
+      );
+    } else {
+      coordinatedHeader.style.removeProperty("position");
+    }
+    coordinatedHeader.removeAttribute(
+      "data-filter-matome-api-status-original-position",
+    );
+    coordinatedHeader.removeAttribute(
+      "data-filter-matome-api-status-original-position-priority",
+    );
+  }
+  coordinatedHeader = null;
+  coordinatedHeaderOriginalPosition = "";
+  coordinatedHeaderOriginalPositionPriority = "";
+};
+
+const ensureHeaderIsDocumentAnchored = (header: HTMLElement): void => {
+  if (coordinatedHeader !== header) {
+    releaseHeaderCoordination();
+    coordinatedHeader = header;
+    coordinatedHeaderOriginalPosition =
+      header.getAttribute("data-filter-matome-api-status-original-position") ??
+      header.style.getPropertyValue("position");
+    coordinatedHeaderOriginalPositionPriority =
+      header.getAttribute(
+        "data-filter-matome-api-status-original-position-priority",
+      ) ?? header.style.getPropertyPriority("position");
+  }
+  header.setAttribute(
+    "data-filter-matome-api-status-original-position",
+    coordinatedHeaderOriginalPosition,
+  );
+  header.setAttribute(
+    "data-filter-matome-api-status-original-position-priority",
+    coordinatedHeaderOriginalPositionPriority,
+  );
+  if (header.style.position !== "relative") {
+    header.style.setProperty("position", "relative");
+  }
+};
+
 const releaseAccountMenuCoordination = (): void => {
   const accountItem = coordinatedAccountItem;
   const nicoCacheMenu = coordinatedNicoCacheMenu;
@@ -345,10 +406,10 @@ const releaseAccountMenuCoordination = (): void => {
     );
   }
   if (nicoCacheMenu) {
-    if (coordinatedNicoCacheOriginalTranslate) {
-      nicoCacheMenu.style.translate = coordinatedNicoCacheOriginalTranslate;
+    if (coordinatedNicoCacheOriginalPosition) {
+      nicoCacheMenu.style.position = coordinatedNicoCacheOriginalPosition;
     } else {
-      nicoCacheMenu.style.removeProperty("translate");
+      nicoCacheMenu.style.removeProperty("position");
     }
     nicoCacheMenu.removeAttribute("data-filter-matome-api-status-offset");
     if (accountItem?.isConnected && nicoCacheMenu.isConnected) {
@@ -366,7 +427,22 @@ const releaseAccountMenuCoordination = (): void => {
   coordinatedNicoCacheMenu = null;
   coordinatedAccountOriginalMargin = "";
   coordinatedAccountBaseMargin = "0px";
-  coordinatedNicoCacheOriginalTranslate = "";
+  coordinatedNicoCacheOriginalPosition = "";
+};
+
+const setDocumentPosition = (
+  container: HTMLElement,
+  left: number,
+  top: number,
+): void => {
+  container.style.setProperty(
+    "--filter-matome-api-status-trigger-left",
+    `${Math.round(Math.max(0, left))}px`,
+  );
+  container.style.setProperty(
+    "--filter-matome-api-status-trigger-top",
+    `${Math.round(Math.max(0, top))}px`,
+  );
 };
 
 const positionBetweenNicoCacheAndAccount = (
@@ -393,7 +469,7 @@ const positionBetweenNicoCacheAndAccount = (
       coordinatedAccountOriginalMargin ||
       getComputedStyle(accountItem).marginLeft ||
       "0px";
-    coordinatedNicoCacheOriginalTranslate = nicoCacheMenu.style.translate;
+    coordinatedNicoCacheOriginalPosition = nicoCacheMenu.style.position;
   }
 
   accountItem.setAttribute(
@@ -402,23 +478,17 @@ const positionBetweenNicoCacheAndAccount = (
   );
   accountItem.style.marginLeft = `calc(${coordinatedAccountBaseMargin} + ${String(width)}px)`;
   const accountRect = accountItem.getBoundingClientRect();
-  const filterLeft = Math.max(0, accountRect.left - width);
+  const documentLeft = accountRect.left + window.scrollX - width;
+  const documentTop = accountRect.top + window.scrollY;
+  setDocumentPosition(container, documentLeft, documentTop);
+  nicoCacheMenu.style.position = "absolute";
   nicoCacheMenu.style.left = `${Math.round(
-    Math.max(0, accountRect.left - nicoCacheWidth),
+    Math.max(0, documentLeft - nicoCacheWidth),
   )}px`;
-  nicoCacheMenu.style.top = `${Math.round(Math.max(0, accountRect.top))}px`;
-  nicoCacheMenu.style.translate = `${String(-width)}px 0px`;
+  nicoCacheMenu.style.top = `${Math.round(Math.max(0, documentTop))}px`;
   nicoCacheMenu.setAttribute(
     "data-filter-matome-api-status-offset",
     String(width),
-  );
-  container.style.setProperty(
-    "--filter-matome-api-status-trigger-left",
-    `${Math.round(filterLeft)}px`,
-  );
-  container.style.setProperty(
-    "--filter-matome-api-status-trigger-top",
-    `${Math.round(Math.max(0, accountRect.top))}px`,
   );
   return true;
 };
@@ -428,12 +498,7 @@ const positionContainer = (
   placement: Placement,
 ): void => {
   const nicoCacheMenu = document.getElementById("ncnl_common_header_menu");
-  const nicoCacheRect = nicoCacheMenu?.getBoundingClientRect();
   const nicoCachePlacement = nicoCacheMenu?.dataset.ncnlMounted;
-  const useNicoCacheAnchor =
-    (nicoCachePlacement === "account" || nicoCachePlacement === "service") &&
-    nicoCacheRect !== undefined &&
-    nicoCacheRect.width > 0;
   const width = Math.ceil(container.getBoundingClientRect().width);
   if (
     placement.name === "account" &&
@@ -450,27 +515,15 @@ const positionContainer = (
     return;
   }
   releaseAccountMenuCoordination();
-  const anchorRect = useNicoCacheAnchor
-    ? nicoCacheRect
-    : placement.anchor.getBoundingClientRect();
-  const preferredLeft =
-    useNicoCacheAnchor && nicoCachePlacement === "service"
-      ? anchorRect.right
-      : placement.name === "service"
-        ? anchorRect.right
-        : anchorRect.left - width;
-  const left = Math.min(
-    Math.max(0, preferredLeft),
-    Math.max(0, window.innerWidth - width),
-  );
-  container.style.setProperty(
-    "--filter-matome-api-status-trigger-left",
-    `${Math.round(left)}px`,
-  );
-  container.style.setProperty(
-    "--filter-matome-api-status-trigger-top",
-    `${Math.round(Math.max(0, anchorRect.top))}px`,
-  );
+  const anchorRect =
+    nicoCacheMenu instanceof HTMLElement && nicoCachePlacement === "service"
+      ? nicoCacheMenu.getBoundingClientRect()
+      : placement.anchor.getBoundingClientRect();
+  const left =
+    anchorRect.right +
+    window.scrollX -
+    (placement.name === "fallback" ? width : 0);
+  setDocumentPosition(container, left, anchorRect.top + window.scrollY);
 };
 
 const setText = (element: HTMLElement | null, value: string): void => {
@@ -529,13 +582,20 @@ const positionPopover = (container: HTMLElement): void => {
   const below = window.innerHeight - rect.bottom - margin;
   const above = rect.top - margin;
   const placeAbove = below < 160 && above > below;
-  const measuredHeight = Math.min(popover.scrollHeight || 240, 420, above);
-  const top = placeAbove
-    ? Math.max(margin, rect.top - measuredHeight)
-    : Math.min(rect.bottom, window.innerHeight - margin);
+  const availableHeight = Math.max(80, placeAbove ? above : below);
+  const measuredHeight = Math.min(
+    popover.scrollHeight || 240,
+    420,
+    availableHeight,
+  );
+  const top = placeAbove ? -measuredHeight : rect.height;
   container.dataset.popoverPlacement = placeAbove ? "above" : "below";
-  container.style.setProperty("--filter-matome-api-status-left", `${left}px`);
+  container.style.setProperty(
+    "--filter-matome-api-status-left",
+    `${left - rect.left}px`,
+  );
   container.style.setProperty("--filter-matome-api-status-top", `${top}px`);
+  popover.style.maxHeight = `${availableHeight}px`;
 };
 
 const setOpen = (container: HTMLElement, open: boolean): void => {
@@ -635,9 +695,11 @@ const mountMenu = (): void => {
   const header = document.getElementById("CommonHeader");
   if (!header) {
     releaseAccountMenuCoordination();
+    releaseHeaderCoordination();
     document.getElementById(CONTAINER_ID)?.removeAttribute("data-mounted");
     return;
   }
+  ensureHeaderIsDocumentAnchored(header);
   const placement = findPlacement(header);
   const container = document.getElementById(CONTAINER_ID) ?? createMenu();
   if (!(container instanceof HTMLElement)) return;

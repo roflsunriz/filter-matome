@@ -46,23 +46,33 @@ const installFixture = async (
   await page.evaluate(
     ({ language, activeApis }) => {
       document.documentElement.lang = language;
+      document.body.style.minHeight = "2000px";
       const nicoCacheMenu = document.createElement("div");
       nicoCacheMenu.id = "ncnl_common_header_menu";
       nicoCacheMenu.dataset.ncnlMounted = "account";
       nicoCacheMenu.style.cssText =
-        "position:fixed;left:860px;top:0;width:90px;height:36px";
+        "position:fixed;left:600px;top:0;width:90px;height:36px";
       document.body.append(nicoCacheMenu);
       const accountLink = document.querySelector<HTMLAnchorElement>(
         '#CommonHeader a[href="https://www.nicovideo.jp/my"]',
       );
       const accountItem = accountLink?.parentElement;
       if (!accountItem) throw new Error("account fixture not found");
+      const accountRow = accountItem.parentElement;
+      if (!accountRow) throw new Error("account row fixture not found");
+      accountRow.style.cssText =
+        "display:flex;height:36px;margin-left:600px;align-items:center";
+      for (const child of accountRow.children) {
+        if (child !== accountItem && child instanceof HTMLElement) {
+          child.style.display = "none";
+        }
+      }
       accountItem.setAttribute("data-ncnl-account-space", "true");
       accountItem.setAttribute("data-ncnl-account-original-margin", "");
       accountItem.setAttribute("data-ncnl-account-base-margin", "0px");
       accountItem.setAttribute("data-ncnl-account-width", "90");
       accountItem.style.cssText =
-        "position:fixed;left:860px;top:0;width:140px;height:36px;margin-left:calc(0px + 90px)";
+        "width:140px;height:36px;margin-left:calc(0px + 90px)";
       if (!activeApis) return;
       window.FilterMatomePlaybackRateApi = {
         version: 1,
@@ -105,8 +115,16 @@ const hasDesiredAccountMenuOrder = (page: Page): Promise<boolean> =>
     const filterRect = filterMenu.getBoundingClientRect();
     const nicoCacheRect = nicoCacheMenu.getBoundingClientRect();
     const accountRect = accountItem.getBoundingClientRect();
+    const popover = document.getElementById("filter-matome-api-status-popover");
+    const header = document.getElementById("CommonHeader");
     return (
       filterMenu.parentElement === document.body &&
+      getComputedStyle(filterMenu).position === "absolute" &&
+      popover !== null &&
+      getComputedStyle(popover).position === "absolute" &&
+      header !== null &&
+      getComputedStyle(header).position === "relative" &&
+      getComputedStyle(nicoCacheMenu).position === "absolute" &&
       Math.abs(nicoCacheRect.right - filterRect.left) <= 1 &&
       Math.abs(filterRect.right - accountRect.left) <= 1
     );
@@ -127,6 +145,24 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
   await expect(menu).toHaveCount(1);
   await expect(menu).toHaveAttribute("data-placement", "account");
   await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
+
+  const beforeScroll = await trigger.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { viewportTop: rect.top, documentTop: rect.top + window.scrollY };
+  });
+  await page.evaluate(() => window.scrollTo(0, 240));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(240);
+  const afterScroll = await trigger.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { viewportTop: rect.top, documentTop: rect.top + window.scrollY };
+  });
+  expect(afterScroll.viewportTop).toBeLessThan(beforeScroll.viewportTop);
+  expect(
+    Math.abs(afterScroll.documentTop - beforeScroll.documentTop),
+  ).toBeLessThanOrEqual(1);
+  await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 
   await trigger.hover();
   await expect(menu).toHaveAttribute("data-summary", "warning");
@@ -172,6 +208,7 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
     ).detachedCommonHeaderFixture = header;
     header.remove();
   });
+  await expect(menu).toHaveCount(1);
   await expect(menu).not.toHaveAttribute("data-mounted", "true");
   await expect
     .poll(() =>
@@ -184,6 +221,11 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
         )?.parentElement;
         return {
           accountMargin: accountItem?.style.marginLeft ?? "missing",
+          headerPosition:
+            host.detachedCommonHeaderFixture?.style.position ?? "missing",
+          nicoCachePosition:
+            document.getElementById("ncnl_common_header_menu")?.style
+              .position ?? "missing",
           nicoCacheTranslate:
             document.getElementById("ncnl_common_header_menu")?.style
               .translate ?? "missing",
@@ -192,6 +234,8 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
     )
     .toEqual({
       accountMargin: "calc(90px)",
+      headerPosition: "sticky",
+      nicoCachePosition: "fixed",
       nicoCacheTranslate: "",
     });
   await page.evaluate(() => {
@@ -204,6 +248,7 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
     document.body.prepend(host.detachedCommonHeaderFixture);
     delete host.detachedCommonHeaderFixture;
   });
+  await expect(menu).toHaveCount(1);
   await expect(menu).toHaveAttribute("data-mounted", "true");
   await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
 });

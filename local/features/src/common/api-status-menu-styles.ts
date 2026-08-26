@@ -1,9 +1,9 @@
 export const API_STATUS_MENU_STYLES = `
 #filter-matome-api-status-menu {
-  position: fixed;
+  position: absolute;
   top: var(--filter-matome-api-status-trigger-top, 0);
   left: var(--filter-matome-api-status-trigger-left, 0);
-  z-index: 101050;
+  z-index: 1;
   display: none;
   box-sizing: border-box;
   height: 36px;
@@ -78,9 +78,9 @@ export const API_STATUS_MENU_STYLES = `
 }
 
 #filter-matome-api-status-menu .filter-matome-api-status-popover {
-  position: fixed;
-  top: var(--filter-matome-api-status-top, 44px);
-  left: var(--filter-matome-api-status-left, 8px);
+  position: absolute;
+  top: var(--filter-matome-api-status-top, 36px);
+  left: var(--filter-matome-api-status-left, 0);
   z-index: 101100;
   box-sizing: border-box;
   width: min(360px, calc(100vw - 16px));
