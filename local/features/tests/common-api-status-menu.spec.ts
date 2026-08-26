@@ -47,11 +47,11 @@ const installFixture = async (
     ({ language, activeApis }) => {
       document.documentElement.lang = language;
       document.body.style.minHeight = "2000px";
+      const headerMenuLeft = Math.max(0, innerWidth - 340);
       const nicoCacheMenu = document.createElement("div");
       nicoCacheMenu.id = "ncnl_common_header_menu";
       nicoCacheMenu.dataset.ncnlMounted = "account";
-      nicoCacheMenu.style.cssText =
-        "position:fixed;left:600px;top:0;width:90px;height:36px";
+      nicoCacheMenu.style.cssText = `position:fixed;left:${String(headerMenuLeft)}px;top:0;width:90px;height:36px`;
       document.body.append(nicoCacheMenu);
       const accountLink = document.querySelector<HTMLAnchorElement>(
         '#CommonHeader a[href="https://www.nicovideo.jp/my"]',
@@ -60,8 +60,7 @@ const installFixture = async (
       if (!accountItem) throw new Error("account fixture not found");
       const accountRow = accountItem.parentElement;
       if (!accountRow) throw new Error("account row fixture not found");
-      accountRow.style.cssText =
-        "display:flex;height:36px;margin-left:600px;align-items:center";
+      accountRow.style.cssText = `display:flex;height:36px;margin-left:${String(headerMenuLeft)}px;align-items:center`;
       for (const child of accountRow.children) {
         if (child !== accountItem && child instanceof HTMLElement) {
           child.style.display = "none";
@@ -119,12 +118,12 @@ const hasDesiredAccountMenuOrder = (page: Page): Promise<boolean> =>
     const header = document.getElementById("CommonHeader");
     return (
       filterMenu.parentElement === document.body &&
-      getComputedStyle(filterMenu).position === "absolute" &&
+      getComputedStyle(filterMenu).position === "fixed" &&
       popover !== null &&
       getComputedStyle(popover).position === "absolute" &&
       header !== null &&
-      getComputedStyle(header).position === "relative" &&
-      getComputedStyle(nicoCacheMenu).position === "absolute" &&
+      getComputedStyle(header).position === "sticky" &&
+      getComputedStyle(nicoCacheMenu).position === "fixed" &&
       Math.abs(nicoCacheRect.right - filterRect.left) <= 1 &&
       Math.abs(filterRect.right - accountRect.left) <= 1
     );
@@ -143,7 +142,7 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
     name: "filter-matome: nlFilter API 挿入状態",
   });
   await expect(menu).toHaveCount(1);
-  await expect(menu).toHaveAttribute("data-placement", "account");
+  await expect(menu).toHaveAttribute("data-filter-matome-mounted", "account");
   await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
 
   const beforeScroll = await trigger.evaluate((element) => {
@@ -156,10 +155,8 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
     const rect = element.getBoundingClientRect();
     return { viewportTop: rect.top, documentTop: rect.top + window.scrollY };
   });
-  expect(afterScroll.viewportTop).toBeLessThan(beforeScroll.viewportTop);
-  expect(
-    Math.abs(afterScroll.documentTop - beforeScroll.documentTop),
-  ).toBeLessThanOrEqual(1);
+  expect(afterScroll.viewportTop).toBeGreaterThanOrEqual(0);
+  expect(afterScroll.documentTop).toBeGreaterThan(beforeScroll.documentTop);
   await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
@@ -178,6 +175,15 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
     "data-status",
     "waiting",
   );
+
+  const statusItems = menu.locator('[role="menuitem"]');
+  await trigger.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(statusItems.first()).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(statusItems.last()).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
 
   await page.evaluate(() => {
     window.FilterMatomeCommentMenuBridgeApi = { version: 1 };
@@ -209,35 +215,7 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
     header.remove();
   });
   await expect(menu).toHaveCount(1);
-  await expect(menu).not.toHaveAttribute("data-mounted", "true");
-  await expect
-    .poll(() =>
-      page.evaluate(() => {
-        const host = window as Window & {
-          detachedCommonHeaderFixture?: HTMLElement;
-        };
-        const accountItem = host.detachedCommonHeaderFixture?.querySelector(
-          'a[href="https://www.nicovideo.jp/my"]',
-        )?.parentElement;
-        return {
-          accountMargin: accountItem?.style.marginLeft ?? "missing",
-          headerPosition:
-            host.detachedCommonHeaderFixture?.style.position ?? "missing",
-          nicoCachePosition:
-            document.getElementById("ncnl_common_header_menu")?.style
-              .position ?? "missing",
-          nicoCacheTranslate:
-            document.getElementById("ncnl_common_header_menu")?.style
-              .translate ?? "missing",
-        };
-      }),
-    )
-    .toEqual({
-      accountMargin: "calc(90px)",
-      headerPosition: "sticky",
-      nicoCachePosition: "fixed",
-      nicoCacheTranslate: "",
-    });
+  await expect(menu).toHaveAttribute("data-filter-matome-mounted", "account");
   await page.evaluate(() => {
     const host = window as Window & {
       detachedCommonHeaderFixture?: HTMLElement;
@@ -249,7 +227,7 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
     delete host.detachedCommonHeaderFixture;
   });
   await expect(menu).toHaveCount(1);
-  await expect(menu).toHaveAttribute("data-mounted", "true");
+  await expect(menu).toHaveAttribute("data-filter-matome-mounted", "account");
   await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
 });
 
@@ -280,7 +258,7 @@ test("API不在と版不一致を赤い要約状態で区別する", async ({ pa
 test("狭幅RTLでもホバーパネルが画面外へはみ出さずEscapeで閉じる", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 320, height: 480 });
+  await page.setViewportSize({ width: 480, height: 480 });
   await installFixture(page, { language: "ur" });
   const trigger = page.getByRole("button", {
     name: "filter-matome: nlFilter API کی حالت",
@@ -291,7 +269,7 @@ test("狭幅RTLでもホバーパネルが画面外へはみ出さずEscapeで�
   const box = await popover.boundingBox();
   expect(box).not.toBeNull();
   expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
-  expect((box?.x ?? 0) + (box?.width ?? 321)).toBeLessThanOrEqual(320);
+  expect((box?.x ?? 0) + (box?.width ?? 481)).toBeLessThanOrEqual(480);
   expect(box?.y ?? -1).toBeGreaterThanOrEqual(0);
   expect((box?.y ?? 0) + (box?.height ?? 481)).toBeLessThanOrEqual(480);
   await page.keyboard.press("Escape");

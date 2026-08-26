@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- 【common・CommonHeader】filter-matome API状態メニューがNicoCacheメニューの左へ並び、ビューポートへfixed配置されていたため、文書基準のabsolute配置へ変更して表示順を`NicoCache → filter-matome → アカウント`へ修正した。機能側では`fixed`／`sticky`を使わず、CommonHeaderの公式stickyも使用中だけrelativeへ退避し、ヘッダー消失時は公式positionと追加余白を復元する。
+- 【common・CommonHeader】独自の位置計算を重ねたことでfilter-matome API状態メニューが不安定だったため、マウント、account余白予約、再配置、DOM監視、ホバー・フォーカス操作を`05_nicocache_menu.js`と同じ構造へ置き換えた。メニュー内容だけをAPI状態表示に変更し、表示順は`NicoCache → filter-matome → アカウント`に保つ。
 - 【nlFilters・sandbox】公式プレイヤー更新でコメント再取得APIの固定minify識別子Matchが0件になったため、Cookieなしの公式資産を再採取し、action・store・additionals・Watchコメント入力の関係をcapture groupとbackreferenceで固定するMatchへ修正した。コメントメニューもReact runtime・button・propsを同じ方式で再利用し、保存済み複数版と最新原本で対象1件・他資産0件、置換後構文、既存公式操作を検証した。
 - 【Java extension・NicoCacheGUI】extension専用ログがMainタブへも複製されないよう、全8拡張を`guiOnly`の正式ロガーへ統一した。DestroyAdsもExtension2として専用タブを登録し、初期化失敗時の警告をMainへ直接出さないよう修正した。
 

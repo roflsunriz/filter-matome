@@ -35,6 +35,7 @@ interface MenuEvaluation {
   headerPosition: string;
   nicoCachePosition: string | null;
   statuses: Record<string, string>;
+  container: { left: number; right: number; top: number; bottom: number };
   trigger: { left: number; right: number; top: number; bottom: number };
   popover: { left: number; right: number; top: number; bottom: number };
   nicoCacheMenu: {
@@ -49,17 +50,7 @@ interface MenuEvaluation {
     top: number;
     bottom: number;
   } | null;
-  scrollY: number;
   viewport: { width: number; height: number };
-}
-
-interface ScrollEvaluation {
-  scrollY: number;
-  triggerTop: number;
-  triggerLeft: number;
-  nicoCacheRight: number | null;
-  menuPosition: string;
-  headerPosition: string;
 }
 
 const DEFAULT_CDP_ENDPOINT = "http://127.0.0.1:9222";
@@ -105,23 +96,14 @@ const isMenuEvaluation = (value: unknown): value is MenuEvaluation =>
     typeof value.nicoCachePosition === "string") &&
   isRecord(value.statuses) &&
   Object.values(value.statuses).every((status) => typeof status === "string") &&
+  isRect(value.container) &&
   isRect(value.trigger) &&
   isRect(value.popover) &&
   (value.nicoCacheMenu === null || isRect(value.nicoCacheMenu)) &&
   (value.accountMenu === null || isRect(value.accountMenu)) &&
-  typeof value.scrollY === "number" &&
   isRecord(value.viewport) &&
   typeof value.viewport.width === "number" &&
   typeof value.viewport.height === "number";
-
-const isScrollEvaluation = (value: unknown): value is ScrollEvaluation =>
-  isRecord(value) &&
-  typeof value.scrollY === "number" &&
-  typeof value.triggerTop === "number" &&
-  typeof value.triggerLeft === "number" &&
-  (value.nicoCacheRight === null || typeof value.nicoCacheRight === "number") &&
-  typeof value.menuPosition === "string" &&
-  typeof value.headerPosition === "string";
 
 const parseArgument = (name: string): string | undefined => {
   const prefix = `--${name}=`;
@@ -320,7 +302,7 @@ const main = async (): Promise<void> => {
             menuCount: document.querySelectorAll("#filter-matome-api-status-menu").length,
             nicoCacheMenuCount: document.querySelectorAll("#ncnl_common_header_menu").length,
             summary: menu.dataset.summary ?? "",
-            placement: menu.dataset.placement ?? "",
+            placement: menu.dataset.filterMatomeMounted ?? "",
             menuPosition: getComputedStyle(menu).position,
             popoverPosition: getComputedStyle(popover).position,
             headerPosition: header instanceof HTMLElement
@@ -334,6 +316,7 @@ const main = async (): Promise<void> => {
                 item.getAttribute("data-api-id"), item.getAttribute("data-status"),
               ]),
             ),
+            container: toRect(menu.getBoundingClientRect()),
             trigger: toRect(trigger.getBoundingClientRect()),
             popover: toRect(popover.getBoundingClientRect()),
             nicoCacheMenu: nicoCacheMenu instanceof HTMLElement
@@ -342,7 +325,6 @@ const main = async (): Promise<void> => {
             accountMenu: accountMenu instanceof HTMLElement
               ? toRect(accountMenu.getBoundingClientRect())
               : null,
-            scrollY,
             viewport: { width: innerWidth, height: innerHeight },
           };
         })()`,
@@ -353,9 +335,9 @@ const main = async (): Promise<void> => {
       if (
         result.menuCount !== 1 ||
         !["account", "service"].includes(result.placement) ||
-        result.menuPosition !== "absolute" ||
+        result.menuPosition !==
+          (result.placement === "account" ? "fixed" : "relative") ||
         result.popoverPosition !== "absolute" ||
-        result.headerPosition !== "relative" ||
         result.statuses["playback-rate"] !== "active" ||
         result.statuses["comment-reload"] !== "active" ||
         !["waiting", "active"].includes(result.statuses["comment-menu"] ?? "")
@@ -365,64 +347,22 @@ const main = async (): Promise<void> => {
       if (
         result.nicoCacheMenu &&
         result.nicoCacheMenu.right > result.nicoCacheMenu.left &&
-        Math.abs(result.nicoCacheMenu.right - result.trigger.left) > 2
+        Math.abs(result.nicoCacheMenu.right - result.container.left) > 2
       ) {
         throw new Error(
-          "filter-matomeメニューがNicoCacheメニューの直後にありません。",
+          `filter-matomeメニューがNicoCacheメニューの直後にありません: ${JSON.stringify(result)}`,
         );
       }
       if (
         result.placement === "account" &&
-        (result.nicoCachePosition !== "absolute" ||
+        (result.nicoCachePosition !== "fixed" ||
           !result.accountMenu ||
-          Math.abs(result.trigger.right - result.accountMenu.left) > 2)
+          Math.abs(result.container.right - result.accountMenu.left) > 2)
       ) {
         throw new Error(
           "filter-matomeメニューがNicoCacheとアカウントの間にありません。",
         );
       }
-      const initialDocumentTop = result.trigger.top + result.scrollY;
-      const scrolled = await evaluate(
-        pageClient,
-        `(() => {
-          window.scrollTo(0, Math.min(240, Math.max(0, document.documentElement.scrollHeight - innerHeight)));
-          const menu = document.getElementById("filter-matome-api-status-menu");
-          const trigger = menu?.querySelector("button");
-          const header = document.getElementById("CommonHeader");
-          const nicoCacheMenu = document.getElementById("ncnl_common_header_menu");
-          if (!(menu instanceof HTMLElement) || !(trigger instanceof HTMLElement)) {
-            throw new Error("menu missing after scroll");
-          }
-          return {
-            scrollY,
-            triggerTop: trigger.getBoundingClientRect().top,
-            triggerLeft: trigger.getBoundingClientRect().left,
-            nicoCacheRight: nicoCacheMenu instanceof HTMLElement
-              ? nicoCacheMenu.getBoundingClientRect().right
-              : null,
-            menuPosition: getComputedStyle(menu).position,
-            headerPosition: header instanceof HTMLElement
-              ? getComputedStyle(header).position
-              : "missing",
-          };
-        })()`,
-      );
-      if (!isScrollEvaluation(scrolled)) {
-        throw new Error("スクロール後のAPI状態メニュー評価が不正です。");
-      }
-      if (
-        scrolled.menuPosition !== "absolute" ||
-        scrolled.headerPosition !== "relative" ||
-        Math.abs(scrolled.triggerTop + scrolled.scrollY - initialDocumentTop) >
-          2 ||
-        (scrolled.nicoCacheRight !== null &&
-          Math.abs(scrolled.nicoCacheRight - scrolled.triggerLeft) > 2)
-      ) {
-        throw new Error(
-          `API状態メニューが文書位置から外れました: ${JSON.stringify(scrolled)}`,
-        );
-      }
-      await evaluate(pageClient, "window.scrollTo(0, 0); true");
       assertInsideViewport(result.popover, result.viewport);
       console.log(`[api-status-menu-live] verified: ${watchUrl}`);
       console.log(
