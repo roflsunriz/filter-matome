@@ -6,8 +6,9 @@
   "packageManager": "bun@1.3.14",
   "scripts": {
     "build": "bun scripts/build.ts",
-    "type-check": "tsc --noEmit && tsc --noEmit -p scripts/sandbox/tsconfig.json",
-    "lint": "eslint src/**/*.ts scripts/sandbox/*.ts",
+    "docs:capture": "bun run build && bun scripts/capture-docs-screenshots.ts",
+    "type-check": "tsc --noEmit && tsc --noEmit -p scripts/tsconfig.json && tsc --noEmit -p scripts/sandbox/tsconfig.json",
+    "lint": "eslint src/**/*.ts scripts/capture-docs-screenshots.ts scripts/sandbox/*.ts",
     "format": "prettier --write \"{src,tests,scripts}/**/*.ts\" \"*.ts\" package.json",
     "format:check": "prettier --check \"{src,tests,scripts}/**/*.ts\" \"*.ts\" package.json",
     "benchmark:comment-filter": "bun tests/comment-filter2-performance.bench.ts",

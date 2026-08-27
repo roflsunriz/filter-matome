@@ -68,8 +68,11 @@ bun run build
 - `bun run build`: 全ブラウザー機能、Worker、Service Worker、静的HTMLを一括生成。
 - `bun run error-check`: 型チェックとlintの短縮コマンド。
 - `bun run verify`: format差分、lint、型、単体・E2E、ビルドをCI相当の順序で一括検証。
+- `bun run docs:capture`: NicoCache_nl経由の実ページとビルド済みSPAをChromeの一時セッションで開き、`docs/resources/`の利用者向け画面画像を更新する。
 
 `bun run format` は`src/`、`tests/`、`scripts/`とルートのTypeScriptを整形し、`bun run format:check`は書き換えず差分だけを検出します。実行後は差分を確認してください。CIとリリースは`bun install --frozen-lockfile`を使い、`bun.lock`にない依存解決を拒否します。テスト方針とfixtureの扱いは [tests/README.md](tests/README.md) を参照してください。
+
+`docs:capture`は既存のChromeプロフィール、Cookie、IndexedDBを読み込みません。mylist2のサンプルだけを破棄可能な一時BrowserContextへ作成し、動画取得スケジューラーは予約を保存せず確認画面まで撮影します。既定のプロキシーは`http://127.0.0.1:8080`、動画IDは`sm9`です。必要な場合は`DOCS_CAPTURE_PROXY`、`DOCS_CAPTURE_VIDEO_ID`、`DOCS_CAPTURE_BROWSER_CHANNEL`で変更できます。
 
 ## ビルド成果物
 

@@ -5,6 +5,19 @@
 5. git tag "#(version)"
 6. git push origin "#(version)" の操作でGithub Actionsが自動でリリースを作成する。タグは`#238`、配布アーカイブはURLフラグメントとの衝突を避けた`filter-matome-238.7z`のように、ファイル名側だけ`#`を除く。
 
+## ドキュメント画像の更新
+
+画面構成や主要な操作導線を変更した場合は、NicoCache_nlを起動してから実ページ撮影を更新する。fixtureの簡略DOMはドキュメント画像に使わず、Chromeの匿名一時セッションでNicoCache_nl経由の実際のニコニコ動画ページとビルド済みSPAを開く。
+
+```powershell
+cd local/features
+bun run docs:capture
+cd ../..
+mkdocs build --strict
+```
+
+撮影スクリプトはmylist2へ匿名サンプルを一時作成するが、既存のChromeプロフィール、Cookie、IndexedDBは読み込まない。動画取得スケジューラーは保存直前の確認画面までに留める。生成された`docs/resources/common-api-status.png`、`mylist2.png`、`movie-info.png`、`smart-fetcher.png`を目視し、ユーザー名、アイコン、Cookie、秘密情報、キャッシュのローカルパスなどが含まれていないことを確認する。問題がある場合は画像をコミットせず、撮影対象またはマスク範囲を修正して取り直す。
+
 ## 公式プレイヤー再生速度ブリッジの追従確認
 
 公式設定またはmlink-video-controllerで変更した再生速度が元へ戻る、公式設定パネルがエラーになる、または101番nlFilterのMatchが外れた場合は、Cookieと認証ヘッダーを保存しないraw CDP captureを取り直す。取得物はGit管理外の`local/features/src/sandbox/official-watch-bundle/`だけへ置き、公式コードを製品bundleへ取り込まない。

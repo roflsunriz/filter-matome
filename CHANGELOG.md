@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - 【common・CommonHeader】NicoCacheのキャッシュ操作とは別に、再生速度同期・コメント再取得・コメントメニュー挿入の版付きnlFilter APIを、有効・利用待ち・未検出・版不一致で確認できるfilter-matomeホバーメニューを追加した。公式アカウントリンクやservice linkから位置を求め、公式React管理外でNicoCacheメニューと重ならないよう配置し、狭幅・低高さ・RTL・キーボード操作にも対応する。
+- 【docs・Playwright】文章だけでは画面構成を把握しづらいmylist2、movie-info、動画取得スケジューラー、CommonHeader API状態表示に実画面画像を追加し、fixtureではなくNicoCache_nl経由の実ページを匿名Chromeセッションで再撮影できるコマンドを追加した。
 
 ### Fixed
 
