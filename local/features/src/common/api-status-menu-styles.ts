@@ -69,7 +69,7 @@ export const API_STATUS_MENU_STYLES = `
 
 #filter-matome-api-status-menu[data-summary="warning"]
   .filter-matome-api-status-summary,
-#filter-matome-api-status-menu [data-status="waiting"]
+#filter-matome-api-status-menu [data-status="probing"]
   .filter-matome-api-status-dot,
 #filter-matome-api-status-menu [data-status="not-applicable"]
   .filter-matome-api-status-dot {
@@ -81,6 +81,8 @@ export const API_STATUS_MENU_STYLES = `
 #filter-matome-api-status-menu [data-status="missing"]
   .filter-matome-api-status-dot,
 #filter-matome-api-status-menu [data-status="incompatible"]
+  .filter-matome-api-status-dot,
+#filter-matome-api-status-menu [data-status="probe-error"]
   .filter-matome-api-status-dot {
   background: #ef4444;
 }

@@ -161,7 +161,6 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
 
-  await trigger.hover();
   await expect(menu).toHaveAttribute("data-summary", "warning");
   await expect(menu.locator('[data-api-id="playback-rate"]')).toHaveAttribute(
     "data-status",
@@ -173,8 +172,18 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
   );
   await expect(menu.locator('[data-api-id="comment-menu"]')).toHaveAttribute(
     "data-status",
-    "waiting",
+    "probing",
   );
+
+  await page.evaluate(() => {
+    window.FilterMatomeCommentMenuBridgeApi = { version: 1 };
+    window.dispatchEvent(new Event("filter-matome:api-status-change"));
+  });
+  await expect(menu.locator('[data-api-id="comment-menu"]')).toHaveAttribute(
+    "data-status",
+    "active",
+  );
+  await expect(menu).toHaveAttribute("data-summary", "active");
 
   const statusItems = menu.locator('[role="menuitem"]');
   await trigger.focus();
@@ -184,17 +193,6 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
   await expect(statusItems.last()).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(trigger).toBeFocused();
-
-  await page.evaluate(() => {
-    window.FilterMatomeCommentMenuBridgeApi = { version: 1 };
-  });
-  await page.mouse.move(2, 80);
-  await trigger.hover();
-  await expect(menu.locator('[data-api-id="comment-menu"]')).toHaveAttribute(
-    "data-status",
-    "active",
-  );
-  await expect(menu).toHaveAttribute("data-summary", "active");
 
   await page.evaluate(() => {
     const header = document.getElementById("CommonHeader");
@@ -234,7 +232,6 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
 test("API不在と版不一致を赤い要約状態で区別する", async ({ page }) => {
   await installFixture(page, { activeApis: false });
   const menu = page.locator("#filter-matome-api-status-menu");
-  await page.getByRole("button", { name: /filter-matome/u }).hover();
   await expect(menu).toHaveAttribute("data-summary", "error");
   await expect(menu.locator('[data-api-id="comment-reload"]')).toHaveAttribute(
     "data-status",
@@ -246,9 +243,8 @@ test("API不在と版不一致を赤い要約状態で区別する", async ({ pa
       version: 1,
       reload: "invalid",
     } as unknown as Window["FilterMatomeCommentApi"];
+    window.dispatchEvent(new Event("filter-matome:api-status-change"));
   });
-  await page.mouse.move(2, 80);
-  await page.getByRole("button", { name: /filter-matome/u }).hover();
   await expect(menu.locator('[data-api-id="comment-reload"]')).toHaveAttribute(
     "data-status",
     "incompatible",

@@ -52,7 +52,7 @@
 - `cf2:smid-changed`: 対象動画IDの変更。
 - `commentFilter2Update`: video-playerへ送る更新イベント。
 - `window.FilterMatomeCommentApi`: nlFilterが公式資産内で公開する版付き再取得API。comment-filter2は`version: 1`と`reload()`だけを受理する。
-- `window.FilterMatomeCommentMenuApi`: comment-filter2が公開し、nlFilterで接続した公式Reactメニューだけが利用する版付き項目・操作API。
+- `window.FilterMatomeCommentMenuApi`: comment-filter2が公開し、nlFilterで接続した公式Reactメニューだけが利用する版付き項目・操作API。公開・破棄時は`filter-matome:api-status-change`を送出し、CommonHeaderの自動状態表示へ即時反映する。
 
 イベント名やデータ型を変更するときは `src/types/video-player-bridge-types.ts` とvideo-player側の受信処理を同時に更新してください。
 

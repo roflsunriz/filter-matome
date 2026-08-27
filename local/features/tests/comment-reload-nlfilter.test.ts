@@ -56,6 +56,7 @@ describe("公式コメント再取得nlFilter", () => {
       const transformed = applyCommentReloadNlFilter(fixture, contract);
       const deminified = await format(transformed, { parser: "babel" });
       expect(deminified).toContain("FilterMatomeCommentApi");
+      expect(deminified).toContain("filter-matome:api-status-change");
       expect(deminified).toContain("e.current().fetchAdditionals");
     }
   });

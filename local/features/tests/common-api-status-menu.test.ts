@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
-import { resolveFilterMatomeApiStatuses } from "@/common/api-status-menu";
+import {
+  findLoadedCommentMenuBundleUrl,
+  probeCommentMenuBundle,
+  resolveFilterMatomeApiStatuses,
+} from "@/common/api-status-menu";
 
 describe("CommonHeader filter-matome API状態メニュー", () => {
   test("Watch以外では3つのnlFilter APIを対象外にする", () => {
@@ -11,7 +15,7 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
     ]);
   });
 
-  test("版と関数を検証し、コメントメニューは実行前を待機中にする", () => {
+  test("版と関数を検証し、コメントメニューは自動検査中から有効へ進む", () => {
     const host = {
       FilterMatomePlaybackRateApi: {
         version: 1,
@@ -31,13 +35,18 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
     expect(resolveFilterMatomeApiStatuses(host, "/watch/sm9")).toEqual([
       { id: "playback-rate", kind: "active" },
       { id: "comment-reload", kind: "active" },
-      { id: "comment-menu", kind: "waiting" },
+      { id: "comment-menu", kind: "probing" },
     ]);
+
+    expect(
+      resolveFilterMatomeApiStatuses(host, "/watch/sm9", "active")[2],
+    ).toEqual({ id: "comment-menu", kind: "active" });
 
     expect(
       resolveFilterMatomeApiStatuses(
         { ...host, FilterMatomeCommentMenuBridgeApi: { version: 1 } },
         "/watch/sm9",
+        "missing",
       )[2],
     ).toEqual({ id: "comment-menu", kind: "active" });
   });
@@ -57,5 +66,60 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
       { id: "comment-reload", kind: "incompatible" },
       { id: "comment-menu", kind: "incompatible" },
     ]);
+  });
+
+  test("読込済みExpandedComment資産だけを自動プローブ対象にする", () => {
+    expect(
+      findLoadedCommentMenuBundleUrl([
+        { name: "https://example.com/ExpandedComment-test.js" },
+        {
+          name: "https://resource.video.nimg.jp/web/scripts/nvpc_next/assets/ExpandedComment-current.js?cache=1",
+        },
+      ]),
+    ).toBe(
+      "https://resource.video.nimg.jp/web/scripts/nvpc_next/assets/ExpandedComment-current.js",
+    );
+    expect(
+      findLoadedCommentMenuBundleUrl([
+        {
+          name: "https://resource.video.nimg.jp/web/scripts/nvpc_next/assets/PlayerSeekBar-current.js",
+        },
+      ]),
+    ).toBeNull();
+  });
+
+  test("再取得した公式資産内の103番固有markerを副作用なしで検査する", async () => {
+    const url =
+      "https://resource.video.nimg.jp/web/scripts/nvpc_next/assets/ExpandedComment-current.js";
+    const source = [
+      "FilterMatomeCommentMenuApi",
+      "FilterMatomeCommentMenuBridgeApi={version:1}",
+      "e.getItems(comment)",
+      "e.execute(action,comment)",
+    ].join(";");
+    const requests: Array<{ input: string; credentials?: RequestCredentials }> =
+      [];
+    expect(
+      await probeCommentMenuBundle(url, async (input, init) => {
+        requests.push({
+          input: String(input),
+          credentials: init?.credentials,
+        });
+        return new Response(source);
+      }),
+    ).toBe("active");
+    expect(requests).toEqual([{ input: url, credentials: "omit" }]);
+    expect(
+      await probeCommentMenuBundle(
+        url,
+        async () => new Response("official source without marker"),
+      ),
+    ).toBe("missing");
+    expect(
+      await probeCommentMenuBundle(
+        "https://example.com/ExpandedComment-current.js",
+        async () => new Response(source),
+      ),
+    ).toBe("probe-error");
   });
 });

@@ -106,7 +106,7 @@ bunx playwright test tests/comment-filter2.spec.ts
 
 Matchを変更する前に`comment-context-menu-match-history.md`へ公式原本のURL、SHA-256、サイズ、Matchと一致数、意味上の根拠を追記します。公式minify名の変化を含む3版以上で対象1回・他資産0回を確認するまでは、識別子を無条件にワイルドカード化しません。
 
-現行MatchはReact runtime、button、css、handler、propsをcaptureし、同じruntimeとpropsが直後の`comment.vposMs`表示へ使われる関係を固定します。動的確認では公式コメントメニューを一度開き、CommonHeaderの`filter-matome`メニューでコメントメニューが`利用待ち`から`有効`へ変わることも確認します。
+現行MatchはReact runtime、button、css、handler、propsをcaptureし、同じruntimeとpropsが直後の`comment.vposMs`表示へ使われる関係を固定します。動的確認では公式コメントメニューを開かず、読込済み`ExpandedComment`資産への自動プローブだけでCommonHeaderのコメントメニュー状態が`自動検査中`から`有効`へ変わることを確認します。プローブは認証情報を送らず、103番固有markerの有無だけを検査します。
 
 ```powershell
 cd local/features

@@ -22,6 +22,8 @@
 - `get()`: media controllerが保持する現在値を返す。
 - `set(rate)`: 有限な0.1～5だけをmedia controllerへ渡し、反映後の値を返す。
 
+API公開直後には`filter-matome:api-status-change`イベントを送出し、CommonHeaderの状態表示をユーザー操作なしで即時更新する。定期確認は180秒間隔の保険とし、初期化競合で表示だけが古い状態に残らないようにする。
+
 公式UIは既存のwatch controllerを通るため、表示候補と利用可否を変更しない。mlink-video-controllerだけがこのブリッジを使ってmedia controllerを更新し、APIがないスタンドアロンvideo-playerでは従来どおり動画要素へ直接設定する。
 
 ## Match

@@ -175,7 +175,10 @@ const waitForMenuReady = async (
         document.getElementById("filter-matome-api-status-menu") &&
         globalThis.FilterMatomePlaybackRateApi?.version === 1 &&
         globalThis.FilterMatomeCommentApi?.version === 1 &&
-        globalThis.FilterMatomeCommentMenuApi?.version === 1
+        globalThis.FilterMatomeCommentMenuApi?.version === 1 &&
+        document.querySelector('[data-api-id="playback-rate"]')?.getAttribute("data-status") === "active" &&
+        document.querySelector('[data-api-id="comment-reload"]')?.getAttribute("data-status") === "active" &&
+        document.querySelector('[data-api-id="comment-menu"]')?.getAttribute("data-status") === "active"
       )`,
     );
     if (ready === true) return;
@@ -189,6 +192,12 @@ const waitForMenuReady = async (
       playback: globalThis.FilterMatomePlaybackRateApi?.version ?? null,
       reload: globalThis.FilterMatomeCommentApi?.version ?? null,
       commentMenu: globalThis.FilterMatomeCommentMenuApi?.version ?? null,
+      statuses: Object.fromEntries(
+        Array.from(document.querySelectorAll("[data-api-id]"), (item) => [
+          item.getAttribute("data-api-id"),
+          item.getAttribute("data-status"),
+        ]),
+      ),
     })`,
   );
   throw new Error(
@@ -340,7 +349,7 @@ const main = async (): Promise<void> => {
         result.popoverPosition !== "absolute" ||
         result.statuses["playback-rate"] !== "active" ||
         result.statuses["comment-reload"] !== "active" ||
-        !["waiting", "active"].includes(result.statuses["comment-menu"] ?? "")
+        result.statuses["comment-menu"] !== "active"
       ) {
         throw new Error(`API状態が不正です: ${JSON.stringify(result)}`);
       }

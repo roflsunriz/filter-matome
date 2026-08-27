@@ -31,6 +31,7 @@ describe("公式再生速度同期nlFilter", () => {
     expect(filterSource).not.toMatch(/Match<\r?\nplaybackRate\r?\n>/u);
     expect(filterSource).not.toContain("_x_");
     expect(deminified).toContain("FilterMatomePlaybackRateApi");
+    expect(deminified).toContain("filter-matome:api-status-change");
     expect(deminified).toContain("this.media.setPlaybackRate(e)");
     expect(investigation).toContain(contract.match);
     expect(investigation).toContain(

@@ -25,6 +25,8 @@ comment-filter2が公開する契約版`1`は次の最小境界である。
 - `getItems(comment)`: 公式コメントモデルを検証し、表示する項目IDと日本語ラベルだけを返す。
 - `execute(action, comment)`: コピー、Google検索、HTTP(S) URLの新規タブ表示、comment-filter2の全動画NGワード・NGユーザーID追加を実行する。
 
+CommonHeaderの状態表示は公式メニューを疑似操作しない。Performance Resource Timingで既に読み込まれた同一公式CDNの`ExpandedComment-*.js`だけを特定し、Cookieなどの認証情報を付けずに再取得して、103番が追加する`FilterMatomeCommentMenuApi`、bridge marker、`getItems`、`execute`の固有断片をread-only検査する。ページ開始時と資産読込時に即時確認し、その後の保険確認は180秒間隔とする。
+
 URLを直接開く項目は、空白を除いた本文全体を`URL`で解析でき、schemeが`http:`または`https:`の場合だけ返す。NGワードは本文を正規表現リテラルとしてエスケープし、既存の同一ルールを重複登録しない。無効な同一ルールは再有効化し、保存後に既存の公式コメント再取得APIで即時反映する。
 
 ## 追従確認

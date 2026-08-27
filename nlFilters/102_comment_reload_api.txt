@@ -9,5 +9,5 @@ Match<
 (var ([A-Za-z_$][\w$]*)=function\(\)\{var [A-Za-z_$][\w$]*=[A-Za-z_$][\w$]*\(function\*\(([A-Za-z_$][\w$]*),([A-Za-z_$][\w$]*)=\{\}\)\{[A-Za-z_$][\w$]*\(\3,\[`initialized`,`fetched`\]\);)(?=let ([A-Za-z_$][\w$]*)=\3\.current\(\),[A-Za-z_$][\w$]*=yield [A-Za-z_$][\w$]*\(\5\.watch\.comment\.nvComment\.server,\5\.watch\.video\.id,\5\.watch\.comment\.nvComment\.params,\4\))
 >
 Replace<
-$1try{globalThis.FilterMatomeCommentApi={version:1,reload:()=>$2($3,$3.current().fetchAdditionals)}}catch{};
+$1try{globalThis.FilterMatomeCommentApi={version:1,reload:()=>$2($3,$3.current().fetchAdditionals)};globalThis.dispatchEvent?.(new Event(`filter-matome:api-status-change`))}catch{};
 >

@@ -260,6 +260,7 @@ export class CommentFilter2 {
 
       if (window.FilterMatomeCommentMenuApi === this.officialCommentMenu) {
         delete window.FilterMatomeCommentMenuApi;
+        window.dispatchEvent(new Event("filter-matome:api-status-change"));
       }
 
       this.isInitialized = false;
@@ -321,6 +322,7 @@ export function startCommentFilter2(): CommentFilter2 {
     window.CommentFilter2Instance = commentFilter2Instance;
     window.FilterMatomeCommentMenuApi =
       commentFilter2Instance.getOfficialCommentMenuApi();
+    window.dispatchEvent(new Event("filter-matome:api-status-change"));
 
     // 初期化完了イベントを送信
     window.dispatchEvent(new CustomEvent("CommentFilter2Ready"));

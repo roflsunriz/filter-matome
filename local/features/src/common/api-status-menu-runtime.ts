@@ -31,7 +31,7 @@ type Copy = {
 const ENGLISH_COPY: Copy = {
   trigger: "filter-matome",
   title: "nlFilter API status",
-  note: "The comment-menu bridge is confirmed after the official comment menu is opened once.",
+  note: "APIs are checked automatically. Reload the Watch page if a red status persists.",
   names: {
     "playback-rate": "Playback-rate bridge",
     "comment-reload": "Comment reload",
@@ -39,9 +39,10 @@ const ENGLISH_COPY: Copy = {
   },
   states: {
     active: "Active",
-    waiting: "Waiting for use",
+    probing: "Checking",
     missing: "Not detected",
     incompatible: "Version mismatch",
+    "probe-error": "Check failed",
     "not-applicable": "Watch only",
   },
 };
@@ -51,7 +52,7 @@ const COPIES: Record<string, Copy> = {
   ja: {
     trigger: "filter-matome",
     title: "nlFilter API 挿入状態",
-    note: "コメントメニューは、公式コメントメニューを一度開いた後に挿入済みと確認できます。",
+    note: "各APIは自動検査されます。赤い状態が続く場合はWatchページを再読み込みしてください。",
     names: {
       "playback-rate": "再生速度同期",
       "comment-reload": "コメント再取得",
@@ -59,16 +60,17 @@ const COPIES: Record<string, Copy> = {
     },
     states: {
       active: "有効",
-      waiting: "利用待ち",
+      probing: "自動検査中",
       missing: "未検出",
       incompatible: "版不一致",
+      "probe-error": "検査失敗",
       "not-applicable": "Watchのみ",
     },
   },
   zh: {
     ...ENGLISH_COPY,
     title: "nlFilter API 状态",
-    note: "打开一次官方评论菜单后，即可确认评论菜单桥接是否已插入。",
+    note: "系统会自动检查各项 API。若红色状态持续出现，请重新加载观看页面。",
     names: {
       "playback-rate": "播放速度同步",
       "comment-reload": "重新加载评论",
@@ -76,9 +78,10 @@ const COPIES: Record<string, Copy> = {
     },
     states: {
       active: "有效",
-      waiting: "等待使用",
+      probing: "正在检查",
       missing: "未检测到",
       incompatible: "版本不匹配",
+      "probe-error": "检查失败",
       "not-applicable": "仅限观看页",
     },
   },
@@ -87,9 +90,10 @@ const COPIES: Record<string, Copy> = {
     title: "nlFilter API स्थिति",
     states: {
       active: "सक्रिय",
-      waiting: "उपयोग की प्रतीक्षा",
+      probing: "जाँच जारी",
       missing: "नहीं मिला",
       incompatible: "संस्करण अलग",
+      "probe-error": "जाँच विफल",
       "not-applicable": "केवल Watch",
     },
   },
@@ -98,9 +102,10 @@ const COPIES: Record<string, Copy> = {
     title: "Estado de API nlFilter",
     states: {
       active: "Activa",
-      waiting: "En espera",
+      probing: "Comprobando",
       missing: "No detectada",
       incompatible: "Versión incompatible",
+      "probe-error": "Error de comprobación",
       "not-applicable": "Solo en Watch",
     },
   },
@@ -109,9 +114,10 @@ const COPIES: Record<string, Copy> = {
     title: "État des API nlFilter",
     states: {
       active: "Active",
-      waiting: "En attente",
+      probing: "Vérification",
       missing: "Non détectée",
       incompatible: "Version incompatible",
+      "probe-error": "Échec de vérification",
       "not-applicable": "Watch uniquement",
     },
   },
@@ -120,9 +126,10 @@ const COPIES: Record<string, Copy> = {
     title: "حالة واجهات nlFilter",
     states: {
       active: "نشطة",
-      waiting: "بانتظار الاستخدام",
+      probing: "جارٍ الفحص",
       missing: "غير مكتشفة",
       incompatible: "إصدار غير متوافق",
+      "probe-error": "فشل الفحص",
       "not-applicable": "صفحة المشاهدة فقط",
     },
   },
@@ -131,9 +138,10 @@ const COPIES: Record<string, Copy> = {
     title: "Estado das APIs nlFilter",
     states: {
       active: "Ativa",
-      waiting: "Aguardando uso",
+      probing: "Verificando",
       missing: "Não detectada",
       incompatible: "Versão incompatível",
+      "probe-error": "Falha na verificação",
       "not-applicable": "Somente no Watch",
     },
   },
@@ -142,9 +150,10 @@ const COPIES: Record<string, Copy> = {
     title: "nlFilter API অবস্থা",
     states: {
       active: "সক্রিয়",
-      waiting: "ব্যবহারের অপেক্ষায়",
+      probing: "পরীক্ষা চলছে",
       missing: "শনাক্ত হয়নি",
       incompatible: "সংস্করণ মেলেনি",
+      "probe-error": "পরীক্ষা ব্যর্থ",
       "not-applicable": "শুধু Watch",
     },
   },
@@ -153,9 +162,10 @@ const COPIES: Record<string, Copy> = {
     title: "Состояние API nlFilter",
     states: {
       active: "Активен",
-      waiting: "Ожидает использования",
+      probing: "Проверка",
       missing: "Не обнаружен",
       incompatible: "Версия несовместима",
+      "probe-error": "Ошибка проверки",
       "not-applicable": "Только Watch",
     },
   },
@@ -164,9 +174,10 @@ const COPIES: Record<string, Copy> = {
     title: "nlFilter API کی حالت",
     states: {
       active: "فعال",
-      waiting: "استعمال کا منتظر",
+      probing: "جانچ جاری ہے",
       missing: "نہیں ملا",
       incompatible: "ورژن مختلف ہے",
+      "probe-error": "جانچ ناکام",
       "not-applicable": "صرف Watch",
     },
   },
@@ -178,6 +189,7 @@ let accountOriginalMarginLeft = "";
 let accountBaseMarginLeft = "0px";
 let accountReservedWidth = 0;
 let positionFrame = 0;
+let activeResolveStatuses: ResolveStatuses | null = null;
 
 const getCopy = (): Copy => {
   const language = document.documentElement.lang.toLowerCase().split("-")[0];
@@ -188,7 +200,10 @@ const getSummary = (
   statuses: FilterMatomeApiStatus[],
 ): "active" | "warning" | "error" => {
   if (
-    statuses.some(({ kind }) => kind === "missing" || kind === "incompatible")
+    statuses.some(
+      ({ kind }) =>
+        kind === "missing" || kind === "incompatible" || kind === "probe-error",
+    )
   ) {
     return "error";
   }
@@ -646,6 +661,7 @@ export function startApiStatusMenuRuntime(
 ): void {
   if (started) return;
   started = true;
+  activeResolveStatuses = resolveStatuses;
 
   document.addEventListener("pointerdown", (event) => {
     const container = document.getElementById(CONTAINER_ID);
@@ -678,9 +694,28 @@ export function startApiStatusMenuRuntime(
   });
 
   window.addEventListener("popstate", () => {
-    setTimeout(() => initialize(resolveStatuses), 0);
+    setTimeout(() => {
+      initialize(resolveStatuses);
+      refreshApiStatusMenuRuntime();
+    }, 0);
   });
   window.addEventListener("resize", scheduleAccountMenuPosition);
   window.addEventListener("scroll", scheduleAccountMenuPosition, true);
+  window.addEventListener(
+    "filter-matome:api-status-change",
+    refreshApiStatusMenuRuntime,
+  );
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "hidden") {
+      refreshApiStatusMenuRuntime();
+    }
+  });
   initialize(resolveStatuses);
+}
+
+export function refreshApiStatusMenuRuntime(): void {
+  const container = document.getElementById(CONTAINER_ID);
+  if (container instanceof HTMLElement && activeResolveStatuses) {
+    renderStatuses(container, activeResolveStatuses);
+  }
 }

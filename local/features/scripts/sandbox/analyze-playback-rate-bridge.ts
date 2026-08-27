@@ -136,6 +136,9 @@ export const assertPlaybackRateNlFilterContract = (
   if (!contract.replace.includes(EXPOSED_API_FRAGMENT)) {
     throw new Error("101番nlFilterに版付き再生速度APIの注入処理がありません");
   }
+  if (!contract.replace.includes("filter-matome:api-status-change")) {
+    throw new Error("101番nlFilterにAPI状態更新イベントがありません");
+  }
   if (contract.replace.includes("_x_")) {
     throw new Error("101番nlFilterに旧playbackRate全面置換が残っています");
   }
@@ -214,6 +217,7 @@ const main = async (): Promise<void> => {
     ]);
   if (
     !deminified.includes("FilterMatomePlaybackRateApi") ||
+    !deminified.includes("filter-matome:api-status-change") ||
     !deminified.includes("this.media.setPlaybackRate(e)") ||
     !deminified.includes("media.playbackRate !== this.playbackRate") ||
     !deminified.includes("media.playbackRate = this.playbackRate")

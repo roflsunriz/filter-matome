@@ -130,6 +130,11 @@ export function assertNlFilterContract(
       "102_comment_reload_api.txtに再取得APIの注入処理がありません",
     );
   }
+  if (!contract.replace.includes("filter-matome:api-status-change")) {
+    throw new Error(
+      "102_comment_reload_api.txtにAPI状態更新イベントがありません",
+    );
+  }
   return contract;
 }
 
@@ -187,7 +192,8 @@ async function main(): Promise<void> {
   if (
     !deminified.includes("fetchAdditionals") ||
     !deminified.includes("/v1/threads") ||
-    !deminified.includes("FilterMatomeCommentApi")
+    !deminified.includes("FilterMatomeCommentApi") ||
+    !deminified.includes("filter-matome:api-status-change")
   ) {
     throw new Error(
       "nlFilter適用・de-minify後にコメント再取得契約を確認できませんでした",

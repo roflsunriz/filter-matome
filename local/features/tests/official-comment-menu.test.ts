@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import {
   buildGoogleSearchUrl,
   OfficialCommentMenu,
@@ -47,6 +49,14 @@ function createFixture(
 }
 
 describe("公式コメントメニューAPI", () => {
+  test("APIの公開と破棄をCommonHeaderの自動状態表示へ通知する", async () => {
+    const source = await readFile(
+      resolve(import.meta.dirname, "../src/comment-filter2/index.ts"),
+      "utf8",
+    );
+    expect(source.match(/filter-matome:api-status-change/gu)?.length).toBe(2);
+  });
+
   test("通常コメントへコピー・検索・comment-filter2 NG項目を返す", () => {
     const { menu } = createFixture();
     expect(menu.getItems({ body: "通常コメント", userId: "user-1" })).toEqual([

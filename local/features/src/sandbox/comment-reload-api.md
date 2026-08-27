@@ -26,6 +26,8 @@ minify後の内部名では、取得actionが`Ar`（export alias `O`）、現在
 - `FilterMatomeCommentApi.version`: 契約版`1`
 - `FilterMatomeCommentApi.reload()`: 直前と同じ追加条件で公式コメントを再取得するPromise
 
+API公開直後には`filter-matome:api-status-change`イベントを送出し、CommonHeaderの状態表示をユーザー操作なしで即時更新する。定期確認は180秒間隔の保険とし、API初期化直後の表示更新を180秒待たせない。
+
 ストア本体、Watchデータ、thread keyは公開しない。comment-filter2は`reload()`を呼び、再取得時の`POST /v1/threads`レスポンスを従来の`DataInterceptor`でフィルタリングする。APIの初期化中は短時間待機する。APIがない、または版が違う場合は効果のない通常再読み込みを自動実行せず、更新後の資産を取得するため一度だけ`Ctrl+F5`が必要なことを通知する。API呼び出し自体の失敗は通信エラーとして通知し、再試行できる状態を保つ。
 
 ## 現行資産での再検証（2026-08-20）

@@ -105,5 +105,5 @@ Match<
 this\.getPlaybackRate=\(\)=>this\.media\.getPlaybackRate\(\)
 >
 Replace<
-this.getPlaybackRate=()=>this.media.getPlaybackRate(),globalThis.FilterMatomePlaybackRateApi={version:1,get:()=>this.media?.getPlaybackRate()??null,set:e=>Number.isFinite(e)&&e>=.1&&e<=5&&this.media?(this.media.setPlaybackRate(e),this.media.getPlaybackRate()):null}
+this.getPlaybackRate=()=>this.media.getPlaybackRate(),globalThis.FilterMatomePlaybackRateApi={version:1,get:()=>this.media?.getPlaybackRate()??null,set:e=>Number.isFinite(e)&&e>=.1&&e<=5&&this.media?(this.media.setPlaybackRate(e),this.media.getPlaybackRate()):null},globalThis.dispatchEvent?.(new Event(`filter-matome:api-status-change`))
 >
