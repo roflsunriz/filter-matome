@@ -48,7 +48,7 @@
     "typescript": "6.0.2",
     "typescript-eslint": "8.63.0"
   },
-  "version": "250.1",
+  "version": "251",
   "description": "Enhancing scripts for Niconico",
   "main": "index.js",
   "directories": {

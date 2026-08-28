@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#251] - 2026-08-28
+
 ### Added
 
 - 【common・CommonHeader】NicoCacheのキャッシュ操作とは別に、再生速度同期・コメント再取得・コメントメニュー挿入の版付きnlFilter APIを、有効・自動検査中・未検出・版不一致・検査失敗で確認できるfilter-matomeメニューを追加した。公式アカウントリンクやservice linkから位置を求め、公式React管理外でNicoCacheメニューと重ならないよう配置し、狭幅・低高さ・RTL・キーボード操作にも対応する。
@@ -13,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- 【features・README】リリース番号を`251`へ更新し、latestバッジを`#251`へ変更した。
 - 【common・CommonHeader】filter-matome API状態表示をホバーや公式コメントメニューの右クリックに依存させず、ページ開始・対象資産読込・ページ復帰時と180秒間隔で自動更新するよう変更した。コメントメニュー挿入は読込済み公式資産を認証情報なしで再取得し、103番固有markerだけをread-only検査する。
 
 ### Fixed
