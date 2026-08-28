@@ -204,6 +204,13 @@ niconicoを非表示（有効）
 - **エクスポート**: 現在のルールを JSON Lines 形式でダウンロード
 - **インポート**: JSON Lines / JSON 形式のファイルを読み込み
 
+## フィルターを高速に保つためのヒント
+- マッチを可能な限り文字列リテラルにする
+- 正規表現を限界の限界まで削る
+- 複雑な正規表現や貪欲な正規表現を使わない（常に単純な正規表現を使う）
+- ユーザーID NGを積極的に使う（常に文字列リテラルマッチなので超高速）
+- 適用動画IDのスコープを狭める（常にALLでなく、特定の動画IDのみに絞る）
+
 ## 参考リンク
 
 - [MDN 正規表現チートシート](https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Regular_expressions/Cheatsheet)
