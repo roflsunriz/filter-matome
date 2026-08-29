@@ -50,6 +50,8 @@ watchページ間のSPA遷移は共通navigationイベントから`ModuleManager
 
 原宿風表示のCSSはモジュールbundleへ文字列として埋め込まず、ビルド時に`dist/watch-harajuku.css`へ生成します。`104_watch_harajuku_style.txt`がWatchの`head`先頭で先行ロードし、公式root CSS応答全体を`filter-matome-official` layerへ入れます。Harajuku側はモジュール有効時の`data-filter-matome-harajuku="active"`だけを`@scope`のrootにし、非layerの通常宣言で公式CSSより優先します。モジュール無効時は同属性がないため、先行ロード済みCSSは画面へ影響しません。
 
+公式Watchが全画面表示中のときは、`fullscreen-target`の実測状態から全画面を判定し、公式の動画プレーヤー設定パネルをHarajukuの`@scope`終端に指定します。設定パネル内では公式スタイルを維持し、全画面解除時は通常のHarajuku配置へ戻します。
+
 保存形式を変更するときは、設定UI、インポート・エクスポート、正規化、初期値、テストを同時に更新してください。
 
 設定UIは一覧・各機能設定を`settings-ui-core.ts`、入出力・背景画像モーダルを`settings-ui.ts`へ分けています。背景画像の基本CRUDは`background-image-storage-core.ts`、保守と入出力は`background-image-settings.ts`が担当し、原宿表示のメタデータ読取とCSS、パネルのキー保護も専用ファイルへ分離しています。

@@ -6,6 +6,8 @@ import { composeHarajukuStylesheet } from "../scripts/harajuku-stylesheet";
 import {
   HARAJUKU_ACTIVE_ATTRIBUTE,
   HARAJUKU_ACTIVE_VALUE,
+  HARAJUKU_STYLE_EXEMPT_ATTRIBUTE,
+  HARAJUKU_STYLE_EXEMPT_VALUE,
   HARAJUKU_STYLESHEET_ID,
   HARAJUKU_STYLESHEET_PATH,
 } from "../src/mlink-video-controller/modules/harajuku-style-contract";
@@ -15,7 +17,7 @@ const projectRoot = resolve(import.meta.dirname, "..");
 test("Harajuku CSSはactive scope内で!importantなしに生成される", async () => {
   const stylesheet = await composeHarajukuStylesheet(projectRoot);
   expect(stylesheet).toContain(
-    `@scope (:root[${HARAJUKU_ACTIVE_ATTRIBUTE}="${HARAJUKU_ACTIVE_VALUE}"])`,
+    `@scope (:root[${HARAJUKU_ACTIVE_ATTRIBUTE}="${HARAJUKU_ACTIVE_VALUE}"]) to ([${HARAJUKU_STYLE_EXEMPT_ATTRIBUTE}="${HARAJUKU_STYLE_EXEMPT_VALUE}"])`,
   );
   expect(stylesheet).toContain(":scope {\n    --hy-bg:");
   expect(stylesheet).not.toContain("  :root");

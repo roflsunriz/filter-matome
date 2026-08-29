@@ -251,6 +251,37 @@ test("API不在と版不一致を赤い要約状態で区別する", async ({ pa
   );
 });
 
+test("公式Watchの全画面表示中はメニューを閉じて非表示にする", async ({
+  page,
+}) => {
+  await installFixture(page);
+  const menu = page.locator("#filter-matome-api-status-menu");
+  const trigger = page.getByRole("button", {
+    name: "filter-matome: nlFilter API 挿入状態",
+  });
+  await trigger.focus();
+  await expect(menu).toHaveAttribute("data-filter-matome-open", "true");
+
+  await page.evaluate(() => {
+    const target = document.createElement("div");
+    target.dataset.stylingName = "fullscreen-target";
+    document.body.append(target);
+    const style = document.createElement("style");
+    style.dataset.fixture = "browser-fullscreen";
+    style.textContent =
+      '[data-styling-name="fullscreen-target"] { position: fixed; inset: 1px; }';
+    document.body.append(style);
+  });
+  await expect(menu).toBeHidden();
+  await expect(menu).toHaveAttribute("data-filter-matome-open", "false");
+
+  await page.evaluate(() => {
+    document.querySelector('[data-fixture="browser-fullscreen"]')?.remove();
+  });
+  await expect(menu).toBeVisible();
+  await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
+});
+
 test("狭幅RTLでもホバーパネルが画面外へはみ出さずEscapeで閉じる", async ({
   page,
 }) => {

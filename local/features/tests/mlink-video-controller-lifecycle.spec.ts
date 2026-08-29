@@ -8,6 +8,8 @@ import { composeHarajukuStylesheet } from "../scripts/harajuku-stylesheet";
 import {
   HARAJUKU_ACTIVE_ATTRIBUTE,
   HARAJUKU_ACTIVE_VALUE,
+  HARAJUKU_STYLE_EXEMPT_ATTRIBUTE,
+  HARAJUKU_STYLE_EXEMPT_VALUE,
   HARAJUKU_STYLESHEET_ID,
   HARAJUKU_STYLESHEET_PATH,
 } from "../src/mlink-video-controller/modules/harajuku-style-contract";
@@ -190,6 +192,7 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
       </div>
       <main>
         <section class="grid-template-areas">
+          <div class="grid-area_player"><div data-styling-name="fullscreen-target"></div></div>
           <div class="grid-area_bottom">
             <div><div><h1>テスト動画</h1></div></div>
             <div id="watch-tags">テストタグ</div>
@@ -200,7 +203,10 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
           </div>
           <div class="grid-area_sidebar"><div><div id="watch-sidebar"><section><header>コメントリスト</header></section></div></div></div>
         </section>
-      </main>`,
+      </main>
+      <div data-nvpc-scope="watch-floating-panel" data-nvpc-part="floating">
+        <section data-nvpc-scope="watch-floating-panel" data-nvpc-part="content"></section>
+      </div>`,
       `<link id="${HARAJUKU_STYLESHEET_ID}" rel="stylesheet" href="${HARAJUKU_STYLESHEET_PATH}">
       <style>
         @layer reset, base, tokens, recipes, utilities;
@@ -342,6 +348,29 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
   await expect(page.locator("html")).toHaveAttribute(
     HARAJUKU_ACTIVE_ATTRIBUTE,
     HARAJUKU_ACTIVE_VALUE,
+  );
+  const playerSettings = page.locator(
+    '[data-nvpc-scope="watch-floating-panel"][data-nvpc-part="floating"]',
+  );
+  await expect(playerSettings).not.toHaveAttribute(
+    HARAJUKU_STYLE_EXEMPT_ATTRIBUTE,
+  );
+  await page.evaluate(() => {
+    const style = document.createElement("style");
+    style.dataset.fixture = "browser-fullscreen";
+    style.textContent =
+      '[data-styling-name="fullscreen-target"] { position: fixed; inset: 1px; }';
+    document.body.append(style);
+  });
+  await expect(playerSettings).toHaveAttribute(
+    HARAJUKU_STYLE_EXEMPT_ATTRIBUTE,
+    HARAJUKU_STYLE_EXEMPT_VALUE,
+  );
+  await page.evaluate(() => {
+    document.querySelector('[data-fixture="browser-fullscreen"]')?.remove();
+  });
+  await expect(playerSettings).not.toHaveAttribute(
+    HARAJUKU_STYLE_EXEMPT_ATTRIBUTE,
   );
   await page.locator(".HarajukuThemeButton").evaluate((button) => {
     (button as HTMLButtonElement).click();

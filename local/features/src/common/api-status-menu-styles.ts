@@ -16,6 +16,10 @@ export const API_STATUS_MENU_STYLES = `
     "Helvetica Neue", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
 }
 
+#filter-matome-api-status-menu[data-filter-matome-mounted][hidden] {
+  display: none;
+}
+
 #filter-matome-api-status-menu .filter-matome-api-status-trigger {
   all: unset;
   box-sizing: border-box;

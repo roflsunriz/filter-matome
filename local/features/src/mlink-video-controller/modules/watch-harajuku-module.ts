@@ -9,9 +9,12 @@ import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
 import { HarajukuMetadataReader, META_ITEMS } from "./harajuku-metadata";
 import { renderHarajukuDescription } from "./harajuku-description";
 import { createMaterialIcon } from "@/common/material-icons";
+import { isWatchFullscreenActive } from "@/common/watch-fullscreen";
 import {
   HARAJUKU_ACTIVE_ATTRIBUTE,
   HARAJUKU_ACTIVE_VALUE,
+  HARAJUKU_STYLE_EXEMPT_ATTRIBUTE,
+  HARAJUKU_STYLE_EXEMPT_VALUE,
   HARAJUKU_STYLESHEET_ID,
   HARAJUKU_STYLESHEET_PATH,
 } from "./harajuku-style-contract";
@@ -52,6 +55,8 @@ type OwnerApiMetadata = Omit<
 const THEME_KEY = "harajuku-theme";
 const BACKGROUND_PRIORITY_KEY = "harajuku-background-priority";
 const CHROME_CLASS = "HarajukuWatchChrome";
+const WATCH_FLOATING_PANEL_SELECTOR =
+  '[data-nvpc-scope="watch-floating-panel"][data-nvpc-part="floating"]';
 
 const SELECTORS = {
   sidebarPanel:
@@ -132,6 +137,7 @@ export class WatchHarajukuModule implements ModuleInstance {
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     window.removeEventListener("resize", this.scheduleRender);
+    document.removeEventListener("fullscreenchange", this.scheduleRender);
 
     if (this.retryTimer !== null) {
       window.clearInterval(this.retryTimer);
@@ -156,6 +162,7 @@ export class WatchHarajukuModule implements ModuleInstance {
       "--hy-watch-sidebar-panel-height",
     );
     document.documentElement.style.colorScheme = "";
+    this.clearFullscreenStyleExemptions();
     this.restoreCommonHeaderPosition();
 
     this.scheduled = false;
@@ -239,6 +246,40 @@ export class WatchHarajukuModule implements ModuleInstance {
       };
     }
     header.style.setProperty("position", "relative");
+  }
+
+  private clearFullscreenStyleExemptions(): void {
+    document
+      .querySelectorAll<HTMLElement>(`[${HARAJUKU_STYLE_EXEMPT_ATTRIBUTE}]`)
+      .forEach((element) =>
+        element.removeAttribute(HARAJUKU_STYLE_EXEMPT_ATTRIBUTE),
+      );
+  }
+
+  private syncFullscreenStyleExemptions(): void {
+    const fullscreen = isWatchFullscreenActive();
+    document
+      .querySelectorAll<HTMLElement>(`[${HARAJUKU_STYLE_EXEMPT_ATTRIBUTE}]`)
+      .forEach((element) => {
+        if (!fullscreen || !element.matches(WATCH_FLOATING_PANEL_SELECTOR)) {
+          element.removeAttribute(HARAJUKU_STYLE_EXEMPT_ATTRIBUTE);
+        }
+      });
+    if (fullscreen) {
+      document
+        .querySelectorAll<HTMLElement>(WATCH_FLOATING_PANEL_SELECTOR)
+        .forEach((panel) => {
+          if (
+            panel.getAttribute(HARAJUKU_STYLE_EXEMPT_ATTRIBUTE) !==
+            HARAJUKU_STYLE_EXEMPT_VALUE
+          ) {
+            panel.setAttribute(
+              HARAJUKU_STYLE_EXEMPT_ATTRIBUTE,
+              HARAJUKU_STYLE_EXEMPT_VALUE,
+            );
+          }
+        });
+    }
   }
 
   private getTheme(): ThemeName {
@@ -734,6 +775,7 @@ export class WatchHarajukuModule implements ModuleInstance {
   }
 
   private renderChrome(): boolean {
+    this.syncFullscreenStyleExemptions();
     this.ensurePageAnchoredCommonHeader();
     const description = this.ensureDescription();
     this.updateLayoutMetrics();
@@ -907,5 +949,6 @@ export class WatchHarajukuModule implements ModuleInstance {
     });
 
     window.addEventListener("resize", this.scheduleRender);
+    document.addEventListener("fullscreenchange", this.scheduleRender);
   }
 }

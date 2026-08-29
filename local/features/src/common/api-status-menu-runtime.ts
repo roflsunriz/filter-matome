@@ -1,4 +1,5 @@
 import { API_STATUS_MENU_STYLES } from "@/common/api-status-menu-styles.js";
+import { isWatchFullscreenActive } from "@/common/watch-fullscreen.js";
 import type {
   FilterMatomeApiStatus,
   FilterMatomeApiStatusId,
@@ -514,6 +515,20 @@ const setMenuOpen = (
   if (open) renderStatuses(container, resolveStatuses);
 };
 
+const syncFullscreenVisibility = (
+  container: HTMLElement,
+  resolveStatuses: ResolveStatuses,
+): void => {
+  const fullscreen = isWatchFullscreenActive();
+  if (container.hidden === fullscreen) return;
+  container.hidden = fullscreen;
+  if (fullscreen) {
+    setMenuOpen(container, false, resolveStatuses);
+  } else if (container.dataset.filterMatomeMounted === "account") {
+    scheduleAccountMenuPosition();
+  }
+};
+
 const createStatusItem = (id: FilterMatomeApiStatusId): HTMLLIElement => {
   const item = document.createElement("li");
   item.className = "filter-matome-api-status-item";
@@ -652,6 +667,7 @@ const initialize = (resolveStatuses: ResolveStatuses): boolean => {
     if (container.parentElement !== commonHeader)
       commonHeader.append(container);
   }
+  syncFullscreenVisibility(container, resolveStatuses);
   renderStatuses(container, resolveStatuses);
   return true;
 };
@@ -677,6 +693,9 @@ export function startApiStatusMenuRuntime(
     const commonHeader = document.getElementById("CommonHeader");
     const container = document.getElementById(CONTAINER_ID);
     const placement = commonHeader && findPlacement(commonHeader);
+    if (container instanceof HTMLElement) {
+      syncFullscreenVisibility(container, resolveStatuses);
+    }
     if (
       !isPlacementCurrent(
         container instanceof HTMLElement ? container : null,
@@ -699,7 +718,19 @@ export function startApiStatusMenuRuntime(
       refreshApiStatusMenuRuntime();
     }, 0);
   });
-  window.addEventListener("resize", scheduleAccountMenuPosition);
+  document.addEventListener("fullscreenchange", () => {
+    const container = document.getElementById(CONTAINER_ID);
+    if (container instanceof HTMLElement) {
+      syncFullscreenVisibility(container, resolveStatuses);
+    }
+  });
+  window.addEventListener("resize", () => {
+    const container = document.getElementById(CONTAINER_ID);
+    if (container instanceof HTMLElement) {
+      syncFullscreenVisibility(container, resolveStatuses);
+    }
+    scheduleAccountMenuPosition();
+  });
   window.addEventListener("scroll", scheduleAccountMenuPosition, true);
   window.addEventListener(
     "filter-matome:api-status-change",
