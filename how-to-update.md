@@ -16,7 +16,7 @@ cd ../..
 mkdocs build --strict
 ```
 
-撮影スクリプトはmylist2へ匿名サンプルを一時作成するが、既存のChromeプロフィール、Cookie、IndexedDBは読み込まない。動画取得スケジューラーは保存直前の確認画面までに留める。生成された`docs/resources/common-api-status.png`、`mylist2.png`、`movie-info.png`、`smart-fetcher.png`を目視し、ユーザー名、アイコン、Cookie、秘密情報、キャッシュのローカルパスなどが含まれていないことを確認する。問題がある場合は画像をコミットせず、撮影対象またはマスク範囲を修正して取り直す。
+撮影スクリプトはmylist2とwatch-historyへ匿名サンプルを一時作成するが、既存のChromeプロフィール、Cookie、IndexedDBは読み込まない。動画取得スケジューラーは保存直前の確認画面までに留める。生成された`docs/resources/`のPNGと`cover-images/`の5枚を目視し、ユーザー名、アイコン、Cookie、秘密情報、キャッシュのローカルパスなどが含まれていないことを確認する。問題がある場合は画像をコミットせず、撮影対象またはマスク範囲を修正して取り直す。
 
 ## 公式プレイヤー再生速度ブリッジの追従確認
 

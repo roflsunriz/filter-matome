@@ -1,5 +1,18 @@
 # 検証手順
 
+## ドキュメント画面画像
+
+NicoCache_nlを起動し、匿名の一時Chromeセッションから現行の実ページとビルド済みSPAを撮影します。
+
+```powershell
+cd local/features
+bun run docs:capture
+cd ../..
+mkdocs build --strict
+```
+
+`docs/resources/`と`cover-images/`の生成画像を目視し、comment-filter2、mlink-video-controller、背景画像設定、watch-history、mylist2、movie-info、movie-fetcher、video-player、CommonHeaderが現在の画面構成と一致することを確認します。あわせて、ユーザー名、アイコン、Cookie、秘密情報、ローカルキャッシュパスなど、匿名サンプル以外の情報が写っていないことを確認します。
+
 ## Harajuku・CommonHeaderの全画面表示
 
 対象は、原宿風Watchを有効にした公式Watchページの動画プレーヤー設定パネルと、CommonHeaderのfilter-matome API状態メニューです。

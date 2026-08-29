@@ -5,7 +5,7 @@ CommentFilter2 は、ニコニコ動画のコメントを **強力にフィル�
 
 ## 設定画面
 
-![CommentFilter2 設定画面](resources/comment-filter-2-2.avif)
+![CommentFilter2 設定画面](resources/comment-filter-2-2.png)
 
 ## ルール形式について
 

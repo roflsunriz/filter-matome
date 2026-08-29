@@ -264,7 +264,7 @@ pip install -r requirements-docs.txt
 mkdocs serve
 ```
 
-画面画像は、起動中のNicoCache_nlを経由して実際のニコニコ動画ページとビルド済みSPAをChromeで開き、匿名の一時ブラウザーセッションから更新します。
+画面画像は、起動中のNicoCache_nlを経由して実際のニコニコ動画ページとビルド済みSPAをChromeで開き、匿名の一時ブラウザーセッションから`docs/resources/`と`cover-images/`を更新します。
 
 ```powershell
 cd local/features

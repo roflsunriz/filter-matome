@@ -175,10 +175,6 @@ HTMLを使用する各機能は、NicoCache_nl経由で次のURLに配信され�
 | video-player | `https://www.nicovideo.jp/local/features/dist/pages/video-player/index.html` |
 | watch-history | `https://www.nicovideo.jp/local/features/dist/pages/watch-history/index.html` |
 
-### 104_watch_harajuku_style.txt
-
-Watchページで原宿風表示用CSSを公式CSSより先に読み込み、公式root CSSを専用のcascade layerへ隔離する。原宿風表示が有効な間だけactive scopeを開くため、モジュール無効時の公式表示には影響せず、有効時は大量の`!important`に頼らず通常のCSSカスケードで表示を切り替える。
-
 ### 101_disable_official_function.txt
 
 Watchページの`server-context`直後へ設定JSONと同期スクリプトを挿入し、設定で有効にした項目だけを公式クライアントが読み込む前に書き換える。配布時の設定では`sessionUser.type`を`premium`として表示上の分岐を調整するが、認証状態、視聴権限、サーバー側で判定されるプレミアム権限は付与されない。
@@ -193,11 +189,15 @@ Watchページの`server-context`直後へ設定JSONと同期スクリプトを�
 
 公式プレイヤーで描画中のコメントを右クリックしたとき、公式Reactメニューへcomment-filter2の操作を追加するフィルタ。DOMや表示文言を探索せず、公式側が保持するコメントモデルを版付きAPIへ渡す。コメントのコピー、Google検索、本文がHTTP(S) URLの場合の新規タブ表示、全動画対象のNGワード・NGユーザーID追加ができ、既存の公式NG操作も維持する。
 
+### 104_watch_harajuku_style.txt
+
+Watchページで原宿風表示用CSSを公式CSSより先に読み込み、公式root CSSを専用のcascade layerへ隔離する。原宿風表示が有効な間だけactive scopeを開くため、モジュール無効時の公式表示には影響せず、有効時は大量の`!important`に頼らず通常のCSSカスケードで表示を切り替える。
+
 #### mlink-video-controller
 
-![リンクとステータス](resources/mlink-video-controller1.avif)
+![リンクとステータス](resources/mlink-video-controller1.png)
 
-![リンクとステータス2](resources/mlink-video-controller2.avif)
+![リンクとステータス2](resources/mlink-video-controller2.png)
 
 ニコニコ動画の視聴ページを開くと、右下に紫色のメニューが現れる。そのメニューを開くと、順に、コメントヒートマップと再生関連の微調整タブ、音量微調整タブ、再生速度変更タブ、コメント検索タブ、関連リンクタブ、モジュール設定タブに切り替えられる。  
 
@@ -241,9 +241,9 @@ Watchページの`server-context`直後へ設定JSONと同期スクリプトを�
 
 #### comment-filter2
 
-![コメントフィルタ1](resources/comment-filter-2-1.avif)
+![コメントフィルタ1](resources/comment-filter-2-1.png)
 
-![コメントフィルタ2](resources/comment-filter-2-2.avif)
+![コメントフィルタ2](resources/comment-filter-2-2.png)
 
 コメントAPI応答を捕捉し、IndexedDBへ保存したJSONルールまたは互換ルールでコメントの非表示・置換・コマンド制御を行う。非表示に一致したコメントは空文字へ変換せず、コメントエントリごと除去して公式プレイヤーまたはローカルvideo-playerへ渡す。大量データはWorkerで処理し、利用できない場合はメインスレッドへ安全にフォールバックする。
 
@@ -277,8 +277,6 @@ Watchページの`server-context`直後へ設定JSONと同期スクリプトを�
 
 #### video-player
 
-![カスタムキャッシュ](resources/cache.avif)
-
 NicoCache_nlのローカルキャッシュをコメント付きで再生するスタンドアロンプレイヤー。キャッシュ済みの有料期限切れ動画、削除動画、非公開動画を対象にし、通常のWatch情報を取得できない場合はNicoCache_nl拡張経由のnicochart.jp公開情報へフォールバックする。情報源がnicochartの場合は画面上に明示する。（削除済み動画と非公開動画では公式側でコメントも非公開になり、取得できない場合がある）
 
 コメント一覧と動画上のオーバーレイ、表示切り替え、透明度・色・NGワード・NG正規表現、音量、全画面、背景、繰り返し、自動次動画を設定できる。ログイン状態と投稿先を確認できる動画では、75文字までの本文と公式風コマンドパレットを使ってコメントを投稿し、成功したコメントを一覧とオーバーレイへ即時反映する。未ログイン、投稿禁止、レート制限、CAPTCHA要求はフォーム内に理由と再試行方法を表示する。
@@ -307,15 +305,11 @@ NicoCache_nlのローカルキャッシュをコメント付きで再生する�
 
 ### 105_premium_hide.txt
 
-![適用前](resources/premium-recruit-hide-1.png)
-
-![適用後](resources/premium-recruit-hide-2.png)
-
 コモンヘッダーのプレミアム会員勧誘要素を非表示にする。
 
 #### watch-history
 
-![視聴履歴](resources/watch-history.avif)
+![視聴履歴](resources/watch-history.png)
 
 視聴履歴タブでは、視聴ページで再生した動画の履歴が表示される。左のサイドバーから検索、ソート、フィルタ、削除、簡易統計が可能。右サイドバーでは各動画をクリックすると動画IDや投稿者などの詳細情報が表示される。更にそこから動画を開いたりメモを追加することも可能。  
 
@@ -347,13 +341,11 @@ NicoCache_nlのローカルキャッシュをコメント付きで再生する�
 !!! note
     VSCodeでのnlFiltersのシンタックスハイライト機能は[NLF Code](https://github.com/roflsunriz/NLF-Code)が利用可能。
 
-![フィルタ切り替え画面](resources/toggle.png)
-
 ---
 
 ## 4. Watch Page Background Image Settings
 
-![背景画像](resources/background-image-settings.avif)
+![背景画像](resources/background-image-settings.png)
 
 [CSS: カスケーディングスタイルシート:MDN](https://developer.mozilla.org/ja/docs/Web/CSS)を参照
 
