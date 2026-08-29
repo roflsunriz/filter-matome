@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#252] - 2026-08-29
+
+### Added
+
+- 【docs・comment-filter2】大量のルールでもフィルター性能を保ちやすいよう、文字列リテラル、単純な正規表現、ユーザーID NG、動画IDスコープを優先する設定上のヒントを追加した。
+
+### Changed
+
+- 【features・README】リリース番号を`252`へ更新し、latestバッジを`#252`へ変更した。
+
 ### Fixed
 
 - 【Harajuku・common】全画面表示で公式の動画プレーヤー設定がHarajuku用のサイドバー配置に上書きされ、filter-matome API状態メニューが画面上へ残る問題を修正した。Fullscreen APIと公式Watchのブラウザー内全画面を共通判定し、全画面中は設定パネルをHarajukuスタイルの対象外にするとともにAPI状態メニューを閉じて非表示にし、解除後は両方を通常表示へ戻す。
