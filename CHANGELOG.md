@@ -6,13 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [#253] - 2026-08-31
+
 ### Changed
 
+- 【features・README】リリース番号を`253`へ更新し、latestバッジを`#253`へ変更した。
 - 【docs・Playwright】現行フロントエンドと一致する画面を案内できるよう、匿名の実ページ撮影をcomment-filter2、mlink-video-controller、背景画像設定、watch-history、video-player、READMEカバーまで拡張し、旧UI画像と現在の画面を置き換えた。
 - 【docs・USAGE】nlFilterの説明を番号どおりに追えるよう、104番の説明を101・102・103番の後へ移動し、現在の機能を表さない旧キャッシュフォルダー画像、旧フィルターコード画像、匿名の現行CommonHeaderでは再現できない旧プレミアム勧誘比較画像を削除した。
 
 ### Fixed
 
+- 【destroy-ads・PAC】広告要求の正本とPAC生成処理が別々の手書き一覧になっていたため、完全なホスト、
+  サブドメイン、パス限定規則から配列形式のPACを生成する構造へ統一した。配布Java extensionも同じ
+  配列・ループ構造へ整理し、末尾ドット、HTTP(S)制限、全規則と対象外通信を実行テストで固定した。
 - 【common・CommonHeader】通知とアカウントの間に空白だけが残る問題や、固定メニューが公式操作へ重なる問題を防ぐため、公式アカウント要素への`margin-left`予約と画面上の固定配置を廃止し、公式ルート生成後の右側flex列へ`通知群 → NicoCache → filter-matome → アカウント`の順で直接参加させるよう修正した。旧予約属性と余白も除去し、空の`#CommonHeader`が併存しても実体の公式ルートを優先する。
 - 【nlFilters・CommonHeader】トップ、静画、生放送、チャンネル、大百科、実況、Nアニメ、ブロマガ、コモンズ、NicoFT、ニコニコQ、ニコニ貢献、ニコニ立体、ニュース、ニコニコ広場でもAPI状態メニューを表示できるよう、複数階層を含むCommonHeader導入ホストへ配信対象を広げ、ブートストラップと遅延エントリーを対象ページと同じオリジンのローカル配信から読み込むよう修正した。NicoFTではCommonHeader機能だけを起動する。
 - 【common・CommonHeader】サービスごとのホストIDやアカウントURLの差でAPI状態メニューが左側へずれる、または挿入されない問題を防ぐため、公式ルートclassと`cmnhd_ref`のaccount位置を優先し、実況、NicoFT、ニコニコ広場は確認済みの意味的URLへ限定したフォールバックで配置するよう修正した。
