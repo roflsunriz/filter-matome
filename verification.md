@@ -1,5 +1,25 @@
 # 検証手順
 
+## CommonHeader API状態メニューの挿入順
+
+公式CommonHeaderのReactルート生成前にfilter-matomeメニューを追加せず、生成後はログイン・
+非ログインとも`NicoCache → filter-matome → アカウント`の順で表示されることを確認します。
+
+```powershell
+cd local/features
+bunx playwright test tests/common-api-status-menu.spec.ts
+bun run verify
+```
+
+Playwrightでは、空の`#CommonHeader`だけが存在する状態でAPI状態メニューとstyleが作成されず、
+公式ルートを後から追加するとメニューが`document.body`へ固定配置されることを確認します。
+非ログインfixtureでは会員登録URLの直後にあるアカウントプレースホルダーを基準にします。
+
+実ページではブラウザーキャッシュとService Workerを迂回してトップ、動画トップ、ランキング、
+新着、検索、タグ、視聴、ユーザーをハード再読み込みします。ページへJavaScriptを手動評価せず、
+`features.js`と`05_nicocache_menu.js`の自動読込、公式`.nico-CommonHeaderRoot`、両メニューの
+`account`配置、ログイン・非ログイン時の座標順をそれぞれ確認します。
+
 ## ドキュメント画面画像
 
 NicoCache_nlを起動し、匿名の一時Chromeセッションから現行の実ページとビルド済みSPAを撮影します。

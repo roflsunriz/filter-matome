@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 【docs・Playwright】現行フロントエンドと一致する画面を案内できるよう、匿名の実ページ撮影をcomment-filter2、mlink-video-controller、背景画像設定、watch-history、video-player、READMEカバーまで拡張し、旧UI画像と現在の画面を置き換えた。
 - 【docs・USAGE】nlFilterの説明を番号どおりに追えるよう、104番の説明を101・102・103番の後へ移動し、現在の機能を表さない旧キャッシュフォルダー画像、旧フィルターコード画像、匿名の現行CommonHeaderでは再現できない旧プレミアム勧誘比較画像を削除した。
 
+### Fixed
+
+- 【common・CommonHeader】公式ルート生成前にfilter-matome API状態メニューを`#CommonHeader`直下へ追加して公式Reactの生成を妨げないよう、意味的なサービス・アカウント項目が現れるまでDOMを変更せず待機し、非ログイン時も会員登録直後のアカウントプレースホルダーへ配置するよう修正した。
+
 ## [#252] - 2026-08-29
 
 ### Added

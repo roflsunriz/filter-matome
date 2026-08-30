@@ -34,7 +34,7 @@
 - 動画IDは呼び出し元またはURLを優先し、`window.NicoCache_nl.watch` は型確認付きのフォールバックに限定する。
 - DOMやAPIから得る `unknown` は、共通境界で検証してから機能固有型へ渡す。
 - 公式通知の一括既読は、全ページのレスポンスと`nextUrl`を検証し終えてからPUTを開始し、公式API以外のURL、ページ循環、過大件数では何も変更せず停止する。
-- nlFilter API状態メニューのマウント、挿入先探索、account余白予約、`requestAnimationFrame`再配置、MutationObserver、ホバー・フォーカス・キーボード操作は`05_nicocache_menu.js`と同じ構造にする。違いはコンテナ名とAPI状態表示の内容だけに限定し、ログイン時は`NicoCache → filter-matome → アカウント`、未ログイン時はservice配置のNicoCache直後に並べる。状態確認をホバーや公式コメントメニューの右クリックへ依存させず、自動検査結果は閉じたメニューの要約色にも反映する。
+- nlFilter API状態メニューのマウント、挿入先探索、account余白予約、`requestAnimationFrame`再配置、MutationObserver、ホバー・フォーカス・キーボード操作は`05_nicocache_menu.js`と同じ構造にする。違いはコンテナ名とAPI状態表示の内容だけに限定し、ログイン・非ログインとも公式CommonHeaderルートと意味的アカウントURLが生成されるまでDOMを変更せず、`NicoCache → filter-matome → アカウント`の順に配置する。状態確認をホバーや公式コメントメニューの右クリックへ依存させず、自動検査結果は閉じたメニューの要約色にも反映する。
 - nlFilter API状態メニューはFullscreen APIと公式Watchのブラウザー内全画面を共通判定し、全画面中は開いているポップオーバーを閉じてメニュー全体を非表示にする。解除後はaccount配置と余白を再計算して元の表示順へ戻す。
 - 表示用HTML、動画説明、検索結果は、DOMPurifyまたはDOM APIで安全に組み立てる。
 - アイコンは `material-icons.ts` のヘルパーを使い、各プロジェクトへSVGを重複埋め込みしない。

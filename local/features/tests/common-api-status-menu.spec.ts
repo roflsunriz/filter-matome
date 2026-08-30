@@ -12,6 +12,18 @@ const headerFixture = readFileSync(
   join(fixturesRoot, "nicovideo-common-header-account.html"),
   "utf8",
 );
+const anonymousHeaderFixture = `<div id="CommonHeader">
+  <div class="nico-CommonHeaderRoot">
+    <div>
+      <a href="https://www.nicovideo.jp/video_top?cmnhd_ref=pos%3Dheader_servicelink">動画</a>
+    </div>
+    <div data-lab-anonymous-account-row>
+      <a href="https://account.nicovideo.jp/login">ログイン</a>
+      <div><a href="https://account.nicovideo.jp/register/simple">ニコニコ会員登録</a></div>
+      <div data-lab-anonymous-account-placeholder></div>
+    </div>
+  </div>
+</div>`;
 
 let bundle = "";
 
@@ -131,6 +143,54 @@ const hasDesiredAccountMenuOrder = (page: Page): Promise<boolean> =>
 
 test.beforeAll(() => {
   bundle = buildFixtureBundle();
+});
+
+test("公式CommonHeaderルートの生成前はDOMへ挿入せず匿名ルート生成後に配置する", async ({
+  page,
+}) => {
+  await page.route(pageUrl, async (route) => {
+    await route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: '<!doctype html><html lang="ja"><head><meta charset="utf-8"></head><body><div id="CommonHeader"></div></body></html>',
+    });
+  });
+  await page.goto(pageUrl);
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(() => {
+    (
+      window as Window & {
+        startFilterMatomeApiStatusMenuTest?: () => void;
+      }
+    ).startFilterMatomeApiStatusMenuTest?.();
+  });
+
+  await expect(page.locator("#filter-matome-api-status-menu")).toHaveCount(0);
+  await expect(
+    page.locator("#filter-matome-api-status-menu-styles"),
+  ).toHaveCount(0);
+  await expect(page.locator("#CommonHeader > *")).toHaveCount(0);
+
+  await page.evaluate((fixture) => {
+    const current = document.getElementById("CommonHeader");
+    if (!current) throw new Error("pending CommonHeader fixture not found");
+    const template = document.createElement("template");
+    template.innerHTML = fixture;
+    const replacement = template.content.firstElementChild;
+    if (!(replacement instanceof HTMLElement)) {
+      throw new Error("anonymous CommonHeader fixture is invalid");
+    }
+    current.replaceWith(replacement);
+  }, anonymousHeaderFixture);
+
+  const menu = page.locator("#filter-matome-api-status-menu");
+  await expect(menu).toHaveCount(1);
+  await expect(menu).toHaveAttribute("data-filter-matome-mounted", "account");
+  expect(
+    await menu.evaluate((element) => element.parentElement === document.body),
+  ).toBe(true);
+  await expect(
+    page.locator("[data-lab-anonymous-account-placeholder]"),
+  ).toHaveAttribute("data-filter-matome-account-space", "true");
 });
 
 test("NicoCacheメニューとアカウントメニューの間へ配置しAPI状態を更新する", async ({

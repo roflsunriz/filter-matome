@@ -257,7 +257,25 @@ const findAccountMenuItem = (commonHeader: Element): HTMLElement | null => {
       // Invalid links are not CommonHeader account items.
     }
   }
-  return bestItem;
+  if (bestItem) return bestItem;
+
+  for (const anchor of root.querySelectorAll<HTMLAnchorElement>("a[href]")) {
+    try {
+      const url = new URL(anchor.href, location.href);
+      if (
+        url.hostname !== "account.nicovideo.jp" ||
+        !/^\/register(?:\/|$)/u.test(url.pathname)
+      ) {
+        continue;
+      }
+      const registerItem = anchor.parentElement;
+      const placeholderItem = registerItem?.nextElementSibling;
+      if (placeholderItem instanceof HTMLElement) return placeholderItem;
+    } catch {
+      // Invalid links are not CommonHeader registration items.
+    }
+  }
+  return null;
 };
 
 const findInsertionReference = (navigation: Element): Element | null => {
@@ -653,19 +671,21 @@ const initialize = (resolveStatuses: ResolveStatuses): boolean => {
   if (!commonHeader) return false;
   const placement = findPlacement(commonHeader);
   const existing = document.getElementById(CONTAINER_ID);
+  if (!placement) {
+    if (existing instanceof HTMLElement) {
+      clearAccountMenuPosition(existing);
+      existing.removeAttribute("data-filter-matome-mounted");
+    }
+    return false;
+  }
   const container =
     existing instanceof HTMLElement ? existing : createMenu(resolveStatuses);
-  if (placement?.mounted === "account") {
+  if (placement.mounted === "account") {
     mountAccountMenu(container, placement.reference as HTMLElement);
-  } else if (placement) {
+  } else {
     clearAccountMenuPosition(container);
     placement.parent.insertBefore(container, placement.reference);
     container.dataset.filterMatomeMounted = placement.mounted;
-  } else {
-    clearAccountMenuPosition(container);
-    container.removeAttribute("data-filter-matome-mounted");
-    if (container.parentElement !== commonHeader)
-      commonHeader.append(container);
   }
   syncFullscreenVisibility(container, resolveStatuses);
   renderStatuses(container, resolveStatuses);
