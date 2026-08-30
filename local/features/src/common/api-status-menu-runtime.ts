@@ -411,7 +411,22 @@ const positionAccountMenu = (container: HTMLElement): void => {
   if (width <= 0) return;
   reserveAccountSpace(mountedAccountItem, width);
   const accountRect = mountedAccountItem.getBoundingClientRect();
-  const left = Math.max(0, accountRect.left - width);
+  const nicoCacheMenu = document.getElementById("ncnl_common_header_menu");
+  const nicoWidth =
+    nicoCacheMenu instanceof HTMLElement &&
+    nicoCacheMenu.dataset.ncnlMounted === "account"
+      ? Math.ceil(nicoCacheMenu.getBoundingClientRect().width)
+      : 0;
+  let left = Math.max(0, accountRect.left - width);
+  const viewportWidth = Math.max(
+    window.innerWidth,
+    document.documentElement.clientWidth,
+  );
+  if (viewportWidth > 0) {
+    const minimumLeft = nicoWidth;
+    const maximumLeft = Math.max(minimumLeft, viewportWidth - width);
+    left = Math.min(Math.max(left, minimumLeft), maximumLeft);
+  }
   const popover = container.querySelector<HTMLElement>(
     ".filter-matome-api-status-popover",
   );

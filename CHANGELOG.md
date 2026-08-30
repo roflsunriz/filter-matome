@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - 【common・CommonHeader】公式ルート生成前にfilter-matome API状態メニューを`#CommonHeader`直下へ追加して公式Reactの生成を妨げないよう、意味的なサービス・アカウント項目が現れるまでDOMを変更せず待機し、非ログイン時も会員登録直後のアカウントプレースホルダーへ配置するよう修正した。
+- 【common・CommonHeader】CommonHeaderの最小幅やブラウザーズームで公式アカウント項目が画面外へ移動しても、NicoCacheとfilter-matome API状態メニューを可視領域右端へ収めるよう修正した。
 
 ## [#252] - 2026-08-29
 

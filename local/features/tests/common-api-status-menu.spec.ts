@@ -289,6 +289,39 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
   await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
 });
 
+test("CommonHeaderの最小幅がビューポートを超えても両メニューを画面内へ収める", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 480, height: 480 });
+  await installFixture(page);
+  await page.evaluate(() => {
+    const accountItem = document.querySelector(
+      '#CommonHeader a[href="https://www.nicovideo.jp/my"]',
+    )?.parentElement;
+    if (!accountItem?.parentElement)
+      throw new Error("account fixture not found");
+    accountItem.parentElement.style.marginLeft = "900px";
+    dispatchEvent(new Event("resize"));
+  });
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const nico = document.getElementById("ncnl_common_header_menu");
+        const filter = document.getElementById("filter-matome-api-status-menu");
+        if (!nico || !filter) return false;
+        const nicoRect = nico.getBoundingClientRect();
+        const filterRect = filter.getBoundingClientRect();
+        return (
+          nicoRect.left >= 0 &&
+          Math.abs(nicoRect.right - filterRect.left) <= 1 &&
+          filterRect.right <= innerWidth
+        );
+      }),
+    )
+    .toBe(true);
+});
+
 test("API不在と版不一致を赤い要約状態で区別する", async ({ page }) => {
   await installFixture(page, { activeApis: false });
   const menu = page.locator("#filter-matome-api-status-menu");

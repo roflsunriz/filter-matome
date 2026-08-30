@@ -14,6 +14,8 @@ bun run verify
 Playwrightでは、空の`#CommonHeader`だけが存在する状態でAPI状態メニューとstyleが作成されず、
 公式ルートを後から追加するとメニューが`document.body`へ固定配置されることを確認します。
 非ログインfixtureでは会員登録URLの直後にあるアカウントプレースホルダーを基準にします。
+480pxのfixtureでは公式アカウント項目を画面外へ移動し、NicoCacheとfilter-matomeの順序を保って
+両メニューがビューポート内へクランプされることを確認します。
 
 実ページではブラウザーキャッシュとService Workerを迂回してトップ、動画トップ、ランキング、
 新着、検索、タグ、視聴、ユーザーをハード再読み込みします。ページへJavaScriptを手動評価せず、
