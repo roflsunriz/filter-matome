@@ -1,21 +1,21 @@
 export type AdBlockReason =
   "niconico-ad-service" | "third-party-ad-service" | "niconico-ad-media";
 
-const EXACT_NICONICO_AD_HOSTS = new Set([
+export const EXACT_NICONICO_AD_HOSTS = [
   "ads.nicovideo.jp",
   "api.nicoad.nicovideo.jp",
-]);
+] as const;
 
-const EXACT_THIRD_PARTY_AD_HOSTS = new Set([
+export const EXACT_THIRD_PARTY_AD_HOSTS = [
   "analytics.twitter.com",
   "analytics.tiktok.com",
   "analytics-ipv6.tiktokw.us",
   "imasdk.googleapis.com",
   "static.ads-twitter.com",
   "tag.flvcdn.net",
-]);
+] as const;
 
-const AD_HOST_SUFFIXES = [
+export const AD_HOST_SUFFIXES = [
   ".ads.nicovideo.jp",
   ".doubleclick.net",
   ".googlesyndication.com",
@@ -52,7 +52,7 @@ const AD_HOST_SUFFIXES = [
   ".2mdn.net",
 ] as const;
 
-const SPECIAL_MEDIA_PATHS = new Map<string, readonly string[]>([
+export const SPECIAL_MEDIA_PATH_RULES = [
   ["dcdn.cdn.nimg.jp", ["/nicoad/instream/"]],
   ["secure-dcdn.cdn.nimg.jp", ["/nicoad/"]],
   ["www.google.com", ["/pagead/", "/ccm/"]],
@@ -63,7 +63,13 @@ const SPECIAL_MEDIA_PATHS = new Map<string, readonly string[]>([
   ["cksync.yahoo.co.jp", ["/"]],
   ["yads.c.yimg.jp", ["/"]],
   ["yads.yjtag.yahoo.co.jp", ["/"]],
-]);
+] as const;
+
+const exactNiconicoAdHosts = new Set<string>(EXACT_NICONICO_AD_HOSTS);
+const exactThirdPartyAdHosts = new Set<string>(EXACT_THIRD_PARTY_AD_HOSTS);
+const specialMediaPaths = new Map<string, readonly string[]>(
+  SPECIAL_MEDIA_PATH_RULES,
+);
 
 const normalizeHostname = (hostname: string): string =>
   hostname.toLowerCase().replace(/\.$/, "");
@@ -81,18 +87,18 @@ export function getAdBlockReason(value: string | URL): AdBlockReason | null {
 
   const hostname = normalizeHostname(url.hostname);
   if (
-    EXACT_NICONICO_AD_HOSTS.has(hostname) ||
+    exactNiconicoAdHosts.has(hostname) ||
     hostname.endsWith(".ads.nicovideo.jp")
   ) {
     return "niconico-ad-service";
   }
   if (
-    EXACT_THIRD_PARTY_AD_HOSTS.has(hostname) ||
+    exactThirdPartyAdHosts.has(hostname) ||
     AD_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix))
   ) {
     return "third-party-ad-service";
   }
-  const prefixes = SPECIAL_MEDIA_PATHS.get(hostname);
+  const prefixes = specialMediaPaths.get(hostname);
   if (prefixes?.some((prefix) => url.pathname.startsWith(prefix))) {
     return "niconico-ad-media";
   }

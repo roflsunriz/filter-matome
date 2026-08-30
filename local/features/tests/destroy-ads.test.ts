@@ -1,8 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { createContext, runInContext } from "node:vm";
 
 import {
+  AD_HOST_SUFFIXES,
+  EXACT_NICONICO_AD_HOSTS,
+  EXACT_THIRD_PARTY_AD_HOSTS,
+  SPECIAL_MEDIA_PATH_RULES,
   getAdBlockReason,
   shouldBlockAdRequest,
 } from "@/destroy-ads/ad-request-policy";
@@ -195,6 +200,24 @@ describe("DestroyAds NicoCache_nl extension", () => {
       existsSync(resolve(repositoryRoot, "extensions", "DestroyAds.class")),
     ).toBeTrue();
   });
+
+  test("uses every canonical PAC rule in the distributable Java extension", () => {
+    for (const value of [
+      ...EXACT_NICONICO_AD_HOSTS,
+      ...EXACT_THIRD_PARTY_AD_HOSTS,
+      ...AD_HOST_SUFFIXES,
+      ...SPECIAL_MEDIA_PATH_RULES.flatMap(([host, prefixes]) => [
+        host,
+        ...prefixes,
+      ]),
+    ]) {
+      expect(extensionSource).toContain(`"${value}"`);
+    }
+    expect(extensionSource).toContain(
+      'appendPacArray(block, "destroyAdsExactHosts", EXACT_AD_HOSTS)',
+    );
+    expect(extensionSource).toContain("appendPacPathRules(block)");
+  });
 });
 
 describe("destroy-ads PAC route", () => {
@@ -206,15 +229,61 @@ describe("destroy-ads PAC route", () => {
 }
 `;
 
+  const loadPac = (source: string) => {
+    const context = createContext({
+      dnsDomainIs: (host: string, suffix: string) => host.endsWith(suffix),
+      shExpMatch: (host: string, pattern: string) =>
+        pattern.startsWith("*.")
+          ? host.endsWith(pattern.slice(1))
+          : host === pattern,
+    });
+    runInContext(source, context, { filename: "proxy.pac" });
+    return (url: string, host: string): string => {
+      context.url = url;
+      context.host = host;
+      return runInContext("FindProxyForURL(url, host)", context) as string;
+    };
+  };
+
   test("routes only managed ad hosts to the existing NicoCache proxy", () => {
     const result = rewriteProxyPac(basePac);
     expect(result.changed).toBeTrue();
-    expect(result.source).toContain(
-      "dnsDomainIs(destroyAdsHost, '.doubleclick.net')",
-    );
-    expect(result.source).toContain("destroyAdsHost === 'ads.nicovideo.jp'");
     expect(result.source).toContain("return 'PROXY 127.0.0.1:8080';");
     expect(result.source).toContain("return 'DIRECT';");
+
+    const findProxy = loadPac(result.source);
+    for (const host of [
+      ...EXACT_NICONICO_AD_HOSTS,
+      ...EXACT_THIRD_PARTY_AD_HOSTS,
+    ]) {
+      expect(findProxy(`https://${host}/probe`, host)).toBe(
+        "PROXY 127.0.0.1:8080",
+      );
+      expect(findProxy(`https://${host}./probe`, `${host}.`)).toBe(
+        "PROXY 127.0.0.1:8080",
+      );
+    }
+    for (const suffix of AD_HOST_SUFFIXES) {
+      const host = `probe${suffix}`;
+      expect(findProxy(`https://${host}/probe`, host)).toBe(
+        "PROXY 127.0.0.1:8080",
+      );
+    }
+    for (const [host, prefixes] of SPECIAL_MEDIA_PATH_RULES) {
+      for (const prefix of prefixes) {
+        expect(findProxy(`https://${host}${prefix}probe`, host)).toBe(
+          "PROXY 127.0.0.1:8080",
+        );
+      }
+    }
+
+    expect(findProxy("https://example.com/", "example.com")).toBe("DIRECT");
+    expect(
+      findProxy("https://dcdn.cdn.nimg.jp/not-nicoad/", "dcdn.cdn.nimg.jp"),
+    ).toBe("DIRECT");
+    expect(
+      findProxy("https://www.google.com/not-pagead/", "www.google.com"),
+    ).toBe("DIRECT");
   });
 
   test("is idempotent, accepts earlier DIRECT, and rejects an unsafe tail", () => {

@@ -31,6 +31,65 @@ public final class DestroyAds implements Extension2, RequestFilter, Rewriter {
     private static final String PAC_DIRECT_RETURN = "  return 'DIRECT';";
     private static final Pattern PAC_PROXY =
             Pattern.compile("PROXY\\s+127\\.0\\.0\\.1:\\d+");
+    private static final String[] EXACT_AD_HOSTS = {
+        "ads.nicovideo.jp",
+        "api.nicoad.nicovideo.jp",
+        "analytics.twitter.com",
+        "analytics.tiktok.com",
+        "analytics-ipv6.tiktokw.us",
+        "imasdk.googleapis.com",
+        "static.ads-twitter.com",
+        "tag.flvcdn.net"
+    };
+    private static final String[] AD_HOST_SUFFIXES = {
+        ".ads.nicovideo.jp",
+        ".doubleclick.net",
+        ".googlesyndication.com",
+        ".googletagmanager.com",
+        ".googleadservices.com",
+        ".ad-stir.com",
+        ".adtdp.com",
+        ".pubmatic.com",
+        ".amazon-adsystem.com",
+        ".adtrafficquality.google",
+        ".impact-ad.jp",
+        ".im-apps.net",
+        ".socdm.com",
+        ".rubiconproject.com",
+        ".ad-delivery.net",
+        ".microad.jp",
+        ".adnxs.com",
+        ".media.net",
+        ".adingo.jp",
+        ".casalemedia.com",
+        ".criteo.com",
+        ".openx.net",
+        ".indexww.com",
+        ".ladsp.com",
+        ".i-mobile.co.jp",
+        ".genieesspv.jp",
+        ".gsspcln.jp",
+        ".id5-sync.com",
+        ".gmossp-sp.jp",
+        ".creativecdn.com",
+        ".slim02.jp",
+        ".crwdcntrl.net",
+        ".rlcdn.com",
+        ".2mdn.net"
+    };
+    private static final String[][] AD_PATH_RULES = {
+        {"dcdn.cdn.nimg.jp", "/nicoad/instream/"},
+        {"secure-dcdn.cdn.nimg.jp", "/nicoad/"},
+        {"www.google.com", "/pagead/", "/ccm/"},
+        {"www.google.co.jp", "/pagead/", "/ccm/"},
+        {"s.yimg.jp", "/images/listing/tool/cv/",
+                "/images/listing/tool/yads/"},
+        {"apm.yahoo.co.jp", "/"},
+        {"b99.yahoo.co.jp", "/"},
+        {"cksync.yahoo.co.jp", "/"},
+        {"yads.c.yimg.jp", "/"},
+        {"yads.yjtag.yahoo.co.jp", "/"}
+    };
     private static final Pattern SUPPORTED_REWRITE_URL = Pattern.compile(
             "https?://(?:resource\\.video\\.nimg\\.jp/web/scripts/(?:"
             + "nvpc_next/assets/(?:Advertisement|root|bridge|"
@@ -182,68 +241,27 @@ public final class DestroyAds implements Extension2, RequestFilter, Rewriter {
             host = host.substring(0, host.length() - 1);
         }
 
-        if (host.equals("ads.nicovideo.jp")
-                || host.endsWith(".ads.nicovideo.jp")
-                || host.equals("api.nicoad.nicovideo.jp")
-                || host.equals("analytics.twitter.com")
-                || host.equals("analytics.tiktok.com")
-                || host.equals("analytics-ipv6.tiktokw.us")
-                || host.equals("imasdk.googleapis.com")
-                || host.equals("static.ads-twitter.com")
-                || host.equals("tag.flvcdn.net")) {
-            return true;
+        for (String exactHost : EXACT_AD_HOSTS) {
+            if (host.equals(exactHost)) {
+                return true;
+            }
         }
-        if (host.endsWith(".doubleclick.net")
-                || host.endsWith(".googlesyndication.com")
-                || host.endsWith(".googletagmanager.com")
-                || host.endsWith(".googleadservices.com")
-                || host.endsWith(".ad-stir.com")
-                || host.endsWith(".adtdp.com")
-                || host.endsWith(".pubmatic.com")
-                || host.endsWith(".amazon-adsystem.com")
-                || host.endsWith(".adtrafficquality.google")
-                || host.endsWith(".impact-ad.jp")
-                || host.endsWith(".im-apps.net")
-                || host.endsWith(".socdm.com")
-                || host.endsWith(".rubiconproject.com")
-                || host.endsWith(".ad-delivery.net")
-                || host.endsWith(".microad.jp")
-                || host.endsWith(".adnxs.com")
-                || host.endsWith(".media.net")
-                || host.endsWith(".adingo.jp")
-                || host.endsWith(".casalemedia.com")
-                || host.endsWith(".criteo.com")
-                || host.endsWith(".openx.net")
-                || host.endsWith(".indexww.com")
-                || host.endsWith(".ladsp.com")
-                || host.endsWith(".i-mobile.co.jp")
-                || host.endsWith(".genieesspv.jp")
-                || host.endsWith(".gsspcln.jp")
-                || host.endsWith(".id5-sync.com")
-                || host.endsWith(".gmossp-sp.jp")
-                || host.endsWith(".creativecdn.com")
-                || host.endsWith(".slim02.jp")
-                || host.endsWith(".crwdcntrl.net")
-                || host.endsWith(".rlcdn.com")
-                || host.endsWith(".2mdn.net")) {
-            return true;
+        for (String suffix : AD_HOST_SUFFIXES) {
+            if (host.endsWith(suffix)) {
+                return true;
+            }
         }
-        return (host.equals("dcdn.cdn.nimg.jp")
-                    && path.startsWith("/nicoad/instream/"))
-                || (host.equals("secure-dcdn.cdn.nimg.jp")
-                    && path.startsWith("/nicoad/"))
-                || ((host.equals("www.google.com")
-                        || host.equals("www.google.co.jp"))
-                    && (path.startsWith("/pagead/")
-                        || path.startsWith("/ccm/")))
-                || (host.equals("s.yimg.jp")
-                    && (path.startsWith("/images/listing/tool/cv/")
-                        || path.startsWith("/images/listing/tool/yads/")))
-                || host.equals("apm.yahoo.co.jp")
-                || host.equals("b99.yahoo.co.jp")
-                || host.equals("cksync.yahoo.co.jp")
-                || host.equals("yads.c.yimg.jp")
-                || host.equals("yads.yjtag.yahoo.co.jp");
+        for (String[] rule : AD_PATH_RULES) {
+            if (!host.equals(rule[0])) {
+                continue;
+            }
+            for (int index = 1; index < rule.length; index++) {
+                if (path.startsWith(rule[index])) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void installProxyPacRoute() {
@@ -314,68 +332,100 @@ public final class DestroyAds implements Extension2, RequestFilter, Rewriter {
     }
 
     private static String managedPacBlock(String proxy) {
-        return PAC_START + "\n"
-                + "  var destroyAdsHost = host.toLowerCase();\n"
-                + "  var destroyAdsUrl = url.toLowerCase();\n"
-                + "  if (destroyAdsHost === 'ads.nicovideo.jp'\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.ads.nicovideo.jp')\n"
-                + "      || destroyAdsHost === 'api.nicoad.nicovideo.jp'\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.doubleclick.net')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.googlesyndication.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.googletagmanager.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.googleadservices.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.ad-stir.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.adtdp.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.pubmatic.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.amazon-adsystem.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.rubiconproject.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.criteo.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.openx.net')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.microad.jp')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.adnxs.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.i-mobile.co.jp')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.im-apps.net')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.socdm.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.impact-ad.jp')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.ad-delivery.net')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.media.net')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.adingo.jp')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.casalemedia.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.indexww.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.ladsp.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.genieesspv.jp')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.gsspcln.jp')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.id5-sync.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.gmossp-sp.jp')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.creativecdn.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.slim02.jp')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.crwdcntrl.net')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.rlcdn.com')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.2mdn.net')\n"
-                + "      || dnsDomainIs(destroyAdsHost, '.adtrafficquality.google')\n"
-                + "      || destroyAdsHost === 'analytics.twitter.com'\n"
-                + "      || destroyAdsHost === 'static.ads-twitter.com'\n"
-                + "      || destroyAdsHost === 'analytics.tiktok.com'\n"
-                + "      || destroyAdsHost === 'analytics-ipv6.tiktokw.us'\n"
-                + "      || destroyAdsHost === 'imasdk.googleapis.com'\n"
-                + "      || destroyAdsHost === 'tag.flvcdn.net'\n"
-                + "      || destroyAdsHost === 'apm.yahoo.co.jp'\n"
-                + "      || destroyAdsHost === 'b99.yahoo.co.jp'\n"
-                + "      || destroyAdsHost === 'cksync.yahoo.co.jp'\n"
-                + "      || destroyAdsHost === 'yads.c.yimg.jp'\n"
-                + "      || destroyAdsHost === 'yads.yjtag.yahoo.co.jp'\n"
-                + "      || (destroyAdsHost === 'dcdn.cdn.nimg.jp'\n"
-                + "          && destroyAdsUrl.indexOf('/nicoad/instream/') >= 0)\n"
-                + "      || (destroyAdsHost === 'secure-dcdn.cdn.nimg.jp'\n"
-                + "          && destroyAdsUrl.indexOf('/nicoad/') >= 0)\n"
-                + "      || ((destroyAdsHost === 'www.google.com'\n"
-                + "           || destroyAdsHost === 'www.google.co.jp')\n"
-                + "          && (destroyAdsUrl.indexOf('/pagead/') >= 0\n"
-                + "              || destroyAdsUrl.indexOf('/ccm/') >= 0))\n"
-                + "      || (destroyAdsHost === 's.yimg.jp'\n"
-                + "          && (destroyAdsUrl.indexOf('/images/listing/tool/cv/') >= 0\n"
-                + "              || destroyAdsUrl.indexOf('/images/listing/tool/yads/') >= 0))) {\n"
-                + "    return '" + proxy + "';\n"
-                + "  };\n" + PAC_END;
+        StringBuilder block = new StringBuilder(PAC_START).append('\n')
+                .append("  var destroyAdsHost = host.toLowerCase();\n")
+                .append("  if (destroyAdsHost.charAt("
+                        + "destroyAdsHost.length - 1) === '.') {\n")
+                .append("    destroyAdsHost = destroyAdsHost.substring("
+                        + "0, destroyAdsHost.length - 1);\n")
+                .append("  }\n")
+                .append("  var destroyAdsUrl = url.toLowerCase();\n");
+        appendPacArray(block, "destroyAdsExactHosts", EXACT_AD_HOSTS);
+        appendPacArray(block, "destroyAdsHostSuffixes", AD_HOST_SUFFIXES);
+        appendPacPathRules(block);
+        return block.append(
+                "  var destroyAdsMatched = false;\n"
+                + "  var destroyAdsIndex;\n\n"
+                + "  for (destroyAdsIndex = 0;\n"
+                + "       destroyAdsIndex < destroyAdsExactHosts.length;\n"
+                + "       destroyAdsIndex++) {\n"
+                + "    if (destroyAdsHost === destroyAdsExactHosts[destroyAdsIndex]) {\n"
+                + "      destroyAdsMatched = true;\n"
+                + "      break;\n"
+                + "    }\n"
+                + "  }\n\n"
+                + "  if (!destroyAdsMatched) {\n"
+                + "    for (destroyAdsIndex = 0;\n"
+                + "         destroyAdsIndex < destroyAdsHostSuffixes.length;\n"
+                + "         destroyAdsIndex++) {\n"
+                + "      if (dnsDomainIs(\n"
+                + "          destroyAdsHost,\n"
+                + "          destroyAdsHostSuffixes[destroyAdsIndex]\n"
+                + "      )) {\n"
+                + "        destroyAdsMatched = true;\n"
+                + "        break;\n"
+                + "      }\n"
+                + "    }\n"
+                + "  }\n\n"
+                + "  if (!destroyAdsMatched) {\n"
+                + "    var destroyAdsPathStart = destroyAdsUrl.indexOf('://');\n"
+                + "    destroyAdsPathStart = destroyAdsUrl.indexOf('/', destroyAdsPathStart + 3);\n"
+                + "    var destroyAdsPath = destroyAdsPathStart >= 0\n"
+                + "      ? destroyAdsUrl.substring(destroyAdsPathStart)\n"
+                + "      : '/';\n"
+                + "    for (destroyAdsIndex = 0;\n"
+                + "         destroyAdsIndex < destroyAdsPathRules.length;\n"
+                + "         destroyAdsIndex++) {\n"
+                + "      var destroyAdsRule = destroyAdsPathRules[destroyAdsIndex];\n"
+                + "      if (destroyAdsHost !== destroyAdsRule[0]) {\n"
+                + "        continue;\n"
+                + "      }\n"
+                + "      for (var destroyAdsPrefixIndex = 0;\n"
+                + "           destroyAdsPrefixIndex < destroyAdsRule[1].length;\n"
+                + "           destroyAdsPrefixIndex++) {\n"
+                + "        if (destroyAdsPath.indexOf(\n"
+                + "            destroyAdsRule[1][destroyAdsPrefixIndex]\n"
+                + "        ) === 0) {\n"
+                + "          destroyAdsMatched = true;\n"
+                + "          break;\n"
+                + "        }\n"
+                + "      }\n"
+                + "      if (destroyAdsMatched) {\n"
+                + "        break;\n"
+                + "      }\n"
+                + "    }\n"
+                + "  }\n\n"
+                + "  if (destroyAdsMatched\n"
+                + "      && (destroyAdsUrl.indexOf('http:') === 0\n"
+                + "          || destroyAdsUrl.indexOf('https:') === 0)) {\n"
+                + "    return '").append(proxy).append("';\n"
+                + "  }\n").append(PAC_END).toString();
+    }
+
+    private static void appendPacArray(StringBuilder block, String name,
+            String[] values) {
+        block.append("  var ").append(name).append(" = [\n");
+        for (int index = 0; index < values.length; index++) {
+            block.append("    \"").append(values[index]).append('"');
+            block.append(index + 1 < values.length ? ",\n" : "\n");
+        }
+        block.append("  ];\n");
+    }
+
+    private static void appendPacPathRules(StringBuilder block) {
+        block.append("  var destroyAdsPathRules = [\n");
+        for (int ruleIndex = 0; ruleIndex < AD_PATH_RULES.length; ruleIndex++) {
+            String[] rule = AD_PATH_RULES[ruleIndex];
+            block.append("    [\"").append(rule[0]).append("\", [");
+            for (int prefixIndex = 1; prefixIndex < rule.length; prefixIndex++) {
+                if (prefixIndex > 1) {
+                    block.append(',');
+                }
+                block.append('"').append(rule[prefixIndex]).append('"');
+            }
+            block.append(ruleIndex + 1 < AD_PATH_RULES.length
+                    ? "]],\n" : "]]\n");
+        }
+        block.append("  ];\n");
     }
 }
