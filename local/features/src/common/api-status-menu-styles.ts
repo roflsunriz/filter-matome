@@ -123,8 +123,8 @@ export const API_STATUS_MENU_STYLES = `
 }
 
 #filter-matome-api-status-menu[data-filter-matome-mounted="account"] {
-  position: fixed;
-  z-index: 101001;
+  position: relative;
+  z-index: 1;
 }
 
 #filter-matome-api-status-menu[data-filter-matome-open="true"]

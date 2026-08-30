@@ -63,7 +63,7 @@ const installFixture = async (
       const nicoCacheMenu = document.createElement("div");
       nicoCacheMenu.id = "ncnl_common_header_menu";
       nicoCacheMenu.dataset.ncnlMounted = "account";
-      nicoCacheMenu.style.cssText = `position:fixed;left:${String(headerMenuLeft)}px;top:0;width:90px;height:36px`;
+      nicoCacheMenu.style.cssText = "position:relative;width:90px;height:36px";
       document.body.append(nicoCacheMenu);
       const accountLink = document.querySelector<HTMLAnchorElement>(
         '#CommonHeader a[href="https://www.nicovideo.jp/my"]',
@@ -128,16 +128,20 @@ const hasDesiredAccountMenuOrder = (page: Page): Promise<boolean> =>
     const accountRect = accountItem.getBoundingClientRect();
     const popover = document.getElementById("filter-matome-api-status-popover");
     const header = document.getElementById("CommonHeader");
+    const host = document.getElementById("ncnl_common_header_account_host");
     return (
-      filterMenu.parentElement === document.body &&
-      getComputedStyle(filterMenu).position === "fixed" &&
+      filterMenu.parentElement === host &&
+      nicoCacheMenu.parentElement === host &&
+      getComputedStyle(host!).position === "fixed" &&
+      getComputedStyle(filterMenu).position === "relative" &&
       popover !== null &&
       getComputedStyle(popover).position === "absolute" &&
       header !== null &&
       getComputedStyle(header).position === "sticky" &&
-      getComputedStyle(nicoCacheMenu).position === "fixed" &&
+      getComputedStyle(nicoCacheMenu).position === "relative" &&
       Math.abs(nicoCacheRect.right - filterRect.left) <= 1 &&
-      Math.abs(filterRect.right - accountRect.left) <= 1
+      Math.abs(filterRect.right - accountRect.left) <= 1 &&
+      accountItem.style.marginLeft === ""
     );
   });
 
@@ -186,11 +190,14 @@ test("公式CommonHeaderルートの生成前はDOMへ挿入せず匿名ルー�
   await expect(menu).toHaveCount(1);
   await expect(menu).toHaveAttribute("data-filter-matome-mounted", "account");
   expect(
-    await menu.evaluate((element) => element.parentElement === document.body),
+    await menu.evaluate(
+      (element) =>
+        element.parentElement?.id === "ncnl_common_header_account_host",
+    ),
   ).toBe(true);
   await expect(
     page.locator("[data-lab-anonymous-account-placeholder]"),
-  ).toHaveAttribute("data-filter-matome-account-space", "true");
+  ).not.toHaveAttribute("style", /margin-left/u);
 });
 
 test("CommonHeaderのホストIDが異なっても公式ルートから配置する", async ({

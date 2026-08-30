@@ -10,6 +10,7 @@ const CONTAINER_ID = "filter-matome-api-status-menu";
 const POPOVER_ID = "filter-matome-api-status-popover";
 const STYLE_ID = "filter-matome-api-status-menu-styles";
 const LEGACY_HOST_ID = "ncnl_common_header_extension_host";
+const ACCOUNT_HOST_ID = "ncnl_common_header_account_host";
 
 type ResolveStatuses = (
   host: Record<string, unknown>,
@@ -187,9 +188,6 @@ const COPIES: Record<string, Copy> = {
 
 let started = false;
 let mountedAccountItem: HTMLElement | null = null;
-let accountOriginalMarginLeft = "";
-let accountBaseMarginLeft = "0px";
-let accountReservedWidth = 0;
 let positionFrame = 0;
 let activeResolveStatuses: ResolveStatuses | null = null;
 
@@ -426,90 +424,41 @@ const findPlacement = (commonHeader: Element): Placement | null => {
     : null;
 };
 
-const releaseAccountSpace = (): void => {
-  if (!mountedAccountItem) return;
-  if (accountOriginalMarginLeft) {
-    mountedAccountItem.style.marginLeft = accountOriginalMarginLeft;
-  } else {
-    mountedAccountItem.style.removeProperty("margin-left");
-  }
-  mountedAccountItem.removeAttribute("data-filter-matome-account-space");
-  mountedAccountItem.removeAttribute(
-    "data-filter-matome-account-original-margin",
+const LEGACY_ACCOUNT_ATTRIBUTES = [
+  "data-ncnl-account-space",
+  "data-ncnl-account-original-margin",
+  "data-ncnl-account-base-margin",
+  "data-ncnl-account-width",
+  "data-filter-matome-account-space",
+  "data-filter-matome-account-original-margin",
+  "data-filter-matome-account-base-margin",
+  "data-filter-matome-account-width",
+] as const;
+
+const clearLegacyAccountSpace = (accountItem: HTMLElement | null): void => {
+  if (!accountItem) return;
+  const reserved = LEGACY_ACCOUNT_ATTRIBUTES.some((name) =>
+    accountItem.hasAttribute(name),
   );
-  mountedAccountItem.removeAttribute("data-filter-matome-account-base-margin");
-  mountedAccountItem.removeAttribute("data-filter-matome-account-width");
+  if (reserved) accountItem.style.removeProperty("margin-left");
+  for (const name of LEGACY_ACCOUNT_ATTRIBUTES)
+    accountItem.removeAttribute(name);
+};
+
+const releaseAccountSpace = (): void => {
+  clearLegacyAccountSpace(mountedAccountItem);
   mountedAccountItem = null;
-  accountOriginalMarginLeft = "";
-  accountBaseMarginLeft = "0px";
-  accountReservedWidth = 0;
 };
 
-const getAccountBaseMargin = (accountItem: HTMLElement): string => {
-  if (accountItem.hasAttribute("data-ncnl-account-space")) {
-    const nicoBase =
-      accountItem.getAttribute("data-ncnl-account-base-margin") || "0px";
-    const nicoWidth =
-      Number(accountItem.getAttribute("data-ncnl-account-width")) || 0;
-    return `calc(${nicoBase} + ${String(nicoWidth)}px)`;
-  }
-  return getComputedStyle(accountItem).marginLeft || "0px";
-};
-
-const reserveAccountSpace = (accountItem: HTMLElement, width: number): void => {
-  if (mountedAccountItem !== accountItem) {
-    releaseAccountSpace();
-    mountedAccountItem = accountItem;
-    if (accountItem.hasAttribute("data-filter-matome-account-space")) {
-      accountOriginalMarginLeft =
-        accountItem.getAttribute(
-          "data-filter-matome-account-original-margin",
-        ) || "";
-      accountBaseMarginLeft =
-        accountItem.getAttribute("data-filter-matome-account-base-margin") ||
-        "0px";
-      accountReservedWidth =
-        Number(accountItem.getAttribute("data-filter-matome-account-width")) ||
-        0;
-    } else {
-      accountOriginalMarginLeft = accountItem.style.marginLeft;
-      accountBaseMarginLeft = getAccountBaseMargin(accountItem);
-    }
-    accountItem.setAttribute("data-filter-matome-account-space", "true");
-    accountItem.setAttribute(
-      "data-filter-matome-account-original-margin",
-      accountOriginalMarginLeft,
-    );
-    accountItem.setAttribute(
-      "data-filter-matome-account-base-margin",
-      accountBaseMarginLeft,
-    );
-  }
-  const expectedMargin = `calc(${accountBaseMarginLeft} + ${String(width)}px)`;
-  if (
-    accountReservedWidth !== width ||
-    accountItem.style.marginLeft !== expectedMargin
-  ) {
-    accountReservedWidth = width;
-    accountItem.style.marginLeft = expectedMargin;
-    accountItem.setAttribute("data-filter-matome-account-width", String(width));
-  }
-};
-
-const positionNicoCacheBefore = (filterLeft: number, top: number): void => {
-  const nicoCacheMenu = document.getElementById("ncnl_common_header_menu");
-  if (
-    !(nicoCacheMenu instanceof HTMLElement) ||
-    nicoCacheMenu.dataset.ncnlMounted !== "account"
-  ) {
-    return;
-  }
-  const nicoWidth = Math.ceil(nicoCacheMenu.getBoundingClientRect().width);
-  if (nicoWidth <= 0) return;
-  nicoCacheMenu.style.left = `${Math.round(
-    Math.max(0, filterLeft - nicoWidth),
-  )}px`;
-  nicoCacheMenu.style.top = `${Math.round(top)}px`;
+const ensureAccountHost = (): HTMLElement => {
+  const existing = document.getElementById(ACCOUNT_HOST_ID);
+  if (existing instanceof HTMLElement) return existing;
+  const host = document.createElement("div");
+  host.id = ACCOUNT_HOST_ID;
+  host.style.cssText =
+    "position:fixed;top:0;right:0;z-index:101001;display:flex;height:36px;";
+  document.body.append(host);
+  return host;
 };
 
 const positionAccountMenu = (container: HTMLElement): void => {
@@ -519,26 +468,18 @@ const positionAccountMenu = (container: HTMLElement): void => {
   ) {
     return;
   }
-  const width = Math.ceil(container.getBoundingClientRect().width);
-  if (width <= 0) return;
-  reserveAccountSpace(mountedAccountItem, width);
+  const host = document.getElementById(ACCOUNT_HOST_ID);
+  if (!(host instanceof HTMLElement)) return;
   const accountRect = mountedAccountItem.getBoundingClientRect();
-  const nicoCacheMenu = document.getElementById("ncnl_common_header_menu");
-  const nicoWidth =
-    nicoCacheMenu instanceof HTMLElement &&
-    nicoCacheMenu.dataset.ncnlMounted === "account"
-      ? Math.ceil(nicoCacheMenu.getBoundingClientRect().width)
-      : 0;
-  let left = Math.max(0, accountRect.left - width);
-  const viewportWidth = Math.max(
-    window.innerWidth,
-    document.documentElement.clientWidth,
-  );
-  if (viewportWidth > 0) {
-    const minimumLeft = nicoWidth;
-    const maximumLeft = Math.max(minimumLeft, viewportWidth - width);
-    left = Math.min(Math.max(left, minimumLeft), maximumLeft);
-  }
+  const viewportWidth =
+    document.documentElement.clientWidth || window.innerWidth;
+  const accountLeft =
+    viewportWidth > 0
+      ? Math.min(Math.max(0, accountRect.left), viewportWidth)
+      : Math.max(0, accountRect.left);
+  host.style.right = `${Math.round(Math.max(0, viewportWidth - accountLeft))}px`;
+  host.style.top = `${Math.round(accountRect.top)}px`;
+  const containerRect = container.getBoundingClientRect();
   const popover = container.querySelector<HTMLElement>(
     ".filter-matome-api-status-popover",
   );
@@ -546,10 +487,9 @@ const positionAccountMenu = (container: HTMLElement): void => {
     ? Math.ceil(popover.getBoundingClientRect().width)
     : 0;
   container.dataset.filterMatomePopoverAlign =
-    popoverWidth > 0 && left + width - popoverWidth < 0 ? "left" : "right";
-  container.style.left = `${Math.round(left)}px`;
-  container.style.top = `${Math.round(accountRect.top)}px`;
-  positionNicoCacheBefore(left, accountRect.top);
+    popoverWidth > 0 && containerRect.right - popoverWidth < 0
+      ? "left"
+      : "right";
 };
 
 const scheduleAccountMenuPosition = (): void => {
@@ -565,11 +505,21 @@ const mountAccountMenu = (
   container: HTMLElement,
   accountItem: HTMLElement,
 ): void => {
+  if (mountedAccountItem !== accountItem) releaseAccountSpace();
+  mountedAccountItem = accountItem;
+  clearLegacyAccountSpace(accountItem);
+  const host = ensureAccountHost();
+  const nicoCacheMenu = document.getElementById("ncnl_common_header_menu");
+  if (
+    nicoCacheMenu instanceof HTMLElement &&
+    nicoCacheMenu.parentElement !== host
+  ) {
+    host.prepend(nicoCacheMenu);
+  }
+  if (container.parentElement !== host) host.append(container);
   container.dataset.filterMatomeMounted = "account";
-  if (container.parentElement !== document.body)
-    document.body.append(container);
-  const width = Math.ceil(container.getBoundingClientRect().width);
-  if (width > 0) reserveAccountSpace(accountItem, width);
+  container.style.removeProperty("left");
+  container.style.removeProperty("top");
   positionAccountMenu(container);
 };
 
@@ -593,7 +543,7 @@ const isPlacementCurrent = (
   }
   if (placement.mounted === "account") {
     return (
-      container.parentElement === document.body &&
+      container.parentElement?.id === ACCOUNT_HOST_ID &&
       mountedAccountItem === placement.reference
     );
   }
