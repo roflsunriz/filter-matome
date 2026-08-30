@@ -1,5 +1,6 @@
 import {
   getFeaturePage,
+  isCommonHeaderPage,
   isMlinkPage,
   isNiconicoPage,
   isWatchPage,
@@ -108,11 +109,15 @@ async function activateCurrentPage(): Promise<void> {
     return;
   }
 
-  if (!isNiconicoPage()) {
+  if (!isCommonHeaderPage()) {
     return;
   }
 
   await startCommon();
+
+  if (!isNiconicoPage()) {
+    return;
+  }
 
   const tasks: Promise<void>[] = [
     loadEntry<MovieFetcherModule>("movie-fetcher/index").then((module) => {

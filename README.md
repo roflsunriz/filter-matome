@@ -181,7 +181,7 @@ local/
   └── scripts/           # Bunビルド・テストスクリプト
 
 nlFilters/
-├── 100_features.txt                # 全機能を含むfeatures.jsをニコニコ動画全体へ挿入
+├── 100_features.txt                # CommonHeader導入サービスへfeatures.jsを挿入
 ├── 101_disable_official_function.txt # serverContext書換設定と公式・mlink再生速度同期
 ├── 102_comment_reload_api.txt       # 公式コメント再取得actionをcomment-filter2へ公開
 ├── 103_official_comment_menu.txt    # 公式Reactコメントメニューへcomment-filter2操作を接続

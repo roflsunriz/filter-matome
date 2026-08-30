@@ -3,8 +3,9 @@
 # filter-matomeの全ブラウザ機能を含む単一バンドルを読み込む。
 # 実際に起動する機能はfeatures.js内のページルーターが判定する。
 [Replace]
-Name = filter-matome機能バンドル挿入（ニコニコ動画全体用）
-FullURL = https:\/\/[^.]+\.nicovideo\.jp.*?(?:\/.*?)?$
+Name = filter-matome機能バンドル挿入（CommonHeader導入サービス用）
+FullURL = https?:\/\/(?:(?:[^\/]+\.)*nicovideo\.jp|(?:www\.)?nicoft\.io)(?:\/.*)?$
+ContentType = text/html
 Match<
 (<head(?:[^>]+)?>)(\r\n)?
 >

@@ -10,7 +10,7 @@
 
 | ファイル名 | 役割 |
 |---|---|
-| `100_features.txt` | `dist/features.js`をニコニコ動画全体へ1回挿入 |
+| `100_features.txt` | `dist/features.js`をCommonHeader導入サービスへ1回挿入 |
 | `101_disable_official_function.txt` | serverContextの設定JSONを保持し、公式プレイヤーとmlinkの再生速度を版付きAPIで同期 |
 | `102_comment_reload_api.txt` | 公式コメントストアの再取得actionをcomment-filter2向けの版付きAPIとして公開 |
 | `103_official_comment_menu.txt` | 公式Reactコメントメニューへcomment-filter2の版付き操作APIを接続 |

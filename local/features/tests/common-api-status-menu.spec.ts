@@ -193,6 +193,144 @@ test("公式CommonHeaderルートの生成前はDOMへ挿入せず匿名ルー�
   ).toHaveAttribute("data-filter-matome-account-space", "true");
 });
 
+test("CommonHeaderのホストIDが異なっても公式ルートから配置する", async ({
+  page,
+}) => {
+  await page.route(pageUrl, async (route) => {
+    await route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: `<!doctype html><html lang="ja"><head><meta charset="utf-8"></head><body>${anonymousHeaderFixture.replace('id="CommonHeader"', 'id="common-header"')}</body></html>`,
+    });
+  });
+  await page.goto(pageUrl);
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(() => {
+    (
+      window as Window & {
+        startFilterMatomeApiStatusMenuTest?: () => void;
+      }
+    ).startFilterMatomeApiStatusMenuTest?.();
+  });
+
+  await expect(page.locator("#filter-matome-api-status-menu")).toHaveAttribute(
+    "data-filter-matome-mounted",
+    "account",
+  );
+});
+
+test("サービス固有my URLも公式cmnhd_refからアカウント項目と判定する", async ({
+  page,
+}) => {
+  await page.route(pageUrl, async (route) => {
+    await route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: `<!doctype html><html lang="ja"><head><meta charset="utf-8"></head><body>${headerFixture.replace(
+        "https://www.nicovideo.jp/my",
+        "https://seiga.nicovideo.jp/my/?cmnhd_ref=device%3Dpc%26site%3Dseiga%26pos%3Dheader",
+      )}</body></html>`,
+    });
+  });
+  await page.goto(pageUrl);
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(() => {
+    (
+      window as Window & {
+        startFilterMatomeApiStatusMenuTest?: () => void;
+      }
+    ).startFilterMatomeApiStatusMenuTest?.();
+  });
+
+  await expect(page.locator("#filter-matome-api-status-menu")).toHaveAttribute(
+    "data-filter-matome-mounted",
+    "account",
+  );
+});
+
+test("実況の旧共通ヘッダーでは共有ホストへ配置する", async ({ page }) => {
+  await page.route(pageUrl, async (route) => {
+    await route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: `<!doctype html><html lang="ja"><head><meta charset="utf-8"></head><body>
+        <div id="CommonHeader"><div id="siteHeader"><div id="siteHeaderInner">
+          <a href="https://www.nicovideo.jp/">ニコニコ</a>
+          <a href="https://www.nicovideo.jp/video_top/">動画</a>
+          <a href="https://seiga.nicovideo.jp/">静画</a>
+          <a href="https://live.nicovideo.jp/">生放送</a>
+        </div></div></div></body></html>`,
+    });
+  });
+  await page.goto(pageUrl);
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(() => {
+    (
+      window as Window & {
+        startFilterMatomeApiStatusMenuTest?: () => void;
+      }
+    ).startFilterMatomeApiStatusMenuTest?.();
+  });
+
+  const host = page.locator("#ncnl_common_header_extension_host");
+  await expect(host).toHaveCSS("position", "fixed");
+  await expect(host.locator("#filter-matome-api-status-menu")).toHaveAttribute(
+    "data-filter-matome-mounted",
+    "legacy",
+  );
+});
+
+test("NicoFTではログイン導線の直前へ配置する", async ({ page }) => {
+  const nicoFtUrl = "https://nicoft.io/common-header-test";
+  await page.route(nicoFtUrl, async (route) => {
+    await route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: '<!doctype html><html lang="ja"><head><meta charset="utf-8"></head><body><div><a href="https://nicoft.io/login">新規登録・ログイン</a></div></body></html>',
+    });
+  });
+  await page.goto(nicoFtUrl);
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(() => {
+    (
+      window as Window & {
+        startFilterMatomeApiStatusMenuTest?: () => void;
+      }
+    ).startFilterMatomeApiStatusMenuTest?.();
+  });
+
+  await expect(page.locator("#filter-matome-api-status-menu")).toHaveAttribute(
+    "data-filter-matome-mounted",
+    "account",
+  );
+});
+
+test("ニコニコ広場では設定導線の直前へ配置する", async ({ page }) => {
+  const hirobaUrl = "https://www.beta.hiroba.nicovideo.jp/common-header-test";
+  await page.route(hirobaUrl, async (route) => {
+    await route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: `<!doctype html><html lang="ja"><head><meta charset="utf-8"></head><body><div style="display:flex">
+        <a href="https://www.beta.hiroba.nicovideo.jp/notifications">通知</a>
+        <a href="https://www.beta.hiroba.nicovideo.jp/settings">設定</a>
+      </div></body></html>`,
+    });
+  });
+  await page.goto(hirobaUrl);
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(() => {
+    (
+      window as Window & {
+        startFilterMatomeApiStatusMenuTest?: () => void;
+      }
+    ).startFilterMatomeApiStatusMenuTest?.();
+  });
+
+  const menu = page.locator("#filter-matome-api-status-menu");
+  await expect(menu).toHaveAttribute("data-filter-matome-mounted", "service");
+  expect(
+    await menu.evaluate((element) =>
+      element.nextElementSibling?.getAttribute("href")?.endsWith("/settings"),
+    ),
+  ).toBe(true);
+});
+
 test("NicoCacheメニューとアカウントメニューの間へ配置しAPI状態を更新する", async ({
   page,
 }) => {

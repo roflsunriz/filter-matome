@@ -42,6 +42,14 @@ export function isNiconicoPage(loc: Location = window.location): boolean {
   );
 }
 
+export function isCommonHeaderPage(loc: Location = window.location): boolean {
+  return (
+    isNiconicoPage(loc) ||
+    loc.hostname === "nicoft.io" ||
+    loc.hostname.endsWith(".nicoft.io")
+  );
+}
+
 export function isMlinkPage(loc: Location = window.location): boolean {
   if (!isNiconicoPage(loc)) {
     return false;

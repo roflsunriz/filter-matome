@@ -8,6 +8,7 @@
 
 - `getFeaturePage()`: 静的HTMLの `<html data-feature-page="...">` から `mylist`、`movie-info`、`video-player`、`watch-history` を判定する。
 - `isNiconicoPage()`: `nicovideo.jp` とそのサブドメインかを判定する。
+- `isCommonHeaderPage()`: CommonHeaderを使う`nicovideo.jp`系ページとNicoFTかを判定する。
 - `isMlinkPage()`: mlink-video-controllerを有効にする既知のサブドメインかを判定する。
 - `isWatchPage()`: `www.nicovideo.jp/watch/<動画ID>` の厳密なパスかを判定する。
 - `filter-matome:navigation`: `pushState`、`replaceState`、`popstate`、`hashchange`を一度だけ捕捉して各機能へ配信する共通イベント。
@@ -15,6 +16,7 @@
 - `server-context-override.ts`: 設定の型・実行時検証、パス適用、元の会員種別を尊重するコメント投稿保護。
 
 `src/features.ts` がこれらの結果を使い、共通機能と各プロジェクトの `start*` 関数を起動します。
+NicoFTではCommonHeader機能だけを起動し、動画一覧・視聴ページ専用機能は起動しません。
 
 ## 変更時の注意
 

@@ -17,10 +17,15 @@ Playwrightでは、空の`#CommonHeader`だけが存在する状態でAPI状態�
 480pxのfixtureでは公式アカウント項目を画面外へ移動し、NicoCacheとfilter-matomeの順序を保って
 両メニューがビューポート内へクランプされることを確認します。
 
-実ページではブラウザーキャッシュとService Workerを迂回してトップ、動画トップ、ランキング、
-新着、検索、タグ、視聴、ユーザーをハード再読み込みします。ページへJavaScriptを手動評価せず、
+実ページではブラウザーキャッシュとService Workerを迂回してトップ、静画、生放送、チャンネル、
+大百科、実況、Nアニメ、ブロマガ、コモンズ、NicoFT、ニコニコQ、ニコニ貢献、ニコニ立体、
+ニュース、ニコニコ広場をハード再読み込みします。ページへJavaScriptを手動評価せず、
 `features.js`と`05_nicocache_menu.js`の自動読込、公式`.nico-CommonHeaderRoot`、両メニューの
 `account`配置、ログイン・非ログイン時の座標順をそれぞれ確認します。
+
+2026-08-31にはログイン済みChromeでトップと動画トップを分けた16URLを測定し、両script、
+両メニュー、`NicoCache → filter-matome`の座標順を確認しました。公式PC・responsiveに加え、
+実況の旧36pxヘッダー、NicoFT、広場の独自44pxヘッダーを800pxでも画面内に収めます。
 
 ## ドキュメント画面画像
 

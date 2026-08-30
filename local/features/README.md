@@ -43,7 +43,7 @@ local/features/
 `src/features.ts` は一度だけ起動し、`runtime/page-context.ts` の判定結果に応じて機能を初期化します。
 
 - 生成HTMLの `data-feature-page`: mylist2、movie-fetcher、movie-info、video-player、watch-historyの各SPAを起動する。
-- NicoCache_nlの対象ページ: `common` を起動し、対象ホストでは `mlink-video-controller` を起動する。
+- CommonHeader導入サービス: `common` を起動し、`nicovideo.jp`の対象ホストでは `mlink-video-controller` を起動する。NicoFTでは`common`だけを起動する。
 - `www.nicovideo.jp/watch/<動画ID>`: comment-filter2、video-playerのルーター、watch-historyの追跡処理を起動する。
 
 SPA遷移は `runtime/navigation.ts` がHistory APIと`popstate`・`hashchange`を単一イベントへ変換して再判定します。ページ判定を変更すると複数機能の起動条件へ波及するため、`runtime/` と `features.ts` を併せて確認してください。

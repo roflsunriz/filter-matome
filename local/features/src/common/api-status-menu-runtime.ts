@@ -9,6 +9,7 @@ import type {
 const CONTAINER_ID = "filter-matome-api-status-menu";
 const POPOVER_ID = "filter-matome-api-status-popover";
 const STYLE_ID = "filter-matome-api-status-menu-styles";
+const LEGACY_HOST_ID = "ncnl_common_header_extension_host";
 
 type ResolveStatuses = (
   host: Record<string, unknown>,
@@ -18,7 +19,7 @@ type ResolveStatuses = (
 type Placement = {
   parent: Element;
   reference: Element | null;
-  mounted: "account" | "service";
+  mounted: "account" | "service" | "legacy";
 };
 
 type Copy = {
@@ -219,8 +220,21 @@ const applyStyles = (): void => {
   (document.head ?? document.documentElement).append(style);
 };
 
+const findOfficialRoot = (commonHeader: Element): Element | null => {
+  if (commonHeader.matches(".nico-CommonHeaderRoot")) return commonHeader;
+  return commonHeader.querySelector(".nico-CommonHeaderRoot");
+};
+
+const findCommonHeader = (): Element | null =>
+  document.getElementById("CommonHeader") ??
+  document.querySelector(".nico-CommonHeaderRoot") ??
+  (/(?:^|\.)nicoft\.io$/u.test(location.hostname) ||
+  location.hostname === "www.beta.hiroba.nicovideo.jp"
+    ? document.body
+    : null);
+
 const findServiceNavigation = (commonHeader: Element): Element | null => {
-  const root = commonHeader.querySelector(".nico-CommonHeaderRoot");
+  const root = findOfficialRoot(commonHeader);
   if (!root) return null;
   for (const anchor of root.querySelectorAll<HTMLAnchorElement>("a[href]")) {
     if ((anchor.getAttribute("href") ?? "").includes("header_servicelink")) {
@@ -231,14 +245,20 @@ const findServiceNavigation = (commonHeader: Element): Element | null => {
 };
 
 const findAccountMenuItem = (commonHeader: Element): HTMLElement | null => {
-  const root = commonHeader.querySelector(".nico-CommonHeaderRoot");
+  const root = findOfficialRoot(commonHeader);
   if (!root) return null;
   let bestItem: HTMLElement | null = null;
   let bestDepth = Number.POSITIVE_INFINITY;
   for (const anchor of root.querySelectorAll<HTMLAnchorElement>("a[href]")) {
     try {
       const url = new URL(anchor.href, location.href);
-      if (url.hostname !== "www.nicovideo.jp" || url.pathname !== "/my") {
+      const commonHeaderReference = url.searchParams.get("cmnhd_ref") ?? "";
+      const isAccountUrl =
+        url.hostname === "www.nicovideo.jp" && url.pathname === "/my";
+      if (
+        !isAccountUrl &&
+        !/(?:^|&)pos=header(?:&|$)/u.test(commonHeaderReference)
+      ) {
         continue;
       }
       const item = anchor.parentElement;
@@ -295,6 +315,84 @@ const findInsertionReference = (navigation: Element): Element | null => {
   return reference;
 };
 
+const findNicoFtAccountMenuItem = (): HTMLElement | null => {
+  if (!/(?:^|\.)nicoft\.io$/u.test(location.hostname)) return null;
+  for (const anchor of document.querySelectorAll<HTMLAnchorElement>(
+    "a[href]",
+  )) {
+    try {
+      const url = new URL(anchor.href, location.href);
+      if (
+        (url.hostname === "nicoft.io" || url.hostname === "www.nicoft.io") &&
+        url.pathname === "/login"
+      ) {
+        return anchor;
+      }
+    } catch {
+      // Invalid links are not NicoFT account items.
+    }
+  }
+  return null;
+};
+
+const findHirobaPlacement = (): Placement | null => {
+  if (
+    location.hostname !== "www.beta.hiroba.nicovideo.jp" ||
+    document.readyState === "loading"
+  ) {
+    return null;
+  }
+  for (const anchor of document.querySelectorAll<HTMLAnchorElement>(
+    "a[href]",
+  )) {
+    try {
+      const url = new URL(anchor.href, location.href);
+      if (
+        url.hostname === location.hostname &&
+        url.pathname === "/settings" &&
+        anchor.parentElement
+      ) {
+        return {
+          parent: anchor.parentElement,
+          reference: anchor,
+          mounted: "service",
+        };
+      }
+    } catch {
+      // Invalid links are not Hiroba settings items.
+    }
+  }
+  return null;
+};
+
+const findLegacyHeaderHost = (commonHeader: Element): HTMLElement | null => {
+  const inner = document.getElementById("siteHeaderInner");
+  if (!inner || !commonHeader.contains(inner)) return null;
+  let serviceLinks = 0;
+  for (const anchor of inner.querySelectorAll<HTMLAnchorElement>("a[href]")) {
+    try {
+      const url = new URL(anchor.href, location.href);
+      if (
+        url.hostname === "www.nicovideo.jp" ||
+        /^(?:seiga|live|news|dic)\.nicovideo\.jp$/u.test(url.hostname)
+      ) {
+        serviceLinks += 1;
+      }
+    } catch {
+      // Invalid links are not legacy CommonHeader service items.
+    }
+  }
+  if (serviceLinks < 3) return null;
+  const existing = document.getElementById(LEGACY_HOST_ID);
+  if (existing instanceof HTMLElement) return existing;
+  const host = document.createElement("div");
+  host.id = LEGACY_HOST_ID;
+  host.style.cssText =
+    "position:fixed;top:0;right:0;z-index:101000;display:flex;height:36px;";
+  inner.append(host);
+  return host;
+};
+
 const findPlacement = (commonHeader: Element): Placement | null => {
   const accountItem = findAccountMenuItem(commonHeader);
   if (accountItem?.parentElement) {
@@ -304,13 +402,27 @@ const findPlacement = (commonHeader: Element): Placement | null => {
       mounted: "account",
     };
   }
+  const nicoFtAccountItem = findNicoFtAccountMenuItem();
+  if (nicoFtAccountItem?.parentElement) {
+    return {
+      parent: nicoFtAccountItem.parentElement,
+      reference: nicoFtAccountItem,
+      mounted: "account",
+    };
+  }
+  const hirobaPlacement = findHirobaPlacement();
+  if (hirobaPlacement) return hirobaPlacement;
   const navigation = findServiceNavigation(commonHeader);
-  return navigation
-    ? {
-        parent: navigation,
-        reference: findInsertionReference(navigation),
-        mounted: "service",
-      }
+  if (navigation) {
+    return {
+      parent: navigation,
+      reference: findInsertionReference(navigation),
+      mounted: "service",
+    };
+  }
+  const legacyHost = findLegacyHeaderHost(commonHeader);
+  return legacyHost
+    ? { parent: legacyHost, reference: null, mounted: "legacy" }
     : null;
 };
 
@@ -682,7 +794,7 @@ const createMenu = (resolveStatuses: ResolveStatuses): HTMLElement => {
 };
 
 const initialize = (resolveStatuses: ResolveStatuses): boolean => {
-  const commonHeader = document.getElementById("CommonHeader");
+  const commonHeader = findCommonHeader();
   if (!commonHeader) return false;
   const placement = findPlacement(commonHeader);
   const existing = document.getElementById(CONTAINER_ID);
@@ -725,7 +837,7 @@ export function startApiStatusMenuRuntime(
   });
 
   const observer = new MutationObserver(() => {
-    const commonHeader = document.getElementById("CommonHeader");
+    const commonHeader = findCommonHeader();
     const container = document.getElementById(CONTAINER_ID);
     const placement = commonHeader && findPlacement(commonHeader);
     if (container instanceof HTMLElement) {
