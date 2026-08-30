@@ -59,7 +59,7 @@ const installFixture = async (
     ({ language, activeApis }) => {
       document.documentElement.lang = language;
       document.body.style.minHeight = "2000px";
-      const headerMenuLeft = Math.max(0, innerWidth - 340);
+      const headerMenuLeft = Math.max(0, innerWidth - 480);
       const nicoCacheMenu = document.createElement("div");
       nicoCacheMenu.id = "ncnl_common_header_menu";
       nicoCacheMenu.dataset.ncnlMounted = "account";
@@ -73,9 +73,12 @@ const installFixture = async (
       const accountRow = accountItem.parentElement;
       if (!accountRow) throw new Error("account row fixture not found");
       accountRow.style.cssText = `display:flex;height:36px;margin-left:${String(headerMenuLeft)}px;align-items:center`;
-      for (const child of accountRow.children) {
-        if (child !== accountItem && child instanceof HTMLElement) {
-          child.style.display = "none";
+      for (const [index, child] of [...accountRow.children].entries()) {
+        if (!(child instanceof HTMLElement) || child === accountItem) continue;
+        if (index === 0) child.style.display = "none";
+        else {
+          child.dataset.labOfficialControl = "true";
+          child.style.cssText = "width:48px;height:36px;flex:0 0 48px";
         }
       }
       accountItem.setAttribute("data-ncnl-account-space", "true");
@@ -128,20 +131,30 @@ const hasDesiredAccountMenuOrder = (page: Page): Promise<boolean> =>
     const accountRect = accountItem.getBoundingClientRect();
     const popover = document.getElementById("filter-matome-api-status-popover");
     const header = document.getElementById("CommonHeader");
-    const host = document.getElementById("ncnl_common_header_account_host");
+    const accountRow = accountItem.parentElement;
+    const visibleChildren = accountRow
+      ? [...accountRow.children]
+          .filter((child) => child.getBoundingClientRect().width > 0)
+          .map((child) => child.getBoundingClientRect())
+      : [];
     return (
-      filterMenu.parentElement === host &&
-      nicoCacheMenu.parentElement === host &&
-      getComputedStyle(host!).position === "fixed" &&
+      filterMenu.parentElement === accountRow &&
+      nicoCacheMenu.parentElement === accountRow &&
+      nicoCacheMenu.nextElementSibling === filterMenu &&
+      filterMenu.nextElementSibling === accountItem &&
       getComputedStyle(filterMenu).position === "relative" &&
       popover !== null &&
-      getComputedStyle(popover).position === "absolute" &&
+      getComputedStyle(popover).position === "fixed" &&
       header !== null &&
       getComputedStyle(header).position === "sticky" &&
       getComputedStyle(nicoCacheMenu).position === "relative" &&
       Math.abs(nicoCacheRect.right - filterRect.left) <= 1 &&
       Math.abs(filterRect.right - accountRect.left) <= 1 &&
-      accountItem.style.marginLeft === ""
+      accountItem.style.marginLeft === "" &&
+      visibleChildren.every(
+        (rect, index) =>
+          index === 0 || visibleChildren[index - 1]!.right <= rect.left + 1,
+      )
     );
   });
 
@@ -192,7 +205,9 @@ test("公式CommonHeaderルートの生成前はDOMへ挿入せず匿名ルー�
   expect(
     await menu.evaluate(
       (element) =>
-        element.parentElement?.id === "ncnl_common_header_account_host",
+        element.nextElementSibling?.hasAttribute(
+          "data-lab-anonymous-account-placeholder",
+        ) === true,
     ),
   ).toBe(true);
   await expect(
@@ -207,6 +222,31 @@ test("CommonHeaderのホストIDが異なっても公式ルートから配置す
     await route.fulfill({
       contentType: "text/html; charset=utf-8",
       body: `<!doctype html><html lang="ja"><head><meta charset="utf-8"></head><body>${anonymousHeaderFixture.replace('id="CommonHeader"', 'id="common-header"')}</body></html>`,
+    });
+  });
+  await page.goto(pageUrl);
+  await page.addScriptTag({ content: bundle });
+  await page.evaluate(() => {
+    (
+      window as Window & {
+        startFilterMatomeApiStatusMenuTest?: () => void;
+      }
+    ).startFilterMatomeApiStatusMenuTest?.();
+  });
+
+  await expect(page.locator("#filter-matome-api-status-menu")).toHaveAttribute(
+    "data-filter-matome-mounted",
+    "account",
+  );
+});
+
+test("空のCommonHeader IDが併存しても別ホストの公式ルートを優先する", async ({
+  page,
+}) => {
+  await page.route(pageUrl, async (route) => {
+    await route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: `<!doctype html><html lang="ja"><head><meta charset="utf-8"></head><body><div id="CommonHeader"></div>${anonymousHeaderFixture.replace('id="CommonHeader"', 'id="common-header"')}</body></html>`,
     });
   });
   await page.goto(pageUrl);
@@ -417,8 +457,7 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
     ).detachedCommonHeaderFixture = header;
     header.remove();
   });
-  await expect(menu).toHaveCount(1);
-  await expect(menu).toHaveAttribute("data-filter-matome-mounted", "account");
+  await expect(menu).toHaveCount(0);
   await page.evaluate(() => {
     const host = window as Window & {
       detachedCommonHeaderFixture?: HTMLElement;
@@ -434,20 +473,9 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
   await expect.poll(() => hasDesiredAccountMenuOrder(page)).toBe(true);
 });
 
-test("CommonHeaderの最小幅がビューポートを超えても両メニューを画面内へ収める", async ({
-  page,
-}) => {
+test("狭幅でも公式操作と両メニューを重ねず画面内へ収める", async ({ page }) => {
   await page.setViewportSize({ width: 480, height: 480 });
   await installFixture(page);
-  await page.evaluate(() => {
-    const accountItem = document.querySelector(
-      '#CommonHeader a[href="https://www.nicovideo.jp/my"]',
-    )?.parentElement;
-    if (!accountItem?.parentElement)
-      throw new Error("account fixture not found");
-    accountItem.parentElement.style.marginLeft = "900px";
-    dispatchEvent(new Event("resize"));
-  });
 
   await expect
     .poll(() =>

@@ -26,8 +26,10 @@ Playwrightでは、空の`#CommonHeader`だけが存在する状態でAPI状態�
 2026-08-31にはログイン済みChromeでトップと動画トップを分けた16URLを測定し、両script、
 両メニュー、`NicoCache → filter-matome`の座標順を確認しました。公式PC・responsiveに加え、
 実況の旧36pxヘッダー、NicoFT、広場の独自44pxヘッダーを800pxでも画面内に収めます。
-トップは通常のキャッシュ・Service Worker経路で15秒維持し、公式アカウント要素の計算済み
-`margin-left`が`0px`、旧予約属性が0件、共有ホスト右端とアカウント左端が一致することを確認します。
+トップは通常のキャッシュ・Service Worker経路で維持し、公式アカウント要素の計算済み
+`margin-left`が`0px`、旧予約属性が0件であることを確認します。公式右側flex列の全可視要素を
+DOM順に測り、通知群、NicoCache、filter-matome、アカウントが隣接して重ならないこと、空の
+`#CommonHeader`が併存しても別ホストの公式ルートへ両メニューが生成されることを確認します。
 
 ## ドキュメント画面画像
 

@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- 【common・CommonHeader】通知とアカウントの間に巨大な空白だけが残る問題を防ぐため、公式アカウント要素へ`margin-left`を追加する余白予約を廃止し、NicoCacheとfilter-matomeを共有固定ホストへ順番に配置するよう修正した。旧予約属性と余白も自動除去する。
+- 【common・CommonHeader】通知とアカウントの間に空白だけが残る問題や、固定メニューが公式操作へ重なる問題を防ぐため、公式アカウント要素への`margin-left`予約と画面上の固定配置を廃止し、公式ルート生成後の右側flex列へ`通知群 → NicoCache → filter-matome → アカウント`の順で直接参加させるよう修正した。旧予約属性と余白も除去し、空の`#CommonHeader`が併存しても実体の公式ルートを優先する。
 - 【nlFilters・CommonHeader】トップ、静画、生放送、チャンネル、大百科、実況、Nアニメ、ブロマガ、コモンズ、NicoFT、ニコニコQ、ニコニ貢献、ニコニ立体、ニュース、ニコニコ広場でもAPI状態メニューを表示できるよう、複数階層を含むCommonHeader導入ホストへ配信対象を広げ、ブートストラップと遅延エントリーを対象ページと同じオリジンのローカル配信から読み込むよう修正した。NicoFTではCommonHeader機能だけを起動する。
 - 【common・CommonHeader】サービスごとのホストIDやアカウントURLの差でAPI状態メニューが左側へずれる、または挿入されない問題を防ぐため、公式ルートclassと`cmnhd_ref`のaccount位置を優先し、実況、NicoFT、ニコニコ広場は確認済みの意味的URLへ限定したフォールバックで配置するよう修正した。
 - 【common・CommonHeader】公式ルート生成前にfilter-matome API状態メニューを`#CommonHeader`直下へ追加して公式Reactの生成を妨げないよう、意味的なサービス・アカウント項目が現れるまでDOMを変更せず待機し、非ログイン時も会員登録直後のアカウントプレースホルダーへ配置するよう修正した。

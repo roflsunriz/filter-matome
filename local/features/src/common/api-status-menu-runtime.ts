@@ -10,7 +10,6 @@ const CONTAINER_ID = "filter-matome-api-status-menu";
 const POPOVER_ID = "filter-matome-api-status-popover";
 const STYLE_ID = "filter-matome-api-status-menu-styles";
 const LEGACY_HOST_ID = "ncnl_common_header_extension_host";
-const ACCOUNT_HOST_ID = "ncnl_common_header_account_host";
 
 type ResolveStatuses = (
   host: Record<string, unknown>,
@@ -224,8 +223,8 @@ const findOfficialRoot = (commonHeader: Element): Element | null => {
 };
 
 const findCommonHeader = (): Element | null =>
-  document.getElementById("CommonHeader") ??
   document.querySelector(".nico-CommonHeaderRoot") ??
+  document.getElementById("CommonHeader") ??
   (/(?:^|\.)nicoft\.io$/u.test(location.hostname) ||
   location.hostname === "www.beta.hiroba.nicovideo.jp"
     ? document.body
@@ -287,7 +286,14 @@ const findAccountMenuItem = (commonHeader: Element): HTMLElement | null => {
         continue;
       }
       const registerItem = anchor.parentElement;
-      const placeholderItem = registerItem?.nextElementSibling;
+      let placeholderItem = registerItem?.nextElementSibling;
+      while (
+        placeholderItem &&
+        (placeholderItem.id === "ncnl_common_header_menu" ||
+          placeholderItem.id === CONTAINER_ID)
+      ) {
+        placeholderItem = placeholderItem.nextElementSibling;
+      }
       if (placeholderItem instanceof HTMLElement) return placeholderItem;
     } catch {
       // Invalid links are not CommonHeader registration items.
@@ -450,17 +456,6 @@ const releaseAccountSpace = (): void => {
   mountedAccountItem = null;
 };
 
-const ensureAccountHost = (): HTMLElement => {
-  const existing = document.getElementById(ACCOUNT_HOST_ID);
-  if (existing instanceof HTMLElement) return existing;
-  const host = document.createElement("div");
-  host.id = ACCOUNT_HOST_ID;
-  host.style.cssText =
-    "position:fixed;top:0;right:0;z-index:101001;display:flex;height:36px;";
-  document.body.append(host);
-  return host;
-};
-
 const positionAccountMenu = (container: HTMLElement): void => {
   if (
     !mountedAccountItem?.isConnected ||
@@ -468,28 +463,26 @@ const positionAccountMenu = (container: HTMLElement): void => {
   ) {
     return;
   }
-  const host = document.getElementById(ACCOUNT_HOST_ID);
-  if (!(host instanceof HTMLElement)) return;
-  const accountRect = mountedAccountItem.getBoundingClientRect();
+  const containerRect = container.getBoundingClientRect();
   const viewportWidth =
     document.documentElement.clientWidth || window.innerWidth;
-  const accountLeft =
-    viewportWidth > 0
-      ? Math.min(Math.max(0, accountRect.left), viewportWidth)
-      : Math.max(0, accountRect.left);
-  host.style.right = `${Math.round(Math.max(0, viewportWidth - accountLeft))}px`;
-  host.style.top = `${Math.round(accountRect.top)}px`;
-  const containerRect = container.getBoundingClientRect();
   const popover = container.querySelector<HTMLElement>(
     ".filter-matome-api-status-popover",
   );
   const popoverWidth = popover
     ? Math.ceil(popover.getBoundingClientRect().width)
     : 0;
-  container.dataset.filterMatomePopoverAlign =
-    popoverWidth > 0 && containerRect.right - popoverWidth < 0
-      ? "left"
-      : "right";
+  if (popover && popoverWidth > 0 && viewportWidth > 0) {
+    const left = Math.min(
+      Math.max(8, containerRect.left),
+      Math.max(8, viewportWidth - popoverWidth - 8),
+    );
+    popover.style.position = "fixed";
+    popover.style.left = `${Math.round(left)}px`;
+    popover.style.right = "auto";
+    popover.style.top = `${Math.round(containerRect.bottom)}px`;
+    container.dataset.filterMatomePopoverAlign = "left";
+  }
 };
 
 const scheduleAccountMenuPosition = (): void => {
@@ -508,15 +501,15 @@ const mountAccountMenu = (
   if (mountedAccountItem !== accountItem) releaseAccountSpace();
   mountedAccountItem = accountItem;
   clearLegacyAccountSpace(accountItem);
-  const host = ensureAccountHost();
+  const parent = accountItem.parentElement;
+  if (!parent) return;
   const nicoCacheMenu = document.getElementById("ncnl_common_header_menu");
-  if (
-    nicoCacheMenu instanceof HTMLElement &&
-    nicoCacheMenu.parentElement !== host
-  ) {
-    host.prepend(nicoCacheMenu);
+  if (nicoCacheMenu instanceof HTMLElement) {
+    parent.insertBefore(nicoCacheMenu, accountItem);
   }
-  if (container.parentElement !== host) host.append(container);
+  parent.insertBefore(container, accountItem);
+  const oldHost = document.getElementById("ncnl_common_header_account_host");
+  if (oldHost && oldHost.children.length === 0) oldHost.remove();
   container.dataset.filterMatomeMounted = "account";
   container.style.removeProperty("left");
   container.style.removeProperty("top");
@@ -528,6 +521,13 @@ const clearAccountMenuPosition = (container: HTMLElement): void => {
   container.removeAttribute("data-filter-matome-popover-align");
   container.style.removeProperty("left");
   container.style.removeProperty("top");
+  const popover = container.querySelector<HTMLElement>(
+    ".filter-matome-api-status-popover",
+  );
+  popover?.style.removeProperty("position");
+  popover?.style.removeProperty("left");
+  popover?.style.removeProperty("right");
+  popover?.style.removeProperty("top");
 };
 
 const isPlacementCurrent = (
@@ -543,7 +543,8 @@ const isPlacementCurrent = (
   }
   if (placement.mounted === "account") {
     return (
-      container.parentElement?.id === ACCOUNT_HOST_ID &&
+      container.parentElement === placement.parent &&
+      container.nextElementSibling === placement.reference &&
       mountedAccountItem === placement.reference
     );
   }
