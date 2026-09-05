@@ -16,3 +16,16 @@ $1
 <!--- End of filter-matome features --->
 $2
 >
+
+# 通知の既読後、開いているパネルを公式の一覧再取得処理で更新する。
+# 3.11.0〜3.13.0のPC版・responsive版で確認したaction factory境界に接続する。
+# 識別子はcaptureし、パネル状態・同じstore/reset状態の参照・公式操作の関係を固定する。
+[Replace]
+Name = 公式通知パネルの表示更新API
+FullURL = https?:\/\/common-header\.nimg\.jp\/[0-9]+\.[0-9]+\.[0-9]+\/(?:pc|responsive)\/CommonHeader\.min\.js(?:\?.*)?$
+Match<
+([A-Za-z_$][\w$]*=([A-Za-z_$][\w$]*)=>\{)(?=const ([A-Za-z_$][\w$]*)=\{isServiceMenuOpen:!1,isOshiraseBoxOpen:!1,isAccountOpen:!1,isSearchOpen:!1,isTimelineOpen:!1,isPremiumLeadOpen:!1,isYearlyPlanBannerOpen:!1\},([A-Za-z_$][\w$]*)=\{openServiceMenu\(([A-Za-z_$][\w$]*)\)\{\5\.isSearchOpen&&([A-Za-z_$][\w$]*)\.emit\("search:close"\),\2\.setState\(\{\.\.\.\3,isServiceMenuOpen:!0\}\)\},closeServiceMenu\(\)\{\2\.setState\(\{isServiceMenuOpen:!1\}\)\},openOshiraseBox\(([A-Za-z_$][\w$]*)\)\{\7\.isSearchOpen&&\6\.emit\("search:close"\),\2\.setState\(\{\.\.\.\3,isOshiraseBoxOpen:!0\}\))
+>
+Replace<
+$1globalThis.FilterMatomeNotificationReadApi?.version===1||queueMicrotask(()=>globalThis.dispatchEvent(new Event("filter-matome:api-status-change")));globalThis.FilterMatomeNotificationReadApi={version:1,refresh:()=>{const state=$2.getState();if(state.isOshiraseBoxOpen)$4.openOshiraseBox(state)}};
+>

@@ -102,6 +102,19 @@ const installFixture = async (
         getItems: () => [],
         execute: async () => true,
       };
+      const host = window as Window & {
+        filterMatomeNotificationRefreshCalls?: number;
+      };
+      host.filterMatomeNotificationRefreshCalls = 0;
+      Object.assign(window, {
+        FilterMatomeNotificationReadApi: {
+          version: 1,
+          refresh: () => {
+            host.filterMatomeNotificationRefreshCalls =
+              (host.filterMatomeNotificationRefreshCalls ?? 0) + 1;
+          },
+        },
+      });
     },
     {
       language: options.language ?? "ja",
@@ -419,6 +432,24 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
     "data-status",
     "probing",
   );
+  const notificationItem = menu.locator('[data-api-id="notification-refresh"]');
+  await expect(notificationItem).toHaveAttribute("data-status", "active");
+  await expect(
+    notificationItem.locator(".filter-matome-api-status-name"),
+  ).toHaveText("通知表示更新");
+  await expect(
+    notificationItem.locator(".filter-matome-api-status-value"),
+  ).toHaveText("有効");
+  expect(
+    await page.evaluate(
+      () =>
+        (
+          window as Window & {
+            filterMatomeNotificationRefreshCalls?: number;
+          }
+        ).filterMatomeNotificationRefreshCalls ?? 0,
+    ),
+  ).toBe(0);
 
   await page.evaluate(() => {
     window.FilterMatomeCommentMenuBridgeApi = { version: 1 };
@@ -429,6 +460,16 @@ test("NicoCacheメニューとアカウントメニューの間へ配置しAPI�
     "active",
   );
   await expect(menu).toHaveAttribute("data-summary", "active");
+  expect(
+    await page.evaluate(
+      () =>
+        (
+          window as Window & {
+            filterMatomeNotificationRefreshCalls?: number;
+          }
+        ).filterMatomeNotificationRefreshCalls ?? 0,
+    ),
+  ).toBe(0);
 
   const statusItems = menu.locator('[role="menuitem"]');
   await trigger.focus();
@@ -509,12 +550,21 @@ test("API不在と版不一致を赤い要約状態で区別する", async ({ pa
       version: 1,
       reload: "invalid",
     } as unknown as Window["FilterMatomeCommentApi"];
+    Object.assign(window, {
+      FilterMatomeNotificationReadApi: {
+        version: 2,
+        refresh: "invalid",
+      },
+    });
     window.dispatchEvent(new Event("filter-matome:api-status-change"));
   });
   await expect(menu.locator('[data-api-id="comment-reload"]')).toHaveAttribute(
     "data-status",
     "incompatible",
   );
+  await expect(
+    menu.locator('[data-api-id="notification-refresh"]'),
+  ).toHaveAttribute("data-status", "incompatible");
 });
 
 test("公式Watchの全画面表示中はメニューを閉じて非表示にする", async ({

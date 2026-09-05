@@ -26,7 +26,7 @@ export type FilterMatomeApiStatusKind =
   | "not-applicable";
 
 export type FilterMatomeApiStatusId =
-  "playback-rate" | "comment-reload" | "comment-menu";
+  "playback-rate" | "comment-reload" | "comment-menu" | "notification-refresh";
 
 export type FilterMatomeApiStatus = {
   id: FilterMatomeApiStatusId;
@@ -70,10 +70,19 @@ export function resolveFilterMatomeApiStatuses(
   pathname: string,
   probedCommentMenuStatus: CommentMenuProbeStatus = "probing",
 ): FilterMatomeApiStatus[] {
+  const notificationStatus: FilterMatomeApiStatus = {
+    id: "notification-refresh",
+    kind: versionedApiStatus(host["FilterMatomeNotificationReadApi"], [
+      "refresh",
+    ]),
+  };
   if (!WATCH_PATH_PATTERN.test(pathname)) {
-    return (["playback-rate", "comment-reload", "comment-menu"] as const).map(
-      (id) => ({ id, kind: "not-applicable" }),
-    );
+    return [
+      ...(["playback-rate", "comment-reload", "comment-menu"] as const).map(
+        (id) => ({ id, kind: "not-applicable" as const }),
+      ),
+      notificationStatus,
+    ];
   }
 
   const menuBridge = host["FilterMatomeCommentMenuBridgeApi"];
@@ -106,6 +115,7 @@ export function resolveFilterMatomeApiStatuses(
       kind: versionedApiStatus(host["FilterMatomeCommentApi"], ["reload"]),
     },
     { id: "comment-menu", kind: menuStatus },
+    notificationStatus,
   ];
 }
 

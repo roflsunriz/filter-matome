@@ -7,11 +7,12 @@ import {
 } from "@/common/api-status-menu";
 
 describe("CommonHeader filter-matome API状態メニュー", () => {
-  test("Watch以外では3つのnlFilter APIを対象外にする", () => {
+  test("Watch以外ではWatch専用APIだけを対象外にする", () => {
     expect(resolveFilterMatomeApiStatuses({}, "/search/test")).toEqual([
       { id: "playback-rate", kind: "not-applicable" },
       { id: "comment-reload", kind: "not-applicable" },
       { id: "comment-menu", kind: "not-applicable" },
+      { id: "notification-refresh", kind: "missing" },
     ]);
   });
 
@@ -31,11 +32,16 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
         getItems: () => [],
         execute: async () => true,
       },
+      FilterMatomeNotificationReadApi: {
+        version: 1,
+        refresh: () => undefined,
+      },
     };
     expect(resolveFilterMatomeApiStatuses(host, "/watch/sm9")).toEqual([
       { id: "playback-rate", kind: "active" },
       { id: "comment-reload", kind: "active" },
       { id: "comment-menu", kind: "probing" },
+      { id: "notification-refresh", kind: "active" },
     ]);
 
     expect(
@@ -58,6 +64,7 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
           FilterMatomePlaybackRateApi: { version: 2 },
           FilterMatomeCommentApi: { version: 1, reload: "invalid" },
           FilterMatomeCommentMenuApi: { version: 1 },
+          FilterMatomeNotificationReadApi: { version: 2, refresh: "invalid" },
         },
         "/watch/sm9",
       ),
@@ -65,7 +72,26 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
       { id: "playback-rate", kind: "incompatible" },
       { id: "comment-reload", kind: "incompatible" },
       { id: "comment-menu", kind: "incompatible" },
+      { id: "notification-refresh", kind: "incompatible" },
     ]);
+  });
+
+  test("通知表示更新APIの自動検査ではrefreshを呼び出さない", () => {
+    let refreshCalls = 0;
+    const host = {
+      FilterMatomeNotificationReadApi: {
+        version: 1,
+        refresh: () => {
+          refreshCalls += 1;
+        },
+      },
+    };
+    const statuses = resolveFilterMatomeApiStatuses(host, "/watch/sm9");
+    expect(statuses[statuses.length - 1]).toEqual({
+      id: "notification-refresh",
+      kind: "active",
+    });
+    expect(refreshCalls).toBe(0);
   });
 
   test("読込済みExpandedComment資産だけを自動プローブ対象にする", () => {

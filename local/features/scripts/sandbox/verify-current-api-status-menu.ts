@@ -176,9 +176,11 @@ const waitForMenuReady = async (
         globalThis.FilterMatomePlaybackRateApi?.version === 1 &&
         globalThis.FilterMatomeCommentApi?.version === 1 &&
         globalThis.FilterMatomeCommentMenuApi?.version === 1 &&
+        globalThis.FilterMatomeNotificationReadApi?.version === 1 &&
         document.querySelector('[data-api-id="playback-rate"]')?.getAttribute("data-status") === "active" &&
         document.querySelector('[data-api-id="comment-reload"]')?.getAttribute("data-status") === "active" &&
-        document.querySelector('[data-api-id="comment-menu"]')?.getAttribute("data-status") === "active"
+        document.querySelector('[data-api-id="comment-menu"]')?.getAttribute("data-status") === "active" &&
+        document.querySelector('[data-api-id="notification-refresh"]')?.getAttribute("data-status") === "active"
       )`,
     );
     if (ready === true) return;
@@ -192,6 +194,7 @@ const waitForMenuReady = async (
       playback: globalThis.FilterMatomePlaybackRateApi?.version ?? null,
       reload: globalThis.FilterMatomeCommentApi?.version ?? null,
       commentMenu: globalThis.FilterMatomeCommentMenuApi?.version ?? null,
+      notificationRefresh: globalThis.FilterMatomeNotificationReadApi?.version ?? null,
       statuses: Object.fromEntries(
         Array.from(document.querySelectorAll("[data-api-id]"), (item) => [
           item.getAttribute("data-api-id"),
@@ -349,7 +352,8 @@ const main = async (): Promise<void> => {
         result.popoverPosition !== "absolute" ||
         result.statuses["playback-rate"] !== "active" ||
         result.statuses["comment-reload"] !== "active" ||
-        result.statuses["comment-menu"] !== "active"
+        result.statuses["comment-menu"] !== "active" ||
+        result.statuses["notification-refresh"] !== "active"
       ) {
         throw new Error(`API状態が不正です: ${JSON.stringify(result)}`);
       }
@@ -375,7 +379,7 @@ const main = async (): Promise<void> => {
       assertInsideViewport(result.popover, result.viewport);
       console.log(`[api-status-menu-live] verified: ${watchUrl}`);
       console.log(
-        `[api-status-menu-live] playback=${result.statuses["playback-rate"]} / reload=${result.statuses["comment-reload"]} / menu=${result.statuses["comment-menu"]} / placement=${result.placement} / NicoCache menu=${String(result.nicoCacheMenuCount)}`,
+        `[api-status-menu-live] playback=${result.statuses["playback-rate"]} / reload=${result.statuses["comment-reload"]} / menu=${result.statuses["comment-menu"]} / notification=${result.statuses["notification-refresh"]} / placement=${result.placement} / NicoCache menu=${String(result.nicoCacheMenuCount)}`,
       );
     } finally {
       pageClient.close();

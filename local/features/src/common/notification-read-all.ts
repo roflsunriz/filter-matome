@@ -180,6 +180,11 @@ let insertionScheduled = false;
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
+const isNotificationRefreshApi = (
+  value: unknown,
+): value is { version: 1; refresh: () => void } =>
+  isRecord(value) && value.version === 1 && typeof value.refresh === "function";
+
 const normalizeNotificationId = (value: unknown): string | null => {
   if (typeof value === "string" && value.trim().length > 0) {
     return value;
@@ -501,6 +506,16 @@ const handleButtonClick = async (
 
   try {
     const result = await markAllNotificationsRead();
+    // 公式の再取得で、既読の装飾と重要な未読件数を一緒に更新する。
+    // 処理中に利用者が閉じたパネルを開き直すことはない。
+    const api = (
+      window as Window & { FilterMatomeNotificationReadApi?: unknown }
+    ).FilterMatomeNotificationReadApi;
+    let canRefresh = false;
+    if (isNotificationRefreshApi(api)) {
+      api.refresh();
+      canRefresh = true;
+    }
     if (result.failedIds.length > 0) {
       toastr.warning(
         copy.partial(result.succeededCount, result.failedIds.length),
@@ -514,7 +529,10 @@ const handleButtonClick = async (
     } else {
       toastr.success(copy.success(result.succeededCount), copy.title);
     }
-    findBellTrigger(settingsLink)?.click();
+    // 古い公式資産がキャッシュされている場合は従来の再表示経路を保つ。
+    if (!canRefresh) {
+      findBellTrigger(settingsLink)?.click();
+    }
   } catch (error) {
     window.logger?.error("[NotificationReadAll] 処理に失敗しました", error);
     toastr.error(copy.failure, copy.title);

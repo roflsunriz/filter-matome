@@ -12,8 +12,8 @@
 - `header.ts`: 共通ヘッダーとナビゲーション。`window.NicoCommon` を公開。
 - `logger.ts`: 共通ロガー。`window.logger` を公開。
 - `toastr.ts`: 通知UI。`window.toastr` を公開。
-- `notification-read-all.ts`: 公式CommonHeaderの通知パネルへ一括既読ボタンを追加し、公式通知一覧をページングして未読だけを制限付き並列で既読化する。
-- `api-status-menu.ts`, `api-status-menu-runtime.ts`, `api-status-menu-styles.ts`: 公式CommonHeaderへ独立したfilter-matomeメニューを挿入し、3つのnlFilter版付きAPIをページ開始時・資産読込時・ページ復帰時・180秒間隔で自動検査して表示する。コメントメニューは読込済みの公式`ExpandedComment`資産を認証情報なしで再取得し、103番固有markerをread-only検査する。
+- `notification-read-all.ts`: 公式CommonHeaderの通知パネルへ一括既読ボタンを追加し、公式通知一覧をページングして未読だけを制限付き並列で既読化する。完了時は公式一覧を再取得し、パネルを開いたまま表示へ反映する。
+- `api-status-menu.ts`, `api-status-menu-runtime.ts`, `api-status-menu-styles.ts`: 公式CommonHeaderへ独立したfilter-matomeメニューを挿入し、4つのnlFilter版付きAPIをページ開始時・資産読込時・ページ復帰時・180秒間隔で自動検査して表示する。コメントメニューは読込済みの公式`ExpandedComment`資産を認証情報なしで再取得し、103番固有markerをread-only検査する。通知表示更新の検査では`refresh()`を実行しない。
 - `watch-fullscreen.ts`: Fullscreen APIと、公式Watchの`fullscreen-target`がビューポート全面へ固定された状態を共通の全画面判定へ正規化する。
 - `material-icons.ts`, `icon-assets.ts`: Material Design Iconsの生成、URL化、既存画像の置換。
 - `css-constants.ts`, `visual-theme.ts`: 共通CSS変数とダークテーマトークン。
@@ -34,6 +34,7 @@
 - 動画IDは呼び出し元またはURLを優先し、`window.NicoCache_nl.watch` は型確認付きのフォールバックに限定する。
 - DOMやAPIから得る `unknown` は、共通境界で検証してから機能固有型へ渡す。
 - 公式通知の一括既読は、全ページのレスポンスと`nextUrl`を検証し終えてからPUTを開始し、公式API以外のURL、ページ循環、過大件数では何も変更せず停止する。
+- 通知表示更新は100番の`FilterMatomeNotificationReadApi.refresh()`を通して公式actionへ接続する。公式ストアを公開せず、生成class名を直接変更しない。APIが使えない古いキャッシュでは従来どおり全成功時に閉じて再表示で同期する。
 - nlFilter API状態メニューのマウント、挿入先探索、account余白予約、`requestAnimationFrame`再配置、MutationObserver、ホバー・フォーカス・キーボード操作は`05_nicocache_menu.js`と同じ構造にする。違いはコンテナ名とAPI状態表示の内容だけに限定し、ログイン・非ログインとも公式CommonHeaderルートと意味的アカウントURLが生成されるまでDOMを変更せず、`NicoCache → filter-matome → アカウント`の順に配置する。状態確認をホバーや公式コメントメニューの右クリックへ依存させず、自動検査結果は閉じたメニューの要約色にも反映する。
 - 公式CommonHeaderの最小幅やブラウザーズームによりアカウント項目がビューポート外へ移動しても、NicoCacheとfilter-matomeの順序を保ったまま両メニューを可視領域右端へ収める。
 - nlFilter API状態メニューはFullscreen APIと公式Watchのブラウザー内全画面を共通判定し、全画面中は開いているポップオーバーを閉じてメニュー全体を非表示にする。解除後はaccount配置と余白を再計算して元の表示順へ戻す。

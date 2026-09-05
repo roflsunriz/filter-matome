@@ -10,7 +10,7 @@
 
 | ファイル名 | 役割 |
 |---|---|
-| `100_features.txt` | `dist/features.js`をCommonHeader導入サービスへ1回挿入 |
+| `100_features.txt` | `dist/features.js`をCommonHeader導入サービスへ1回挿入し、公式通知パネルの表示更新APIを接続 |
 | `101_disable_official_function.txt` | serverContextの設定JSONを保持し、公式プレイヤーとmlinkの再生速度を版付きAPIで同期 |
 | `102_comment_reload_api.txt` | 公式コメントストアの再取得actionをcomment-filter2向けの版付きAPIとして公開 |
 | `103_official_comment_menu.txt` | 公式Reactコメントメニューへcomment-filter2の版付き操作APIを接続 |
@@ -54,6 +54,8 @@ Replace<
 5. 対象ページをハード再読み込みして確認する
 
 ## 注意事項
+
+- `100_features.txt`の通知表示更新は、CommonHeaderのaction factoryへ`version: 1`と`refresh()`だけを公開する。3世代のPC・responsive資産で確認した同一store・パネルreset状態・公式actionの参照関係をMatchで固定する。追従時は`local/features/src/sandbox/common-header-notification-read-all.md`の履歴と検証手順を参照する。
 
 - `100_features.txt`を無効にするとブラウザ機能はすべて起動しません。
 - `104_watch_harajuku_style.txt`の公式root CSS Matchを変更するときは、`bun run sandbox:capture-official`で現行資産を取得し、`bun run sandbox:analyze-watch-css`で元CSSとlayer隔離後CSSの両方をde-minify・構文検証してください。

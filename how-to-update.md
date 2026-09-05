@@ -56,11 +56,16 @@ CommonHeaderのベル内に`すべて既読`ボタンが出ない、一覧取得
 
 ```powershell
 cd local/features
-bun test tests/common-notification-read-all.test.ts
+bun test tests/common-notification-read-all.test.ts tests/common-notification-refresh.test.ts
 bunx playwright test tests/common-notification-read-all.spec.ts
+bun scripts/sandbox/verify-notification-refresh.ts --cdp=http://127.0.0.1:9222
 ```
 
 fixtureは確認できた必要フィールドだけを匿名値で更新し、Cookie、通知本文、ユーザーIDを保存しない。自動テストから実サービスへPUTしない。APIのorigin、path、レスポンス型、ページングが確認できない場合は許可条件を緩めず、全ページ検証前に一部通知だけを既読化しない。ロールバックは`src/common/index.ts`から一括既読起動を外し、`notification-read-all.ts`と専用テスト・fixtureを前のリリースへ戻して全体ビルドを再生成する。
+
+通知が既読になってもパネル内の表示が変わらない場合は、`filter-matome`のAPI一覧で通知表示更新が有効か確認する。100番には公式CommonHeaderのaction factoryへ`FilterMatomeNotificationReadApi`を接続する置換も含まれるため、100番と全体ビルドを更新して一度`Ctrl+F5`で再読み込みする。プローブは`refresh()`を実行しない。通常の一括既読は処理完了後に開いているパネルだけ公式一覧を再取得する。
+
+Matchの追従ではsandboxの取得済み資産を先に比較し、3.11.0・3.12.0・3.13.0のPC/responsiveで対象1回、対象外資産0回、置換後構文を確認する。上の検証スクリプトは起動済みの隔離Chromeを使い、ブラウザー側の全要求を匿名fixtureへ置き換えて公式パネルの表示更新を確認する。未知の内部構造へは置換条件を緩めず、旧資産では従来の閉じて再表示する動作を保つ。表示更新だけを戻す場合は100番の通知更新APIのReplace節と対応するTypeScript・テストを同じ以前の版へ戻し、全体ビルドと再読み込みを行う。
 
 ## 原宿風Watch CSSの追従確認
 

@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- 【common・CommonHeader】通知の即時表示更新が利用可能か確認できるよう、filter-matomeのAPI一覧へ通知表示更新の自動検査を追加した。検査では既読化やパネルの開閉を行わない。
+
+### Fixed
+
+- 【common・CommonHeader】一括既読後にお知らせを開き直す必要がないよう、パネルを維持したまま公式一覧を再取得し、既読表示と重要な未読件数を更新する。部分失敗時も成功分だけを反映し、処理中に閉じたパネルを勝手に開き直さない。
+
 ## [#253] - 2026-08-31
 
 ### Changed

@@ -97,6 +97,8 @@ bun run build
 
 ## NicoCache_nl連携の制約
 
+- CommonHeader通知の一括既読後の表示更新は、`nlFilters/100_features.txt`が公式action factoryへ公開する`FilterMatomeNotificationReadApi`（版と`refresh()`のみ）を使う。`refresh()`は開いているパネルだけ公式一覧を再取得するため、自動プローブから呼ばない。2026-09-05に3.11.0〜3.13.0のPC/responsive計6資産で確認済み。Match追従時は既存sandbox資産を先に比較し、同じstore/reset状態/公式actionの参照関係を維持する。根拠と検証は`local/features/src/sandbox/common-header-notification-read-all.md`を参照。
+
 - ブラウザー側の `window.NicoCache_nl.watch` と、`https://nicocachenl.test/api/v1`で提供するNicoCache_nl REST APIを区別する。
 - `window.NicoCache_nl.watch` は `NICO_DATA_ROOT\local\nllib_watch.js` が提供する互換ヘルパーであり、ニコニコ動画の `server-response` メタ情報や視聴ページの `fetch` レスポンスに依存する。ニコニコ動画側の構造変更へすぐ追従できない場合があるため、第一の情報源にはしない。
 - 現在の動画IDはURLまたは呼び出し元から明示された値を優先し、再生状態は `HTMLMediaElement` など対象ページの実体を優先する。`window.NicoCache_nl.watch` は、それらから取得できない情報のフォールバックとして、存在確認、型確認、失敗時処理を入れて使用する。

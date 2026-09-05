@@ -27,7 +27,8 @@ bun run benchmark:comment-filter
 
 ## テストの分担
 
-- `common-notification-read-all.spec.ts`: 公式CommonHeader相当の未読・ページングfixture、一括既読ボタンの再挿入、全成功、部分失敗と再試行。
+- `common-notification-read-all.spec.ts`: 公式CommonHeader相当の未読・ページングfixture、一括既読ボタンの再挿入、開いたままの全成功・部分失敗反映、旧資産での再表示と再試行。
+- `common-notification-refresh.test.ts`: 100番の通知更新API接続、同じstore/reset状態の参照検証、閉じたパネルを再度開かないこと。
 - `common-api-status-menu.spec.ts`: 公式CommonHeader相当のログイン・非ログインfixtureで、公式ルート生成前の非挿入、`05_nicocache_menu.js`と同じaccountマウント、`NicoCache → filter-matome → アカウント`配置、API有効・待機・未検出・版不一致、DOM再生成、狭幅RTL、ホバー・フォーカス・キーボード操作を検証する。
 - `comment-filter2.spec.ts`: 実IndexedDBを使う設定UI、ルールCRUD、即時適用、正規表現プレビュー。
 - `mlink-video-controller.spec.ts`: パネル、各タブ、モジュール設定、インポート・正規化、主要UI操作。

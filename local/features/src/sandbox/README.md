@@ -20,7 +20,8 @@
 - `../../scripts/sandbox/verify-offline-cdp-sandbox.ts`: 一時BrowserContextを作り、CDPでHTTP、HTTPS、WebSocket、FTPを遮断し、CookieとWeb Storageも空であることを検証します。
 - `../../scripts/sandbox/verify-current-comment-reload.ts`: Cookieのない一時BrowserContextで現行Watchページを開き、版付きAPI、`POST /v1/threads`、comment-filter2への再入力、ページ再読み込みがないことを動的検証します。
 - `../../scripts/sandbox/verify-current-playback-rate.ts`: Cookieのない一時BrowserContextで現行Watchページを開き、公式ショートカットとmlinkの再生速度が版付きAPI・動画要素へ同期することを数値だけで動的検証します。
-- `../../scripts/sandbox/verify-current-api-status-menu.ts`: Cookieのない一時BrowserContextで現行Watchページを開き、CommonHeaderの独立メニューと3つのnlFilter API状態、配置、画面内表示を動的検証します。
+- `../../scripts/sandbox/verify-current-api-status-menu.ts`: Cookieのない一時BrowserContextで現行Watchページを開き、CommonHeaderの独立メニューと4つのnlFilter API状態、配置、画面内表示を動的検証します。
+- `../../scripts/sandbox/verify-notification-refresh.ts`: 3世代のCommonHeader PC/responsiveを公式CDNから取得し、通知更新APIのMatchと構文を確認します。匿名fixtureと外部通信を遮断したChromeで、一括既読後の表示更新、部分失敗、処理中のパネル閉鎖を検証します。
 - `../../scripts/sandbox/verify-current-harajuku-css.ts`: NicoCache_nl経由のCookieなし一時タブで原宿風Watchを有効化し、CSSの読込順、重要宣言0件、代表ビューポート、専用DOMを検証します。公式Watchがエラー画面の場合は失敗として報告します。
 - `comment-post-api.md`: 2026-07-19に取得した公式バンドルから確認したコメント投稿契約です。
 - `comment-reload-api.md`: 2026-07-23に取得した公式バンドルから確認した、公式ストアと描画を更新するコメント再取得契約です。

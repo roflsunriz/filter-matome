@@ -1,5 +1,33 @@
 # 検証手順
 
+## お知らせの一括既読と表示更新
+
+2026-09-05。100番の通知表示更新APIを通し、一括既読後にパネルを開いたまま公式一覧を再取得する。
+API一覧には通知表示更新を加え、プローブから`refresh()`を呼ばない。
+
+```powershell
+cd local/features
+bun test tests/common-notification-read-all.test.ts tests/common-notification-refresh.test.ts
+bunx playwright test tests/common-notification-read-all.spec.ts tests/common-api-status-menu.spec.ts
+bun scripts/sandbox/verify-notification-refresh.ts --cdp=http://127.0.0.1:9222
+bun run verify
+```
+
+世代比較は既存sandboxの3.12.0・3.13.0を基点に3.11.0を加え、PC/responsive計6資産でMatchが各1回、その他470資産で0回。
+全6資産の置換後構文とChromeの公式DOMで、全成功・部分失敗・処理中のパネル閉鎖を検証した。
+全成功と成功分だけが700/白から400/灰へ変わり、パネルは維持される。閉じたパネルは復活しない。
+詳細なURL・ハッシュ・世代ごとの関数名・境界の根拠は
+`local/features/src/sandbox/common-header-notification-read-all.md`に記録した。
+
+実際のNicoCache_nl配信もPC/responsiveともAPI挿入済みを確認した。
+ビルド後の匿名の`https://www.nicovideo.jp/video_top`でも、通常のキャッシュ経路・手動コード注入なしで、
+API版1、`refresh`関数、API一覧の通知表示更新が`active`へ自動反映されることを確認した。
+通常のキャッシュを更新するため、利用開始時に一度ページを`Ctrl+F5`で再読み込みする。
+利用者のFirefoxプロフィールと実通知への書き込みは未検証。匿名fixtureから実サービスへのPUTは行わない。
+
+2026-09-05の全体検証はformat、lint、型チェック、単体249件、Playwright 82件、全体ビルドが合格。
+`mkdocs build --strict`も合格した。
+
 ## CommonHeader API状態メニューの挿入順
 
 公式CommonHeaderのReactルート生成前にfilter-matomeメニューを追加せず、生成後はログイン・

@@ -87,7 +87,90 @@ test.beforeAll(() => {
   bundle = buildFixtureBundle();
 });
 
-test("公式CommonHeader相当の未読fixtureを全ページ既読にしてパネルを閉じる", async ({
+for (const partialFailure of [false, true]) {
+  test(`既読後は開いたまま公式再取得で成功した通知だけ更新する（部分失敗=${String(partialFailure)}）`, async ({
+    page,
+  }) => {
+    const notifications = [
+      { id: "first", read: false },
+      { id: "second", read: false },
+    ];
+    let getCount = 0;
+    await page.route(apiPattern, async (route) => {
+      const request = route.request();
+      if (request.method() === "OPTIONS") {
+        await route.fulfill({ status: 204, headers: corsHeaders });
+        return;
+      }
+      if (request.method() === "GET") {
+        getCount += 1;
+        await route.fulfill({
+          json: { data: { notifications, nextUrl: null } },
+          headers: corsHeaders,
+        });
+        return;
+      }
+      const id = new URL(request.url()).pathname.split("/")[3];
+      const failed = partialFailure && id === "second";
+      const notification = notifications.find((item) => item.id === id);
+      if (notification && !failed) notification.read = true;
+      await route.fulfill({ status: failed ? 500 : 204, headers: corsHeaders });
+    });
+    await installFixture(page);
+    await page.evaluate(() => {
+      // 公式actionの再取得・再描画境界。API接続自体はnlFilterの実コードで別途検証する。
+      const api = {
+        version: 1,
+        refresh: () => {
+          void fetch(
+            "https://api.oshirasebox.nicovideo.jp/v1/box?offset=0&importantOnly=false",
+          )
+            .then((response) => response.json())
+            .then(
+              (response: {
+                data: { notifications: { id: string; read: boolean }[] };
+              }) => {
+                const list = document.querySelector(
+                  '[data-fixture="notification-list"]',
+                );
+                list?.replaceChildren(
+                  ...response.data.notifications.map((item) => {
+                    const row = document.createElement("div");
+                    row.dataset.notificationId = item.id;
+                    row.dataset.read = String(item.read);
+                    row.textContent = item.id;
+                    return row;
+                  }),
+                );
+              },
+            );
+        },
+      };
+      Object.assign(window, { FilterMatomeNotificationReadApi: api });
+    });
+    const panel = page.locator('[data-fixture="notification-panel"]');
+    await panel.evaluate((element) => {
+      element.setAttribute("data-original-panel", "true");
+    });
+    await page.getByRole("button", { name: "すべて既読" }).click();
+    await expect(
+      page.locator('[data-notification-id="first"]'),
+    ).toHaveAttribute("data-read", "true");
+    await expect(
+      page.locator('[data-notification-id="second"]'),
+    ).toHaveAttribute("data-read", String(!partialFailure));
+    await expect(panel).toHaveAttribute("data-original-panel", "true");
+    await expect(page.locator("body")).not.toHaveAttribute(
+      "data-bell-close-count",
+    );
+    expect(getCount).toBe(2);
+    await expect(
+      page.getByRole("button", { name: "すべて既読" }),
+    ).toBeEnabled();
+  });
+}
+
+test("表示更新APIがない旧資産では全ページ既読後にパネルを閉じる", async ({
   page,
 }) => {
   const putPaths: string[] = [];

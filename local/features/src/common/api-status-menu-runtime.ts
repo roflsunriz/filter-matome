@@ -38,6 +38,7 @@ const ENGLISH_COPY: Copy = {
     "playback-rate": "Playback-rate bridge",
     "comment-reload": "Comment reload",
     "comment-menu": "Comment menu",
+    "notification-refresh": "Notification display refresh",
   },
   states: {
     active: "Active",
@@ -59,6 +60,7 @@ const COPIES: Record<string, Copy> = {
       "playback-rate": "再生速度同期",
       "comment-reload": "コメント再取得",
       "comment-menu": "コメントメニュー",
+      "notification-refresh": "通知表示更新",
     },
     states: {
       active: "有効",
@@ -77,6 +79,7 @@ const COPIES: Record<string, Copy> = {
       "playback-rate": "播放速度同步",
       "comment-reload": "重新加载评论",
       "comment-menu": "评论菜单",
+      "notification-refresh": "通知显示更新",
     },
     states: {
       active: "有效",
@@ -90,6 +93,10 @@ const COPIES: Record<string, Copy> = {
   hi: {
     ...ENGLISH_COPY,
     title: "nlFilter API स्थिति",
+    names: {
+      ...ENGLISH_COPY.names,
+      "notification-refresh": "सूचना प्रदर्शन अपडेट",
+    },
     states: {
       active: "सक्रिय",
       probing: "जाँच जारी",
@@ -102,6 +109,10 @@ const COPIES: Record<string, Copy> = {
   es: {
     ...ENGLISH_COPY,
     title: "Estado de API nlFilter",
+    names: {
+      ...ENGLISH_COPY.names,
+      "notification-refresh": "Actualización de notificaciones",
+    },
     states: {
       active: "Activa",
       probing: "Comprobando",
@@ -114,6 +125,10 @@ const COPIES: Record<string, Copy> = {
   fr: {
     ...ENGLISH_COPY,
     title: "État des API nlFilter",
+    names: {
+      ...ENGLISH_COPY.names,
+      "notification-refresh": "Actualisation de l'affichage des notifications",
+    },
     states: {
       active: "Active",
       probing: "Vérification",
@@ -126,6 +141,10 @@ const COPIES: Record<string, Copy> = {
   ar: {
     ...ENGLISH_COPY,
     title: "حالة واجهات nlFilter",
+    names: {
+      ...ENGLISH_COPY.names,
+      "notification-refresh": "تحديث عرض الإشعارات",
+    },
     states: {
       active: "نشطة",
       probing: "جارٍ الفحص",
@@ -138,6 +157,10 @@ const COPIES: Record<string, Copy> = {
   pt: {
     ...ENGLISH_COPY,
     title: "Estado das APIs nlFilter",
+    names: {
+      ...ENGLISH_COPY.names,
+      "notification-refresh": "Atualização da exibição de notificações",
+    },
     states: {
       active: "Ativa",
       probing: "Verificando",
@@ -150,6 +173,10 @@ const COPIES: Record<string, Copy> = {
   bn: {
     ...ENGLISH_COPY,
     title: "nlFilter API অবস্থা",
+    names: {
+      ...ENGLISH_COPY.names,
+      "notification-refresh": "বিজ্ঞপ্তি প্রদর্শন আপডেট",
+    },
     states: {
       active: "সক্রিয়",
       probing: "পরীক্ষা চলছে",
@@ -162,6 +189,10 @@ const COPIES: Record<string, Copy> = {
   ru: {
     ...ENGLISH_COPY,
     title: "Состояние API nlFilter",
+    names: {
+      ...ENGLISH_COPY.names,
+      "notification-refresh": "Обновление отображения уведомлений",
+    },
     states: {
       active: "Активен",
       probing: "Проверка",
@@ -174,6 +205,10 @@ const COPIES: Record<string, Copy> = {
   ur: {
     ...ENGLISH_COPY,
     title: "nlFilter API کی حالت",
+    names: {
+      ...ENGLISH_COPY.names,
+      "notification-refresh": "اطلاعات کے ڈسپلے کی تازہ کاری",
+    },
     states: {
       active: "فعال",
       probing: "جانچ جاری ہے",
@@ -677,6 +712,7 @@ const createMenu = (resolveStatuses: ResolveStatuses): HTMLElement => {
     createStatusItem("playback-rate"),
     createStatusItem("comment-reload"),
     createStatusItem("comment-menu"),
+    createStatusItem("notification-refresh"),
   );
   const note = document.createElement("p");
   note.className = "filter-matome-api-status-note";
