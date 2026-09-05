@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- 【開発規約】公式資産APIの世代依存と診断項目の更新漏れを防ぐため、ローカルAGENTS.mdにsandboxの複数世代での汎化検証と、CommonHeaderのAPIタブ・自動プローブを追加・編集・削除時に同期する契約を明記した。
+
 ## [#254] - 2026-09-05
 
 ### Added

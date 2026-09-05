@@ -95,6 +95,15 @@ bun run build
 - `NICO_DATA_ROOT` は `C:\Users\UserName\AppData\Local\NicoCache_nl\config.properties` の `userDataRoot` で設定され、起動時の `nicocache.userDataRoot` システムプロパティやランチャー指定があればそちらが優先される。ポータブル起動や開発起動ではアプリケーションルートがデータルートになる場合もあるため、パスを推測せず毎回設定と `NicoCachePaths.dataRoot()` を確認する。
 - `extensions`、`local`、`cache`、`certs`、`data`、`nlFilters`、`NicoCacheGUI.property` などの実行時データは `NICO_DATA_ROOT` 配下にある。`NICO_APP_ROOT` はソース、JAR、設定、起動スクリプトなど本体側のファイルを置くルートであり、両者を混同しない。
 
+## nlFilterによる公式資産APIの変更契約（必須）
+
+- nlFilterで公式JavaScript資産へAPIを公開・接続するときは、新規追加、既存APIの編集、Match/Replaceの追従、API削除を一体の契約変更として扱う。フィルターだけを変更して完了にしない。
+- 追加・編集前に`local/features/src/sandbox/`の取得済み資産と契約・Match履歴を確認し、複数世代（最低3世代、存在するPC/responsive等の変種を含む）で同じ意味上の境界と参照関係が成立し、十分に汎化されていることを検証する。最新1資産への一致や同一内容の複製を複数世代の根拠にせず、minify名が変化した世代も比較する。資産不足なら追加取得し、未確認のまま汎化済みとしない。
+- 世代ごとにURL、取得日時、SHA-256、サイズ、Match一致数、前版との差分、採用した不変条件をsandboxの対応文書へ記録する。対象箇所への期待一致数（単一挿入なら1回）、対象外資産で0回、置換後の構文、公式store/action/controller等の参照関係と公開APIの動作を確認する。識別子の無条件ワイルドカード化や単語一致だけで対象を広げない。検証対象数、結果、未検証と理由を`verification.md`へ残す。
+- APIの追加・編集・削除と同じ変更内で、CommonHeaderに挿入するFilter-Matome APIタブ（現行の`filter-matome` API状態メニュー）の項目と自動プローブを必ず追加・編集・削除する。追加時は項目とプローブを接続し、編集時は版・必須メソッド・適用ページ・判定条件・説明を同期し、削除時は項目、プローブ、型、翻訳、テスト、文書の不要な参照を取り除く。
+- 自動プローブは手動操作なしで実行され、APIの存在・版・必須メソッド、必要に応じて読込済み資産の固有markerを副作用なしで検査する。未検出、版不一致、検査中、検査失敗、適用対象外を有効と混同しない。既読化、再取得、再生状態変更、メニュー開閉等の操作APIを診断目的で呼ばない。特に`FilterMatomeNotificationReadApi.refresh()`は呼ばない。
+- 変更時は`local/features/src/common/api-status-menu.ts`と関連runtime・表示・翻訳、`local/features/tests/common-api-status-menu.test.ts`、`local/features/tests/common-api-status-menu.spec.ts`を確認・更新し、遅延公開、再描画、SPA遷移と自動再検査後の表示も検証する。sandboxでの世代横断検証に加え、NicoCache_nlの実配信経路からAPIとタブの自動判定が成立することを確認する。個別契約の根拠はsandboxの`playback-rate-bridge.md`、`comment-reload-match-history.md`、`comment-context-menu-match-history.md`、`common-header-notification-read-all.md`を参照する。
+
 ## NicoCache_nl連携の制約
 
 - CommonHeader通知の一括既読後の表示更新は、`nlFilters/100_features.txt`が公式action factoryへ公開する`FilterMatomeNotificationReadApi`（版と`refresh()`のみ）を使う。`refresh()`は開いているパネルだけ公式一覧を再取得するため、自動プローブから呼ばない。2026-09-05に3.11.0〜3.13.0のPC/responsive計6資産で確認済み。Match追従時は既存sandbox資産を先に比較し、同じstore/reset状態/公式actionの参照関係を維持する。根拠と検証は`local/features/src/sandbox/common-header-notification-read-all.md`を参照。
