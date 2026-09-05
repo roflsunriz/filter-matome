@@ -28,6 +28,9 @@ API版1、`refresh`関数、API一覧の通知表示更新が`active`へ自動�
 2026-09-05の全体検証はformat、lint、型チェック、単体249件、Playwright 82件、全体ビルドが合格。
 `mkdocs build --strict`も合格した。
 
+同日の#254公開前検査では`bun audit`で検出した開発用の`@humanfs/node`を0.16.8へ更新し、
+再検査は100パッケージ・脆弱性0件となった。直接依存は増やさず、必要な間接依存だけを更新した。
+
 ## CommonHeader API状態メニューの挿入順
 
 公式CommonHeaderのReactルート生成前にfilter-matomeメニューを追加せず、生成後はログイン・
