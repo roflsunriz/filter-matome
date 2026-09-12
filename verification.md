@@ -34,6 +34,8 @@ bun run sandbox:verify-api-status-menu
 
 容量超過と致命的ネットワークエラーはフェイクHLSで検証し、物理メモリー不足を実機で意図的に発生させる試験は実施していない。会員固有の有料/PPV動画と利用者のFirefoxプロフィールは未検証。通常の認可・画質・プロキシー設定を変更せず、公開動画での実配信と境界テストを組み合わせた。原本とcaptureの区別、取得時刻・ハッシュ・現行CDN照合は`local/features/src/sandbox/full-buffer-bridge.md`に記録した。
 
+開始・完了時の文書確認で不足していた`CODE_OF_CONDUCT.md`、`SECURITY.md`、`SUPPORT.md`を整備し、CONTRIBUTINGのBun固定値をpackage.jsonへの参照へ修正した。既存の同等文書がないことと、文書内の相対リンク先の存在を確認した。
+
 ## 公式資産APIの変更契約
 
 2026-09-06。ローカル`AGENTS.md`へ、sandboxの最低3世代と各変種による汎化検証、

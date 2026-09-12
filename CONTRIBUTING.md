@@ -16,7 +16,7 @@ filter-matomeプロジェクトへの貢献に興味を持っていただき、�
 ## 🛠️ 開発環境のセットアップ
 
 ### 前提条件
-- Bun 1.3.8 以上
+- Bun（要求バージョンは`local/features/package.json`の`packageManager`を参照）
 - Java Development Kit (JDK) 17 LTS 又は 21 LTS
 - Maven（matome-toolboxの変更・テスト時）
 - Git 2.52.0.windows.1 以上
