@@ -1,4 +1,5 @@
 import { createMaterialIcon } from "@/common/material-icons";
+import { playbackToolsTemplate } from "./playback-tools";
 
 export const playbackTemplate = `
 <div class="playback-content">
@@ -54,5 +55,6 @@ export const playbackTemplate = `
       <button class="x-sec-jump-btn" data-jump-seconds="60">+60秒</button>
     </div>
   </div>
+  ${playbackToolsTemplate}
 </div>
 `;

@@ -18,6 +18,25 @@ mkdocs build --strict
 
 撮影スクリプトはmylist2とwatch-historyへ匿名サンプルを一時作成するが、既存のChromeプロフィール、Cookie、IndexedDBは読み込まない。動画取得スケジューラーは保存直前の確認画面までに留める。生成された`docs/resources/`のPNGと`cover-images/`の5枚を目視し、ユーザー名、アイコン、Cookie、秘密情報、キャッシュのローカルパスなどが含まれていないことを確認する。問題がある場合は画像をコミットせず、撮影対象またはマスク範囲を修正して取り直す。
 
+## 全編先読み・A-Bリピートの更新確認
+
+101番フィルターと`local/features`を同じ版に更新し、全体ビルド後に視聴ページを一度再読み込みする。追加の保存設定やデータ移行は不要。再生タブ下部の`全編先読み`と`A-Bリピート`から操作する。
+
+```powershell
+cd local/features
+bun run sandbox:analyze-full-buffer
+bun test tests/full-buffer-nlfilter.test.ts tests/playback-tools.test.ts tests/common-api-status-menu.test.ts
+bunx playwright test tests/mlink-video-controller-playback-tools.spec.ts tests/common-api-status-menu.spec.ts
+bun run verify
+bun run sandbox:verify-playback-tools
+```
+
+公式資産が更新された場合は、既存sandboxと現在の`PlayerSeekBar`資産を比較する。`full-buffer-bridge.md`へURL・取得日時・サイズ・SHA-256・識別子・一致数・前版との差分を記録し、HLS sessionの生成、映像と音声の読込位置、公式の上限制御が維持されていることを確認する。プロキシー経由のcaptureには別のnlFilterによる変更が含まれるため、原本と混同しない。現行原本はCookieなしで公式CDNから`official-watch-bundle/originals/`へ保存し、配布物へ含めない。
+
+実ページでは全編先読みの開始・解除、100%の範囲、再生位置・一時停止・速度の維持、A-Bの現在位置設定・時刻入力・区間反復・解除・クリア、動画切り替え時のリセットを確認する。上部`filter-matome`の全編先読みAPI状態は自動で有効になり、検査だけで動画取得を始めない。
+
+元へ戻す場合は、101番の全編先読みReplace節と対応するfeaturesを同じ以前の版へ戻し、全体ビルド後に視聴ページを再読み込みする。ブラウザーの容量超過は強制再試行せず、表示された停止理由を確認して画質を下げる。
+
 ## 公式プレイヤー再生速度ブリッジの追従確認
 
 公式設定またはmlink-video-controllerで変更した再生速度が元へ戻る、公式設定パネルがエラーになる、または101番nlFilterのMatchが外れた場合は、Cookieと認証ヘッダーを保存しないraw CDP captureを取り直す。取得物はGit管理外の`local/features/src/sandbox/official-watch-bundle/`だけへ置き、公式コードを製品bundleへ取り込まない。

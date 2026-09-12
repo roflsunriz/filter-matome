@@ -1,5 +1,39 @@
 # 検証手順
 
+## mlinkの全編先読み・A-Bリピート（2026-09-12）
+
+再生タブに2機能を追加した。101番の全編先読みAPIとCommonHeaderの自動検査を同時に接続し、A-Bリピートは標準の動画要素へ接続する。設定はこの動画の間だけ保持し、SPA・再接続・破棄で解除する。
+
+| 検証対象 | 結果 |
+| --- | --- |
+| 公式HLSの世代比較 | 6ビルド・8資産でMatch各1回、対象外526資産で0回、置換後構文合格。同一URLの変更済みコピーは別世代に数えず、HLS session本文は5種類 |
+| API・進捗・時刻の単体確認を含む全単体テスト | 260件合格 |
+| 既存機能を含むChromium E2E | 91件合格 |
+| Firefox 153.0の再生操作・APIメニューE2E | 21件合格。利用者の通常プロフィールを使わない分離環境 |
+| 実Chrome 153.0.8010.36 / NicoCache_nl | 途中再生230秒から、100秒・一時停止を保って全編100%。100～101秒の反復、解除、全5 APIの自動active、通常再読み込みでのリセットを確認 |
+| 実Firefox 153.0 / NicoCache_nl | 全編`[0, 320.086433]`、100秒・一時停止維持、100～101秒の反復、全編先読みAPIの自動activeを確認 |
+| 実ページのサイズ | 360×800、800×600、600×360、1920×1080でパネルとクリア操作が画面内。日本語・英語・RTLの入力/ボタン幅はE2Eでも確認 |
+
+format、lint、型チェック、全体ビルド、`mkdocs build --strict`が合格。`docs/resources/mlink-playback-tools.png`は匿名の実Watchから撮影し、説明・両方の時刻・操作ボタンが切れないことを目視した。操作説明、更新・復旧、API契約文書を同時に更新した。
+
+Material for MkDocsの2.0非互換性の予告も[公式案内](https://squidfunk.github.io/mkdocs-material/blog/2026/02/18/mkdocs-2.0/)と照合した。現行の`requirements-docs.txt`は既に`mkdocs>=1.6,<2.0`を指定し、CIも同じ定義を使うため、2.0への自動更新は防止済み。警告を抑制する設定は追加していない。
+
+```powershell
+cd local/features
+bun run format
+bun run lint
+bun run type-check
+bun run test
+bun run build
+bun run sandbox:analyze-full-buffer
+bun run sandbox:verify-playback-tools
+bun run sandbox:verify-api-status-menu
+```
+
+この端末のBun 1.4.0では、通常の`bun run test`が単体テスト完了後のPlaywright実行ファイルshimで進まなかったため停止し、`bun --bun run test`で同じpackage.json定義の全単体・全E2Eを完走した。テストの除外・期待値の緩和は行っていない。FirefoxはWindows sandbox内でページ生成に失敗したため、分離ブラウザーの同じ21テストを昇格実行して合格した。
+
+容量超過と致命的ネットワークエラーはフェイクHLSで検証し、物理メモリー不足を実機で意図的に発生させる試験は実施していない。会員固有の有料/PPV動画と利用者のFirefoxプロフィールは未検証。通常の認可・画質・プロキシー設定を変更せず、公開動画での実配信と境界テストを組み合わせた。原本とcaptureの区別、取得時刻・ハッシュ・現行CDN照合は`local/features/src/sandbox/full-buffer-bridge.md`に記録した。
+
 ## 公式資産APIの変更契約
 
 2026-09-06。ローカル`AGENTS.md`へ、sandboxの最低3世代と各変種による汎化検証、

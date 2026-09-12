@@ -1,6 +1,6 @@
 export const panelStyles = `
 .panel {
-  max-height: 80vh;
+  max-height: min(80dvh, calc(100% - 112px));
   overflow: hidden;
   flex-direction: column;
 }

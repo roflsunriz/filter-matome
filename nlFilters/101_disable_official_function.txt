@@ -1,5 +1,78 @@
 # nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
 
+# HLS sessionの生成境界。プレビューは対象外。
+# 詳細・世代比較: local/features/src/sandbox/full-buffer-bridge.md
+[Replace]
+Name = 公式プレイヤーの全編先読みAPI
+FullURL = https?://resource\.video\.nimg\.jp/web/scripts/nvpc_next/assets/PlayerSeekBar-[^/?]+\.js(?:\?.*)?
+Match<
+this\.hlsjs\.attachMedia\(this\.video\),this\.hlsjs\.on\(([A-Za-z_$][\w$]*)\.Events\.MANIFEST_PARSED,
+>
+Replace<
+this.hlsjs.attachMedia(this.video),(()=>{
+  if(this.context.isPreview)return;
+  const hls=this.hlsjs,video=this.video;
+  const controllers=[hls.streamController,hls.audioStreamController].filter(Boolean);
+  if(!hls.streamController||controllers.some(controller=>typeof controller.getLoadPosition!=="function")||typeof hls.startLoad!=="function"||typeof hls.resumeBuffering!=="function"||typeof this.setBufferingLimit!=="function")return;
+  const positions=controllers.map(controller=>controller.getLoadPosition);
+  const officialLimit=this.setBufferingLimit;
+  let enabled=false,disposed=false,error=null,saved=null,target=0;
+  const changed=()=>globalThis.dispatchEvent(new Event("filter-matome:api-status-change"));
+  const gap=controller=>{
+    const ranges=controller.mediaBuffer?.buffered??video.buffered;
+    let end=0;
+    for(let index=0;index<ranges.length;index++){
+      if(ranges.start(index)>end+.1)return end;
+      end=Math.max(end,ranges.end(index));
+    }
+    return end;
+  };
+  const restore=()=>{
+    enabled=false;
+    if(saved){Object.assign(hls.config,saved);saved=null;}
+  };
+  controllers.forEach((controller,index)=>{
+    controller.getLoadPosition=function(){return enabled?gap(controller):positions[index].call(this);};
+  });
+  this.setBufferingLimit=value=>{
+    officialLimit.call(this,value);
+    if(enabled&&saved){saved.maxBufferLength=hls.config.maxBufferLength;hls.config.maxBufferLength=target;}
+  };
+  const api={
+    version:1,
+    getState:()=>({enabled,error,videoId:this.watch.video.id}),
+    setEnabled:value=>{
+      if(typeof value!=="boolean")throw new TypeError("Expected boolean");
+      if(disposed)throw new Error("Video session disposed");
+      if(value===enabled)return api.getState();
+      if(value){
+        const duration=video.duration;
+        if(!Number.isFinite(duration)||duration<=0||hls.media!==video)throw new Error("Video not ready");
+        saved={maxBufferLength:hls.config.maxBufferLength,maxMaxBufferLength:hls.config.maxMaxBufferLength,backBufferLength:hls.config.backBufferLength};
+        target=duration+1;error=null;enabled=true;
+        hls.config.maxBufferLength=target;hls.config.maxMaxBufferLength=target;hls.config.backBufferLength=Infinity;
+        try{hls.resumeBuffering();hls.startLoad(-1,true);}catch(failure){restore();throw failure;}
+      }else{restore();hls.startLoad(-1,true);}
+      changed();return api.getState();
+    }
+  };
+  hls.on($1.Events.ERROR,(_event,data)=>{
+    if(!enabled)return;
+    if(data.details==="bufferFullError"||data.fatal){
+      error=data.details==="bufferFullError"?"buffer-limit":"load-error";
+      restore();changed();
+    }
+  });
+  hls.on($1.Events.DESTROYING,()=>{
+    disposed=true;restore();
+    controllers.forEach((controller,index)=>{controller.getLoadPosition=positions[index];});
+    this.setBufferingLimit=officialLimit;
+    if(globalThis.FilterMatomeBufferingApi===api){delete globalThis.FilterMatomeBufferingApi;changed();}
+  });
+  globalThis.FilterMatomeBufferingApi=api;changed();
+})(),this.hlsjs.on($1.Events.MANIFEST_PARSED,
+>
+
 # serverContext書き換え用プレースホルダー。
 # このReplaceには設定値だけを置き、書き換えとコメント投稿保護のロジックは
 # TypeScript製のserver-context-override.jsへ集約する。

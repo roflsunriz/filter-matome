@@ -177,10 +177,12 @@ const waitForMenuReady = async (
         globalThis.FilterMatomeCommentApi?.version === 1 &&
         globalThis.FilterMatomeCommentMenuApi?.version === 1 &&
         globalThis.FilterMatomeNotificationReadApi?.version === 1 &&
+        globalThis.FilterMatomeBufferingApi?.version === 1 &&
         document.querySelector('[data-api-id="playback-rate"]')?.getAttribute("data-status") === "active" &&
         document.querySelector('[data-api-id="comment-reload"]')?.getAttribute("data-status") === "active" &&
         document.querySelector('[data-api-id="comment-menu"]')?.getAttribute("data-status") === "active" &&
-        document.querySelector('[data-api-id="notification-refresh"]')?.getAttribute("data-status") === "active"
+        document.querySelector('[data-api-id="notification-refresh"]')?.getAttribute("data-status") === "active" &&
+        document.querySelector('[data-api-id="full-buffer"]')?.getAttribute("data-status") === "active"
       )`,
     );
     if (ready === true) return;
@@ -260,12 +262,6 @@ const main = async (): Promise<void> => {
         pageClient.send("Runtime.enable"),
         pageClient.send("Network.enable"),
       ]);
-      await pageClient.send("Network.setCacheDisabled", {
-        cacheDisabled: true,
-      });
-      await pageClient.send("Network.setBypassServiceWorker", {
-        bypass: true,
-      });
       await pageClient.send("Emulation.setDeviceMetricsOverride", {
         width: 1280,
         height: 720,
@@ -294,7 +290,7 @@ const main = async (): Promise<void> => {
           const trigger = menu.querySelector("button");
           const popover = document.getElementById("filter-matome-api-status-popover");
           const nicoCacheMenu = document.getElementById("ncnl_common_header_menu");
-          const accountMenu = Array.from(
+          let accountMenu = Array.from(
             document.querySelectorAll("#CommonHeader a[href]"),
           ).find((anchor) => {
             try {
@@ -304,6 +300,15 @@ const main = async (): Promise<void> => {
               return false;
             }
           })?.parentElement;
+          if (!accountMenu) {
+            const register = Array.from(document.querySelectorAll('#CommonHeader a[href]')).find(anchor => {
+              const url = new URL(anchor.href, location.href);
+              return url.hostname === 'account.nicovideo.jp' && /^\\/register(?:\\/|$)/.test(url.pathname);
+            });
+            let next = register?.parentElement?.nextElementSibling;
+            while (next && ['ncnl_common_header_menu', 'filter-matome-api-status-menu'].includes(next.id)) next = next.nextElementSibling;
+            accountMenu = next;
+          }
           if (!(trigger instanceof HTMLElement) || !(popover instanceof HTMLElement)) {
             throw new Error("menu parts missing");
           }
@@ -347,12 +352,13 @@ const main = async (): Promise<void> => {
       if (
         result.menuCount !== 1 ||
         !["account", "service"].includes(result.placement) ||
-        result.menuPosition !==
-          (result.placement === "account" ? "fixed" : "relative") ||
-        result.popoverPosition !== "absolute" ||
+        result.menuPosition !== "relative" ||
+        result.popoverPosition !==
+          (result.placement === "account" ? "fixed" : "absolute") ||
         result.statuses["playback-rate"] !== "active" ||
         result.statuses["comment-reload"] !== "active" ||
         result.statuses["comment-menu"] !== "active" ||
+        result.statuses["full-buffer"] !== "active" ||
         result.statuses["notification-refresh"] !== "active"
       ) {
         throw new Error(`API状態が不正です: ${JSON.stringify(result)}`);
@@ -368,7 +374,7 @@ const main = async (): Promise<void> => {
       }
       if (
         result.placement === "account" &&
-        (result.nicoCachePosition !== "fixed" ||
+        (result.nicoCachePosition !== "relative" ||
           !result.accountMenu ||
           Math.abs(result.container.right - result.accountMenu.left) > 2)
       ) {
@@ -379,7 +385,7 @@ const main = async (): Promise<void> => {
       assertInsideViewport(result.popover, result.viewport);
       console.log(`[api-status-menu-live] verified: ${watchUrl}`);
       console.log(
-        `[api-status-menu-live] playback=${result.statuses["playback-rate"]} / reload=${result.statuses["comment-reload"]} / menu=${result.statuses["comment-menu"]} / notification=${result.statuses["notification-refresh"]} / placement=${result.placement} / NicoCache menu=${String(result.nicoCacheMenuCount)}`,
+        `[api-status-menu-live] playback=${result.statuses["playback-rate"]} / preload=${result.statuses["full-buffer"]} / reload=${result.statuses["comment-reload"]} / menu=${result.statuses["comment-menu"]} / notification=${result.statuses["notification-refresh"]} / placement=${result.placement} / NicoCache menu=${String(result.nicoCacheMenuCount)}`,
       );
     } finally {
       pageClient.close();

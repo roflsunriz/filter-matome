@@ -39,6 +39,7 @@ const ENGLISH_COPY: Copy = {
     "comment-reload": "Comment reload",
     "comment-menu": "Comment menu",
     "notification-refresh": "Notification display refresh",
+    "full-buffer": "Full video preload",
   },
   states: {
     active: "Active",
@@ -61,6 +62,7 @@ const COPIES: Record<string, Copy> = {
       "comment-reload": "コメント再取得",
       "comment-menu": "コメントメニュー",
       "notification-refresh": "通知表示更新",
+      "full-buffer": "全編先読み",
     },
     states: {
       active: "有効",
@@ -80,6 +82,7 @@ const COPIES: Record<string, Copy> = {
       "comment-reload": "重新加载评论",
       "comment-menu": "评论菜单",
       "notification-refresh": "通知显示更新",
+      "full-buffer": "全片预加载",
     },
     states: {
       active: "有效",
@@ -96,6 +99,7 @@ const COPIES: Record<string, Copy> = {
     names: {
       ...ENGLISH_COPY.names,
       "notification-refresh": "सूचना प्रदर्शन अपडेट",
+      "full-buffer": "पूरा वीडियो पहले लोड करें",
     },
     states: {
       active: "सक्रिय",
@@ -112,6 +116,7 @@ const COPIES: Record<string, Copy> = {
     names: {
       ...ENGLISH_COPY.names,
       "notification-refresh": "Actualización de notificaciones",
+      "full-buffer": "Precarga completa",
     },
     states: {
       active: "Activa",
@@ -128,6 +133,7 @@ const COPIES: Record<string, Copy> = {
     names: {
       ...ENGLISH_COPY.names,
       "notification-refresh": "Actualisation de l'affichage des notifications",
+      "full-buffer": "Préchargement intégral",
     },
     states: {
       active: "Active",
@@ -144,6 +150,7 @@ const COPIES: Record<string, Copy> = {
     names: {
       ...ENGLISH_COPY.names,
       "notification-refresh": "تحديث عرض الإشعارات",
+      "full-buffer": "تحميل الفيديو كاملاً مسبقاً",
     },
     states: {
       active: "نشطة",
@@ -160,6 +167,7 @@ const COPIES: Record<string, Copy> = {
     names: {
       ...ENGLISH_COPY.names,
       "notification-refresh": "Atualização da exibição de notificações",
+      "full-buffer": "Pré-carregar vídeo inteiro",
     },
     states: {
       active: "Ativa",
@@ -176,6 +184,7 @@ const COPIES: Record<string, Copy> = {
     names: {
       ...ENGLISH_COPY.names,
       "notification-refresh": "বিজ্ঞপ্তি প্রদর্শন আপডেট",
+      "full-buffer": "সম্পূর্ণ ভিডিও প্রিলোড",
     },
     states: {
       active: "সক্রিয়",
@@ -192,6 +201,7 @@ const COPIES: Record<string, Copy> = {
     names: {
       ...ENGLISH_COPY.names,
       "notification-refresh": "Обновление отображения уведомлений",
+      "full-buffer": "Загрузка всего видео",
     },
     states: {
       active: "Активен",
@@ -208,6 +218,7 @@ const COPIES: Record<string, Copy> = {
     names: {
       ...ENGLISH_COPY.names,
       "notification-refresh": "اطلاعات کے ڈسپلے کی تازہ کاری",
+      "full-buffer": "پوری ویڈیو پہلے لوڈ کریں",
     },
     states: {
       active: "فعال",
@@ -712,6 +723,7 @@ const createMenu = (resolveStatuses: ResolveStatuses): HTMLElement => {
     createStatusItem("playback-rate"),
     createStatusItem("comment-reload"),
     createStatusItem("comment-menu"),
+    createStatusItem("full-buffer"),
     createStatusItem("notification-refresh"),
   );
   const note = document.createElement("p");

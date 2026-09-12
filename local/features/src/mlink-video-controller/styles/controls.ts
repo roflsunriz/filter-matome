@@ -1,4 +1,7 @@
+import { playbackToolsStyles } from "./playback-tools";
+
 export const controlsStyles = `
+${playbackToolsStyles}
 /* 再生タブのコンテンツ容器 */
 .playback-content {
   display: flex;
@@ -251,7 +254,7 @@ input[type="range"]::-moz-range-thumb {
 
 .x-sec-jump-btn {
   flex: 1;
-  min-width: 70px;
+  min-width: 0;
   padding: 8px 4px;
   font-size: 12px;
   font-weight: 500;

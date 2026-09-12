@@ -26,7 +26,11 @@ export type FilterMatomeApiStatusKind =
   | "not-applicable";
 
 export type FilterMatomeApiStatusId =
-  "playback-rate" | "comment-reload" | "comment-menu" | "notification-refresh";
+  | "playback-rate"
+  | "comment-reload"
+  | "comment-menu"
+  | "notification-refresh"
+  | "full-buffer";
 
 export type FilterMatomeApiStatus = {
   id: FilterMatomeApiStatusId;
@@ -78,9 +82,14 @@ export function resolveFilterMatomeApiStatuses(
   };
   if (!WATCH_PATH_PATTERN.test(pathname)) {
     return [
-      ...(["playback-rate", "comment-reload", "comment-menu"] as const).map(
-        (id) => ({ id, kind: "not-applicable" as const }),
-      ),
+      ...(
+        [
+          "playback-rate",
+          "comment-reload",
+          "comment-menu",
+          "full-buffer",
+        ] as const
+      ).map((id) => ({ id, kind: "not-applicable" as const })),
       notificationStatus,
     ];
   }
@@ -115,6 +124,13 @@ export function resolveFilterMatomeApiStatuses(
       kind: versionedApiStatus(host["FilterMatomeCommentApi"], ["reload"]),
     },
     { id: "comment-menu", kind: menuStatus },
+    {
+      id: "full-buffer",
+      kind: versionedApiStatus(host["FilterMatomeBufferingApi"], [
+        "getState",
+        "setEnabled",
+      ]),
+    },
     notificationStatus,
   ];
 }

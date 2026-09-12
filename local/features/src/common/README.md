@@ -13,7 +13,7 @@
 - `logger.ts`: 共通ロガー。`window.logger` を公開。
 - `toastr.ts`: 通知UI。`window.toastr` を公開。
 - `notification-read-all.ts`: 公式CommonHeaderの通知パネルへ一括既読ボタンを追加し、公式通知一覧をページングして未読だけを制限付き並列で既読化する。完了時は公式一覧を再取得し、パネルを開いたまま表示へ反映する。
-- `api-status-menu.ts`, `api-status-menu-runtime.ts`, `api-status-menu-styles.ts`: 公式CommonHeaderへ独立したfilter-matomeメニューを挿入し、4つのnlFilter版付きAPIをページ開始時・資産読込時・ページ復帰時・180秒間隔で自動検査して表示する。コメントメニューは読込済みの公式`ExpandedComment`資産を認証情報なしで再取得し、103番固有markerをread-only検査する。通知表示更新の検査では`refresh()`を実行しない。
+- `api-status-menu.ts`, `api-status-menu-runtime.ts`, `api-status-menu-styles.ts`: 公式CommonHeaderへ独立したfilter-matomeメニューを挿入し、再生速度・全編先読み・コメント再取得・コメントメニュー・通知表示更新の5つのnlFilter版付きAPIをページ開始時・資産読込時・ページ復帰時・180秒間隔で自動検査して表示する。コメントメニューは読込済みの公式`ExpandedComment`資産を認証情報なしで再取得し、103番固有markerをread-only検査する。通知表示更新の`refresh()`や、全編先読みの`getState()`・`setEnabled()`は自動検査から実行しない。
 - `watch-fullscreen.ts`: Fullscreen APIと、公式Watchの`fullscreen-target`がビューポート全面へ固定された状態を共通の全画面判定へ正規化する。
 - `material-icons.ts`, `icon-assets.ts`: Material Design Iconsの生成、URL化、既存画像の置換。
 - `css-constants.ts`, `visual-theme.ts`: 共通CSS変数とダークテーマトークン。

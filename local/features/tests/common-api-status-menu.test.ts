@@ -12,6 +12,7 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
       { id: "playback-rate", kind: "not-applicable" },
       { id: "comment-reload", kind: "not-applicable" },
       { id: "comment-menu", kind: "not-applicable" },
+      { id: "full-buffer", kind: "not-applicable" },
       { id: "notification-refresh", kind: "missing" },
     ]);
   });
@@ -36,11 +37,17 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
         version: 1,
         refresh: () => undefined,
       },
+      FilterMatomeBufferingApi: {
+        version: 1,
+        getState: () => undefined,
+        setEnabled: () => undefined,
+      },
     };
     expect(resolveFilterMatomeApiStatuses(host, "/watch/sm9")).toEqual([
       { id: "playback-rate", kind: "active" },
       { id: "comment-reload", kind: "active" },
       { id: "comment-menu", kind: "probing" },
+      { id: "full-buffer", kind: "active" },
       { id: "notification-refresh", kind: "active" },
     ]);
 
@@ -65,6 +72,7 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
           FilterMatomeCommentApi: { version: 1, reload: "invalid" },
           FilterMatomeCommentMenuApi: { version: 1 },
           FilterMatomeNotificationReadApi: { version: 2, refresh: "invalid" },
+          FilterMatomeBufferingApi: { version: 2, getState: "invalid" },
         },
         "/watch/sm9",
       ),
@@ -72,6 +80,7 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
       { id: "playback-rate", kind: "incompatible" },
       { id: "comment-reload", kind: "incompatible" },
       { id: "comment-menu", kind: "incompatible" },
+      { id: "full-buffer", kind: "incompatible" },
       { id: "notification-refresh", kind: "incompatible" },
     ]);
   });
@@ -92,6 +101,31 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
       kind: "active",
     });
     expect(refreshCalls).toBe(0);
+  });
+
+  test("全編先読みの自動検査は開始・解除・状態読取APIを実行しない", () => {
+    let calls = 0;
+    const api = {
+      version: 1,
+      getState: () => {
+        calls++;
+      },
+      setEnabled: () => {
+        calls++;
+      },
+    };
+    expect(
+      resolveFilterMatomeApiStatuses(
+        { FilterMatomeBufferingApi: api },
+        "/watch/sm9",
+      ).find((status) => status.id === "full-buffer")?.kind,
+    ).toBe("active");
+    expect(calls).toBe(0);
+    expect(
+      resolveFilterMatomeApiStatuses({}, "/watch/sm9").find(
+        (status) => status.id === "full-buffer",
+      )?.kind,
+    ).toBe("missing");
   });
 
   test("読込済みExpandedComment資産だけを自動プローブ対象にする", () => {

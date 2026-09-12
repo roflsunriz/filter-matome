@@ -16,7 +16,9 @@
 - `run-offline-seek-preview-sandbox.ts`: 外部通信を遮断した一時BrowserContextで公式Storyboardモデルとレンダラーを実行し、時刻からスプライトセルへの変換とCSS描画を確認する。
 - `raw-cdp-client.ts`: 各スクリプトで共有する、依存パッケージを使わないCDP WebSocketクライアント。
 - `verify-current-harajuku-css.ts`: NicoCache_nl経由のCookieなし一時タブで原宿風Watchを有効化し、先行stylesheet、公式stylesheetとの順序、Harajuku CSSの重要宣言0件、代表ビューポートの横溢れ、専用DOM生成を確認する。公式Watch自体がエラー画面の場合は成功扱いにしない。
-- `verify-current-api-status-menu.ts`: NicoCache_nl経由のCookieなし一時タブで、ユーザー操作なしに4つのAPI状態が自動更新されること、CommonHeaderの独立メニュー、NicoCache直後とアカウント直前の順序、`05_nicocache_menu.js`互換のaccount／service配置、ポップオーバーの画面内表示を確認する。
+- `verify-current-api-status-menu.ts`: NicoCache_nl経由のCookieなし一時タブで、ユーザー操作なしに5つのAPI状態が自動更新されること、CommonHeaderの独立メニュー、NicoCache直後とアカウント直前の順序、`05_nicocache_menu.js`互換のaccount／service配置、ポップオーバーの画面内表示を確認する。通常のキャッシュ・Service Worker経路を使い、非ログイン時は会員登録の後のアカウント枠を基準にする。
+- `analyze-full-buffer.ts`: 保存済みの独立した3世代以上のWatch資産で、HLS sessionへの全編先読みAPI接続、Match一致数、対象外0件、置換後構文と公式上限制御を確認する。session外に旧nlFilterの変更があるcaptureは原本と区別し、HLS session自体が改変済みの資産は比較根拠へ加えない。結果とde-minify抜粋はGit管理外の`official-watch-bundle/`へ保存する。
+- `verify-current-playback-tools.ts`: 通常のNicoCache_nl配信で途中再生からの全編先読み100%、再生位置・一時停止維持、A-Bリピートを確認する。公開動画sm9のメディア取得を行い、既存プロフィールを継承しない。匿名のパネル画像はGit管理外の`official-watch-bundle/`へ保存する。
 - `verify-notification-refresh.ts`: 3.11.0〜3.13.0のCommonHeader PC/responsive資産で100番の通知更新APIの一意一致と置換後構文を確認する。匿名の一時タブでブラウザーの全要求をfixtureへ置き換え、全成功・部分失敗の既読表示、パネル維持、処理中に閉じたパネルを再度開かないことを検証する。実通知へPUTしない。
 
 ## 実行
@@ -36,6 +38,8 @@ bun run sandbox:analyze-official
 bun run sandbox:analyze-watch-css
 bun run sandbox:verify-harajuku-css
 bun run sandbox:verify-api-status-menu
+bun run sandbox:analyze-full-buffer
+bun run sandbox:verify-playback-tools
 bun scripts/sandbox/verify-notification-refresh.ts --cdp=http://127.0.0.1:9222
 ```
 

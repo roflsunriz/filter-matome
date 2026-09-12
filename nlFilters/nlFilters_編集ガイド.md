@@ -11,7 +11,7 @@
 | ファイル名 | 役割 |
 |---|---|
 | `100_features.txt` | `dist/features.js`をCommonHeader導入サービスへ1回挿入し、公式通知パネルの表示更新APIを接続 |
-| `101_disable_official_function.txt` | serverContextの設定JSONを保持し、公式プレイヤーとmlinkの再生速度を版付きAPIで同期 |
+| `101_disable_official_function.txt` | serverContextの設定JSONを保持し、公式プレイヤーとmlinkの再生速度同期・全編先読みを版付きAPIで接続 |
 | `102_comment_reload_api.txt` | 公式コメントストアの再取得actionをcomment-filter2向けの版付きAPIとして公開 |
 | `103_official_comment_menu.txt` | 公式Reactコメントメニューへcomment-filter2の版付き操作APIを接続 |
 | `104_watch_harajuku_style.txt` | 公式Watch CSSのlayer隔離とHarajuku CSSの先行読込 |
@@ -54,6 +54,8 @@ Replace<
 5. 対象ページをハード再読み込みして確認する
 
 ## 注意事項
+
+- 101番の`FilterMatomeBufferingApi`は公式HLS sessionの`attachMedia`と`MANIFEST_PARSED`の隣接境界へ接続する。通常の180秒上限、映像・音声それぞれの次の読込位置、容量超過時の復元を一体で扱う。追従時は`local/features/src/sandbox/full-buffer-bridge.md`と`bun run sandbox:analyze-full-buffer`で複数世代を比較し、CommonHeaderの`全編先読み`項目・自動プローブ・型・テストも同時に更新する。
 
 - `100_features.txt`の通知表示更新は、CommonHeaderのaction factoryへ`version: 1`と`refresh()`だけを公開する。3世代のPC・responsive資産で確認した同一store・パネルreset状態・公式actionの参照関係をMatchで固定する。追従時は`local/features/src/sandbox/common-header-notification-read-all.md`の履歴と検証手順を参照する。
 

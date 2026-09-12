@@ -50,13 +50,14 @@ export const basePanelStyles = `
   .panel {
     position: fixed;
     bottom: 100px;
-    right: 24px;
-    width: 400px;
-    max-height: 80vh;
+    right: clamp(12px, 2vw, 24px);
+    box-sizing: border-box;
+    width: min(450px, calc(100% - 24px));
+    max-height: min(80dvh, calc(100% - 112px));
     background: var(--panel-bg);
     color: var(--panel-fg);
     border-radius: var(--panel-radius);
-    padding: 24px;
+    padding: clamp(12px, 3vw, 24px);
     box-shadow: var(--panel-shadow);
     z-index: 10000;
     display: none;
@@ -138,6 +139,10 @@ export class BasePanel extends HTMLElement {
     const fab = this.shadow.getElementById("fab");
 
     if (!panel || !fab) return;
+
+    // キーボード由来のclickは座標が0,0になる。Shadow DOM内の操作は経路で判定する。
+    const path = event.composedPath();
+    if (path.includes(panel) || path.includes(fab)) return;
 
     // クリック座標を取得
     const clickX = mouseEvent.clientX;

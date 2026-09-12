@@ -97,6 +97,9 @@ bun run build
 
 ## nlFilterによる公式資産APIの変更契約（必須）
 
+- sandboxの`capture-official-watch-bundle.ts`で保存した資産は、NicoCache_nl経由だと別機能のAPIが挿入済みの場合がある（2026-09-12確認）。保管SHA-256を無条件に公式CDN原本のハッシュとみなさず、`FilterMatome` markerと変更対象classを調べる。同一URLの無改変版・適用済み版は別世代に数えない。全編先読みでは`analyze-full-buffer.ts`がHLS sessionのclass本文ハッシュを併記し、session外だけの変更と対象自身の改変を区別する。
+- 公式Watchの全編先読みは`101_disable_official_function.txt`の`FilterMatomeBufferingApi`でHLS sessionへ接続する。通常上限は確認した資産では180秒であり、`startLoad(0, true)`だけでは再生開始後の`getLoadPosition()`が現在位置へ戻るため先頭側の穴を埋められない。映像・音声それぞれの未読込位置と上限の制御、公式`setBufferingLimit()`の更新、容量超過・破棄時の復元を同時に維持する。根拠と世代比較は`local/features/src/sandbox/full-buffer-bridge.md`を参照する。
+
 - nlFilterで公式JavaScript資産へAPIを公開・接続するときは、新規追加、既存APIの編集、Match/Replaceの追従、API削除を一体の契約変更として扱う。フィルターだけを変更して完了にしない。
 - 追加・編集前に`local/features/src/sandbox/`の取得済み資産と契約・Match履歴を確認し、複数世代（最低3世代、存在するPC/responsive等の変種を含む）で同じ意味上の境界と参照関係が成立し、十分に汎化されていることを検証する。最新1資産への一致や同一内容の複製を複数世代の根拠にせず、minify名が変化した世代も比較する。資産不足なら追加取得し、未確認のまま汎化済みとしない。
 - 世代ごとにURL、取得日時、SHA-256、サイズ、Match一致数、前版との差分、採用した不変条件をsandboxの対応文書へ記録する。対象箇所への期待一致数（単一挿入なら1回）、対象外資産で0回、置換後の構文、公式store/action/controller等の参照関係と公開APIの動作を確認する。識別子の無条件ワイルドカード化や単語一致だけで対象を広げない。検証対象数、結果、未検証と理由を`verification.md`へ残す。

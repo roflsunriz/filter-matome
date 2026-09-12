@@ -57,6 +57,7 @@ export class MlinkVideoController extends BasePanel {
   private commentManager: CommentManager | null = null;
   private heatmapModule: HeatmapModule | null = null;
   private playbackHandler: PlaybackHandler | null = null;
+  private playbackTabController: PlaybackTabController | null = null;
   private volumeHandler: VolumeHandler | null = null;
   private speedHandler: SpeedHandler | null = null;
   private timeUpdateInterval: TimerHandle | null = null;
@@ -68,13 +69,6 @@ export class MlinkVideoController extends BasePanel {
 
   // SPAコメントデータ更新の購読解除用
   private commentDataChangedUnsubscribe: (() => void) | null = null;
-
-  // UIコンポーネント（テンプレートベースに移行したためコメントアウト）
-  // private playbackControls: PlaybackControls | null = null;
-  // private volumeControls: VolumeControls | null = null;
-  // private speedControls: SpeedControls | null = null;
-  // private commentControls: CommentControls | null = null;
-  // private heatmapControls: HeatmapControls | null = null;
 
   // 🆕 新規追加: モジュール管理システム
   private moduleManager: ModuleManager;
@@ -219,6 +213,7 @@ export class MlinkVideoController extends BasePanel {
    */
   private reinitializeVideoServices(): void {
     if (!this.isWatchPage) return;
+    this.playbackTabController?.syncVideo();
 
     window.logger?.debug(
       "[MlinkVideoController] Reinitializing video services for video change",
@@ -264,6 +259,8 @@ export class MlinkVideoController extends BasePanel {
    * クリーンアップ処理（SPA遷移時やページタイプ変更時）
    */
   private cleanup(): void {
+    this.playbackTabController?.destroy();
+    this.playbackTabController = null;
     // タイムアップデート監視を停止
     if (this.timeUpdateInterval) {
       clearInterval(this.timeUpdateInterval);
@@ -399,7 +396,6 @@ export class MlinkVideoController extends BasePanel {
         "[MlinkVideoController] Shadow DOM content appended successfully",
       );
 
-      this.initializeComponents();
       this.setupEventListeners();
 
       // FABの設定（ページタイプに応じて変更）
@@ -446,53 +442,31 @@ export class MlinkVideoController extends BasePanel {
     }
   }
 
-  private initializeComponents() {
-    // テンプレートベースのUIを使用するため、重複するコンポーネントの追加をコメントアウト
-    // 再生コントロール - playbackTemplateで既に実装済み
-    // this.playbackControls = new PlaybackControls(this.playbackHandler);
-    // const playbackContainer = this.shadow.querySelector('#playback');
-    // if (playbackContainer) {
-    //   playbackContainer.appendChild(this.playbackControls);
-    // }
-    // 音量コントロール - volumeTemplateで既に実装済み
-    // this.volumeControls = new VolumeControls(this.volumeHandler);
-    // const volumeContainer = this.shadow.querySelector('#volume');
-    // if (volumeContainer) {
-    //   volumeContainer.appendChild(this.volumeControls);
-    // }
-    // 再生速度コントロール - speedTemplateで既に実装済み
-    // this.speedControls = new SpeedControls(this.speedHandler);
-    // const speedContainer = this.shadow.querySelector('#speed');
-    // if (speedContainer) {
-    //   speedContainer.appendChild(this.speedControls);
-    // }
-    // コメントコントロール - commentsTemplateで既に実装済み
-    // this.commentControls = new CommentControls(this.commentManager);
-    // const commentContainer = this.shadow.querySelector('#comments');
-    // if (commentContainer) {
-    //   commentContainer.appendChild(this.commentControls);
-    // }
-    // ヒートマップコントロール - playbackTemplateで統合実装済み
-    // this.heatmapControls = new HeatmapControls(this.heatmapManager);
-    // const heatmapContainer = this.shadow.querySelector('#heatmap');
-    // if (heatmapContainer) {
-    //   heatmapContainer.appendChild(this.heatmapControls);
-    // }
-  }
-
   private setupEventListeners() {
     new PanelNavigationController(this.shadow).bind();
 
     // 視聴ページでのみ動画関連イベントを設定
     if (this.isWatchPage) {
-      new PlaybackTabController(this.shadow, this.playbackHandler, {
-        startTimeUpdateInterval: () => this.startTimeUpdateInterval(),
-        setupPlayStateListener: () => this.setupPlayStateListener(),
-        updatePlayPauseButton: () => this.updatePlayPauseButton(),
-        toggleLoop: () => this.toggleLoop(),
-        updateLoopButtonAppearance: (button) =>
-          this.updateLoopButtonAppearance(button),
-      }).bind();
+      this.playbackTabController?.destroy();
+      this.playbackTabController = new PlaybackTabController(
+        this.shadow,
+        this.playbackHandler,
+        {
+          startTimeUpdateInterval: () => this.startTimeUpdateInterval(),
+          setupPlayStateListener: () => this.setupPlayStateListener(),
+          updatePlayPauseButton: () => this.updatePlayPauseButton(),
+          toggleLoop: () => this.toggleLoop(),
+          updateLoopButtonAppearance: (button) =>
+            this.updateLoopButtonAppearance(button),
+          onABRepeatEnabled: () => {
+            this.isLoopEnabled = false;
+            this.shadow
+              .querySelector("#playback .control-grid .control-btn:last-child")
+              ?.classList.remove("active");
+          },
+        },
+      );
+      this.playbackTabController.bind();
 
       new SpeedTabController(
         this.shadow,
@@ -696,6 +670,7 @@ export class MlinkVideoController extends BasePanel {
 
   private toggleLoop(): void {
     this.isLoopEnabled = !this.isLoopEnabled;
+    if (this.isLoopEnabled) this.playbackTabController?.disableABRepeat();
   }
 
   private updateLoopButtonAppearance(button: HTMLElement): void {
@@ -914,7 +889,11 @@ export class MlinkVideoController extends BasePanel {
     }
     // 動画終了を定期的にチェック
     this.videoEndedInterval = setInterval(() => {
-      if (this.isLoopEnabled && this.player) {
+      if (
+        this.isLoopEnabled &&
+        this.player &&
+        !this.playbackTabController?.isABRepeatEnabled()
+      ) {
         const currentTime = this.player.getCurrentTime();
         const duration = this.player.getDuration();
 

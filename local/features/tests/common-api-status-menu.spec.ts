@@ -107,6 +107,15 @@ const installFixture = async (
       };
       host.filterMatomeNotificationRefreshCalls = 0;
       Object.assign(window, {
+        FilterMatomeBufferingApi: {
+          version: 1,
+          getState: () => {
+            throw new Error("Probe must not call getState");
+          },
+          setEnabled: () => {
+            throw new Error("Probe must not start preloading");
+          },
+        },
         FilterMatomeNotificationReadApi: {
           version: 1,
           refresh: () => {
@@ -565,6 +574,39 @@ test("API不在と版不一致を赤い要約状態で区別する", async ({ pa
   await expect(
     menu.locator('[data-api-id="notification-refresh"]'),
   ).toHaveAttribute("data-status", "incompatible");
+});
+
+test("全編先読みAPIを操作せず遅延公開・版不一致・SPA対象外へ自動追従する", async ({
+  page,
+}) => {
+  await installFixture(page, { activeApis: false });
+  const item = page.locator('[data-api-id="full-buffer"]');
+  await expect(item).toHaveAttribute("data-status", "missing");
+  await page.evaluate(() => {
+    Object.assign(window, {
+      FilterMatomeBufferingApi: {
+        version: 1,
+        getState: () => {
+          throw new Error("Read probe must not execute getState");
+        },
+        setEnabled: () => {
+          throw new Error("Read probe must not preload");
+        },
+      },
+    });
+    window.dispatchEvent(new Event("filter-matome:api-status-change"));
+  });
+  await expect(item).toHaveAttribute("data-status", "active");
+  await page.evaluate(() => {
+    Object.assign(window, { FilterMatomeBufferingApi: { version: 2 } });
+    window.dispatchEvent(new Event("filter-matome:api-status-change"));
+  });
+  await expect(item).toHaveAttribute("data-status", "incompatible");
+  await page.evaluate(() => {
+    history.pushState(null, "", "/video_top");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  await expect(item).toHaveAttribute("data-status", "not-applicable");
 });
 
 test("公式Watchの全画面表示中はメニューを閉じて非表示にする", async ({

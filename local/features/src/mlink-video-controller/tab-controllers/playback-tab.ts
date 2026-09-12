@@ -1,3 +1,5 @@
+import { PlaybackToolsController } from "./playback-tools";
+
 interface PlaybackHandlerLike {
   seekToPosition(position: number): void;
   seek(params: { seconds: number; direction: "forward" | "backward" }): void;
@@ -10,9 +12,11 @@ export interface PlaybackTabCallbacks {
   updatePlayPauseButton(): void;
   toggleLoop(): void;
   updateLoopButtonAppearance(button: HTMLElement): void;
+  onABRepeatEnabled?(): void;
 }
 
 export class PlaybackTabController {
+  private tools: PlaybackToolsController | null = null;
   constructor(
     private readonly root: ShadowRoot,
     private readonly playbackHandler: PlaybackHandlerLike | null,
@@ -26,6 +30,25 @@ export class PlaybackTabController {
     this.bindJumpButtons();
     this.bindControlButtons();
     this.callbacks.setupPlayStateListener();
+    this.tools?.destroy();
+    this.tools = new PlaybackToolsController(this.root, () =>
+      this.callbacks.onABRepeatEnabled?.(),
+    );
+    this.tools.bind();
+  }
+
+  destroy(): void {
+    this.tools?.destroy();
+    this.tools = null;
+  }
+  syncVideo(): void {
+    this.tools?.sync();
+  }
+  disableABRepeat(): void {
+    this.tools?.repeat.setEnabled(false);
+  }
+  isABRepeatEnabled(): boolean {
+    return this.tools?.repeat.enabled ?? false;
   }
 
   private bindTracker(): void {

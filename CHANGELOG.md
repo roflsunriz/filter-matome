@@ -1,10 +1,19 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+このプロジェクトの主な変更を記録します。
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+書式は[Keep a Changelog](https://keepachangelog.com/en/1.1.0/)に従います。
 
 ## [Unreleased]
+
+### Added
+
+- 【mlink-video-controller】途中から視聴した動画も再生位置を動かさず全体を読み込めるよう、公式プレイヤーの「全編先読み」を追加した。進捗、解除、容量超過・取得失敗を表示し、動画切り替えでは通常の読み込みへ戻す。CommonHeaderのAPI一覧にも副作用のない自動検査を追加した。
+- 【mlink-video-controller】好きな区間を繰り返せるよう、現在位置または時刻入力で開始点・終了点を指定する「A-Bリピート」を追加した。一時停止を維持し、解除・クリア、全体リピートとの切り替え、動画切り替え時のリセットに対応した。
+
+### Fixed
+
+- 【mlink-video-controller】再生タブをキーボードでも操作できるよう、パネル内部の操作を画面外クリックとして扱わないようにした。狭幅・低高さでもパネルと操作ボタンが画面内へ収まるように調整した。
 
 ### Changed
 
