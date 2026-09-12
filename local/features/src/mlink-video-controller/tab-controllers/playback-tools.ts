@@ -4,11 +4,12 @@ import {
   parsePlaybackTime,
 } from "../services/ab-repeat";
 import {
-  getBufferedProgress,
   getOfficialBufferingApi,
+  preloadQualityKey,
   readOfficialBufferingState,
-  type OfficialBufferingApi,
+  readOfficialPreloadPlan,
 } from "../services/official-buffering-bridge";
+import { FullPreloadController } from "../services/full-preload";
 import { getPlaybackToolsCopy } from "../playback-tools-copy";
 
 export class PlaybackToolsController {
@@ -20,7 +21,10 @@ export class PlaybackToolsController {
   private interval: ReturnType<typeof setInterval> | null = null;
   private video: HTMLVideoElement | null = null;
   private videoId = "";
-  private ownedApi: OfficialBufferingApi | null = null;
+  private preloadKey = "";
+  private readonly preload = new FullPreloadController(() =>
+    this.renderBuffer(),
+  );
   private readonly invalidPoints = new Set<string>();
   private bufferError = false;
 
@@ -59,7 +63,7 @@ export class PlaybackToolsController {
         "click",
         () => {
           this.sync();
-          this.setPoint(point, this.video?.currentTime ?? null);
+          this.setPoint(point, this.repeat.position?.currentTime ?? null);
         },
         options,
       );
@@ -108,8 +112,9 @@ export class PlaybackToolsController {
       new URLSearchParams(location.search).get("videoId") ||
       location.pathname;
     if (id !== this.videoId) {
-      this.stopBuffering();
       this.videoId = id;
+      this.preloadKey = "";
+      this.preload.reset();
       this.invalidPoints.clear();
       this.repeat.reset();
       this.renderPoints();
@@ -124,8 +129,24 @@ export class PlaybackToolsController {
     }
     const bufferPanel =
       this.root.querySelector<HTMLElement>("[data-full-buffer]");
-    if (bufferPanel) bufferPanel.hidden = !watchId;
-    if (watchId) this.renderBuffer();
+    if (bufferPanel)
+      bufferPanel.hidden = !watchId || video?.id === "video-element";
+    if (watchId) {
+      try {
+        const api = getOfficialBufferingApi(window);
+        const state = api ? readOfficialBufferingState(api) : null;
+        if (
+          this.preloadKey &&
+          (!state || this.preloadKey !== preloadQualityKey(state))
+        ) {
+          this.preloadKey = "";
+          this.preload.reset();
+        }
+      } catch {
+        this.preload.cancel();
+      }
+      this.renderBuffer();
+    }
     this.renderRepeat();
   }
 
@@ -134,7 +155,7 @@ export class PlaybackToolsController {
     if (this.interval !== null) clearInterval(this.interval);
     this.interval = null;
     this.repeat.destroy();
-    this.stopBuffering();
+    this.preload.cancel();
   }
 
   private button(action: string): HTMLButtonElement | null {
@@ -183,10 +204,7 @@ export class PlaybackToolsController {
         : this.copy.repeatStart;
       toggle.setAttribute("aria-pressed", String(this.repeat.enabled));
     }
-    const ready =
-      this.video !== null &&
-      Number.isFinite(this.video.duration) &&
-      this.video.duration > 0;
+    const ready = this.repeat.available;
     for (const action of ["set-a", "set-b"]) {
       const button = this.button(action);
       if (button) button.disabled = !ready;
@@ -202,45 +220,40 @@ export class PlaybackToolsController {
     status.dataset.error = String(invalid || badRange);
     this.text(
       status,
-      invalid
-        ? this.copy.invalidTime
-        : badRange
-          ? this.copy.invalidRange
-          : this.repeat.enabled
-            ? this.copy.repeating
-            : this.repeat.valid
-              ? this.copy.repeatReady
-              : this.copy.repeatHint,
+      !ready
+        ? this.copy.repeatUnavailable
+        : invalid
+          ? this.copy.invalidTime
+          : badRange
+            ? this.copy.invalidRange
+            : this.repeat.enabled
+              ? this.copy.repeating
+              : this.repeat.valid
+                ? this.copy.repeatReady
+                : this.copy.repeatHint,
     );
   }
 
   private toggleBuffer(): void {
+    this.sync();
+    if (this.preload.status === "loading") {
+      this.preload.cancel();
+      return;
+    }
     const api = getOfficialBufferingApi(window);
     try {
       if (!api) throw new Error("Buffering API unavailable");
-      const state = readOfficialBufferingState(api);
-      if (state.videoId !== this.videoId)
+      const plan = readOfficialPreloadPlan(api);
+      if (plan.videoId !== this.videoId || !plan.ready)
         throw new Error("Video session changed");
-      this.ownedApi = api;
+      this.preloadKey = preloadQualityKey(plan);
       this.bufferError = false;
-      api.setEnabled(!state.enabled);
+      void this.preload.start(plan);
     } catch (error) {
       this.bufferError = true;
       window.logger?.warn("[PlaybackTools] Full preload failed", error);
     }
     this.renderBuffer();
-  }
-
-  private stopBuffering(): void {
-    const api = this.ownedApi;
-    this.ownedApi = null;
-    if (api) {
-      try {
-        if (readOfficialBufferingState(api).enabled) api.setEnabled(false);
-      } catch (error) {
-        window.logger?.warn("[PlaybackTools] Preload cleanup failed", error);
-      }
-    }
   }
 
   private renderBuffer(): void {
@@ -254,29 +267,28 @@ export class PlaybackToolsController {
     try {
       const state = api ? readOfficialBufferingState(api) : null;
       const matching = state?.videoId === this.videoId;
-      const enabled = matching && state?.enabled === true;
-      const video = this.video;
-      const ready =
-        video !== null && Number.isFinite(video.duration) && video.duration > 0;
-      const buffered = video
-        ? getBufferedProgress(video.buffered, video.duration)
-        : { percent: 0, complete: false };
-      progress.value = buffered.percent;
+      const sameQuality =
+        matching &&
+        (!this.preloadKey || this.preloadKey === preloadQualityKey(state));
+      const enabled = sameQuality && this.preload.status === "loading";
+      const ready = state?.ready === true;
+      const percent = sameQuality ? this.preload.percent : 0;
+      progress.value = percent;
       toggle.disabled = !matching || !ready;
       toggle.textContent = enabled ? this.copy.stop : this.copy.start;
       toggle.setAttribute("aria-pressed", String(enabled));
-      const error = matching ? state?.error : null;
+      const error = sameQuality ? this.preload.error : null;
       status.dataset.error = String(Boolean(error) || this.bufferError);
       const message =
-        error === "buffer-limit"
-          ? this.copy.bufferLimit
+        error === "cache-unconfirmed"
+          ? this.copy.cacheUnconfirmed
           : error || this.bufferError
             ? this.copy.loadError
             : !api
               ? this.copy.unavailable
               : !matching || !ready
                 ? this.copy.waiting
-                : `${buffered.complete ? this.copy.complete : enabled ? this.copy.buffering : this.copy.bufferIdle}: ${buffered.percent.toFixed(buffered.complete ? 0 : 1)}%`;
+                : `${sameQuality && this.preload.status === "completed" ? this.copy.complete : enabled ? this.copy.buffering : this.copy.bufferIdle}: ${percent.toFixed(this.preload.status === "completed" ? 0 : 1)}% (${state.videoMode} / ${state.audioBitrate}k)`;
       this.text(status, message);
     } catch {
       toggle.disabled = true;

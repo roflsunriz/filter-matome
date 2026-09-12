@@ -212,7 +212,7 @@ export class HeatmapModule implements ModuleInstance {
       const duration = context.player.getDuration();
 
       if (duration) {
-        context.player.seek(position * duration);
+        void context.player.seek(position * duration);
       }
     });
   }

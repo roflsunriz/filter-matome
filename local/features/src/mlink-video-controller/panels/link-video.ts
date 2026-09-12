@@ -899,7 +899,7 @@ export class MlinkVideoController extends BasePanel {
 
         // 動画が終了に近づいた場合（残り0.5秒以下）
         if (duration > 0 && currentTime > 0 && duration - currentTime <= 0.5) {
-          this.player.seek(0);
+          void this.player.seek(0);
           // 少し遅延させて再生を開始
           setTimeout(() => {
             void this.player?.play();

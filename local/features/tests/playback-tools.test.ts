@@ -4,7 +4,6 @@ import {
   parsePlaybackTime,
 } from "../src/mlink-video-controller/services/ab-repeat";
 import {
-  getBufferedProgress,
   getOfficialBufferingApi,
   readOfficialBufferingState,
 } from "../src/mlink-video-controller/services/official-buffering-bridge";
@@ -35,40 +34,15 @@ describe("再生補助の境界条件", () => {
     expect(formatPlaybackTime(null)).toBe("");
   });
 
-  test("末尾が読み込み済みでも途中に穴があれば100%にしない", () => {
-    const progress = (parts: [number, number][], duration = 100) =>
-      getBufferedProgress(
-        {
-          length: parts.length,
-          start: (index) => parts[index][0],
-          end: (index) => parts[index][1],
-        },
-        duration,
-      );
-    expect(progress([[80, 100]])).toEqual({ percent: 20, complete: false });
-    expect(
-      progress([
-        [0, 30],
-        [60, 100],
-      ]),
-    ).toEqual({ percent: 70, complete: false });
-    expect(progress([[0.025, 99.97]])).toEqual({
-      percent: 100,
-      complete: true,
-    });
-    expect(progress([])).toEqual({ percent: 0, complete: false });
-    expect(progress([[0, 10]], Infinity).complete).toBe(false);
-  });
-
   test("API版・必須関数・戻り値の形式を検査する", () => {
     expect(
       getOfficialBufferingApi({ FilterMatomeBufferingApi: { version: 2 } }),
     ).toBeNull();
     const api = getOfficialBufferingApi({
       FilterMatomeBufferingApi: {
-        version: 1,
-        getState: () => null,
-        setEnabled: () => null,
+        version: 2,
+        getState: () => ({ invalid: true }),
+        getPlan: () => null,
       },
     });
     expect(api).not.toBeNull();

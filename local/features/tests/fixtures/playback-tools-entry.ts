@@ -7,6 +7,28 @@ import {
   basePanelStyles,
 } from "../../src/mlink-video-controller/panels/base";
 
+// 公式mediaの最後のシーク位置による下限を再現する。HTMLのcurrentTimeだけを
+// 戻す実装では公式時計が戻らず、テストが失敗する。
+let lastOfficialSeek = 0;
+const mediaVideo = () => document.querySelector<HTMLVideoElement>("video")!;
+const officialControl = {
+  version: 1,
+  getState: () => ({
+    videoId: "sm9",
+    currentTime: Math.max(lastOfficialSeek, mediaVideo().currentTime),
+    duration: mediaVideo().duration,
+    paused: mediaVideo().paused,
+    seeking: mediaVideo().seeking,
+  }),
+  seek: async (time: number) => {
+    lastOfficialSeek = time;
+    mediaVideo().currentTime = time;
+  },
+  play: () => mediaVideo().play(),
+  pause: () => mediaVideo().pause(),
+};
+Object.assign(window, { FilterMatomePlaybackControlApi: officialControl });
+
 class PlaybackToolsFixture extends BasePanel {
   controller: PlaybackTabController | null = null;
   connectedCallback(): void {

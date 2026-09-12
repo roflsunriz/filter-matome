@@ -20,6 +20,7 @@
     "sandbox:analyze-watch-css": "bun scripts/sandbox/analyze-official-watch-css.ts",
     "sandbox:analyze-playback-rate": "bun scripts/sandbox/analyze-playback-rate-bridge.ts",
     "sandbox:analyze-full-buffer": "bun scripts/sandbox/analyze-full-buffer.ts",
+    "sandbox:analyze-playback-control": "bun scripts/sandbox/analyze-playback-control.ts",
     "sandbox:verify-playback-tools": "bun scripts/sandbox/verify-current-playback-tools.ts",
     "sandbox:analyze-comment-reload": "bun scripts/sandbox/analyze-comment-reload-api.ts",
     "sandbox:analyze-comment-menu": "bun scripts/sandbox/analyze-comment-context-menu.ts",

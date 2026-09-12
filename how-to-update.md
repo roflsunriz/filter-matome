@@ -20,22 +20,23 @@ mkdocs build --strict
 
 ## 全編先読み・A-Bリピートの更新確認
 
-101番フィルターと`local/features`を同じ版に更新し、全体ビルド後に視聴ページを一度再読み込みする。追加の保存設定やデータ移行は不要。再生タブ下部の`全編先読み`と`A-Bリピート`から操作する。
+101番フィルターと`local/features`を同じ版に更新し、全体ビルド後に視聴ページを`Ctrl+F5`で再読み込みする。全編先読みはAPI v2、再生位置同期はAPI v1を使用する。追加の保存設定やデータ移行は不要。再生タブ下部の`全編先読み`と`A-Bリピート`から操作する。
 
 ```powershell
 cd local/features
 bun run sandbox:analyze-full-buffer
-bun test tests/full-buffer-nlfilter.test.ts tests/playback-tools.test.ts tests/common-api-status-menu.test.ts
+bun run sandbox:analyze-playback-control
+bun test tests/full-buffer-nlfilter.test.ts tests/full-preload.test.ts tests/official-playback-control.test.ts tests/playback-tools.test.ts tests/common-api-status-menu.test.ts
 bunx playwright test tests/mlink-video-controller-playback-tools.spec.ts tests/common-api-status-menu.spec.ts
 bun run verify
 bun run sandbox:verify-playback-tools
 ```
 
-公式資産が更新された場合は、既存sandboxと現在の`PlayerSeekBar`資産を比較する。`full-buffer-bridge.md`へURL・取得日時・サイズ・SHA-256・識別子・一致数・前版との差分を記録し、HLS sessionの生成、映像と音声の読込位置、公式の上限制御が維持されていることを確認する。プロキシー経由のcaptureには別のnlFilterによる変更が含まれるため、原本と混同しない。現行原本はCookieなしで公式CDNから`official-watch-bundle/originals/`へ保存し、配布物へ含めない。
+公式資産が更新された場合は、既存sandboxと現在の`PlayerSeekBar`資産を比較する。`full-buffer-bridge.md`と`playback-control-bridge.md`へURL・取得日時・サイズ・SHA-256・識別子・一致数・前版との差分を記録する。HLSの取得計画と、公式mediaのシーク開始・確定・時計の更新が成立することを確認する。プロキシー経由のcaptureには別のnlFilterによる変更が含まれるため、原本と混同しない。現行原本はCookieなしで公式CDNから`official-watch-bundle/originals/`へ保存し、配布物へ含めない。
 
-実ページでは全編先読みの開始・解除、100%の範囲、再生位置・一時停止・速度の維持、A-Bの現在位置設定・時刻入力・区間反復・解除・クリア、動画切り替え時のリセットを確認する。上部`filter-matome`の全編先読みAPI状態は自動で有効になり、検査だけで動画取得を始めない。
+実ページでは全編先読みの開始・中止、同じ品質の完成キャッシュ、再生位置・一時停止・速度の維持、A-Bの現在位置設定・時刻入力・区間反復・解除・クリア、動画・品質切り替え時のリセットを確認する。A-Bは動画要素だけでなく公式時計も計測する。上部`filter-matome`の全編先読み・再生位置同期は自動で有効になり、検査だけで取得やシークを始めない。
 
-元へ戻す場合は、101番の全編先読みReplace節と対応するfeaturesを同じ以前の版へ戻し、全体ビルド後に視聴ページを再読み込みする。ブラウザーの容量超過は強制再試行せず、表示された停止理由を確認して画質を下げる。
+問題がある場合は取得やリピートを停止して公式の操作へ戻し、フィルターとfeaturesを同じ安定版に揃えて復旧する。再生用バッファーへの全編保持や、動画要素の時刻だけを書き換える旧方式は既知の不具合があるため復活させない。先読みの保存に失敗する場合はNicoCache_nlの空き容量・プロキシー経路・完成判定を確認する。
 
 ## 公式プレイヤー再生速度ブリッジの追従確認
 

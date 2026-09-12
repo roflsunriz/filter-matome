@@ -59,8 +59,13 @@ async function setup(page: Page, language = "ja"): Promise<void> {
 const time = (page: Page) =>
   page.evaluate(() => document.querySelector("video")!.currentTime);
 const setTime = (page: Page, value: number) =>
-  page.evaluate((seconds) => {
-    document.querySelector("video")!.currentTime = seconds;
+  page.evaluate(async (seconds) => {
+    const api = (
+      window as unknown as {
+        FilterMatomePlaybackControlApi: { seek(time: number): Promise<void> };
+      }
+    ).FilterMatomePlaybackControlApi;
+    await api.seek(seconds);
   }, value);
 const action = (page: Page, name: string) =>
   page.locator(`[data-action="${name}"]`);
@@ -95,12 +100,39 @@ test("A-Bの指定・時刻編集・一時停止維持・繰り返し・解除�
     await page.evaluate(() => document.querySelector("video")!.paused),
   ).toBe(true);
   expect(await time(page)).toBeCloseTo(3, 1);
+  expect(
+    await page.evaluate(
+      () =>
+        (
+          window as unknown as {
+            FilterMatomePlaybackControlApi: {
+              getState(): { currentTime: number };
+            };
+          }
+        ).FilterMatomePlaybackControlApi.getState().currentTime,
+    ),
+  ).toBeCloseTo(3, 1);
   await page.evaluate(async () => {
     const video = document.querySelector("video")!;
     video.currentTime = 3.95;
     await video.play();
   });
   await expect.poll(() => time(page)).toBeLessThan(3.8);
+  expect(
+    await page.evaluate(() => {
+      const api = (
+        window as unknown as {
+          FilterMatomePlaybackControlApi: {
+            getState(): { currentTime: number };
+          };
+        }
+      ).FilterMatomePlaybackControlApi;
+      return Math.abs(
+        api.getState().currentTime -
+          document.querySelector("video")!.currentTime,
+      );
+    }),
+  ).toBeLessThan(0.02);
   await page.evaluate(() => document.querySelector("video")!.pause());
   const paused = await time(page);
   await page.waitForTimeout(250);
@@ -132,55 +164,104 @@ test("A-Bの指定・時刻編集・一時停止維持・繰り返し・解除�
   await expect(action(page, "ab-toggle")).toBeDisabled();
 });
 
-test("先読みAPIの遅延公開・進捗の穴・失敗表示・解除・SPAリセット", async ({
+test("先読み計画の遅延公開・転送失敗・完成確認・品質とSPAのリセット", async ({
   page,
 }) => {
   await setup(page);
   await expect(action(page, "full-buffer")).toBeDisabled();
+  let failed = true;
+  let completed = 0;
+  let release: (() => void) | undefined;
+  let gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const cors = {
+    "access-control-allow-origin": "https://www.nicovideo.jp",
+    "access-control-allow-credentials": "true",
+  };
+  await page.route(
+    "https://asset.domand.nicovideo.jp/preload/**",
+    async (route) => {
+      await gate;
+      if (!failed) completed++;
+      await route
+        .fulfill({ status: failed ? 403 : 200, headers: cors, body: "segment" })
+        .catch(() => {});
+    },
+  );
+  await page.route(
+    "https://nicocachenl.test/api/v1/videos/**/cache-entries",
+    async (route) => {
+      const item = (
+        cacheId: string,
+        audioBitrate: number,
+        complete: boolean,
+      ) => ({
+        videoId: "sm9",
+        cacheId,
+        complete,
+        caching: false,
+        videoMode: "360p",
+        audioBitrate,
+        legacyLow: false,
+        size: 100,
+        title: null,
+        subFolder: null,
+        filename: null,
+        ts: null,
+      });
+      const caches = {
+        other: item("other", 64, true),
+        selected: item("selected", 192, completed >= 2),
+      };
+      await route.fulfill({
+        headers: cors,
+        contentType: "application/json",
+        body: JSON.stringify({
+          videoId: "sm9",
+          preferred: "other",
+          cacheIds: ["other", "selected"],
+          cachings: [],
+          completes: completed >= 2 ? ["other", "selected"] : ["other"],
+          caches,
+        }),
+      });
+    },
+  );
   await page.evaluate(() => {
     const host = window as unknown as Record<string, unknown>;
     const state = {
       videoId: "sm9",
-      enabled: false,
-      error: null as string | null,
+      videoQualityId: "video-h264-360p-lowest",
+      audioQualityId: "audio-aac-192kbps",
+      videoMode: "360p",
+      audioBitrate: 192,
+      ready: true,
     };
     host.testBufferState = state;
-    host.testBufferCalls = [];
     host.FilterMatomeBufferingApi = {
-      version: 1,
+      version: 2,
       getState: () => ({ ...state }),
-      setEnabled: (enabled: boolean) => {
-        (host.testBufferCalls as boolean[]).push(enabled);
-        state.enabled = enabled;
-        return { ...state };
-      },
+      getPlan: () => ({
+        ...state,
+        resources: [0, 1].map((id) => ({
+          url: `https://asset.domand.nicovideo.jp/preload/${id}`,
+        })),
+      }),
     };
-    Object.defineProperty(document.querySelector("video"), "buffered", {
-      configurable: true,
-      get: () => ({ length: 1, start: () => 16, end: () => 20 }),
-    });
     window.dispatchEvent(new Event("filter-matome:api-status-change"));
   });
   await expect(action(page, "full-buffer")).toBeEnabled();
   await expect(page.locator("[data-buffer-progress]")).toHaveJSProperty(
     "value",
-    20,
+    0,
   );
   await action(page, "full-buffer").click();
   await expect(action(page, "full-buffer")).toHaveAttribute(
     "aria-pressed",
     "true",
   );
-  await page.evaluate(() => {
-    const state = (
-      window as unknown as {
-        testBufferState: { enabled: boolean; error: string };
-      }
-    ).testBufferState;
-    state.enabled = false;
-    state.error = "buffer-limit";
-    window.dispatchEvent(new Event("filter-matome:api-status-change"));
-  });
+  release!();
   await expect(page.locator("[data-buffer-status]")).toHaveAttribute(
     "data-error",
     "true",
@@ -189,7 +270,36 @@ test("先読みAPIの遅延公開・進捗の穴・失敗表示・解除・SPA�
     "aria-pressed",
     "false",
   );
+  failed = false;
   await action(page, "full-buffer").click();
+  await expect(page.locator("[data-buffer-progress]")).toHaveJSProperty(
+    "value",
+    100,
+  );
+  expect(completed).toBe(2);
+  // 別品質の完成キャッシュを現在品質の完了と誤認せず、変更時は状態を消す。
+  await page.evaluate(() => {
+    const state = (
+      window as unknown as {
+        testBufferState: { audioQualityId: string; audioBitrate: number };
+      }
+    ).testBufferState;
+    state.audioQualityId = "audio-aac-320kbps";
+    state.audioBitrate = 320;
+    window.dispatchEvent(new Event("filter-matome:api-status-change"));
+  });
+  await expect(page.locator("[data-buffer-progress]")).toHaveJSProperty(
+    "value",
+    0,
+  );
+  gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await action(page, "full-buffer").click();
+  await expect(action(page, "full-buffer")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   await point(page, "a", "1");
   await point(page, "b", "2");
   await action(page, "ab-toggle").click();
@@ -200,12 +310,11 @@ test("先読みAPIの遅延公開・進捗の穴・失敗表示・解除・SPA�
     "false",
   );
   await expect(page.locator('[data-point="a"]')).toHaveValue("");
-  expect(
-    await page.evaluate(
-      () =>
-        (window as unknown as { testBufferCalls: boolean[] }).testBufferCalls,
-    ),
-  ).toEqual([true, true, false]);
+  await expect(page.locator("[data-buffer-progress]")).toHaveJSProperty(
+    "value",
+    0,
+  );
+  release!();
 });
 
 test("全体リピートへの切替と再接続・破棄でA-B監視を残さない", async ({
@@ -326,6 +435,27 @@ test("動画要素の置換では同じ動画の点を保ち、旧要素を監�
       ),
     )
     .toBeGreaterThan(2.1);
+});
+
+test("ローカルプレイヤーの動画要素へ公式時計を適用しない", async ({ page }) => {
+  await setup(page);
+  await setTime(page, 10);
+  await page.evaluate(() => {
+    const video = document.querySelector("video")!;
+    video.id = "video-element";
+    video.currentTime = 1;
+  });
+  await expect(page.locator("[data-full-buffer]")).toBeHidden();
+  await action(page, "set-a").click();
+  await expect(page.locator('[data-point="a"]')).toHaveValue("0:01.000");
+  await point(page, "b", "2");
+  await action(page, "ab-toggle").click();
+  await page.evaluate(async () => {
+    const video = document.querySelector("video")!;
+    video.currentTime = 1.95;
+    await video.play();
+  });
+  await expect.poll(() => time(page)).toBeLessThan(1.8);
 });
 
 for (const language of ["ja", "en", "ar"]) {

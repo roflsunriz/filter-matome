@@ -1,7 +1,7 @@
 const EN = {
   bufferTitle: "Full video preload",
   bufferHelp:
-    "Loads the whole video without moving playback. Uses network and memory; resets when you change videos.",
+    "Preloads the current quality into NicoCache_nl. Playback keeps its normal memory buffer. Stops on video or quality changes.",
   repeatTitle: "A–B repeat",
   pointA: "A · Start",
   pointB: "B · End",
@@ -18,13 +18,15 @@ const EN = {
   repeating: "Repeating A–B",
   invalidTime: "Enter a time within this video (seconds or m:ss).",
   invalidRange: "B must be at least 0.1 seconds after A.",
-  bufferIdle: "Buffered",
+  bufferIdle: "Preload progress",
   buffering: "Preloading",
-  complete: "Entire video buffered",
+  complete: "Entire video cached",
   waiting: "Waiting for the video",
   unavailable: "Reload this Watch page to enable full video preload.",
-  bufferLimit:
-    "Preloading stopped: browser buffer is full. Lower the quality and try again.",
+  cacheUnconfirmed:
+    "NicoCache_nl could not confirm the complete cache. Check disk space and the proxy, then retry.",
+  repeatUnavailable:
+    "Playback synchronization is not ready. Reload the Watch page if this persists.",
   loadError:
     "Preloading stopped. Check playback and the connection, then try again.",
 };
@@ -33,14 +35,14 @@ const COPIES: Record<string, Partial<Copy>> = {
   ja: {
     bufferTitle: "全編先読み",
     bufferHelp:
-      "再生位置を動かさず全編を読み込みます。通信量・メモリーを使い、動画切り替えで解除されます。",
+      "現在の画質・音質でNicoCache_nlへ全編を先読みします。再生用バッファーは通常範囲のままです。動画・画質切り替えで停止します。",
     repeatTitle: "A-Bリピート",
     pointA: "A · 開始",
     pointB: "B · 終了",
     setCurrent: "現在位置を設定",
     clear: "クリア",
     start: "開始",
-    stop: "解除",
+    stop: "中止",
     repeatStart: "リピート開始",
     repeatStop: "リピート解除",
     repeatHelp:
@@ -50,13 +52,15 @@ const COPIES: Record<string, Partial<Copy>> = {
     repeating: "A-Bリピート中",
     invalidTime: "動画内の時刻を秒数または 分:秒 で入力してください。",
     invalidRange: "BはAより0.1秒以上後に設定してください。",
-    bufferIdle: "読込済み",
+    bufferIdle: "先読み進捗",
     buffering: "全編先読み中",
-    complete: "全編読込済み",
+    complete: "全編キャッシュ済み",
     waiting: "動画の読み込み待ち",
     unavailable: "全編先読みを利用するには視聴ページを再読み込みしてください。",
-    bufferLimit:
-      "ブラウザーのバッファー容量に達したため停止しました。画質を下げて再試行してください。",
+    cacheUnconfirmed:
+      "NicoCache_nlの完成キャッシュを確認できませんでした。空き容量とプロキシーの状態を確認して再試行してください。",
+    repeatUnavailable:
+      "公式プレイヤーとの同期を待っています。続く場合は視聴ページを再読み込みしてください。",
     loadError:
       "先読みを停止しました。動画の再生と通信状態を確認して再試行してください。",
   },

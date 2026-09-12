@@ -177,12 +177,14 @@ const waitForMenuReady = async (
         globalThis.FilterMatomeCommentApi?.version === 1 &&
         globalThis.FilterMatomeCommentMenuApi?.version === 1 &&
         globalThis.FilterMatomeNotificationReadApi?.version === 1 &&
-        globalThis.FilterMatomeBufferingApi?.version === 1 &&
+        globalThis.FilterMatomeBufferingApi?.version === 2 &&
+        globalThis.FilterMatomePlaybackControlApi?.version === 1 &&
         document.querySelector('[data-api-id="playback-rate"]')?.getAttribute("data-status") === "active" &&
         document.querySelector('[data-api-id="comment-reload"]')?.getAttribute("data-status") === "active" &&
         document.querySelector('[data-api-id="comment-menu"]')?.getAttribute("data-status") === "active" &&
         document.querySelector('[data-api-id="notification-refresh"]')?.getAttribute("data-status") === "active" &&
-        document.querySelector('[data-api-id="full-buffer"]')?.getAttribute("data-status") === "active"
+        document.querySelector('[data-api-id="full-buffer"]')?.getAttribute("data-status") === "active" &&
+        document.querySelector('[data-api-id="playback-control"]')?.getAttribute("data-status") === "active"
       )`,
     );
     if (ready === true) return;
@@ -359,6 +361,7 @@ const main = async (): Promise<void> => {
         result.statuses["comment-reload"] !== "active" ||
         result.statuses["comment-menu"] !== "active" ||
         result.statuses["full-buffer"] !== "active" ||
+        result.statuses["playback-control"] !== "active" ||
         result.statuses["notification-refresh"] !== "active"
       ) {
         throw new Error(`API状態が不正です: ${JSON.stringify(result)}`);

@@ -417,7 +417,7 @@ export class HeatmapManager {
   private seekToPosition(position: number): void {
     const duration = this.player.getDuration();
     const time = position * duration;
-    this.player.seek(time);
+    void this.player.seek(time);
   }
 
   private updateCommentData(): void {

@@ -1,6 +1,40 @@
 # nlフィルタ定義(文字コード判定用なのでこの行は削除しないこと)
 
-# HLS sessionの生成境界。プレビューは対象外。
+# 公式media controllerの時刻・smoothTime・再生キューを同期する。
+[Replace]
+Name = 公式プレイヤーの再生位置同期API
+FullURL = https?://resource\.video\.nimg\.jp/web/scripts/nvpc_next/assets/PlayerSeekBar-[^/?]+\.js(?:\?.*)?
+Match<
+this\.getCurrentTime=\(([A-Za-z_$][\w$]*)=!0\)=>this\.media\.getCurrentTime\(\1\)
+>
+Replace<
+this.getCurrentTime=($1=!0)=>this.media.getCurrentTime($1),(()=>{
+  if(this.context?.isPreview)return;
+  const changed=()=>globalThis.dispatchEvent(new Event("filter-matome:api-status-change"));
+  const api={
+    version:1,
+    getState:()=>{
+      const video=this.getVideoElement(),duration=this.getDuration();
+      if(this.isDisposed||!this.watch?.video?.id||!video?.isConnected||!Number.isFinite(duration)||duration<=0)return null;
+      return {videoId:this.watch.video.id,currentTime:this.getCurrentTime(),duration,paused:!this.media.isPlaying(),seeking:this.media.isSeeking()||this.media.isTimeSyncing()||video.seeking};
+    },
+    seek:async time=>{
+      const state=api.getState();
+      if(!state)throw new Error("Official player not ready");
+      if(!Number.isFinite(time)||time<0||time>state.duration)throw new RangeError("Invalid seek time");
+      this.media.seek(time);
+      await this.media.setCurrentTime(time);
+      return api.getState();
+    },
+    play:()=>{if(!api.getState())throw new Error("Official player not ready");return this.media.play();},
+    pause:()=>{if(!api.getState())throw new Error("Official player not ready");this.media.pause();}
+  };
+  this.disposes.push(()=>{if(globalThis.FilterMatomePlaybackControlApi===api){delete globalThis.FilterMatomePlaybackControlApi;changed();}});
+  globalThis.FilterMatomePlaybackControlApi=api;changed();
+})()
+>
+
+# HLS sessionの現在の画質・音質の先読み計画を公開する。
 # 詳細・世代比較: local/features/src/sandbox/full-buffer-bridge.md
 [Replace]
 Name = 公式プレイヤーの全編先読みAPI
@@ -11,62 +45,47 @@ this\.hlsjs\.attachMedia\(this\.video\),this\.hlsjs\.on\(([A-Za-z_$][\w$]*)\.Eve
 Replace<
 this.hlsjs.attachMedia(this.video),(()=>{
   if(this.context.isPreview)return;
-  const hls=this.hlsjs,video=this.video;
-  const controllers=[hls.streamController,hls.audioStreamController].filter(Boolean);
-  if(!hls.streamController||controllers.some(controller=>typeof controller.getLoadPosition!=="function")||typeof hls.startLoad!=="function"||typeof hls.resumeBuffering!=="function"||typeof this.setBufferingLimit!=="function")return;
-  const positions=controllers.map(controller=>controller.getLoadPosition);
-  const officialLimit=this.setBufferingLimit;
-  let enabled=false,disposed=false,error=null,saved=null,target=0;
+  const hls=this.hlsjs;
+  let disposed=false;
   const changed=()=>globalThis.dispatchEvent(new Event("filter-matome:api-status-change"));
-  const gap=controller=>{
-    const ranges=controller.mediaBuffer?.buffered??video.buffered;
-    let end=0;
-    for(let index=0;index<ranges.length;index++){
-      if(ranges.start(index)>end+.1)return end;
-      end=Math.max(end,ranges.end(index));
-    }
-    return end;
-  };
-  const restore=()=>{
-    enabled=false;
-    if(saved){Object.assign(hls.config,saved);saved=null;}
-  };
-  controllers.forEach((controller,index)=>{
-    controller.getLoadPosition=function(){return enabled?gap(controller):positions[index].call(this);};
-  });
-  this.setBufferingLimit=value=>{
-    officialLimit.call(this,value);
-    if(enabled&&saved){saved.maxBufferLength=hls.config.maxBufferLength;hls.config.maxBufferLength=target;}
+  const tracks=()=>{
+    const index=hls.loadLevel>=0?hls.loadLevel:hls.currentLevel;
+    return {index,video:hls.levels[index]?.details,audio:hls.audioTracks[hls.audioTrack]?.details};
   };
   const api={
-    version:1,
-    getState:()=>({enabled,error,videoId:this.watch.video.id}),
-    setEnabled:value=>{
-      if(typeof value!=="boolean")throw new TypeError("Expected boolean");
-      if(disposed)throw new Error("Video session disposed");
-      if(value===enabled)return api.getState();
-      if(value){
-        const duration=video.duration;
-        if(!Number.isFinite(duration)||duration<=0||hls.media!==video)throw new Error("Video not ready");
-        saved={maxBufferLength:hls.config.maxBufferLength,maxMaxBufferLength:hls.config.maxMaxBufferLength,backBufferLength:hls.config.backBufferLength};
-        target=duration+1;error=null;enabled=true;
-        hls.config.maxBufferLength=target;hls.config.maxMaxBufferLength=target;hls.config.backBufferLength=Infinity;
-        try{hls.resumeBuffering();hls.startLoad(-1,true);}catch(failure){restore();throw failure;}
-      }else{restore();hls.startLoad(-1,true);}
-      changed();return api.getState();
+    version:2,
+    getState:()=>{
+      if(disposed)return null;
+      const current=tracks(),quality=this.getQualityByLevelIndex(current.index,hls.levels);
+      if(!quality?.video||!quality?.audio)return null;
+      const audioPart=quality.audio.id.split("-").pop();
+      const audioBitrate=audioPart.endsWith("kbps")?Number(audioPart.slice(0,-4)):0;
+      return {videoId:this.watch.video.id,videoQualityId:quality.video.id,audioQualityId:quality.audio.id,videoMode:quality.video.height+"p",audioBitrate,ready:!!current.video?.fragments?.length&&!!current.audio?.fragments?.length&&!current.video.live&&!current.audio.live};
+    },
+    getPlan:()=>{
+      const state=api.getState();
+      if(!state?.ready)return null;
+      const current=tracks(),resources=[],seen=new Set();
+      const add=(url,start,end)=>{
+        if(typeof url!=="string"||!url)return;
+        const ranged=Number.isSafeInteger(start)&&Number.isSafeInteger(end)&&start>=0&&end>start;
+        const key=url+"|"+(ranged?start+"-"+end:"");
+        if(seen.has(key))return;
+        seen.add(key);resources.push(ranged?{url,rangeStart:start,rangeEnd:end}:{url});
+      };
+      for(const details of [current.video,current.audio]){
+        add(details.url);
+        for(const fragment of details.fragments){
+          const init=fragment.initSegment;
+          if(init){add(init.decryptdata?.uri);add(init.url,init.byteRangeStartOffset,init.byteRangeEndOffset);}
+          add(fragment.decryptdata?.uri);add(fragment.url,fragment.byteRangeStartOffset,fragment.byteRangeEndOffset);
+        }
+      }
+      return {...state,resources};
     }
   };
-  hls.on($1.Events.ERROR,(_event,data)=>{
-    if(!enabled)return;
-    if(data.details==="bufferFullError"||data.fatal){
-      error=data.details==="bufferFullError"?"buffer-limit":"load-error";
-      restore();changed();
-    }
-  });
   hls.on($1.Events.DESTROYING,()=>{
-    disposed=true;restore();
-    controllers.forEach((controller,index)=>{controller.getLoadPosition=positions[index];});
-    this.setBufferingLimit=officialLimit;
+    disposed=true;
     if(globalThis.FilterMatomeBufferingApi===api){delete globalThis.FilterMatomeBufferingApi;changed();}
   });
   globalThis.FilterMatomeBufferingApi=api;changed();

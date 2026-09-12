@@ -98,7 +98,8 @@ bun run build
 ## nlFilterによる公式資産APIの変更契約（必須）
 
 - sandboxの`capture-official-watch-bundle.ts`で保存した資産は、NicoCache_nl経由だと別機能のAPIが挿入済みの場合がある（2026-09-12確認）。保管SHA-256を無条件に公式CDN原本のハッシュとみなさず、`FilterMatome` markerと変更対象classを調べる。同一URLの無改変版・適用済み版は別世代に数えない。全編先読みでは`analyze-full-buffer.ts`がHLS sessionのclass本文ハッシュを併記し、session外だけの変更と対象自身の改変を区別する。
-- 公式Watchの全編先読みは`101_disable_official_function.txt`の`FilterMatomeBufferingApi`でHLS sessionへ接続する。通常上限は確認した資産では180秒であり、`startLoad(0, true)`だけでは再生開始後の`getLoadPosition()`が現在位置へ戻るため先頭側の穴を埋められない。映像・音声それぞれの未読込位置と上限の制御、公式`setBufferingLimit()`の更新、容量超過・破棄時の復元を同時に維持する。根拠と世代比較は`local/features/src/sandbox/full-buffer-bridge.md`を参照する。
+- 全編先読みAPIはv2の`getState()`・`getPlan()`で現在の映像・音声の取得計画だけを公開する。v1の再生用バッファーへの全編保持はブラウザーの容量制限で失敗するため復活させない。`full-preload.ts`が小さなストリームとして取得し、同じ画質・音質のNicoCache_nl完成キャッシュを確認して100%にする。HLSの上限・読込位置・再生状態は変更しない。根拠と世代比較は`local/features/src/sandbox/full-buffer-bridge.md`を参照する。
+- 公式Watchの後方シークは`FilterMatomePlaybackControlApi`から公式mediaの`seek(time)`→`setCurrentTime(time)`を順に呼ぶ（2026-09-13確認）。HTMLVideoElementの時刻だけでは`_setCurrentTime`と`smoothTime`が残り、確定処理だけでも途中のtickが旧時刻へ戻し得る。同期中の時刻は公式の既定getterで読み、A-B・mlinkのシーク・再生/停止を同じ境界へ接続する。`#video-element`のローカル再生は公式時計の対象外。契約は`local/features/src/sandbox/playback-control-bridge.md`を参照する。
 
 - nlFilterで公式JavaScript資産へAPIを公開・接続するときは、新規追加、既存APIの編集、Match/Replaceの追従、API削除を一体の契約変更として扱う。フィルターだけを変更して完了にしない。
 - 追加・編集前に`local/features/src/sandbox/`の取得済み資産と契約・Match履歴を確認し、複数世代（最低3世代、存在するPC/responsive等の変種を含む）で同じ意味上の境界と参照関係が成立し、十分に汎化されていることを検証する。最新1資産への一致や同一内容の複製を複数世代の根拠にせず、minify名が変化した世代も比較する。資産不足なら追加取得し、未確認のまま汎化済みとしない。

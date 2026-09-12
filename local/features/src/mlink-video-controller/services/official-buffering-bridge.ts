@@ -1,76 +1,94 @@
 export interface OfficialBufferingState {
-  enabled: boolean;
-  error: null | "buffer-limit" | "load-error";
   videoId: string;
+  videoQualityId: string;
+  audioQualityId: string;
+  videoMode: string;
+  audioBitrate: number;
+  ready: boolean;
 }
-
+export interface PreloadResource {
+  url: string;
+  rangeStart?: number;
+  rangeEnd?: number;
+}
+export interface OfficialPreloadPlan extends OfficialBufferingState {
+  resources: PreloadResource[];
+}
 export interface OfficialBufferingApi {
-  version: 1;
-  getState(): OfficialBufferingState;
-  setEnabled(enabled: boolean): OfficialBufferingState;
+  version: 2;
+  getState(): unknown;
+  getPlan(): unknown;
 }
 
 export function getOfficialBufferingApi(
   host: Record<string, unknown>,
 ): OfficialBufferingApi | null {
-  const api = host["FilterMatomeBufferingApi"];
+  const value = host["FilterMatomeBufferingApi"];
   if (
-    typeof api !== "object" ||
-    api === null ||
-    !("version" in api) ||
-    api.version !== 1 ||
-    !("getState" in api) ||
-    typeof api.getState !== "function" ||
-    !("setEnabled" in api) ||
-    typeof api.setEnabled !== "function"
+    typeof value !== "object" ||
+    value === null ||
+    !("version" in value) ||
+    value.version !== 2 ||
+    !("getState" in value) ||
+    typeof value.getState !== "function" ||
+    !("getPlan" in value) ||
+    typeof value.getPlan !== "function"
   )
     return null;
-  return api as OfficialBufferingApi;
+  return value as OfficialBufferingApi;
 }
-
+function isState(value: unknown): value is OfficialBufferingState {
+  if (typeof value !== "object" || value === null) return false;
+  const state = value as Record<string, unknown>;
+  return (
+    typeof state.videoId === "string" &&
+    typeof state.videoQualityId === "string" &&
+    typeof state.audioQualityId === "string" &&
+    typeof state.videoMode === "string" &&
+    typeof state.audioBitrate === "number" &&
+    Number.isFinite(state.audioBitrate) &&
+    state.audioBitrate > 0 &&
+    typeof state.ready === "boolean"
+  );
+}
 export function readOfficialBufferingState(
   api: OfficialBufferingApi,
-): OfficialBufferingState {
-  const state: unknown = api.getState();
-  if (
-    typeof state !== "object" ||
-    state === null ||
-    !("enabled" in state) ||
-    typeof state.enabled !== "boolean" ||
-    !("videoId" in state) ||
-    typeof state.videoId !== "string" ||
-    !("error" in state) ||
-    (state.error !== null &&
-      state.error !== "buffer-limit" &&
-      state.error !== "load-error")
-  ) {
-    throw new TypeError("Invalid buffering API state");
-  }
-  return state as OfficialBufferingState;
+): OfficialBufferingState | null {
+  const state = api.getState();
+  if (state === null) return null;
+  if (!isState(state)) throw new TypeError("Invalid buffering API state");
+  return state;
 }
-
-// TimeRanges は映像・音声の共通の再生可能範囲。末尾だけを見て100%と判定しない。
-export function getBufferedProgress(
-  ranges: TimeRanges,
-  duration: number,
-): { percent: number; complete: boolean } {
-  if (!Number.isFinite(duration) || duration <= 0)
-    return { percent: 0, complete: false };
-  let seconds = 0;
-  let end = 0;
-  let continuous = ranges.length > 0;
-  for (let index = 0; index < ranges.length; index++) {
-    const start = Math.max(0, ranges.start(index));
-    const nextEnd = Math.min(duration, ranges.end(index));
-    if (start > end + 0.1) continuous = false;
-    seconds += Math.max(0, nextEnd - Math.max(start, end));
-    end = Math.max(end, nextEnd);
-  }
-  const complete = continuous && end >= duration - 0.1;
-  return {
-    percent: complete
-      ? 100
-      : Math.min(99.9, Math.max(0, (seconds / duration) * 100)),
-    complete,
-  };
+export function readOfficialPreloadPlan(
+  api: OfficialBufferingApi,
+): OfficialPreloadPlan {
+  const value = api.getPlan();
+  if (
+    !isState(value) ||
+    !("resources" in value) ||
+    !Array.isArray(value.resources) ||
+    !value.resources.length ||
+    !value.resources.every((resource: unknown) => {
+      if (
+        typeof resource !== "object" ||
+        resource === null ||
+        !("url" in resource) ||
+        typeof resource.url !== "string"
+      )
+        return false;
+      const item = resource as PreloadResource;
+      return (
+        (item.rangeStart === undefined && item.rangeEnd === undefined) ||
+        (Number.isSafeInteger(item.rangeStart) &&
+          Number.isSafeInteger(item.rangeEnd) &&
+          item.rangeStart! >= 0 &&
+          item.rangeEnd! > item.rangeStart!)
+      );
+    })
+  )
+    throw new TypeError("Invalid preload plan");
+  return value as OfficialPreloadPlan;
+}
+export function preloadQualityKey(state: OfficialBufferingState): string {
+  return `${state.videoId}/${state.videoQualityId}/${state.audioQualityId}`;
 }

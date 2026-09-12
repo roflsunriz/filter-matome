@@ -10,10 +10,10 @@
 
 右下のパネルを開き、再生タブの下部から操作します。
 
-- **全編先読み**: 公式Watchの動画全体を、再生位置・一時停止・再生速度を保ったまま読み込みます。途中から開始した動画の先頭側も対象です。読込済み割合を表示し、`解除`で通常の先読みに戻ります。動画切り替えやページ再読み込みで解除され、開始状態は保存しません。通信量とメモリーを使うため、容量に達した場合は停止理由を表示します。画質を下げて再試行できます。
+- **全編先読み**: 現在の画質・音質の全編をNicoCache_nlへ先に取得します。再生位置・一時停止・再生速度を変更せず、ブラウザーの再生用バッファーは通常の範囲に保ちます。進捗100%はNicoCache_nlで同じ画質・音質の完成キャッシュを確認した状態で、公式シークバーの読込範囲とは別です。`中止`で残りの取得を止められ、取得済みキャッシュは保持します。動画・画質・音質切り替えやページ再読み込みでも停止します。通信量とディスク容量を使い、失敗時はその状態を表示します。
 - **A-Bリピート**: A（開始）とB（終了）の`現在位置を設定`、または時刻入力を使います。入力は秒数、`分:秒`、`時:分:秒`（小数3桁まで）に対応し、BはAより0.1秒以上後に指定します。`リピート開始`で有効になり、一時停止中は自動で再生しません。`リピート解除`は点を保持し、`クリア`は点も消します。全体リピートとA-Bリピートは後から選んだ方を優先します。動画切り替えで点と有効状態を消します。
 
-全編先読みのボタンが無効のままなら、101番フィルターとfeaturesを同じ版へ更新し、視聴ページを再読み込みしてください。上部`filter-matome`メニューの`全編先読み`はAPIが利用可能かを示し、先読みの開始や動画取得は行いません。ローカルvideo-playerではA-Bリピートを利用でき、全編先読みの欄は表示しません。
+ボタンが無効のままなら、101番フィルターとfeaturesを同じ版へ更新し、視聴ページを`Ctrl+F5`で再読み込みしてください。上部`filter-matome`メニューの`全編先読み`（API v2）と`再生位置同期`（API v1）は接続状態を示し、自動検査で動画取得やシークは行いません。ローカルvideo-playerではA-Bリピートを利用でき、全編先読みの欄は表示しません。
 
 ## 構成と責務
 
@@ -69,7 +69,8 @@ watchページ間のSPA遷移は共通navigationイベントから`ModuleManager
 
 - `services/nico-video-player.ts`: 対象ページの動画要素と再生状態を優先して操作する。
 - `services/official-playback-rate-bridge.ts`: 101番nlFilterが公式media controllerへ公開する版付きAPIを検証し、Watchでは公式内部状態と動画要素を同時更新する。APIがないスタンドアロンプレイヤーでは動画要素へ直接設定する。
-- `services/official-buffering-bridge.ts`: 101番の全編先読みAPIの型・動画IDを検証し、映像と音声の共通の読込済み範囲から進捗を算出する。HLS sessionへの接続根拠は`../sandbox/full-buffer-bridge.md`を参照。
+- `services/official-buffering-bridge.ts`, `services/full-preload.ts`: HLSの現在の映像・音声、初期化情報、鍵、Rangeから取得計画を読み、2要求以内の並列ストリームでNicoCache_nlへ蓄積する。取得した応答をSourceBufferや巨大な配列へ保存せず、完成キャッシュを確認する。契約は`../sandbox/full-buffer-bridge.md`を参照。
+- `services/official-playback-control.ts`: 公式mediaのシーク開始・確定と再生/停止へ接続し、公式時計と動画要素の独立した状態を同期する。A-Bと`NicoVideoPlayer`の共通境界であり、`#video-element`は通常のHTMLMediaElement操作へ分岐する。
 - `services/ab-repeat.ts`: 点の検証、再生中の区間監視、終端Bでの次動画への自動遷移抑制、動画要素の置換・破棄を扱う。
 - `tab-controllers/playback-tools.ts`, `templates/playback-tools.ts`, `styles/playback-tools.ts`: 再生タブの2機能を接続する。`playback-tools-copy.ts`に表示文言を集約し、日本語・英語と主要言語の操作名、未翻訳文言の英語フォールバックを提供する。
 - `handlers/mylist2.ts`: mylist2 SPAへ動画追加要求を渡す。
@@ -96,7 +97,7 @@ watchページ間のSPA遷移は共通navigationイベントから`ModuleManager
 - `tests/mlink-video-controller-mylist2.test.ts`: mylist2へのSPA遷移。
 - `tests/mlink-video-controller-cache-remove.test.ts`: キャッシュ削除API。
 - `tests/mlink-video-controller-playback-tools.spec.ts`: A-Bの全操作、実メディアの区間リピート・終端、先読みの遅延公開・失敗、SPA・再接続、狭幅・RTL。
-- `tests/full-buffer-nlfilter.test.ts`, `tests/playback-tools.test.ts`: 読込位置・公式設定の復元・容量超過・破棄と、進捗・時刻の境界条件。
+- `tests/full-buffer-nlfilter.test.ts`, `tests/full-preload.test.ts`, `tests/official-playback-control.test.ts`, `tests/playback-tools.test.ts`: 取得計画、ストリーム消費、取得中止、完成判定、公式時計の下限と非同期シーク、時刻の境界条件。
 
 ```powershell
 cd local/features

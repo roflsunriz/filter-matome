@@ -1,6 +1,28 @@
-# 公式HLSの全編先読みとA-Bリピート
+# 公式HLSの全編先読み
 
-## 確認した経路
+## 現行v2（2026-09-13）
+
+v1の全編保持は、動画がブラウザーのSourceBuffer容量を超えると失敗する。HLS側の秒数を増やしてもブラウザーの容量上限は解除できない。[MDNのappendBuffer例外](https://developer.mozilla.org/en-US/docs/Web/API/SourceBuffer/appendBuffer)もこの上限を説明している。
+
+v2は公式HLSの再生用バッファーを操作せず、現在の画質・音質の取得計画を読み取る。`full-preload.ts`が両方のmedia playlistを先に取得し、その後は同時2要求以内で初期化情報・鍵・CMAF断片をストリームとして消費する。応答を巨大なArrayBufferやSourceBufferへ蓄積せず、NicoCache_nlの通常のキャッシュ経路へ渡す。
+
+- `FilterMatomeBufferingApi.version`: `2`
+- `getState()`: `{videoId, videoQualityId, audioQualityId, videoMode, audioBitrate, ready}` または未準備時の`null`。
+- `getPlan()`: 同じ状態と`resources: [{url, rangeStart?, rangeEnd?}]`。Rangeの終了はexclusive。未準備・ライブでは`null`。
+- 取得元はHLSの現在の`loadLevel`（なければ`currentLevel`）と`audioTracks[audioTrack]`。公式`getQualityByLevelIndex()`で品質を対応付け、映像の`height`と音声ID末尾の`kbps`からNicoCache_nlの品質と照合する。
+- `initSegment`、`decryptdata.uri`、断片URL、byte rangeを収集して重複除去する。署名付きURLはメモリー内だけで使い、ログ・文書・検証JSONへ出さない。
+- v1の`setEnabled()`とHLSの上限・読込位置の書き換えは削除した。CommonHeaderはv2の`getState/getPlan`を検査するが、呼び出さない。
+- GET対象はHTTPSの公式Domand 2ホストと`nicocachenl.test/media/v1/playback-sessions/`のみ。認証はブラウザーの通常のCookie処理に任せ、Cookieを取り出さない。
+- 同じ`videoMode`・`audioBitrate`のNicoCache_nl完成キャッシュをREST APIで確認して100%とする。異なる品質の完成キャッシュ、取得数だけの完了、失敗した要求を100%としない。
+- 既に同じ品質が完成していれば転送せず完了する。中止・動画/品質切り替え・破棄はAbortControllerで止め、取得済みキャッシュは削除しない。
+
+HLSの計画取得に使うプロパティと生成境界は下記6ビルドで確認し、現行の配信資産名は2026-09-12T20:48:10.207Zの再captureでも`PlayerSeekBar-dUxtfLwS.js`だった。自動検証は3世代以上の一致・非対象0件・構文に加え、計画取得の各参照を検査する。全編取得は再生用バッファーの100%保持を意味しない。
+
+192MiB相当を64KiBのチャンクとして消費する単体テスト、両playlistの先行取得、異なる品質の完成を無視するブラウザーテストを追加した。実Watchの公開動画sm9では現在の360p/128kの完成キャッシュと100%表示を確認した。報告された`sm45650421`・360p/192kはログイン必須のため、ログイン環境での最終確認が残る。詳細は`verification.md`に記録する。
+
+A-Bと通常シークの同期は[再生位置同期API](playback-control-bridge.md)を参照する。
+
+## 旧v1の解析と検証履歴（現在は使用しない）
 
 2026-09-12に既存sandboxの`PlayerSeekBar`資産を解析し、現行Watchも再取得した。HLS sessionの生成順は、`this.hlsjs`の構築 → `attachMedia(this.video)` → `MANIFEST_PARSED`登録 → 公式`setBufferingLimit()` → access-rights取得・`loadSource()`である。
 
@@ -13,7 +35,7 @@
 
 解除時には元の上限と公式が途中で指定した最新の制限へ戻す。HLSの容量超過・致命的エラー時も通常設定へ戻し、停止理由を返す。破棄されたsessionのAPIは消し、新しいsessionのAPIを消さない。ブラウザーの物理的なバッファー容量を越えて100%を保証するものではなく、容量不足はUIへ明示する。
 
-## 公開契約
+## 旧v1の公開契約
 
 `globalThis.FilterMatomeBufferingApi`の版は`1`。
 
@@ -53,7 +75,7 @@ URLの共通部分は`https://resource.video.nimg.jp/web/scripts/nvpc_next/asset
 
 PCの通常Watchと現在の動画を扱う同じHLS sessionが対象。プレビュー、MP4 session、スタンドアロンvideo-playerへ全編先読みAPIを適用しない。
 
-## 動作検証
+## v1実装時の動作検証（2026-09-12）
 
 - 単体: 通常設定の復元、公式制限の更新、音声と映像の異なる穴、100%の誤判定防止、容量超過・致命的エラー、破棄・新API保護、プレビュー非公開。
 - ブラウザー: 現在位置と時刻入力、無効時刻、0.1秒境界、一時停止、A-B反復・解除・クリア、終端B、動画要素の置換、SPAと再接続、キーボード、360/800/1920px、日本語・英語・RTL。

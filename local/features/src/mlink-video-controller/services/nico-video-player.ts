@@ -1,5 +1,11 @@
 import { NicoCache_nlInterface } from "@/types/global-types";
 import {
+  getOfficialPlaybackControl,
+  isOfficialWatch,
+  readOfficialPlaybackState,
+  seekPlaybackPosition,
+} from "./official-playback-control";
+import {
   readOfficialPlaybackRate,
   writeOfficialPlaybackRate,
 } from "./official-playback-rate-bridge";
@@ -196,7 +202,11 @@ export class NicoVideoPlayer {
     try {
       const video = this.getVideoElement();
       if (video) {
-        await video.play();
+        const api = isOfficialWatch(video)
+          ? getOfficialPlaybackControl(window)
+          : null;
+        if (api) await api.play();
+        else await video.play();
       }
     } catch (error) {
       window.logger.error("[NicoVideoPlayer] Error playing video:", error);
@@ -208,19 +218,26 @@ export class NicoVideoPlayer {
     try {
       const video = this.getVideoElement();
       if (video) {
-        video.pause();
+        const api = isOfficialWatch(video)
+          ? getOfficialPlaybackControl(window)
+          : null;
+        if (api) api.pause();
+        else video.pause();
       }
     } catch (error) {
       window.logger.error("[NicoVideoPlayer] Error pausing video:", error);
     }
   }
 
-  public seek(time: number): void {
+  public async seek(time: number): Promise<void> {
     try {
       const video = this.getVideoElement();
       if (video) {
-        video.currentTime = Math.max(0, Math.min(time, video.duration));
-        this.currentTime = video.currentTime;
+        await seekPlaybackPosition(
+          video,
+          Math.max(0, Math.min(time, this.getDuration())),
+        );
+        this.currentTime = this.getCurrentTime();
       }
     } catch (error) {
       window.logger.error("[NicoVideoPlayer] Error seeking video:", error);
@@ -300,11 +317,19 @@ export class NicoVideoPlayer {
 
   public getCurrentTime(): number {
     const video = this.getVideoElement();
+    if (video && isOfficialWatch(video)) {
+      const state = readOfficialPlaybackState(window);
+      if (state) return state.currentTime;
+    }
     return video ? video.currentTime : this.currentTime;
   }
 
   public getDuration(): number {
     const video = this.getVideoElement();
+    if (video && isOfficialWatch(video)) {
+      const state = readOfficialPlaybackState(window);
+      if (state) return state.duration;
+    }
     return video ? video.duration : this.duration;
   }
 

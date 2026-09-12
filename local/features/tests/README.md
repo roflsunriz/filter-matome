@@ -33,7 +33,7 @@ bun run benchmark:comment-filter
 - `comment-filter2.spec.ts`: 実IndexedDBを使う設定UI、ルールCRUD、即時適用、正規表現プレビュー。
 - `mlink-video-controller.spec.ts`: パネル、各タブ、モジュール設定、インポート・正規化、主要UI操作。
 - `mlink-video-controller-lifecycle.spec.ts`: 設定正規化、背景画像CRUD、原宿UIの生成・操作・破棄、CommonHeader追加操作との配色互換性。
-- `mlink-video-controller-playback-tools.spec.ts`: 実HTMLMediaElementのA-B反復・終端・停止、時刻入力、先読みAPIの遅延公開・失敗・進捗、SPAと再接続、キーボード、狭幅とRTLを検証する。単体は`full-buffer-nlfilter.test.ts`と`playback-tools.test.ts`を参照。
+- `mlink-video-controller-playback-tools.spec.ts`: 独立した公式時計と実HTMLMediaElementのA-B反復・終端・停止、時刻入力、先読み計画の遅延公開・転送失敗・品質ごとの完成判定、SPA・再接続・ローカル再生、キーボード、狭幅とRTLを検証する。単体は`full-buffer-nlfilter.test.ts`、`full-preload.test.ts`、`official-playback-control.test.ts`、`playback-tools.test.ts`を参照。
 - `movie-info.spec.ts`: 基本4ソース、任意コメント取得、部分失敗、JSON・コピー・ダウンロード操作。
 - `mylist2.spec.ts`: 実IndexedDBを使うマイリスト・動画・設定・詳細・一括操作。
 - `video-player.spec.ts`: スタンドアロンUIと背景モードなどのブラウザー統合。

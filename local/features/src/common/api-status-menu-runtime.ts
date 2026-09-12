@@ -40,6 +40,7 @@ const ENGLISH_COPY: Copy = {
     "comment-menu": "Comment menu",
     "notification-refresh": "Notification display refresh",
     "full-buffer": "Full video preload",
+    "playback-control": "Playback position sync",
   },
   states: {
     active: "Active",
@@ -63,6 +64,7 @@ const COPIES: Record<string, Copy> = {
       "comment-menu": "コメントメニュー",
       "notification-refresh": "通知表示更新",
       "full-buffer": "全編先読み",
+      "playback-control": "再生位置同期",
     },
     states: {
       active: "有効",
@@ -83,6 +85,7 @@ const COPIES: Record<string, Copy> = {
       "comment-menu": "评论菜单",
       "notification-refresh": "通知显示更新",
       "full-buffer": "全片预加载",
+      "playback-control": "播放位置同步",
     },
     states: {
       active: "有效",
@@ -100,6 +103,7 @@ const COPIES: Record<string, Copy> = {
       ...ENGLISH_COPY.names,
       "notification-refresh": "सूचना प्रदर्शन अपडेट",
       "full-buffer": "पूरा वीडियो पहले लोड करें",
+      "playback-control": "प्लेबैक स्थिति सिंक",
     },
     states: {
       active: "सक्रिय",
@@ -117,6 +121,7 @@ const COPIES: Record<string, Copy> = {
       ...ENGLISH_COPY.names,
       "notification-refresh": "Actualización de notificaciones",
       "full-buffer": "Precarga completa",
+      "playback-control": "Sincronización de posición",
     },
     states: {
       active: "Activa",
@@ -134,6 +139,7 @@ const COPIES: Record<string, Copy> = {
       ...ENGLISH_COPY.names,
       "notification-refresh": "Actualisation de l'affichage des notifications",
       "full-buffer": "Préchargement intégral",
+      "playback-control": "Synchronisation de la position",
     },
     states: {
       active: "Active",
@@ -151,6 +157,7 @@ const COPIES: Record<string, Copy> = {
       ...ENGLISH_COPY.names,
       "notification-refresh": "تحديث عرض الإشعارات",
       "full-buffer": "تحميل الفيديو كاملاً مسبقاً",
+      "playback-control": "مزامنة موضع التشغيل",
     },
     states: {
       active: "نشطة",
@@ -168,6 +175,7 @@ const COPIES: Record<string, Copy> = {
       ...ENGLISH_COPY.names,
       "notification-refresh": "Atualização da exibição de notificações",
       "full-buffer": "Pré-carregar vídeo inteiro",
+      "playback-control": "Sincronização da posição",
     },
     states: {
       active: "Ativa",
@@ -185,6 +193,7 @@ const COPIES: Record<string, Copy> = {
       ...ENGLISH_COPY.names,
       "notification-refresh": "বিজ্ঞপ্তি প্রদর্শন আপডেট",
       "full-buffer": "সম্পূর্ণ ভিডিও প্রিলোড",
+      "playback-control": "প্লেব্যাক অবস্থান সিঙ্ক",
     },
     states: {
       active: "সক্রিয়",
@@ -202,6 +211,7 @@ const COPIES: Record<string, Copy> = {
       ...ENGLISH_COPY.names,
       "notification-refresh": "Обновление отображения уведомлений",
       "full-buffer": "Загрузка всего видео",
+      "playback-control": "Синхронизация позиции",
     },
     states: {
       active: "Активен",
@@ -219,6 +229,7 @@ const COPIES: Record<string, Copy> = {
       ...ENGLISH_COPY.names,
       "notification-refresh": "اطلاعات کے ڈسپلے کی تازہ کاری",
       "full-buffer": "پوری ویڈیو پہلے لوڈ کریں",
+      "playback-control": "پلے بیک مقام کی مطابقت",
     },
     states: {
       active: "فعال",
@@ -724,6 +735,7 @@ const createMenu = (resolveStatuses: ResolveStatuses): HTMLElement => {
     createStatusItem("comment-reload"),
     createStatusItem("comment-menu"),
     createStatusItem("full-buffer"),
+    createStatusItem("playback-control"),
     createStatusItem("notification-refresh"),
   );
   const note = document.createElement("p");

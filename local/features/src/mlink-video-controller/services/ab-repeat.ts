@@ -1,3 +1,9 @@
+import {
+  playPlayback,
+  readPlaybackPosition,
+  seekPlaybackPosition,
+} from "./official-playback-control";
+
 export function parsePlaybackTime(value: string): number | null {
   const text = value.trim();
   if (!/^(?:\d+:){0,2}\d+(?:\.\d{1,3})?$/u.test(text)) return null;
@@ -22,11 +28,13 @@ export class ABRepeatController {
   private aborter: AbortController | null = null;
   private frame: number | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
+  private seekPending = false;
+  private generation = 0;
 
   constructor(private readonly changed: () => void) {}
 
   get valid(): boolean {
-    const duration = this.video?.duration;
+    const duration = this.position?.duration;
     return (
       this.a !== null &&
       this.b !== null &&
@@ -38,8 +46,21 @@ export class ABRepeatController {
     );
   }
 
+  get position() {
+    return this.video ? readPlaybackPosition(this.video) : null;
+  }
+  get available(): boolean {
+    return (
+      this.position !== null &&
+      Number.isFinite(this.position.duration) &&
+      this.position.duration > 0
+    );
+  }
+
   bind(video: HTMLVideoElement | null): void {
     if (video === this.video) return;
+    this.generation++;
+    this.seekPending = false;
     this.stopMonitoring();
     this.aborter?.abort();
     this.video = video;
@@ -56,10 +77,7 @@ export class ABRepeatController {
           if (this.enabled && this.valid && this.a !== null) {
             // 終端Bでも公式の次動画への自動遷移より先に、この区間を継続する。
             event.stopImmediatePropagation();
-            video.currentTime = this.a;
-            void video.play().catch(() => {
-              this.setEnabled(false);
-            });
+            this.seekToA(true);
           }
         },
         { ...options, capture: true },
@@ -80,7 +98,7 @@ export class ABRepeatController {
 
   setPoint(point: "a" | "b", seconds: number): boolean {
     this.setEnabled(false);
-    const duration = this.video?.duration;
+    const duration = this.position?.duration;
     if (
       !Number.isFinite(seconds) ||
       seconds < 0 ||
@@ -101,9 +119,11 @@ export class ABRepeatController {
       this.video &&
       this.a !== null &&
       this.b !== null &&
-      (this.video.currentTime < this.a || this.video.currentTime >= this.b)
+      this.position &&
+      (this.position.currentTime < this.a ||
+        this.position.currentTime >= this.b)
     )
-      this.video.currentTime = this.a;
+      this.seekToA();
     if (!this.enabled) this.stopMonitoring();
     this.enforce();
     this.changed();
@@ -111,6 +131,8 @@ export class ABRepeatController {
   }
 
   reset(): void {
+    this.generation++;
+    this.seekPending = false;
     this.enabled = false;
     this.a = null;
     this.b = null;
@@ -119,6 +141,8 @@ export class ABRepeatController {
   }
 
   destroy(): void {
+    this.generation++;
+    this.seekPending = false;
     this.stopMonitoring();
     this.aborter?.abort();
     this.video = null;
@@ -127,17 +151,22 @@ export class ABRepeatController {
 
   private enforce = (): void => {
     const video = this.video;
+    const position = this.position;
     if (
       !this.enabled ||
       !this.valid ||
       !video ||
+      !position ||
+      position.paused ||
+      position.seeking ||
+      this.seekPending ||
       video.paused ||
       this.a === null ||
       this.b === null
     )
       return;
-    if (video.currentTime >= this.b || video.currentTime < this.a)
-      video.currentTime = this.a;
+    if (position.currentTime >= this.b || position.currentTime < this.a)
+      this.seekToA();
     if (this.frame === null)
       this.frame = requestAnimationFrame(() => {
         this.frame = null;
@@ -146,6 +175,28 @@ export class ABRepeatController {
     // 非表示タブではrAFが止まるためtimeupdateに加えて監視する。
     if (this.timer === null) this.timer = setInterval(this.enforce, 50);
   };
+
+  private seekToA(resume = false): void {
+    if (!this.video || this.a === null || this.seekPending) return;
+    const generation = this.generation;
+    const video = this.video;
+    this.seekPending = true;
+    void seekPlaybackPosition(video, this.a)
+      .then(async () => {
+        if (resume && generation === this.generation && this.enabled)
+          await playPlayback(video);
+      })
+      .catch((error: unknown) => {
+        if (generation !== this.generation) return;
+        window.logger?.warn("[ABRepeat] Official seek failed", error);
+        this.setEnabled(false);
+      })
+      .finally(() => {
+        if (generation !== this.generation) return;
+        this.seekPending = false;
+        this.enforce();
+      });
+  }
 
   private stopMonitoring(): void {
     if (this.frame !== null) cancelAnimationFrame(this.frame);

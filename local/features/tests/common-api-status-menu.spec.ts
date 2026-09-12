@@ -108,12 +108,27 @@ const installFixture = async (
       host.filterMatomeNotificationRefreshCalls = 0;
       Object.assign(window, {
         FilterMatomeBufferingApi: {
-          version: 1,
+          version: 2,
           getState: () => {
             throw new Error("Probe must not call getState");
           },
-          setEnabled: () => {
+          getPlan: () => {
             throw new Error("Probe must not start preloading");
+          },
+        },
+        FilterMatomePlaybackControlApi: {
+          version: 1,
+          getState: () => {
+            throw new Error("Unexpected probe operation");
+          },
+          seek: () => {
+            throw new Error("Unexpected probe seek");
+          },
+          play: () => {
+            throw new Error("Unexpected probe play");
+          },
+          pause: () => {
+            throw new Error("Unexpected probe pause");
           },
         },
         FilterMatomeNotificationReadApi: {
@@ -581,32 +596,55 @@ test("全編先読みAPIを操作せず遅延公開・版不一致・SPA対象�
 }) => {
   await installFixture(page, { activeApis: false });
   const item = page.locator('[data-api-id="full-buffer"]');
+  const clockItem = page.locator('[data-api-id="playback-control"]');
   await expect(item).toHaveAttribute("data-status", "missing");
+  await expect(clockItem).toHaveAttribute("data-status", "missing");
   await page.evaluate(() => {
     Object.assign(window, {
       FilterMatomeBufferingApi: {
-        version: 1,
+        version: 2,
         getState: () => {
           throw new Error("Read probe must not execute getState");
         },
-        setEnabled: () => {
+        getPlan: () => {
           throw new Error("Read probe must not preload");
         },
+      },
+      FilterMatomePlaybackControlApi: {
+        version: 1,
+        getState: () => {
+          throw new Error("Unexpected probe operation");
+        },
+        seek: () => {
+          throw new Error("Unexpected probe seek");
+        },
+        play: () => {},
+        pause: () => {},
       },
     });
     window.dispatchEvent(new Event("filter-matome:api-status-change"));
   });
   await expect(item).toHaveAttribute("data-status", "active");
+  await expect(clockItem).toHaveAttribute("data-status", "active");
   await page.evaluate(() => {
-    Object.assign(window, { FilterMatomeBufferingApi: { version: 2 } });
+    Object.assign(window, {
+      FilterMatomeBufferingApi: {
+        version: 1,
+        getState: () => null,
+        setEnabled: () => null,
+      },
+    });
+    Object.assign(window, { FilterMatomePlaybackControlApi: { version: 9 } });
     window.dispatchEvent(new Event("filter-matome:api-status-change"));
   });
   await expect(item).toHaveAttribute("data-status", "incompatible");
+  await expect(clockItem).toHaveAttribute("data-status", "incompatible");
   await page.evaluate(() => {
     history.pushState(null, "", "/video_top");
     window.dispatchEvent(new PopStateEvent("popstate"));
   });
   await expect(item).toHaveAttribute("data-status", "not-applicable");
+  await expect(clockItem).toHaveAttribute("data-status", "not-applicable");
 });
 
 test("公式Watchの全画面表示中はメニューを閉じて非表示にする", async ({

@@ -30,7 +30,8 @@ export type FilterMatomeApiStatusId =
   | "comment-reload"
   | "comment-menu"
   | "notification-refresh"
-  | "full-buffer";
+  | "full-buffer"
+  | "playback-control";
 
 export type FilterMatomeApiStatus = {
   id: FilterMatomeApiStatusId;
@@ -57,11 +58,12 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const versionedApiStatus = (
   candidate: unknown,
   methodNames: string[],
+  version = 1,
 ): FilterMatomeApiStatusKind => {
   if (candidate === undefined) return "missing";
   if (
     !isRecord(candidate) ||
-    candidate["version"] !== 1 ||
+    candidate["version"] !== version ||
     methodNames.some((name) => typeof candidate[name] !== "function")
   ) {
     return "incompatible";
@@ -88,6 +90,7 @@ export function resolveFilterMatomeApiStatuses(
           "comment-reload",
           "comment-menu",
           "full-buffer",
+          "playback-control",
         ] as const
       ).map((id) => ({ id, kind: "not-applicable" as const })),
       notificationStatus,
@@ -126,9 +129,19 @@ export function resolveFilterMatomeApiStatuses(
     { id: "comment-menu", kind: menuStatus },
     {
       id: "full-buffer",
-      kind: versionedApiStatus(host["FilterMatomeBufferingApi"], [
+      kind: versionedApiStatus(
+        host["FilterMatomeBufferingApi"],
+        ["getState", "getPlan"],
+        2,
+      ),
+    },
+    {
+      id: "playback-control",
+      kind: versionedApiStatus(host["FilterMatomePlaybackControlApi"], [
         "getState",
-        "setEnabled",
+        "seek",
+        "play",
+        "pause",
       ]),
     },
     notificationStatus,

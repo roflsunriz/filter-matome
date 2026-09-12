@@ -6,7 +6,31 @@ import {
   waitForTargetWebSocket,
 } from "./raw-cdp-client";
 
-const endpoint = "http://127.0.0.1:9222";
+const arg = (name: string) =>
+  process.argv
+    .find((value) => value.startsWith(`--${name}=`))
+    ?.slice(name.length + 3);
+const endpoint = arg("cdp") ?? "http://127.0.0.1:9222";
+const sampleCount = Number(arg("samples") ?? 12);
+const sampleInterval = Number(arg("interval") ?? 250);
+if (
+  !Number.isInteger(sampleCount) ||
+  sampleCount < 1 ||
+  sampleCount > 1000 ||
+  !Number.isInteger(sampleInterval) ||
+  sampleInterval < 20 ||
+  sampleInterval > 1000
+)
+  throw new Error("Invalid sampling options");
+const url = new URL(
+  arg("url") ?? "https://www.nicovideo.jp/watch/sm9?from=230",
+);
+if (
+  url.protocol !== "https:" ||
+  url.hostname !== "www.nicovideo.jp" ||
+  !/^\/watch\/[a-zA-Z0-9]+$/u.test(url.pathname)
+)
+  throw new Error("Unsupported Watch URL");
 const root = resolve(
   import.meta.dirname,
   "../../src/sandbox/official-watch-bundle",
@@ -14,12 +38,15 @@ const root = resolve(
 const snapshot = `(() => {
   const video=document.querySelector('video[data-name="video-content"]');
   const panel=document.querySelector('mlink-video-controller')?.shadowRoot;
-  const api=globalThis.FilterMatomeBufferingApi;
-  return { title:document.title, video:!!video, duration:video?.duration, time:video?.currentTime, paused:video?.paused,
-    buffered:video?Array.from({length:video.buffered.length},(_,i)=>[video.buffered.start(i),video.buffered.end(i)]):[],
-    api:api?.getState(), probe:document.querySelector('[data-api-id="full-buffer"]')?.dataset.status,
-    tools:!!panel?.querySelector('[data-playback-tools]'), status:panel?.querySelector('[data-buffer-status]')?.textContent,
-    percent:panel?.querySelector('[data-buffer-progress]')?.value, repeat:panel?.querySelector('[data-action="ab-toggle"]')?.getAttribute('aria-pressed') };
+  const clock=globalThis.FilterMatomePlaybackControlApi?.getState();
+  return {video:!!video,duration:video?.duration,mediaTime:video?.currentTime,officialTime:clock?.currentTime,paused:video?.paused,seeking:clock?.seeking,mediaSeeking:video?.seeking,readyState:video?.readyState,
+    bufferVersion:globalThis.FilterMatomeBufferingApi?.version,planReady:globalThis.FilterMatomeBufferingApi?.getState()?.ready,
+    clockVersion:globalThis.FilterMatomePlaybackControlApi?.version,
+    preload:panel?.querySelector('[data-buffer-status]')?.textContent,percent:panel?.querySelector('[data-buffer-progress]')?.value,
+    failed:panel?.querySelector('[data-buffer-status]')?.dataset.error==='true',
+    repeat:panel?.querySelector('[data-action="ab-toggle"]')?.getAttribute('aria-pressed'),
+    clockProbe:document.querySelector('[data-api-id="playback-control"]')?.dataset.status,
+    bufferProbe:document.querySelector('[data-api-id="full-buffer"]')?.dataset.status};
 })()`;
 
 async function main(): Promise<void> {
@@ -40,7 +67,6 @@ async function main(): Promise<void> {
     );
     await page.send("Page.enable");
     await page.send("Runtime.enable");
-    await page.send("Network.enable");
     await page.send("Emulation.setDeviceMetricsOverride", {
       width: 1280,
       height: 900,
@@ -62,19 +88,18 @@ async function main(): Promise<void> {
       if (result.exceptionDetails) throw new Error("Page evaluation failed");
       return result.result.value;
     };
-    await page.send("Page.navigate", {
-      url: "https://www.nicovideo.jp/watch/sm9?from=230",
-    });
+    await page.send("Page.navigate", { url: url.href });
     let ready = false;
     for (let attempt = 0; attempt < 45; attempt++) {
       await new Promise((done) => setTimeout(done, 1000));
       const state = await evaluate(snapshot);
-      if (attempt % 10 === 0) console.log(JSON.stringify(state));
       if (
-        state.api &&
-        state.tools &&
-        typeof state.duration === "number" &&
-        state.duration > 0
+        Number.isFinite(state.officialTime) &&
+        Number.isFinite(state.mediaTime) &&
+        state.clockVersion === 1 &&
+        state.bufferVersion === 2 &&
+        state.planReady &&
+        Number(state.duration) > 2
       ) {
         ready = true;
         break;
@@ -82,119 +107,146 @@ async function main(): Promise<void> {
     }
     if (!ready) {
       console.log(JSON.stringify(await evaluate(snapshot)));
-      throw new Error("Official video / buffering API / mlink not ready");
+      throw new Error(
+        "Official player / v2 preload / playback control not ready",
+      );
     }
-    console.log(JSON.stringify({ before: await evaluate(snapshot) }));
-    await evaluate(`(() => {
-      const video=document.querySelector('video[data-name="video-content"]'); video.pause(); video.currentTime=100;
+    await evaluate(`(async()=>{
+      const control=globalThis.FilterMatomePlaybackControlApi;
       const root=document.querySelector('mlink-video-controller').shadowRoot;
-      root.querySelector('#fab').click();root.querySelector('[data-tab="playback"]').click();
-      root.querySelector('[data-action="full-buffer"]').click(); return {};
+      if(!root.querySelector('.panel').classList.contains('visible'))root.querySelector('#fab').click();
+      root.querySelector('[data-tab="playback"]').click();control.play();return {};
+    })()`);
+    // 初回操作で解除される公式の自動再生を終えてから、明示的に一時停止する。
+    await new Promise((done) => setTimeout(done, 500));
+    const before = await evaluate(`(async()=>{
+      const control=globalThis.FilterMatomePlaybackControlApi;control.pause();
+      await control.seek(Math.min(100,control.getState().duration/3));
+      const root=document.querySelector('mlink-video-controller').shadowRoot;
+      root.querySelector('[data-action="full-buffer"]').click();
+      return {time:control.getState().currentTime};
     })()`);
     let completed = false;
-    for (let attempt = 0; attempt < 120; attempt++) {
+    for (let attempt = 0; attempt < 180; attempt++) {
       await new Promise((done) => setTimeout(done, 1000));
       const state = await evaluate(snapshot);
       if (attempt % 10 === 0) console.log(JSON.stringify(state));
-      if (state.paused !== true || Math.abs(Number(state.time) - 100) > 0.2)
-        throw new Error("Preloading moved playback");
+      if (state.failed) throw new Error("Preload failed");
+      if (
+        !state.paused ||
+        Math.abs(Number(state.mediaTime) - Number(before.time)) > 0.2 ||
+        Math.abs(Number(state.officialTime) - Number(before.time)) > 0.2
+      )
+        throw new Error("Preloading changed playback clocks");
       if (state.percent === 100) {
         completed = true;
         break;
       }
     }
-    if (!completed) throw new Error("Full buffering did not complete");
-    await evaluate(`(() => {
-      const root=document.querySelector('mlink-video-controller').shadowRoot;
-      root.querySelector('[data-action="full-buffer"]').click();
-      for(const [point,value] of [['a','1:40'],['b','1:41']]){const input=root.querySelector('[data-point="'+point+'"]');input.value=value;input.dispatchEvent(new Event('change',{bubbles:true}));}
-      root.querySelector('[data-action="ab-toggle"]').click();
-      const video=document.querySelector('video[data-name="video-content"]');video.currentTime=100.9;return video.play().then(()=>({}));
+    if (!completed) throw new Error("Complete cache was not confirmed");
+    const bounds = await evaluate(`(async()=>{
+      const api=globalThis.FilterMatomePlaybackControlApi,root=document.querySelector('mlink-video-controller').shadowRoot;
+      const a=Math.min(100,api.getState().duration/3),b=a+1;
+      for(const [point,value] of [['a',a],['b',b]]){const input=root.querySelector('[data-point="'+point+'"]');input.value=String(value);input.dispatchEvent(new Event('change',{bubbles:true}));}
+      root.querySelector('[data-action="ab-toggle"]').click();await api.seek(b-.1);await api.play();return {a,b};
     })()`);
-    await new Promise((done) => setTimeout(done, 1600));
-    const repeated = await evaluate(snapshot);
-    if (
-      Number(repeated.time) < 100 ||
-      Number(repeated.time) >= 101.2 ||
-      repeated.repeat !== "true"
-    )
-      throw new Error("A-B repeat failed");
-    await evaluate(
-      `(() => { document.querySelector('video[data-name="video-content"]').pause();const root=document.querySelector('mlink-video-controller').shadowRoot;root.querySelector('[data-playback-tools]').scrollIntoView({block:'center'});return {};})()`,
-    );
-    for (const [width, height] of [
-      [360, 800],
-      [800, 600],
-      [600, 360],
-      [1920, 1080],
-    ]) {
-      await page.send("Emulation.setDeviceMetricsOverride", {
-        width,
-        height,
-        deviceScaleFactor: 1,
-        mobile: false,
-      });
-      const layout = await evaluate(`(() => {
-        const root=document.querySelector('mlink-video-controller').shadowRoot;
-        const panel=root.querySelector('.panel').getBoundingClientRect();
-        const button=root.querySelector('[data-action="ab-clear"]');button.scrollIntoView({block:'center'});
-        const control=button.getBoundingClientRect();
-        return {fits:panel.left>=0&&panel.right<=innerWidth&&panel.top>=0&&panel.bottom<=innerHeight&&control.left>=0&&control.right<=innerWidth&&control.top>=0&&control.bottom<=innerHeight,
-          viewport:[innerWidth,innerHeight],panel:panel.toJSON(),control:control.toJSON(),responsive:root.querySelector('style').textContent.includes('min(450px')};
-      })()`);
-      if (!layout.fits)
-        throw new Error(
-          `Playback controls overflow: ${width}x${height}: ${JSON.stringify(layout)}`,
+    const samples: Record<string, unknown>[] = [];
+    let pendingSince: number | null = null;
+    let stableSamples = 0;
+    for (let attempt = 0; attempt < sampleCount; attempt++) {
+      await new Promise((done) => setTimeout(done, sampleInterval));
+      const state = await evaluate(snapshot);
+      samples.push(state);
+      if (
+        !Number.isFinite(state.officialTime) ||
+        !Number.isFinite(state.mediaTime) ||
+        Number(state.mediaTime) > Number(bounds.b) + 0.2
+      )
+        throw new Error("A-B media position is invalid");
+      if (state.seeking === true) {
+        pendingSince ??= Date.now();
+        // 公式UIはシーク確定前に保留位置を表示する。その間は旧フレームが残るが、
+        // 1秒以内に確定し、保留位置がAであることを検証する。
+        if (
+          Date.now() - pendingSince > 1000 ||
+          Math.abs(Number(state.officialTime) - Number(bounds.a)) > 0.1
+        )
+          throw new Error("A-B seek did not settle at A");
+        continue;
+      }
+      pendingSince = null;
+      stableSamples++;
+      if (
+        Number(state.officialTime) > Number(bounds.b) + 0.2 ||
+        Number(state.mediaTime) > Number(bounds.b) + 0.2 ||
+        Math.abs(Number(state.officialTime) - Number(state.mediaTime)) > 0.3
+      ) {
+        console.log(
+          JSON.stringify({
+            failedSample: state,
+            bounds,
+            recentSamples: samples.slice(-4),
+          }),
         );
+        throw new Error("A-B repeat clocks diverged");
+      }
     }
-    await page.send("Emulation.setDeviceMetricsOverride", {
-      width: 1280,
-      height: 900,
-      deviceScaleFactor: 1,
-      mobile: false,
-    });
     await evaluate(
-      `(() => {document.querySelector('mlink-video-controller').shadowRoot.querySelector('[data-playback-tools]').scrollIntoView({block:'center'});return {};})()`,
+      `(() => {globalThis.FilterMatomePlaybackControlApi.pause();document.querySelector('mlink-video-controller').shadowRoot.querySelector('[data-playback-tools]').scrollIntoView({block:'center'});return {};})()`,
     );
+    let settled = false;
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const state = await evaluate(snapshot);
+      if (
+        !state.seeking &&
+        Number.isFinite(state.officialTime) &&
+        Number.isFinite(state.mediaTime) &&
+        Math.abs(Number(state.officialTime) - Number(state.mediaTime)) <= 0.3
+      ) {
+        settled = true;
+        break;
+      }
+      await new Promise((done) => setTimeout(done, 50));
+    }
+    if (!settled || stableSamples === 0)
+      throw new Error("A-B clocks did not settle after pause");
     await evaluate(
       `new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve({}))))`,
     );
-    const bounds = await evaluate(
-      `(() => {const r=document.querySelector('mlink-video-controller').shadowRoot.querySelector('[data-playback-tools]').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,scale:1};})()`,
+    const clip = await evaluate(
+      `(()=>{const r=document.querySelector('mlink-video-controller').shadowRoot.querySelector('[data-playback-tools]').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,scale:1};})()`,
     );
     const shot = await page.send<{ data: string }>("Page.captureScreenshot", {
       format: "png",
-      clip: bounds,
+      clip,
       captureBeyondViewport: false,
     });
     await writeFile(
       resolve(root, "playback-tools-live.png"),
       Buffer.from(shot.data, "base64"),
     );
-    await page.send("Page.reload", { ignoreCache: false });
-    let reloadReady = false;
-    for (let attempt = 0; attempt < 40; attempt++) {
-      await new Promise((done) => setTimeout(done, 250));
-      const state = await evaluate(`(() => ({ready:
-        globalThis.FilterMatomeBufferingApi?.version===1 && globalThis.FilterMatomeBufferingApi.getState().enabled===false &&
-        document.querySelector('[data-api-id="full-buffer"]')?.dataset.status==='active' &&
-        document.querySelector('mlink-video-controller')?.shadowRoot?.querySelector('[data-action="ab-toggle"]')?.getAttribute('aria-pressed')==='false'
-      }))()`);
-      if (state.ready) {
-        reloadReady = true;
-        break;
-      }
-    }
-    if (!reloadReady)
-      throw new Error(
-        "Normal reload did not reset playback tools and restore API status",
-      );
+    await writeFile(
+      resolve(root, "playback-tools-live-result.json"),
+      JSON.stringify(
+        {
+          verifiedAt: new Date().toISOString(),
+          browser: version.Browser,
+          url: url.pathname,
+          before,
+          samples,
+        },
+        null,
+        2,
+      ),
+    );
     console.log(
       JSON.stringify({
         result: "passed",
         browser: version.Browser,
-        fullBuffer: "100%",
-        repeat: repeated,
+        cache: "100%",
+        clockSamples: samples.length,
+        stableSamples,
+        final: await evaluate(snapshot),
       }),
     );
   } finally {

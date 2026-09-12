@@ -13,6 +13,7 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
       { id: "comment-reload", kind: "not-applicable" },
       { id: "comment-menu", kind: "not-applicable" },
       { id: "full-buffer", kind: "not-applicable" },
+      { id: "playback-control", kind: "not-applicable" },
       { id: "notification-refresh", kind: "missing" },
     ]);
   });
@@ -38,9 +39,16 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
         refresh: () => undefined,
       },
       FilterMatomeBufferingApi: {
+        version: 2,
+        getState: () => undefined,
+        getPlan: () => undefined,
+      },
+      FilterMatomePlaybackControlApi: {
         version: 1,
         getState: () => undefined,
-        setEnabled: () => undefined,
+        seek: () => undefined,
+        play: () => undefined,
+        pause: () => undefined,
       },
     };
     expect(resolveFilterMatomeApiStatuses(host, "/watch/sm9")).toEqual([
@@ -48,6 +56,7 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
       { id: "comment-reload", kind: "active" },
       { id: "comment-menu", kind: "probing" },
       { id: "full-buffer", kind: "active" },
+      { id: "playback-control", kind: "active" },
       { id: "notification-refresh", kind: "active" },
     ]);
 
@@ -73,6 +82,7 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
           FilterMatomeCommentMenuApi: { version: 1 },
           FilterMatomeNotificationReadApi: { version: 2, refresh: "invalid" },
           FilterMatomeBufferingApi: { version: 2, getState: "invalid" },
+          FilterMatomePlaybackControlApi: { version: 1, getState: "invalid" },
         },
         "/watch/sm9",
       ),
@@ -81,6 +91,7 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
       { id: "comment-reload", kind: "incompatible" },
       { id: "comment-menu", kind: "incompatible" },
       { id: "full-buffer", kind: "incompatible" },
+      { id: "playback-control", kind: "incompatible" },
       { id: "notification-refresh", kind: "incompatible" },
     ]);
   });
@@ -103,14 +114,14 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
     expect(refreshCalls).toBe(0);
   });
 
-  test("全編先読みの自動検査は開始・解除・状態読取APIを実行しない", () => {
+  test("全編先読みと再生位置同期の自動検査ではAPIを実行しない", () => {
     let calls = 0;
     const api = {
-      version: 1,
+      version: 2,
       getState: () => {
         calls++;
       },
-      setEnabled: () => {
+      getPlan: () => {
         calls++;
       },
     };
@@ -119,6 +130,24 @@ describe("CommonHeader filter-matome API状態メニュー", () => {
         { FilterMatomeBufferingApi: api },
         "/watch/sm9",
       ).find((status) => status.id === "full-buffer")?.kind,
+    ).toBe("active");
+    expect(calls).toBe(0);
+    const operation = () => {
+      calls++;
+    };
+    expect(
+      resolveFilterMatomeApiStatuses(
+        {
+          FilterMatomePlaybackControlApi: {
+            version: 1,
+            getState: operation,
+            seek: operation,
+            play: operation,
+            pause: operation,
+          },
+        },
+        "/watch/sm9",
+      ).find((status) => status.id === "playback-control")?.kind,
     ).toBe("active");
     expect(calls).toBe(0);
     expect(

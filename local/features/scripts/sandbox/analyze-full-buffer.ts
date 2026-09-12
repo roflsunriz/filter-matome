@@ -64,11 +64,19 @@ async function main(): Promise<void> {
     const sha256 = createHash("sha256").update(source).digest("hex");
     if (seen.has(sha256)) continue;
     seen.add(sha256);
+    const assetName = basename(path).replace(/^[a-f0-9]{12}-/u, "");
+    const targetAsset = assetName.startsWith("PlayerSeekBar-");
+    if (targetAsset && source.includes("FilterMatomeBufferingApi")) {
+      modified.push(path);
+      continue;
+    }
     const matches = [...source.matchAll(new RegExp(BUFFER_ANCHOR, "gu"))];
     if (!matches.length) {
+      if (targetAsset) throw new Error(`${path}: 対象資産のMatchが0回です`);
       unrelated++;
       continue;
     }
+    if (!targetAsset) throw new Error(`${path}: 対象外資産へ一致しました`);
     if (matches.length !== 1)
       throw new Error(`${path}: ${matches.length} matches`);
     const tree = ts.createSourceFile(
@@ -106,6 +114,19 @@ async function main(): Promise<void> {
       !source.includes("this.nextLoadPosition")
     )
       throw new Error(`${path}: 未知の読み込み制御`);
+    if (
+      [
+        "get audioTracks()",
+        "get audioTrack()",
+        "get loadLevel()",
+        "getQualityByLevelIndex(",
+        ".initSegment",
+        ".decryptdata",
+        ".byteRangeStartOffset",
+        ".byteRangeEndOffset",
+      ].some((part) => !source.includes(part))
+    )
+      throw new Error(`${path}: 未知の先読み計画`);
     const formatted = await format(
       contract ? applyBufferContract(source, contract) : source,
       { parser: "babel" },
