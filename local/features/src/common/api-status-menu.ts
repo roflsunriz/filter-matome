@@ -129,6 +129,7 @@ export function resolveFilterMatomeApiStatuses(
     { id: "comment-menu", kind: menuStatus },
     {
       id: "full-buffer",
+      // v2は公式品質IDに基づく取得計画。getState/getPlanは自動プローブから呼ばない。
       kind: versionedApiStatus(
         host["FilterMatomeBufferingApi"],
         ["getState", "getPlan"],

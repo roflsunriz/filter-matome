@@ -58,9 +58,11 @@ this.hlsjs.attachMedia(this.video),(()=>{
       if(disposed)return null;
       const current=tracks(),quality=this.getQualityByLevelIndex(current.index,hls.levels);
       if(!quality?.video||!quality?.audio)return null;
-      const audioPart=quality.audio.id.split("-").pop();
-      const audioBitrate=audioPart.endsWith("kbps")?Number(audioPart.slice(0,-4)):0;
-      return {videoId:this.watch.video.id,videoQualityId:quality.video.id,audioQualityId:quality.audio.id,videoMode:quality.video.height+"p",audioBitrate,ready:!!current.video?.fragments?.length&&!!current.audio?.fragments?.length&&!current.video.live&&!current.audio.live};
+      const videoMode=quality.video.id.split("-").slice(2).join("-");
+      const audioPart=quality.audio.id.split("-")[2];
+      const audioBitrate=audioPart?.endsWith("kbps")?Number(audioPart.slice(0,-4)):0;
+      if(!videoMode||!Number.isFinite(audioBitrate)||audioBitrate<=0)return null;
+      return {videoId:this.watch.video.id,videoQualityId:quality.video.id,audioQualityId:quality.audio.id,videoMode,audioBitrate,ready:!!current.video?.fragments?.length&&!!current.audio?.fragments?.length&&!current.video.live&&!current.audio.live};
     },
     getPlan:()=>{
       const state=api.getState();

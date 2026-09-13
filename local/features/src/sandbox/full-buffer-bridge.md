@@ -9,7 +9,7 @@ v2は公式HLSの再生用バッファーを操作せず、現在の画質・音
 - `FilterMatomeBufferingApi.version`: `2`
 - `getState()`: `{videoId, videoQualityId, audioQualityId, videoMode, audioBitrate, ready}` または未準備時の`null`。
 - `getPlan()`: 同じ状態と`resources: [{url, rangeStart?, rangeEnd?}]`。Rangeの終了はexclusive。未準備・ライブでは`null`。
-- 取得元はHLSの現在の`loadLevel`（なければ`currentLevel`）と`audioTracks[audioTrack]`。公式`getQualityByLevelIndex()`で品質を対応付け、映像の`height`と音声ID末尾の`kbps`からNicoCache_nlの品質と照合する。
+- 取得元はHLSの現在の`loadLevel`（なければ`currentLevel`）と`audioTracks[audioTrack]`。公式`getQualityByLevelIndex()`で品質を対応付け、映像IDの`video-<codec>-`以降（`-lowest`等も保持）と音声IDの`<数値>kbps`部分からNicoCache_nlの品質と照合する。`height`は実寸法であり画質区分ではない。`sm45650421`の360p配信は354pxだったため、旧実装は完成キャッシュがあっても99%で失敗した。音声の`-hr`接尾辞もビットレート部と区別する。照合先は本体`DomandCVIEntry`の`videoSrcIdToCacheQualityExpression()`・`audioSrcIdToCacheQualityExpression()`と`CmafCachingProcessor`のplaylist判定で確認した（2026-09-13）。
 - `initSegment`、`decryptdata.uri`、断片URL、byte rangeを収集して重複除去する。署名付きURLはメモリー内だけで使い、ログ・文書・検証JSONへ出さない。
 - v1の`setEnabled()`とHLSの上限・読込位置の書き換えは削除した。CommonHeaderはv2の`getState/getPlan`を検査するが、呼び出さない。
 - GET対象はHTTPSの公式Domand 2ホストと`nicocachenl.test/media/v1/playback-sessions/`のみ。認証はブラウザーの通常のCookie処理に任せ、Cookieを取り出さない。
@@ -18,7 +18,7 @@ v2は公式HLSの再生用バッファーを操作せず、現在の画質・音
 
 HLSの計画取得に使うプロパティと生成境界は下記6ビルドで確認し、現行の配信資産名は2026-09-12T20:48:10.207Zの再captureでも`PlayerSeekBar-dUxtfLwS.js`だった。自動検証は3世代以上の一致・非対象0件・構文に加え、計画取得の各参照を検査する。全編取得は再生用バッファーの100%保持を意味しない。
 
-192MiB相当を64KiBのチャンクとして消費する単体テスト、両playlistの先行取得、異なる品質の完成を無視するブラウザーテストを追加した。実Watchの公開動画sm9では現在の360p/128kの完成キャッシュと100%表示を確認した。報告された`sm45650421`・360p/192kはログイン必須のため、ログイン環境での最終確認が残る。詳細は`verification.md`に記録する。
+192MiB相当を64KiBのチャンクとして消費する単体テスト、両playlistの先行取得、異なる品質の完成を無視するブラウザーテストを追加した。実Watchの公開動画sm9では360p/128k、ユーザーが起動した実Firefox 155.0.1では報告された`sm45650421`の360p/192k（485.625秒・48,860,107 bytes）の完成キャッシュと100%表示を確認した。後者は画質ID照合の修正後、通常キャッシュ設定で100秒・一時停止を維持し、再生用バッファーは`[0,282]`だった。指定品質は開始時に既に完成しており、未取得からの転送・容量境界はfixtureで検証する。実プロフィールの認証情報や署名URLは抽出していない。更新時のFirefox資産キャッシュと検証の詳細は`verification.md`に記録する。
 
 A-Bと通常シークの同期は[再生位置同期API](playback-control-bridge.md)を参照する。
 

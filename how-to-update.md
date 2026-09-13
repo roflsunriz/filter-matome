@@ -22,6 +22,8 @@ mkdocs build --strict
 
 101番フィルターと`local/features`を同じ版に更新し、全体ビルド後に視聴ページを`Ctrl+F5`で再読み込みする。全編先読みはAPI v2、再生位置同期はAPI v1を使用する。追加の保存設定やデータ移行は不要。再生タブ下部の`全編先読み`と`A-Bリピート`から操作する。
 
+Firefoxで更新後も古い挙動が続く場合は、開発ツールの設定でHTTPキャッシュを一時的に無効化して視聴ページを一度読み込み直す。その後は設定を戻し、通常の再読み込みでも修正が反映されることを確認する。全編先読みの100%は、現在の画質・音質がNicoCache_nlへ全編保存された状態を示す。
+
 ```powershell
 cd local/features
 bun run sandbox:analyze-full-buffer

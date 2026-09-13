@@ -99,6 +99,8 @@ bun run build
 
 - sandboxの`capture-official-watch-bundle.ts`で保存した資産は、NicoCache_nl経由だと別機能のAPIが挿入済みの場合がある（2026-09-12確認）。保管SHA-256を無条件に公式CDN原本のハッシュとみなさず、`FilterMatome` markerと変更対象classを調べる。同一URLの無改変版・適用済み版は別世代に数えない。全編先読みでは`analyze-full-buffer.ts`がHLS sessionのclass本文ハッシュを併記し、session外だけの変更と対象自身の改変を区別する。
 - 全編先読みAPIはv2の`getState()`・`getPlan()`で現在の映像・音声の取得計画だけを公開する。v1の再生用バッファーへの全編保持はブラウザーの容量制限で失敗するため復活させない。`full-preload.ts`が小さなストリームとして取得し、同じ画質・音質のNicoCache_nl完成キャッシュを確認して100%にする。HLSの上限・読込位置・再生状態は変更しない。根拠と世代比較は`local/features/src/sandbox/full-buffer-bridge.md`を参照する。
+- キャッシュ品質の`videoMode`は公式品質IDから`video-<codec>-`を除き、`-lowest`等も保持する。実寸法の`height`とは一致しない（2026-09-13、sm45650421の360p配信は354px）。音声は`audio-<codec>-<数値>kbps`の数値部を使い、`-hr`を末尾のビットレートと誤認しない。NicoCache_nlの`DomandCVIEntry.videoSrcIdToCacheQualityExpression()`・`audioSrcIdToCacheQualityExpression()`が照合先の根拠。
+- Firefox 155.0.1の実プロフィールでは、公式ES Moduleが`fetch(cache: reload)`では新版、`script`読込では旧版のままになる事例を確認した（2026-09-13）。一度の強制再読み込みやFirefox再起動だけでは反映されなかった。検証タブで一時的にHTTPキャッシュを無効化して再取得し、元へ戻した通常の再読み込み後に実APIの返却値と機能を確認する。API版だけで同じ版の修正反映を断定しない。詳細は`verification.md`を参照。
 - 公式Watchの後方シークは`FilterMatomePlaybackControlApi`から公式mediaの`seek(time)`→`setCurrentTime(time)`を順に呼ぶ（2026-09-13確認）。HTMLVideoElementの時刻だけでは`_setCurrentTime`と`smoothTime`が残り、確定処理だけでも途中のtickが旧時刻へ戻し得る。同期中の時刻は公式の既定getterで読み、A-B・mlinkのシーク・再生/停止を同じ境界へ接続する。`#video-element`のローカル再生は公式時計の対象外。契約は`local/features/src/sandbox/playback-control-bridge.md`を参照する。
 
 - nlFilterで公式JavaScript資産へAPIを公開・接続するときは、新規追加、既存APIの編集、Match/Replaceの追従、API削除を一体の契約変更として扱う。フィルターだけを変更して完了にしない。

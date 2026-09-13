@@ -23,7 +23,7 @@ const contract = readBufferContract(
 );
 const fixture = `class Session {
   constructor(hls,preview){this.hlsjs=hls;this.video=hls.media;this.watch={video:{id:"sm9"}};this.context={isPreview:preview};this.hlsjs.attachMedia(this.video),this.hlsjs.on(Hls.Events.MANIFEST_PARSED,()=>{});}
-  getQualityByLevelIndex(index){return index===0?{video:{id:"video-h264-360p-lowest",height:360},audio:{id:"audio-aac-192kbps"}}:null}
+  getQualityByLevelIndex(index){return index===0?this.hlsjs.quality:null}
 }`;
 
 function setup(preview = false) {
@@ -50,6 +50,10 @@ function setup(preview = false) {
   const listeners = new Map<string, () => void>();
   const video = { currentTime: 720, duration: 1800, paused: true };
   const hls = {
+    quality: {
+      video: { id: "video-h264-360p", height: 354 },
+      audio: { id: "audio-aac-192kbps" },
+    },
     config: {
       maxBufferLength: 180,
       maxMaxBufferLength: 600,
@@ -131,6 +135,21 @@ describe("全編先読みAPI v2", () => {
     expect(api!.getState()).toBeNull();
     expect(host.FilterMatomeBufferingApi).toBeUndefined();
     expect(setup(true).api).toBeNull();
+  });
+  test("キャッシュ品質は映像の実寸法ではなくIDを使い、画質・音質の接尾辞を扱う", () => {
+    const { api, hls } = setup();
+    for (const [id, mode] of [
+      ["video-h264-360p", "360p"],
+      ["video-h264-360p-lowest", "360p-lowest"],
+      ["video-h264-360p-low", "360p-low"],
+      ["video-h264-360p-mid", "360p-mid"],
+      ["video-h264-1080p", "1080p"],
+    ]) {
+      hls.quality.video.id = id;
+      expect(readOfficialPreloadPlan(api!).videoMode).toBe(mode);
+    }
+    hls.quality.audio.id = "audio-aac-576kbps-hr";
+    expect(readOfficialPreloadPlan(api!).audioBitrate).toBe(576);
   });
   test("旧sessionの破棄で新APIを消さない", () => {
     const { host, destroy } = setup();
