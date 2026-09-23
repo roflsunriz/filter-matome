@@ -1,6 +1,14 @@
 name: Dependabot automation
 
 on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        required: true
+        type: string
+      head_sha:
+        required: true
+        type: string
   pull_request_target:
     types: [opened, synchronize, reopened]
   workflow_run:
@@ -14,7 +22,8 @@ jobs:
       contents: write
       pull-requests: write
       statuses: write
-    uses: roflsunriz/myAGENTS/.github/workflows/dependabot-automation.yml@021f4942f60d406da553a483f2a398e5a58fc94c
+    uses: roflsunriz/myAGENTS/.github/workflows/dependabot-automation.yml@e2bc243aaac72671e01b9188382cf46d27227804
     with:
       ci_workflows: '["CI"]'
+      callback_workflow_file: dependabot-automation.yml
       post_merge_workflows: '["docs.yml"]'
