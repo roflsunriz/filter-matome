@@ -1,0 +1,20 @@
+name: Dependabot automation
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+jobs:
+  dependabot:
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+      statuses: write
+    uses: roflsunriz/myAGENTS/.github/workflows/dependabot-automation.yml@021f4942f60d406da553a483f2a398e5a58fc94c
+    with:
+      ci_workflows: '["CI"]'
+      post_merge_workflows: '["docs.yml"]'

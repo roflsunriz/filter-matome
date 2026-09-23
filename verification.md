@@ -190,3 +190,9 @@ Playwrightでは、公式Watchと同じ`data-styling-name="fullscreen-target"`�
 実ページで確認する場合は、原宿風Watchを有効にして動画プレーヤーを全画面表示し、設定ボタンから公式パネルを開きます。設定パネルが公式の全画面用配置・寸法を保ち、filter-matome API状態メニューが表示されないことを確認します。全画面を解除した後は、設定パネルとAPI状態メニューが通常表示へ戻ることを確認します。
 
 問題が再発した場合は、公式Watchの`fullscreen-target`と`watch-floating-panel`の安定属性、全画面時の矩形・`position`、公式バンドルの変更をCookieなしの隔離captureで再確認します。表示文言やハッシュ付きclass名を代替セレクターに使わず、確認できたDOM契約と回帰テストを先に更新します。
+
+## Dependabot 自動処理（2026-09-23）
+
+`.github/workflows/dependabot-automation.yml` を actionlint で検査し、PR 用 workflow 名（CI）と一致することを確認する。Dependabot の patch／minor かつ全 PR チェック成功の場合だけ取り込み、major・古い SHA・再失敗は残す。
+
+実際の Dependabot PR がまだない場合、動作経路は未検証として扱う。実 PR 発生後に自動化ジョブ、CI の再試行、マージ結果を確認する。
