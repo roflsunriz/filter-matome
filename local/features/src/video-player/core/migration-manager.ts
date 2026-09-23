@@ -128,6 +128,7 @@ export class MigrationManager {
     } catch (error) {
       throw new Error(
         `バージョン ${version} のマイグレーションに失敗: ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
       );
     }
   }

@@ -714,7 +714,7 @@ function getForcedCommandsForFork(
     return [];
   }
 
-  let configuredCommands: readonly string[] = [];
+  let configuredCommands: readonly string[];
 
   switch (threadFork) {
     case CONSTANTS.FORK_TYPES.OWNER:

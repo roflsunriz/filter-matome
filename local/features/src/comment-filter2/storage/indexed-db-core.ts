@@ -634,7 +634,7 @@ export abstract class FilterStorageCore {
 
       return JSON.stringify(exportData, null, 2);
     } catch (error) {
-      throw new Error(`JSON export failed: ${String(error)}`);
+      throw new Error(`JSON export failed: ${String(error)}`, { cause: error });
     }
   }
 
@@ -655,7 +655,7 @@ export abstract class FilterStorageCore {
 
       return JSON.stringify(exportData, null, 2);
     } catch (error) {
-      throw new Error(`Export failed: ${String(error)}`);
+      throw new Error(`Export failed: ${String(error)}`, { cause: error });
     }
   }
 
@@ -681,7 +681,7 @@ export abstract class FilterStorageCore {
           throw new Error("Unknown file format");
       }
     } catch (error) {
-      throw new Error(`Import failed: ${String(error)}`);
+      throw new Error(`Import failed: ${String(error)}`, { cause: error });
     }
   }
 
@@ -702,7 +702,9 @@ export abstract class FilterStorageCore {
         migratedCount: rules.length,
       };
     } catch (error) {
-      throw new Error(`JSONL import failed: ${String(error)}`);
+      throw new Error(`JSONL import failed: ${String(error)}`, {
+        cause: error,
+      });
     }
   }
 
@@ -812,7 +814,7 @@ export abstract class FilterStorageCore {
 
       throw new Error("Invalid JSON format");
     } catch (error) {
-      throw new Error(`JSON import failed: ${String(error)}`);
+      throw new Error(`JSON import failed: ${String(error)}`, { cause: error });
     }
   }
 
@@ -829,7 +831,7 @@ export abstract class FilterStorageCore {
 
       return migrationResult;
     } catch (error) {
-      throw new Error(`CSV import failed: ${String(error)}`);
+      throw new Error(`CSV import failed: ${String(error)}`, { cause: error });
     }
   }
 

@@ -113,6 +113,7 @@ export class ApiService {
     } catch (error) {
       throw new Error(
         `動画情報の取得に失敗しました: ${error instanceof Error ? error.message : "不明なエラー"}`,
+        { cause: error },
       );
     }
   }

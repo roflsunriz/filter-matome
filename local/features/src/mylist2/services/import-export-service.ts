@@ -205,6 +205,7 @@ export class ImportExportService {
       window.logger.error("レガシーデータのインポートに失敗しました:", error);
       throw new Error(
         `レガシーデータのインポートに失敗しました: ${error instanceof Error ? error.message : "不明なエラー"}`,
+        { cause: error },
       );
     }
   }

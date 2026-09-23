@@ -345,7 +345,7 @@ export abstract class Mylist2UICore {
     const isAsc = order === "asc";
 
     return keywords.sort((a, b) => {
-      let comparison = 0;
+      let comparison: number;
 
       switch (type) {
         case "title":
