@@ -562,6 +562,7 @@ async function main(): Promise<void> {
         } catch (error) {
           throw new Error(
             `${error instanceof Error ? error.message : String(error)}\nDiagnostics:\n${diagnostics.join("\n") || "none"}`,
+            { cause: error },
           );
         }
         const viewportName = `${String(viewport.width)}x${String(viewport.height)}`;

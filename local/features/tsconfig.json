@@ -13,7 +13,7 @@
       "@/*": ["./src/*", "./node_modules/comment-overlay/dist/types/*"]
     },
     "skipLibCheck": true,
-    "lib": ["DOM", "ES2020"],
+    "lib": ["DOM", "ES2020", "ES2022.Error"],
     "isolatedModules": true,
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },

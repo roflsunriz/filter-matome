@@ -195,6 +195,7 @@ const buildFixtureBundle = (): string => {
   } catch (error) {
     throw new Error(
       `匿名fixtureバンドルのビルドに失敗しました: ${errorMessage(error)}`,
+      { cause: error },
     );
   } finally {
     rmSync(directory, { recursive: true, force: true });

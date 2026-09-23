@@ -55,6 +55,8 @@ export const parseServerResponseMetaContent = (content: string): unknown => {
     return JSON.parse(decodedContent) as unknown;
   } catch (error) {
     const detail = error instanceof Error ? `: ${error.message}` : "";
-    throw new Error(`server-response metaのJSON解析に失敗しました${detail}`);
+    throw new Error(`server-response metaのJSON解析に失敗しました${detail}`, {
+      cause: error,
+    });
   }
 };
