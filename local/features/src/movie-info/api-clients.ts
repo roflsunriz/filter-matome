@@ -28,7 +28,7 @@ export const fetchCacheInfo = async (
   } catch (error: unknown) {
     const message = toErrorMessage(error);
     window.logger?.error?.("[movie-info] cache info fetch failed", message);
-    throw new Error(message);
+    throw new Error(message, { cause: error });
   }
 };
 
@@ -40,7 +40,7 @@ export const fetchThumbInfo = async (videoId: string): Promise<ThumbInfo> => {
   } catch (error: unknown) {
     const message = toErrorMessage(error);
     window.logger?.error?.("[movie-info] thumb info fetch failed", message);
-    throw new Error(message);
+    throw new Error(message, { cause: error });
   }
 };
 
@@ -61,7 +61,7 @@ export const fetchGpacInfo = async (videoId: string): Promise<GpacResponse> => {
   } catch (error: unknown) {
     const message = toErrorMessage(error);
     window.logger?.error?.("[movie-info] GPAC fetch failed", message);
-    throw new Error(message);
+    throw new Error(message, { cause: error });
   }
 };
 
@@ -77,7 +77,7 @@ export const fetchWatchApiData = async (
   } catch (error: unknown) {
     const message = toErrorMessage(error);
     window.logger?.error?.("[movie-info] watch api fetch failed", message);
-    throw new Error(message);
+    throw new Error(message, { cause: error });
   }
 };
 
@@ -95,6 +95,6 @@ export const fetchCommentsWithApi = async (
   } catch (error: unknown) {
     const message = toErrorMessage(error);
     window.logger?.error?.("[movie-info] comment fetch failed", message);
-    throw new Error(message);
+    throw new Error(message, { cause: error });
   }
 };

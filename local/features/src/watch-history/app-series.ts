@@ -395,7 +395,7 @@ export abstract class WatchHistorySeriesApp extends WatchHistoryDashboardApp {
     const intervalMs = alert.checkInterval;
 
     // 間隔を適切な単位で表示
-    let intervalText = "";
+    let intervalText: string;
     if (intervalMs < 60 * 1000) {
       intervalText = `${Math.round(intervalMs / 1000)}秒`;
     } else if (intervalMs < 60 * 60 * 1000) {
@@ -410,7 +410,7 @@ export abstract class WatchHistorySeriesApp extends WatchHistoryDashboardApp {
     const timeUntilCheck = alert.nextCheckAt - Date.now();
     const isOverdue = timeUntilCheck <= 0;
 
-    let timeUntilText = "";
+    let timeUntilText: string;
     if (isOverdue) {
       timeUntilText = "期限切れ";
     } else if (timeUntilCheck < 60 * 1000) {

@@ -319,7 +319,7 @@ const main = async (): Promise<void> => {
         return;
       }
       const task = (async () => {
-        let allowed = false;
+        let allowed: boolean;
         try {
           const url = new URL(params.request.url);
           allowed =

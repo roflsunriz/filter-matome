@@ -211,7 +211,7 @@ export class MigrationManager {
       this.dispatchProgressEvent();
 
       logger.error("[MigrationManager] マイグレーション実行エラー:", error);
-      throw new Error(String(error));
+      throw new Error(String(error), { cause: error });
     }
   }
 
