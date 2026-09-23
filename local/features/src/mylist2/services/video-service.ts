@@ -137,7 +137,7 @@ export class VideoService {
     const isAsc = order === "asc";
 
     return videos.sort((a: DBVideo, b: DBVideo) => {
-      let comparison = 0;
+      let comparison: number;
 
       switch (type) {
         case "uploadedAt":

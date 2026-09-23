@@ -62,7 +62,7 @@ export class MylistService {
     const isAsc = order === "asc";
 
     return mylistsWithCount.sort((a: MylistInfo, b: MylistInfo) => {
-      let comparison = 0;
+      let comparison: number;
 
       switch (type) {
         case "name":

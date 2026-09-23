@@ -69,7 +69,9 @@ export function parseJsonCollection(text: string): NgRuleJson[] {
 
     throw new Error("Invalid JSON collection format");
   } catch (error) {
-    throw new Error(`JSON collection parse error: ${String(error)}`);
+    throw new Error(`JSON collection parse error: ${String(error)}`, {
+      cause: error,
+    });
   }
 }
 

@@ -238,7 +238,7 @@ export class JsonCommentFilter {
       worker.onerror = (event: ErrorEvent | Event) => {
         worker.terminate();
 
-        let reason: Error = new Error("Worker error (unknown)");
+        let reason: Error;
 
         if (event instanceof ErrorEvent) {
           const errorValue: unknown = event.error;

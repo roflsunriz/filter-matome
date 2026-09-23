@@ -233,7 +233,9 @@ export class BatchOperations {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "動画情報の更新に失敗しました";
-      throw new Error("動画情報の更新に失敗しました: " + errorMessage);
+      throw new Error("動画情報の更新に失敗しました: " + errorMessage, {
+        cause: error,
+      });
     } finally {
       this.progressService.hideProgress();
     }
@@ -303,7 +305,9 @@ export class BatchOperations {
         error instanceof Error
           ? error.message
           : "公開状態チェックに失敗しました";
-      throw new Error("公開状態チェックに失敗しました: " + errorMessage);
+      throw new Error("公開状態チェックに失敗しました: " + errorMessage, {
+        cause: error,
+      });
     } finally {
       this.progressService.hideProgress();
     }
@@ -500,7 +504,9 @@ export class BatchOperations {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "動画情報の更新に失敗しました";
-      throw new Error("動画情報の更新に失敗しました: " + errorMessage);
+      throw new Error("動画情報の更新に失敗しました: " + errorMessage, {
+        cause: error,
+      });
     } finally {
       this.progressService.hideProgress();
     }
