@@ -263,7 +263,7 @@ Append<
 ### ドキュメント開発
 ```bash
 pip install -r requirements-docs.txt
-mkdocs serve
+zensical serve
 ```
 
 画面画像は、起動中のNicoCache_nlを経由して実際のニコニコ動画ページとビルド済みSPAをChromeで開き、匿名の一時ブラウザーセッションから`docs/resources/`と`cover-images/`を更新します。
@@ -273,7 +273,7 @@ cd local/features
 bun run docs:capture
 ```
 
-撮影後はリポジトリ直下で`mkdocs build --strict`を実行し、画像を含むドキュメント全体を確認してください。
+撮影後はリポジトリ直下で`python scripts/build-docs.py`を実行し、画像を含むドキュメント全体を確認してください。公開時は`DOCS_BUILD_DATE`を設定すると全ページの先頭に更新日時を表示します。
 
 
 ## ⚠️ 重要な注意事項

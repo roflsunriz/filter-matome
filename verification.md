@@ -1,5 +1,11 @@
 # 検証手順
 
+## Zensical 文書移行（2026-09-27）
+
+`python -m pip install -r requirements-docs.txt` 後、`python scripts/build-docs.py` を実行する。`DOCS_BUILD_DATE` を設定した場合は `.mkdocs-build/site/index.html` など全ページの先頭に更新日時が入り、未設定時は入らないことを確認する。`docs/` の原本は変更されない。Pages デプロイ後は公開ページと Actions の結果を確認する。
+
+2026-09-27 のローカル検証では Zensical 0.0.65 の strict ビルドが成功し、Markdown 5 ページに対応する HTML 5 ページと 404 ページを生成した。`DOCS_BUILD_DATE` 設定時の先頭表示を確認した。`mvn --batch-mode --quiet verify` と `pip-audit -r requirements-docs.txt` も成功した。Pages 実配信は未検証。
+
 ## #256 原宿風Watch共通パネル（2026-09-27）
 
 Chrome CDP 9222でNicoCache_nl経由の公開Watch `sm9` を開いた。修正前は公式ギフトパネルにインライン`position: fixed; left: 225px; top: -628px`が設定され、旧CSSの通常宣言より優先されていた。ページスクロール600pxでパネルのY座標が-628から-28へ移動することを再現した。生成済みCSSを再ビルドしても旧URLの読込済みstylesheetには旧規則が残ったため、104番とモジュールのURLを`?v=256`へ同期した。

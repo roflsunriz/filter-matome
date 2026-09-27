@@ -10,6 +10,7 @@ site_dir: .mkdocs-build/site
 
 theme:
   name: material
+  variant: classic
   language: ja
   palette:
     - scheme: default
@@ -51,9 +52,3 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
-
-extra:
-  build_date: !ENV [DOCS_BUILD_DATE, "ローカルビルド"]
-
-hooks:
-  - scripts/mkdocs_hooks.py

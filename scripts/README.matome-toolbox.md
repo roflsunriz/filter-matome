@@ -91,7 +91,7 @@ java -jar target/matome-toolbox-0.1.0-SNAPSHOT.jar \
 - `updater`: GitHub Releases API、ETag、`.part`ダウンロード
 - `developer`: `create-claude-link`相当の安全な相対リンク作成、`create-all-symlinks.ps1`相当の一括リンク、依存関係診断
 
-`nicocache-utility.py`と専用READMEは削除済みです。NicoCache_nl本体の管理機能と重複するため、matome-toolboxにはNicoCache管理プラグインを組み込んでいません。MkDocsのビルドフックなど、用途が異なるスクリプトは残しています。
+`nicocache-utility.py`と専用READMEは削除済みです。NicoCache_nl本体の管理機能と重複するため、matome-toolboxにはNicoCache管理プラグインを組み込んでいません。Zensicalの文書ビルドなど、用途が異なるスクリプトは別に管理しています。
 
 ## OS固有機能
 

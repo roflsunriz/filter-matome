@@ -46,7 +46,7 @@ public final class DeveloperPlugin implements ToolPlugin {
                 + "実作成には --yes、事前確認には --dry-run を指定してください。\n\n"
                 + "例:\n"
                 + "java -jar matome-toolbox.jar --headless --plugin developer --action links --dry-run\n"
-                + "\nmkdocs_hooks.pyはMkDocsのPythonフックとして残しますが、matome-toolbox本体の実行にはPython依存はありません。";
+                + "\n文書サイトはscripts/build-docs.pyからZensicalでビルドしますが、matome-toolbox本体の実行にはPython依存はありません。";
     }
 
     @Override
@@ -66,7 +66,7 @@ public final class DeveloperPlugin implements ToolPlugin {
                 context.log().info("matome-toolboxはPython依存なしで動作します。");
                 context.log().info("既定のリンク元: " + DeveloperSymlinkService.defaultSourceRoot(context));
                 context.log().info("既定のリンク先: " + DeveloperSymlinkService.defaultTargetRoot());
-                context.log().info("MkDocsフックは既存のscripts/mkdocs_hooks.pyをMkDocsから利用してください。");
+                context.log().info("文書サイトはscripts/build-docs.pyからZensicalでビルドしてください。");
                 yield 0;
             }
             default -> throw new IllegalArgumentException("未対応の開発補助アクションです: " + action);

@@ -10,7 +10,7 @@ on:
       - "README.md"
       - "mkdocs.yml"
       - "requirements-docs.txt"
-      - "scripts/mkdocs_hooks.py"
+      - "scripts/build-docs.py"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
@@ -48,7 +48,7 @@ jobs:
         run: echo "DOCS_BUILD_DATE=$(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M JST')" >> "$GITHUB_ENV"
 
       - name: Build site
-        run: mkdocs build --strict
+        run: python scripts/build-docs.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

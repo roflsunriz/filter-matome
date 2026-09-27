@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 文書サイトの保守を続けられるよう、Material for MkDocs から Zensical の classic テーマへ移行し、公開時の最終更新日表示をビルド前処理で維持した。
+
 ## [#256] - 2026-09-27
 
 ### Fixed

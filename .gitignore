@@ -40,6 +40,8 @@ scripts/matome-toolbox/.test-data/
 
 # MkDocs
 .mkdocs-build/
+.zensical-build.yml
+zensical-docs-*/
 
 # Claw-Code
 .claw/
