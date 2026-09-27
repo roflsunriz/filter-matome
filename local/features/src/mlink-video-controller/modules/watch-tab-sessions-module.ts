@@ -126,6 +126,8 @@ export class WatchTabSessionsModule implements ModuleInstance {
     this.storagePrototype = prototype;
 
     if (!this.originalPrototypeGetItem) {
+      // 元のStorageメソッドは呼び出し時に対象を.call()で明示する。
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       this.originalPrototypeGetItem = prototype.getItem;
       const getItemPatch = this.createGetItemPatch();
       prototype.getItem = function patchedGetItem(
@@ -137,6 +139,8 @@ export class WatchTabSessionsModule implements ModuleInstance {
     }
 
     if (!this.originalPrototypeSetItem) {
+      // 元のStorageメソッドは呼び出し時に対象を.call()で明示する。
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       this.originalPrototypeSetItem = prototype.setItem;
       const setItemPatch = this.createSetItemPatch();
       prototype.setItem = function patchedSetItem(
@@ -149,6 +153,8 @@ export class WatchTabSessionsModule implements ModuleInstance {
     }
 
     if (!this.originalPrototypeRemoveItem) {
+      // 元のStorageメソッドは呼び出し時に対象を.call()で明示する。
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       this.originalPrototypeRemoveItem = prototype.removeItem;
       const removeItemPatch = this.createRemoveItemPatch();
       prototype.removeItem = function patchedRemoveItem(

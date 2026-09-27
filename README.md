@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/roflsunriz/filter-matome.svg)](https://github.com/roflsunriz/filter-matome/releases)
-[![Latest Version](https://img.shields.io/badge/latest-%23255-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
+[![Latest Version](https://img.shields.io/badge/latest-%23256-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
 
 **filter-matome**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
 
@@ -138,7 +138,7 @@ winget install Google.Chrome
 - **音量微調整**: 音量の微調整
 - **コメントヒートマップ**: コメントの盛り上がり箇所を視覚化
 - **サムネイルフィルター**: キーワード・正規表現で動画サムネイルを非表示
-- **原宿風Watch表示**: 視聴ページの表示を原宿風レイアウトへ変更し、事前取得した動画説明文を内容量に応じて伸縮・最大高以降スクロールで表示
+- **原宿風Watch表示**: 視聴ページを原宿風レイアウトへ変更し、動画説明文を内容量に応じて伸縮表示。ギフトや設定などのパネルはページをスクロールしても画面内に固定
 - **モジュール管理**: ヘッダープライバシー、UI強化、視聴ページ機能強化、背景セレクター/背景画像設定、マトリックス背景、タブセッション拡張などを管理
 
 ### 動画/API情報ダッシュボード (movie-info)

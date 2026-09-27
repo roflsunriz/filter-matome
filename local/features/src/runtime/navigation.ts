@@ -49,6 +49,8 @@ export function installNavigationMonitor(): void {
   };
 
   const wrapHistoryMethod = (method: "pushState" | "replaceState"): void => {
+    // ラッパーは元のHistoryメソッドを同じthisで.apply()する。
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     const original = history[method];
     history[method] = function (
       this: History,
