@@ -620,13 +620,13 @@
   [aria-label="タグ編集"][class*="z_docked"][class*="w_watchSidebar"],
   [aria-label="ギフト"][class*="z_docked"][class*="w_watchSidebar"],
   [aria-label="マイリストに追加"][class*="z_docked"][class*="w_watchSidebar"] {
-    position: absolute;
-    left: calc(var(--hy-player-width) + var(--hy-gap));
-    right: auto;
-    top: 0;
-    width: var(--hy-sidebar-width);
-    height: var(--hy-watch-sidebar-panel-height);
-    max-height: var(--hy-watch-sidebar-panel-height);
+    position: fixed !important;
+    left: auto !important;
+    right: max(8px, calc((100vw - var(--hy-width)) / 2));
+    top: 48px !important;
+    width: min(var(--hy-sidebar-width), calc(100vw - 16px));
+    height: min(var(--hy-watch-sidebar-panel-height), calc(100dvh - 56px));
+    max-height: min(var(--hy-watch-sidebar-panel-height), calc(100dvh - 56px));
     padding-top: 0;
     transform: none;
     z-index: 60;

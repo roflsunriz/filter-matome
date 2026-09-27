@@ -14,14 +14,17 @@ import {
 
 const projectRoot = resolve(import.meta.dirname, "..");
 
-test("Harajuku CSSはactive scope内で!importantなしに生成される", async () => {
+test("Harajuku CSSは公式パネルのインライン位置だけを優先して生成される", async () => {
   const stylesheet = await composeHarajukuStylesheet(projectRoot);
   expect(stylesheet).toContain(
     `@scope (:root[${HARAJUKU_ACTIVE_ATTRIBUTE}="${HARAJUKU_ACTIVE_VALUE}"]) to ([${HARAJUKU_STYLE_EXEMPT_ATTRIBUTE}="${HARAJUKU_STYLE_EXEMPT_VALUE}"])`,
   );
   expect(stylesheet).toContain(":scope {\n    --hy-bg:");
   expect(stylesheet).not.toContain("  :root");
-  expect(stylesheet).not.toContain("!important");
+  expect(stylesheet.match(/!important/gu)).toHaveLength(3);
+  expect(stylesheet).toContain("position: fixed !important;");
+  expect(stylesheet).toContain("left: auto !important;");
+  expect(stylesheet).toContain("top: 48px !important;");
 });
 
 test("Watch用nlFilterが公式CSSより前に独立stylesheetを読み込む", async () => {

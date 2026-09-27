@@ -568,7 +568,7 @@ async function main(): Promise<void> {
         const viewportName = `${String(viewport.width)}x${String(viewport.height)}`;
         await verifyPageAnchoredHarajukuIcon(pageClient);
         if (
-          observation.harajukuImportantDeclarations !== 0 ||
+          observation.harajukuImportantDeclarations !== 3 ||
           !observation.harajukuLinkBeforeOfficial ||
           observation.horizontalOverflow
         ) {

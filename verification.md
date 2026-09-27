@@ -1,5 +1,23 @@
 # 検証手順
 
+## #256 原宿風Watch共通パネル（2026-09-27）
+
+Chrome CDP 9222でNicoCache_nl経由の公開Watch `sm9` を開いた。修正前は公式ギフトパネルにインライン`position: fixed; left: 225px; top: -628px`が設定され、旧CSSの通常宣言より優先されていた。ページスクロール600pxでパネルのY座標が-628から-28へ移動することを再現した。生成済みCSSを再ビルドしても旧URLの読込済みstylesheetには旧規則が残ったため、104番とモジュールのURLを`?v=256`へ同期した。
+
+修正版は通常のWatch再読み込みから`/local/features/dist/watch-harajuku.css?v=256`を読み、原宿モジュールがactiveであることを確認した。ギフト・動画プレーヤー設定・タグ編集を実際のボタンから開き、スクロール前後の矩形をCDPで測定した。
+
+| 画面 | パネルの矩形 | スクロール後 | 内容 |
+| --- | --- | --- | --- |
+| 1280×720 | x=857, y=48, 幅384, 高さ607 | 同じ矩形 | 設定は807pxの内容を550pxの内部スクロール領域に収容 |
+| 784×505 | x=433, y=48, 幅320, 高さ449 | 同じ矩形 | 設定は814pxの内容を392pxの内部スクロール領域に収容 |
+| 390×650 | x=43, y=48, 幅320, 高さ594 | 同じ矩形 | 設定は814pxの内容を537pxの内部スクロール領域に収容 |
+
+タグ編集も各画面で同じ固定座標と内部スクロールを確認した。NG設定とマイリスト追加は匿名Watchの操作導線から開けなかったため、実ページでの確認は残る。両者を含む5種類の共通セレクターは`mlink-video-controller-lifecycle.spec.ts`のDOM回帰テストで通常幅・狭幅、スクロール前後、全画面の設定除外を確認する。単独の`roflsunriz/harajuku`についてはUserCSSとUserScriptをCDPで一時適用し、784×505でギフト・設定・タグ編集の座標がスクロール前後で同一と確認した。管理拡張での常用プロファイルは未確認。
+
+隔離検証用`bun run sandbox:verify-harajuku-css`は公式ES Moduleの一件が`ERR_SSL_PROTOCOL_ERROR`で読めず、公式Watchの初期化前に停止した。通常CDPタブでの実配信測定とChromium回帰テストを代替とし、この失敗を成功扱いしない。再現時はTLS経路を確認したうえで同スクリプトを再実行する。
+
+`bun run verify`はformat、lint、型チェック、全単体テスト、Chromium E2E 92件、39ファイルの全体ビルドを通過した。`mkdocs build --strict`と`bun install --frozen-lockfile`も成功し、`bun audit`は106パッケージで脆弱性0件。Playwright 1.63.0への更新直後は対応するChromiumがなくE2Eが起動前に失敗したため、公式の`playwright install chromium`を実行して全体検証をやり直した。TypeScript 7.0.2はtypescript-eslint 8.70.1とsandboxのTypeScript解析APIに非互換だったため6.0.2へ戻した。`bun outdated`で残る更新候補はTypeScript 7だけ。
+
 ## #255の公開前確認（2026-09-13）
 
 最新公開版`#254`からの5コミットと実差分を確認し、全編先読み・A-Bリピート・公式時計同期・画質ID照合・操作パネル・文書の変更をCHANGELOGの`#255`節へ整理した。package.jsonの版番号とREADMEのlatestバッジは255へ同期し、CONTRIBUTINGの配布形式を実際の7zアーカイブと公開手順へ訂正した。

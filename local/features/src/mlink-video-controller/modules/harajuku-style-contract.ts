@@ -5,4 +5,4 @@ export const HARAJUKU_STYLE_EXEMPT_ATTRIBUTE =
 export const HARAJUKU_STYLE_EXEMPT_VALUE = "fullscreen-settings";
 export const HARAJUKU_STYLESHEET_ID = "filter-matome-watch-harajuku-stylesheet";
 export const HARAJUKU_STYLESHEET_PATH =
-  "/local/features/dist/watch-harajuku.css";
+  "/local/features/dist/watch-harajuku.css?v=256";

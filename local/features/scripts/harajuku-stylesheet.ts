@@ -24,9 +24,25 @@ export async function composeHarajukuStylesheet(
     ),
   );
   const stylesheet = parts.join("\n");
-  if (stylesheet.includes("!important")) {
+  const panelStart = stylesheet.indexOf('  [aria-label="動画プレーヤー設定"],');
+  const panelEnd = stylesheet.indexOf("\n  }", panelStart);
+  const panelRule = stylesheet.slice(panelStart, panelEnd);
+  const allowedOverrides = [
+    "position: fixed !important;",
+    "left: auto !important;",
+    "top: 48px !important;",
+  ];
+  const importantCount = [...stylesheet.matchAll(/!important/gu)].length;
+  if (
+    panelStart < 0 ||
+    panelEnd < 0 ||
+    importantCount !== allowedOverrides.length ||
+    allowedOverrides.some((declaration) => !panelRule.includes(declaration)) ||
+    stylesheet.slice(0, panelStart).includes("!important") ||
+    stylesheet.slice(panelEnd).includes("!important")
+  ) {
     throw new Error(
-      "Harajuku stylesheet must use the cascade instead of !important",
+      "Harajuku stylesheet permits only the official panel inline-position overrides",
     );
   }
 

@@ -121,6 +121,11 @@ bun run build
 - このリポジトリの成果物は、主に `NICO_DATA_ROOT` 側に作成されたシンボリックリンクから参照される。例えば `NICO_DATA_ROOT\nlFilters\100_features.txt` は `C:\filter-matome\nlFilters\100_features.txt` を参照する。リンクは双方向ではないため、作成、置換、削除の前に `LinkType` と `Target` を確認する。
 - NicoCache_nlをプロキシーとして起動し、対象のローカル配信が有効な場合、`NICO_DATA_ROOT\local\` 配下は `https://www.nicovideo.jp/local/` 配下として配信される。
 
+## 原宿風Watch共通パネルの固定位置（2026-09-27）
+
+- 公式Watchのギフト等の共通パネルは`position: fixed`でも、公式JavaScriptがインライン`left`・`top`をスクロール中に更新する。原宿風配置は通常のCSS宣言だけでは勝てないため、対象5パネルの`position`・`left`・`top`に限って`!important`を許可する。`local/features/scripts/harajuku-stylesheet.ts`の許可検証と`harajuku-style-contract.test.ts`を同時に更新する。
+- `/local/features/dist/watch-harajuku.css`は同じURLで再ビルドするとブラウザーが旧CSSを保持する場合がある。原宿風CSSを変えるリリースでは`harajuku-style-contract.ts`と`nlFilters/104_watch_harajuku_style.txt`の版付きURLを揃える。CDP実測と未検証条件は`verification.md`の#256節を参照する。
+
 ## NicoCache_nl本体の変更とビルド
 
 - NicoCache_nl本体のソースは `C:\Users\UserName\AppData\Local\NicoCache_nl\src\` にある。

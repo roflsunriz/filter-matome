@@ -22,6 +22,6 @@ Match<
 >
 Replace<
 $1
-<link id="filter-matome-watch-harajuku-stylesheet" rel="stylesheet" href="/local/features/dist/watch-harajuku.css">
+<link id="filter-matome-watch-harajuku-stylesheet" rel="stylesheet" href="/local/features/dist/watch-harajuku.css?v=256">
 $2
 >

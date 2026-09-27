@@ -204,7 +204,7 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
           <div class="grid-area_sidebar"><div><div id="watch-sidebar"><section><header>コメントリスト</header></section></div></div></div>
         </section>
       </main>
-      <div data-nvpc-scope="watch-floating-panel" data-nvpc-part="floating">
+      <div data-nvpc-scope="watch-floating-panel" data-nvpc-part="floating" aria-label="動画プレーヤー設定">
         <section data-nvpc-scope="watch-floating-panel" data-nvpc-part="content"></section>
       </div>`,
       `<link id="${HARAJUKU_STYLESHEET_ID}" rel="stylesheet" href="${HARAJUKU_STYLESHEET_PATH}">
@@ -355,6 +355,48 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
   await expect(playerSettings).not.toHaveAttribute(
     HARAJUKU_STYLE_EXEMPT_ATTRIBUTE,
   );
+  for (const viewport of [
+    { width: 1280, height: 720 },
+    { width: 390, height: 650 },
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const label of [
+      "動画プレーヤー設定",
+      "NG設定",
+      "タグ編集",
+      "ギフト",
+      "マイリストに追加",
+    ]) {
+      if (label !== "動画プレーヤー設定") {
+        await page.evaluate((panelLabel) => {
+          const panel = document.createElement("div");
+          panel.setAttribute("aria-label", panelLabel);
+          panel.className = "z_docked w_watchSidebar";
+          panel.innerHTML =
+            "<section><header>パネル</header><div>内容</div></section>";
+          document.querySelector(".grid-area_sidebar")?.append(panel);
+        }, label);
+      }
+      const panel = page.locator(`[aria-label="${label}"]`);
+      await expect(panel).toHaveCSS("position", "fixed");
+      const before = await panel.boundingBox();
+      expect(before).not.toBeNull();
+      expect(before!.x).toBeGreaterThanOrEqual(0);
+      expect(before!.y).toBeGreaterThanOrEqual(0);
+      expect(before!.x + before!.width).toBeLessThanOrEqual(viewport.width);
+      expect(before!.y + before!.height).toBeLessThanOrEqual(viewport.height);
+      await page.evaluate(() => window.scrollTo(0, 600));
+      const after = await panel.boundingBox();
+      expect(after).not.toBeNull();
+      expect(after!.x).toBeCloseTo(before!.x, 0);
+      expect(after!.y).toBeCloseTo(before!.y, 0);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      if (label !== "動画プレーヤー設定") {
+        await panel.evaluate((element) => element.remove());
+      }
+    }
+  }
+  await page.setViewportSize({ width: 1280, height: 720 });
   await page.evaluate(() => {
     const style = document.createElement("style");
     style.dataset.fixture = "browser-fullscreen";
