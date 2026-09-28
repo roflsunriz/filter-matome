@@ -26,4 +26,7 @@ jobs:
     with:
       ci_workflows: '["CI"]'
       callback_workflow_file: dependabot-automation.yml
+      autofix_command: 'cd local/features && bun install --lockfile-only --ignore-scripts && cargo generate-lockfile --manifest-path ../../benchmarks/comment-filter-core/rust/Cargo.toml'
+      autofix_paths: '["local/features/bun.lock","benchmarks/comment-filter-core/rust/Cargo.lock"]'
+      autofix_workflow_files: '["ci.yml"]'
       post_merge_workflows: '["docs.yml"]'
