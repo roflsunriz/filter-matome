@@ -1,0 +1,174 @@
+name: バグレポート
+description: バグや不具合を報告する
+title: '[Bug] '
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |-
+        filter-matomeに関する内容を、目的と確認できた事実に分けて記載してください。
+        Cookie、認証トークン、パスワード、個人情報を本文や添付に含めないでください。署名付き配信URLと証明書秘密鍵も伏せてください。
+        投稿前に[README](https://github.com/roflsunriz/filter-matome/blob/main/README.md)と[既存Issue](https://github.com/roflsunriz/filter-matome/issues)を確認してください。
+        脆弱性の報告は[SECURITY.md](https://github.com/roflsunriz/filter-matome/blob/main/SECURITY.md)の案内に従ってください。
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 事前確認
+      options:
+        - label: 既存Issueを検索しました。
+          required: false
+        - label: 可能な範囲で最新の公開版でも確認しました。
+          required: false
+  - type: checkboxes
+    id: legacy-7
+    attributes:
+      label: 事前確認と切り分け
+      options:
+        - label: filter-matomeの最新版を使用している
+          required: false
+        - label: ブラウザの最新版を使用している
+          required: false
+        - label: JDKの最新版を使用している(メジャーバージョン(例:17)の最新版)
+          required: false
+        - label: BouncyCastleの最新版を使用している
+          required: false
+        - label: OSの更新状況を確認した（使用中の版と更新できない理由があれば記載）
+          required: false
+        - label: nlFiltersを無効にしてもまだ問題が起きる
+          required: false
+        - label: extensionsを無効にしてもまだ問題が起きる
+          required: false
+        - label: ブラウザの拡張機能をすべて無効にしてもまだ問題が起きる
+          required: false
+        - label: proxy.pacをデフォルト状態にしてもまだ問題が起きる
+          required: false
+        - label: config.propertiesをデフォルト状態にしてもまだ問題が起きる
+          required: false
+        - label: ハード再読み込み（Ctrl+F5）でまだ問題が起きる
+          required: false
+        - label: 既存のissueで同様の問題が報告されていないか確認した
+          required: false
+        - label: 他のブラウザでも同様の問題が発生するか確認した
+          required: false
+        - label: ブラウザの関連キャッシュデータをすべて削除してから問題が継続することを確認した
+          required: false
+  - type: textarea
+    id: legacy-7-exception
+    attributes:
+      label: 事前確認できない項目と理由
+      description: チェックリストが最大限頑張っても埋められない場合は理由を述べて投稿してください:（例:オフライン環境にいるためアップデートできない等）
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-1
+    attributes:
+      label: 概要
+      description: バグの内容を簡潔に分かりやすく説明してください。
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-5
+    attributes:
+      label: 対象と環境
+      description: |-
+        以下の情報を記載してください：
+
+        **ブラウザ:**
+        - [ ] Firefox (バージョン: x.x.x)
+        - [ ] Chrome (バージョン: x.x.x)
+        - [ ] その他:
+
+        **ブラウザにインストールされた拡張機能:**
+        - (全て書き出してください)
+
+        **OS:**
+        - [ ] Windows (バージョン: x.x.x)
+        - [ ] macOS (バージョン: x.x.x)
+        - [ ] Linux (ディストリビューション: x.x.x)
+
+        **その他:**
+        （ブラウザに影響を及ぼすソフトウェアがインストール済みの場合はそのソフトウェアを全て書き出してください）
+
+        **filter-matome:**
+        - バージョン: #xxx
+
+        **NicoCache_nl:**
+        - バージョン: 2026-xx-xx
+        - 使用しているextensions（全て書き出すこと）:
+                - [ ] CommentFilterLogger
+                - [ ] ExtUtil
+                - [ ] nlGpac
+        - 使用しているnlFilters（全て書き出すこと）:
+                - [ ] 100_common
+                - [ ] 101_disable_official_function
+                - [ ] 102_mlink_video_controller
+                - [ ] 103_comment_filter2
+                - [ ] 104_video_player
+                - [ ] 105_premium_hide
+                - [ ] 106_watch_history
+        - 使用しているJDK: (Adoptium OpenJDK 17 17.xx.xx.xx)
+        - 使用しているBouncyCastleのバージョン: (x.x)
+
+        **関連する設定:**
+        - 有効にしているconfig.propertiesの設定:
+        - 変更したproxy.pacの設定:
+        - 変更したnlFilter_sys.txtの設定:
+
+        **ニコニコ動画:**
+        - プレミアム会員: Yes or No
+        - 問題がアカウントに関連する場合は、匿名化したアカウントの条件（ユーザー名やIDは不要）:
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-2
+    attributes:
+      label: 再現手順
+      description: |-
+        バグを再現するための手順を詳しく記載してください：
+
+        1. '...' に移動
+        2. '...' をクリック
+        3. '...' まで下にスクロール
+        4. エラーを確認
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-3
+    attributes:
+      label: 期待した結果
+      description: 本来どのような動作をするべきかを説明してください。
+    validations:
+      required: false
+  - type: textarea
+    id: actual-common
+    attributes:
+      label: 実際の結果
+      description: 観測した症状とエラーメッセージを記載してください。
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-4
+    attributes:
+      label: 診断情報
+      description: |-
+        出来るだけ問題を具体的に説明するスクリーンショットやエラーログ、デバッグログ、録画ビデオを添付してください。
+        ビデオの中に再現手順が含まれているとメンテナーが分かりやすいです。
+        Windowsの画面キャプチャは切り取りツールなどを使用できます。録画やOCRは利用可能なツールを使用してください。
+        コピーできない文字列は、OCRの結果を原画面と照合してから共有してください。
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-6
+    attributes:
+      label: 補足
+      description: 問題に関する追加の文脈や情報があれば記載してください。
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 公開情報の確認
+      options:
+        - label: 本文と添付に秘密情報や個人情報が含まれていないことを確認しました。
+          required: true

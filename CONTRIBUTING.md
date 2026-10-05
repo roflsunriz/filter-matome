@@ -247,3 +247,8 @@ GitHub Actionsがfeaturesとmatome-toolboxをビルドし、`filter-matome-<番�
 ---
 
 **貢献してくださる皆様、ありがとうございます！一緒に素晴らしいソフトウェアを作り上げましょう！** 🚀
+
+
+## 報告・提案の受付
+
+[Issueの受付](https://github.com/roflsunriz/filter-matome/issues/new/choose)から用途に合うフォームを選び、目的、対象と環境、確認できた結果を記載してください。Pull Requestには変更後の挙動、検証結果、未検証条件、互換性への影響を記載します。受付と秘密情報の扱いは[SUPPORT.md](SUPPORT.md)を参照してください。

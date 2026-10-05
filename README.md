@@ -4,7 +4,7 @@
 [![GitHub release](https://img.shields.io/github/release/roflsunriz/filter-matome.svg)](https://github.com/roflsunriz/filter-matome/releases)
 [![Latest Version](https://img.shields.io/badge/latest-%23256-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
 
-**filter-matome**は、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
+filter-matomeは、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
 
 ## 機能プレビュー
 
@@ -19,16 +19,16 @@
 ### mlink-video-controller
 ![mlink-video-controller](./cover-images/mlink-video-controller.png)
 
-## ✨ 主な機能
+## 主な機能
 
-### 🎯 コア機能
+### コア機能
 - **視聴履歴**: ブラウザ容量の許す限り無制限で履歴を保存・統計表示、シリーズ追跡、検索・フィルタ、キャッシュ品質アイコン表示
 - **マイリスト2**: 複数マイリスト作成、検索、ソート、一括操作、検索ワード保存、キャッシュ品質アイコン表示
 - **コメントフィルター2**: 公式NGワードを遥かに凌ぐ強力なフィルタリング機能、ページ再読み込み不要の再適用、描画コメントの右クリックからコピー・検索・URL表示・NG追加、NGユーザー・ニコる数設定、コメントコマンド設定、フィルターログ送信
 - **動画プレイヤー拡張**: 有料動画キャッシュ再生、削除済み・視聴不可動画のローカル再生、HLS対応、コメント描画・同期機能、ウォッチページ取得失敗時のnicochart.jp動画情報フォールバック
 - **マルチリンクビデオコントローラー**: 全編先読み、A-Bリピート、再生速度調整、フレーム単位シーク、音量微調整、コメントヒートマップ、サムネイルフィルター、原宿風Watch表示、モジュール管理
 
-### 🛠️ 拡張機能
+### 拡張機能
 - **公式通知の一括既読**: CommonHeaderのベル内から全未読通知を一度に既読化し、パネルを開いたまま既読表示へ更新
 - **nlFilter API状態表示**: CommonHeaderの独立した`filter-matome`メニューで、再生速度同期・再生位置同期・全編先読み・コメント再取得・コメントメニュー挿入・通知表示更新をページ開始時と180秒ごとに自動検査し、有効／自動検査中／未検出／版不一致／検査失敗を確認
 - **背景画像設定**: 視聴ページの背景をカスタマイズ
@@ -38,7 +38,7 @@
 - **動画/API情報ダッシュボード**: 動画IDから複数APIの情報を横断表示
 - **動画取得スケジューラー**: 動画・日時・確認の3段階ウィザードで予約し、繰り返し、祝日、モード別の帯域上限、完了可能時間の判定、再試行、個別・一括削除できる取得履歴を管理
 
-## 📦 導入方法
+## 導入方法
 
 ### 前提条件
 - [NicoCache_nl](https://roflsunriz.github.io/setup-nicocache-nl/) 本体のインストール
@@ -90,7 +90,7 @@ winget install Google.Chrome
 ### クリーンインストール
 [USAGE](https://roflsunriz.github.io/filter-matome/USAGE/) のクリーンインストール手順を参照
 
-## 📖 機能詳細
+## 機能詳細
 
 ### 視聴履歴 (watch-history)
 - **無制限履歴保存**: ニコニコ動画の50件制限を突破
@@ -148,7 +148,25 @@ winget install Google.Chrome
 - **エラー表示**: 一部API取得失敗時も成功したパネルを表示し、失敗元と確認ポイントを整理
 
 
-## 🔧 開発者向け情報
+## 重要な注意事項
+
+### 使用上の注意
+- **全機能同時使用前提**: 個別機能の抜き出しは動作保証外
+- **データバックアップ**: ブラウザデータ削除前に必ずエクスポート実行
+- **更新時の確認**: [CHANGELOG.md](CHANGELOG.md)を必ず確認してから更新
+- **ハード再読み込み**: 機能の有効/無効切り替え後はCtrl+F5実行
+
+### データ削除リスク
+以下の操作でIndexedDBとローカルストレージの設定が消去されます：
+- サイトデータの削除
+- Cookieとサイトデータの削除
+- オフライン作業用データの削除
+- ブラウザデータの削除
+
+**注意**: mylist2やcomment-filter2、watch-historyの視聴履歴はIndexedDBに保存されます。watch-historyのシリーズアラートはNicoCache_nl extensionが管理します。画面のエクスポートには履歴とアラートの両方が含まれるため、必ず安全な場所に退避してください。
+
+
+## 開発者向け情報
 
 ### 技術スタック
 - **言語**: TypeScript
@@ -221,7 +239,13 @@ CIと同じ検証をまとめて実行する場合は`bun run verify`を使用�
 
 ### scripts の matome-toolbox
 
-`scripts/` のメディア変換、設定編集、更新、開発者向け操作をまとめたGUI・ヘッドレス対応のJavaアプリです。リリースアーカイブにはビルド済みJARを同梱しているため、利用者はMavenやBunでビルドする必要がありません。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。mediaのrenameはffprobeを優先し、利用不能・情報不足時はGPACへフォールバックして、実測した解像度と音声ビットレートからNicoCache互換名を自動構築します。開発補助プラグインでは、Windowsの`C:\filter-matome`と`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値にして、旧`create-all-symlinks.ps1`相当のリンクをGUI・ヘッドレスで安全に作成できます。導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.matome-toolbox.md`](scripts/README.matome-toolbox.md) を参照してください。`nicocache-utility.py`と専用READMEは削除済みで、NicoCache_nlの管理操作は本体側の機能を使用します。用途が異なるMkDocs用フックなどは残しています。
+`scripts/` のメディア変換、設定編集、更新、開発者向け操作をまとめたGUI・ヘッドレス対応のJavaアプリです。リリースアーカイブにはビルド済みJARを同梱しているため、利用者はMavenやBunでビルドする必要がありません。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。
+
+メディアファイル名の変更ではffprobeを優先し、利用不能・情報不足時はGPACへフォールバックして、実測した解像度と音声ビットレートからNicoCache互換名を自動構築します。
+
+開発補助プラグインでは、Windowsの`C:\filter-matome`と`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値にして、旧`create-all-symlinks.ps1`相当のリンクをGUI・ヘッドレスで安全に作成できます。
+
+導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.matome-toolbox.md`](scripts/README.matome-toolbox.md) を参照してください。`nicocache-utility.py`と専用READMEは削除済みで、NicoCache_nlの管理操作は本体側の機能を使用します。用途が異なるMkDocs用フックなどは残しています。
 
 ### NicoCache_nlの終了・再起動
 
@@ -254,7 +278,7 @@ Append<
 >
 ```
 
-## 📚 ドキュメント
+## ドキュメント
 
 - **ドキュメントサイト**: [https://roflsunriz.github.io/filter-matome/](https://roflsunriz.github.io/filter-matome/)
 - **使い方ガイド**: [USAGE](https://roflsunriz.github.io/filter-matome/USAGE/)
@@ -276,25 +300,7 @@ bun run docs:capture
 撮影後はリポジトリ直下で`python scripts/build-docs.py`を実行し、画像を含むドキュメント全体を確認してください。公開時は`DOCS_BUILD_DATE`を設定すると全ページの先頭に更新日時を表示します。
 
 
-## ⚠️ 重要な注意事項
-
-### 使用上の注意
-- **全機能同時使用前提**: 個別機能の抜き出しは動作保証外
-- **データバックアップ**: ブラウザデータ削除前に必ずエクスポート実行
-- **更新時の確認**: [CHANGELOG.md](CHANGELOG.md)を必ず確認してから更新
-- **ハード再読み込み**: 機能の有効/無効切り替え後はCtrl+F5実行
-
-### データ削除リスク
-以下の操作でIndexedDBとローカルストレージの設定が消去されます：
-- サイトデータの削除
-- Cookieとサイトデータの削除
-- オフライン作業用データの削除
-- ブラウザデータの削除
-
-**注意**: mylist2やcomment-filter2、watch-historyの視聴履歴はIndexedDBに保存されます。watch-historyのシリーズアラートはNicoCache_nl extensionが管理します。画面のエクスポートには履歴とアラートの両方が含まれるため、必ず安全な場所に退避してください！
-
-
-## 🔗 関連リンク
+## 関連リンク
 
 ### コミュニティ
 - [NicoCache_nl Usage Guide](https://roflsunriz.github.io/setup-nicocache-nl/)
@@ -311,13 +317,13 @@ bun run docs:capture
 - [GPAC](https://gpac.io/downloads/gpac-nightly-builds/)
 - [WinMerge](https://winmerge.org/?lang=ja)
 
-## 📄 ライセンス
+## ライセンス
 
 MIT License - Copyright (c) 2017-2026 roflsunriz
 
 私の名前を明記している限り、本ソフトウェアは自由に使用、複製、改変、配布、商用利用、非商用利用できます。詳細は[LICENSE](LICENSE)ファイルをご覧ください。
 
-## 🚀 リリース情報
+## リリース情報
 
 ### 最新バージョン
 
@@ -337,17 +343,13 @@ git tag -d "#300"
 git push origin :refs/tags/#300
 ```
 
-## 🤝 コントリビューション
+## コントリビューション
 
 プルリクエストや課題報告を歓迎します。大きな変更を行う前に、まずIssueを作成して議論することをお勧めします。
 
-## 🙏 謝辞
+## 謝辞
 
 このプロジェクトは多くのコミュニティメンバーの協力により成り立っています。特に、フィードバックやバグレポートを提供してくださった全ての方々に感謝いたします。
-
----
-
-**⚡ 高速・高機能・高カスタマイズ性 - filter-matomeでニコニコ動画を最大限に活用しましょう！**
 
 ## 依存更新の自動処理
 

@@ -1,0 +1,102 @@
+name: 機能要求
+description: 新機能の提案をする
+title: '[Feature] '
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |-
+        filter-matomeに関する内容を、目的と確認できた事実に分けて記載してください。
+        Cookie、認証トークン、パスワード、個人情報を本文や添付に含めないでください。署名付き配信URLと証明書秘密鍵も伏せてください。
+        投稿前に[README](https://github.com/roflsunriz/filter-matome/blob/main/README.md)と[既存Issue](https://github.com/roflsunriz/filter-matome/issues)を確認してください。
+        脆弱性の報告は[SECURITY.md](https://github.com/roflsunriz/filter-matome/blob/main/SECURITY.md)の案内に従ってください。
+  - type: textarea
+    id: legacy-1
+    attributes:
+      label: 提案する変更
+      description: 提案する機能について簡潔に説明してください。
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-2
+    attributes:
+      label: 解決したい問題
+      description: この機能が必要な理由や、解決したい問題について説明してください。
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-3
+    attributes:
+      label: 詳細な説明
+      description: 提案する機能の詳細な仕様や動作について説明してください。
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-4
+    attributes:
+      label: UI/UXの提案
+      description: |-
+        ユーザーインターフェースに関する提案があれば記載してください。
+        - モックアップ
+        - ワイヤーフレーム
+        - 参考となるサイトやアプリ
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-5
+    attributes:
+      label: 技術的な考慮事項
+      description: 実装に関する技術的な提案や考慮すべき点があれば記載してください。
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-6
+    attributes:
+      label: 受け入れ基準
+      description: |-
+        この機能が完成したと判断する基準を記載してください：
+
+        - [ ] 基準1
+        - [ ] 基準2
+        - [ ] 基準3
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-7
+    attributes:
+      label: 代替案と互換性
+      description: この機能の代替となる解決策があれば記載してください。
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-8
+    attributes:
+      label: 参考資料
+      description: 参考となるスクリーンショット、リンク、資料があれば添付してください。
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-9
+    attributes:
+      label: 優先度
+      description: |-
+        - [ ] 高 (緊急に必要)
+        - [ ] 中 (あると便利)
+        - [ ] 低 (将来的にあれば良い)
+    validations:
+      required: false
+  - type: textarea
+    id: legacy-10
+    attributes:
+      label: 補足
+      description: その他、この機能要求に関する追加情報があれば記載してください。
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 公開情報の確認
+      options:
+        - label: 本文と添付に秘密情報や個人情報が含まれていないことを確認しました。
+          required: true

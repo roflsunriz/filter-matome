@@ -10,3 +10,13 @@
 不具合の報告には、filter-matomeとNicoCache_nlの版、OS・ブラウザーの版、対象機能、再現手順、期待した動作と実際の動作を添えてください。公式サイト側の変更が疑われる場合は、対象ページの種類と問題の発生時刻も役立ちます。
 
 ログや画像は問題箇所だけを抜粋し、Cookie、トークン、個人情報、署名付きURL、秘密鍵を含めないでください。回答や修正までの時間は保証していません。
+
+
+## 受付窓口
+
+- 不具合、機能提案、改善案: [Issueの受付](https://github.com/roflsunriz/filter-matome/issues/new/choose)
+- コードや文書の変更: [Pull Request](https://github.com/roflsunriz/filter-matome/pulls)
+- 使い方の質問と話題の共有: [Discussions](https://github.com/roflsunriz/filter-matome/discussions)
+
+本文と添付からCookie、トークン、パスワード、個人情報を除いてください。
+脆弱性の詳細は公開せず、[セキュリティ案内](SECURITY.md)に従ってください。
