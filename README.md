@@ -168,115 +168,7 @@ winget install Google.Chrome
 
 ## 開発者向け情報
 
-### 技術スタック
-- **言語**: TypeScript
-- **ビルドツール・ランタイム**: Bun（要求バージョンは `local/features/package.json` を参照）
-- **補助ツール**: Java 25、Maven（matome-toolboxの開発・テスト時のみ）
-- **静的解析**: ESLint、typescript-eslint
-- **テスト**: Bun test、Playwright
-- **ストレージ**: IndexedDB
-- **UI**: Material Design Icons
-- **フィルター言語**: nlFilter (NicoCache_nl独自DSL)
-
-### プロジェクト構成
-```
-local/
-├─ background-images/    # 視聴ページ用の背景画像
-└─┬── features/          # メイン機能群
-  ├── src/               # TypeScriptソースコード
-  │   ├── api-info/             # ニコニコ動画/API仕様メモ
-  │   ├── comment-filter2/      # コメントフィルター
-  │   ├── common/               # 共通ヘルパー、共通ヘッダー、ロガー、トースト
-  │   ├── mlink-video-controller/ # 視聴ページ操作パネルとモジュール
-  │   ├── movie-fetcher/        # 一覧カードからDomand/CMAFを取得
-  │   ├── movie-info/           # 動画/API情報ダッシュボード
-  │   ├── mylist2/              # マイリスト2
-  │   ├── runtime/              # 配信ページ判定と起動境界
-  │   ├── sandbox/              # 外部バンドルを隔離してAPI契約を調査する領域
-  │   ├── types/                # 共通型定義
-  │   ├── video-player/         # ローカル動画プレイヤー
-  │   └── watch-history/        # 視聴履歴SPAと視聴追跡
-  ├── tests/             # Bun単体テスト、Playwrightテスト、fixture
-  ├── dist/              # Bunで生成した単一バンドル、Worker、静的HTML
-  └── scripts/           # Bunビルド・テストスクリプト
-
-nlFilters/
-├── 100_features.txt                # CommonHeader導入サービスへfeatures.jsを挿入
-├── 101_disable_official_function.txt # serverContext書換設定と公式・mlink再生速度同期
-├── 102_comment_reload_api.txt       # 公式コメント再取得actionをcomment-filter2へ公開
-├── 103_official_comment_menu.txt    # 公式Reactコメントメニューへcomment-filter2操作を接続
-├── 104_watch_harajuku_style.txt     # 公式CSSのlayer隔離と原宿風Watch CSSの先行読込
-└── 105_premium_hide.txt            # プレミアム勧誘非表示(ニコニコ動画共通コモンヘッダーのプレミアム勧誘を非表示)
-
-extensions/
-├── CommentFilterLogger.java/.class       # コメントフィルターログの受信とGUI表示
-├── DestroyAds.java/.class                # 広告生成コードの書き換えと上流通信前の遮断
-├── ExtUtil.java/.class                   # Java拡張向けの共通ユーティリティ
-├── FilterMatomeSeriesAlerts.java/.class # シリーズ新着の定期確認とOS通知
-├── FilterMatomeSmartFetcher.java/.class # 永続予約・暗号化Cookie・帯域制御・取得履歴の管理
-├── NicochartInfoProxy.java/.class        # 再生不可時のnicochart.jp動画情報フォールバック
-├── nlGpac.java/.class                    # GPACによるローカルキャッシュのメディア解析API
-└── nlMovieFetcher.java/.class            # 現行Domand/CMAF配信の取得・進捗確認・中止API
-
-docs/resources/            # USAGE.mdで使われる画像リソース
-```
-
-### ビルド方法
-```bash
-cd local/features
-bun install
-bun run format
-bun run lint
-bun run type-check
-bun run test
-bun run build
-```
-
-CIと同じ検証をまとめて実行する場合は`bun run verify`を使用します。CI・リリースでは`bun install --frozen-lockfile`により`bun.lock`との差分を拒否します。
-
-`features.js`はページ判定用の軽量ブートストラップで、必要な機能だけを`entries/`から遅延読み込みします。生成は単一の`bun run build`で一括して行います。
-構成、生成物、プロジェクト別READMEは [`local/features/README.md`](local/features/README.md) を参照してください。
-
-### scripts の matome-toolbox
-
-`scripts/` のメディア変換、設定編集、更新、開発者向け操作をまとめたGUI・ヘッドレス対応のJavaアプリです。リリースアーカイブにはビルド済みJARを同梱しているため、利用者はMavenやBunでビルドする必要がありません。固定パス、シェル依存、Python GUI依存、無確認上書きを避け、READMEをプラグインヘルプ辞書として表示します。
-
-メディアファイル名の変更ではffprobeを優先し、利用不能・情報不足時はGPACへフォールバックして、実測した解像度と音声ビットレートからNicoCache互換名を自動構築します。
-
-開発補助プラグインでは、Windowsの`C:\filter-matome`と`%LOCALAPPDATA%\NicoCache_nl`、Linux/macOSの標準設定領域を初期値にして、旧`create-all-symlinks.ps1`相当のリンクをGUI・ヘッドレスで安全に作成できます。
-
-導入、ヘッドレス実行、外部プラグインの追加方法、単体・機能・結合・E2Eテストは [`scripts/README.matome-toolbox.md`](scripts/README.matome-toolbox.md) を参照してください。`nicocache-utility.py`と専用READMEは削除済みで、NicoCache_nlの管理操作は本体側の機能を使用します。用途が異なるMkDocs用フックなどは残しています。
-
-### NicoCache_nlの終了・再起動
-
-NicoCache_nlの終了と再起動は、NicoCache_nl本体に付属するGUIまたは標準ランチャーを使用してください。matome-toolboxはリポジトリのリンク作成、メディア処理、設定編集、更新に集中し、NicoCache_nl本体のプロセス管理は行いません。
-
-### nlFilter文法
-```ini
-[Replace]
-Name = フィルター名
-URL = 対象URL正規表現
-Match<
-置換対象テキスト
->
-Replace<
-置換後テキスト
->
-
-[Script]
-Name = スクリプト名
-URL = 対象URL正規表現
-Append<
-挿入するJavaScriptコード
->
-
-[Style]
-Name = スタイル名
-URL = 対象URL正規表現
-Append<
-追加するCSSコード
->
-```
+詳細は [findings.md](findings.md#extra-12) に移しました。
 
 ## ドキュメント
 
@@ -285,20 +177,8 @@ Append<
 - **変更履歴**: [CHANGELOG.md](CHANGELOG.md)
 
 ### ドキュメント開発
-```bash
-pip install -r requirements-docs.txt
-zensical serve
-```
 
-画面画像は、起動中のNicoCache_nlを経由して実際のニコニコ動画ページとビルド済みSPAをChromeで開き、匿名の一時ブラウザーセッションから`docs/resources/`と`cover-images/`を更新します。
-
-```powershell
-cd local/features
-bun run docs:capture
-```
-
-撮影後はリポジトリ直下で`python scripts/build-docs.py`を実行し、画像を含むドキュメント全体を確認してください。公開時は`DOCS_BUILD_DATE`を設定すると全ページの先頭に更新日時を表示します。
-
+詳細は [findings.md](findings.md#extra-13) に移しました。
 
 ## 関連リンク
 
@@ -331,7 +211,9 @@ MIT License - Copyright (c) 2017-2026 roflsunriz
 - **リリース履歴**: [CHANGELOG.md](CHANGELOG.md)
 
 ### リリース作成方法（開発者向け）
-```bash
+
+詳細は [findings.md](findings.md#extra-14) に移しました。
+
 # 次のバージョンタグを作成してプッシュ
 git tag "#300"
 git push origin "#300"
@@ -353,4 +235,4 @@ git push origin :refs/tags/#300
 
 ## 依存更新の自動処理
 
-Dependabot は対象の依存関係を毎週確認します。patch／minor／major 更新は PR のチェック（CI）が成功した後に自動で squash merge されます。CI の失敗ジョブは 1 回だけ再実行します。再失敗した PR は残して手動で修正します。マージ後はデプロイ workflow を明示起動します。
+詳細は [findings.md](findings.md#readme-1) に移しました。
