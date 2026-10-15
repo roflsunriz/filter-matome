@@ -390,3 +390,7 @@ bun run docs:capture
 ## 現行ビルドの照合（2026-10-16）
 
 上の移動元AGENTSにある「単一バンドル」は旧説明。現行のscripts/build.tsは軽量features.js、機能別entries、Worker、静的HTMLを一括生成する。READMEから移した説明とbuild.tsのfeatureEntrypointsを正本として確認する。ビルドの実行単位は引き続きlocal/features全体である。
+
+## 依存監査のoverride（2026-10-16）
+
+brace-expansion 5.0.9の既存固定は2026-10-16の監査でDoS脆弱性に該当した。現行は5.0.12へ固定し、package.jsonとbun.lockを同時更新する。上流が安全版を取り込んだ時点で固定の必要性を再評価し、bun auditと全体verifyで確認する。

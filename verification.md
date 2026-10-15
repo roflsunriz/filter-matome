@@ -235,3 +235,9 @@ Playwrightでは、公式Watchと同じ`data-styling-name="fullscreen-target"`�
 - 追跡中のrequirementsファイルをpip-auditで検査し、いずれも既知の脆弱性0件だった。固定されたツールと依存範囲を変更していない。
 - ローカルbun auditは既存brace-expansion 5.0.9のDoS脆弱性を検出した。既存overrideを5.0.12へ上げる最小修復とその品質検証は、文書分離とは別の修復として記録する。文書を分離したことを監査成功の理由にしない。
 - 文書移動と参照整理では製品の実行時ロジックを変更していない。実機書換え、認証操作、外部サービスへの投稿・署名・リリースは実施せず、これらの動作が再検証済みであるとは扱わない。
+
+## 2026-10-16: brace-expansionの依存監査修復
+
+- push前のbun auditが既存override 5.0.9にGHSA-qhr7-859c-m2p7、GHSA-6j4f-fj2g-mc7p、GHSA-q2hr-2g5m-vwhrを検出したため、既存overrideだけを5.0.12へ更新してbun install --ignore-scriptsからlockfileを再生成した。依存設定2行・lock4行の差分で、製品ソースは変更していない。
+- 修復後のbun auditは106パッケージで既知の脆弱性0件。bun run verifyはformat・lint・型検査・単体267件・Playwright92件・39ファイルのbuildがすべて成功した。最初の書式検査でpackage.jsonが失敗したため、既存Prettierで整形してから全体を再検証した。
+- ブラウザテストは既存のfixtureによる検証であり、実利用プロファイルやNicoCache_nlの設定・データを変更していない。
