@@ -1,5 +1,10 @@
 # 検証手順
 
+## 2026-10-19: CI高速化
+
+- 変更したGitHub Actionsをactionlint 1.7.12で検査し、エラー0件を確認した。
+- GitHub上の未解決Dependabot更新PRと依存脆弱性アラートがともに0件であることを確認した。
+
 ## Zensical 文書移行（2026-09-27）
 
 `python -m pip install -r requirements-docs.txt` 後、`python scripts/build-docs.py` を実行する。`DOCS_BUILD_DATE` を設定した場合は `.mkdocs-build/site/index.html` など全ページの先頭に更新日時が入り、未設定時は入らないことを確認する。`docs/` の原本は変更されない。Pages デプロイ後は公開ページと Actions の結果を確認する。

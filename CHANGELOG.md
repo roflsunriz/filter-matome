@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- OS別のmatome-toolbox検証で1件の失敗時に残りのmatrixを直ちに中止し、失敗結果を早く返すようにした。
+
 ### Security
 
 - 開発ツールのDoS脆弱性を解消するため、既存のbrace-expansion固定を5.0.12へ更新し、全体検証と再監査で確認した。
