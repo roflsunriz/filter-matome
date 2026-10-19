@@ -324,6 +324,16 @@ export class ModuleManager {
       // モジュールを初期化
       await moduleInstance.initialize();
 
+      // 初期化中に別ページへSPA遷移した場合、古いページ用インスタンスを
+      // 管理対象へ残さない。次の再初期化で現在ページ用を新規作成する。
+      if (
+        !this.settings.isModuleEnabled(moduleId) ||
+        !this.pageDetector.isTargetPage(config.targetPages)
+      ) {
+        moduleInstance.destroy();
+        return;
+      }
+
       // 管理対象に追加
       this.modules.set(moduleId, moduleInstance);
 

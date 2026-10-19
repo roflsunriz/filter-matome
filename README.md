@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/roflsunriz/filter-matome.svg)](https://github.com/roflsunriz/filter-matome/releases)
-[![Latest Version](https://img.shields.io/badge/latest-%23256-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
+[![Latest Version](https://img.shields.io/badge/latest-%23257-blue)](https://github.com/roflsunriz/filter-matome/releases/latest)
 
 filter-matomeは、ニコニコ動画の視聴体験を大幅に向上させる高機能な拡張機能群です。視聴履歴の無制限保存、強力なコメントフィルター、マイリスト2、動画プレイヤー拡張など、多彩な機能を提供します。
 
@@ -212,18 +212,7 @@ MIT License - Copyright (c) 2017-2026 roflsunriz
 
 ### リリース作成方法（開発者向け）
 
-詳細は [findings.md](findings.md#extra-14) に移しました。
-
-# 次のバージョンタグを作成してプッシュ
-git tag "#300"
-git push origin "#300"
-```
-
-```bash
-# 間違えてリリースを作った場合、タグを削除して再度リリースを作成
-git tag -d "#300"
-git push origin :refs/tags/#300
-```
+検証、公開、ロールバックを含む手順は [how-to-update.md](how-to-update.md) を参照してください。
 
 ## コントリビューション
 

@@ -6,6 +6,19 @@ export interface MetaItem {
   source: MetaSourceLabel;
 }
 
+export interface OwnerApiMetadata {
+  name: string;
+  profileHref: string;
+  videoHref: string;
+  iconSrc: string;
+  iconAlt: string;
+}
+
+export interface HarajukuWatchApiMetadata {
+  descriptionHtml: string;
+  owner: OwnerApiMetadata | null;
+}
+
 interface StructuredVideoData {
   "@type"?: string;
   uploadDate?: string;
@@ -22,6 +35,69 @@ export const META_ITEMS: MetaItem[] = [
   { key: "mylists", label: "マイリスト", source: "マイリスト" },
   { key: "postedAt", label: "投稿日時", source: "投稿日時" },
 ];
+
+export async function loadHarajukuWatchApiMetadata(): Promise<HarajukuWatchApiMetadata | null> {
+  const requestedVideoId =
+    window.commonHelper.extractVideoIdFromUrl(window.location) ??
+    (await window.commonHelper.getVideoIdWithFallback(window.location));
+  const result = await window.commonHelper.fetchWatchPage(
+    requestedVideoId ?? undefined,
+  );
+  const currentVideoId = window.commonHelper.extractVideoIdFromUrl();
+  if (!result || !requestedVideoId || requestedVideoId !== currentVideoId) {
+    return null;
+  }
+
+  const apiData = result.apiData as unknown as {
+    video?: { description?: string };
+    owner?: {
+      id?: number | string;
+      nickname?: string;
+      iconUrl?: string;
+    } | null;
+    channel?: {
+      id?: number | string;
+      name?: string;
+      iconUrl?: string;
+      url?: string;
+    } | null;
+  };
+  const descriptionHtml =
+    typeof apiData.video?.description === "string"
+      ? apiData.video.description
+      : "";
+  const owner = apiData.owner;
+  if (owner?.id !== undefined && owner.nickname && owner.iconUrl) {
+    const profileHref = `/user/${owner.id}`;
+    return {
+      descriptionHtml,
+      owner: {
+        name: owner.nickname,
+        profileHref,
+        videoHref: `${profileHref}/video`,
+        iconSrc: owner.iconUrl,
+        iconAlt: owner.nickname,
+      },
+    };
+  }
+
+  const channel = apiData.channel;
+  if (channel?.id !== undefined && channel.name && channel.iconUrl) {
+    const profileHref = channel.url || `/channel/${channel.id}`;
+    return {
+      descriptionHtml,
+      owner: {
+        name: channel.name,
+        profileHref,
+        videoHref: `${profileHref.replace(/\/$/, "")}/video`,
+        iconSrc: channel.iconUrl,
+        iconAlt: channel.name,
+      },
+    };
+  }
+
+  return { descriptionHtml, owner: null };
+}
 
 /** 視聴ページ上の複数ソースから原宿UI用統計を収集する。 */
 export class HarajukuMetadataReader {

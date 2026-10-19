@@ -245,12 +245,16 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
       MlinkTabControllers: {
         WatchHarajukuModule: new (config: unknown) => {
           initialize(): Promise<void>;
+          onSPANavigate(): Promise<void>;
           destroy(): void;
         };
         watchHarajukuModuleConfig: unknown;
         startNotificationReadAll(): void;
       };
-      harajukuModule?: { destroy(): void };
+      harajukuModule?: {
+        onSPANavigate(): Promise<void>;
+        destroy(): void;
+      };
     };
     const module = new api.MlinkTabControllers.WatchHarajukuModule(
       api.MlinkTabControllers.watchHarajukuModuleConfig,
@@ -500,6 +504,50 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
       responsiveMetrics.height,
     );
   }
+
+  await page.evaluate(async () => {
+    history.pushState(null, "", "/ranking");
+    await (
+      window as unknown as {
+        harajukuModule?: { onSPANavigate(): Promise<void> };
+      }
+    ).harajukuModule?.onSPANavigate();
+  });
+  await expect(page.locator(".HarajukuWatchChrome")).toHaveCount(0);
+  await expect(page.locator("html")).not.toHaveAttribute(
+    HARAJUKU_ACTIVE_ATTRIBUTE,
+  );
+
+  await page.evaluate(async () => {
+    history.pushState(null, "", "/watch/sm10");
+    window.commonHelper.getVideoIdWithFallback = async () => "sm10";
+    window.commonHelper.extractVideoIdFromUrl = () => "sm10";
+    window.commonHelper.fetchWatchPage = async () =>
+      ({
+        apiData: {
+          video: { description: "SPA再入場後の説明" },
+          owner: {
+            id: 10,
+            nickname: "SPA投稿者",
+            iconUrl: "https://example.com/spa-owner.png",
+          },
+        },
+      }) as Awaited<ReturnType<typeof window.commonHelper.fetchWatchPage>>;
+    await (
+      window as unknown as {
+        harajukuModule?: { onSPANavigate(): Promise<void> };
+      }
+    ).harajukuModule?.onSPANavigate();
+  });
+  await expect(page.locator("html")).toHaveAttribute(
+    HARAJUKU_ACTIVE_ATTRIBUTE,
+    HARAJUKU_ACTIVE_VALUE,
+  );
+  await expect(page.locator(".HarajukuWatchChrome")).toHaveCount(1);
+  await expect(page.locator(".HarajukuDescription")).toContainText(
+    "SPA再入場後の説明",
+  );
+  await expect(page.locator(".HarajukuOwner-name")).toHaveText("SPA投稿者");
 
   await page.evaluate(() => {
     (

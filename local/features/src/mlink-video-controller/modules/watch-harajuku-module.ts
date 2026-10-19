@@ -6,7 +6,12 @@ import {
   ModuleCategory,
 } from "@/types/module-types";
 import { isWatchLikePage } from "@/mlink-video-controller/utils/page-detect";
-import { HarajukuMetadataReader, META_ITEMS } from "./harajuku-metadata";
+import {
+  HarajukuMetadataReader,
+  META_ITEMS,
+  loadHarajukuWatchApiMetadata,
+  type OwnerApiMetadata,
+} from "./harajuku-metadata";
 import { renderHarajukuDescription } from "./harajuku-description";
 import { createMaterialIcon } from "@/common/material-icons";
 import { isWatchFullscreenActive } from "@/common/watch-fullscreen";
@@ -46,11 +51,6 @@ interface OwnerMetadata {
   supportAction: HTMLAnchorElement | null;
   menuAction: HTMLButtonElement | null;
 }
-
-type OwnerApiMetadata = Omit<
-  OwnerMetadata,
-  "followAction" | "supportAction" | "menuAction"
->;
 
 const THEME_KEY = "harajuku-theme";
 const BACKGROUND_PRIORITY_KEY = "harajuku-background-priority";
@@ -93,6 +93,7 @@ export class WatchHarajukuModule implements ModuleInstance {
   private ownerApiMetadata: OwnerApiMetadata | null = null;
   private descriptionHtml: string | null = null;
   private renderedDescriptionHtml: string | null | undefined;
+  private lifecycleRevision = 0;
   private readonly metadataReader = new HarajukuMetadataReader(
     SELECTORS.detailList,
     SELECTORS.bottom,
@@ -123,15 +124,23 @@ export class WatchHarajukuModule implements ModuleInstance {
     this.ensurePageAnchoredCommonHeader();
     this.setTheme(this.getTheme());
     this.setBackgroundPriority(this.getBackgroundPriority());
-    await this.loadWatchApiMetadata();
+    this._isActive = true;
+    const revision = ++this.lifecycleRevision;
+    this.startObserver();
     this.scheduleRender();
     this.startRetryTimer();
-    this.startObserver();
-
-    this._isActive = true;
+    await this.refreshWatchApiMetadata(revision);
+    if (revision !== this.lifecycleRevision || !isWatchLikePage()) {
+      if (revision === this.lifecycleRevision) {
+        this.destroy();
+      }
+      return;
+    }
+    this.scheduleRender();
   }
 
   destroy(): void {
+    this.lifecycleRevision += 1;
     this.observer?.disconnect();
     this.observer = null;
     this.resizeObserver?.disconnect();
@@ -190,15 +199,55 @@ export class WatchHarajukuModule implements ModuleInstance {
       return;
     }
 
+    if (!this._isActive) {
+      await this.initialize();
+      return;
+    }
+
+    const revision = ++this.lifecycleRevision;
+    this.observer?.disconnect();
+    this.observer = null;
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+    if (this.retryTimer !== null) {
+      window.clearInterval(this.retryTimer);
+      this.retryTimer = null;
+    }
+    this.restoreCommonHeaderPosition();
+
     document.querySelectorAll(`.${CHROME_CLASS}`).forEach((node) => {
       node.remove();
     });
     document.querySelectorAll(".HarajukuOwner").forEach((node) => {
       node.remove();
     });
-    await this.loadWatchApiMetadata();
+    document.querySelectorAll(".HarajukuDescription").forEach((node) => {
+      node.remove();
+    });
+    document.documentElement.style.removeProperty("--hy-description-height");
+    document.documentElement.style.removeProperty(
+      "--hy-watch-sidebar-panel-height",
+    );
+    this.ownerApiMetadata = null;
+    this.descriptionHtml = null;
+    this.renderedDescriptionHtml = undefined;
+    this.ensureStylesheet();
+    document.documentElement.setAttribute(
+      HARAJUKU_ACTIVE_ATTRIBUTE,
+      HARAJUKU_ACTIVE_VALUE,
+    );
+    this.ensurePageAnchoredCommonHeader();
+    this.startObserver();
     this.scheduleRender();
     this.startRetryTimer();
+    await this.refreshWatchApiMetadata(revision);
+    if (
+      revision === this.lifecycleRevision &&
+      this._isActive &&
+      isWatchLikePage()
+    ) {
+      this.scheduleRender();
+    }
   }
 
   private ensureStylesheet(): void {
@@ -376,63 +425,34 @@ export class WatchHarajukuModule implements ModuleInstance {
     };
   }
 
-  private async loadWatchApiMetadata(): Promise<void> {
+  private async refreshWatchApiMetadata(revision: number): Promise<void> {
+    try {
+      await this.loadWatchApiMetadata(revision);
+    } catch (error) {
+      if (revision === this.lifecycleRevision) {
+        window.logger?.warn(
+          "[WatchHarajukuModule] 動画メタデータの更新に失敗しました",
+          error,
+        );
+      }
+    }
+  }
+
+  private async loadWatchApiMetadata(revision: number): Promise<void> {
     this.ownerApiMetadata = null;
     this.descriptionHtml = null;
     this.renderedDescriptionHtml = undefined;
-    const requestedVideoId = await window.commonHelper.getVideoIdWithFallback();
-    const result = await window.commonHelper.fetchWatchPage(
-      requestedVideoId ?? undefined,
-    );
-    const currentVideoId = window.commonHelper.extractVideoIdFromUrl();
-    if (!result || !requestedVideoId || requestedVideoId !== currentVideoId) {
+    const metadata = await loadHarajukuWatchApiMetadata();
+    if (
+      revision !== this.lifecycleRevision ||
+      !this._isActive ||
+      !isWatchLikePage() ||
+      !metadata
+    ) {
       return undefined;
     }
-
-    const apiData = result.apiData as unknown as {
-      video?: {
-        description?: string;
-      };
-      owner?: {
-        id?: number | string;
-        nickname?: string;
-        iconUrl?: string;
-      } | null;
-      channel?: {
-        id?: number | string;
-        name?: string;
-        iconUrl?: string;
-        url?: string;
-      } | null;
-    };
-    this.descriptionHtml =
-      typeof apiData.video?.description === "string"
-        ? apiData.video.description
-        : "";
-    const owner = apiData.owner;
-    if (owner?.id !== undefined && owner.nickname && owner.iconUrl) {
-      const profileHref = `/user/${owner.id}`;
-      this.ownerApiMetadata = {
-        name: owner.nickname,
-        profileHref,
-        videoHref: `${profileHref}/video`,
-        iconSrc: owner.iconUrl,
-        iconAlt: owner.nickname,
-      };
-      return;
-    }
-
-    const channel = apiData.channel;
-    if (channel?.id !== undefined && channel.name && channel.iconUrl) {
-      const profileHref = channel.url || `/channel/${channel.id}`;
-      this.ownerApiMetadata = {
-        name: channel.name,
-        profileHref,
-        videoHref: `${profileHref.replace(/\/$/, "")}/video`,
-        iconSrc: channel.iconUrl,
-        iconAlt: channel.name,
-      };
-    }
+    this.descriptionHtml = metadata.descriptionHtml;
+    this.ownerApiMetadata = metadata.owner;
   }
 
   private cloneActionIcon(source: Element | null, fallback: string): Element {

@@ -9,6 +9,7 @@ class PanelManager {
   private observer: MutationObserver;
   private currentUrl: string = "";
   private isReinitializing: boolean = false; // 再初期化中フラグ
+  private reinitializeRequested: boolean = false;
   private lastPageType: "watch" | "other" = "other"; // 前回のページタイプ
 
   constructor() {
@@ -99,52 +100,55 @@ class PanelManager {
   }
 
   private async reinitialize(): Promise<void> {
-    // 再初期化中フラグチェック（多重実行防止）
+    // 処理中に到着した遷移は破棄せず、現在の処理後に最新DOMでもう一度実行する。
+    this.reinitializeRequested = true;
     if (this.isReinitializing) {
       window.logger?.debug(
-        "[MlinkVideoController] Reinitialize already in progress, skipping",
+        "[MlinkVideoController] Reinitialize already in progress, queued",
       );
       return;
     }
 
     try {
       this.isReinitializing = true;
-      window.logger?.info(
-        "[MlinkVideoController] Reinitializing for SPA navigation",
-      );
+      while (this.reinitializeRequested) {
+        this.reinitializeRequested = false;
+        try {
+          window.logger?.info(
+            "[MlinkVideoController] Reinitializing for SPA navigation",
+          );
 
-      // プレイヤーを再初期化
-      NicoVideoPlayer.getInstance().reinitialize();
+          // プレイヤーを再初期化
+          NicoVideoPlayer.getInstance().reinitialize();
 
-      // パネル（UI）のSPA遷移処理を呼び出し
-      if (this.panel) {
-        const mlinkPanel = this.panel as unknown as {
-          handleSPANavigation?: () => Promise<void>;
-        };
-        if (typeof mlinkPanel.handleSPANavigation === "function") {
-          await mlinkPanel.handleSPANavigation();
+          // パネル（UI）のSPA遷移処理を呼び出し
+          if (this.panel) {
+            const mlinkPanel = this.panel as unknown as {
+              handleSPANavigation?: () => Promise<void>;
+            };
+            if (typeof mlinkPanel.handleSPANavigation === "function") {
+              await mlinkPanel.handleSPANavigation();
+            }
+          }
+
+          // モジュールマネージャーも再初期化（動的インポートでモジュール取得）
+          const { ModuleManager } =
+            await import("@/mlink-video-controller/module-handlers/module-manager");
+          const moduleManager = ModuleManager.getInstance();
+          await moduleManager.reinitializeForSPA();
+
+          window.logger?.info(
+            "[MlinkVideoController] Reinitialization completed successfully",
+          );
+        } catch (error) {
+          window.logger?.error(
+            "[MlinkVideoController] Reinitialization failed:",
+            error,
+          );
         }
       }
-
-      // モジュールマネージャーも再初期化（動的インポートでモジュール取得）
-      const { ModuleManager } =
-        await import("@/mlink-video-controller/module-handlers/module-manager");
-      const moduleManager = ModuleManager.getInstance();
-      await moduleManager.reinitializeForSPA();
-
-      window.logger?.info(
-        "[MlinkVideoController] Reinitialization completed successfully",
-      );
-    } catch (error) {
-      window.logger?.error(
-        "[MlinkVideoController] Reinitialization failed:",
-        error,
-      );
     } finally {
-      // 再初期化完了後、少し遅延してからフラグをリセット
-      setTimeout(() => {
-        this.isReinitializing = false;
-      }, 500);
+      this.isReinitializing = false;
     }
   }
 
@@ -159,14 +163,6 @@ class PanelManager {
   }
 
   private handleUrlChange() {
-    // 再初期化中は処理しない
-    if (this.isReinitializing) {
-      window.logger?.debug(
-        "[MlinkVideoController] Reinitialize in progress, skipping URL change handler",
-      );
-      return;
-    }
-
     const previousUrl = this.currentUrl;
     this.currentUrl = location.href;
 

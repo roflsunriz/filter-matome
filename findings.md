@@ -13,3 +13,4 @@
 - 原宿panelは公式inline `left/top` に勝つ対象5panelの座標だけ `!important` を許可する。CSS更新時はcontractとnlFilterの版付きURLを揃え、同URL cache残留を避ける。
 - control endpointのport/tokenはdata rootのpropertyから読む。debug変更は元値を記録し、検証後に戻して再起動する。log/証明書/dataには秘密があるため出力・commitしない。
 - `scripts/build.ts` は軽量bootstrap、feature entry、Worker、静的HTMLを一括生成する。旧「単一bundle」説明を根拠にせず、`local/features` 全体buildと必要file検査を行う。
+- mlinkのSPA再初期化は処理中の後続遷移を破棄せず、完了後に最新DOMで再実行する。Watch専用moduleは非対象ページへの離脱で破棄されるため、再入場時に同じinstanceが渡されてもObserver、timer、DOM、非同期metadataを世代管理して再構築できる状態を保つ。

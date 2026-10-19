@@ -1,5 +1,26 @@
 # 検証手順
 
+## #257 原宿風WatchのSPA再入場（2026-10-19）
+
+Issue #26の条件を、公式Watch相当のDOMを使うChromium fixtureで再現した。修正前は、SPA再初期化中の後続要求が`isReinitializing`で破棄される経路と、非Watchで`destroy()`された原宿風モジュールの同一instanceがWatchへ戻ってもactiveへ復帰しない経路があった。
+
+再初期化要求を処理中も保留し、現在の処理完了後に最新DOMでもう一度実行するよう変更した。原宿風モジュールは遷移ごとに旧Observer、ResizeObserver、再試行timer、CommonHeader位置、追加DOM、layout変数を破棄して再構築する。動画メタデータ取得には世代番号を持たせ、古い遷移の非同期結果を新しい動画へ反映しない。モジュール初期化中に対象ページを離れた場合は、ModuleManagerへ古いinstanceを登録しない。
+
+回帰テストでは`/watch/sm9`から`/ranking`へSPA離脱し、原宿DOMとactive属性が消えることを確認した。その後、同じinstanceで`/watch/sm10`へ再入場し、active属性、原宿chrome、更新後の説明文、投稿者名が1件ずつ復帰することを確認した。通常幅・狭幅、長短の説明、全画面、共通パネル、テーマ、背景優先、破棄の既存検査も同じテストで維持した。
+
+公開前検証は次のとおり。
+
+| 検証 | 結果 |
+| --- | --- |
+| `bun run verify` | format、ESLint、型検査、単体267件、Chromium E2E 92件、39ファイルのbuildが合格 |
+| 原宿風の対象テスト | lifecycle、CSS契約、release workflow、SPA共通監視、1000行上限が合格 |
+| `mvn --batch-mode verify` | matome-toolbox 33件、JAR生成が合格 |
+| `python scripts/build-docs.py` | Zensical 0.0.69のstrict buildが合格 |
+| 依存監査 | `bun audit`は106パッケージ、`pip-audit -r requirements-docs.txt`、GitHub Dependabot alertはいずれも既知脆弱性0件 |
+| 更新確認 | DOMPurify 3.4.17、Playwright 1.64.1、ESLint 10.13.0、typescript-eslint 8.71.2へ更新。TypeScript 7.0.2は既知の非互換のため6.0.3を維持 |
+
+package版、READMEのlatestバッジ、104番フィルターとモジュール側のstylesheet URLを257へ同期した。実利用FirefoxプロフィールとNicoCache_nl経由の公開Watchでの手動SPA操作はローカル自動検証に含めず、公開後の通常利用経路で追加確認する。fixtureだけの合格を実プロフィール確認済みとは扱わない。
+
 ## 2026-10-19: CI高速化
 
 - 変更したGitHub Actionsをactionlint 1.7.12で検査し、エラー0件を確認した。
