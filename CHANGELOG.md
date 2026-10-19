@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- GitHub Actions の月間利用時間を抑えるため、Dependabot version update と自動マージを毎週・即時処理から毎月28日（Asia/Tokyo）の月末一括処理へ変更した。
+
 ## [#257] - 2026-10-19
 
 ### Fixed

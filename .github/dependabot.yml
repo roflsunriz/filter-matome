@@ -3,25 +3,35 @@ updates:
   - package-ecosystem: bun
     directory: "/local/features"
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 0 28 * *"
+      timezone: "Asia/Tokyo"
     open-pull-requests-limit: 5
   - package-ecosystem: cargo
     directory: "/benchmarks/comment-filter-core/rust"
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 0 28 * *"
+      timezone: "Asia/Tokyo"
     open-pull-requests-limit: 5
   - package-ecosystem: maven
     directory: "/scripts/matome-toolbox"
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 0 28 * *"
+      timezone: "Asia/Tokyo"
     open-pull-requests-limit: 5
   - package-ecosystem: pip
     directory: "/"
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 0 28 * *"
+      timezone: "Asia/Tokyo"
     open-pull-requests-limit: 5
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 0 28 * *"
+      timezone: "Asia/Tokyo"
     open-pull-requests-limit: 5

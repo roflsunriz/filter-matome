@@ -267,3 +267,8 @@ Playwrightでは、公式Watchと同じ`data-styling-name="fullscreen-target"`�
 - push前のbun auditが既存override 5.0.9にGHSA-qhr7-859c-m2p7、GHSA-6j4f-fj2g-mc7p、GHSA-q2hr-2g5m-vwhrを検出したため、既存overrideだけを5.0.12へ更新してbun install --ignore-scriptsからlockfileを再生成した。依存設定2行・lock4行の差分で、製品ソースは変更していない。
 - 修復後のbun auditは106パッケージで既知の脆弱性0件。bun run verifyはformat・lint・型検査・単体267件・Playwright92件・39ファイルのbuildがすべて成功した。最初の書式検査でpackage.jsonが失敗したため、既存Prettierで整形してから全体を再検証した。
 - ブラウザテストは既存のfixtureによる検証であり、実利用プロファイルやNicoCache_nlの設定・データを変更していない。
+
+## 2026-10-20: Dependabot 月末一括処理
+
+- `.github/dependabot.yml` は毎月28日00:00、`.github/workflows/dependabot-automation.yml` は同日18:00（いずれも `Asia/Tokyo`）に設定した。呼び出し先は検証済み共通 workflow の固定 SHA とし、現在の head SHA、Dependabot の資格状態、全 PR チェック成功を merge 前に再確認する。
+- YAML 構文、変更差分、空白エラーをローカルで検査した。実際の月末 schedule と Dependabot PR の merge 経路は、次回の毎月28日実行で確認する。

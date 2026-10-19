@@ -1,6 +1,9 @@
 name: Dependabot automation
 
 on:
+  schedule:
+    - cron: "0 9 28 * *"
+      timezone: "Asia/Tokyo"
   workflow_dispatch:
     inputs:
       pr_number:
@@ -22,7 +25,7 @@ jobs:
       contents: write
       pull-requests: write
       statuses: write
-    uses: roflsunriz/myAGENTS/.github/workflows/dependabot-automation.yml@8bcb79de73249f04e83d0a6071d30ac025710a17
+    uses: roflsunriz/myAGENTS/.github/workflows/dependabot-automation.yml@a0b3cb541342a67ac38845d2de31ccaf73ed75a6
     with:
       ci_workflows: '["CI"]'
       callback_workflow_file: dependabot-automation.yml
