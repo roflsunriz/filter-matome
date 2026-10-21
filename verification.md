@@ -213,7 +213,7 @@ DOM順に測り、通知群、NicoCache、filter-matome、アカウントが隣�
 
 ## ドキュメント画面画像
 
-NicoCache_nlを起動し、匿名の一時Chromeセッションから現行の実ページとビルド済みSPAを撮影します。
+匿名の一時ChromeセッションからGitHubの公開ページ、現行の実ページ、ビルド済みSPAを撮影します。
 
 ```powershell
 cd local/features
@@ -222,7 +222,7 @@ cd ../..
 mkdocs build --strict
 ```
 
-`docs/resources/`と`cover-images/`の生成画像を目視し、comment-filter2、mlink-video-controller、背景画像設定、watch-history、mylist2、movie-info、movie-fetcher、video-player、CommonHeaderが現在の画面構成と一致することを確認します。あわせて、ユーザー名、アイコン、Cookie、秘密情報、ローカルキャッシュパスなど、匿名サンプル以外の情報が写っていないことを確認します。
+`docs/resources/`と`cover-images/`の生成画像を目視し、GitHubのIssue導線、comment-filter2、mlink-video-controller、背景画像設定、watch-history、mylist2、movie-info、movie-fetcher、video-player、CommonHeaderが現在の画面構成と一致することを確認します。注釈画像は赤い枠・矢印・ラベルが対象要素を指し、矢印の線と先端が対象枠の内側へ入らず、ラベル同士や操作対象と読めない状態で重なっていないことも確認します。あわせて、ユーザー名、アイコン、Cookie、秘密情報、ローカルキャッシュパスなど、匿名サンプル以外の情報が写っていないことを確認します。
 
 ## Harajuku・CommonHeaderの全画面表示
 
@@ -272,3 +272,9 @@ Playwrightでは、公式Watchと同じ`data-styling-name="fullscreen-target"`�
 
 - `.github/dependabot.yml` は毎月28日00:00、`.github/workflows/dependabot-automation.yml` は同日18:00（いずれも `Asia/Tokyo`）に設定した。呼び出し先は検証済み共通 workflow の固定 SHA とし、現在の head SHA、Dependabot の資格状態、全 PR チェック成功を merge 前に再確認する。
 - YAML 構文、変更差分、空白エラーをローカルで検査した。実際の月末 schedule と Dependabot PR の merge 経路は、次回の毎月28日実行で確認する。
+
+## 2026-10-22: 利用者向け操作画像の追加
+
+- Playwrightの匿名一時ChromeからGitHubの公開リポジトリ、Issue一覧、サインイン画面を開き、`Issues`、`Search issues`、`New issue`、サインイン欄のDOM矩形を基準に赤い枠・矢印・日本語ラベルを生成した。3枚を目視し、矢印の線と先端が対象枠の外側で止まること、指示先、文字の可読性、個人情報・認証情報が含まれないことを確認した。Issueの作成・編集・送信は行っていない。
+- NicoCache_nl経由のmylist2は、匿名の一時IndexedDBへ作成したマイリストを使い、初回作成欄と設定ボタン、動画ID欄、追加ボタン、エクスポート位置を示す2枚を生成した。矢印を対象枠の外側へ移し、注釈の重なりを修正後に目視した。動画情報APIが`OFFLINE`を返したため、動画追加後の従来画像は更新していない。
+- ユーザー説明では、ニコニコ動画がPHP脆弱性対応の緊急メンテナンス中だった。実測でも検索ページがHTTP 503、動画情報取得が`OFFLINE`となったため、CommonHeader、Watch上のcomment-filter2・mlink-video-controller・背景画像設定、movie-info、movie-fetcher、watch-history、video-playerの再撮影は未実施である。既存画像を成功扱いで上書きせず、サービス復旧後に`bun run docs:capture`を再実行する。

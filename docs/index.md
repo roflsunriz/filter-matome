@@ -11,7 +11,7 @@ filter-matome の導入手順、各機能の使い方、補助資料をまとめ
 - [comment-filter2 README](comment-filter2.md)
 
 ## GitHub
-- [GitHubでIssue / Feature Requestを作成する方法](how-to-make-an-issue.md)
+- [GitHubでIssueを作成する方法](how-to-make-an-issue.md)
 
 
 ## 補足

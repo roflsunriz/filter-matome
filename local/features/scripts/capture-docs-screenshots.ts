@@ -21,7 +21,16 @@ const timeout = 90_000;
 
 type CaptureTask = {
   name: string;
+  useNicoCacheProxy?: boolean;
   run: (browser: Browser) => Promise<void>;
+};
+
+type AnnotationPosition = "above" | "below" | "left" | "right";
+
+type ScreenshotAnnotation = {
+  label: string;
+  position?: AnnotationPosition;
+  target: Locator;
 };
 
 let sampleThumbnailUrl: string | null = null;
@@ -55,12 +64,15 @@ const preparePage = async (page: Page): Promise<void> => {
   });
 };
 
-const createPage = async (browser: Browser): Promise<Page> => {
+const createPage = async (
+  browser: Browser,
+  colorScheme: "dark" | "light" = "dark",
+): Promise<Page> => {
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
     locale: "ja-JP",
     timezoneId: "Asia/Tokyo",
-    colorScheme: "dark",
+    colorScheme,
     ignoreHTTPSErrors: true,
   });
   const page = await context.newPage();
@@ -71,6 +83,219 @@ const createPage = async (browser: Browser): Promise<Page> => {
 
 const closePage = async (page: Page): Promise<void> => {
   await page.context().close();
+};
+
+const clearAnnotations = async (page: Page): Promise<void> => {
+  await page
+    .locator('[data-docs-annotation-layer="true"]')
+    .evaluateAll((layers) => {
+      for (const layer of layers) layer.remove();
+    });
+};
+
+const addAnnotations = async (
+  page: Page,
+  annotations: ScreenshotAnnotation[],
+): Promise<void> => {
+  await clearAnnotations(page);
+  const viewport = page.viewportSize();
+  if (!viewport) throw new Error("注釈画像のviewportを取得できませんでした");
+
+  const labelWidth = 224;
+  const labelHeight = 42;
+  const margin = 12;
+  const gap = 24;
+  const items: Array<{
+    height: number;
+    label: string;
+    labelX: number;
+    labelY: number;
+    width: number;
+    x: number;
+    y: number;
+  }> = [];
+
+  for (const annotation of annotations) {
+    await annotation.target.waitFor({ state: "visible" });
+    await annotation.target.scrollIntoViewIfNeeded();
+    const box = await annotation.target.boundingBox();
+    if (!box) {
+      throw new Error(
+        `注釈対象「${annotation.label}」の座標を取得できませんでした`,
+      );
+    }
+
+    let labelX = box.x + box.width / 2 - labelWidth / 2;
+    let labelY = box.y - labelHeight - gap;
+    switch (annotation.position ?? "above") {
+      case "below":
+        labelY = box.y + box.height + gap;
+        break;
+      case "left":
+        labelX = box.x - labelWidth - gap;
+        labelY = box.y + box.height / 2 - labelHeight / 2;
+        break;
+      case "right":
+        labelX = box.x + box.width + gap;
+        labelY = box.y + box.height / 2 - labelHeight / 2;
+        break;
+      case "above":
+        break;
+    }
+
+    items.push({
+      height: box.height,
+      label: annotation.label,
+      labelX: Math.max(
+        margin,
+        Math.min(labelX, viewport.width - labelWidth - margin),
+      ),
+      labelY: Math.max(
+        margin,
+        Math.min(labelY, viewport.height - labelHeight - margin),
+      ),
+      width: box.width,
+      x: box.x,
+      y: box.y,
+    });
+  }
+
+  await page.evaluate(
+    ({ annotationItems, height, width }) => {
+      const svgNamespace = "http://www.w3.org/2000/svg";
+      const layer = document.createElement("div");
+      layer.dataset.docsAnnotationLayer = "true";
+      Object.assign(layer.style, {
+        height: `${String(height)}px`,
+        left: "0",
+        pointerEvents: "none",
+        position: "fixed",
+        top: "0",
+        width: `${String(width)}px`,
+        zIndex: "2147483647",
+      });
+
+      const svg = document.createElementNS(svgNamespace, "svg");
+      svg.setAttribute("aria-hidden", "true");
+      svg.setAttribute("height", String(height));
+      svg.setAttribute("width", String(width));
+      Object.assign(svg.style, {
+        height: "100%",
+        inset: "0",
+        overflow: "visible",
+        position: "absolute",
+        width: "100%",
+      });
+
+      const definitions = document.createElementNS(svgNamespace, "defs");
+      const marker = document.createElementNS(svgNamespace, "marker");
+      marker.setAttribute("id", "docs-arrowhead");
+      marker.setAttribute("markerHeight", "8");
+      marker.setAttribute("markerWidth", "8");
+      marker.setAttribute("orient", "auto");
+      marker.setAttribute("refX", "7");
+      marker.setAttribute("refY", "4");
+      marker.setAttribute("viewBox", "0 0 8 8");
+      const arrow = document.createElementNS(svgNamespace, "path");
+      arrow.setAttribute("d", "M 0 0 L 8 4 L 0 8 z");
+      arrow.setAttribute("fill", "#d50000");
+      marker.append(arrow);
+      definitions.append(marker);
+      svg.append(definitions);
+      layer.append(svg);
+
+      for (const item of annotationItems) {
+        const outline = document.createElement("div");
+        Object.assign(outline.style, {
+          border: "4px solid #d50000",
+          borderRadius: "7px",
+          boxShadow: "0 0 0 2px rgba(255, 255, 255, 0.95)",
+          height: `${String(item.height)}px`,
+          left: `${String(item.x)}px`,
+          position: "absolute",
+          top: `${String(item.y)}px`,
+          width: `${String(item.width)}px`,
+        });
+        layer.append(outline);
+
+        const label = document.createElement("div");
+        label.textContent = item.label;
+        Object.assign(label.style, {
+          alignItems: "center",
+          background: "#d50000",
+          border: "2px solid #ffffff",
+          borderRadius: "7px",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.38)",
+          color: "#ffffff",
+          display: "flex",
+          font: '700 16px/1.25 -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI", sans-serif',
+          height: "42px",
+          justifyContent: "center",
+          left: `${String(item.labelX)}px`,
+          padding: "0 10px",
+          position: "absolute",
+          textAlign: "center",
+          top: `${String(item.labelY)}px`,
+          width: "224px",
+        });
+        layer.append(label);
+
+        const labelCenter = {
+          x: item.labelX + 112,
+          y: item.labelY + 21,
+        };
+        const targetCenter = {
+          x: item.x + item.width / 2,
+          y: item.y + item.height / 2,
+        };
+        const toTarget = {
+          x: targetCenter.x - labelCenter.x,
+          y: targetCenter.y - labelCenter.y,
+        };
+        const startScale =
+          1 /
+          Math.max(
+            Math.abs(toTarget.x) / 112,
+            Math.abs(toTarget.y) / 21,
+            Number.EPSILON,
+          );
+        const lineStart = {
+          x: labelCenter.x + toTarget.x * startScale,
+          y: labelCenter.y + toTarget.y * startScale,
+        };
+        const toLabel = {
+          x: labelCenter.x - targetCenter.x,
+          y: labelCenter.y - targetCenter.y,
+        };
+        const arrowGap = 12;
+        const endScale =
+          1 /
+          Math.max(
+            Math.abs(toLabel.x) / (item.width / 2 + arrowGap),
+            Math.abs(toLabel.y) / (item.height / 2 + arrowGap),
+            Number.EPSILON,
+          );
+        const lineEnd = {
+          x: targetCenter.x + toLabel.x * endScale,
+          y: targetCenter.y + toLabel.y * endScale,
+        };
+
+        const line = document.createElementNS(svgNamespace, "line");
+        line.setAttribute("marker-end", "url(#docs-arrowhead)");
+        line.setAttribute("stroke", "#d50000");
+        line.setAttribute("stroke-linecap", "round");
+        line.setAttribute("stroke-width", "5");
+        line.setAttribute("x1", String(lineStart.x));
+        line.setAttribute("x2", String(lineEnd.x));
+        line.setAttribute("y1", String(lineStart.y));
+        line.setAttribute("y2", String(lineEnd.y));
+        svg.append(line);
+      }
+
+      document.body.append(layer);
+    },
+    { annotationItems: items, height: viewport.height, width: viewport.width },
+  );
 };
 
 const screenshotPage = async (
@@ -130,6 +355,65 @@ const goto = async (page: Page, path: string): Promise<void> => {
   }
 };
 
+const gotoExternal = async (page: Page, url: string): Promise<void> => {
+  const response = await page.goto(url, { waitUntil: "domcontentloaded" });
+  if (!response?.ok()) {
+    throw new Error(
+      `${url} の読み込みに失敗しました (HTTP ${String(response?.status() ?? "応答なし")})`,
+    );
+  }
+  await page.evaluate(async () => document.fonts.ready);
+};
+
+const captureGitHubIssueGuide = async (browser: Browser): Promise<void> => {
+  const page = await createPage(browser, "light");
+  const repositoryUrl = "https://github.com/roflsunriz/filter-matome";
+  try {
+    await gotoExternal(page, repositoryUrl);
+    const issuesTab = page.getByRole("link", { name: /^Issues/u }).first();
+    await addAnnotations(page, [
+      { label: "1. Issuesを開く", position: "below", target: issuesTab },
+    ]);
+    await screenshotPage(page, "issue-01-open-issues.png", {
+      clipHeight: 620,
+    });
+
+    await gotoExternal(page, `${repositoryUrl}/issues`);
+    const search = page.locator('input[placeholder="Search issues"]');
+    const newIssue = page.getByRole("link", { name: "New issue" });
+    await addAnnotations(page, [
+      { label: "1. 似た報告を検索", position: "below", target: search },
+      { label: "2. New issueを開く", position: "below", target: newIssue },
+    ]);
+    await screenshotPage(page, "issue-02-search-and-create.png", {
+      clipHeight: 650,
+    });
+
+    const bugReportUrl = `${repositoryUrl}/issues/new?template=bug_report.yml`;
+    await gotoExternal(page, bugReportUrl);
+    if (!page.url().startsWith("https://github.com/login")) {
+      throw new Error(
+        "匿名セッションがGitHubのサインイン画面へ移動しませんでした",
+      );
+    }
+    const username = page.getByLabel("Username or email address");
+    const password = page.getByLabel("Password");
+    const signIn = page.getByRole("button", { name: "Sign in" });
+    await addAnnotations(page, [
+      {
+        label: "1. GitHubアカウントを入力",
+        position: "left",
+        target: username,
+      },
+      { label: "2. パスワードを入力", position: "right", target: password },
+      { label: "3. Sign in", position: "below", target: signIn },
+    ]);
+    await screenshotPage(page, "issue-03-sign-in.png", { clipHeight: 720 });
+  } finally {
+    await closePage(page);
+  }
+};
+
 const waitForPlayableVideo = async (
   page: Page,
   selector: string,
@@ -181,9 +465,43 @@ const captureMylist2 = async (browser: Browser): Promise<void> => {
     await createMylist(page, "あとで見る");
     await page.locator(".mylist-item", { hasText: "お気に入り" }).click();
 
+    await addAnnotations(page, [
+      {
+        label: "新しいマイリスト名を入力",
+        position: "right",
+        target: page.locator("#newMylistName"),
+      },
+      {
+        label: "動画追加・バックアップは設定から",
+        position: "right",
+        target: page.locator("#settingsFab"),
+      },
+    ]);
+    await screenshotPage(page, "mylist2-first-steps.png");
+    await clearAnnotations(page);
+
     await page.locator("#settingsFab").click();
     await page.locator("#settingsModal").waitFor({ state: "visible" });
     await page.locator("#videoIdInput").fill(videoId);
+    await addAnnotations(page, [
+      {
+        label: "動画IDまたはURLを入力",
+        position: "above",
+        target: page.locator("#videoIdInput"),
+      },
+      {
+        label: "入力した動画を追加",
+        position: "right",
+        target: page.locator("#addVideo"),
+      },
+      {
+        label: "JSONでバックアップ／復元",
+        position: "left",
+        target: page.locator("#exportMylist"),
+      },
+    ]);
+    await screenshotPage(page, "mylist2-settings-guide.png");
+    await clearAnnotations(page);
     await page.locator("#addVideo").click();
 
     const alert = page.locator(".cml2-alert-modal");
@@ -460,6 +778,11 @@ const captureSmartFetcher = async (browser: Browser): Promise<void> => {
 };
 
 const tasks: CaptureTask[] = [
+  {
+    name: "GitHub Issueガイド",
+    run: captureGitHubIssueGuide,
+    useNicoCacheProxy: false,
+  },
   { name: "CommonHeader API状態", run: captureApiStatus },
   { name: "mylist2", run: captureMylist2 },
   { name: "movie-info", run: captureMovieInfo },
@@ -478,7 +801,9 @@ for (const task of tasks) {
     browser = await chromium.launch({
       channel: browserChannel,
       headless: true,
-      proxy: { server: proxyServer },
+      ...(task.useNicoCacheProxy === false
+        ? {}
+        : { proxy: { server: proxyServer } }),
       args: ["--ignore-certificate-errors"],
     });
     try {
