@@ -14,6 +14,7 @@
 
 - GitHub Actions の月間利用時間を抑えるため、Dependabot version update と自動マージを毎週・即時処理から毎月28日（Asia/Tokyo）の月末一括処理へ変更した。
 - 【Issueガイド】現在のIssue Formに合わせて`.yml`テンプレート、`[Bug]`／`[Feature]`、記入項目、秘密情報の除去、脆弱性の連絡先を更新し、バグ報告と機能要求を直接開ける導線を追加した。
+- 【開発依存】push前監査で確認した互換範囲の更新として、typescript-eslintを8.72.0へ更新した。
 
 ## [#257] - 2026-10-19
 

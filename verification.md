@@ -278,3 +278,8 @@ Playwrightでは、公式Watchと同じ`data-styling-name="fullscreen-target"`�
 - Playwrightの匿名一時ChromeからGitHubの公開リポジトリ、Issue一覧、サインイン画面を開き、`Issues`、`Search issues`、`New issue`、サインイン欄のDOM矩形を基準に赤い枠・矢印・日本語ラベルを生成した。3枚を目視し、矢印の線と先端が対象枠の外側で止まること、指示先、文字の可読性、個人情報・認証情報が含まれないことを確認した。Issueの作成・編集・送信は行っていない。
 - NicoCache_nl経由のmylist2は、匿名の一時IndexedDBへ作成したマイリストを使い、初回作成欄と設定ボタン、動画ID欄、追加ボタン、エクスポート位置を示す2枚を生成した。矢印を対象枠の外側へ移し、注釈の重なりを修正後に目視した。動画情報APIが`OFFLINE`を返したため、動画追加後の従来画像は更新していない。
 - ユーザー説明では、ニコニコ動画がPHP脆弱性対応の緊急メンテナンス中だった。実測でも検索ページがHTTP 503、動画情報取得が`OFFLINE`となったため、CommonHeader、Watch上のcomment-filter2・mlink-video-controller・背景画像設定、movie-info、movie-fetcher、watch-history、video-playerの再撮影は未実施である。既存画像を成功扱いで上書きせず、サービス復旧後に`bun run docs:capture`を再実行する。
+
+## 2026-10-22: push前の依存更新
+
+- `bun audit`は106パッケージで既知の脆弱性0件だった。`bun outdated`で互換範囲に残っていたtypescript-eslint 8.72.0へ更新し、再監査で脆弱性0件、互換範囲の更新残り0件を確認した。TypeScript 7.0.2は現在の`typescript`指定範囲に入らず、`bun outdated`の更新候補は6.0.3のままである。
+- 更新後の`bun run verify`でPrettier、ESLint、型検査、単体267件、Playwright 92件、39ファイルのビルドが成功した。`python scripts/build-docs.py`の厳格ビルドと`git diff --check`も成功した。
