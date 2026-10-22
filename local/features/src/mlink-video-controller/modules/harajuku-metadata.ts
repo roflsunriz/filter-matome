@@ -58,6 +58,16 @@ function accountName(account: UnknownRecord): string | undefined {
   return nonEmptyString(account.name) ?? nonEmptyString(account.nickname);
 }
 
+function videoDescription(video: UnknownRecord | undefined): string {
+  const description = nonEmptyString(video?.description);
+  if (description) {
+    return description;
+  }
+  return typeof video?.shortDescription === "string"
+    ? video.shortDescription
+    : "";
+}
+
 function buildOwnerMetadata(
   value: unknown,
   kind: "user" | "channel",
@@ -94,8 +104,7 @@ export function parseHarajukuWatchApiMetadata(
 ): HarajukuWatchApiMetadata {
   const apiData = asRecord(value);
   const video = asRecord(apiData?.video);
-  const descriptionHtml =
-    typeof video?.description === "string" ? video.description : "";
+  const descriptionHtml = videoDescription(video);
   const owner =
     buildOwnerMetadata(apiData?.owner, "user") ??
     buildOwnerMetadata(apiData?.channel, "channel");

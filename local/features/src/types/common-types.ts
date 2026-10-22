@@ -23,8 +23,8 @@ export interface CommonHeaderInstance {
 // コメントAPIのリクエストパラメータ
 export interface NvCommentParams {
   targets: Array<{
-    id: string;
-    fork: string;
+    id: string | number;
+    fork: string | number;
   }>;
   language: string;
 }
@@ -35,24 +35,28 @@ export interface NvCommentThreadKey {
   force184: string;
 }
 
+export interface NvCommentData {
+  server: string;
+  params: NvCommentParams;
+  threadKey: string | NvCommentThreadKey;
+}
+
 // サーバーレスポンスの基本構造
 export interface NicoApiServerResponse {
   data: {
-    response: NicoApiData;
+    response: unknown;
   };
 }
 
 // ニコニコ動画のAPIデータ
 export interface NicoApiData {
-  comment: {
-    nvComment: {
-      server: string;
-      params: NvCommentParams;
-      threadKey: NvCommentThreadKey;
-    };
+  comment?: {
+    nvComment?: NvCommentData;
   };
   video: {
-    description: string;
+    id?: string;
+    description?: string;
+    shortDescription?: string;
     [key: string]: unknown;
   };
   series?: {

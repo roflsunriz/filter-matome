@@ -6,7 +6,7 @@ describe("parseHarajukuWatchApiMetadata", () => {
   test("現行のowner.nameを投稿者名として優先する", () => {
     expect(
       parseHarajukuWatchApiMetadata({
-        video: { description: "動画説明" },
+        video: { description: "現行の動画説明" },
         owner: {
           id: "4",
           name: "現行投稿者",
@@ -15,7 +15,7 @@ describe("parseHarajukuWatchApiMetadata", () => {
         },
       }),
     ).toEqual({
-      descriptionHtml: "動画説明",
+      descriptionHtml: "現行の動画説明",
       owner: {
         name: "現行投稿者",
         profileHref: "/user/4",
@@ -42,6 +42,16 @@ describe("parseHarajukuWatchApiMetadata", () => {
       iconSrc: "https://example.com/legacy-owner.png",
       iconAlt: "旧形式投稿者",
     });
+  });
+
+  test("shortDescriptionだけの旧応答も説明文として扱う", () => {
+    expect(
+      parseHarajukuWatchApiMetadata({
+        video: {
+          shortDescription: "短い説明",
+        },
+      }).descriptionHtml,
+    ).toBe("短い説明");
   });
 
   test("ユーザー投稿者がない場合はチャンネル情報を扱う", () => {

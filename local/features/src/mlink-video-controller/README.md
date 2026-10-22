@@ -53,7 +53,7 @@ watchページ間のSPA遷移は共通navigationイベントから`ModuleManager
 - 背景画像: `background-image-settings.ts` がIndexedDB、永続化要求、移行、バックアップ・復旧を管理する。
 - ヒートマップ、ヘッダープライバシー、原宿風表示などには個別のlocalStorage設定がある。
 
-原宿風表示はwatchページの`server-response.data.response.video.description`を投稿者情報と同じ事前取得経路から読み、DOMPurifyで安全化した専用説明欄へ描画します。公式の詳細アコーディオンは表示せず、空または短い説明は最小高、長い説明は上限まで自動伸長し、上限を超えた本文だけを内部スクロールさせます。
+原宿風表示はwatchページの現行`server-response.data.response.$watchV4.data`を共通層で正規化し、`video.description`と`metadata.jsonLd.owner`から説明文・投稿者情報を読みます。旧Watch応答も同じ内部形式で扱います。取得した説明文はDOMPurifyで安全化した専用説明欄へ描画します。公式の詳細アコーディオンは表示せず、空または短い説明は最小高、長い説明は上限まで自動伸長し、上限を超えた本文だけを内部スクロールさせます。
 
 左上の原宿風ニコニコアイコンは画面へ居残る`fixed`にせず、ページ内の同じ文書座標へ置きます。公式CommonHeaderのインライン`sticky`はモジュール有効中だけ退避して`relative`へ変更し、無効化・破棄時は元の値と優先度を復元します。
 

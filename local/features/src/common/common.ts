@@ -10,10 +10,11 @@ import {
   FetchOptions,
   FetchNicoCommentsOptions,
   CommentApiResponse,
-  NicoApiServerResponse,
   CommentThread,
+  NvCommentData,
 } from "@/types/common-types";
 import { parseServerResponseMetaContent } from "@/common/server-response-parser";
+import { normalizeWatchResponseData } from "@/common/watch-response-normalizer";
 
 type VideoIdSource =
   | string
@@ -151,8 +152,7 @@ const setTimedCache = <T>(
   }
 };
 
-const createCommentCacheKey = (apiData: NicoApiData): string => {
-  const nvComment = apiData.comment.nvComment;
+const createCommentCacheKey = (nvComment: NvCommentData): string => {
   return JSON.stringify({
     server: nvComment.server,
     params: nvComment.params,
@@ -302,12 +302,17 @@ window.commonHelper = {
         ) {
           throw new Error("Invalid server response");
         }
-        const serverResponse = serverResponseUnknown as NicoApiServerResponse;
+        const serverResponse = serverResponseUnknown;
+        const normalizedApiData = normalizeWatchResponseData(serverResponse);
+        if (!normalizedApiData) {
+          throw new Error("Watch応答に既知の動画データがありません");
+        }
+        const apiData = normalizedApiData as unknown as NicoApiData;
 
         return {
           serverContext: serverContext,
           serverResponse: serverResponse,
-          apiData: serverResponse.data.response,
+          apiData,
         };
       } catch (error) {
         console.error(error);
@@ -340,11 +345,16 @@ window.commonHelper = {
     apiData: NicoApiData,
     options: FetchNicoCommentsOptions = {},
   ): Promise<NicoCommentResult | void> => {
+    const nvComment = apiData.comment?.nvComment;
+    if (!nvComment) {
+      console.error("コメント接続情報がWatch APIデータにありません");
+      return;
+    }
+    const cacheKey =
+      createCommentCacheKey(nvComment) +
+      (options.bypassCommentFilter ? "|raw" : "|filtered");
     try {
-      const commentServer = apiData.comment.nvComment.server + "/v1/threads";
-      const cacheKey =
-        createCommentCacheKey(apiData) +
-        (options.bypassCommentFilter ? "|raw" : "|filtered");
+      const commentServer = nvComment.server + "/v1/threads";
       const cachedResult = getTimedCache(commentCache, cacheKey);
       if (cachedResult) {
         return cachedResult;
@@ -356,8 +366,8 @@ window.commonHelper = {
       }
 
       const requestBody = {
-        params: apiData.comment.nvComment.params,
-        threadKey: apiData.comment.nvComment.threadKey,
+        params: nvComment.params,
+        threadKey: nvComment.threadKey,
       };
 
       const request = (async (): Promise<NicoCommentResult | void> => {
@@ -407,9 +417,6 @@ window.commonHelper = {
     } catch (error) {
       console.error("コメントデータ取得エラー:", error);
     } finally {
-      const cacheKey =
-        createCommentCacheKey(apiData) +
-        (options.bypassCommentFilter ? "|raw" : "|filtered");
       commentInflight.delete(cacheKey);
     }
   },

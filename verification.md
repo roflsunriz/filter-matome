@@ -1,14 +1,20 @@
 # 検証手順
 
-## #258 原宿風Watchの投稿者名変更追従（2026-10-22）
+## #258 原宿風WatchとWatch V4の変更追従（2026-10-22）
 
-ニコニコ動画のWatch APIでユーザー投稿者名が`owner.nickname`から`owner.name`へ変わった条件を、メタデータ変換の単体テストと公式Watch相当のChromium fixtureで再現した。修正前は`name`だけの投稿者を無効と判定して`.HarajukuOwner`を生成しなかった。
+2026-10-22に保存した実Watchページソースを、値を出力せずキー・型・文字列長だけで確認した。`server-response.data.response`直下は従来の`video`・`owner`・`comment`ではなく`$watchV4`と`pcweb`であり、実データは`$watchV4.data.video.description`、`comment.nvComment`、`metadata.jsonLd.owner`へ移動していた。投稿者は`id`・`type`・`name`・`description`・`iconUrl`を持つ。描画後DOMを保存した別資料では`server-response`が除去され、Harajuku説明欄がempty、投稿者欄が0件の一方、公式の投稿者リンクは残る状態も確認した。
 
-修正版は`owner.name`を正本、`owner.nickname`を旧形式の互換として扱う。ユーザーIDとアイコンURLがそろう場合だけ投稿者欄を生成し、ユーザー投稿者がない場合は既存の`channel.name`へフォールバックする。単体テスト4件で現行形、旧形、チャンネル形、必須値欠損を確認し、Chromium lifecycleテスト4件で初期表示の現行形とSPA再入場後の旧形がそれぞれ1件だけ表示されることを確認した。
+修正版は共通層でWatch V4を既存内部形式へ正規化し、動画、コメント、タグ、投稿者、チャンネル、サムネイルURLを各機能へ渡す。投稿者名は正規化後の`owner.name`を正本、`owner.nickname`を旧形式の互換として扱う。ユーザーIDとアイコンURLがそろう場合だけ投稿者欄を生成し、チャンネル型は`channel.name`へ分岐する。
 
-公開前の全体検証では`bun run verify`がformat、lint、型検査、単体271件、Chromium E2E 92件、39ファイルのビルドを通過した。`python scripts/build-docs.py`、`mvn --batch-mode --quiet verify`、`bun install --frozen-lockfile`も成功した。`bun audit`は106パッケージ、`pip-audit -r requirements-docs.txt`はZensical 0.0.71を含む文書依存で既知の脆弱性0件だった。`bun outdated`で残るTypeScript 7.0.2は既知のtypescript-eslint・sandbox解析API非互換のため6.0.3を維持した。
+添付された実ページソースの`server-response`全体を正規化関数へ入力し、動画IDが文字列、説明文77文字、投稿者IDが文字列、投稿者名9文字、アイコンあり、コメントserverあり、threadKeyが文字列、タグ10件、互換thumbnail URLありになることを値非表示で確認した。投稿者名は互換`nickname`にも同じ値が入る。fixtureだけでなく実測応答で変換経路が成立している。
 
-ブラウザー安全ポリシーによりニコニコ動画の実ページは今回直接確認できていない。NicoCache_nlの通常キャッシュ・Service Worker経路、実利用ブラウザーでのユーザー投稿動画とチャンネル投稿動画は未検証として残り、公開前に`how-to-update.md`の実ページ手順で確認する。
+添付の描画後DOMへ実`server-response`を戻し、`common.ts`とビルド済みHarajukuモジュールを製品と同じ順で接続した。投稿者欄1件、投稿者名9文字、プロフィールリンクとアイコンあり、説明欄1件・ready・本文65文字、Harajuku chrome 1件を確認した。
+
+追加報告の`TypeError: can't access property "nvComment", e.comment is undefined`は、旧パスの`comment`へ`common.ts`が直接アクセスしたことで説明できる。Watch V4正規化後の`comment.nvComment`を使い、コメント情報がない異常応答でも例外を出さずコメント取得だけを利用不可として返す。実測構造を匿名値で再現した単体テストにより、ユーザー投稿、チャンネル投稿、旧Watch互換、未知応答の拒否を確認する。
+
+公開前の全体検証では`bun run verify`がformat、lint、型検査、単体276件、Chromium E2E 92件、39ファイルのビルドを通過した。`python scripts/build-docs.py`、`mvn --batch-mode --quiet verify`、`bun install --frozen-lockfile`も成功した。`bun audit`は106パッケージ、`pip-audit -r requirements-docs.txt`はZensical 0.0.71を含む文書依存で既知の脆弱性0件だった。`bun outdated`で残るTypeScript 7.0.2は既知のtypescript-eslint・sandbox解析API非互換のため6.0.3を維持した。
+
+実ページソースと描画後DOMは添付保存物で確認したが、NicoCache_nlの通常キャッシュ・Service Worker経路、実利用ブラウザーへ修正版を導入した状態、チャンネル投稿動画は未検証として残る。公開前に`how-to-update.md`の実ページ手順で確認する。
 
 ## #257 原宿風WatchのSPA再入場（2026-10-19）
 

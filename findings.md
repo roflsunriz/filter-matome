@@ -4,6 +4,7 @@
 - Java extensionは1個の実行class fileだけで完結させる。inner/anonymous/helper classを生成せず、Bun buildとは別にNicoCache本体とJDKでcompileする。
 - 公式assetをNicoCache経由でcaptureすると別filter適用済みの場合がある。SHAだけでCDN原本とみなさずmarker・対象class・本文hashを確認し、同一内容の複製を別世代に数えない。
 - nlFilterによる公式API変更はfilter、公開API、API status menu/probe、型、翻訳、test、文書を一体更新する。最低3世代+PC/responsiveで意味境界、一致数、対象外0、構文、参照関係を検証し、minify名のwildcard化で逃げない。
+- 2026-10-22実測のWatch HTMLでは、`server-response.data.response`直下が`$watchV4`と`pcweb`になった。動画・コメントは`$watchV4.data.video`と`comment`、投稿者は`$watchV4.data.metadata.jsonLd.owner`にある。共通層で旧内部形式へ一度だけ正規化し、各機能で新旧パスを重複判定しない。保存済み描画DOMだけではmetaが除かれる場合があるため、ページソースと描画DOMを区別する。
 - 自動probeは存在/版/method/markerだけを副作用なしで確認する。notification refresh、再取得、再生変更、menu操作などを診断目的で呼ばない。
 - 全編先読みはv2のplan/stateだけを公開し、browser bufferへ全編保持するv1を復活させない。同品質の完成cacheをNicoCache側で確認して100%とし、HLS limit・再生stateを変えない。
 - cache品質IDはcodec prefixを除いて `lowest` 等を保持し、実pixel heightと同一視しない。audioは数値kbps部分を使い、`hr` をbitrateと誤認しない。
@@ -11,7 +12,7 @@
 - 公式Watchのseekは公式mediaの `seek`→`setCurrentTime` 境界を使う。HTMLVideoElementだけ変えると内部時計が旧値へ戻す。local playerは別時計。
 - `window.NicoCache_nl.watch` はURL/media実体から取れないmetadataのfallbackに限定する。cache状態は `/api/v1/.../cache-entries`、実mediaは `/media/v1` を使い、旧 `/cache/*` を使わない。
 - 原宿panelは公式inline `left/top` に勝つ対象5panelの座標だけ `!important` を許可する。CSS更新時はcontractとnlFilterの版付きURLを揃え、同URL cache残留を避ける。
-- 原宿風Watchのユーザー投稿者名はWatch APIの現行`owner.name`を正本とし、旧`owner.nickname`を互換として残す。`channel.name`との分岐、ID・icon URLの必須条件は純粋変換の単体testとlifecycle testで固定する。
+- 原宿風Watchの現行投稿者は正規化後の`owner.name`を正本とし、旧`owner.nickname`を互換として残す。正規化元はWatch V4の`metadata.jsonLd.owner`で、説明文は同じV4データの`video.description`を使う。`owner.type`によるユーザー・チャンネル分岐、ID・icon URLの必須条件、新旧応答の互換を単体testとlifecycle testで固定する。
 - control endpointのport/tokenはdata rootのpropertyから読む。debug変更は元値を記録し、検証後に戻して再起動する。log/証明書/dataには秘密があるため出力・commitしない。
 - `scripts/build.ts` は軽量bootstrap、feature entry、Worker、静的HTMLを一括生成する。旧「単一bundle」説明を根拠にせず、`local/features` 全体buildと必要file検査を行う。
 - mlinkのSPA再初期化は処理中の後続遷移を破棄せず、完了後に最新DOMで再実行する。Watch専用moduleは非対象ページへの離脱で破棄されるため、再入場時に同じinstanceが渡されてもObserver、timer、DOM、非同期metadataを世代管理して再構築できる状態を保つ。

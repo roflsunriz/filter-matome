@@ -22,7 +22,8 @@
 
 ### Fixed
 
-- 【mlink-video-controller・原宿風Watch】ニコニコ動画のWatch APIでユーザー投稿者名が`owner.nickname`から`owner.name`へ変更された後も、投稿者欄を表示できるよう追従した。旧応答の`nickname`とチャンネル投稿も引き続き扱う。
+- 【mlink-video-controller・原宿風Watch】現行Watch V4で移動した投稿者情報と動画説明文を`$watchV4.data.metadata.jsonLd.owner`と`$watchV4.data.video.description`から取得し、投稿者欄と説明文を再表示できるよう修正した。旧Watch応答とチャンネル投稿も引き続き扱う。
+- 【common・movie-info・Mylist2】`server-response.data.response`直下が`$watchV4`と`pcweb`へ変更された後も、動画・投稿者・コメント・タグ・サムネイルを既存の内部形式へ正規化するよう修正した。`comment`がないデータでも`nvComment`参照で例外を発生させない。
 
 ## [#257] - 2026-10-19
 
