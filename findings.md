@@ -11,6 +11,7 @@
 - 公式Watchのseekは公式mediaの `seek`→`setCurrentTime` 境界を使う。HTMLVideoElementだけ変えると内部時計が旧値へ戻す。local playerは別時計。
 - `window.NicoCache_nl.watch` はURL/media実体から取れないmetadataのfallbackに限定する。cache状態は `/api/v1/.../cache-entries`、実mediaは `/media/v1` を使い、旧 `/cache/*` を使わない。
 - 原宿panelは公式inline `left/top` に勝つ対象5panelの座標だけ `!important` を許可する。CSS更新時はcontractとnlFilterの版付きURLを揃え、同URL cache残留を避ける。
+- 原宿風Watchのユーザー投稿者名はWatch APIの現行`owner.name`を正本とし、旧`owner.nickname`を互換として残す。`channel.name`との分岐、ID・icon URLの必須条件は純粋変換の単体testとlifecycle testで固定する。
 - control endpointのport/tokenはdata rootのpropertyから読む。debug変更は元値を記録し、検証後に戻して再起動する。log/証明書/dataには秘密があるため出力・commitしない。
 - `scripts/build.ts` は軽量bootstrap、feature entry、Worker、静的HTMLを一括生成する。旧「単一bundle」説明を根拠にせず、`local/features` 全体buildと必要file検査を行う。
 - mlinkのSPA再初期化は処理中の後続遷移を破棄せず、完了後に最新DOMで再実行する。Watch専用moduleは非対象ページへの離脱で破棄されるため、再入場時に同じinstanceが渡されてもObserver、timer、DOM、非同期metadataを世代管理して再構築できる状態を保つ。

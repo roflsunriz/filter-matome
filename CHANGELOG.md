@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [#258] - 2026-10-22
+
 ### Added
 
 - 【利用者向けドキュメント・Playwright】Issueの作成場所、重複検索、未サインイン時のログインと、Mylist2の初回作成・動画追加・バックアップを迷わず操作できるよう、実ページへ赤い枠・矢印・日本語ラベルを自動配置した案内画像を追加した。
@@ -15,6 +17,12 @@
 - GitHub Actions の月間利用時間を抑えるため、Dependabot version update と自動マージを毎週・即時処理から毎月28日（Asia/Tokyo）の月末一括処理へ変更した。
 - 【Issueガイド】現在のIssue Formに合わせて`.yml`テンプレート、`[Bug]`／`[Feature]`、記入項目、秘密情報の除去、脆弱性の連絡先を更新し、バグ報告と機能要求を直接開ける導線を追加した。
 - 【開発依存】push前監査で確認した互換範囲の更新として、typescript-eslintを8.72.0へ更新した。
+- 【文書依存】公開文書の互換範囲でZensicalを0.0.71へ更新した。
+- リリース番号、READMEのlatestバッジ、原宿風Watch stylesheetの版付きURLを258へ同期した。
+
+### Fixed
+
+- 【mlink-video-controller・原宿風Watch】ニコニコ動画のWatch APIでユーザー投稿者名が`owner.nickname`から`owner.name`へ変更された後も、投稿者欄を表示できるよう追従した。旧応答の`nickname`とチャンネル投稿も引き続き扱う。
 
 ## [#257] - 2026-10-19
 

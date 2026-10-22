@@ -19,6 +19,8 @@ export interface HarajukuWatchApiMetadata {
   owner: OwnerApiMetadata | null;
 }
 
+type UnknownRecord = Record<string, unknown>;
+
 interface StructuredVideoData {
   "@type"?: string;
   uploadDate?: string;
@@ -36,6 +38,71 @@ export const META_ITEMS: MetaItem[] = [
   { key: "postedAt", label: "投稿日時", source: "投稿日時" },
 ];
 
+function asRecord(value: unknown): UnknownRecord | undefined {
+  return typeof value === "object" && value !== null
+    ? (value as UnknownRecord)
+    : undefined;
+}
+
+function nonEmptyString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function accountId(value: unknown): string | number | undefined {
+  return typeof value === "string" || typeof value === "number"
+    ? value
+    : undefined;
+}
+
+function accountName(account: UnknownRecord): string | undefined {
+  return nonEmptyString(account.name) ?? nonEmptyString(account.nickname);
+}
+
+function buildOwnerMetadata(
+  value: unknown,
+  kind: "user" | "channel",
+): OwnerApiMetadata | null {
+  const account = asRecord(value);
+  if (!account) {
+    return null;
+  }
+
+  const id = accountId(account.id);
+  const name = accountName(account);
+  const iconUrl = nonEmptyString(account.iconUrl);
+  if (id === undefined || !name || !iconUrl) {
+    return null;
+  }
+
+  const fallbackHref = `/${kind}/${id}`;
+  const profileHref =
+    kind === "channel"
+      ? (nonEmptyString(account.url) ?? fallbackHref)
+      : fallbackHref;
+  return {
+    name,
+    profileHref,
+    videoHref: `${profileHref.replace(/\/$/, "")}/video`,
+    iconSrc: iconUrl,
+    iconAlt: name,
+  };
+}
+
+/** Watch APIの現行形と旧形を原宿UI用の安定したメタデータへ変換する。 */
+export function parseHarajukuWatchApiMetadata(
+  value: unknown,
+): HarajukuWatchApiMetadata {
+  const apiData = asRecord(value);
+  const video = asRecord(apiData?.video);
+  const descriptionHtml =
+    typeof video?.description === "string" ? video.description : "";
+  const owner =
+    buildOwnerMetadata(apiData?.owner, "user") ??
+    buildOwnerMetadata(apiData?.channel, "channel");
+
+  return { descriptionHtml, owner };
+}
+
 export async function loadHarajukuWatchApiMetadata(): Promise<HarajukuWatchApiMetadata | null> {
   const requestedVideoId =
     window.commonHelper.extractVideoIdFromUrl(window.location) ??
@@ -48,55 +115,7 @@ export async function loadHarajukuWatchApiMetadata(): Promise<HarajukuWatchApiMe
     return null;
   }
 
-  const apiData = result.apiData as unknown as {
-    video?: { description?: string };
-    owner?: {
-      id?: number | string;
-      nickname?: string;
-      iconUrl?: string;
-    } | null;
-    channel?: {
-      id?: number | string;
-      name?: string;
-      iconUrl?: string;
-      url?: string;
-    } | null;
-  };
-  const descriptionHtml =
-    typeof apiData.video?.description === "string"
-      ? apiData.video.description
-      : "";
-  const owner = apiData.owner;
-  if (owner?.id !== undefined && owner.nickname && owner.iconUrl) {
-    const profileHref = `/user/${owner.id}`;
-    return {
-      descriptionHtml,
-      owner: {
-        name: owner.nickname,
-        profileHref,
-        videoHref: `${profileHref}/video`,
-        iconSrc: owner.iconUrl,
-        iconAlt: owner.nickname,
-      },
-    };
-  }
-
-  const channel = apiData.channel;
-  if (channel?.id !== undefined && channel.name && channel.iconUrl) {
-    const profileHref = channel.url || `/channel/${channel.id}`;
-    return {
-      descriptionHtml,
-      owner: {
-        name: channel.name,
-        profileHref,
-        videoHref: `${profileHref.replace(/\/$/, "")}/video`,
-        iconSrc: channel.iconUrl,
-        iconAlt: channel.name,
-      },
-    };
-  }
-
-  return { descriptionHtml, owner: null };
+  return parseHarajukuWatchApiMetadata(result.apiData);
 }
 
 /** 視聴ページ上の複数ソースから原宿UI用統計を収集する。 */

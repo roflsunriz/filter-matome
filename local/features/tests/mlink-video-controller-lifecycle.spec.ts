@@ -237,6 +237,12 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
               description:
                 '<p>短い説明 <a href="https://example.com/details">詳細リンク</a> <a href="javascript:window.__unsafe = true">危険リンク</a></p><script>window.__unsafe = true</script>',
             },
+            owner: {
+              id: "4",
+              name: "現行投稿者",
+              nickname: "旧投稿者名",
+              iconUrl: "https://example.com/current-owner.png",
+            },
           },
         }) as Awaited<ReturnType<typeof window.commonHelper.fetchWatchPage>>,
       extractVideoIdFromUrl: () => "sm9",
@@ -265,6 +271,11 @@ test("Harajuku module creates interactive chrome and removes it on destroy", asy
   });
 
   await expect(page.locator(".HarajukuWatchChrome")).toHaveCount(1);
+  await expect(page.locator(".HarajukuOwner-name")).toHaveText("現行投稿者");
+  await expect(page.locator(".HarajukuOwner-name")).toHaveAttribute(
+    "href",
+    "/user/4",
+  );
   const logoIcon = page.locator('[data-fixture="harajuku-logo-icon"]');
   await expect(page.locator("#CommonHeader")).toHaveCSS("position", "relative");
   await expect(logoIcon).toHaveCSS("position", "absolute");
