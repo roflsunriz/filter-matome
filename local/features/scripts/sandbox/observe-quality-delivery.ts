@@ -198,7 +198,11 @@ const findDomandSnapshot = (
     return null;
   }
   const media = value.media;
-  const domand = isRecord(media) ? media.domand : null;
+  const domand = isRecord(media)
+    ? isRecord(media.domand)
+      ? media.domand
+      : media.contents
+    : null;
   if (
     isRecord(domand) &&
     Array.isArray(domand.videos) &&
@@ -291,6 +295,8 @@ const QUALITY_EVALUATION = String.raw`
       value && typeof value === 'object' && !Array.isArray(value) ? value : {};
     const serverResponse = record(parseMeta('server-response'));
     let response = record(record(serverResponse.data).response);
+    const watchV4 = record(record(response.$watchV4).data);
+    if (Object.keys(watchV4).length > 0) response = watchV4;
     if (
       Object.keys(response).length === 0 &&
       typeof window.commonHelper?.fetchWatchPage === 'function'

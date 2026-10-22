@@ -1,6 +1,23 @@
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 import { normalizeWatchResponseData } from "../src/common/watch-response-normalizer";
+
+const qualityObserver = readFileSync(
+  resolve(
+    import.meta.dirname,
+    "../scripts/sandbox/observe-quality-delivery.ts",
+  ),
+  "utf8",
+);
+const membershipObserver = readFileSync(
+  resolve(
+    import.meta.dirname,
+    "../scripts/sandbox/observe-membership-context.ts",
+  ),
+  "utf8",
+);
 
 const nvComment = {
   threadKey: "thread-key",
@@ -19,6 +36,25 @@ describe("normalizeWatchResponseData", () => {
                 id: "sm9",
                 description: "完全な動画説明",
                 thumbnail: { normal: "https://example.com/thumbnail.jpg" },
+              },
+              media: {
+                accessRightKey: "access-key",
+                contents: {
+                  videos: [{ id: "video", isAvailable: true }],
+                  audios: [{ id: "audio", isAvailable: true }],
+                },
+              },
+              payment: {
+                ppv: { isEnabled: false, showPromotion: false },
+                admission: { isEnabled: true, showPromotion: true },
+                continuationBenefit: {
+                  isEnabled: false,
+                  showPromotion: false,
+                },
+                premium: { isEnabled: false, showPromotion: false },
+                watchableUserType: "member",
+                commentableUserType: "member",
+                billingType: "channel",
               },
               comment: { nvComment },
               tags: { items: [{ name: "テスト" }] },
@@ -40,9 +76,10 @@ describe("normalizeWatchResponseData", () => {
       },
     });
 
-    expect(result?.video).toEqual({
+    expect(result?.video).toMatchObject({
       id: "sm9",
       description: "完全な動画説明",
+      watchableUserTypeForPayment: "member",
       thumbnail: {
         normal: "https://example.com/thumbnail.jpg",
         url: "https://example.com/thumbnail.jpg",
@@ -56,6 +93,27 @@ describe("normalizeWatchResponseData", () => {
     });
     expect(result?.comment).toEqual({ nvComment });
     expect(result?.tag).toEqual({ items: [{ name: "テスト" }] });
+    expect(result?.media).toMatchObject({
+      domand: {
+        accessRightKey: "access-key",
+        videos: [{ id: "video", isAvailable: true }],
+        audios: [{ id: "audio", isAvailable: true }],
+      },
+    });
+    expect(result?.payment).toMatchObject({
+      video: {
+        isPpv: false,
+        isAdmission: true,
+        isContinuationBenefit: false,
+        isPremium: false,
+        watchableUserType: "member",
+        commentableUserType: "member",
+        billingType: "channel",
+      },
+    });
+    expect(result?.video).toMatchObject({
+      watchableUserTypeForPayment: "member",
+    });
   });
 
   test("Watch V4のチャンネル投稿をchannelへ分岐する", () => {
@@ -104,5 +162,13 @@ describe("normalizeWatchResponseData", () => {
     expect(
       normalizeWatchResponseData({ data: { response: { pcweb: {} } } }),
     ).toBeUndefined();
+  });
+
+  test("raw観測スクリプトもWatch V4を展開する", () => {
+    expect(qualityObserver).toContain("response.$watchV4");
+    expect(qualityObserver).toContain("media.contents");
+    expect(membershipObserver).toContain("response.$watchV4");
+    expect(membershipObserver).toContain("enabled(payment.ppv)");
+    expect(membershipObserver).toContain("payment.watchableUserType");
   });
 });

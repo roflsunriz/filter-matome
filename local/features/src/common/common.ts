@@ -453,7 +453,10 @@ window.commonHelper = {
           // SPAレンダリング完了をチェック（NicoCache_nlが利用可能か、タイムアウト）
           const isReady =
             nicoCache?.watch?.getVideoID ||
-            nicoCache?.watch?.apiData?.video?.id;
+            (
+              normalizeWatchResponseData(nicoCache?.watch?.apiData) as
+                { video?: { id?: string } } | undefined
+            )?.video?.id;
           // @ts-expect-error - タイムアウト条件として使用
           if (isReady || attempts >= maxAttempts) {
             resolve();
@@ -495,7 +498,10 @@ window.commonHelper = {
       }
 
       // 2. フォールバック: APIデータから取得を試行
-      const videoId = nicoCache?.watch?.apiData?.video?.id;
+      const videoId = (
+        normalizeWatchResponseData(nicoCache?.watch?.apiData) as
+          { video?: { id?: string } } | undefined
+      )?.video?.id;
       if (videoId && typeof videoId === "string") {
         const fromApiData = normalizeVideoId(videoId);
         if (fromApiData) {

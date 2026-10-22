@@ -1,3 +1,5 @@
+import { normalizeWatchResponseData } from "@/common/watch-response-normalizer";
+
 const FRONTEND_ID = "6";
 const FRONTEND_VERSION = "0";
 const ACTION_TRACK_CHARACTERS =
@@ -59,7 +61,7 @@ type DeliverySelection = MovieInspection & {
 };
 
 type WatchEnvelope = {
-  data?: { response?: WatchResponse } | WatchResponse;
+  data?: unknown;
   meta?: { status?: number; errorCode?: string };
 };
 
@@ -130,10 +132,9 @@ export function createActionTrackId(now = Date.now()): string {
 }
 
 function watchResponseFrom(envelope: WatchEnvelope): WatchResponse | null {
-  const data = envelope.data;
-  if (!data) return null;
-  if ("response" in data) return data.response ?? null;
-  return data as WatchResponse;
+  return (
+    (normalizeWatchResponseData(envelope) as WatchResponse | undefined) ?? null
+  );
 }
 
 async function readJson<T>(response: Response, label: string): Promise<T> {
@@ -165,9 +166,13 @@ function createWatchUrl(
   videoId: string,
   actionTrackId: string,
 ): URL {
+  const origin =
+    typeof location === "undefined"
+      ? "https://www.nicovideo.jp"
+      : location.origin;
   const watchUrl = new URL(
     `/api/watch/${endpoint}/${encodeURIComponent(videoId)}`,
-    location.origin,
+    origin,
   );
   watchUrl.searchParams.set("_frontendId", FRONTEND_ID);
   watchUrl.searchParams.set("_frontendVersion", FRONTEND_VERSION);

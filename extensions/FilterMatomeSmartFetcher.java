@@ -24,7 +24,7 @@ import dareka.processor.*; import dareka.processor.impl.NicoCachingTitleRetrieve
  */
 public final class FilterMatomeSmartFetcher
         implements Extension2, Processor, SystemEventListener {
-    public static final int REVISION = 26081801; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
+    public static final int REVISION = 26102201; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
     private static final String API_PREFIX = "/api/v1/extensions/filter-matome/smart-fetcher/", REQUIRED_HEADER = "X-Filter-Matome-Smart-Fetcher";
     private static final Pattern API_URL = Pattern.compile( "^https?://nicocachenl\\.test" + API_PREFIX + "(state|schedule|settings|run-now|cancel|remove|remove-history|clear-history|credentials|clear-credentials)"
                     + "(?:\\?([^#]*))?$", Pattern.CASE_INSENSITIVE);
@@ -376,13 +376,11 @@ public final class FilterMatomeSmartFetcher
             watchEnvelope = requestJson( "https://www.nicovideo.jp/api/watch/v3_guest/" + videoId + query, "GET", watchHeaders, null, false);
         } else if (status < 200L || status >= 300L) {
             throw new IOException("watch API: HTTP " + status + (errorCode == null ? "" : " (" + errorCode + ")")); }
-        JsonObject watch = watchEnvelope.getObject("data", "response");
-        if (watch == null) {
-            watch = watchEnvelope.getObject("data"); }
-        JsonObject domand = watch == null ? null : watch.getObject("media", "domand"); NicoCachingTitleRetriever.putTitleCache(videoId, watch == null ? null : Json.getString(watch, "video", "title"));
-        String accessKey = domand == null ? null : Json.getString(domand, "accessRightKey");
-        String videoQuality = selectBestQuality( domand == null ? null : domand.getArray("videos"));
-        String audioQuality = selectBestQuality( domand == null ? null : domand.getArray("audios"));
+        JsonObject watch = ExtUtil.selectWatchData(watchEnvelope);
+        JsonObject media = watch == null ? null : watch.getObject("media"), domand = media == null ? null : media.getObject("domand"), delivery = domand != null ? domand : media == null ? null : media.getObject("contents"); NicoCachingTitleRetriever.putTitleCache(videoId, watch == null ? null : Json.getString(watch, "video", "title"));
+        String accessKey = domand != null ? Json.getString(domand, "accessRightKey") : Json.getString(media, "accessRightKey");
+        String videoQuality = selectBestQuality( delivery == null ? null : delivery.getArray("videos"));
+        String audioQuality = selectBestQuality( delivery == null ? null : delivery.getArray("audios"));
         if (accessKey == null || videoQuality == null || audioQuality == null) {
             throw new IOException("利用可能なDomand配信がありません"); }
         String watchTrackId = Json.getString(watch, "client", "watchTrackId");

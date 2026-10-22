@@ -1,8 +1,10 @@
 サーバーAPIエンドポイント（視聴ページ）：https://www.nicovideo.jp/watch/${SMID}
-ここにアクセスし、metaタグのserver-responseのcontentにJSONがあり、それを取得する。そのJSONの中のdata.responseがapiData。
+ここにアクセスし、metaタグのserver-responseのcontentにJSONがあり、それを取得する。2026-10-22実測の現行形は`data.response.$watchV4.data`がWatchデータで、`data.response.pcweb`が併存する。旧形は`data.response`自体がWatchデータだった。
 ただし、生のJSONではなくHTMLエンコードとUNICODEエンコードされているので、それをデコードする。
 
 metaタグのserver-contextとserver-responseは公式スクリプトが視聴ページレンダリング後自動消去してしまうのでfetchやxmlHttpRequestで視聴ページにアクセスして取得する必要がある。DOMから取得する方法では取れない。
+
+実装では`common/watch-response-normalizer.ts`を正本とし、現行`$watchV4.data`と旧`data.response`を同じ内部形式へ正規化する。以下の詳細型は旧Watch応答および正規化後の内部形式を説明するもので、現行raw V4の直下構造ではない。現行raw V4では投稿者が`metadata.jsonLd.owner`、タグが`tags`、配信候補が`media.contents`、アクセス権キーが`media.accessRightKey`にある。
 
 # 1) 最小構造(TypeScript型)
 
@@ -425,7 +427,7 @@ export interface Waku {
 
 * PPV境界
 
-  * 視聴/コメント可否は `payment.video.*` と `video.isAuthenticationRequired`、さらに `series.video.*.isPaymentRequired` を併読。
+  * 旧形の視聴/コメント可否は `payment.video.*`、現行V4は`payment.{ppv,admission,continuationBenefit,premium}.isEnabled`と`payment.watchableUserType`を使う。共通正規化後は旧`payment.video.*`としても参照できる。`video.isAuthenticationRequired`と`series.video.*.isPaymentRequired`も必要に応じて併読する。
 
 * コメント描画
 

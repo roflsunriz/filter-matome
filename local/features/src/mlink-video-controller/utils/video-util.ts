@@ -3,6 +3,7 @@
 import "@/types/global.d.ts";
 import { VideoOperation, SimpleVideoInfo } from "@/types/video-types";
 import { NicoCache_nlInterface } from "@/types/global-types";
+import { normalizeWatchResponseData } from "@/common/watch-response-normalizer";
 import {
   getCacheRemovalNotice,
   removeCacheForVideo,
@@ -34,15 +35,15 @@ export const handleVideoOperation = (
 export const getVideoInfo = async (): Promise<SimpleVideoInfo> => {
   const nicoCache = (window as Window & { NicoCache_nl: NicoCache_nlInterface })
     .NicoCache_nl;
-  const videoTitle = nicoCache?.watch?.apiData?.video
-    ? nicoCache.watch.apiData.video.title || ""
-    : "";
+  const apiData = normalizeWatchResponseData(nicoCache?.watch?.apiData) as
+    NicoCache_nlInterface["watch"]["apiData"] | undefined;
+  const videoTitle = apiData?.video?.title || "";
   const videoId = await getActiveVideoId();
 
   return {
     videoId,
     threadId: nicoCache?.watch
-      ? nicoCache?.watch?.apiData?.comment?.threads?.find(
+      ? apiData?.comment?.threads?.find(
           (thread) => thread.isDefaultPostTarget === true,
         )?.id || ""
       : "",
@@ -54,7 +55,9 @@ export const handleCacheRemove = async (videoId: string): Promise<void> => {
   if (!videoId) return;
   const nicoCache = (window as Window & { NicoCache_nl: NicoCache_nlInterface })
     .NicoCache_nl;
-  const videoTitle = nicoCache?.watch?.apiData?.video?.title || "";
+  const apiData = normalizeWatchResponseData(nicoCache?.watch?.apiData) as
+    NicoCache_nlInterface["watch"]["apiData"] | undefined;
+  const videoTitle = apiData?.video?.title || "";
   if (confirm("本当に削除しますか？: " + videoId + " " + videoTitle)) {
     try {
       const result = await removeCacheForVideo(videoId);

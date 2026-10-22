@@ -5,6 +5,17 @@ const asRecord = (value: unknown): UnknownRecord | undefined =>
     ? (value as UnknownRecord)
     : undefined;
 
+const isWatchData = (
+  value: UnknownRecord | undefined,
+): value is UnknownRecord =>
+  Boolean(
+    value &&
+    (asRecord(value.video) ||
+      asRecord(value.media) ||
+      asRecord(value.comment) ||
+      asRecord(value.client)),
+  );
+
 const normalizeOwner = (
   value: unknown,
 ): { owner?: UnknownRecord; channel?: UnknownRecord } => {
@@ -33,7 +44,17 @@ export const normalizeWatchResponseData = (
 ): UnknownRecord | undefined => {
   const root = asRecord(value);
   const data = asRecord(root?.data);
-  const response = asRecord(data?.response);
+  const response =
+    asRecord(data?.response) ??
+    (asRecord(data?.$watchV4)
+      ? data
+      : asRecord(root?.$watchV4)
+        ? root
+        : isWatchData(data)
+          ? data
+          : isWatchData(root)
+            ? root
+            : undefined);
   if (!response) {
     return undefined;
   }
@@ -41,7 +62,7 @@ export const normalizeWatchResponseData = (
   const watchV4 = asRecord(response.$watchV4);
   const watchV4Data = asRecord(watchV4?.data);
   if (!watchV4Data) {
-    return asRecord(response.video) ? response : undefined;
+    return isWatchData(response) ? response : undefined;
   }
 
   const metadata = asRecord(watchV4Data.metadata);
@@ -56,9 +77,36 @@ export const normalizeWatchResponseData = (
     rawThumbnail?.large ??
     rawThumbnail?.player ??
     rawThumbnail?.ogp;
+  const rawPayment = asRecord(watchV4Data.payment);
+  const rawPaymentVideo = asRecord(rawPayment?.video);
+  const paymentVideo =
+    rawPaymentVideo ??
+    (rawPayment
+      ? {
+          isPpv: asRecord(rawPayment.ppv)?.isEnabled,
+          isAdmission: asRecord(rawPayment.admission)?.isEnabled,
+          isContinuationBenefit: asRecord(rawPayment.continuationBenefit)
+            ?.isEnabled,
+          isPremium: asRecord(rawPayment.premium)?.isEnabled,
+          watchableUserType: rawPayment.watchableUserType,
+          commentableUserType: rawPayment.commentableUserType,
+          billingType: rawPayment.billingType,
+        }
+      : undefined);
+  const payment = rawPayment
+    ? {
+        ...rawPayment,
+        ...(paymentVideo ? { video: paymentVideo } : {}),
+      }
+    : undefined;
   const video = rawVideo
     ? {
         ...rawVideo,
+        ...(typeof paymentVideo?.watchableUserType === "string"
+          ? {
+              watchableUserTypeForPayment: paymentVideo.watchableUserType,
+            }
+          : {}),
         ...(rawThumbnail
           ? {
               thumbnail: {
@@ -71,9 +119,26 @@ export const normalizeWatchResponseData = (
           : {}),
       }
     : undefined;
+  const rawMedia = asRecord(watchV4Data.media);
+  const contents = asRecord(rawMedia?.contents);
+  const media = rawMedia
+    ? {
+        ...rawMedia,
+        ...(contents && !rawMedia.domand
+          ? {
+              domand: {
+                ...contents,
+                accessRightKey: rawMedia.accessRightKey,
+              },
+            }
+          : {}),
+      }
+    : undefined;
   return {
     ...watchV4Data,
     ...(video ? { video } : {}),
+    ...(media ? { media } : {}),
+    ...(payment ? { payment } : {}),
     ...ownerFields,
     ...(watchV4Data.tags && !watchV4Data.tag ? { tag: watchV4Data.tags } : {}),
   };

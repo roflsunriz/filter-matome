@@ -70,7 +70,7 @@ filter-matomeでは公式の会員・購入権利を偽装せず、認可済み�
 
 | 権利 | 主なフラグ・値 | 意味 |
 | --- | --- | --- |
-| プレミアム限定動画 | `payment.video.isPremium`、`needPremiumPayment` | 動画自体がプレミアム契約を要求 |
+| プレミアム限定動画 | 旧`payment.video.isPremium`、V4`payment.premium.isEnabled`、`needPremiumPayment` | 動画自体がプレミアム契約を要求 |
 | チャンネル入会 | `isAdmission`、`watchableUserType` | 対象チャンネルの会員権 |
 | 継続入会特典 | `isContinuationBenefit` | 入会期間に基づく権利 |
 | PPV | `isPpv`、`billingType` | 個別購入・レンタル等の権利 |

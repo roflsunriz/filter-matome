@@ -15,6 +15,14 @@ const fetcherPath = resolve(
 );
 const scheduler = readFileSync(schedulerPath, "utf8");
 const fetcher = readFileSync(fetcherPath, "utf8");
+const seriesAlerts = readFileSync(
+  resolve(repositoryRoot, "extensions", "FilterMatomeSeriesAlerts.java"),
+  "utf8",
+);
+const extUtil = readFileSync(
+  resolve(repositoryRoot, "extensions", "ExtUtil.java"),
+  "utf8",
+);
 const schedulerClient = readFileSync(
   resolve(
     repositoryRoot,
@@ -92,6 +100,17 @@ describe("smartFetcher Java extension contract", () => {
     expect(fetcher).toContain("throttle(total");
     expect(fetcher).toContain("hasCompletedCache(videoId)");
     expect(fetcher).toContain("new Cache(video).exists()");
+  });
+
+  test("Watch V4のHTMLフォールバックをJava拡張でも扱う", () => {
+    expect(extUtil).not.toContain("改変はしないでください");
+    expect(extUtil).toContain("static JsonObject selectWatchData");
+    expect(extUtil).toContain('getObject("$watchV4", "data")');
+    expect(scheduler).toContain("ExtUtil.selectWatchData");
+    expect(scheduler).toContain('media.getObject("contents")');
+    expect(scheduler).toContain('Json.getString(media, "accessRightKey")');
+    expect(seriesAlerts).toContain("ExtUtil.selectWatchData");
+    expect(seriesAlerts).toContain('"series", "video", "next"');
   });
 
   test("取得履歴の個別・一括削除は履歴だけを永続化する", () => {

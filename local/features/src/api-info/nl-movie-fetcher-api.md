@@ -21,7 +21,7 @@ Cookie、`accessRightKey`、署名付きクエリー、ユーザーID、視聴�
 
 ## 旧実装との差分
 
-230716版は `media.delivery.movie.session` のDMCセッションと、音声を内包する単一HLSを前提にしている。現行レスポンスは `media.domand` を使用し、アクセス権APIが返すマスタープレイリストから映像と音声を別々のmedia playlistとして取得する。各playlistには `EXT-X-MAP`、`EXT-X-KEY`、暗号化CMAF断片が含まれる。
+230716版は `media.delivery.movie.session` のDMCセッションと、音声を内包する単一HLSを前提にしている。旧Watch APIは`media.domand`、現行Watch HTML V4は`media.contents`と`media.accessRightKey`を使用する。共通正規化後はどちらも`media.domand`として扱い、アクセス権APIが返すマスタープレイリストから映像と音声を別々のmedia playlistとして取得する。各playlistには `EXT-X-MAP`、`EXT-X-KEY`、暗号化CMAF断片が含まれる。
 
 旧実装のDMCセッション生成、単一子playlistの走査、旧mylist/deflist/video.array API、2015〜2022年のDOMセレクターは利用しない。
 
@@ -38,6 +38,8 @@ X-Frontend-Version: 0
 未ログインの隔離プロファイルでは通常版がHTTP 400 `UNAUTHORIZED`、ゲスト版がHTTP 200になった。したがって通常版を先に呼び、HTTP 401またはHTTP 400 `UNAUTHORIZED`の場合だけ、同じqueryとheaderで`/api/watch/v3_guest/{videoId}`へフォールバックする。ログイン中にゲスト版を固定使用するとHTTP 400 `FORBIDDEN`になる環境があるため、認証状態を無視してゲスト版へ固定しない。
 
 2026-08-07のサーバー側再確認では、ブラウザー外から同じWatch APIを直接呼ぶとHTTP 406のHTMLになる経路があった。smartFetcherは通常版・ゲスト版のJSON交渉を優先し、JSONを取得できない場合だけ、同じ保存Cookieで`/watch/{videoId}`を取得してHTMLエスケープ済みの`meta[name="server-response"]`を復元する。本文、Cookie、`accessRightKey`はログへ出さず、復元後も下記と同じ最小フィールドとホスト制限を適用する。2026-08-07の公開`sm9`で、このフォールバックからaccess-rights APIの署名済みDomand URLまで到達することを、ダウンロードを開始しないプローブで確認した。
+
+2026-10-22のWatch HTMLは`data.response.$watchV4.data`へ移行した。Javaは`ExtUtil.selectWatchData`、TypeScriptは`common/watch-response-normalizer.ts`を使い、直接APIとHTMLフォールバックのどちらが旧形式・V4形式でも同じ内部形へ変換する。直接`/api/watch/v3`の同日実応答は未確認のため、移行済みとは断定しない。
 
 使用する最小フィールドは次のとおり。
 
@@ -61,7 +63,7 @@ interface WatchResponse {
 ```http
 POST https://nvapi.nicovideo.jp/v1/watch/{videoId}/access-rights/hls?actionTrackId={watchTrackId}
 Content-Type: application/json
-X-Access-Right-Key: {media.domand.accessRightKey}
+X-Access-Right-Key: {正規化後media.domand.accessRightKey}
 X-Frontend-Id: 6
 X-Frontend-Version: 0
 X-Request-With: https://www.nicovideo.jp

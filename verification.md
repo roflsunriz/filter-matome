@@ -12,7 +12,13 @@
 
 追加報告の`TypeError: can't access property "nvComment", e.comment is undefined`は、旧パスの`comment`へ`common.ts`が直接アクセスしたことで説明できる。Watch V4正規化後の`comment.nvComment`を使い、コメント情報がない異常応答でも例外を出さずコメント取得だけを利用不可として返す。実測構造を匿名値で再現した単体テストにより、ユーザー投稿、チャンネル投稿、旧Watch互換、未知応答の拒否を確認する。
 
-公開前の全体検証では`bun run verify`がformat、lint、型検査、単体276件、Chromium E2E 92件、39ファイルのビルドを通過した。`python scripts/build-docs.py`、`mvn --batch-mode --quiet verify`、`bun install --frozen-lockfile`も成功した。`bun audit`は106パッケージ、`pip-audit -r requirements-docs.txt`はZensical 0.0.71を含む文書依存で既知の脆弱性0件だった。`bun outdated`で残るTypeScript 7.0.2は既知のtypescript-eslint・sandbox解析API非互換のため6.0.3を維持した。
+リポジトリ全体を横断監査し、HTML埋め込みを読むcommon・Harajuku・Movie Info・Mylist2・watch-history、直接Watch APIを読むmovie-fetcher・video-info、`NicoCache_nl.watch.apiData`を読む動画ID・タイトル・タグ・スレッド経路、JavaのSmartFetcher・Series Alerts、画質・会員状態sandbox、型とAPI資料を確認した。TypeScriptは共通正規化、Javaは`ExtUtil.selectWatchData`へ集約した。旧direct、旧`response`、V4 direct、V4 `response`の4形とV4 seriesをJava実行テストで確認した。
+
+`ExtUtil.java`はメンテナー指示に基づき改変禁止の記述を削除し、CP932からUTF-8へ移行した。NicoCache_nl本体JARをclasspathにしてExtUtil、SmartFetcher、Series Alerts、nlMovieFetcherを同時コンパイルし、生成物が同名4クラスだけで追加inner/helper classがないことを確認した。追跡中classはExtUtil・SmartFetcher・Series Alertsを更新し、`javap`で3クラスのrevision 26102201と`ExtUtil.selectWatchData`の公開を確認した。
+
+直接`/api/watch/v3`と`v3_guest`の2026-10-22実応答は添付資料に含まれず未確認である。旧形式とV4形式の両fixtureをmovie-fetcher・video-info・Java共通選択へ通しており、どちらでも処理できるが、移行済みとは断定しない。
+
+公開前の全体検証では`bun run verify`がformat、lint、型検査、単体280件、Chromium E2E 92件、39ファイルのビルドを通過した。`python scripts/build-docs.py`、`mvn --batch-mode --quiet verify`、`bun install --frozen-lockfile`も成功した。Mavenは最初の並列実行で隔離updaterのETag再利用検査が1回失敗したが、同テスト単独と全33件の再実行は成功した。`bun audit`は106パッケージ、`pip-audit -r requirements-docs.txt`はZensical 0.0.71を含む文書依存で既知の脆弱性0件だった。`bun outdated`で残るTypeScript 7.0.2は既知のtypescript-eslint・sandbox解析API非互換のため6.0.3を維持した。
 
 実ページソースと描画後DOMは添付保存物で確認したが、NicoCache_nlの通常キャッシュ・Service Worker経路、実利用ブラウザーへ修正版を導入した状態、チャンネル投稿動画は未検証として残る。公開前に`how-to-update.md`の実ページ手順で確認する。
 

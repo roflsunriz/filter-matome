@@ -30,11 +30,12 @@
     serverResponse = JSON.parse(JSON.parse(contentDecoded));
   }
 
-  // メモ仕様：data.response が apiData （なければ他候補も探索）
-  const apiData =
+  // 現行Watch V4を優先し、旧Watch応答も互換として扱う。
+  const response =
     serverResponse?.data?.response ??
     serverResponse?.response ??
     serverResponse?.apiData;
+  const apiData = response?.$watchV4?.data ?? response;
   if (!apiData) throw new Error('apiData not found in server-response');
 
   const nv = apiData?.comment?.nvComment;

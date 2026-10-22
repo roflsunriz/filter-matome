@@ -6,6 +6,7 @@ import {
   ModuleStatus,
 } from "@/types/module-types";
 import { createMaterialIcon } from "@/common/material-icons";
+import { normalizeWatchResponseData } from "@/common/watch-response-normalizer";
 
 type CancelableCallback = (() => void) & { cancel(): void };
 
@@ -239,7 +240,10 @@ export class WatchPageModule implements ModuleInstance {
     }
 
     // DOM構築前はAPIデータをフォールバックにする
-    const tagItems = window.NicoCache_nl?.watch?.apiData?.tag?.items;
+    const apiData = normalizeWatchResponseData(
+      window.NicoCache_nl?.watch?.apiData,
+    ) as { tag?: { items?: unknown[] } } | undefined;
+    const tagItems = apiData?.tag?.items;
     if (Array.isArray(tagItems)) {
       return tagItems.length;
     }
@@ -411,8 +415,11 @@ export class WatchPageModule implements ModuleInstance {
     let title = "無題";
 
     // 1. NicoCache_nlのAPIデータから取得
-    if (window.NicoCache_nl?.watch?.apiData?.video?.title) {
-      title = window.NicoCache_nl.watch.apiData.video.title;
+    const apiData = normalizeWatchResponseData(
+      window.NicoCache_nl?.watch?.apiData,
+    ) as { video?: { title?: string } } | undefined;
+    if (apiData?.video?.title) {
+      title = apiData.video.title;
     }
     // 2. ページタイトルから取得（フォールバック）
     else if (document.title && document.title !== "ニコニコ動画") {

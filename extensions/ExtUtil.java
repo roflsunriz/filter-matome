@@ -1,7 +1,6 @@
 /**
- * ExtUtil: Extension‚ğì‚éã‚Å–ğ—§‚¿‚»‚¤‚È’èŒ^ˆ—‚ğ‚Ü‚Æ‚ß‚½ƒ†[ƒeƒBƒŠƒeƒBƒNƒ‰ƒX
+ * ExtUtil: Extensionã‚’ä½œã‚‹ä¸Šã§å½¹ç«‹ã¡ãã†ãªå®šå‹å‡¦ç†ã‚’ã¾ã¨ã‚ãŸãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£ã‚¯ãƒ©ã‚¹
  * 
- * ‚±‚Ìƒtƒ@ƒCƒ‹‚ğ‘¼‚ÌExtension‚É“¯«‚µ‚Ä‚à\‚¢‚Ü‚¹‚ñ‚ªA‰ü•Ï‚Í‚µ‚È‚¢‚Å‚­‚¾‚³‚¢B
  */
 package extensions;
 
@@ -31,6 +30,7 @@ import dareka.NLMain;
 import dareka.common.CloseUtil;
 import dareka.common.LoggerHandler;
 import dareka.common.Pair;
+import dareka.common.json.JsonObject;
 import dareka.extensions.Extension2;
 import dareka.extensions.ExtensionManager;
 import dareka.processor.HttpHeader;
@@ -40,18 +40,18 @@ import dareka.processor.StringResource;
 import dareka.processor.URLResource;
 import dareka.processor.impl.EasyRewriter;
 
-// XV—š—ğ:
+// æ›´æ–°å±¥æ­´:
 //
-// 100905 ‰”Å(ƒeƒXƒg”Å‚Æ‚ÌŒİŠ·«‚Í‚ ‚è‚Ü‚¹‚ñ)
-// 100909 getInteger()‚ğ’Ç‰Á
-// 101028 matchNGtitle()‚ª•”•ªˆê’v‚µ‚È‚©‚Á‚½•s‹ï‡‚ğC³
-// 110110 isNGvideoId()‚ğ’Ç‰ÁANGŒn‚ğEasyRewriter.LST‚ğg‚¤‚æ‚¤‚É•ÏX
-// 110125 ƒƒOo—Íü‚è‚ğ+110125mod‚ÌŠg’£ƒƒK[‚ğg‚¤‚æ‚¤‚É•ÏX
+// 100905 åˆç‰ˆ(ãƒ†ã‚¹ãƒˆç‰ˆã¨ã®äº’æ›æ€§ã¯ã‚ã‚Šã¾ã›ã‚“)
+// 100909 getInteger()ã‚’è¿½åŠ 
+// 101028 matchNGtitle()ãŒéƒ¨åˆ†ä¸€è‡´ã—ãªã‹ã£ãŸä¸å…·åˆã‚’ä¿®æ­£
+// 110110 isNGvideoId()ã‚’è¿½åŠ ã€NGç³»ã‚’EasyRewriter.LSTã‚’ä½¿ã†ã‚ˆã†ã«å¤‰æ›´
+// 110125 ãƒ­ã‚°å‡ºåŠ›å‘¨ã‚Šã‚’+110125modã®æ‹¡å¼µãƒ­ã‚¬ãƒ¼ã‚’ä½¿ã†ã‚ˆã†ã«å¤‰æ›´
 //
 public class ExtUtil extends Thread implements Extension2, Runnable {
 	
-	/** ExtUtil‚ÌƒŠƒrƒWƒ‡ƒ“‚ğ”»’è‚·‚éê‡‚Í‚±‚Ì’l‚ğQÆ‚·‚é */
-	public static final int REVISION = 110125;
+	/** ExtUtilã®ãƒªãƒ“ã‚¸ãƒ§ãƒ³ã‚’åˆ¤å®šã™ã‚‹å ´åˆã¯ã“ã®å€¤ã‚’å‚ç…§ã™ã‚‹ */
+	public static final int REVISION = 26102201;
 	public static final String VER_STRING = "ExtUtil_" + REVISION;
 	
 	private static final Pattern URL_HOST_PATTERN = Pattern.compile("https?://([^/]+)");
@@ -83,7 +83,7 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 		}
 	}
 	
-	// “à•”—p‚ÉŒÂX‚Ìó‘Ô‚ğ•Û‚·‚éƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+	// å†…éƒ¨ç”¨ã«å€‹ã€…ã®çŠ¶æ…‹ã‚’ä¿æŒã™ã‚‹ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 	private ExtUtil(Extension2 caller, String methodName, Object param) {
 		this.caller = caller;
 		this.methodName = methodName;
@@ -94,7 +94,7 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	
 	// Extension2 interface
 	public void registerExtensions(ExtensionManager mgr) {
-		// Extension‚Æ‚µ‚Ä‚Í‰½‚à‚µ‚È‚¢
+		// Extensionã¨ã—ã¦ã¯ä½•ã‚‚ã—ãªã„
 	}
 	
 	public String getVersionString() {
@@ -121,27 +121,27 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * ExtUtil‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+	 * ExtUtilã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 	 * <p>
-	 * ŒÄ‚Ño‚µŒ³‚Ìî•ñ‚ğ•K—v‚Æ‚·‚éAPI‚ÍƒCƒ“ƒXƒ^ƒ“ƒXƒƒ\ƒbƒh‚Æ‚µ‚ÄÀ‘•‚µ‚Ä‚¢‚éB
-	 * ‚»‚Ì‚½‚ßA‚»‚ê‚ç‚ÌAPI‚ğ—˜—p‚·‚é‚É‚ÍAƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚µ‚ÄŒÄ‚Ño‚µŒ³‚Ì
-	 * Extension‚ğExtUtil‚É“o˜^‚·‚é•K—v‚ª‚ ‚éB
-	 * ‚Ü‚½AŒÄ‚Ño‚µŒ³‚ÌExtension‚ÅˆÈ‰º‚Ìƒƒ\ƒbƒh‚ğ’è‹`‚·‚é‚±‚Æ‚ÅAƒCƒxƒ“ƒg–ˆ‚É
-	 * ExtUtil‚©‚çƒR[ƒ‹ƒoƒbƒN‚ğó‚¯æ‚é‚±‚Æ‚ª‚Å‚«‚éB
+	 * å‘¼ã³å‡ºã—å…ƒã®æƒ…å ±ã‚’å¿…è¦ã¨ã™ã‚‹APIã¯ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ãƒ¡ã‚½ãƒƒãƒ‰ã¨ã—ã¦å®Ÿè£…ã—ã¦ã„ã‚‹ã€‚
+	 * ãã®ãŸã‚ã€ãã‚Œã‚‰ã®APIã‚’åˆ©ç”¨ã™ã‚‹ã«ã¯ã€ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã—ã¦å‘¼ã³å‡ºã—å…ƒã®
+	 * Extensionã‚’ExtUtilã«ç™»éŒ²ã™ã‚‹å¿…è¦ãŒã‚ã‚‹ã€‚
+	 * ã¾ãŸã€å‘¼ã³å‡ºã—å…ƒã®Extensionã§ä»¥ä¸‹ã®ãƒ¡ã‚½ãƒƒãƒ‰ã‚’å®šç¾©ã™ã‚‹ã“ã¨ã§ã€ã‚¤ãƒ™ãƒ³ãƒˆæ¯ã«
+	 * ExtUtilã‹ã‚‰ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã‚’å—ã‘å–ã‚‹ã“ã¨ãŒã§ãã‚‹ã€‚
 	 * <pre>
 	 * public void onMinutes():
-	 *   1•ªŠÔŠu‚ÅŒÄ‚Ño‚³‚ê‚éBƒVƒ“ƒOƒ‹ƒXƒŒƒbƒh‚Å“o˜^‚³‚ê‚½Extension‚ğ
-	 *   ‡”Ô‚ÉŒÄ‚Ño‚·‚Ì‚ÅA•K‚¸‚µ‚à“™ŠÔŠu‚ÅŒÄ‚Ño‚³‚ê‚é‚í‚¯‚Å‚Í‚È‚¢B
+	 *   1åˆ†é–“éš”ã§å‘¼ã³å‡ºã•ã‚Œã‚‹ã€‚ã‚·ãƒ³ã‚°ãƒ«ã‚¹ãƒ¬ãƒƒãƒ‰ã§ç™»éŒ²ã•ã‚ŒãŸExtensionã‚’
+	 *   é †ç•ªã«å‘¼ã³å‡ºã™ã®ã§ã€å¿…ãšã—ã‚‚ç­‰é–“éš”ã§å‘¼ã³å‡ºã•ã‚Œã‚‹ã‚ã‘ã§ã¯ãªã„ã€‚
 	 * public void onShutdown():
-	 *   shutdown‚ÉŒÄ‚Ño‚³‚ê‚éB•Û‘¶“™‚ÌI—¹ˆ—‚ğs‚¤–‚ª‚Å‚«‚éB
+	 *   shutdownæ™‚ã«å‘¼ã³å‡ºã•ã‚Œã‚‹ã€‚ä¿å­˜ç­‰ã®çµ‚äº†å‡¦ç†ã‚’è¡Œã†äº‹ãŒã§ãã‚‹ã€‚
 	 *   
-	 * reflact API‚ğg‚Á‚Ä“®“I‚Éƒƒ\ƒbƒh‚ğŒŸõ‚·‚é‚Ì‚ÅAinterface‚Ì‚æ‚¤‚É
-	 * •K‚¸ƒƒ\ƒbƒh‚ğ’è‹`‚·‚é•K—v‚Í–³‚¢(g‚í‚È‚¢‚à‚Ì‚Í’è‹`‚µ‚È‚­‚Ä—Ç‚¢)B</pre>
+	 * reflact APIã‚’ä½¿ã£ã¦å‹•çš„ã«ãƒ¡ã‚½ãƒƒãƒ‰ã‚’æ¤œç´¢ã™ã‚‹ã®ã§ã€interfaceã®ã‚ˆã†ã«
+	 * å¿…ãšãƒ¡ã‚½ãƒƒãƒ‰ã‚’å®šç¾©ã™ã‚‹å¿…è¦ã¯ç„¡ã„(ä½¿ã‚ãªã„ã‚‚ã®ã¯å®šç¾©ã—ãªãã¦è‰¯ã„)ã€‚</pre>
 	 * 
-	 * @param extension “o˜^‚·‚éExtension‚ÌƒCƒ“ƒXƒ^ƒ“ƒX
-	 * @param prefix    ƒƒO‚ğ•\¦‚·‚é‚ÌƒvƒŒƒtƒBƒbƒNƒX•¶š—ñ(null‚È‚çŒÄ‚Ño‚µŒ³ƒNƒ‰ƒX–¼)
-	 * @param propDebug ƒfƒoƒbƒOƒ‚[ƒhó‘Ô‚ğæ“¾‚·‚éƒvƒƒpƒeƒB•¶š—ñ(null‚È‚ç<b>prefix</b>+"Debug")
-	 * @throws IllegalArgumentException extension‚ªnull‚Ìê‡
+	 * @param extension ç™»éŒ²ã™ã‚‹Extensionã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹
+	 * @param prefix    ãƒ­ã‚°ã‚’è¡¨ç¤ºã™ã‚‹æ™‚ã®ãƒ—ãƒ¬ãƒ•ã‚£ãƒƒã‚¯ã‚¹æ–‡å­—åˆ—(nullãªã‚‰å‘¼ã³å‡ºã—å…ƒã‚¯ãƒ©ã‚¹å)
+	 * @param propDebug ãƒ‡ãƒãƒƒã‚°ãƒ¢ãƒ¼ãƒ‰çŠ¶æ…‹ã‚’å–å¾—ã™ã‚‹ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£æ–‡å­—åˆ—(nullãªã‚‰<b>prefix</b>+"Debug")
+	 * @throws IllegalArgumentException extensionãŒnullã®å ´åˆ
 	 */
 	public ExtUtil(Extension2 extension, String prefix, String propDebug) {
 		if (extension == null) {
@@ -164,19 +164,19 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * î•ñƒƒO‚ğo—Í‚·‚é
+	 * æƒ…å ±ãƒ­ã‚°ã‚’å‡ºåŠ›ã™ã‚‹
 	 * 
-	 * @param message ƒƒO•¶š—ñ
+	 * @param message ãƒ­ã‚°æ–‡å­—åˆ—
 	 */
 	public void info(String message) {
 		extLogger.info(message);
 	}
 	
 	/**
-	 * î•ñƒƒO‚ğƒtƒH[ƒ}ƒbƒg‚µ‚Äo—Í‚·‚é
+	 * æƒ…å ±ãƒ­ã‚°ã‚’ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã—ã¦å‡ºåŠ›ã™ã‚‹
 	 * 
-	 * @param format ƒtƒH[ƒ}ƒbƒg•¶š—ñ
-	 * @param args ƒtƒH[ƒ}ƒbƒgƒpƒ‰ƒ[ƒ^
+	 * @param format ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆæ–‡å­—åˆ—
+	 * @param args ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 	 */
 	public void info(String format, Object...args) {
 		extLogger.info(format, args);
@@ -184,37 +184,37 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	
 	
 	/**
-	 * ŒxƒƒO‚ğo—Í‚·‚é
+	 * è­¦å‘Šãƒ­ã‚°ã‚’å‡ºåŠ›ã™ã‚‹
 	 * 
-	 * @param message ƒƒO•¶š—ñ
+	 * @param message ãƒ­ã‚°æ–‡å­—åˆ—
 	 */
 	public void warn(String message) {
 		extLogger.warning(message);
 	}
 	
 	/**
-	 * ŒxƒƒO‚ğƒtƒH[ƒ}ƒbƒg‚µ‚Äo—Í‚·‚é
+	 * è­¦å‘Šãƒ­ã‚°ã‚’ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã—ã¦å‡ºåŠ›ã™ã‚‹
 	 * 
-	 * @param format ƒtƒH[ƒ}ƒbƒg•¶š—ñ
-	 * @param args ƒtƒH[ƒ}ƒbƒgƒpƒ‰ƒ[ƒ^
+	 * @param format ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆæ–‡å­—åˆ—
+	 * @param args ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 	 */
 	public void warn(String format, Object...args) {
 		extLogger.warning(String.format(format, args));
 	}
 	
 	/**
-	 * ƒfƒoƒbƒOƒ‚[ƒh‚©H
+	 * ãƒ‡ãƒãƒƒã‚°ãƒ¢ãƒ¼ãƒ‰ã‹ï¼Ÿ
 	 * 
-	 * @return ƒfƒoƒbƒOƒ‚[ƒh‚È‚çtrue
+	 * @return ãƒ‡ãƒãƒƒã‚°ãƒ¢ãƒ¼ãƒ‰ãªã‚‰true
 	 */
 	public boolean isDebug() {
 		return Boolean.getBoolean(propDebug);
 	}
 	
 	/**
-	 * ƒfƒoƒbƒOƒƒO‚ğo—Í‚·‚é
+	 * ãƒ‡ãƒãƒƒã‚°ãƒ­ã‚°ã‚’å‡ºåŠ›ã™ã‚‹
 	 * 
-	 * @param message ƒƒO•¶š—ñ
+	 * @param message ãƒ­ã‚°æ–‡å­—åˆ—
 	 */
 	@Deprecated
 	public void _DBG(String message) {
@@ -222,61 +222,61 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * ƒfƒoƒbƒOƒ‚[ƒh‚È‚çƒfƒoƒbƒOƒƒO‚ğƒtƒH[ƒ}ƒbƒg‚µ‚Äo—Í‚·‚é
+	 * ãƒ‡ãƒãƒƒã‚°ãƒ¢ãƒ¼ãƒ‰ãªã‚‰ãƒ‡ãƒãƒƒã‚°ãƒ­ã‚°ã‚’ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã—ã¦å‡ºåŠ›ã™ã‚‹
 	 * 
-	 * @param format ƒtƒH[ƒ}ƒbƒg•¶š—ñ
-	 * @param args ƒtƒH[ƒ}ƒbƒgƒpƒ‰ƒ[ƒ^
+	 * @param format ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆæ–‡å­—åˆ—
+	 * @param args ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 	 */
 	public void debug(String format, Object...args) {
 		if (isDebug()) extLogger.debug(String.format(format, args));
 	}
 	
 	/**
-	 * ƒXƒŒƒbƒh‚ğ¶¬‚µ‚Äw’èƒƒ\ƒbƒh‚ğŒÄ‚Ño‚·
+	 * ã‚¹ãƒ¬ãƒƒãƒ‰ã‚’ç”Ÿæˆã—ã¦æŒ‡å®šãƒ¡ã‚½ãƒƒãƒ‰ã‚’å‘¼ã³å‡ºã™
 	 * 
-	 * @param methodName ŒÄ‚Ño‚·ƒƒ\ƒbƒh–¼•¶š—ñ(ˆø”–³‚µ)
+	 * @param methodName å‘¼ã³å‡ºã™ãƒ¡ã‚½ãƒƒãƒ‰åæ–‡å­—åˆ—(å¼•æ•°ç„¡ã—)
 	 */
 	public void execute(String methodName) {
 		execute(methodName, null);
 	}
 	
 	/**
-	 * ƒXƒŒƒbƒh‚ğ¶¬‚µ‚Äw’èƒƒ\ƒbƒh‚ğˆø”•t‚«‚ÅŒÄ‚Ño‚·
+	 * ã‚¹ãƒ¬ãƒƒãƒ‰ã‚’ç”Ÿæˆã—ã¦æŒ‡å®šãƒ¡ã‚½ãƒƒãƒ‰ã‚’å¼•æ•°ä»˜ãã§å‘¼ã³å‡ºã™
 	 * 
-	 * @param methodName ŒÄ‚Ño‚·ƒƒ\ƒbƒh–¼•¶š—ñ(ˆø”T)
-	 * @param param w’èƒƒ\ƒbƒh‚É“n‚·ˆø”
+	 * @param methodName å‘¼ã³å‡ºã™ãƒ¡ã‚½ãƒƒãƒ‰åæ–‡å­—åˆ—(å¼•æ•°T)
+	 * @param param æŒ‡å®šãƒ¡ã‚½ãƒƒãƒ‰ã«æ¸¡ã™å¼•æ•°
 	 */
 	public <T> void execute(String methodName, T param) {
 		(new ExtUtil(caller, methodName, param)).start();
 	}
 	
 	/**
-	 * ’x‰„ŠÔŒã‚Éw’èƒƒ\ƒbƒh‚ğŒÄ‚Ño‚·
+	 * é…å»¶æ™‚é–“å¾Œã«æŒ‡å®šãƒ¡ã‚½ãƒƒãƒ‰ã‚’å‘¼ã³å‡ºã™
 	 * 
-	 * @param methodName ŒÄ‚Ño‚·ƒƒ\ƒbƒh–¼•¶š—ñ(ˆø”–³‚µ)
-	 * @param delay ’x‰„ŠÔ(ƒ~ƒŠ•b)
+	 * @param methodName å‘¼ã³å‡ºã™ãƒ¡ã‚½ãƒƒãƒ‰åæ–‡å­—åˆ—(å¼•æ•°ç„¡ã—)
+	 * @param delay é…å»¶æ™‚é–“(ãƒŸãƒªç§’)
 	 */
 	public void setSchedule(String methodName, long delay) {
 		sched.schedule(new ExtUtil(caller, methodName, null), delay, TimeUnit.MILLISECONDS);
 	}
 	
 	/**
-	 * ’x‰„ŠÔŒã‚Éw’èƒƒ\ƒbƒh‚ğˆø”•t‚«‚ÅŒÄ‚Ño‚·
+	 * é…å»¶æ™‚é–“å¾Œã«æŒ‡å®šãƒ¡ã‚½ãƒƒãƒ‰ã‚’å¼•æ•°ä»˜ãã§å‘¼ã³å‡ºã™
 	 * 
-	 * @param methodName ŒÄ‚Ño‚·ƒƒ\ƒbƒh–¼•¶š—ñ(ˆø”T)
-	 * @param param w’èƒƒ\ƒbƒh‚É“n‚·ˆø”
-	 * @param delay ’x‰„ŠÔ(ƒ~ƒŠ•b)
+	 * @param methodName å‘¼ã³å‡ºã™ãƒ¡ã‚½ãƒƒãƒ‰åæ–‡å­—åˆ—(å¼•æ•°T)
+	 * @param param æŒ‡å®šãƒ¡ã‚½ãƒƒãƒ‰ã«æ¸¡ã™å¼•æ•°
+	 * @param delay é…å»¶æ™‚é–“(ãƒŸãƒªç§’)
 	 */
 	public <T> void setSchedule(String methodName, T param, long delay) {
 		sched.schedule(new ExtUtil(caller, methodName, param), delay, TimeUnit.MILLISECONDS);
 	}
 	
 	/**
-	 * ƒŒƒXƒ|ƒ“ƒX—p‚ÉƒLƒƒƒbƒVƒ…‚³‚ê‚È‚¢•¶š—ñƒŠƒ\[ƒX‚ğ•Ô‚·
+	 * ãƒ¬ã‚¹ãƒãƒ³ã‚¹ç”¨ã«ã‚­ãƒ£ãƒƒã‚·ãƒ¥ã•ã‚Œãªã„æ–‡å­—åˆ—ãƒªã‚½ãƒ¼ã‚¹ã‚’è¿”ã™
 	 * 
-	 * @param text ƒŒƒXƒ|ƒ“ƒX•¶š—ñ
-	 * @param contentType ƒRƒ“ƒeƒ“ƒgƒ^ƒCƒv(È—ª‚Í"text/plain")
-	 * @return •¶š—ñƒŠƒ\[ƒX
+	 * @param text ãƒ¬ã‚¹ãƒãƒ³ã‚¹æ–‡å­—åˆ—
+	 * @param contentType ã‚³ãƒ³ãƒ†ãƒ³ãƒˆã‚¿ã‚¤ãƒ—(çœç•¥æ™‚ã¯"text/plain")
+	 * @return æ–‡å­—åˆ—ãƒªã‚½ãƒ¼ã‚¹
 	 */
 	public static StringResource responseText(String text, String contentType) {
 		StringResource r = new StringResource(text);
@@ -294,12 +294,24 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	public static StringResource responseText(String text) {
 		return responseText(text, "text/plain");
 	}
+
+	/** ç¾è¡ŒWatch V4ãƒ»æ—§Watch APIãƒ»æ—§server-responseã‹ã‚‰Watchãƒ‡ãƒ¼ã‚¿ã‚’é¸ã¶ã€‚ */
+	public static JsonObject selectWatchData(JsonObject envelope) {
+		if (envelope == null) return null;
+		JsonObject data = envelope.getObject("data");
+		JsonObject response = data == null ? null : data.getObject("response");
+		JsonObject candidate = response != null ? response : data;
+		JsonObject watchV4 = candidate == null
+				? null : candidate.getObject("$watchV4", "data");
+		if (watchV4 != null) return watchV4;
+		return candidate;
+	}
 	
 	/**
-	 * ƒLƒƒƒbƒVƒ…ƒtƒHƒ‹ƒ_ˆÈ‰º‚É‚ ‚éƒtƒ@ƒCƒ‹ƒIƒuƒWƒFƒNƒg‚ğ•Ô‚·
+	 * ã‚­ãƒ£ãƒƒã‚·ãƒ¥ãƒ•ã‚©ãƒ«ãƒ€ä»¥ä¸‹ã«ã‚ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’è¿”ã™
 	 * 
-	 * @param path ƒLƒƒƒbƒVƒ…ƒtƒHƒ‹ƒ_ˆÈ‰º‚Ì‘Š‘ÎƒpƒX
-	 * @return ƒtƒ@ƒCƒ‹ƒIƒuƒWƒFƒNƒg
+	 * @param path ã‚­ãƒ£ãƒƒã‚·ãƒ¥ãƒ•ã‚©ãƒ«ãƒ€ä»¥ä¸‹ã®ç›¸å¯¾ãƒ‘ã‚¹
+	 * @return ãƒ•ã‚¡ã‚¤ãƒ«ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 	 */
 	public static File cacheFolderFile(String path) {
 		String cacheFolder = System.getProperty("cacheFolder", "");
@@ -313,13 +325,13 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * ƒVƒXƒeƒ€ƒvƒƒpƒeƒB‚Ì®”’l‚ğÅ¬’lEÅ‘å’l‚Ì§ŒÀ•t‚«‚Åæ“¾‚·‚é
+	 * ã‚·ã‚¹ãƒ†ãƒ ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã®æ•´æ•°å€¤ã‚’æœ€å°å€¤ãƒ»æœ€å¤§å€¤ã®åˆ¶é™ä»˜ãã§å–å¾—ã™ã‚‹
 	 * 
-	 * @param name æ“¾‚·‚éƒvƒƒpƒeƒB–¼
-	 * @param def ƒfƒtƒHƒ‹ƒg’l(Å¬’lEÅ‘å’l‚Ì”ÍˆÍ“à‚Å‚ ‚é‚±‚Æ)
-	 * @param min Å¬’l
-	 * @param max Å‘å’l
-	 * @return æ“¾‚µ‚½ƒVƒXƒeƒ€ƒvƒƒpƒeƒB‚Ì®”’l
+	 * @param name å–å¾—ã™ã‚‹ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£å
+	 * @param def ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå€¤(æœ€å°å€¤ãƒ»æœ€å¤§å€¤ã®ç¯„å›²å†…ã§ã‚ã‚‹ã“ã¨)
+	 * @param min æœ€å°å€¤
+	 * @param max æœ€å¤§å€¤
+	 * @return å–å¾—ã—ãŸã‚·ã‚¹ãƒ†ãƒ ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã®æ•´æ•°å€¤
 	 */
 	public static int getInteger(String name, int def, int min, int max) {
 		int value = def;
@@ -341,14 +353,14 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * ƒŠƒNƒGƒXƒgƒwƒbƒ_‚ÉURL‚ğİ’è‚·‚éBHostƒwƒbƒ_‚àİ’è‚·‚éB
-	 * ‚Ü‚½Aƒƒ\ƒbƒh‚ğGET‚Éİ’èAContent-Typeƒwƒbƒ_‚Ííœ‚·‚éB
+	 * ãƒªã‚¯ã‚¨ã‚¹ãƒˆãƒ˜ãƒƒãƒ€ã«URLã‚’è¨­å®šã™ã‚‹ã€‚Hostãƒ˜ãƒƒãƒ€ã‚‚è¨­å®šã™ã‚‹ã€‚
+	 * ã¾ãŸã€ãƒ¡ã‚½ãƒƒãƒ‰ã‚’GETã«è¨­å®šã€Content-Typeãƒ˜ãƒƒãƒ€ã¯å‰Šé™¤ã™ã‚‹ã€‚
 	 * 
-	 * @param requestHeader İ’è‘ÎÛ‚ÌƒŠƒNƒGƒXƒgƒwƒbƒ_
-	 * @param url İ’è‚·‚éURL
-	 * @param setReferer true‚È‚çrequestHeader.getURI()‚Ì“à—e‚ğReferer‚Éİ’è‚·‚éB
-	 *                   false‚È‚çReferer‚ğƒNƒŠƒA‚·‚é
-	 * @return URL‚ğİ’è‚µ‚½ƒŠƒNƒGƒXƒgƒwƒbƒ_
+	 * @param requestHeader è¨­å®šå¯¾è±¡ã®ãƒªã‚¯ã‚¨ã‚¹ãƒˆãƒ˜ãƒƒãƒ€
+	 * @param url è¨­å®šã™ã‚‹URL
+	 * @param setReferer trueãªã‚‰requestHeader.getURI()ã®å†…å®¹ã‚’Refererã«è¨­å®šã™ã‚‹ã€‚
+	 *                   falseãªã‚‰Refererã‚’ã‚¯ãƒªã‚¢ã™ã‚‹
+	 * @return URLã‚’è¨­å®šã—ãŸãƒªã‚¯ã‚¨ã‚¹ãƒˆãƒ˜ãƒƒãƒ€
 	 */
 	public static HttpRequestHeader setURL(
 			HttpRequestHeader requestHeader, String url, boolean setReferer) {
@@ -370,10 +382,10 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * ƒŒƒXƒ|ƒ“ƒXƒwƒbƒ_‚ÌContent-Type‚©‚ç•¶šƒZƒbƒg‚ğæ“¾‚·‚é
+	 * ãƒ¬ã‚¹ãƒãƒ³ã‚¹ãƒ˜ãƒƒãƒ€ã®Content-Typeã‹ã‚‰æ–‡å­—ã‚»ãƒƒãƒˆã‚’å–å¾—ã™ã‚‹
 	 * 
-	 * @param responseHeader æ“¾‘ÎÛ‚ÌƒŒƒXƒ|ƒ“ƒXƒwƒbƒ_
-	 * @return æ“¾‚µ‚½•¶šƒZƒbƒgAæ“¾‚Å‚«‚È‚¢ê‡‚ÍUTF-8‚ğ•Ô‚·
+	 * @param responseHeader å–å¾—å¯¾è±¡ã®ãƒ¬ã‚¹ãƒãƒ³ã‚¹ãƒ˜ãƒƒãƒ€
+	 * @return å–å¾—ã—ãŸæ–‡å­—ã‚»ãƒƒãƒˆã€å–å¾—ã§ããªã„å ´åˆã¯UTF-8ã‚’è¿”ã™
 	 */
 	public static String getCharset(HttpResponseHeader responseHeader) {
 		String charset = "UTF-8";
@@ -386,15 +398,15 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * ƒŠƒNƒGƒXƒgƒwƒbƒ_‚ğŒ³‚ÉHTTPƒAƒNƒZƒX‚µ‚ÄŒ‹‰Ê‚ğ•¶š—ñ‚É‚µ‚Ä•Ô‚·ŠÈˆÕƒƒ\ƒbƒh
+	 * ãƒªã‚¯ã‚¨ã‚¹ãƒˆãƒ˜ãƒƒãƒ€ã‚’å…ƒã«HTTPã‚¢ã‚¯ã‚»ã‚¹ã—ã¦çµæœã‚’æ–‡å­—åˆ—ã«ã—ã¦è¿”ã™ç°¡æ˜“ãƒ¡ã‚½ãƒƒãƒ‰
 	 * <p>
-	 * ‚±‚Ìƒƒ\ƒbƒh‚ğg‚¤‚É‚ÍAÅ’áŒÀƒŠƒNƒGƒXƒgƒwƒbƒ_‚ÉƒAƒNƒZƒXæURL‚ğİ’è‚·‚éB
-	 * •K—v‚É‰‚¶‚Ä"Host","Accept-Ancoding","Content-Type"‚Æ‚¢‚Á‚½ƒwƒbƒ_‚ªİ’è‚³‚ê‚éB
-	 * POST‚Ìê‡‚ÍContent-Type‚É"application/x-www-form-urlencoded"‚ğİ’è‚·‚éB
+	 * ã“ã®ãƒ¡ã‚½ãƒƒãƒ‰ã‚’ä½¿ã†ã«ã¯ã€æœ€ä½é™ãƒªã‚¯ã‚¨ã‚¹ãƒˆãƒ˜ãƒƒãƒ€ã«ã‚¢ã‚¯ã‚»ã‚¹å…ˆURLã‚’è¨­å®šã™ã‚‹ã€‚
+	 * å¿…è¦ã«å¿œã˜ã¦"Host","Accept-Ancoding","Content-Type"ã¨ã„ã£ãŸãƒ˜ãƒƒãƒ€ãŒè¨­å®šã•ã‚Œã‚‹ã€‚
+	 * POSTã®å ´åˆã¯Content-Typeã«"application/x-www-form-urlencoded"ã‚’è¨­å®šã™ã‚‹ã€‚
 	 * 
-	 * @param requestHeader ƒŠƒNƒGƒXƒgƒwƒbƒ_
-	 * @param postString GET‚Ìê‡‚ÍnullAPOST‚Ìê‡‚ÍPOST‚·‚é•¶š—ñ‚ğw’è‚·‚é
-	 * @return ƒŒƒXƒ|ƒ“ƒXƒ{ƒfƒB•¶š—ñAƒXƒe[ƒ^ƒX‚ª200ˆÈŠO‚Ìê‡‚Ínull
+	 * @param requestHeader ãƒªã‚¯ã‚¨ã‚¹ãƒˆãƒ˜ãƒƒãƒ€
+	 * @param postString GETã®å ´åˆã¯nullã€POSTã®å ´åˆã¯POSTã™ã‚‹æ–‡å­—åˆ—ã‚’æŒ‡å®šã™ã‚‹
+	 * @return ãƒ¬ã‚¹ãƒãƒ³ã‚¹ãƒœãƒ‡ã‚£æ–‡å­—åˆ—ã€ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãŒ200ä»¥å¤–ã®å ´åˆã¯null
 	 */
 	public static String http_get(HttpRequestHeader requestHeader, String postString) {
 		String url = requestHeader.getURI();
@@ -416,7 +428,7 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 		try {
 			URLResource r = new URLResource(requestHeader.getURI());
 			r.setFollowRedirects(true);
-			// NicoCache‚ªƒTƒ|[ƒg‚µ‚Ä‚¢‚éƒGƒ“ƒR[ƒfƒBƒ“ƒO‚Ì‚İİ’è
+			// NicoCacheãŒã‚µãƒãƒ¼ãƒˆã—ã¦ã„ã‚‹ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã®ã¿è¨­å®š
 			requestHeader.setMessageHeader("Accept-Encoding", "gzip, deflate");
 			responseHeader = r.getResponseHeader(bin, requestHeader);
 			if (responseHeader != null && responseHeader.getStatusCode() == 200) {
@@ -445,11 +457,11 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * ƒNƒ‰ƒX‚Ìˆø”–³‚µstaticƒƒ\ƒbƒh‚ğ“®“I‚ÉŒÄ‚Ño‚µ‚ÄŒ‹‰Ê‚ğ•Ô‚·
+	 * ã‚¯ãƒ©ã‚¹ã®å¼•æ•°ç„¡ã—staticãƒ¡ã‚½ãƒƒãƒ‰ã‚’å‹•çš„ã«å‘¼ã³å‡ºã—ã¦çµæœã‚’è¿”ã™
 	 * 
-	 * @param className ŒÄ‚Ño‚·ƒNƒ‰ƒX–¼BExtension‚Ìê‡‚Í"extensions.`"
-	 * @param methodName ŒÄ‚Ño‚·ƒƒ\ƒbƒh–¼
-	 * @return ŒÄ‚Ño‚µ‚½Œ‹‰Ê‚ğŠi”[‚·‚éƒIƒuƒWƒFƒNƒgA¸”s‚µ‚½ê‡‚Ínull
+	 * @param className å‘¼ã³å‡ºã™ã‚¯ãƒ©ã‚¹åã€‚Extensionã®å ´åˆã¯"extensions.ï½"
+	 * @param methodName å‘¼ã³å‡ºã™ãƒ¡ã‚½ãƒƒãƒ‰å
+	 * @return å‘¼ã³å‡ºã—ãŸçµæœã‚’æ ¼ç´ã™ã‚‹ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€å¤±æ•—ã—ãŸå ´åˆã¯null
 	 */
 	public static Object callMethod(String className, String methodName) {
 		try {
@@ -462,14 +474,14 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * ƒNƒ‰ƒX‚Ìƒƒ\ƒbƒh‚ğ“®“I‚ÉŒÄ‚Ño‚µ‚ÄŒ‹‰Ê‚ğ•Ô‚·
+	 * ã‚¯ãƒ©ã‚¹ã®ãƒ¡ã‚½ãƒƒãƒ‰ã‚’å‹•çš„ã«å‘¼ã³å‡ºã—ã¦çµæœã‚’è¿”ã™
 	 * 
-	 * @param k ŒÄ‚Ño‚·ƒNƒ‰ƒX‚ÌClassƒIƒuƒWƒFƒNƒgAnull‚ğw’è‚µ‚½ê‡‚Íinstance‚©‚çæ“¾‚·‚é
-	 * @param instance ŒÄ‚Ño‚·ƒIƒuƒWƒFƒNƒg‚ÌƒCƒ“ƒXƒ^ƒ“ƒXAstaticƒƒ\ƒbƒh‚Ìê‡‚Ínull
-	 * @param methodName ŒÄ‚Ño‚·ƒƒ\ƒbƒh–¼
-	 * @param parameterTypes ŒÄ‚Ño‚·ƒƒ\ƒbƒh‚Ìˆø”Œ^‚Ì”z—ñAˆø”–³‚µ‚Ìê‡‚Ínull
-	 * @param parameters ŒÄ‚Ño‚·ƒƒ\ƒbƒh‚Ìˆø”‚Ì”z—ñAˆø”–³‚µ‚Ìê‡‚Ínull
-	 * @return ŒÄ‚Ño‚µ‚½Œ‹‰Ê‚ğŠi”[‚·‚éƒIƒuƒWƒFƒNƒgA¸”s‚µ‚½ê‡‚Ínull
+	 * @param k å‘¼ã³å‡ºã™ã‚¯ãƒ©ã‚¹ã®Classã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€nullã‚’æŒ‡å®šã—ãŸå ´åˆã¯instanceã‹ã‚‰å–å¾—ã™ã‚‹
+	 * @param instance å‘¼ã³å‡ºã™ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã€staticãƒ¡ã‚½ãƒƒãƒ‰ã®å ´åˆã¯null
+	 * @param methodName å‘¼ã³å‡ºã™ãƒ¡ã‚½ãƒƒãƒ‰å
+	 * @param parameterTypes å‘¼ã³å‡ºã™ãƒ¡ã‚½ãƒƒãƒ‰ã®å¼•æ•°å‹ã®é…åˆ—ã€å¼•æ•°ç„¡ã—ã®å ´åˆã¯null
+	 * @param parameters å‘¼ã³å‡ºã™ãƒ¡ã‚½ãƒƒãƒ‰ã®å¼•æ•°ã®é…åˆ—ã€å¼•æ•°ç„¡ã—ã®å ´åˆã¯null
+	 * @return å‘¼ã³å‡ºã—ãŸçµæœã‚’æ ¼ç´ã™ã‚‹ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€å¤±æ•—ã—ãŸå ´åˆã¯null
 	 */
 	public static Object callMethod(Class<?> k, Object instance,
 			String methodName, Class<?>[] parameterTypes, Object...parameters) {
@@ -495,31 +507,31 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * ƒtƒ@ƒCƒ‹‚ªXV‚³‚ê‚Ä‚¢‚ê‚Î“Ç‚İ‚İƒƒ\ƒbƒh‚ğŒÄ‚Ño‚·
+	 * ãƒ•ã‚¡ã‚¤ãƒ«ãŒæ›´æ–°ã•ã‚Œã¦ã„ã‚Œã°èª­ã¿è¾¼ã¿ãƒ¡ã‚½ãƒƒãƒ‰ã‚’å‘¼ã³å‡ºã™
 	 * <p>
-	 * fileInfo‚É“Ç‚İ‚İ‚½‚¢ƒtƒ@ƒCƒ‹‚Ìî•ñ‚ğPair<File, Long>‚Å—^‚¦‚éB
-	 * File’l‚Í“Ç‚İ‚İ‚½‚¢ƒtƒ@ƒCƒ‹‚ÌFileƒIƒuƒWƒFƒNƒgALong’l‚Íƒtƒ@ƒCƒ‹‚Ì
-	 * ÅIXV“ú‚ğİ’è‚·‚é(Å‰‚É•K‚¸“Ç‚İ‚İ‚½‚¢‚È‚ç0L‚ğİ’è)B
-	 * ƒtƒ@ƒCƒ‹‚ª‘¶İ‚·‚éê‡ALong’l‚Íƒtƒ@ƒCƒ‹‚ÌÅIXV“ú‚Åã‘‚«‚³‚ê‚éB
-	 * ƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚È‚¢ê‡ALong’l‚Í1L‚Åã‘‚«‚³‚ê‚éB
-	 * ‚Ü‚½AfileInfo‚Í”r‘¼§Œä‚Ì‚½‚ß‚ÌƒƒbƒNƒIƒuƒWƒFƒNƒg‚Æ‚µ‚Ä‚à—p‚¢‚ç‚ê‚é‚Ì‚ÅA
-	 * ‰Â”\‚ÈŒÀ‚èstatic finalƒIƒuƒWƒFƒNƒg‚Æ‚µ‚Ä’è‹`‚·‚é‚Ì‚ª–]‚Ü‚µ‚¢B
+	 * fileInfoã«èª­ã¿è¾¼ã¿ãŸã„ãƒ•ã‚¡ã‚¤ãƒ«ã®æƒ…å ±ã‚’Pair<File, Long>ã§ä¸ãˆã‚‹ã€‚
+	 * Fileå€¤ã¯èª­ã¿è¾¼ã¿ãŸã„ãƒ•ã‚¡ã‚¤ãƒ«ã®Fileã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã€Longå€¤ã¯ãƒ•ã‚¡ã‚¤ãƒ«ã®
+	 * æœ€çµ‚æ›´æ–°æ—¥æ™‚ã‚’è¨­å®šã™ã‚‹(æœ€åˆã«å¿…ãšèª­ã¿è¾¼ã¿ãŸã„ãªã‚‰0Lã‚’è¨­å®š)ã€‚
+	 * ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã™ã‚‹å ´åˆã€Longå€¤ã¯ãƒ•ã‚¡ã‚¤ãƒ«ã®æœ€çµ‚æ›´æ–°æ—¥æ™‚ã§ä¸Šæ›¸ãã•ã‚Œã‚‹ã€‚
+	 * ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ãªã„å ´åˆã€Longå€¤ã¯1Lã§ä¸Šæ›¸ãã•ã‚Œã‚‹ã€‚
+	 * ã¾ãŸã€fileInfoã¯æ’ä»–åˆ¶å¾¡ã®ãŸã‚ã®ãƒ­ãƒƒã‚¯ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨ã—ã¦ã‚‚ç”¨ã„ã‚‰ã‚Œã‚‹ã®ã§ã€
+	 * å¯èƒ½ãªé™ã‚Šstatic finalã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨ã—ã¦å®šç¾©ã™ã‚‹ã®ãŒæœ›ã¾ã—ã„ã€‚
 	 * <p>
-	 * loadMethod‚ÍˆÈ‰º‚ÌŒ`®‚ÅŒÄ‚Ño‚·ƒƒ\ƒbƒh‚ğ’è‹`‚·‚éB
+	 * loadMethodã¯ä»¥ä¸‹ã®å½¢å¼ã§å‘¼ã³å‡ºã™ãƒ¡ã‚½ãƒƒãƒ‰ã‚’å®šç¾©ã™ã‚‹ã€‚
 	 * <pre>
 	 * public void loadMethod(BufferedReader br) throws IOException</pre>
 	 * <p>
-	 * br‚É‚ÍAƒtƒ@ƒCƒ‹‚ª‘¶İ‚·‚éê‡‚ÍBufferedReader‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ª—^‚¦‚ç‚ê‚é‚ªA
-	 * ƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚È‚¢ê‡‚Ínull‚ª—^‚¦‚ç‚ê‚éB‚æ‚Á‚ÄAbr‚ªnullˆÈŠO‚Ìê‡‚Í
-	 * ƒtƒ@ƒCƒ‹‚©‚çƒRƒŒƒNƒVƒ‡ƒ“‚É’l‚ğ“Ç‚İ‚İAbr‚ªnull‚Ìê‡‚ÍƒRƒŒƒNƒVƒ‡ƒ“‚ğ
-	 * ƒNƒŠƒA‚·‚éA‚Æ‚¢‚Á‚½g‚¢•û‚ª‚Å‚«‚éB
+	 * brã«ã¯ã€ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã™ã‚‹å ´åˆã¯BufferedReaderã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ãŒä¸ãˆã‚‰ã‚Œã‚‹ãŒã€
+	 * ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ãªã„å ´åˆã¯nullãŒä¸ãˆã‚‰ã‚Œã‚‹ã€‚ã‚ˆã£ã¦ã€brãŒnullä»¥å¤–ã®å ´åˆã¯
+	 * ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ã‚³ãƒ¬ã‚¯ã‚·ãƒ§ãƒ³ã«å€¤ã‚’èª­ã¿è¾¼ã¿ã€brãŒnullã®å ´åˆã¯ã‚³ãƒ¬ã‚¯ã‚·ãƒ§ãƒ³ã‚’
+	 * ã‚¯ãƒªã‚¢ã™ã‚‹ã€ã¨ã„ã£ãŸä½¿ã„æ–¹ãŒã§ãã‚‹ã€‚
 	 * <p>
-	 * –{ƒƒ\ƒbƒh‚Ìg—p—á‚Í{@link #matchNGtitle(String)}‚ğQÆ‚Ì‚±‚ÆB
+	 * æœ¬ãƒ¡ã‚½ãƒƒãƒ‰ã®ä½¿ç”¨ä¾‹ã¯{@link #matchNGtitle(String)}ã‚’å‚ç…§ã®ã“ã¨ã€‚
 	 * 
-	 * @param fileInfo ƒtƒ@ƒCƒ‹î•ñ‚ğPair<File, Long>‚Å—^‚¦‚é
-	 * @param loadMethod ÀÛ‚Éƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚Şƒƒ\ƒbƒh–¼
-	 * @param charset ƒtƒ@ƒCƒ‹‚©‚ç“Ç‚İ‚ŞÛ‚Ì•¶šƒZƒbƒg(È—ª‚Í"UTF-8")
-	 * @return loadMethod‚ğŒÄ‚Ño‚µ‚½‚È‚çtrue
+	 * @param fileInfo ãƒ•ã‚¡ã‚¤ãƒ«æƒ…å ±ã‚’Pair<File, Long>ã§ä¸ãˆã‚‹
+	 * @param loadMethod å®Ÿéš›ã«ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€ãƒ¡ã‚½ãƒƒãƒ‰å
+	 * @param charset ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰èª­ã¿è¾¼ã‚€éš›ã®æ–‡å­—ã‚»ãƒƒãƒˆ(çœç•¥æ™‚ã¯"UTF-8")
+	 * @return loadMethodã‚’å‘¼ã³å‡ºã—ãŸãªã‚‰true
 	 */
 	public boolean loadFile(Pair<File, Long> fileInfo, String loadMethod, Charset charset) {
 		BufferedReader br = null;
@@ -562,24 +574,24 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * ‘‚«o‚µƒƒ\ƒbƒh‚ğŒÄ‚Ño‚µ‚Äƒtƒ@ƒCƒ‹‚ğXV‚·‚é
+	 * æ›¸ãå‡ºã—ãƒ¡ã‚½ãƒƒãƒ‰ã‚’å‘¼ã³å‡ºã—ã¦ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ›´æ–°ã™ã‚‹
 	 * <p>
-	 * fileInfo‚Å—^‚¦‚ç‚ê‚éƒtƒ@ƒCƒ‹‚Ì“à—e‚ğXV‚µ‚ÄAXV“ú‚ğã‘‚«‚·‚éB
-	 * ‘‚«o‚·ƒtƒ@ƒCƒ‹‚ÍƒfƒCƒŠ[‚ÅƒoƒbƒNƒAƒbƒv‚ğì¬‚·‚éB
+	 * fileInfoã§ä¸ãˆã‚‰ã‚Œã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ã®å†…å®¹ã‚’æ›´æ–°ã—ã¦ã€æ›´æ–°æ—¥æ™‚ã‚’ä¸Šæ›¸ãã™ã‚‹ã€‚
+	 * æ›¸ãå‡ºã™ãƒ•ã‚¡ã‚¤ãƒ«ã¯ãƒ‡ã‚¤ãƒªãƒ¼ã§ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ã‚’ä½œæˆã™ã‚‹ã€‚
 	 * <p>
-	 * saveMethod‚ÍˆÈ‰º‚ÌŒ`®‚ÅŒÄ‚Ño‚·ƒƒ\ƒbƒh‚ğ’è‹`‚·‚éB
+	 * saveMethodã¯ä»¥ä¸‹ã®å½¢å¼ã§å‘¼ã³å‡ºã™ãƒ¡ã‚½ãƒƒãƒ‰ã‚’å®šç¾©ã™ã‚‹ã€‚
 	 * <pre>
 	 * public void saveMethod(BufferedWriter bw) throws IOException</pre>
 	 * <p>
-	 * bw‚É‚ÍA•K‚¸BufferedWriter‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ª—^‚¦‚ç‚ê‚éB
-	 * loadMethod‚ÆˆÙ‚È‚èAbw‚Énull‚ª—^‚¦‚ç‚ê‚é‚±‚Æ‚Í–³‚¢B
+	 * bwã«ã¯ã€å¿…ãšBufferedWriterã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ãŒä¸ãˆã‚‰ã‚Œã‚‹ã€‚
+	 * loadMethodã¨ç•°ãªã‚Šã€bwã«nullãŒä¸ãˆã‚‰ã‚Œã‚‹ã“ã¨ã¯ç„¡ã„ã€‚
 	 * 
 	 * @see #loadFile(Pair, String, Charset)
-	 * @param fileInfo ƒtƒ@ƒCƒ‹î•ñ‚ğPair<File, Long>‚Å—^‚¦‚é
-	 * @param saveMethod ÀÛ‚Éƒtƒ@ƒCƒ‹‚É‘‚«o‚·ƒƒ\ƒbƒh–¼
-	 * @param direct ‚±‚Ì’l‚ªtrue‚È‚çAsaveMethod‚Ì•¶š—ñ‚ğ’¼Ú‘‚«o‚·
-	 * @param charset ƒtƒ@ƒCƒ‹‚É‘‚«o‚·Û‚Ì•¶šƒZƒbƒg(È—ª‚Í"UTF-8")
-	 * @return ƒtƒ@ƒCƒ‹‚Ì‘‚«o‚µ‚É¬Œ÷‚µ‚½‚È‚çtrue
+	 * @param fileInfo ãƒ•ã‚¡ã‚¤ãƒ«æƒ…å ±ã‚’Pair<File, Long>ã§ä¸ãˆã‚‹
+	 * @param saveMethod å®Ÿéš›ã«ãƒ•ã‚¡ã‚¤ãƒ«ã«æ›¸ãå‡ºã™ãƒ¡ã‚½ãƒƒãƒ‰å
+	 * @param direct ã“ã®å€¤ãŒtrueãªã‚‰ã€saveMethodã®æ–‡å­—åˆ—ã‚’ç›´æ¥æ›¸ãå‡ºã™
+	 * @param charset ãƒ•ã‚¡ã‚¤ãƒ«ã«æ›¸ãå‡ºã™éš›ã®æ–‡å­—ã‚»ãƒƒãƒˆ(çœç•¥æ™‚ã¯"UTF-8")
+	 * @return ãƒ•ã‚¡ã‚¤ãƒ«ã®æ›¸ãå‡ºã—ã«æˆåŠŸã—ãŸãªã‚‰true
 	 * 
 	 */
 	public boolean saveFile(Pair<File, Long> fileInfo,
@@ -626,12 +638,12 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * “®‰æ‚ª‰ß‹‚Éíœ‚³‚ê‚½‚±‚Æ‚ª‚ ‚é‚©H
+	 * å‹•ç”»ãŒéå»ã«å‰Šé™¤ã•ã‚ŒãŸã“ã¨ãŒã‚ã‚‹ã‹ï¼Ÿ
 	 * <ul>
-	 * <li>totalRename‚Ìíœ—š—ğî•ñ‚ÉŠÜ‚Ü‚ê‚Ä‚¢‚é‚©H
+	 * <li>totalRenameã®å‰Šé™¤å±¥æ­´æƒ…å ±ã«å«ã¾ã‚Œã¦ã„ã‚‹ã‹ï¼Ÿ
 	 * </ul>
-	 * @param smid “®‰æID
-	 * @return ‰ß‹‚Éíœ‚³‚ê‚½‚±‚Æ‚ª‚ ‚ê‚Îtrue
+	 * @param smid å‹•ç”»ID
+	 * @return éå»ã«å‰Šé™¤ã•ã‚ŒãŸã“ã¨ãŒã‚ã‚Œã°true
 	 */
 	@SuppressWarnings("unchecked")
 	public static boolean hasRemoved(String smid) {
@@ -641,14 +653,14 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * NGƒ^ƒCƒgƒ‹‚ğŠm”F‚·‚é
+	 * NGã‚¿ã‚¤ãƒˆãƒ«ã‚’ç¢ºèªã™ã‚‹
 	 * <ul>
-	 * <li>list/OKvideoId.txt‚ÉŠÜ‚Ü‚ê‚Ä‚¢‚È‚¢(smid‚ªw’è‚³‚ê‚Ä‚¢‚éê‡)
-	 * <li>list/NGtitle.txt‚ÉŠÜ‚Ü‚ê‚Ä‚¢‚é‚©H
+	 * <li>list/OKvideoId.txtã«å«ã¾ã‚Œã¦ã„ãªã„(smidãŒæŒ‡å®šã•ã‚Œã¦ã„ã‚‹å ´åˆ)
+	 * <li>list/NGtitle.txtã«å«ã¾ã‚Œã¦ã„ã‚‹ã‹ï¼Ÿ
 	 * </ul>
-	 * @param title ƒ^ƒCƒgƒ‹•¶š—ñ
-	 * @param smid “®‰æIDA•K—v‚È‚¯‚ê‚Înull
-	 * @return NGƒ^ƒCƒgƒ‹‚Éƒ}ƒbƒ`‚·‚ê‚ÎMatcher‚ğAƒ}ƒbƒ`‚µ‚È‚¯‚ê‚Înull‚ğ•Ô‚·
+	 * @param title ã‚¿ã‚¤ãƒˆãƒ«æ–‡å­—åˆ—
+	 * @param smid å‹•ç”»IDã€å¿…è¦ãªã‘ã‚Œã°null
+	 * @return NGã‚¿ã‚¤ãƒˆãƒ«ã«ãƒãƒƒãƒã™ã‚Œã°Matcherã‚’ã€ãƒãƒƒãƒã—ãªã‘ã‚Œã°nullã‚’è¿”ã™
 	 */
 	public static Matcher matchNGtitle(String title, String smid) {
 		Pattern pattern;
@@ -672,12 +684,12 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * NGƒ†[ƒU[‚©H
+	 * NGãƒ¦ãƒ¼ã‚¶ãƒ¼ã‹ï¼Ÿ
 	 * <ul>
-	 * <li>list/NGuserId.txt‚ÉŠÜ‚Ü‚ê‚Ä‚¢‚é‚©H
+	 * <li>list/NGuserId.txtã«å«ã¾ã‚Œã¦ã„ã‚‹ã‹ï¼Ÿ
 	 * </ul>
-	 * @param userId ƒ†[ƒU[ID
-	 * @return NGƒ†[ƒU[‚È‚çtrue
+	 * @param userId ãƒ¦ãƒ¼ã‚¶ãƒ¼ID
+	 * @return NGãƒ¦ãƒ¼ã‚¶ãƒ¼ãªã‚‰true
 	 */
 	public static boolean isNGuserId(String userId) {
 		Pattern pattern = EasyRewriter.LST.getPattern("list/NGuserId.txt");
@@ -692,12 +704,12 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * NG“®‰æID‚©H
+	 * NGå‹•ç”»IDã‹ï¼Ÿ
 	 * <ul>
-	 * <li>list/NGvideoId.txt‚ÉŠÜ‚Ü‚ê‚Ä‚¢‚é‚©H
+	 * <li>list/NGvideoId.txtã«å«ã¾ã‚Œã¦ã„ã‚‹ã‹ï¼Ÿ
 	 * </ul>
-	 * @param videoId “®‰æID
-	 * @return NG“®‰æID‚È‚çtrue
+	 * @param videoId å‹•ç”»ID
+	 * @return NGå‹•ç”»IDãªã‚‰true
 	 */
 	public static boolean isNGvideoId(String videoId) {
 		Pattern pattern = EasyRewriter.LST.getPattern("list/NGvideoId.txt");
@@ -705,11 +717,11 @@ public class ExtUtil extends Thread implements Extension2, Runnable {
 	}
 	
 	/**
-	 * w’èƒtƒ@ƒCƒ‹‚ğƒoƒbƒNƒAƒbƒvƒtƒ@ƒCƒ‹‚ÉƒŠƒl[ƒ€‚·‚é
+	 * æŒ‡å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚’ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ãƒ•ã‚¡ã‚¤ãƒ«ã«ãƒªãƒãƒ¼ãƒ ã™ã‚‹
 	 * 
-	 * @param file ƒŠƒl[ƒ€‘ÎÛ‚Ìƒtƒ@ƒCƒ‹(ƒtƒ@ƒCƒ‹–¼+".bak"‚É‚È‚é)
-	 * @param daily true‚È‚ç“ú•t‚ª•Ï‚í‚é–ˆ‚ÉAfalse(È—ª)‚È‚çí‚ÉƒoƒbƒNƒAƒbƒv‚ğì¬‚·‚é
-	 * @return ƒŠƒl[ƒ€‚µ‚½‚çtrue
+	 * @param file ãƒªãƒãƒ¼ãƒ å¯¾è±¡ã®ãƒ•ã‚¡ã‚¤ãƒ«(ãƒ•ã‚¡ã‚¤ãƒ«å+".bak"ã«ãªã‚‹)
+	 * @param daily trueãªã‚‰æ—¥ä»˜ãŒå¤‰ã‚ã‚‹æ¯ã«ã€false(çœç•¥æ™‚)ãªã‚‰å¸¸ã«ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ã‚’ä½œæˆã™ã‚‹
+	 * @return ãƒªãƒãƒ¼ãƒ ã—ãŸã‚‰true
 	 */
 	public static boolean renameToBak(File file, boolean daily) {
 		if (file.exists()) {

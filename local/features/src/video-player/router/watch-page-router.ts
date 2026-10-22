@@ -7,6 +7,7 @@ import {
   hasCompletedCache,
 } from "@/common/cache-info-api";
 import { searchVideoCaches } from "@/common/cache-search-client";
+import { normalizeWatchResponseData } from "@/common/watch-response-normalizer";
 import { addNavigationListener } from "@/runtime/navigation";
 
 type PlayerPreference = "standalone" | "official" | "ask";
@@ -97,7 +98,10 @@ const getCurrentWatchVideoId = (): string | null => {
 };
 
 const getCurrentDocumentTitle = (): string | undefined => {
-  const apiTitle = window.NicoCache_nl?.watch?.apiData?.video?.title;
+  const apiData = normalizeWatchResponseData(
+    window.NicoCache_nl?.watch?.apiData,
+  ) as { video?: { title?: string } } | undefined;
+  const apiTitle = apiData?.video?.title;
   if (apiTitle && apiTitle.trim()) {
     return apiTitle;
   }

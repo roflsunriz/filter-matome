@@ -59,7 +59,7 @@ import dareka.processor.StringResource;
 public final class FilterMatomeSeriesAlerts
         implements Extension2, Processor, SystemEventListener {
 
-    public static final int REVISION = 26081801;
+    public static final int REVISION = 26102201;
     public static final String VER_STRING = "FilterMatomeSeriesAlerts_" + REVISION;
 
     private static final String LOG_PREFIX = "SeriesAlerts";
@@ -326,14 +326,13 @@ public final class FilterMatomeSeriesAlerts
                 normalized = URLDecoder.decode(normalized,
                         StandardCharsets.UTF_8);
             }
-            JsonValue root = Json.parse(normalized);
+            JsonObject root = Json.parseObject(normalized);
             if (root == null) {
                 throw new IOException("server-responseを解析できません");
             }
-            String id = Json.getString(root, "data", "response", "series",
-                    "video", "next", "id");
-            String title = Json.getString(root, "data", "response", "series",
-                    "video", "next", "title");
+            JsonObject watch = ExtUtil.selectWatchData(root);
+            String id = Json.getString(watch, "series", "video", "next", "id");
+            String title = Json.getString(watch, "series", "video", "next", "title");
             if (id == null || title == null) {
                 return null;
             }

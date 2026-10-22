@@ -3,6 +3,7 @@ import type {
   ThumbOwnerInfo,
   ThumbTagInfo,
 } from "@/types/movie-info-types";
+import { normalizeWatchResponseData } from "@/common/watch-response-normalizer";
 
 export const EXT_THUMB_INFO_ENDPOINT =
   "https://ext.nicovideo.jp/api/getthumbinfo/";
@@ -482,7 +483,7 @@ const parseJsonPayload = (
   }
 
   const meta = asRecord(root.meta);
-  const data = asRecord(root.data) ?? root;
+  const data = normalizeWatchResponseData(root) ?? asRecord(root.data) ?? root;
   const responseStatus = getNumber(meta, "status") ?? getNumber(root, "status");
   if (responseStatus !== undefined && responseStatus >= 400) {
     const errorCode =

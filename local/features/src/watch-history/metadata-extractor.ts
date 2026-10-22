@@ -65,6 +65,7 @@ export class WatchMetadataExtractor {
   public extractOwnerName(apiData: NicoApiData): string | null {
     try {
       const ownerData = apiData.owner as {
+        name?: string;
         nickname?: string;
         [key: string]: unknown;
       };
@@ -78,6 +79,7 @@ export class WatchMetadataExtractor {
       };
 
       return (
+        ownerData?.name ||
         ownerData?.nickname ||
         channelData?.name ||
         videoData?.owner?.nickname ||

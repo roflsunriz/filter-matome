@@ -1,4 +1,5 @@
 import type { ExtendedNicoCache_nl } from "@/types/global-types";
+import { normalizeWatchResponseData } from "@/common/watch-response-normalizer";
 
 const STANDALONE_PLAYER_PATH =
   "/local/features/dist/pages/video-player/index.html";
@@ -19,7 +20,9 @@ const hasVideoIdInCache = (nicoCache: ExtendedNicoCache_nl | null): boolean => {
   if (!nicoCache) {
     return false;
   }
-  const apiId = nicoCache.watch?.apiData?.video?.id;
+  const apiData = normalizeWatchResponseData(nicoCache.watch?.apiData) as
+    { video?: { id?: unknown } } | undefined;
+  const apiId = apiData?.video?.id;
   if (typeof apiId === "string" && apiId.trim().length > 0) {
     return true;
   }

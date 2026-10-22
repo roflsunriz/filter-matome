@@ -14,6 +14,10 @@
 
 ページソースの`server-response.data.response.$watchV4.data`に`video.description`、`comment.nvComment`、`metadata.jsonLd.owner`があることを確認する。Movie Infoの統合データ取得で`comment is undefined`例外がなく、コメントプレビューまで取得できること、Mylist2で投稿者名とサムネイルを失わないことも確認する。WebScrapBookなどの描画DOM保存ではmetaが除去される場合があるため、ページソースの代用にしない。
 
+SmartFetcherのWatch HTMLフォールバックでは`media.contents`と`media.accessRightKey`から配信候補を取得し、Series Alertsでは`$watchV4.data.series.video.next`を確認する。共通選択経路は`ExtUtil.selectWatchData`を使う。3つのJavaソースをNicoCache_nlのclasspathで再コンパイルし、`ExtUtil.class`、`FilterMatomeSmartFetcher.class`、`FilterMatomeSeriesAlerts.class`を同期する。画質・会員状態のsandboxはV4と旧形の両fixtureで構文・意味を確認する。
+
+`/api/watch/v3`と`/api/watch/v3_guest`は、秘密値を出力せず`data`・`response`・`$watchV4`のキー構造だけを実測する。旧形式とV4形式の両fixtureでmovie-fetcher、video-info、Java共通選択を検証し、実測できない場合は未確認と記録する。
+
 ブラウザーが旧CSSを保持する場合、WatchのHTMLにある`watch-harajuku.css`の版付きURLと、実際に読み込まれたCSSの内容を照合する。問題があれば104番フィルターとfeaturesを同じ以前のリリースへ戻してビルドし、NicoCache_nlを再起動する。どちらか一方だけを戻すとCSS読込順とキャッシュキーがずれる。
 
 ## ドキュメント画像の更新

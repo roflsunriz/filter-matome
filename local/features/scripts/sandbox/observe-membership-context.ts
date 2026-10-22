@@ -189,10 +189,13 @@ const MEMBERSHIP_EVALUATION = String.raw`
         ? allowed.includes(value) ? value : 'other'
         : null;
     const enabled = (value) => bool(record(value).isEnabled);
+    const promoted = (value) => bool(record(value).showPromotion);
 
     let serverContext = record(parseMeta('server-context'));
     let serverResponse = record(parseMeta('server-response'));
     let response = record(record(serverResponse.data).response);
+    const watchV4 = record(record(response.$watchV4).data);
+    if (Object.keys(watchV4).length > 0) response = watchV4;
     if (
       Object.keys(response).length === 0 &&
       typeof window.commonHelper?.fetchWatchPage === 'function'
@@ -220,27 +223,31 @@ const MEMBERSHIP_EVALUATION = String.raw`
       sessionUserType,
       viewerIsPremium: bool(viewer.isPremium),
       payment: {
-        isPpv: bool(paymentVideo.isPpv),
-        isAdmission: bool(paymentVideo.isAdmission),
-        isContinuationBenefit: bool(paymentVideo.isContinuationBenefit),
-        isPremium: bool(paymentVideo.isPremium),
+        isPpv: bool(paymentVideo.isPpv) ?? enabled(payment.ppv),
+        isAdmission: bool(paymentVideo.isAdmission) ?? enabled(payment.admission),
+        isContinuationBenefit:
+          bool(paymentVideo.isContinuationBenefit) ??
+          enabled(payment.continuationBenefit),
+        isPremium: bool(paymentVideo.isPremium) ?? enabled(payment.premium),
         watchableUserType: safeEnum(
-          paymentVideo.watchableUserType,
+          paymentVideo.watchableUserType ?? payment.watchableUserType,
           ['purchaser', 'member', 'all'],
         ),
         commentableUserType: safeEnum(
-          paymentVideo.commentableUserType,
+          paymentVideo.commentableUserType ?? payment.commentableUserType,
           ['purchaser', 'member', 'all'],
         ),
         billingType: safeEnum(
-          paymentVideo.billingType,
+          paymentVideo.billingType ?? payment.billingType,
           ['custom', 'channel', 'none', 'free'],
         ),
         preview: {
-          ppv: enabled(preview.ppv),
-          admission: enabled(preview.admission),
-          continuationBenefit: enabled(preview.continuationBenefit),
-          premium: enabled(preview.premium),
+          ppv: enabled(preview.ppv) ?? promoted(payment.ppv),
+          admission: enabled(preview.admission) ?? promoted(payment.admission),
+          continuationBenefit:
+            enabled(preview.continuationBenefit) ??
+            promoted(payment.continuationBenefit),
+          premium: enabled(preview.premium) ?? promoted(payment.premium),
         },
       },
       videoAds: {

@@ -89,6 +89,52 @@ describe("video-info-api", () => {
     ).toBe("https://example.invalid/player.jpg?key=[redacted]");
   });
 
+  test("normalizes a possible direct Watch V4 response", () => {
+    const result = parseVideoInfoPayload(
+      JSON.stringify({
+        meta: { status: 200 },
+        data: {
+          $watchV4: {
+            data: {
+              video: {
+                id: "sm9",
+                contentType: "mp4",
+                title: "V4動画",
+                description: "V4説明",
+                count: { view: 10, comment: 20, mylist: 30 },
+                duration: 120,
+                thumbnail: { normal: "https://example.invalid/v4.jpg" },
+                registeredAt: "2026-10-22T00:00:00+09:00",
+              },
+              tags: { items: [{ name: "V4タグ", isLocked: true }] },
+              metadata: {
+                jsonLd: {
+                  owner: {
+                    id: "4",
+                    type: "user",
+                    name: "V4投稿者",
+                    iconUrl: "https://example.invalid/v4-user.jpg",
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+      "sm9",
+      "watch-api",
+    );
+
+    expect(result).toMatchObject({
+      videoId: "sm9",
+      title: "V4動画",
+      description: "V4説明",
+      thumbnailUrl: "https://example.invalid/v4.jpg",
+      owner: { id: "4", nickname: "V4投稿者" },
+      tags: [{ name: "V4タグ", locked: true }],
+    });
+  });
+
   test("normalizes legacy JSON with missing optional fields", () => {
     const result = parseVideoInfoPayload(
       JSON.stringify({

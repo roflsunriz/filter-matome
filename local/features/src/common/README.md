@@ -19,6 +19,7 @@
 - `css-constants.ts`, `visual-theme.ts`: 共通CSS変数とダークテーマトークン。
 - `thumbnail-fallback.ts`: 欠落・読込失敗時の共通サムネイル。
 - `server-response-parser.ts`: `server-response` メタ情報の安全な解析。
+- `watch-response-normalizer.ts`: 現行Watch V4と旧Watch応答を共通内部形式へ正規化。
 - `video-info-api.ts`: 旧ext-thumb XMLと現行Watch API JSONを共通の動画情報へ正規化するクライアント。
 - `cache-search-client.ts`, `cache-search-results.ts`: NicoCache_nlキャッシュ検索と結果UI。
 - `cache-info-api.ts`: 専用ホストREST APIのレスポンス検証、取得、完成判定、再生候補の優先順位。
@@ -67,6 +68,7 @@
 
 - `tests/common-material-icons.test.ts`
 - `tests/common-server-response-parser.test.ts`
+- `tests/watch-response-normalizer.test.ts`
 - `tests/common-notification-read-all.test.ts`
 - `tests/common-notification-read-all.spec.ts`
 - `tests/common-api-status-menu.test.ts`

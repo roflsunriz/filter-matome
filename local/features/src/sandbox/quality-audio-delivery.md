@@ -2,7 +2,7 @@
 
 ## 結論
 
-公式watchプレイヤーは、watch APIの `media.domand.videos` と `media.domand.audios` を別々の候補として受け取り、その直積を再生候補にする。実際に利用できる組だけを `access-rights/hls` へ送信し、返されたHLS masterをHLS.jsで再生する。
+公式watchプレイヤーは、旧Watch APIの`media.domand`または現行Watch HTML V4の`media.contents`にある`videos`と`audios`を別々の候補として受け取り、その直積を再生候補にする。実際に利用できる組だけを `access-rights/hls` へ送信し、返されたHLS masterをHLS.jsで再生する。
 
 会員種別を表す `sessionUser.type` は設定UIの案内にも使われるが、画質・音質の実際の可否は各候補の `isAvailable` とサーバーのaccess-rights認可で決まる。一般会員のコンテキストをプレミアム表示へ書き換えても、1080pや高音質を配信可能にはできない。実装ではサーバー応答を正として扱う必要がある。
 
@@ -47,7 +47,7 @@
 
 ## 配信開始までの流れ
 
-1. watch APIから `media.domand.videos`、`audios`、`accessRightKey` を受け取る。
+1. Watch応答から旧`media.domand`またはV4の`media.contents`と`media.accessRightKey`を受け取る。
 2. 映像と音声をそれぞれ `qualityLevel` の降順に並べ、映像優先・音声次点の直積を生成する。
 3. `video.isAvailable && audio.isAvailable` の組だけを残す。
 4. `/v1/watch/{watchId}/access-rights/hls` へ `outputs: [[videoId, audioId], ...]` をPOSTする。

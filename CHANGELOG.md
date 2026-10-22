@@ -24,6 +24,8 @@
 
 - 【mlink-video-controller・原宿風Watch】現行Watch V4で移動した投稿者情報と動画説明文を`$watchV4.data.metadata.jsonLd.owner`と`$watchV4.data.video.description`から取得し、投稿者欄と説明文を再表示できるよう修正した。旧Watch応答とチャンネル投稿も引き続き扱う。
 - 【common・movie-info・Mylist2】`server-response.data.response`直下が`$watchV4`と`pcweb`へ変更された後も、動画・投稿者・コメント・タグ・サムネイルを既存の内部形式へ正規化するよう修正した。`comment`がないデータでも`nvComment`参照で例外を発生させない。
+- 【ExtUtil・SmartFetcher・Series Alerts・sandbox】Java拡張のWatchデータ選択をExtUtilへ共通化し、Watch HTMLフォールバックと、画質・会員状態の観測スクリプトも`$watchV4.data`、`media.contents`、V4課金フィールドへ追従した。ExtUtilはCP932からUTF-8へ移行し、メンテナー方針に合わせて改変禁止の記述を削除した。
+- 【movie-fetcher・video-info】`/api/watch/v3`が旧形式またはV4形式のどちらを返しても、同じ共通正規化を通して配信候補と動画情報を取得できるようにした。
 
 ## [#257] - 2026-10-19
 

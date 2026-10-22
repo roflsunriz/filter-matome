@@ -77,8 +77,8 @@ export interface LinkData {
 
 // ニコニコAPI関連の型定義
 export interface NicoApiData {
-  comment: {
-    nvComment: {
+  comment?: {
+    nvComment?: {
       server: string;
       params: Record<string, unknown>;
       threadKey: string;
@@ -88,7 +88,7 @@ export interface NicoApiData {
 
 export interface NicoApiResponse {
   data: {
-    response: NicoApiData;
+    response: unknown;
   };
 }
 
