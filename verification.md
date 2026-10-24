@@ -1,10 +1,12 @@
 # 検証手順
 
-## Mylist2の二重ダイアログ（2026-10-25）
+## #259 Mylist2の二重ダイアログ（2026-10-25）
 
 動画移動後などに完了ダイアログがほぼ同時に2件生成されると、従来は両方の処理が`document.querySelector`と重複IDで先頭の要素を取得し、後から表示されたダイアログのボタンへイベントが付かない状態を再現した。動的に生成するアラート、確認、移動先選択、インポート／エクスポート、汎用選択、一括API設定を、各呼び出しが生成したルート要素とその配下だけで管理するよう変更した。
 
 Chromium回帰テストでは完了ダイアログを同時に2件表示し、2件目のOKで1件だけが閉じ、残った1件目のOKで残存0件になることを確認した。既存のマイリスト作成・検索・ソート・動画詳細・一括操作も含む`mylist2.spec.ts`は8件合格した。`bun run verify`はPrettier、ESLint、型検査、単体280件、Chromium E2E 93件、39ファイルの全体ビルドを通過した。`python scripts/build-docs.py`も問題なく完了した。
+
+公開前に版番号、READMEのlatestバッジ、104番フィルターとモジュール側の原宿風Watch stylesheet URLを259へ同期した。`bun install --frozen-lockfile`はlockfile変更なし、`mvn --batch-mode --quiet verify`はmatome-toolbox 33件とJAR生成に成功した。Zensical 0.0.72で文書を再ビルドし、`bun audit`は106パッケージ、`pip-audit -r requirements-docs.txt`とGitHub Dependabot alertは既知脆弱性0件だった。`bun outdated`で残るTypeScript 7.0.2は既知のtypescript-eslint・sandbox解析API非互換のため6.0.3を維持した。
 
 ## #258 原宿風WatchとWatch V4の変更追従（2026-10-22）
 
