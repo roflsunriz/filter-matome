@@ -1,4 +1,5 @@
 import { startMylist2 } from "@/mylist2";
+import { ModalService } from "@/mylist2/ui/modal-service";
 import type { DBVideo } from "@/types/video-types";
 import type { KeywordInfo, MylistInfo } from "@/types/mylist-types";
 
@@ -7,6 +8,8 @@ type SeedData = {
   videos: DBVideo[];
   keywords: Array<KeywordInfo & { id: number }>;
 };
+
+const modalService = new ModalService();
 
 function createStores(database: IDBDatabase): void {
   const mylists = database.createObjectStore("mylists", {
@@ -104,6 +107,11 @@ Object.assign(window, {
     seedAndStart: async (seed: SeedData) => {
       await seedDatabase(seed);
       startMylist2();
+    },
+    showConcurrentAlerts: (messages: string[]) => {
+      messages.forEach((message) => {
+        void modalService.showCustomAlert(message);
+      });
     },
   },
 });

@@ -118,7 +118,10 @@ async function openApp(page: Page): Promise<void> {
   await page.evaluate(async (data) => {
     const api = (
       window as unknown as {
-        Mylist2Test: { seedAndStart: (value: typeof data) => Promise<void> };
+        Mylist2Test: {
+          seedAndStart: (value: typeof data) => Promise<void>;
+          showConcurrentAlerts: (messages: string[]) => void;
+        };
       }
     ).Mylist2Test;
     await api.seedAndStart(data);
@@ -465,4 +468,30 @@ test("一括操作5種が対応する確認UIを開いてキャンセルでき�
     await page.locator("#cml2BatchCancel").click();
     await expect(page.locator(".cml2-modal")).toHaveCount(0);
   }
+});
+
+test("同時に表示された完了ダイアログを手前から順に閉じられる", async ({
+  page,
+}) => {
+  await page.evaluate(() => {
+    (
+      window as unknown as {
+        Mylist2Test: {
+          showConcurrentAlerts: (messages: string[]) => void;
+        };
+      }
+    ).Mylist2Test.showConcurrentAlerts(["先に表示", "後に表示"]);
+  });
+
+  const dialogs = page.locator(".cml2-alert-modal");
+  await expect(dialogs).toHaveCount(2);
+  await expect(dialogs.nth(0)).toContainText("先に表示");
+  await expect(dialogs.nth(1)).toContainText("後に表示");
+
+  await dialogs.nth(1).locator("#alertOkButton").click();
+  await expect(dialogs).toHaveCount(1);
+  await expect(dialogs.first()).toContainText("先に表示");
+
+  await dialogs.first().locator("#alertOkButton").click();
+  await expect(dialogs).toHaveCount(0);
 });

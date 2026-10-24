@@ -1,5 +1,11 @@
 # 検証手順
 
+## Mylist2の二重ダイアログ（2026-10-25）
+
+動画移動後などに完了ダイアログがほぼ同時に2件生成されると、従来は両方の処理が`document.querySelector`と重複IDで先頭の要素を取得し、後から表示されたダイアログのボタンへイベントが付かない状態を再現した。動的に生成するアラート、確認、移動先選択、インポート／エクスポート、汎用選択、一括API設定を、各呼び出しが生成したルート要素とその配下だけで管理するよう変更した。
+
+Chromium回帰テストでは完了ダイアログを同時に2件表示し、2件目のOKで1件だけが閉じ、残った1件目のOKで残存0件になることを確認した。既存のマイリスト作成・検索・ソート・動画詳細・一括操作も含む`mylist2.spec.ts`は8件合格した。`bun run verify`はPrettier、ESLint、型検査、単体280件、Chromium E2E 93件、39ファイルの全体ビルドを通過した。`python scripts/build-docs.py`も問題なく完了した。
+
 ## #258 原宿風WatchとWatch V4の変更追従（2026-10-22）
 
 2026-10-22に保存した実Watchページソースを、値を出力せずキー・型・文字列長だけで確認した。`server-response.data.response`直下は従来の`video`・`owner`・`comment`ではなく`$watchV4`と`pcweb`であり、実データは`$watchV4.data.video.description`、`comment.nvComment`、`metadata.jsonLd.owner`へ移動していた。投稿者は`id`・`type`・`name`・`description`・`iconUrl`を持つ。描画後DOMを保存した別資料では`server-response`が除去され、Harajuku説明欄がempty、投稿者欄が0件の一方、公式の投稿者リンクは残る状態も確認した。

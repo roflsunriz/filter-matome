@@ -32,13 +32,12 @@ export class ModalService {
       `;
 
       // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
-      document.body.insertAdjacentHTML("beforeend", modalHTML);
-      const modal = document.querySelector(".cml2-alert-modal") as HTMLElement;
-      const okButton = document.getElementById(
-        "alertOkButton",
-      ) as HTMLButtonElement;
+      const modal = appendModalElement(modalHTML);
+      const okButton =
+        modal?.querySelector<HTMLButtonElement>("#alertOkButton");
 
       if (!modal || !okButton) {
+        modal?.remove();
         window.logger.error("アラートモーダルの要素が作成できませんでした");
         resolve(false);
         return;
@@ -108,16 +107,15 @@ export class ModalService {
       `;
 
       // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
-      document.body.insertAdjacentHTML("beforeend", modalHTML);
-      const modal = document.querySelector(".cml2-alert-modal") as HTMLElement;
-      const okButton = document.getElementById(
-        "confirmOkButton",
-      ) as HTMLButtonElement;
-      const cancelButton = document.getElementById(
-        "confirmCancelButton",
-      ) as HTMLButtonElement;
+      const modal = appendModalElement(modalHTML);
+      const okButton =
+        modal?.querySelector<HTMLButtonElement>("#confirmOkButton");
+      const cancelButton = modal?.querySelector<HTMLButtonElement>(
+        "#confirmCancelButton",
+      );
 
       if (!modal || !okButton || !cancelButton) {
+        modal?.remove();
         window.logger.error("確認モーダルの要素が作成できませんでした");
         resolve(false);
         return;
@@ -196,21 +194,17 @@ export class ModalService {
       `;
 
       // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
-      document.body.insertAdjacentHTML("beforeend", modalHTML);
+      const modal = appendModalElement(modalHTML);
 
       return new Promise<number | null>((resolve) => {
-        const modal = document.querySelector(".cml2-modal") as HTMLElement;
-        const confirmBtn = document.getElementById(
-          "confirmAction",
-        ) as HTMLButtonElement;
-        const cancelBtn = document.getElementById(
-          "cancelAction",
-        ) as HTMLButtonElement;
-        const select = document.getElementById(
-          "targetMylist",
-        ) as HTMLSelectElement;
+        const confirmBtn =
+          modal?.querySelector<HTMLButtonElement>("#confirmAction");
+        const cancelBtn =
+          modal?.querySelector<HTMLButtonElement>("#cancelAction");
+        const select = modal?.querySelector<HTMLSelectElement>("#targetMylist");
 
         if (!modal || !confirmBtn || !cancelBtn || !select) {
+          modal?.remove();
           window.logger.error(
             "マイリスト選択モーダルの要素が作成できませんでした",
           );
@@ -323,12 +317,18 @@ export class ModalService {
           </div>
         </div>`;
       // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
-      document.body.insertAdjacentHTML("beforeend", html);
-      const modal = document.querySelector(".cml2-modal") as HTMLElement;
+      const modal = appendModalElement(html);
+      if (!modal) {
+        window.logger.error(
+          "エクスポート選択モーダルの要素が作成できませんでした",
+        );
+        resolve({ action: "cancel" });
+        return;
+      }
       const cleanup = () => {
         document.removeEventListener("keydown", onKey);
-        modal?.removeEventListener("click", onBackdrop);
-        modal?.remove();
+        modal.removeEventListener("click", onBackdrop);
+        modal.remove();
       };
       const onKey = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
@@ -343,7 +343,7 @@ export class ModalService {
         }
       };
       const bind = (id: string, result: "local" | "cloud" | "cancel") => {
-        const el = document.getElementById(id);
+        const el = modal.querySelector(`#${id}`);
         if (el)
           el.addEventListener("click", () => {
             cleanup();
@@ -380,18 +380,24 @@ export class ModalService {
           </div>
         </div>`;
       // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
-      document.body.insertAdjacentHTML("beforeend", html);
-      const modal = document.querySelector(".cml2-modal") as HTMLElement;
+      const modal = appendModalElement(html);
+      if (!modal) {
+        window.logger.error(
+          "インポート選択モーダルの要素が作成できませんでした",
+        );
+        resolve({ action: "cancel" });
+        return;
+      }
       const cleanup = () => {
         document.removeEventListener("keydown", onKey);
-        modal?.removeEventListener("click", onBackdrop);
-        modal?.remove();
+        modal.removeEventListener("click", onBackdrop);
+        modal.remove();
       };
       const bind = (
         id: string,
         result: "local" | "clear" | "cloud" | "cancel",
       ) => {
-        const el = document.getElementById(id);
+        const el = modal.querySelector(`#${id}`);
         if (el)
           el.addEventListener("click", () => {
             cleanup();
@@ -442,14 +448,12 @@ export class ModalService {
           </div>
         </div>`;
       // document.body に直接マウントすることで、#Mylist2Manager のスタッキングコンテキストから独立
-      document.body.insertAdjacentHTML("beforeend", html);
-      const modal = document.querySelector(".cml2-modal") as HTMLElement;
-      const select = document.getElementById(
-        "cml2Selection",
-      ) as HTMLSelectElement | null;
-      const ok = document.getElementById("cml2SelectionOk");
-      const cancel = document.getElementById("cml2SelectionCancel");
+      const modal = appendModalElement(html);
+      const select = modal?.querySelector<HTMLSelectElement>("#cml2Selection");
+      const ok = modal?.querySelector("#cml2SelectionOk");
+      const cancel = modal?.querySelector("#cml2SelectionCancel");
       if (!modal || !select || !ok || !cancel) {
+        modal?.remove();
         resolve(null);
         return;
       }
@@ -505,16 +509,14 @@ export class ModalService {
           </div>
         </div>`;
 
-      document.body.insertAdjacentHTML("beforeend", html);
-      const modal = document.querySelector<HTMLElement>(".cml2-modal");
-      const concurrencyInput = document.getElementById(
-        "cml2BatchConcurrency",
-      ) as HTMLInputElement | null;
-      const delayInput = document.getElementById(
-        "cml2BatchDelay",
-      ) as HTMLInputElement | null;
-      const startButton = document.getElementById("cml2BatchStart");
-      const cancelButton = document.getElementById("cml2BatchCancel");
+      const modal = appendModalElement(html);
+      const concurrencyInput = modal?.querySelector<HTMLInputElement>(
+        "#cml2BatchConcurrency",
+      );
+      const delayInput =
+        modal?.querySelector<HTMLInputElement>("#cml2BatchDelay");
+      const startButton = modal?.querySelector("#cml2BatchStart");
+      const cancelButton = modal?.querySelector("#cml2BatchCancel");
 
       if (
         !modal ||
@@ -523,6 +525,7 @@ export class ModalService {
         !startButton ||
         !cancelButton
       ) {
+        modal?.remove();
         resolve(null);
         return;
       }
@@ -559,4 +562,13 @@ function escapeHtml(text: string): string {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
+}
+
+function appendModalElement(html: string): HTMLElement | null {
+  const template = document.createElement("template");
+  template.innerHTML = html.trim();
+  const modal = template.content.firstElementChild;
+  if (!(modal instanceof HTMLElement)) return null;
+  document.body.append(modal);
+  return modal;
 }
