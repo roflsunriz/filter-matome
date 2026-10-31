@@ -45,7 +45,19 @@ function documentRoute(route: Route): void {
 test("カードからDomand取得を開始し完了状態を表示する", async ({ page }) => {
   let extensionStatus = "idle";
   let accessRequestWith: string | undefined;
+  let deliveryCookieReceived = false;
+  let apiReceivedCookie = false;
   const watchEndpoints: string[] = [];
+  await page.context().addCookies([
+    {
+      name: "domand_bid",
+      value: "synthetic-test-cookie",
+      domain: ".nicovideo.jp",
+      path: "/",
+      secure: true,
+      httpOnly: true,
+    },
+  ]);
   await page.route(pageUrl, documentRoute);
   await page.route("**/api/watch/v3/sm9?**", (route) => {
     watchEndpoints.push("v3");
@@ -99,11 +111,31 @@ test("カードからDomand取得を開始し完了状態を表示する", async
     },
   );
   await page.route(
+    "https://www.nicovideo.jp/local/filter-matome/movie-fetcher/start",
+    async (route) => {
+      const headers = await route.request().allHeaders();
+      deliveryCookieReceived = headers.cookie?.includes("domand_bid=") ?? false;
+      expect(headers["x-filter-matome-movie-fetcher"]).toBe("1");
+      expect(headers.origin).toBe("https://www.nicovideo.jp");
+      extensionStatus = "fetching";
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          videoId: "sm9",
+          status: "fetching",
+          completed: 0,
+          total: 2,
+        }),
+      });
+    },
+  );
+  await page.route(
     "**/api/v1/extensions/filter-matome/movie-fetcher/**",
     async (route) => {
       const url = route.request().url();
-      if (url.endsWith("/start")) extensionStatus = "fetching";
-      else if (url.includes("/status") && extensionStatus === "fetching")
+      const headers = await route.request().allHeaders();
+      apiReceivedCookie ||= Boolean(headers.cookie);
+      if (url.includes("/status") && extensionStatus === "fetching")
         extensionStatus = "completed";
       await route.fulfill({
         contentType: "application/json",
@@ -131,6 +163,8 @@ test("カードからDomand取得を開始し完了状態を表示する", async
   await expect(button).toHaveAttribute("title", /取得完了/);
   expect(watchEndpoints).toEqual(["v3"]);
   expect(accessRequestWith).toBe("https://www.nicovideo.jp");
+  expect(deliveryCookieReceived).toBe(true);
+  expect(apiReceivedCookie).toBe(false);
 });
 
 test("未ログインでは通常Watch APIからゲスト版へ切り替える", async ({
@@ -178,6 +212,19 @@ test("未ログインでは通常Watch APIからゲスト版へ切り替える",
             contentUrl:
               "https://delivery.domand.nicovideo.jp/hlsbid/0123456789abcdef01234567/playlists/variants/0123456789abcdef.m3u8",
           },
+        }),
+      }),
+  );
+  await page.route(
+    "https://www.nicovideo.jp/local/filter-matome/movie-fetcher/start",
+    (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          videoId: "sm9",
+          status: "completed",
+          completed: 2,
+          total: 2,
         }),
       }),
   );

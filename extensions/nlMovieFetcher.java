@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.HttpCookie;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
@@ -17,7 +18,9 @@ import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -51,7 +54,7 @@ import dareka.processor.impl.VideoDescriptor;
  * 視聴権の取得はログイン状態を持つブラウザー側へ任せ、この拡張は署名済みURLだけを扱う。
  */
 public final class nlMovieFetcher implements Extension2, Processor {
-    public static final int REVISION = 26081802;
+    public static final int REVISION = 26103101;
     public static final String VER_STRING = "nlMovieFetcher_" + REVISION;
 
     private static final String API_PREFIX = "/api/v1/extensions/filter-matome/movie-fetcher/";
@@ -60,6 +63,12 @@ public final class nlMovieFetcher implements Extension2, Processor {
     private static final Pattern API_URL = Pattern.compile(
             "^https?://nicocachenl\\.test" + API_PREFIX
                     + "(capabilities|start|status|cancel|report)(?:\\?([^#]*))?$",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern COOKIE_BRIDGE_URL = Pattern.compile(
+            "^https://www\\.nicovideo\\.jp/local/filter-matome/movie-fetcher/start$",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern ROUTE_URL = Pattern.compile(
+            API_URL.pattern() + "|" + COOKIE_BRIDGE_URL.pattern(),
             Pattern.CASE_INSENSITIVE);
     private static final Pattern VIDEO_ID = Pattern.compile(
             "^[a-z]{2}[0-9]+$", Pattern.CASE_INSENSITIVE);
@@ -120,7 +129,7 @@ public final class nlMovieFetcher implements Extension2, Processor {
 
     @Override
     public Pattern getSupportedURLAsPattern() {
-        return API_URL;
+        return ROUTE_URL;
     }
 
     @Override
@@ -132,9 +141,18 @@ public final class nlMovieFetcher implements Extension2, Processor {
     public Resource onRequest(HttpRequestHeader request, Socket browser)
             throws IOException {
         Matcher matcher = API_URL.matcher(request.getURI());
-        if (!matcher.matches()
+        boolean bridge = COOKIE_BRIDGE_URL.matcher(request.getURI()).matches();
+        if ((!matcher.matches() && !bridge)
                 || !"1".equals(request.getMessageHeader(REQUIRED_HEADER))) {
             return StringResource.getNotFound();
+        }
+        if (bridge) {
+            if (!"https://www.nicovideo.jp".equals(
+                    request.getMessageHeader("Origin"))) {
+                return StringResource.getNotFound();
+            }
+            return "POST".equalsIgnoreCase(request.getMethod())
+                    ? start(request, browser) : StringResource.getMethodNotAllowed();
         }
         String operation = matcher.group(1).toLowerCase(Locale.ROOT);
         if ("capabilities".equals(operation)) {
@@ -433,6 +451,45 @@ public final class nlMovieFetcher implements Extension2, Processor {
             selected.append(cookie);
         }
         return selected.toString();
+    }
+
+    static String issuedDeliveryCookie(HttpURLConnection connection)
+            throws IOException {
+        for (Map.Entry<String, List<String>> header : connection.getHeaderFields().entrySet()) {
+            if (header.getKey() == null || !"Set-Cookie".equalsIgnoreCase(header.getKey())) {
+                continue;
+            }
+            for (String value : header.getValue()) {
+                if (!value.startsWith("domand_bid=")) {
+                    continue;
+                }
+                try {
+                    for (HttpCookie candidate : HttpCookie.parse(value)) {
+                        String domain = candidate.getDomain();
+                        String content = candidate.getValue();
+                        if (!"domand_bid".equals(candidate.getName()) || domain == null
+                                || !("nicovideo.jp".equalsIgnoreCase(domain)
+                                        || ".nicovideo.jp".equalsIgnoreCase(domain))
+                                || !"/".equals(candidate.getPath())
+                                || candidate.getMaxAge() == 0 || content == null
+                                || content.isEmpty() || content.length() > 4096) {
+                            throw new IOException("invalid delivery cookie");
+                        }
+                        for (int i = 0; i < content.length(); i++) {
+                            char ch = content.charAt(i);
+                            if (ch <= 0x20 || ch >= 0x7f || ch == ';' || ch == ','
+                                    || ch == '\\' || ch == '"') {
+                                throw new IOException("invalid delivery cookie");
+                            }
+                        }
+                        return "domand_bid=" + content;
+                    }
+                } catch (IllegalArgumentException exception) {
+                    throw new IOException("invalid delivery cookie", exception);
+                }
+            }
+        }
+        return null;
     }
 
     static SSLSocketFactory getProxyTlsSocketFactory() throws IOException {

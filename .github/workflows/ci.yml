@@ -139,6 +139,17 @@ jobs:
         working-directory: local/features
         run: bun run build
 
+      - name: Test Java extensions against NicoCache_nl v1.9.8
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 \
+            https://github.com/roflsunriz/NicoCache_nl/releases/download/v1.9.8/NicoCache_nl-v1.9.8.zip \
+            --output "$RUNNER_TEMP/nicocache-v1.9.8.zip"
+          echo "fe7eb3c9a058eabde74e8c592c4a4bf1a60d0ecaf793ff2cec80515b4ef29c48  $RUNNER_TEMP/nicocache-v1.9.8.zip" | sha256sum --check
+          unzip -j "$RUNNER_TEMP/nicocache-v1.9.8.zip" NicoCache_nl.jar -d "$RUNNER_TEMP/nicocache-test"
+          cd local/features
+          bun scripts/test-java-extensions.ts "$RUNNER_TEMP/nicocache-test/NicoCache_nl.jar"
+
       - name: Test and package matome-toolbox
         working-directory: scripts/matome-toolbox
         run: mvn --batch-mode verify

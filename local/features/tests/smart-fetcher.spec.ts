@@ -9,6 +9,8 @@ const localApiCorsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, X-Filter-Matome-Smart-Fetcher",
 };
+const SMART_FETCHER_API_AND_SAME_ORIGIN_CREDENTIAL_BRIDGE_PATTERN =
+  /^https:\/\/(?:nicocachenl\.test\/api\/v1\/extensions|www\.nicovideo\.jp\/local)\/filter-matome\/smart-fetcher\//u;
 
 const projectRoot = join(import.meta.dirname, "..");
 const fixtureEntry = join(
@@ -76,6 +78,18 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
 }, testInfo) => {
   const serverState = createState();
   const actions: string[] = [];
+  let credentialsCookieReceived = false;
+  let apiReceivedCookie = false;
+  await page.context().addCookies([
+    {
+      name: "user_session",
+      value: "synthetic-test-session",
+      domain: ".nicovideo.jp",
+      path: "/",
+      secure: true,
+      httpOnly: true,
+    },
+  ]);
   await page.route(pageUrl, documentRoute);
   await page.route("**/api/watch/v3/sm9?**", (route) =>
     route.fulfill({
@@ -118,7 +132,7 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
     }),
   );
   await page.route(
-    "**/api/v1/extensions/filter-matome/smart-fetcher/**",
+    SMART_FETCHER_API_AND_SAME_ORIGIN_CREDENTIAL_BRIDGE_PATTERN,
     async (route) => {
       if (route.request().method() === "OPTIONS") {
         await route.fulfill({ status: 204, headers: localApiCorsHeaders });
@@ -127,6 +141,14 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
       const action =
         new URL(route.request().url()).pathname.split("/").at(-1) ?? "";
       actions.push(action);
+      const headers = await route.request().allHeaders();
+      if (action === "credentials") {
+        credentialsCookieReceived =
+          headers.cookie?.includes("user_session=") ?? false;
+        expect(headers.origin).toBe("https://www.nicovideo.jp");
+      } else {
+        apiReceivedCookie ||= Boolean(headers.cookie);
+      }
       if (action === "schedule") {
         const body = route.request().postDataJSON() as Record<string, unknown>;
         serverState.schedules = [
@@ -260,6 +282,8 @@ test("動画を調査して予約し、管理操作と設定を同じ画面で�
       "clear-credentials",
     ]),
   );
+  expect(credentialsCookieReceived).toBe(true);
+  expect(apiReceivedCookie).toBe(false);
 });
 
 test("SPAを二重起動しても予約と履歴を消さずタイマーを重複させない", async ({
@@ -308,7 +332,7 @@ test("SPAを二重起動しても予約と履歴を消さずタイマーを重�
 
   await page.route(pageUrl, documentRoute);
   await page.route(
-    "**/api/v1/extensions/filter-matome/smart-fetcher/**",
+    SMART_FETCHER_API_AND_SAME_ORIGIN_CREDENTIAL_BRIDGE_PATTERN,
     (route) =>
       route.fulfill({
         contentType: "application/json",
@@ -405,7 +429,7 @@ test("取得履歴を確認後に個別・一括削除しても予約を保持�
 
   await page.route(pageUrl, documentRoute);
   await page.route(
-    "**/api/v1/extensions/filter-matome/smart-fetcher/**",
+    SMART_FETCHER_API_AND_SAME_ORIGIN_CREDENTIAL_BRIDGE_PATTERN,
     async (route) => {
       const action =
         new URL(route.request().url()).pathname.split("/").at(-1) ?? "";
@@ -485,7 +509,7 @@ test("更新後の予約と履歴を遅れて届いた古い定期応答で消�
 
   await page.route(pageUrl, documentRoute);
   await page.route(
-    "**/api/v1/extensions/filter-matome/smart-fetcher/**",
+    SMART_FETCHER_API_AND_SAME_ORIGIN_CREDENTIAL_BRIDGE_PATTERN,
     async (route) => {
       const action =
         new URL(route.request().url()).pathname.split("/").at(-1) ?? "";
@@ -582,7 +606,7 @@ test("狭い画面でも横にはみ出さず全フォームへ到達できる",
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route(pageUrl, documentRoute);
   await page.route(
-    "**/api/v1/extensions/filter-matome/smart-fetcher/**",
+    SMART_FETCHER_API_AND_SAME_ORIGIN_CREDENTIAL_BRIDGE_PATTERN,
     (route) =>
       route.fulfill({
         contentType: "application/json",

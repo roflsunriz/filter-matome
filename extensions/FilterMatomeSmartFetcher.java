@@ -24,10 +24,10 @@ import dareka.processor.*; import dareka.processor.impl.NicoCachingTitleRetrieve
  */
 public final class FilterMatomeSmartFetcher
         implements Extension2, Processor, SystemEventListener {
-    public static final int REVISION = 26102201; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
+    public static final int REVISION = 26103101; public static final String VER_STRING = "FilterMatomeSmartFetcher_" + REVISION;
     private static final String API_PREFIX = "/api/v1/extensions/filter-matome/smart-fetcher/", REQUIRED_HEADER = "X-Filter-Matome-Smart-Fetcher";
-    private static final Pattern API_URL = Pattern.compile( "^https?://nicocachenl\\.test" + API_PREFIX + "(state|schedule|settings|run-now|cancel|remove|remove-history|clear-history|credentials|clear-credentials)"
-                    + "(?:\\?([^#]*))?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern API_URL = Pattern.compile( "^(?:https?://nicocachenl\\.test" + API_PREFIX + "(state|schedule|settings|run-now|cancel|remove|remove-history|clear-history|credentials|clear-credentials)"
+                    + "(?:\\?([^#]*))?|https://www\\.nicovideo\\.jp/local/filter-matome/smart-fetcher/(credentials))$", Pattern.CASE_INSENSITIVE);
     private static final Pattern VIDEO_ID = Pattern.compile( "^[a-z]{2}[0-9]+$", Pattern.CASE_INSENSITIVE), COOKIE_NAME = Pattern.compile( "^(nicosid|domand_bid|user_session|user_session_secure)$"), SERVER_RESPONSE = Pattern.compile("(?is)<meta\\b(?=[^>]*\\bname=[\"']server-response[\"'])[^>]*\\bcontent=(?:\"([^\"]*)\"|'([^']*)')[^>]*>");
     private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0 Safari/537.36", DATA_ROOT_PROPERTY = "nicocache.userDataRoot", CREDENTIAL_AAD = "filter-matome-smart-fetcher-v1";
     private static final String[] METHODS = { "GET", "POST" };
@@ -71,9 +71,9 @@ public final class FilterMatomeSmartFetcher
         Matcher matcher = API_URL.matcher(request.getURI());
         if (!matcher.matches() || !"1".equals(request.getMessageHeader(REQUIRED_HEADER))) {
             return StringResource.getNotFound(); }
-        String action = matcher.group(1).toLowerCase(Locale.ROOT);
-        if ("state".equals(action) && request.isGetMethod()) {
-            return json(createStateJson()); }
+        if (matcher.group(3) != null && !"https://www.nicovideo.jp".equals(request.getMessageHeader("Origin"))) return StringResource.getNotFound();
+        String action = (matcher.group(1) == null ? matcher.group(3) : matcher.group(1)).toLowerCase(Locale.ROOT);
+        if ("state".equals(action) && request.isGetMethod()) return json(createStateJson());
         if (!"POST".equalsIgnoreCase(request.getMethod())) {
             return StringResource.getMethodNotAllowed(); }
         captureCredentials(request.getMessageHeader("Cookie"));
@@ -283,7 +283,7 @@ public final class FilterMatomeSmartFetcher
                     throw new IOException("取得可能時間を超過しました"); }
                 String cookie = decryptCookie();
                 Map<String, Object> prepared = prepareDelivery( text(snapshot, "videoId"), cookie);
-                startDownloader(text(snapshot, "videoId"), text(prepared, "contentUrl"), cookie, maximumRate);
+                startDownloader(text(snapshot, "videoId"), text(prepared, "contentUrl"), text(prepared, "deliveryCookie"), maximumRate);
                 Map<String, Object> status = waitForDownloader( id, text(snapshot, "videoId"), deadline, cookie);
                 actualBytes = number(status, "bytesTransferred");
                 String downloaderState = text(status, "status");
@@ -367,13 +367,13 @@ public final class FilterMatomeSmartFetcher
             watchHeaders.put("Cookie", cookie); }
         JsonObject watchEnvelope;
         try {
-            watchEnvelope = requestJson( "https://www.nicovideo.jp/api/watch/v3/" + videoId + query, "GET", watchHeaders, null, true);
+            watchEnvelope = requestJson( "https://www.nicovideo.jp/api/watch/v3/" + videoId + query, "GET", watchHeaders, null, true, null);
         } catch (IOException exception) {
             watchEnvelope = requestWatchPage(videoId, cookie); }
         long status = jsonLong(watchEnvelope, "_httpStatus", 0L);
         String errorCode = Json.getString(watchEnvelope, "meta", "errorCode");
         if (status == 401L || (status == 400L && "UNAUTHORIZED".equals(errorCode))) {
-            watchEnvelope = requestJson( "https://www.nicovideo.jp/api/watch/v3_guest/" + videoId + query, "GET", watchHeaders, null, false);
+            watchEnvelope = requestJson( "https://www.nicovideo.jp/api/watch/v3_guest/" + videoId + query, "GET", watchHeaders, null, false, null);
         } else if (status < 200L || status >= 300L) {
             throw new IOException("watch API: HTTP " + status + (errorCode == null ? "" : " (" + errorCode + ")")); }
         JsonObject watch = ExtUtil.selectWatchData(watchEnvelope);
@@ -396,13 +396,15 @@ public final class FilterMatomeSmartFetcher
         accessHeaders.put("Referer", "https://www.nicovideo.jp/watch/" + videoId);
         if (!cookie.isEmpty()) accessHeaders.put("Cookie", cookie);
         String accessBody = "{\"outputs\":[[\"" + TextUtil.escapeJSON(videoQuality) + "\",\"" + TextUtil.escapeJSON(audioQuality) + "\"]]}";
+        Map<String, String> issuedCookies = new LinkedHashMap<>();
         JsonObject access = requestJson( "https://nvapi.nicovideo.jp/v1/watch/" + videoId + "/access-rights/hls?actionTrackId="
-                        + java.net.URLEncoder.encode(watchTrackId, StandardCharsets.UTF_8), "POST", accessHeaders, accessBody, false);
+                        + java.net.URLEncoder.encode(watchTrackId, StandardCharsets.UTF_8), "POST", accessHeaders, accessBody, false, issuedCookies);
         String contentUrl = Json.getString(access, "data", "contentUrl");
         if (contentUrl == null || !contentUrl.startsWith( "https://delivery.domand.nicovideo.jp/")) {
             throw new IOException("配信URLを取得できませんでした"); }
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("contentUrl", contentUrl);
+        result.put("contentUrl", contentUrl); String issued = issuedCookies.get("domand_bid");
+        result.put("deliveryCookie", issued == null ? cookie : issued);
         return result; }
     private String selectBestQuality(JsonArray candidates) {
         JsonObject best = null;
@@ -424,7 +426,7 @@ public final class FilterMatomeSmartFetcher
                 bestLevel = level;
                 bestBitRate = bitRate; } }
         return best == null ? null : Json.getString(best, "id"); }
-    private JsonObject requestJson(String url, String method, Map<String, String> headers, String body, boolean permitError) throws Exception {
+    private JsonObject requestJson(String url, String method, Map<String, String> headers, String body, boolean permitError, Map<String, String> issuedCookies) throws Exception {
         Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", Integer.getInteger("listenPort", 8080))); HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection(proxy);
         if (connection instanceof HttpsURLConnection) ((HttpsURLConnection) connection).setSSLSocketFactory(nlMovieFetcher.getProxyTlsSocketFactory());
         connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
@@ -436,8 +438,10 @@ public final class FilterMatomeSmartFetcher
         connection.setRequestProperty("Connection", "close");
         for (Map.Entry<String, String> header : headers.entrySet()) {
             connection.setRequestProperty(header.getKey(), header.getValue()); }
-        if (body != null) {
-            writeBody(connection, body); }
+        if (body != null) writeBody(connection, body);
+        int status = connection.getResponseCode();
+        if (issuedCookies != null && status >= 200 && status < 300) {
+            String issued = nlMovieFetcher.issuedDeliveryCookie(connection); if (issued != null) issuedCookies.put("domand_bid", issued); }
         return readJsonResponse(connection, permitError); }
     private JsonObject requestWatchPage(String videoId, String cookie) throws IOException {
         HttpURLConnection connection = (HttpURLConnection) new URL("https://www.nicovideo.jp/watch/" + videoId).openConnection(Proxy.NO_PROXY);

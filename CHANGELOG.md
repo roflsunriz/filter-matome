@@ -6,6 +6,19 @@
 
 ## [Unreleased]
 
+## [#260] - 2026-10-31
+
+### Fixed
+
+- 【movie-fetcher】動画一覧の取得ボタンから配信用CookieをNicoCache_nlへ渡せず、マスタープレイリストがHTTP 403となる問題を修正した。
+- 【smartFetcher】ブラウザーの認証情報を保存できない問題と、予約実行時に配信権APIが新たに発行したCookieを取得処理へ渡せない問題を修正した。
+- 【リリース手順】Java拡張を更新した後にNicoCache_nlの再起動が必要なことを案内する。
+
+### Changed
+
+- 【依存関係】minimatchを脆弱性修正版の11.0.1へ、hls.js、ESLint、typescript-eslint、Node.js型定義、Zensical、Maven Surefireを互換性を確認した版へ更新した。
+- リリース番号、READMEのlatestバッジ、原宿風Watch stylesheetの版付きURLを260へ同期した。
+
 ## [#259] - 2026-10-25
 
 ### Changed

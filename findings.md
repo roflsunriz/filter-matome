@@ -6,6 +6,7 @@
 - nlFilterによる公式API変更はfilter、公開API、API status menu/probe、型、翻訳、test、文書を一体更新する。最低3世代+PC/responsiveで意味境界、一致数、対象外0、構文、参照関係を検証し、minify名のwildcard化で逃げない。
 - 2026-10-22実測のWatch HTMLでは、`server-response.data.response`直下が`$watchV4`と`pcweb`になった。動画・コメントは`$watchV4.data.video`と`comment`、投稿者は`$watchV4.data.metadata.jsonLd.owner`にある。共通層で旧内部形式へ一度だけ正規化し、各機能で新旧パスを重複判定しない。保存済み描画DOMだけではmetaが除かれる場合があるため、ページソースと描画DOMを区別する。
 - Java拡張のWatch envelope選択はUTF-8化した`ExtUtil.selectWatchData`を正本にする。SmartFetcherは正規化後の`media.contents`と`media.accessRightKey`、Series Alertsは`series`を読み、旧応答も同関数で扱う。raw観測用sandboxもV4を明示的に展開する。
+- 2026-10-31の匿名実測では、access-rights応答が`HttpOnly`・`.nicovideo.jp`・`/`の`domand_bid`を発行し、拡張と同じヘッダーの配信要求はCookieなしで403、ありで200だった（sm46979587、sm46984082、sm46981064）。#259では開始APIの`nicocachenl.test`移行後にこのCookieを受け取れず、smartFetcherの認証情報更新も`credentials: omit`で空になった。同一オリジンの限定POSTで取得・保存し、予約交渉ではaccess-rights応答の新しい配信用Cookieも引き継ぐ。Cookie値や署名URLは記録しない。
 - `/api/watch/v3`の2026-10-22実応答は添付資料に含まれず未確認。TypeScriptとJavaは、`data`直下の旧形式、`data.response`の旧形式、`data.$watchV4`、`data.response.$watchV4`をすべて同じ内部形式へ正規化する。実応答を取得した時点で対象形と秘密値非出力を再確認する。
 - 自動probeは存在/版/method/markerだけを副作用なしで確認する。notification refresh、再取得、再生変更、menu操作などを診断目的で呼ばない。
 - 全編先読みはv2のplan/stateだけを公開し、browser bufferへ全編保持するv1を復活させない。同品質の完成cacheをNicoCache側で確認して100%とし、HLS limit・再生stateを変えない。

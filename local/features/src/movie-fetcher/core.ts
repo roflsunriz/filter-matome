@@ -8,6 +8,8 @@ const ACTION_TRACK_CHARACTERS =
 export const MOVIE_FETCHER_HEADER = "X-Filter-Matome-Movie-Fetcher";
 export const MOVIE_FETCHER_API =
   "https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher";
+const MOVIE_FETCHER_START =
+  "https://www.nicovideo.jp/local/filter-matome/movie-fetcher/start";
 
 export interface DomandQuality {
   id?: string;
@@ -324,10 +326,18 @@ async function callExtension<T>(
 
 export async function startFetch(videoId: string): Promise<MovieFetcherStatus> {
   const contentUrl = await negotiateContentUrl(videoId);
-  return callExtension<MovieFetcherStatus>("start", {
-    method: "POST",
-    body: JSON.stringify({ videoId, contentUrl }),
-  });
+  return readJson<MovieFetcherStatus>(
+    await fetch(MOVIE_FETCHER_START, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        [MOVIE_FETCHER_HEADER]: "1",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ videoId, contentUrl }),
+    }),
+    "nlMovieFetcher",
+  );
 }
 
 export async function reportFetchError(

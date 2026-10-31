@@ -33,4 +33,4 @@ GUI起動時はNicoCacheGUIへ`nlMovieFetcher`タブを追加します。タブ�
 - 取得履歴は1件ずつ、または確認後にまとめて削除できる。履歴の削除は予約と取得済み動画キャッシュには影響しない。
 - 予約、設定、履歴は `data/filter-matome-smart-fetcher.json` へ原子的に保存する。破損時は `.corrupt-<時刻>` へ退避し、実行中の再起動は中断履歴として回収する。
 
-Cookieはニコニコ動画のPOST通信を通過したときに更新され、`nicosid`、`domand_bid`、`user_session`、`user_session_secure`だけを保存します。値はAES-GCMで暗号化した `data/filter-matome-smart-fetcher.credentials.json`、256ビット鍵は別の `data/filter-matome-smart-fetcher.key` に保存し、対応OSでは所有者だけへファイル権限を限定します。状態API、JSON状態、GUIログにはCookie、署名URL、アクセス権キーを含めません。予約画面から保存Cookieだけを削除できます。鍵と暗号文を同時に読める同一OSユーザーや管理者から保護する仕組みではないため、NicoCache_nlのユーザーデータルート自体も適切に保護してください。
+Cookieはニコニコ動画と同一オリジンの認証情報更新で受け取り、`nicosid`、`domand_bid`、`user_session`、`user_session_secure`だけを保存します。予約時に配信権APIが新しい配信用Cookieを発行した場合は、その値を取得処理へ渡します。保存値はAES-GCMで暗号化した `data/filter-matome-smart-fetcher.credentials.json`、256ビット鍵は別の `data/filter-matome-smart-fetcher.key` に保存し、対応OSでは所有者だけへファイル権限を限定します。状態API、JSON状態、GUIログにはCookie、署名URL、アクセス権キーを含めません。予約画面から保存Cookieだけを削除できます。鍵と暗号文を同時に読める同一OSユーザーや管理者から保護する仕組みではないため、NicoCache_nlのユーザーデータルート自体も適切に保護してください。

@@ -3,6 +3,8 @@ import { inspectVideo, type MovieInspection } from "./core";
 export const SMART_FETCHER_HEADER = "X-Filter-Matome-Smart-Fetcher";
 export const SMART_FETCHER_API =
   "https://nicocachenl.test/api/v1/extensions/filter-matome/smart-fetcher";
+const SMART_FETCHER_CREDENTIALS =
+  "https://www.nicovideo.jp/local/filter-matome/smart-fetcher/credentials";
 
 export type Recurrence = "once" | "daily" | "weekly" | "monthly" | "yearly";
 export type HolidayPolicy = "include" | "exclude" | "only";
@@ -111,10 +113,10 @@ export function getSmartFetcherState(): Promise<SmartFetcherState> {
 }
 
 export function refreshStoredCredentials(): Promise<SmartFetcherState> {
-  return fetch(`${SMART_FETCHER_API}/credentials`, {
+  return fetch(SMART_FETCHER_CREDENTIALS, {
     method: "POST",
     cache: "no-store",
-    credentials: "omit",
+    credentials: "same-origin",
     headers: { [SMART_FETCHER_HEADER]: "1" },
   }).then((response) => readJson<SmartFetcherState>(response));
 }

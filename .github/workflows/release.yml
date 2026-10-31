@@ -146,7 +146,7 @@ jobs:
           echo "2. ダウンロードしたアーカイブを展開" >> release_notes.md
           echo "3. \`nlFilters\`, \`local\`, \`extensions\`フォルダを上書きコピー" >> release_notes.md
           echo "4. 必要に応じて\`mime.types\`を上書きコピー" >> release_notes.md
-          echo "5. ブラウザでハード再読み込み（Ctrl+F5）" >> release_notes.md
+          echo "5. NicoCache_nlを再起動してから、ブラウザでハード再読み込み（Ctrl+F5）" >> release_notes.md
           echo "6. \`GUIDE.html\` を開いて \`USAGE GUIDE\` と \`NicoCache_nl SETUP GUIDE\` を確認する" >> release_notes.md
           echo "" >> release_notes.md
           echo "### 🛠️ 開発環境の構築" >> release_notes.md

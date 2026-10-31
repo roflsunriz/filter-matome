@@ -76,7 +76,7 @@ CONNECT後に返るサイト証明書は`nicocache.userDataRoot/certs/ca.cer`を
 検証し、ホスト名検証は無効化しない。これによりDomandのリクエストを本体の
 キャッシュ処理へ通しつつ、JVM既定ストアにローカルCAがない環境でも接続できる。
 配信playlistと断片には`Origin: https://www.nicovideo.jp`と同サイトの`Referer`を付ける。
-`/start`へブラウザーが自動送信するCookieのうち、配信URLにも適用される
+ニコニコ動画と同一オリジンの開始要求へブラウザーが自動送信するCookieのうち、配信URLにも適用される
 配信用の`domand_bid`だけを転送する。認証用`nicosid`や検索設定など他のCookieは
 転送しない。値をAPIレスポンスやログへ出力してはならない。
 実測ではCookieなしの署名URL取得は403、ブラウザーの同一コンテキストでは200だった。
@@ -91,15 +91,18 @@ CONNECT後に返るサイト証明書は`nicocache.userDataRoot/certs/ca.cer`を
 
 ## nlMovieFetcherローカルAPI
 
-すべて同一オリジンで、`X-Filter-Matome-Movie-Fetcher: 1` が必須。URLだけを直接開いた場合は404にする。
+いずれも `X-Filter-Matome-Movie-Fetcher: 1` が必須。URLだけを直接開いた場合は404にする。ブラウザーからの開始要求はCookieを受け取るためニコニコ動画と同一オリジンの限定POSTを使い、`Origin`とメソッドを検証する。状態・中止・報告と予約側からの内部開始要求は専用ホストを使う。
 
 - `GET https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher/capabilities`
-- `POST https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher/start` — `{"videoId":"sm9","contentUrl":"https://delivery.domand.nicovideo.jp/..."}`
+- `POST https://www.nicovideo.jp/local/filter-matome/movie-fetcher/start` — ブラウザーからの開始要求。`{"videoId":"sm9","contentUrl":"https://delivery.domand.nicovideo.jp/..."}`
+- `POST https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher/start` — 予約側からの内部開始要求。
 - `GET https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher/status?videoId=sm9`
 - `POST https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher/cancel` — `{"videoId":"sm9"}`
 - `POST https://nicocachenl.test/api/v1/extensions/filter-matome/movie-fetcher/report` — watch/access-rights APIなど、ブラウザー側で取得処理が止まった場合の短いエラー報告
 
 状態は `idle | queued | fetching | canceling | canceled | completed | failed`。`completed` と `total` は子playlistとCMAFリソースの取得数、`bytesTransferred`は帯域制御に使う実転送量である。全リソース取得後にNicoCache_nlの完成キャッシュが実在しない場合は`failed`となり、smartFetcherも完了履歴を作らない。開始・終了時刻は利用側が管理するため返さない。
+
+smartFetcherの認証情報更新も同一オリジンの限定POSTを使う。予約時のaccess-rights応答が新しい`domand_bid`を発行した場合は、そのCookieを取得処理へ渡す。Cookieは許可したドメインとパスを検証し、値はAPI応答やログへ含めない。
 
 GUI起動時は本体の拡張ロガーAPIでNicoCacheGUIへ`nlMovieFetcher`専用タブを追加する。受付、watch/access-rights APIのブラウザー側失敗、playlist数、CMAFリソース数と進捗、完了・中止・失敗理由を動画ID単位で記録する。ブラウザー報告は160文字へ制限し、URLを省略する。署名付きURL、Cookie、`accessRightKey`はログへ出力しない。GUIを使用しない場合も同じ内容を通常ログへ出力する。
 
