@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- READMEでfindings.mdへの案内に置き換わっていた本文を復元し、構成・開発・検証の説明をREADMEから直接読めるようにした。移動後のREADME更新は保持した。
+
+
 ## [#260] - 2026-10-31
 
 ### Fixed
