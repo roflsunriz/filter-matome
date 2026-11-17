@@ -6,6 +6,9 @@
 - DOMPurify 3.4.18、regexpp 4.12.3、Playwright 1.65.1、ESLint 10.15.0、Prettier 3.10.1、typescript-eslint 8.73.0、Zensical 0.1.1へ更新した。新しいPrettierで差分となった2か所は改行だけを整えた。TypeScript 7.0.2はpeerDependenciesの対応範囲外のため6.0.3を維持し、`bun outdated`の残りはこの1件だけだった。Maven依存・明示版付きプラグインとRust regexに更新候補はなかった。
 - `bun install --frozen-lockfile`はlockfile変更なし。`bun run verify`は書式、lint、型検査、単体282件、Chromium E2E 94件、39ファイルのビルドに成功した。`mvn --batch-mode --quiet verify`は33件・失敗0件とJAR生成、`python scripts/build-docs.py`はZensical 0.1.1で成功した。
 - 更新後の`bun audit`（107パッケージ）、`pip-audit -r requirements-docs.txt`、`cargo audit`、公開前のGitHub Dependabot alertは既知脆弱性0件。実利用プロフィールでのMylist2の再確認は前項の未検証事項として維持する。
+- 公開コミット`675cde12f90fff791a4b1b0eda27ec0cfd2fc61f`の[CI](https://github.com/roflsunriz/filter-matome/actions/runs/44090407770)と[Docs](https://github.com/roflsunriz/filter-matome/actions/runs/44090407822)が成功後、同じコミットへ`#261`を付けてプッシュした。[Release](https://github.com/roflsunriz/filter-matome/actions/runs/44090792793)も成功し、[正式リリース](https://github.com/roflsunriz/filter-matome/releases/tag/%23261)として公開された。CIではJava拡張の実行検査とLinux・macOS・Windowsのtoolbox検証も成功した。
+- 公開済み`filter-matome-261.7z`（2,232,896バイト）をダウンロードし、SHA-256 `135a9838c8e69502b72ce4c8ad34bc15b8a50102e3157a6f371158539d2f9433`がGitHubのasset digestと一致した。7-Zip整合性検査、必要なHTML・bootstrap・遅延entry・Service Worker・Java拡張・JARの存在、版261とCHANGELOG本文の収録を確認した。同梱JARのプラグイン4件と隔離data rootでの自己診断も成功した。
+- ダウンロードしたアーカイブ内のHTML・JavaScriptを一時サーバーから隔離Chromiumへ配信し、手動JavaScript注入なしで起動した。1280px・375pxで画像が読み込まれ、SVG本文が依存パッケージの`outlined/help_outline.svg`と一致した。Service Worker制御下の通常再読み込み後も画像読み込み成功、`[material-icons]`警告0件だった。実利用プロフィール・NicoCache_nlのPAC／HTTPS経路は未検証のままとする。
 
 ## 2026-11-17: Mylist2のヘルプアイコン
 
