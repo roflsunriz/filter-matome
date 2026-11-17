@@ -1,5 +1,5 @@
-// Generated from npm @material-design-icons/svg usage.
-// Update via scripts when icon usage changes.
+// Bundled SVGs from @material-design-icons/svg.
+// Keep imports and maps in sync with TypeScript and HTML icon usage.
 
 import addOutlinedIcon from "@material-design-icons/svg/outlined/add.svg";
 import analyticsOutlinedIcon from "@material-design-icons/svg/outlined/analytics.svg";
@@ -53,6 +53,7 @@ import fullscreenOutlinedIcon from "@material-design-icons/svg/outlined/fullscre
 import fullscreenExitOutlinedIcon from "@material-design-icons/svg/outlined/fullscreen_exit.svg";
 import gpsFixedOutlinedIcon from "@material-design-icons/svg/outlined/gps_fixed.svg";
 import helpOutlinedIcon from "@material-design-icons/svg/outlined/help.svg";
+import helpOutlineOutlinedIcon from "@material-design-icons/svg/outlined/help_outline.svg";
 import historyOutlinedIcon from "@material-design-icons/svg/outlined/history.svg";
 import homeOutlinedIcon from "@material-design-icons/svg/outlined/home.svg";
 import imageOutlinedIcon from "@material-design-icons/svg/outlined/image.svg";
@@ -194,6 +195,7 @@ const outlinedSvgMap = {
   fullscreen_exit: fullscreenExitOutlinedIcon,
   gps_fixed: gpsFixedOutlinedIcon,
   help: helpOutlinedIcon,
+  help_outline: helpOutlineOutlinedIcon,
   history: historyOutlinedIcon,
   home: homeOutlinedIcon,
   image: imageOutlinedIcon,

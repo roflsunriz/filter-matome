@@ -1,5 +1,13 @@
 # 検証手順
 
+## 2026-11-17: Mylist2のヘルプアイコン
+
+- 修正前に`bun test tests/common-material-icons.test.ts`で、静的HTMLが参照する`help_outline`が共通mapに存在せず失敗することを確認した。依存パッケージ内の既存SVGをimportし、mapへ登録した後は3件すべて合格した。共通定数と`src/`配下の全静的HTMLの`data-icon`を検査する。
+- `bunx playwright test tests/mylist2.spec.ts`は9件合格。初期化時の`[material-icons]`警告が0件で、1280px・375pxともヘルプ画像の`src`と`naturalWidth > 0`を確認した。
+- `bun run verify`は書式検査、ESLint、型検査、全単体テスト、Chromium E2E 94件、39ファイルの全体ビルドに成功した。`python scripts/build-docs.py`も成功し、`bun audit`は107パッケージで既知脆弱性0件だった。依存関係は変更していない。
+- ビルド済み`dist/`を一時ローカルサーバーで配信し、隔離したheadless ChromiumからHTML内のbootstrapと動的importでMylist2を起動した。手動JavaScript注入なしで1280px・375pxの画像読み込みを確認し、Service Worker有効・通常キャッシュでの再読み込み後も画像読み込み成功、アイコン警告0件だった。既存のプロフィール・IndexedDBは使用していない。
+- 報告者の実利用ブラウザー／プロフィール、NicoCache_nlのPAC・HTTPS経由では未検証。今回の確認はローカル生成物と隔離Chromiumの範囲に限る。再確認は`local/features`で上記単体・Mylist2テストと`bun run verify`を実行する。復旧時は以前のソースから全体ビルドし、`dist/`一式を揃える。
+
 ## 2026-11-10: README本文と配布情報の整備
 
 - Git履歴の移動前後と現在のREADMEを比較し、移動案内・競合マーカー・新たなコードフェンス不整合が残っていないことを確認した。復元で追加された相対リンクの参照先とアンカーを確認した。

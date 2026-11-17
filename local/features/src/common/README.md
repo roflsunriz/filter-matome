@@ -41,6 +41,7 @@
 - nlFilter API状態メニューはFullscreen APIと公式Watchのブラウザー内全画面を共通判定し、全画面中は開いているポップオーバーを閉じてメニュー全体を非表示にする。解除後はaccount配置と余白を再計算して元の表示順へ戻す。
 - 表示用HTML、動画説明、検索結果は、DOMPurifyまたはDOM APIで安全に組み立てる。
 - アイコンは `material-icons.ts` のヘルパーを使い、各プロジェクトへSVGを重複埋め込みしない。
+- アイコンを追加するときは `icon-assets.ts` のSVG importとmapを更新し、静的HTMLの`data-icon`も含めて `tests/common-material-icons.test.ts` で登録を確認する。
 - Google Driveの保存フォルダー名、対象ファイル接頭辞、認証情報の保存キー、multipart boundary接頭辞は利用機能から明示し、サービス側に特定機能の既定値を持たせない。
 
 ## グローバル互換API

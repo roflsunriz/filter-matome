@@ -8,6 +8,7 @@
 
 ### Fixed
 
+- 【mylist2】ヘルプのアイコンが表示されず、`outlined/help_outline`が見つからない警告が出る問題を修正した。
 - READMEでfindings.mdへの案内に置き換わっていた本文を復元し、構成・開発・検証の説明をREADMEから直接読めるようにした。移動後のREADME更新は保持した。
 
 

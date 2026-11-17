@@ -1,5 +1,6 @@
 # 調査知見
 
+- 共通アイコンは`src/common/icon-assets.ts`（`local/features/`配下）の明示的なSVG importとmapへ登録する。依存パッケージにSVGが存在するだけでは`getIconPath`から使えず、静的HTMLの`data-icon`は型検査でも検出されない。2026-11-17にMylist2の`help_outline`の登録漏れを再現した。生成スクリプトは存在しないため旧生成コメントを実態へ合わせ、共通定数と全静的HTMLの登録漏れを`tests/common-material-icons.test.ts`で確認する。
 - `NICO_APP_ROOT`（本体・source/JAR）と `NICO_DATA_ROOT`（runtime data）を分ける。data rootは設定/起動propertyで変わるため固定pathを仮定しない。成果物のsymlinkは置換前に `LinkType` と `Target` を確認する。
 - Java extensionは1個の実行class fileだけで完結させる。inner/anonymous/helper classを生成せず、Bun buildとは別にNicoCache本体とJDKでcompileする。
 - 公式assetをNicoCache経由でcaptureすると別filter適用済みの場合がある。SHAだけでCDN原本とみなさずmarker・対象class・本文hashを確認し、同一内容の複製を別世代に数えない。

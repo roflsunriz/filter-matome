@@ -136,7 +136,30 @@ test.beforeAll(() => {
 });
 
 test.beforeEach(async ({ page }) => {
+  const iconWarnings: string[] = [];
+  page.on("console", (message) => {
+    if (message.text().startsWith("[material-icons]")) {
+      iconWarnings.push(message.text());
+    }
+  });
   await openApp(page);
+  expect(iconWarnings).toEqual([]);
+});
+
+test("ヘルプアイコンを通常幅と狭幅で読み込む", async ({ page }) => {
+  const icon = page.locator(
+    '.mylist-sidebar-footer img[data-icon="help_outline"]',
+  );
+  for (const width of [1280, 375]) {
+    await page.setViewportSize({ width, height: 600 });
+    await expect(icon).toBeVisible();
+    await expect(icon).toHaveAttribute("src", /^data:image\/svg\+xml,/);
+    await expect
+      .poll(() =>
+        icon.evaluate((image: HTMLImageElement) => image.naturalWidth),
+      )
+      .toBeGreaterThan(0);
+  }
 });
 
 test("共通ヘッダーと重ならずダーク背景でビューポートを使用する", async ({
