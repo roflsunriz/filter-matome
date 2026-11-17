@@ -1,5 +1,12 @@
 # 検証手順
 
+## #261 公開前検証（2026-11-17）
+
+- 前回タグ`#260`以降の全コミットと実差分を確認し、Mylist2のヘルプアイコン修正とREADME本文復元をCHANGELOGへ記載した。package版、READMEバッジ、原宿風Watchの2か所のCSS URLを261へ同期した。
+- DOMPurify 3.4.18、regexpp 4.12.3、Playwright 1.65.1、ESLint 10.15.0、Prettier 3.10.1、typescript-eslint 8.73.0、Zensical 0.1.1へ更新した。新しいPrettierで差分となった2か所は改行だけを整えた。TypeScript 7.0.2はpeerDependenciesの対応範囲外のため6.0.3を維持し、`bun outdated`の残りはこの1件だけだった。Maven依存・明示版付きプラグインとRust regexに更新候補はなかった。
+- `bun install --frozen-lockfile`はlockfile変更なし。`bun run verify`は書式、lint、型検査、単体282件、Chromium E2E 94件、39ファイルのビルドに成功した。`mvn --batch-mode --quiet verify`は33件・失敗0件とJAR生成、`python scripts/build-docs.py`はZensical 0.1.1で成功した。
+- 更新後の`bun audit`（107パッケージ）、`pip-audit -r requirements-docs.txt`、`cargo audit`、公開前のGitHub Dependabot alertは既知脆弱性0件。実利用プロフィールでのMylist2の再確認は前項の未検証事項として維持する。
+
 ## 2026-11-17: Mylist2のヘルプアイコン
 
 - 修正前に`bun test tests/common-material-icons.test.ts`で、静的HTMLが参照する`help_outline`が共通mapに存在せず失敗することを確認した。依存パッケージ内の既存SVGをimportし、mapへ登録した後は3件すべて合格した。共通定数と`src/`配下の全静的HTMLの`data-icon`を検査する。

@@ -1,5 +1,6 @@
 # 調査知見
 
+- 2026-11-17のnpm registryでは`typescript-eslint`と`@typescript-eslint/typescript-estree` 8.73.0のTypeScript対応は`>=4.8.4 <6.1.0`。`@typescript/native`の対応条件は別であり、`typescript` 7.0.2への更新許可とは扱わない。公開前の`bun outdated`で7.0.2だけが残る場合は6.0.3を維持し、解析ツールのpeerDependencies変更時に再確認する。
 - 共通アイコンは`src/common/icon-assets.ts`（`local/features/`配下）の明示的なSVG importとmapへ登録する。依存パッケージにSVGが存在するだけでは`getIconPath`から使えず、静的HTMLの`data-icon`は型検査でも検出されない。2026-11-17にMylist2の`help_outline`の登録漏れを再現した。生成スクリプトは存在しないため旧生成コメントを実態へ合わせ、共通定数と全静的HTMLの登録漏れを`tests/common-material-icons.test.ts`で確認する。
 - `NICO_APP_ROOT`（本体・source/JAR）と `NICO_DATA_ROOT`（runtime data）を分ける。data rootは設定/起動propertyで変わるため固定pathを仮定しない。成果物のsymlinkは置換前に `LinkType` と `Target` を確認する。
 - Java extensionは1個の実行class fileだけで完結させる。inner/anonymous/helper classを生成せず、Bun buildとは別にNicoCache本体とJDKでcompileする。

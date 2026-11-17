@@ -1,4 +1,4 @@
-1. local/features/package.jsonのバージョンを更新する（例：300 -> 301）（特に指示がない場合は基本的にメジャー更新を行うこと）
+1. local/features/package.jsonのバージョンを更新する（例：300 -> 301）（特に指示がない場合は基本的にメジャー更新を行うこと）。原宿風WatchのCSS読込URLは、`nlFilters/104_watch_harajuku_style.txt`と`local/features/src/mlink-video-controller/modules/harajuku-style-contract.ts`の`?v=`を同じ番号へ揃える。
 2. CHANGELOG.mdを更新しチェンジログを記録する（Keep a Changelog形式に従う）。前回のリリースタグからのコミット履歴を全て参照して詳しく記録する。
 3. README.mdのlatestバッジのバージョンを更新する
 4. 脆弱性検査と全体検証を行ってからmainへコミット・プッシュし、そのコミットのCIとDocsの成功を確認する

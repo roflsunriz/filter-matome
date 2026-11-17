@@ -6,11 +6,17 @@
 
 ## [Unreleased]
 
+## [#261] - 2026-11-17
+
 ### Fixed
 
 - 【mylist2】ヘルプのアイコンが表示されず、`outlined/help_outline`が見つからない警告が出る問題を修正した。
-- READMEでfindings.mdへの案内に置き換わっていた本文を復元し、構成・開発・検証の説明をREADMEから直接読めるようにした。移動後のREADME更新は保持した。
+- READMEの構成・開発・検証の説明を復元し、READMEから直接読めるようにした。
 
+### Changed
+
+- 【依存関係】DOMPurify、正規表現解析、Playwright、ESLint、Prettier、typescript-eslint、Zensicalを更新し、全体テスト・ビルドで確認した。TypeScriptは解析ツールの対応範囲にある6.0.3を維持した。
+- リリース番号、READMEのlatestバッジ、原宿風Watch stylesheetの版付きURLを261へ同期した。
 
 ## [#260] - 2026-10-31
 

@@ -145,8 +145,7 @@ const COPIES: Record<string, Copy> = {
     title: "বিজ্ঞপ্তি",
     button: "সব পড়া হিসেবে চিহ্নিত করুন",
     busy: "পড়া হিসেবে চিহ্নিত হচ্ছে…",
-    success: (count) =>
-      `${String(count)}টি বিজ্ঞপ্তি পড়া হিসেবে চিহ্নিত হয়েছে।`,
+    success: (count) => `${String(count)}টি বিজ্ঞপ্তি পড়া হিসেবে চিহ্নিত হয়েছে।`,
     noUnread: "কোনো অপঠিত বিজ্ঞপ্তি নেই।",
     partial: (success, failure) =>
       `${String(success)}টি সফল, ${String(failure)}টি ব্যর্থ। আবার চেষ্টা করুন।`,

@@ -300,8 +300,7 @@ const localized: Record<string, Partial<Messages>> = {
     deleteHistory: "रिकॉर्ड हटाएँ",
     clearHistory: "सारा इतिहास हटाएँ",
     confirmDeleteHistory: "क्या यह फ़ेच रिकॉर्ड हटाना है?",
-    confirmClearHistory:
-      "क्या पूरा फ़ेच इतिहास हटाना है? इसे वापस नहीं लाया जा सकता।",
+    confirmClearHistory: "क्या पूरा फ़ेच इतिहास हटाना है? इसे वापस नहीं लाया जा सकता।",
   },
   es: {
     title: "Programador de descargas",
