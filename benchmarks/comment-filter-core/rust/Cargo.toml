@@ -8,7 +8,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-regex = "=1.13.1"
+regex = "=1.13.2"
 
 [profile.release]
 codegen-units = 1
