@@ -61,7 +61,7 @@
     "@eslint-community/regexpp": "4.12.3",
     "@material-design-icons/svg": "^0.14.15",
     "comment-overlay": "4.1.6",
-    "dompurify": "^3.4.18",
+    "dompurify": "^3.5.0",
     "fflate": "^0.8.3",
     "hls.js": "^1.7.4",
     "image-validator": "^1.2.1"
