@@ -8,7 +8,7 @@
         "@eslint-community/regexpp": "4.12.3",
         "@material-design-icons/svg": "^0.14.15",
         "comment-overlay": "4.1.6",
-        "dompurify": "^3.4.18",
+        "dompurify": "^3.5.0",
         "fflate": "^0.8.3",
         "hls.js": "^1.7.4",
         "image-validator": "^1.2.1",
@@ -122,7 +122,7 @@
 
     "deep-is": ["deep-is@0.1.4", "", {}, "sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ=="],
 
-    "dompurify": ["dompurify@3.4.18", "", { "optionalDependencies": { "@types/trusted-types": "^2.0.7" } }, "sha512-ofe3wI/uNm68HInABYFJYqQxRw1EaKAjNdrFVKqjUY+UZurvNd2L/HuQe097s/4RivWiZyP6tT7aoT8atjfhwg=="],
+    "dompurify": ["dompurify@3.5.0", "", { "optionalDependencies": { "@types/trusted-types": "^2.0.7" } }, "sha512-LYC0ZkE8P1V42JsRYTwMdme/2ET8SpOc5AA2eOFjP/IadvRd2fwiT4TVz5vkfy0XUx12aS2UaRkTnfVPNOv9vw=="],
 
     "escape-string-regexp": ["escape-string-regexp@4.0.0", "", {}, "sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA=="],
 
